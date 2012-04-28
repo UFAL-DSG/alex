@@ -1,0 +1,9 @@
+.project
+.pydevproject
+.eric4projec
+.ropeproject
+*.pyc
+*.a
+*.o
+*.dll
+
