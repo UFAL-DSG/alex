@@ -21,6 +21,9 @@ The database also contains a list of dialogue act types observed in the data.
 
 It scans for all 'cued_data/*.sem' files and process them.
 
+
+NOTE: This script can be used as a packege/library anytime someone needs to convert CUED dialogue acts into UFAL dialogue acts.
+
 """
 
 idir = './cued_data'
@@ -220,137 +223,138 @@ class CUEDDialogueAct:
 
     return
 
-verbose = False
-sem_files = glob.glob(os.path.join(idir,'*.sem'))
+if __name__ == '__main__':
+  verbose = False
+  sem_files = glob.glob(os.path.join(idir,'*.sem'))
 
-slots = collections.defaultdict(set)
-ufal_da_list = collections.defaultdict(list)
+  slots = collections.defaultdict(set)
+  ufal_da_list = collections.defaultdict(list)
 
-for fn in sem_files:
-  print 'Processing file: ' + fn
-  bnfn = os.path.basename(fn)
+  for fn in sem_files:
+    print 'Processing file: ' + fn
+    bnfn = os.path.basename(fn)
 
-  f = open(fn, 'r')
+    f = open(fn, 'r')
 
-  da_clustered = collections.defaultdict(set)
-  for line in f:
-    line = line.strip()
+    da_clustered = collections.defaultdict(set)
+    for line in f:
+      line = line.strip()
 
-    if verbose:
-      print '-'*120
-      print 'Input:   ' + line
+      if verbose:
+        print '-'*120
+        print 'Input:   ' + line
 
-    text, cued_da = line.split('<=>')
-    text = text.strip()
-    cued_da = cued_da.strip()
-
-
-    if verbose:
-      print 'Text:    ' + text
-      print 'DA:      ' + cued_da
-      print
-
-    da = CUEDDialogueAct(text,cued_da)
-    da.parse()
-
-    if verbose:
-      print 'cued_da:  ' + da.get_cued_da()
-      print 'ufal_da:  ' + da.get_ufal_da()
-
-    ufal_da = da.get_ufal_da()
-
-    if ufal_da:
-      ufal_da_list[bnfn].append((da.text, da.get_ufal_da()))
-      da_clustered[da.get_ufal_da()].add(da.text)
-
-      slts = da.get_slots_and_values()
-      for slt in slts:
-        slots[slt].update(slts[slt])
-
-  fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp')), 'w+')
-  for key in sorted(da_clustered):
-    fo.write(key)
-    fo.write(' <=> ')
-    fo.write(str(sorted(list(da_clustered[key])))+'\n')
-  fo.close()
-
-  dai_unique = set()
-  for da in sorted(da_clustered):
-    dais = split_by(da, '&', '(', ')', '"')
-    for dai in dais:
-      dai_unique.add(dai)
-
-  fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.dais')), 'w+')
-  for dai in sorted(dai_unique):
-    fo.write(dai)
-    fo.write('\n')
-  fo.close()
+      text, cued_da = line.split('<=>')
+      text = text.strip()
+      cued_da = cued_da.strip()
 
 
-  da_reclustered = collections.defaultdict(set)
-  for key in da_clustered:
-    sem_reduced = re.sub(r'([a-z_0-9]+)(="[a-zA-Z0-9_\'! ]+")', r'\1', key)
-    da_reclustered[sem_reduced].update(da_clustered[key])
+      if verbose:
+        print 'Text:    ' + text
+        print 'DA:      ' + cued_da
+        print
 
-  fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.reduced')), 'w+')
-  for key in sorted(da_reclustered):
-    fo.write(key)
-    fo.write(' <=> ')
-    fo.write(str(sorted(list(da_reclustered[key])))+'\n')
-  fo.close()
+      da = CUEDDialogueAct(text,cued_da)
+      da.parse()
 
-  dai_unique = set()
-  for da in sorted(da_reclustered):
-    dais = split_by(da, '&', '(', ')', '"')
-    for dai in dais:
-      dai_unique.add(dai)
+      if verbose:
+        print 'cued_da:  ' + da.get_cued_da()
+        print 'ufal_da:  ' + da.get_ufal_da()
 
-  fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.reduced.dais')), 'w+')
-  for dai in sorted(dai_unique):
-    fo.write(dai)
-    fo.write('\n')
-  fo.close()
+      ufal_da = da.get_ufal_da()
 
-i = 0
-for fn in ufal_da_list:
-  if 'asr' in fn:
-    ext = '.asr'
-  else:
-    ext = '.trn'
-  fo_trn = open(os.path.join(odir, fn.replace('.sem', '.trn')), 'w+')
-  fo_sem = open(os.path.join(odir, fn), 'w+')
+      if ufal_da:
+        ufal_da_list[bnfn].append((da.text, da.get_ufal_da()))
+        da_clustered[da.get_ufal_da()].add(da.text)
 
-  for text, da in ufal_da_list[fn]:
-    wav_name = ("%06d" % i) + '.wav'
-    fo_trn.write(wav_name + ' => ' + text+'\n')
-    fo_sem.write(wav_name + ' => ' + da+'\n')
+        slts = da.get_slots_and_values()
+        for slt in slts:
+          slots[slt].update(slts[slt])
 
-    i += 1
+    fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp')), 'w+')
+    for key in sorted(da_clustered):
+      fo.write(key)
+      fo.write(' <=> ')
+      fo.write(str(sorted(list(da_clustered[key])))+'\n')
+    fo.close()
 
-  fo_trn.close()
-  fo_sem.close()
+    dai_unique = set()
+    for da in sorted(da_clustered):
+      dais = split_by(da, '&', '(', ')', '"')
+      for dai in dais:
+        dai_unique.add(dai)
+
+    fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.dais')), 'w+')
+    for dai in sorted(dai_unique):
+      fo.write(dai)
+      fo.write('\n')
+    fo.close()
 
 
-s = 'database = {'
-for slt in sorted(slots):
-  if not slt:
-    continue
-  s += '\n'
-  s += '  "'+slt+'": {'
-  s += '\n'
+    da_reclustered = collections.defaultdict(set)
+    for key in da_clustered:
+      sem_reduced = re.sub(r'([a-z_0-9]+)(="[a-zA-Z0-9_\'! ]+")', r'\1', key)
+      da_reclustered[sem_reduced].update(da_clustered[key])
 
-  for vlu in sorted(slots[slt]):
-    if not vlu:
+    fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.reduced')), 'w+')
+    for key in sorted(da_reclustered):
+      fo.write(key)
+      fo.write(' <=> ')
+      fo.write(str(sorted(list(da_reclustered[key])))+'\n')
+    fo.close()
+
+    dai_unique = set()
+    for da in sorted(da_reclustered):
+      dais = split_by(da, '&', '(', ')', '"')
+      for dai in dais:
+        dai_unique.add(dai)
+
+    fo = open(os.path.join(odir, os.path.basename(fn).replace('.sem', '.grp.reduced.dais')), 'w+')
+    for dai in sorted(dai_unique):
+      fo.write(dai)
+      fo.write('\n')
+    fo.close()
+
+  i = 0
+  for fn in ufal_da_list:
+    if 'asr' in fn:
+      ext = '.asr'
+    else:
+      ext = '.trn'
+    fo_trn = open(os.path.join(odir, fn.replace('.sem', '.trn')), 'w+')
+    fo_sem = open(os.path.join(odir, fn), 'w+')
+
+    for text, da in ufal_da_list[fn]:
+      wav_name = ("%06d" % i) + '.wav'
+      fo_trn.write(wav_name + ' => ' + text+'\n')
+      fo_sem.write(wav_name + ' => ' + da+'\n')
+
+      i += 1
+
+    fo_trn.close()
+    fo_sem.close()
+
+
+  s = 'database = {'
+  for slt in sorted(slots):
+    if not slt:
       continue
-    s += '    "'+vlu+'": [' + '"'+vlu+'",],'
+    s += '\n'
+    s += '  "'+slt+'": {'
     s += '\n'
 
-  s += '  },'
-  s += '\n'
-s += '}'
-s += '\n'
+    for vlu in sorted(slots[slt]):
+      if not vlu:
+        continue
+      s += '    "'+vlu+'": [' + '"'+vlu+'",],'
+      s += '\n'
 
-fo = open(os.path.join(odir,'auto_database.py'), 'w+')
-fo.write(s)
-fo.close()
+    s += '  },'
+    s += '\n'
+  s += '}'
+  s += '\n'
+
+  fo = open(os.path.join(odir,'auto_database.py'), 'w+')
+  fo.write(s)
+  fo.close()
 
