@@ -11,7 +11,7 @@ import math
 from collections import deque
 
 """
-FIXME: There confusion in naming packets, frames, and samples.
+FIXME: There is confusion in naming packets, frames, and samples.
        Ideally frames should always mean be blocks of samples.
 """
 

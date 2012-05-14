@@ -16,7 +16,7 @@ import SDS.utils.audio as audio
 import SDS.utils.various as various
 
 """
-FIXME: There confusion in naming packets, frames, and samples.
+FIXME: There is confusion in naming packets, frames, and samples.
        Ideally frames should be blocks of samples.
 
 """
