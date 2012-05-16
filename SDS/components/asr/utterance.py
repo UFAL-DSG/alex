@@ -50,8 +50,14 @@ class Utterance:
   def __le__(self, other):
     return self.utterance <= other.utterance
   def __eq__(self, other):
+    if other == None:
+      return False
+
     return self.utterance == other.utterance
   def __ne__(self, other):
+    if other == None:
+      return True
+
     return self.utterance != other.utterance
   def __gt__(self, other):
     return self.utterance > other.utterance
@@ -67,6 +73,12 @@ class Utterance:
   def __iter__(self):
     for i in self.utterance:
       yield i
+
+  def isempty(self):
+    if len(self.utterance) == 0:
+      return True
+
+    return False
 
   def index(self, s):
     f = s[0]
@@ -96,7 +108,7 @@ class UtteranceFeatures:
     self.size = size
     self.features = defaultdict(float)
 
-    if utterance:
+    if utterance != None:
       self.parse(utterance)
 
   def __str__(self):
@@ -132,6 +144,9 @@ class UtteranceFeatures:
 
           self.features[tuple(u[i:i+k])] += 1.0
 
+    if u.isempty():
+      self.features['__empty__'] += 1.0
+
     new_features = defaultdict(float)
     for f in self.features:
       if len(f) == 3:
@@ -141,6 +156,9 @@ class UtteranceFeatures:
 
     for f in new_features:
       self.features[f] += new_features[f]
+
+    if len(self.features) == 0:
+      print u.utterance
 
     self.set = set(self.features.keys())
 
