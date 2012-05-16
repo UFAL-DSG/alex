@@ -1,6 +1,6 @@
 .project
 .pydevproject
-.eric4projec
+.eric4project
 .ropeproject
 *.pyc
 *.a
