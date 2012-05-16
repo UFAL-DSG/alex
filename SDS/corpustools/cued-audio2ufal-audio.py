@@ -14,7 +14,7 @@ from SDS.utils.string import split_by
 
 """
 This program process CUED call log files and copies all audio into a destination directory.
-It also extracts annotations from the log files and saves them alongside the copied wavs.
+It also extracts transcriptions from the log files and saves them alongside the copied wavs.
 
 It scans for 'user-transcription.norm.xml' to extract transcriptions and names of wave files.
 
@@ -112,18 +112,21 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
     description="""
     This program process CUED call log files and copies all audio into a destination directory.
-    It also extracts annotations from the log files and saves them alongside the copied wavs.
+    It also extracts transcriptions from the log files and saves them alongside the copied wavs.
 
     It scans for 'user-transcription.norm.xml' to extract transcriptions and names of wave files.
 
     """)
 
-  parser.add_argument('indir', action="store", help='an input directory with CUED call log files')
-  parser.add_argument('indir_audio', action="store", help='an input directory with CUED audio files')
-  parser.add_argument('outdir', action="store", help='an output directory for files with audio and their transcription')
-  parser.add_argument('-v', action="store_true", default=False, dest="verbose", help='set verbose oputput')
+  parser.add_argument('indir', action="store",
+                      help='an input directory with CUED call log files')
+  parser.add_argument('indir_audio', action="store",
+                      help='an input directory with CUED audio files')
+  parser.add_argument('outdir', action="store",
+                      help='an output directory for files with audio and their transcription')
+  parser.add_argument('-v', action="store_true", default=False, dest="verbose",
+                      help='set verbose oputput')
 
   args = parser.parse_args()
-
 
   convert(args.indir, args.indir_audio, args.outdir, args.verbose)
