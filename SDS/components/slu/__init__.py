@@ -71,7 +71,11 @@ class SLUPreprocessing:
     else:
       self.text_normalization_mapping = [(['erm', ], []),
                                         (['uhm', ], []),
-                                        (['um', ], [])
+                                        (['um', ], []),
+                                        (["I'm", ], ['I', 'am']),
+                                        (['(sil)', ], []),
+                                        (['(%hesitation)', ], []),
+                                        (['(hesitation)', ], [])
                                         ]
 
 
