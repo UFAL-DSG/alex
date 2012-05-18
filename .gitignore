@@ -6,4 +6,6 @@
 *.a
 *.o
 *.dll
+*~
+.*.swp
 build/
