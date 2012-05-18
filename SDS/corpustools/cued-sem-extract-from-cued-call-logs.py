@@ -8,6 +8,10 @@ import collections
 import re
 import xml.dom.minidom
 import random
+import sys
+
+__depth__ = 2
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
 
 from SDS.utils.string import split_by_comma, split_by
 from SDS.utils.various import flatten, get_text_from_xml_node

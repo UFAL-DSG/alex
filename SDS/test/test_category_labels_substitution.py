@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import os.path
+
+__depth__ = 2
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+
 from SDS.components.slu import SLUPreprocessing, load_utterances, load_das
 
 utterances_dict = load_utterances('./resources/towninfo-train.trn')
@@ -15,10 +21,10 @@ for k in semantics_dict:
   print '='*120
   print utterances_dict[k]
   print semantics_dict[k]
-  
-  utterance, da, category_labels = slu_prep.values2slot_names_in_da(utterances_dict[k], 
+
+  utterance, da, category_labels = slu_prep.values2slot_names_in_da(utterances_dict[k],
                                                                     semantics_dict[k])
-  
+
   print '-'*120
   print utterance
   print da
@@ -28,7 +34,7 @@ for k in semantics_dict:
 
   full_utterance = slu_prep.slot_names2values_in_utterance(utterance, category_labels)
   full_da = slu_prep.slot_names2values_in_da(da, category_labels)
-  
+
   print full_utterance
   print full_da
-  
+

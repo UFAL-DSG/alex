@@ -6,6 +6,10 @@ import os.path
 import collections
 import re
 import argparse
+import sys
+
+__depth__ = 2
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
 
 from SDS.utils.string import split_by_comma, split_by
 from SDS.corpustools.cuedda import CUEDDialogueAct
@@ -54,7 +58,7 @@ if __name__ == '__main__':
     description="""
     This program processes the CUED call logs for <semitran> tags, converts the UCED semantic annotations
     therein to the UFAL semantic format and stores them in a <semitran_ufal> tag.
-    
+
     It scans for all */user-transcription.norm.xml files in the directory given by the --indir argument.
     By default, this is ./cued_call_logs.
 

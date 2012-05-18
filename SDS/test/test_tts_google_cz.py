@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+import os.path
+
+__depth__ = 2
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+
 import SDS.utils.cache as cache
 import SDS.utils.audio as audio
 

@@ -9,6 +9,9 @@ import sys
 
 from collections import defaultdict
 
+__depth__ = 2
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+
 from SDS.utils.string import split_by
 
 def load_semantics(file_name):
