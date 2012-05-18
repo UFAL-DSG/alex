@@ -17,8 +17,9 @@ There are two ways how to run unit tests:
         $ easy_install nose
         $ nosetests
 
-    Nose searchs through packages and runs every test. Tests must be
-    named test_<something>.py and must not be executable.
+    Nose searchs through packages and runs every test. Tests must be named
+    test_<something>.py and must not be executable. Tests doesn't have to be
+    run from project root, nose is able to find project root on its own.
 
 
 How should my unit tests look like?
