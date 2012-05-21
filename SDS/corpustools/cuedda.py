@@ -172,13 +172,27 @@ class CUEDDialogueAct:
     if " looking " in self.text and 'inform(task="find")' not in s:
       s.append('inform(task="find")')
 
+    if "not" == self.text:
+      s = ['negate()', ]
+    if "it does not matter" == self.text:
+      s = ['inform(="dontcare")', ]
+    if "type of food" == self.text:
+      s = ['request(food)', ]
+    if "addenbrooke's" == self.text:
+      s = ['request(name="addenbrookes")', ]
+
     s = '&'.join(sorted(s))
 
     if not s:
+      print '# CUEDDialogueAct.get_ufal_da()'
       print '#'+'='*120
       print '#', self.text
       print '#', self.cuedDA
+      print '#', 'null()'
       print '#'+'.'*120
+
+    if not s:
+      s = 'null()'
 
     return s
 

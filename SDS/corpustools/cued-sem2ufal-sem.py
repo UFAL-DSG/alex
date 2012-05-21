@@ -89,19 +89,18 @@ if __name__ == '__main__':
       da = CUEDDialogueAct(text,cued_da)
       da.parse()
 
-      if verbose:
-        print 'cued_da:  ' + da.get_cued_da()
-        print 'ufal_da:  ' + da.get_ufal_da()
-
       ufal_da = da.get_ufal_da()
 
-      if ufal_da:
-        ufal_da_list[bnfn].append((da.text, da.get_ufal_da()))
-        da_clustered[da.get_ufal_da()].add(da.text)
+      if verbose:
+        print 'cued_da:  ' + da.get_cued_da()
+        print 'ufal_da:  ' + ufal_da
 
-        slts = da.get_slots_and_values()
-        for slt in slts:
-          slots[slt].update(slts[slt])
+      ufal_da_list[bnfn].append((da.text, da.get_ufal_da()))
+      da_clustered[da.get_ufal_da()].add(da.text)
+
+      slts = da.get_slots_and_values()
+      for slt in slts:
+        slots[slt].update(slts[slt])
 
     fo = open(os.path.join(outdir, os.path.basename(fn).replace('.sem', '.grp')), 'w+')
     for key in sorted(da_clustered):
@@ -147,8 +146,8 @@ if __name__ == '__main__':
       fo.write('\n')
     fo.close()
 
-  i = 0
   for fn in ufal_da_list:
+    i = 0
     if 'asr' in fn:
       ext = '.asr'
     else:

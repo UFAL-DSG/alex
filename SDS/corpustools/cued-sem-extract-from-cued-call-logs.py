@@ -11,7 +11,6 @@ import random
 
 from SDS.utils.string import split_by_comma, split_by
 from SDS.utils.various import flatten, get_text_from_xml_node
-from SDS.corpustools.cuedda import CUEDDialogueAct
 
 """
 This program extracts CUED semantic annotations from CUED call logs into a format which can be later processed by
@@ -34,32 +33,30 @@ def extract_trns_sems_from_file(file, verbose):
   for el in els:
     transcription = el.getElementsByTagName("transcription")
     cued_da = el.getElementsByTagName("semitran")
+    cued_dahyp = el.getElementsByTagName("semihyp")
     asrhyp = el.getElementsByTagName("asrhyp")
     audio = el.getElementsByTagName("rec")
 
-    if len(transcription) != 1 or len(cued_da) != 1 or len(asrhyp) == 0 or len(audio) != 1:
-      # skip this node, it contains multiple elements of either transcriptionm, cued_da, asrhyp, or audio.
+
+    if len(transcription) != 1 or len(cued_da) != 1 or len(cued_dahyp) == 0 or len(asrhyp) == 0 or len(audio) != 1:
+      # skip this node, it contains multiple elements of either transcriptionm, cued_da,
+      # cued_dahyp, asrhyp, or audio.
       continue
 
     transcription = get_text_from_xml_node(transcription[0]).lower()
     cued_da       = get_text_from_xml_node(cued_da[0])
+    cued_dahyp    = get_text_from_xml_node(cued_dahyp[0])
     asrhyp        = get_text_from_xml_node(asrhyp[0]).lower()
     audio         = audio[0].getAttribute('fname').strip()
 
-    da = CUEDDialogueAct(transcription, cued_da)
-    da.parse()
-
-    ufal_da = da.get_ufal_da()
-
     if verbose:
-      print "#1 t:", transcription, "# a:", asrhyp, "# s:", cued_da, "# f:", audio
-      print "#2 f:", audio
-      print "#3 t:", transcription, "# s:", ufal_da
-      print "#4 a:", asrhyp, "# s:", ufal_da
+      print "#1 f:", audio
+      print "#2 t:", transcription, "# s:", cued_da
+      print "#3 a:", asrhyp, "# s:", cued_dahyp
       print
 
-    if ufal_da:
-      trns_sems.append((transcription, asrhyp, cued_da, audio))
+    if cued_da:
+      trns_sems.append((transcription, asrhyp, cued_da, cued_dahyp, audio))
 
   return trns_sems
 
@@ -83,19 +80,28 @@ def extract_trns_sems(indir, outdir, verbose):
 
 def write_trns_sem(outdir, fname, data):
   fo = open(os.path.join(outdir, fname), 'w+')
-  for transcription, asrhyp, ufal_da, audio in data:
+  for transcription, asrhyp, cued_da, cued_dahyp, audio in data:
     fo.write(transcription)
     fo.write(' <=> ')
-    fo.write(ufal_da)
+    fo.write(cued_da)
     fo.write('\n')
   fo.close()
 
 def write_asrhyp_sem(outdir, fname, data):
   fo = open(os.path.join(outdir, fname), 'w+')
-  for transcription, asrhyp, ufal_da, audio in data:
+  for transcription, asrhyp, cued_da, cued_dahyp, audio in data:
     fo.write(asrhyp)
     fo.write(' <=> ')
-    fo.write(ufal_da)
+    fo.write(cued_da)
+    fo.write('\n')
+  fo.close()
+
+def write_asrhyp_semhyp(outdir, fname, data):
+  fo = open(os.path.join(outdir, fname), 'w+')
+  for transcription, asrhyp, cued_da, cued_dahyp, audio in data:
+    fo.write(asrhyp)
+    fo.write(' <=> ')
+    fo.write(cued_dahyp)
     fo.write('\n')
   fo.close()
 
@@ -123,6 +129,7 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
+  print 'Extracting semantics from the call logs'
   trns_sems = extract_trns_sems(args.indir, args.outdir, args.verbose)
 
   # fix the shuffling of the data
@@ -135,13 +142,16 @@ if __name__ == '__main__':
   dev   = trns_sems[int(0.8*len(trns_sems)):int(0.9*len(trns_sems))]
   test  = trns_sems[int(0.9*len(trns_sems)):]
 
+  print 'Saving the semantics'
   write_trns_sem(args.outdir,'caminfo-train.sem', train)
   write_asrhyp_sem(args.outdir,'caminfo-train.asr.sem', train)
+  write_asrhyp_semhyp(args.outdir,'caminfo-train.asr.shyp.sem', train)
 
   write_trns_sem(args.outdir,'caminfo-dev.sem', dev)
   write_asrhyp_sem(args.outdir,'caminfo-dev.asr.sem', dev)
+  write_asrhyp_semhyp(args.outdir,'caminfo-dev.asr.shyp.sem', dev)
 
   write_trns_sem(args.outdir,'caminfo-test.sem', test)
   write_asrhyp_sem(args.outdir,'caminfo-test.asr.sem', test)
-
+  write_asrhyp_semhyp(args.outdir,'caminfo-test.asr.shyp.sem', test)
 
