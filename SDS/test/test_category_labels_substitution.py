@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-import os.path
+from __init__ import init_path
 
-__depth__ = 2
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+init_path()
 
 from SDS.components.slu import SLUPreprocessing, load_utterances, load_das
 

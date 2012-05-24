@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import sys
 import time
-import os.path
 
-__depth__ = 2
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+from __init__ import init_path
+
+init_path()
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
