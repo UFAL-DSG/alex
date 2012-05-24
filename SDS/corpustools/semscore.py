@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import glob
-import os.path
 import re
 import argparse
 import sys
 
 from collections import defaultdict
+from __init__ import init_path
 
-__depth__ = 2
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), *__depth__*[os.path.pardir])))
+init_path()
 
 from SDS.utils.string import split_by
+
 
 def load_semantics(file_name):
   f = open(file_name)

@@ -4,13 +4,14 @@
 import glob
 import os.path
 import argparse
-import collections
-import re
 import xml.dom.minidom
 import shutil
 
+from __init__ import init_path
+
+init_path()
+
 from SDS.utils.various import flatten, get_text_from_xml_node
-from SDS.utils.string import split_by
 
 """
 This program process CUED call log files and copies all audio into a destination directory.
