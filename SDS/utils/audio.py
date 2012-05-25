@@ -32,7 +32,10 @@ def load_wav(cfg, file_name):
 
   """
 
-  wf = wave.open(file_name, 'r')
+  try:
+    wf = wave.open(file_name, 'r')
+  except EOFError:
+    raise Exception('Input wave is corrupted: End of file.')
 
   if wf.getnchannels() != 1:
     raise Exception('Input wave is not in mono')
