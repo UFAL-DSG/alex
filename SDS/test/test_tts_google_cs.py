@@ -10,8 +10,8 @@ print "Testing Google TTS service"
 print "="*120
 print
 
-text = 'Dobry den. Dekujeme za zavolani.'
-language = 'cz'
+text = 'Dobrý den. Děkujeme za zavolání.'
+language = 'cs'
 sample_rate = 16000
 
 print "Synthesize text:", text
