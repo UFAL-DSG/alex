@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import sys
 import time
 
-import SDS.utils.audio as audio
-import SDS.utils.various as various
+import __init__
 
 from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD

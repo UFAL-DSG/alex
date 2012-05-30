@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import __init__
+
 import SDS.utils.audio as audio
 
 from SDS.components.asr.google import GoogleASR

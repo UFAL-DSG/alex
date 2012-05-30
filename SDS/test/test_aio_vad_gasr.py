@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import sys
 import time
+
+import __init__
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various

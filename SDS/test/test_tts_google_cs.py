@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import SDS.utils.cache as cache
+import __init__
+
 import SDS.utils.audio as audio
 
 from SDS.components.tts.google import GoogleTTS

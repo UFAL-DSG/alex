@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import glob
-import os.path
 import re
 import argparse
 import sys
 
 from collections import defaultdict
+import __init__
+
 
 from SDS.utils.string import split_by
+
 
 def load_semantics(file_name):
   f = open(file_name)

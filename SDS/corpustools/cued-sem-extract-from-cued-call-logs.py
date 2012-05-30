@@ -4,12 +4,11 @@
 import glob
 import os.path
 import argparse
-import collections
-import re
 import xml.dom.minidom
 import random
 
-from SDS.utils.string import split_by_comma, split_by
+import __init__
+
 from SDS.utils.various import flatten, get_text_from_xml_node
 
 """
