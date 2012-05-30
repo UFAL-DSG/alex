@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import __init__
-
+import SDS.utils.cache as cache
 import SDS.utils.audio as audio
 
-from SDS.components.tts.google import GoogleTTS
+from SDS.components.tts.flite import FliteTTS
 
-print "Testing Google TTS service"
+print "Testing Flite TTS"
 print "="*120
 print
 
-text = 'Dobry den. Dekujeme za zavolani.'
-language = 'cz'
+text = 'Hello. Thank you for calling. '
+language = 'en'
+voice = 'kal'
 sample_rate = 16000
 
 print "Synthesize text:", text
 print "Language:       ", language
+print "Voice:          ", voice
 print "Sample rate:    ", sample_rate
 print
 
@@ -25,20 +26,21 @@ cfg = {
       'sample_rate': sample_rate
     },
   'TTS': {
-    'Google': {
+    'Flite': {
       'debug': False,
-      'language' : language
+      'language' : language,
+      'voice': voice
     }
   }
 }
 
-tts = GoogleTTS(cfg)
+tts = FliteTTS(cfg)
 
 print 'calling TTS'
 wav = tts.synthesize(text)
 
-print 'saving the TTS audio in ./tmp/google_tts.wav'
-audio.save_wav(cfg, './tmp/google_tts.wav', wav)
+print 'saving the TTS audio in ./tmp/flite_tts.wav'
+audio.save_wav(cfg, './tmp/flite_tts.wav', wav)
 
 print 'playing audio'
 audio.play(cfg, wav)
