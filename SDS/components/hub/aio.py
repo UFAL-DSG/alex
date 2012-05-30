@@ -93,11 +93,13 @@ class AudioIO(multiprocessing.Process):
         return False
 
   def read_write_audio(self, p, stream, wf, play_buffer):
-    # send some of the available data to the output
-    #   it should not be blocking operation
-    # therefore:
-    #   1) do not send more then play_buffer_frames
-    #   2) send only if stream.get_write_available() is more then the frame size
+    """Send some of the available data to the output.
+    It should be a non-blocking operation.
+
+    Therefore:
+      1) do not send more then play_buffer_frames
+      2) send only if stream.get_write_available() is more then the frame size
+    """
     if self.audio_play.poll():
       while self.audio_play.poll() \
             and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size'] \

@@ -70,3 +70,44 @@ def split_by(text, splitter, opening_parentheses, closing_parentheses, quotes):
     split_list.append(text[segment_start:segment_end].strip())
 
   return split_list
+
+def parse_command(command):
+  """Parse the command name(var1="val1",...) into a dictionary strucure:
+
+    E.g. call(destination="1245",opt="X") will be parsed into:
+
+      { "name":        "call",
+        "destination": "1245",
+        "opt":         "X"}
+
+    Return the parsed command in a dictionary.
+  """
+
+  try:
+    i = command.index('(')
+  except ValueError:
+    raise Exception("Parsing error in: %s. Missing opening parenthesis." % command)
+
+  name = command[:i]
+  d = {"name": name}
+
+  # remove the parentheses
+  command_svs = command[i+1:len(command)-1]
+
+  if not command_svs:
+    # there are no parameters
+    return d
+
+  command_svs = split_by(command_svs, ',', '', '', '"')
+
+  for command_sv in command_svs:
+    i = split_by(command_sv, '=', '', '', '"')
+    if len(i) == 1:
+      raise Exception("Parsing error in: %s: %s. There is only variable name" % (command, str(i)))
+    elif len(i) == 2:
+      # there is slot name and value
+      d[i[0]] = i[1][1:-1]
+    else:
+      raise Exception("Parsing error in: %s: %s" % (command, str(i)))
+
+  return d

@@ -1,0 +1,383 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import pyaudio
+import wave
+import time
+import random
+import multiprocessing
+import sys
+import os.path
+import struct
+import array
+import pjsua as pj
+import threading
+from datetime import datetime
+
+import SDS.utils.audio as audio
+import SDS.utils.various as various
+import SDS.utils.string as string
+
+"""
+FIXME: There is confusion in naming packets, frames, and samples.
+       Ideally frames should be blocks of samples.
+
+"""
+
+# Logging callback
+def log_cb(level, str, len):
+    print str,
+
+class AccountCallback(pj.AccountCallback):
+  """ Callback to receive events from account
+
+  """
+
+  sem = None
+
+  def __init__(self, cfg, account=None):
+    pj.AccountCallback.__init__(self, account)
+
+    self.cfg = cfg
+
+  def on_incoming_call(self, call):
+    """ Notification on incoming call
+    """
+    print "Incoming call from ", call.info().remote_uri
+
+    call_cb = CallCallback(self.cfg, call)
+    call.set_callback(call_cb)
+
+    call.answer()
+
+  def wait(self):
+    self.sem = threading.Semaphore(0)
+    self.sem.acquire()
+
+  def on_reg_state(self):
+    if self.sem:
+      if self.account.info().reg_status >= 200:
+        self.sem.release()
+
+
+class CallCallback(pj.CallCallback):
+  """ Callback to receive events from Call
+  """
+
+  def __init__(self, cfg, call=None):
+    pj.CallCallback.__init__(self, call)
+
+    self.cfg = cfg
+
+    self.rec_id = None
+    self.output_file_name_recorded = os.path.join(self.cfg['Logging']['output_dir'],
+      'all-'+datetime.now().isoformat('-').replace(':', '-')+'.recorded.wav')
+    self.output_file_name_played = os.path.join(self.cfg['Logging']['output_dir'],
+      'all-'+datetime.now().isoformat('-').replace(':', '-')+'.played.wav')
+
+  # Notification when call state has changed
+  def on_state(self):
+    print "CallCallback::on_state : Call with", self.call.info().remote_uri,
+    print "is", self.call.info().state_text,
+    print "last code =", self.call.info().last_code,
+    print "(" + self.call.info().last_reason + ")"
+
+    if self.call.info().last_code == pj.CallState.DISCONNECTED:
+      pj.Lib.instance().recorder_destroy(self.recorded_id)
+      pj.Lib.instance().recorder_destroy(self.played_id)
+
+
+  def on_transfer_status(self, code, reason, final, cont):
+    print "CallCallback::on_transfer_status : Call with", self.call.info().remote_uri,
+    print "is", self.call.info().state_text,
+    print "last code =", self.call.info().last_code,
+    print "(" + self.call.info().last_reason + ")"
+
+    print code, reason, final, cont
+
+    return True
+
+  def on_transfer_request(self, dst, code):
+    print "CallCallback::on_transfer_request : Remote party transferring the call to ",
+    print dst, code
+
+    return 202
+
+  # Notification when call's media state has changed.
+  def on_media_state(self):
+    if self.call.info().media_state == pj.MediaState.ACTIVE:
+      print "CallCallback::on_media_state : Media is now active"
+      if not self.rec_id:
+        # Create wave recorders
+        self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
+        recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
+        self.played_id = pj.Lib.instance().create_recorder(self.output_file_name_played)
+        played_slot = pj.Lib.instance().recorder_get_slot(self.played_id)
+
+        # Connect the call to the wave recorder
+        call_slot = self.call.info().conf_slot
+        pj.Lib.instance().conf_connect(call_slot, recorded_slot)
+
+        # Connect the system to the wave recorder
+        # FIX: Now it duplicates recording from the call. It should be dumping what is played to
+        # the user
+        pj.Lib.instance().conf_connect(call_slot, played_slot)
+    else:
+      print "CallCallback::on_media_state : Media is inactive"
+
+  def on_dtmf_digit(self, digits):
+    print "Received digits:", digits
+
+
+class VoipIO(multiprocessing.Process):
+  """ VoipIO implements IO operations using a SIP protocol.
+
+  If enabled then it logs all recorded and played audio into a file.
+  The file is in RIFF wave in stereo, where left channel contains recorded audio and the right channel contains
+  played audio.
+  """
+
+  def __init__(self, cfg, commands, audio_record, audio_play, audio_played):
+    """ Initialize VoipIO
+
+    cfg - configuration dictionary
+
+    audio_record - inter-process connection for sending recorded audio.
+      Audio is divided into frames, each with the length of samples_per_buffer.
+
+    audio_play - inter-process connection for receiving audio which should to be played.
+      Audio must be divided into frames, each with the length of samples_per_buffer.
+
+    audio_played - inter-process connection for sending audio which was played.
+      Audio is divided into frames and synchronised with the recorded audio.
+    """
+
+    multiprocessing.Process.__init__(self)
+
+    self.cfg = cfg
+    self.commands = commands
+    self.audio_record = audio_record
+    self.audio_play = audio_play
+    self.audio_played = audio_played
+
+    self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
+                                         'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
+
+  def process_pending_commands(self):
+    """Process all pending commands.
+
+    Available commands:
+      stop()    - stop processing and exit the process
+      flush()   - flush input buffers.
+        Now it only flushes the input connection.
+        It is not able flush data already send to the sound card.
+
+      call(dst)     - make a call to the destination dst
+      transfer(dst) - transfer the existing call to the destination dst
+      hungup()      - hung up the existing call
+
+    Return True if the process should terminate.
+    """
+
+    while self.commands.poll():
+      command = self.commands.recv()
+
+      if command == 'stop()':
+        # discard all data in play buffer
+        while self.audio_play.poll():
+          data_play = self.audio_play.recv()
+
+        # stop recording and playing
+        self.wf.close()
+
+        return True
+
+      if command == 'flush()':
+        # discard all data in play buffer
+        while self.audio_play.poll():
+          data_play = self.audio_play.recv()
+
+        return False
+
+      if command.startswith('call('):
+        args = string.parse_command(command)
+        self.make_call(args['destination'])
+
+        return False
+
+      if command.startswith('transfer('):
+        args = string.parse_command(command)
+        self.transfer(args['destination'])
+
+        return False
+
+      if command == 'hangup()':
+        self.hungup()
+
+        return False
+
+
+      return False
+
+  def read_write_audio(self):
+    """Send some of the available data to the output.
+    It should be a non-blocking operation.
+
+    Therefore:
+      1) do not send more then play_buffer_frames
+      2) send only if stream.get_write_available() is more then the frame size
+    """
+    return
+
+    if self.audio_play.poll():
+      while self.audio_play.poll() \
+            and len(play_buffer) < self.cfg['VoipIO']['play_buffer_size'] \
+            and stream.get_write_available() > self.cfg['VoipIO']['samples_per_buffer']:
+
+        # send to play frames from input
+        data_play = self.audio_play.recv()
+        stream.write(data_play)
+
+        play_buffer.append(data_play)
+
+        if self.cfg['VoipIO']['debug']:
+          print '.',
+          sys.stdout.flush()
+
+    else:
+      data_play = b"\x00\x00"*self.cfg['VoipIO']['samples_per_buffer']
+
+      play_buffer.append(data_play)
+      if self.cfg['VoipIO']['debug']:
+        print '.',
+        sys.stdout.flush()
+
+    # record one packet of audio data
+    # it will be blocked until the data is recorded
+    data_rec = stream.read(self.cfg['VoipIO']['samples_per_buffer'])
+    # send recorded data it must be read at the other end
+    self.audio_record.send(data_rec)
+
+    # get played audio block
+    data_play = play_buffer.pop(0)
+
+    # send played audio
+    self.audio_played.send(data_play)
+
+    # save the recorded and played data
+    data_stereo = bytearray()
+    for i in range(self.cfg['VoipIO']['samples_per_buffer']):
+      data_stereo.extend(data_rec[i*2])
+      data_stereo.extend(data_rec[i*2+1])
+
+      # there might not be enough data to be played
+      # then add zeros
+      try:
+        data_stereo.extend(data_play[i*2])
+      except IndexError:
+        data_stereo.extend(b'\x00')
+
+      try:
+        data_stereo.extend(data_play[i*2+1])
+      except IndexError:
+        data_stereo.extend(b'\x00')
+
+    wf.writeframes(data_stereo)
+
+  def get_sip_uri_for_phone_number(self, dst):
+    sip_uri = "sip:"+dst+self.cfg['VoipIO']['domain']
+    return sip_uri
+
+  def is_sip_uri(self, dst):
+    return dst.startswith('sip:')
+
+  def make_call(self, uri):
+    try:
+        print "Making a call to", uri
+        return self.acc.make_call(uri, cb=CallCallback())
+    except pj.Error, e:
+        print "Exception: " + str(e)
+        return None
+
+  def transfer(self, uri):
+    """FIX: This does not work yet!"""
+    try:
+        print "Transferring the call to", uri
+        return self.call.transfer(uri)
+    except pj.Error, e:
+        print "Exception: " + str(e)
+        return None
+
+  def run(self):
+    self.wf = wave.open(self.output_file_name, 'w')
+    self.wf.setnchannels(2)
+    self.wf.setsampwidth(2)
+    self.wf.setframerate(self.cfg['Audio']['sample_rate'])
+
+    play_buffer_frames = 0
+
+    try:
+      # Create library instance
+      self.lib = pj.Lib()
+
+      # Init library with default config with some customization.
+
+      my_ua_cfg = pj.UAConfig()
+
+      my_media_cfg = pj.MediaConfig()
+      my_media_cfg.no_vad = True
+      my_media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
+
+      my_log_cfg = pj.LogConfig()
+      my_log_cfg.level = self.cfg['VoipIO']['pjsip_log_level']
+      my_log_cfg.callback = log_cb
+
+      self.lib.init(ua_cfg=my_ua_cfg, media_cfg=my_media_cfg, log_cfg=my_log_cfg)
+      self.lib.set_null_snd_dev()
+
+      # Create UDP transport which listens to any available port
+      self.transport = self.lib.create_transport(pj.TransportType.UDP, pj.TransportConfig(0))
+      print
+      print "Listening on", self.transport.info().host,
+      print "port", self.transport.info().port, "\n"
+
+      # Start the library
+      self.lib.start()
+
+      self.acc = self.lib.create_account(pj.AccountConfig(self.cfg['VoipIO']['domain'],
+                                                          self.cfg['VoipIO']['user'],
+                                                          self.cfg['VoipIO']['password']))
+
+      self.acc_cb = AccountCallback(self.cfg, self.acc)
+      self.acc.set_callback(self.acc_cb)
+      self.acc_cb.wait()
+
+      print
+      print
+      print "Registration complete, status=", self.acc.info().reg_status,  "(" + self.acc.info().reg_reason + ")"
+
+      my_sip_uri = "sip:" + self.transport.info().host + ":" + str(self.transport.info().port)
+
+      # this is a play buffer for synchronization with recorded audio
+      self.play_buffer = []
+
+      while 1:
+        # process all pending commands
+        if self.process_pending_commands():
+          return
+
+        # process audio data
+        self.read_write_audio()
+
+
+      # Shutdown the library
+      self.transport = None
+      self.acc.delete()
+      self.acc = None
+      self.lib.destroy()
+      self.lib = None
+
+    except pj.Error, e:
+        print "Exception: " + str(e)
+        self.lib.destroy()
+        self.lib = None
