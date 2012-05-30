@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import glob
-import os.path
 import collections
-import re
 
-from SDS.utils.string import split_by_comma, split_by
+import __init__
+
+from SDS.utils.string import split_by_comma
+
 
 class CUEDSlot:
   def __init__(self, slot):
