@@ -6,9 +6,7 @@ import os.path
 import re
 import argparse
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.corpustools.cuedda import CUEDDialogueAct
 

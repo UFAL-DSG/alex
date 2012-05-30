@@ -6,9 +6,8 @@ import argparse
 import sys
 
 from collections import defaultdict
-from __init__ import init_path
+import __init__
 
-init_path()
 
 from SDS.utils.string import split_by
 

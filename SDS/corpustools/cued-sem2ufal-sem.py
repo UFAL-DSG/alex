@@ -7,9 +7,7 @@ import collections
 import re
 import argparse
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.utils.string import split_by
 from SDS.corpustools.cuedda import CUEDDialogueAct

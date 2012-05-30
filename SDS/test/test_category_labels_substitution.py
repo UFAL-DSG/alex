@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.components.slu import SLUPreprocessing, load_utterances, load_das
 

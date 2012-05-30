@@ -3,9 +3,7 @@
 
 import collections
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.utils.string import split_by_comma
 

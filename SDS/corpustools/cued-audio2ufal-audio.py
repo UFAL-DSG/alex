@@ -7,9 +7,7 @@ import argparse
 import xml.dom.minidom
 import shutil
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.utils.various import flatten, get_text_from_xml_node
 

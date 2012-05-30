@@ -4,9 +4,7 @@
 import multiprocessing
 import time
 
-from __init__ import init_path
-
-init_path()
+import __init__
 
 from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD
