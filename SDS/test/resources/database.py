@@ -20,8 +20,7 @@ database = {
   },
 
   "area": {
-      "central": ["central", "centre"],
-      "dontcare": ["dontcare",],
+      "central": ["central","centre"],
       "east": ["east",],
       "north": ["north",],
       "riverside": ["riverside",],
@@ -32,14 +31,12 @@ database = {
   "drinks": {
       "beer": ["beer",],
       "cocktails": ["cocktails",],
-      "dontcare": ["dontcare",],
       "soft drinks": ["soft drinks", "soft"],
       "wine": ["wine",],
   },
 
   "food": {
       "chinese": ["chinese",],
-      "dontcare": ["dontcare",],
       "english": ["english",],
       "fish": ["fish",],
       "french": ["french",],
@@ -51,7 +48,6 @@ database = {
 
   "music": {
       "classical": ["classical",],
-      "dontcare": ["dontcare",],
       "ethnic": ["ethnic",],
       "folk": ["folk",],
       "jazz": ["jazz",],
@@ -113,7 +109,6 @@ database = {
   "near": {
       "castle": ["castle",],
       "cinema": ["cinema",],
-      "dontcare": ["dontcare",],
       "fountain": ["fountain",],
       "main square": ["main square", "main", "square"],
       "museum": ["museum",],
@@ -121,7 +116,7 @@ database = {
       "police station": ["police station", "police"],
       "post office": ["post office", "post"],
       "railway station": ["railway station", "railway"],
-      "river jay": ["river jay", "river", "jay"],
+      "river jay": ["river jay", "river", "jay", "riverside"],
       "royal hotel": ["royal hotel", "royal"],
       "tourist information": ["tourist information", "tourist", "information"],
       "tower": ["tower",],
@@ -136,9 +131,8 @@ database = {
 
   "pricerange": {
       "cheap": ["cheap", "cheaper"],
-      "dontcare": ["dontcare",],
-      "expensive": ["expensive",],
-      "moderate": ["moderate",],
+      "expensive": ["expensive", "luxurious"],
+      "moderate": ["mid priced", "mid range", "mid", "medium", "midpriced", "midprice", "reasonably priced", "moderate", "moderately"],
   },
 
   "stars": {
@@ -146,12 +140,11 @@ database = {
       "2": ["2", "two"],
       "3": ["3", "three"],
       "4": ["4", "four"],
-      "5": ["5", "five"],
-      "dontcare": ["dontcare",],
+      "5": ["5", "five"], 
   },
 
   "task": {
-      "find": ["find",],
+      "find": ["find", "looking"],
   },
 
   "type": {
