@@ -5,6 +5,8 @@ import multiprocessing
 import sys
 import time
 
+import __init__
+
 import SDS.utils.audio as audio
 import SDS.utils.various as various
 from SDS.components.hub.vio import VoipIO
@@ -13,13 +15,12 @@ from SDS.components.hub.vio import VoipIO
 
 cfg = {
   'Audio': {
-    'sample_rate': 8000
+    'sample_rate': 8000, 
+    'samples_per_frame': 128,
   },
   'VoipIO': {
     'pjsip_log_level': 3,
     'debug': True,
-    'vad': True,
-    'samples_per_frame': 128,
 
     'domain': 'your_domain',
     'user': 'your_user',
@@ -35,7 +36,7 @@ print "="*120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['VoipIO']['samples_per_frame'])
+wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
 # remove the last frame
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send vio_commands

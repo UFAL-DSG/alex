@@ -148,7 +148,7 @@ class VAD(multiprocessing.Process):
           self.audio_out.send('speech_start()')
           # create new logging file
           self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
-                                               'trn-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
+                                               'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
           if self.cfg['VAD']['debug']:
             print self.output_file_name
@@ -187,7 +187,7 @@ class VAD(multiprocessing.Process):
 
           # save the recorded and played data
           data_stereo = bytearray()
-          for i in range(self.cfg['AudioIO']['samples_per_frame']):
+          for i in range(self.cfg['Audio']['samples_per_frame']):
             data_stereo.extend(data_rec[i*2])
             data_stereo.extend(data_rec[i*2+1])
             # there might not be enough data to be played

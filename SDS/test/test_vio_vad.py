@@ -14,13 +14,12 @@ from SDS.components.hub.vad import VAD
 
 cfg = {
   'Audio': {
-      'sample_rate': 16000
+    'sample_rate': 8000, 
+    'samples_per_frame': 128,
   },
   'VoipIO': {
     'pjsip_log_level': 3,
     'debug': True,
-    'vad': True,
-    'samples_per_frame': 128,
 
     'domain': 'your_domain',
     'user': 'your_user',
@@ -33,7 +32,8 @@ cfg = {
     'power_threshold_multiplier': 1,
     'power_adaptation_frames': 20,
     'power_decision_frames': 25,
-    'power_decision_speech_threshold': 0.7,
+#    'power_decision_speech_threshold': 0.7,
+    'power_decision_speech_threshold': 0.3,
     'power_decision_non_speech_threshold': 0.2,
   },
   'Logging': {
@@ -46,7 +46,7 @@ print "="*120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['VoipIO']['samples_per_frame'])
+wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
 # remove the last frame
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send vio_commands

@@ -13,11 +13,11 @@ from SDS.components.hub.tts import TTS
 
 cfg = {
   'Audio': {
-    'sample_rate': 16000
+    'sample_rate': 16000, 
+    'samples_per_frame': 80,
   },
   'AudioIO': {
     'debug': False,
-    'samples_per_frame': 80,
     'play_buffer_size': 70,
   },
   'VAD': {

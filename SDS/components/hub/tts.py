@@ -68,7 +68,7 @@ class TTS(multiprocessing.Process):
         sys.stdout.flush()
         
       wav = self.tts.synthesize(text)
-      wav = various.split_to_bins(wav, 2*self.cfg['AudioIO']['samples_per_frame'])
+      wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
       
       for frame in wav:
         self.audio_out.send(frame)

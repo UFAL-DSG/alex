@@ -248,22 +248,19 @@ class VoipIO(multiprocessing.Process):
       2) send only if stream.get_write_available() is more then the frame size
     """
 
-    if self.audio_play.poll():
-      while self.audio_play.poll() \
-            and self.mem_player.get_write_available() > self.cfg['VoipIO']['samples_per_frame']*2:
-
-        # send to play frames from input
-        data_play = self.audio_play.recv()
-        if len(data_play) == self.cfg['VoipIO']['samples_per_frame']*2:
-          self.mem_player.put_frame(data_play)
+    if self.audio_play.poll()and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
+      # send a frame from input to be played
+      data_play = self.audio_play.recv()
+      if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
+        self.mem_player.put_frame(data_play)
 
         if self.cfg['VoipIO']['debug']:
           print '.',
           sys.stdout.flush()
 
-    if self.mem_capture.get_read_available() > self.cfg['VoipIO']['samples_per_frame']*2:
+    if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
+      # get and send recorded data, it must be read at the other end
       data_rec = self.mem_capture.get_frame()
-      # send recorded data it must be read at the other end
       self.audio_record.send(data_rec)
       if self.cfg['VoipIO']['debug']:
         print '+',
@@ -338,7 +335,8 @@ class VoipIO(multiprocessing.Process):
 
       media_cfg = pj.MediaConfig()
       media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
-      media_cfg.audio_frame_ptime = int(1000*self.cfg['VoipIO']['samples_per_frame']/self.cfg['Audio']['sample_rate'])
+      media_cfg.audio_frame_ptime = int(1000*self.cfg['Audio']['samples_per_frame']/self.cfg['Audio']['sample_rate'])
+      print self.cfg['Audio']['samples_per_frame'], media_cfg.audio_frame_ptime
       media_cfg.no_vad = True
       media_cfg.enable_ice = False
 

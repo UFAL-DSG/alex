@@ -103,7 +103,7 @@ class AudioIO(multiprocessing.Process):
     if self.audio_play.poll():
       while self.audio_play.poll() \
             and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size'] \
-            and stream.get_write_available() > self.cfg['AudioIO']['samples_per_frame']:
+            and stream.get_write_available() > self.cfg['Audio']['samples_per_frame']:
 
         # send to play frames from input
         data_play = self.audio_play.recv()
@@ -116,7 +116,7 @@ class AudioIO(multiprocessing.Process):
           sys.stdout.flush()
 
     else:
-      data_play = b"\x00\x00"*self.cfg['AudioIO']['samples_per_frame']
+      data_play = b"\x00\x00"*self.cfg['Audio']['samples_per_frame']
 
       play_buffer.append(data_play)
       if self.cfg['AudioIO']['debug']:
@@ -125,7 +125,7 @@ class AudioIO(multiprocessing.Process):
 
     # record one packet of audio data
     # it will be blocked until the data is recorded
-    data_rec = stream.read(self.cfg['AudioIO']['samples_per_frame'])
+    data_rec = stream.read(self.cfg['Audio']['samples_per_frame'])
     # send recorded data it must be read at the other end
     self.audio_record.send(data_rec)
 
@@ -137,7 +137,7 @@ class AudioIO(multiprocessing.Process):
 
     # save the recorded and played data
     data_stereo = bytearray()
-    for i in range(self.cfg['AudioIO']['samples_per_frame']):
+    for i in range(self.cfg['Audio']['samples_per_frame']):
       data_stereo.extend(data_rec[i*2])
       data_stereo.extend(data_rec[i*2+1])
 
@@ -170,7 +170,7 @@ class AudioIO(multiprocessing.Process):
                     rate = self.cfg['Audio']['sample_rate'],
                     input = True,
                     output = True,
-                    frames_per_buffer = self.cfg['AudioIO']['samples_per_frame'])
+                    frames_per_buffer = self.cfg['Audio']['samples_per_frame'])
 
 
     # this is a play buffer for synchronization with recorded audio
