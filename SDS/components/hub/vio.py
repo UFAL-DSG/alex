@@ -208,15 +208,14 @@ class VoipIO(multiprocessing.Process):
         while self.audio_play.poll():
           data_play = self.audio_play.recv()
 
-        # stop recording and playing
-        self.wf.close()
-
         return True
 
       if command == 'flush()':
         # discard all data in play buffer
         while self.audio_play.poll():
           data_play = self.audio_play.recv()
+
+        #self.mem_player.flush()
 
         return False
 
@@ -248,62 +247,19 @@ class VoipIO(multiprocessing.Process):
       1) do not send more then play_buffer_frames
       2) send only if stream.get_write_available() is more then the frame size
     """
-    return
 
     if self.audio_play.poll():
       while self.audio_play.poll() \
-            and len(play_buffer) < self.cfg['VoipIO']['play_buffer_size'] \
-            and stream.get_write_available() > self.cfg['VoipIO']['samples_per_frame']:
+            and self.mem_player.get_write_available() > self.cfg['VoipIO']['samples_per_frame']:
 
         # send to play frames from input
         data_play = self.audio_play.recv()
-        stream.write(data_play)
-
-        play_buffer.append(data_play)
+        if len(data_play) == self.cfg['VoipIO']['samples_per_frame']*2:
+          self.mem_player.put_frame(data_play)
 
         if self.cfg['VoipIO']['debug']:
           print '.',
           sys.stdout.flush()
-
-    else:
-      data_play = b"\x00\x00"*self.cfg['VoipIO']['samples_per_frame']
-
-      play_buffer.append(data_play)
-      if self.cfg['VoipIO']['debug']:
-        print '.',
-        sys.stdout.flush()
-
-    # record one packet of audio data
-    # it will be blocked until the data is recorded
-    data_rec = stream.read(self.cfg['VoipIO']['samples_per_frame'])
-    # send recorded data it must be read at the other end
-    self.audio_record.send(data_rec)
-
-    # get played audio block
-    data_play = play_buffer.pop(0)
-
-    # send played audio
-    self.audio_played.send(data_play)
-
-    # save the recorded and played data
-    data_stereo = bytearray()
-    for i in range(self.cfg['VoipIO']['samples_per_frame']):
-      data_stereo.extend(data_rec[i*2])
-      data_stereo.extend(data_rec[i*2+1])
-
-      # there might not be enough data to be played
-      # then add zeros
-      try:
-        data_stereo.extend(data_play[i*2])
-      except IndexError:
-        data_stereo.extend(b'\x00')
-
-      try:
-        data_stereo.extend(data_play[i*2+1])
-      except IndexError:
-        data_stereo.extend(b'\x00')
-
-    wf.writeframes(data_stereo)
 
   def get_sip_uri_for_phone_number(self, dst):
     sip_uri = "sip:"+dst+self.cfg['VoipIO']['domain']
@@ -331,6 +287,15 @@ class VoipIO(multiprocessing.Process):
         print "Exception: " + str(e)
         return None
 
+  def hangup(self):
+    try:
+        if self.cfg['VoipIO']['debug']:
+          print "Hung up the call"
+        return self.call.hungup()
+    except pj.Error, e:
+        print "Exception: " + str(e)
+        return None
+
   def on_incoming_call(self, remote_uri):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_incoming_call - from ", remote_uri
@@ -348,13 +313,6 @@ class VoipIO(multiprocessing.Process):
       print "VoipIO::on_call_disconnected"
 
   def run(self):
-    self.wf = wave.open(self.output_file_name, 'w')
-    self.wf.setnchannels(2)
-    self.wf.setsampwidth(2)
-    self.wf.setframerate(self.cfg['Audio']['sample_rate'])
-
-    play_buffer_frames = 0
-
     try:
       # Create library instance
       self.lib = pj.Lib()
@@ -402,28 +360,7 @@ class VoipIO(multiprocessing.Process):
 
       # Create memory player
       self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
-      #self.mem_player_cb = pj.MemPlayerCallback(self.mem_player)
-      #self.mem_player.set_callback(self.mem_player_cb)
       self.mem_player.create()
-
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
-
-      # this is a play buffer for synchronization with recorded audio
-      self.play_buffer = []
 
       while 1:
         # process all pending commands
@@ -433,6 +370,7 @@ class VoipIO(multiprocessing.Process):
         # process audio data
         self.read_write_audio()
 
+        time.sleep(0.002)
 
       # Shutdown the library
       self.transport = None
@@ -442,6 +380,6 @@ class VoipIO(multiprocessing.Process):
       self.lib = None
 
     except pj.Error, e:
-        print "Exception: " + str(e)
-        self.lib.destroy()
-        self.lib = None
+      print "Exception: " + str(e)
+      self.lib.destroy()
+      self.lib = None

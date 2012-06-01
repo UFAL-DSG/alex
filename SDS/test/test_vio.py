@@ -20,7 +20,6 @@ cfg = {
     'debug': True,
     'vad': True,
     'samples_per_frame': 128,
-    'play_buffer_size': 70,
 
     'domain': 'your_domain',
     'user': 'your_user',
