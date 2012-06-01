@@ -136,13 +136,13 @@ class CallCallback(pj.CallCallback):
 
         # Connect the call to the wave recorder
         pj.Lib.instance().conf_connect(call_slot, recorded_slot)
-
         # Connect the memory player to the wave recorder
         pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, played_slot)
 
+        # Connect the call to the memory capture
+        pj.Lib.instance().conf_connect(call_slot, self.voipio.mem_capture.port_slot)
         # Connect the memory player to the call
         pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
-
     else:
       print "CallCallback::on_media_state : Media is inactive"
 
@@ -250,7 +250,7 @@ class VoipIO(multiprocessing.Process):
 
     if self.audio_play.poll():
       while self.audio_play.poll() \
-            and self.mem_player.get_write_available() > self.cfg['VoipIO']['samples_per_frame']:
+            and self.mem_player.get_write_available() > self.cfg['VoipIO']['samples_per_frame']*2:
 
         # send to play frames from input
         data_play = self.audio_play.recv()
@@ -260,6 +260,15 @@ class VoipIO(multiprocessing.Process):
         if self.cfg['VoipIO']['debug']:
           print '.',
           sys.stdout.flush()
+
+    if self.mem_capture.get_read_available() > self.cfg['VoipIO']['samples_per_frame']*2:
+      data_rec = self.mem_capture.get_frame()
+      # send recorded data it must be read at the other end
+      self.audio_record.send(data_rec)
+      if self.cfg['VoipIO']['debug']:
+        print '+',
+        sys.stdout.flush()
+
 
   def get_sip_uri_for_phone_number(self, dst):
     sip_uri = "sip:"+dst+self.cfg['VoipIO']['domain']
@@ -297,6 +306,7 @@ class VoipIO(multiprocessing.Process):
         return None
 
   def on_incoming_call(self, remote_uri):
+    # FIX a message should be send that there is a new incomming call
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_incoming_call - from ", remote_uri
 
@@ -361,6 +371,10 @@ class VoipIO(multiprocessing.Process):
       # Create memory player
       self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
       self.mem_player.create()
+
+      # Create memory capture
+      self.mem_capture = pj.MemCapture(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+      self.mem_capture.create()
 
       while 1:
         # process all pending commands
