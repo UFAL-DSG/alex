@@ -17,7 +17,7 @@ cfg = {
   },
   'AudioIO': {
     'debug': False,
-    'samples_per_buffer': 80,
+    'samples_per_frame': 80,
     'play_buffer_size': 70,
   },
   'VAD': {

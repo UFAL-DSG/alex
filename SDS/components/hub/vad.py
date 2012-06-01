@@ -187,7 +187,7 @@ class VAD(multiprocessing.Process):
 
           # save the recorded and played data
           data_stereo = bytearray()
-          for i in range(self.cfg['AudioIO']['samples_per_buffer']):
+          for i in range(self.cfg['AudioIO']['samples_per_frame']):
             data_stereo.extend(data_rec[i*2])
             data_stereo.extend(data_rec[i*2+1])
             # there might not be enough data to be played
@@ -212,7 +212,6 @@ class VAD(multiprocessing.Process):
 
       # process audio data
       self.read_write_audio()
-
 
 
 

@@ -19,7 +19,7 @@ cfg = {
   },
   'AudioIO': {
     'debug': False,
-    'samples_per_buffer': 80,
+    'samples_per_frame': 80,
     'play_buffer_size': 70,
   },
   'VAD': {
@@ -50,7 +50,7 @@ print "="*120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['AudioIO']['samples_per_buffer'])
+wav = various.split_to_bins(wav, 2*cfg['AudioIO']['samples_per_frame'])
 # remove the last frame
 
 aio_commands, aio_child_commands = multiprocessing.Pipe() # used to send commands to AudioIO
@@ -113,5 +113,4 @@ vad.join()
 asr.join()
 
 print
-
 

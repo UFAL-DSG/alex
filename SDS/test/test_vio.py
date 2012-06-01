@@ -9,15 +9,17 @@ import SDS.utils.audio as audio
 import SDS.utils.various as various
 from SDS.components.hub.vio import VoipIO
 
+# FIX: samples_per_frame should be renamed to samples_per_frame
+
 cfg = {
   'Audio': {
-      'sample_rate': 8000
+    'sample_rate': 8000
   },
   'VoipIO': {
     'pjsip_log_level': 3,
     'debug': True,
     'vad': True,
-    'samples_per_buffer': 80,
+    'samples_per_frame': 128,
     'play_buffer_size': 70,
 
     'domain': 'your_domain',
@@ -34,7 +36,7 @@ print "="*120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['VoipIO']['samples_per_buffer'])
+wav = various.split_to_bins(wav, 2*cfg['VoipIO']['samples_per_frame'])
 # remove the last frame
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send vio_commands
@@ -70,5 +72,4 @@ vio_commands.send('stop()')
 vio.join()
 
 print
-
 

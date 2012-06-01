@@ -10,9 +10,10 @@ import sys
 import os.path
 import struct
 import array
-import pjsua as pj
 import threading
 from datetime import datetime
+
+import pjsuaxt as pj
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
@@ -28,24 +29,35 @@ FIXME: There is confusion in naming packets, frames, and samples.
 def log_cb(level, str, len):
     print str,
 
+def get_random_word(wordLen):
+  word = ''
+  for i in range(wordLen):
+    word += random.choice('\0x00ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\xFF')
+  return word
+
 class AccountCallback(pj.AccountCallback):
   """ Callback to receive events from account
 
   """
 
   sem = None
+  voipio = None
 
-  def __init__(self, cfg, account=None):
+  def __init__(self, cfg, account=None, voipio=None):
     pj.AccountCallback.__init__(self, account)
 
     self.cfg = cfg
+    self.voipio = voipio
 
   def on_incoming_call(self, call):
     """ Notification on incoming call
     """
+
+    self.voipio.on_incoming_call(call.info().remote_uri)
+
     print "Incoming call from ", call.info().remote_uri
 
-    call_cb = CallCallback(self.cfg, call)
+    call_cb = CallCallback(self.cfg, call, self.voipio)
     call.set_callback(call_cb)
 
     call.answer()
@@ -64,10 +76,11 @@ class CallCallback(pj.CallCallback):
   """ Callback to receive events from Call
   """
 
-  def __init__(self, cfg, call=None):
+  def __init__(self, cfg, call=None, voipio=None):
     pj.CallCallback.__init__(self, call)
 
     self.cfg = cfg
+    self.voipio = voipio
 
     self.rec_id = None
     self.output_file_name_recorded = os.path.join(self.cfg['Logging']['output_dir'],
@@ -82,10 +95,15 @@ class CallCallback(pj.CallCallback):
     print "last code =", self.call.info().last_code,
     print "(" + self.call.info().last_reason + ")"
 
-    if self.call.info().last_code == pj.CallState.DISCONNECTED:
+    if self.call.info().state == pj.CallState.CONNECTING:
+      self.voipio.on_call_connecting()
+    if self.call.info().state == pj.CallState.CONFIRMED:
+      self.voipio.on_call_confirmed()
+
+    if self.call.info().state == pj.CallState.DISCONNECTED:
       pj.Lib.instance().recorder_destroy(self.recorded_id)
       pj.Lib.instance().recorder_destroy(self.played_id)
-
+      self.voipio.on_call_disconnected()
 
   def on_transfer_status(self, code, reason, final, cont):
     print "CallCallback::on_transfer_status : Call with", self.call.info().remote_uri,
@@ -108,6 +126,8 @@ class CallCallback(pj.CallCallback):
     if self.call.info().media_state == pj.MediaState.ACTIVE:
       print "CallCallback::on_media_state : Media is now active"
       if not self.rec_id:
+        call_slot = self.call.info().conf_slot
+
         # Create wave recorders
         self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
         recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
@@ -115,13 +135,14 @@ class CallCallback(pj.CallCallback):
         played_slot = pj.Lib.instance().recorder_get_slot(self.played_id)
 
         # Connect the call to the wave recorder
-        call_slot = self.call.info().conf_slot
         pj.Lib.instance().conf_connect(call_slot, recorded_slot)
 
-        # Connect the system to the wave recorder
-        # FIX: Now it duplicates recording from the call. It should be dumping what is played to
-        # the user
-        pj.Lib.instance().conf_connect(call_slot, played_slot)
+        # Connect the memory player to the wave recorder
+        pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, played_slot)
+
+        # Connect the memory player to the call
+        pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
+
     else:
       print "CallCallback::on_media_state : Media is inactive"
 
@@ -143,10 +164,10 @@ class VoipIO(multiprocessing.Process):
     cfg - configuration dictionary
 
     audio_record - inter-process connection for sending recorded audio.
-      Audio is divided into frames, each with the length of samples_per_buffer.
+      Audio is divided into frames, each with the length of samples_per_frame.
 
     audio_play - inter-process connection for receiving audio which should to be played.
-      Audio must be divided into frames, each with the length of samples_per_buffer.
+      Audio must be divided into frames, each with the length of samples_per_frame.
 
     audio_played - inter-process connection for sending audio which was played.
       Audio is divided into frames and synchronised with the recorded audio.
@@ -232,7 +253,7 @@ class VoipIO(multiprocessing.Process):
     if self.audio_play.poll():
       while self.audio_play.poll() \
             and len(play_buffer) < self.cfg['VoipIO']['play_buffer_size'] \
-            and stream.get_write_available() > self.cfg['VoipIO']['samples_per_buffer']:
+            and stream.get_write_available() > self.cfg['VoipIO']['samples_per_frame']:
 
         # send to play frames from input
         data_play = self.audio_play.recv()
@@ -245,7 +266,7 @@ class VoipIO(multiprocessing.Process):
           sys.stdout.flush()
 
     else:
-      data_play = b"\x00\x00"*self.cfg['VoipIO']['samples_per_buffer']
+      data_play = b"\x00\x00"*self.cfg['VoipIO']['samples_per_frame']
 
       play_buffer.append(data_play)
       if self.cfg['VoipIO']['debug']:
@@ -254,7 +275,7 @@ class VoipIO(multiprocessing.Process):
 
     # record one packet of audio data
     # it will be blocked until the data is recorded
-    data_rec = stream.read(self.cfg['VoipIO']['samples_per_buffer'])
+    data_rec = stream.read(self.cfg['VoipIO']['samples_per_frame'])
     # send recorded data it must be read at the other end
     self.audio_record.send(data_rec)
 
@@ -266,7 +287,7 @@ class VoipIO(multiprocessing.Process):
 
     # save the recorded and played data
     data_stereo = bytearray()
-    for i in range(self.cfg['VoipIO']['samples_per_buffer']):
+    for i in range(self.cfg['VoipIO']['samples_per_frame']):
       data_stereo.extend(data_rec[i*2])
       data_stereo.extend(data_rec[i*2+1])
 
@@ -293,7 +314,8 @@ class VoipIO(multiprocessing.Process):
 
   def make_call(self, uri):
     try:
-        print "Making a call to", uri
+        if self.cfg['VoipIO']['debug']:
+          print "Making a call to", uri
         return self.acc.make_call(uri, cb=CallCallback())
     except pj.Error, e:
         print "Exception: " + str(e)
@@ -302,11 +324,28 @@ class VoipIO(multiprocessing.Process):
   def transfer(self, uri):
     """FIX: This does not work yet!"""
     try:
-        print "Transferring the call to", uri
+        if self.cfg['VoipIO']['debug']:
+          print "Transferring the call to", uri
         return self.call.transfer(uri)
     except pj.Error, e:
         print "Exception: " + str(e)
         return None
+
+  def on_incoming_call(self, remote_uri):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_incoming_call - from ", remote_uri
+
+  def on_call_connecting(self):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_call_connecting"
+
+  def on_call_confirmed(self):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_call_confirmed"
+
+  def on_call_disconnected(self):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_call_disconnected"
 
   def run(self):
     self.wf = wave.open(self.output_file_name, 'w')
@@ -322,17 +361,20 @@ class VoipIO(multiprocessing.Process):
 
       # Init library with default config with some customization.
 
-      my_ua_cfg = pj.UAConfig()
+      ua_cfg = pj.UAConfig()
+      ua_cfg.max_calls = 1
 
-      my_media_cfg = pj.MediaConfig()
-      my_media_cfg.no_vad = True
-      my_media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
+      log_cfg = pj.LogConfig()
+      log_cfg.level = self.cfg['VoipIO']['pjsip_log_level']
+      log_cfg.callback = log_cb
 
-      my_log_cfg = pj.LogConfig()
-      my_log_cfg.level = self.cfg['VoipIO']['pjsip_log_level']
-      my_log_cfg.callback = log_cb
+      media_cfg = pj.MediaConfig()
+      media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
+      media_cfg.audio_frame_ptime = int(1000*self.cfg['VoipIO']['samples_per_frame']/self.cfg['Audio']['sample_rate'])
+      media_cfg.no_vad = True
+      media_cfg.enable_ice = False
 
-      self.lib.init(ua_cfg=my_ua_cfg, media_cfg=my_media_cfg, log_cfg=my_log_cfg)
+      self.lib.init(ua_cfg, log_cfg, media_cfg)
       self.lib.set_null_snd_dev()
 
       # Create UDP transport which listens to any available port
@@ -348,7 +390,7 @@ class VoipIO(multiprocessing.Process):
                                                           self.cfg['VoipIO']['user'],
                                                           self.cfg['VoipIO']['password']))
 
-      self.acc_cb = AccountCallback(self.cfg, self.acc)
+      self.acc_cb = AccountCallback(self.cfg, self.acc, self)
       self.acc.set_callback(self.acc_cb)
       self.acc_cb.wait()
 
@@ -357,6 +399,28 @@ class VoipIO(multiprocessing.Process):
       print "Registration complete, status=", self.acc.info().reg_status,  "(" + self.acc.info().reg_reason + ")"
 
       my_sip_uri = "sip:" + self.transport.info().host + ":" + str(self.transport.info().port)
+
+      # Create memory player
+      self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+      #self.mem_player_cb = pj.MemPlayerCallback(self.mem_player)
+      #self.mem_player.set_callback(self.mem_player_cb)
+      self.mem_player.create()
+
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
+      self.mem_player.put_frame(get_random_word(self.cfg['VoipIO']['samples_per_frame']*2))
 
       # this is a play buffer for synchronization with recorded audio
       self.play_buffer = []

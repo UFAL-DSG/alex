@@ -28,7 +28,7 @@ be named as "wav" or "wav_*".
 def load_wav(cfg, file_name):
   """Reads all audio data from the file and returns it in a string.
 
-  The content is resampled into the default sample rate.
+  The content is re-sampled into the default sample rate.
 
   """
 
