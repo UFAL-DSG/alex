@@ -4,7 +4,19 @@
 class SDSException(Exception):
   pass
 
+class ASRException(SDSException):
+  pass
+
 class SLUException(SDSException):
+  pass
+
+class DMException(SDSException):
+  pass
+
+class NLGException(SDSException):
+  pass
+
+class TTSException(SDSException):
   pass
 
 class UtteranceException(SLUException):
