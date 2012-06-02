@@ -3,6 +3,7 @@
 
 import multiprocessing
 import time
+import sys
 
 import __init__
 
@@ -77,14 +78,26 @@ while count < max_count:
     audio_play.send(data_play)
 
   # read all VAD output audio
-  while vad_audio_out.poll():
+  if vad_audio_out.poll():
     data_rec = vad_audio_out.recv()
 
     if data_rec == 'speech_start()':
-      print 'Speech start'
+      print 'VAD:', 'Speech start'
     if data_rec == 'speech_end()':
-      print 'Speech end'
+      print 'VAD:', 'Speech end'
 
+  # read all messages from VoipIO
+  if vio_commands.poll():
+    message = vio_commands.recv()
+    print 'VoipIO:', message
+    
+  # read all messages from VAD
+  if vad_commands.poll():
+    message = vad_commands.recv()
+    print 'VAD:', message
+
+  sys.stdout.flush()
+  
 vio_commands.send('stop()')
 vad_commands.send('stop()')
 vio.join()

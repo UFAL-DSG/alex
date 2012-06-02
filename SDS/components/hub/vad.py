@@ -145,7 +145,9 @@ class VAD(multiprocessing.Process):
 
       if change:
         if change == 'speech':
+          # inform both the parent and the consumer
           self.audio_out.send('speech_start()')
+          self.commands.send('speech_start()')
           # create new logging file
           self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                                'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
@@ -159,7 +161,9 @@ class VAD(multiprocessing.Process):
           self.wf.setframerate(self.cfg['Audio']['sample_rate'])
 
         if change == 'non-speech':
+          # inform both the parent and the consumer
           self.audio_out.send('speech_end()')
+          self.commands.send('speech_end()')
           # close the current logging file
           if self.wf:
             self.wf.close()

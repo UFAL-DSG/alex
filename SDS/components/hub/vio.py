@@ -242,13 +242,10 @@ class VoipIO(multiprocessing.Process):
   def read_write_audio(self):
     """Send some of the available data to the output.
     It should be a non-blocking operation.
-
-    Therefore:
-      1) do not send more then play_buffer_frames
-      2) send only if stream.get_write_available() is more then the frame size
+    
     """
 
-    if self.audio_play.poll()and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
+    if self.audio_play.poll() and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
       # send a frame from input to be played
       data_play = self.audio_play.recv()
       if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
@@ -263,7 +260,7 @@ class VoipIO(multiprocessing.Process):
       data_rec = self.mem_capture.get_frame()
       self.audio_record.send(data_rec)
       if self.cfg['VoipIO']['debug']:
-        print '+',
+        print ',',
         sys.stdout.flush()
 
 
@@ -284,7 +281,7 @@ class VoipIO(multiprocessing.Process):
         return None
 
   def transfer(self, uri):
-    """FIX: This does not work yet!"""
+    """FIXME: This does not work yet!"""
     try:
         if self.cfg['VoipIO']['debug']:
           print "Transferring the call to", uri
@@ -303,21 +300,32 @@ class VoipIO(multiprocessing.Process):
         return None
 
   def on_incoming_call(self, remote_uri):
-    # FIX a message should be send that there is a new incomming call
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_incoming_call - from ", remote_uri
 
+    # send a message that there is a new incoming call
+    self.commands.send('incoming_call("%s")' % remote_uri)
+    
   def on_call_connecting(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_connecting"
+      
+    # send a message that the call is connecting
+    self.commands.send('call_connecting()')
 
   def on_call_confirmed(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_confirmed"
 
+    # send a message that the call is confirmed
+    self.commands.send('call_confirmed()')
+    
   def on_call_disconnected(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_disconnected"
+      
+    # send a message that the call is disconnected
+    self.commands.send('call_disconnected()')
 
   def run(self):
     try:

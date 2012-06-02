@@ -11,7 +11,7 @@ import SDS.utils.audio as audio
 import SDS.utils.various as various
 from SDS.components.hub.vio import VoipIO
 
-# FIX: samples_per_frame should be renamed to samples_per_frame
+# FIXME: samples_per_frame should be renamed to samples_per_frame
 
 cfg = {
   'Audio': {
@@ -40,6 +40,7 @@ wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
 # remove the last frame
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send vio_commands
+vio_messages, vio_child_messages = multiprocessing.Pipe() # used to send vio_messages
 audio_record, child_audio_record = multiprocessing.Pipe() # I read from this connection recorded audio
 audio_play, child_audio_play     = multiprocessing.Pipe() # I write in audio to be played
 audio_played, child_audio_played = multiprocessing.Pipe() # I read from this to get played audio
@@ -54,7 +55,7 @@ max_count = 25000
 while count < max_count:
   time.sleep(0.002)
   count += 1
-
+    
   # write one frame into the audio output
   if wav:
     data_play = wav.pop(0)
@@ -62,12 +63,19 @@ while count < max_count:
     audio_play.send(data_play)
 
   # read all recorded audio
-  while audio_record.poll():
+  if audio_record.poll():
     data_rec = audio_record.recv()
   # read all played audio
-  while audio_played.poll():
+  if audio_played.poll():
     data_played = audio_played.recv()
-
+    
+  # read all messages from VoipIO
+  if vio_commands.poll():
+    message = vio_commands.recv()
+    print 'VoipIO:', message
+    
+  sys.stdout.flush()
+    
 vio_commands.send('stop()')
 vio.join()
 
