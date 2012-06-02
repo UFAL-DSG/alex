@@ -9,9 +9,9 @@ import __init__
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
-from SDS.components.hub.vio import VoipIO
 
-# FIXME: samples_per_frame should be renamed to samples_per_frame
+from SDS.components.hub.vio import VoipIO
+from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
@@ -60,7 +60,7 @@ while count < max_count:
   if wav:
     data_play = wav.pop(0)
     #print len(wav), len(data_play)
-    audio_play.send(data_play)
+    audio_play.send(Frame(data_play))
 
   # read all recorded audio
   if audio_record.poll():
@@ -71,12 +71,15 @@ while count < max_count:
     
   # read all messages from VoipIO
   if vio_commands.poll():
-    message = vio_commands.recv()
-    print 'VoipIO:', message
+    command = vio_commands.recv()
+    if isinstance(command, Command):
+      print
+      print command
+      print
     
   sys.stdout.flush()
     
-vio_commands.send('stop()')
+vio_commands.send(Command('stop()'))
 vio.join()
 
 print

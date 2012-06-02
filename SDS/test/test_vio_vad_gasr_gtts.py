@@ -3,10 +3,11 @@
 
 import multiprocessing
 import time
+import sys
 
 import __init__
 
-from SDS.components.hub.aio import AudioIO
+from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
 from SDS.components.hub.tts import TTS
@@ -14,12 +15,16 @@ from SDS.components.hub.messages import Command, TTSText
 
 cfg = {
   'Audio': {
-    'sample_rate': 16000, 
-    'samples_per_frame': 80,
+    'sample_rate': 8000, 
+    'samples_per_frame': 128,
   },
-  'AudioIO': {
-    'debug': False,
-    'play_buffer_size': 70,
+  'VoipIO': {
+    'pjsip_log_level': 3,
+    'debug': True,
+
+    'domain': 'your_domain',
+    'user': 'your_user',
+    'password': 'your_password',
   },
   'VAD': {
     'debug': False,
@@ -32,7 +37,7 @@ cfg = {
     'power_decision_non_speech_threshold': 0.2,
   },
   'ASR': {
-    'debug': True,
+    'debug': False,
     'type': 'Google',
     'Google': {
       'debug': False,
@@ -55,10 +60,10 @@ cfg = {
 print "Test of the AudioIO, VAD, ASR and TTS components:"
 print "="*120
 
-aio_commands, aio_child_commands = multiprocessing.Pipe() # used to send commands to AudioIO
-aio_record, aio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
-aio_play, aio_child_play = multiprocessing.Pipe()         # I write in audio to be played
-aio_played, aio_child_played = multiprocessing.Pipe()     # I read from this to get played audio
+vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO
+vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
+vio_play, vio_child_play = multiprocessing.Pipe()         # I write in audio to be played
+vio_played, vio_child_played = multiprocessing.Pipe()     # I read from this to get played audio
                                                           #   which in sync with recorded signal
 
 vad_commands, vad_child_commands = multiprocessing.Pipe() # used to send commands to VAD
@@ -70,21 +75,21 @@ asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe() # used to read
 tts_commands, tts_child_commands = multiprocessing.Pipe() # used to send commands to TTS
 tts_text_in, tts_child_text_in = multiprocessing.Pipe()   # used to send TTS text
 
-command_connections = [aio_commands, vad_commands, asr_commands, tts_commands]
+command_connections = [vio_commands, vad_commands, asr_commands, tts_commands]
 
-non_command_connections = [aio_record, aio_child_record,
-                           aio_play, aio_child_play,
-                           aio_played, aio_child_played,
+non_command_connections = [vio_record, vio_child_record,
+                           vio_play, vio_child_play,
+                           vio_played, vio_child_played,
                            vad_audio_out, vad_child_audio_out,
                            asr_hypotheses_out, asr_child_hypotheses,
                            tts_text_in, tts_child_text_in]
 
-aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play, aio_child_played)
-vad = VAD(cfg, vad_child_commands, aio_record, aio_played, vad_child_audio_out)
+vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
+vad = VAD(cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
 asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-tts = TTS(cfg, tts_child_commands, tts_child_text_in, aio_play)
+tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
 
-aio.start()
+vio.start()
 vad.start()
 asr.start()
 tts.start()
@@ -92,7 +97,7 @@ tts.start()
 tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
 
 count = 0
-max_count = 15000
+max_count = 50000
 while count < max_count:
   time.sleep(0.002)
   count += 1
@@ -121,18 +126,22 @@ while count < max_count:
       print
       
 # stop processes
-aio_commands.send(Command('stop()'))
+vio_commands.send(Command('stop()'))
 vad_commands.send(Command('stop()'))
 asr_commands.send(Command('stop()'))
 tts_commands.send(Command('stop()'))
 
 # clean connections
+for c in command_connections:
+  while c.poll():
+    c.recv()
+
 for c in non_command_connections:
   while c.poll():
     c.recv()
 
 # wait for processes to stop
-aio.join()
+vio.join()
 vad.join()
 asr.join()
 tts.join()

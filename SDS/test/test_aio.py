@@ -8,7 +8,9 @@ import __init__
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
+
 from SDS.components.hub.aio import AudioIO
+from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
@@ -53,16 +55,16 @@ while count < max_count:
   if wav:
     data_play = wav.pop(0)
     #print len(wav), len(data_play)
-    audio_play.send(data_play)
+    audio_play.send(Frame(data_play))
 
   # read all recorded audio
-  while audio_record.poll():
+  if audio_record.poll():
     data_rec = audio_record.recv()
   # read all played audio
-  while audio_played.poll():
+  if audio_played.poll():
     data_played = audio_played.recv()
 
-aio_commands.send('stop()')
+aio_commands.send(Command('stop()'))
 aio.join()
 
 print

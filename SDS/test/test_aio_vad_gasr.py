@@ -12,6 +12,7 @@ import SDS.utils.various as various
 from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
+from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
@@ -69,6 +70,8 @@ aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play, aio_chi
 vad = VAD(cfg, vad_child_commands, aio_record, aio_played, vad_child_audio_out)
 asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
 
+command_connections = [aio_commands, vad_commands, asr_commands]
+
 non_command_connections = [aio_record, aio_child_record,
                            aio_play, aio_child_play,
                            aio_played, aio_child_played,
@@ -89,18 +92,27 @@ while count < max_count:
   if wav:
     data_play = wav.pop(0)
     #print len(wav), len(data_play)
-    aio_play.send(data_play)
+    aio_play.send(Frame(data_play))
 
   # read all ASR output audio
-  while asr_hypotheses_out.poll():
-    data_hyp = asr_hypotheses_out.recv()
+  if asr_hypotheses_out.poll():
+    asr_hyp = asr_hypotheses_out.recv()
 
-    print data_hyp
+    if isinstance(asr_hyp.hyp, ASRHyp):
+      print asr_hyp.hyp
 
+  # read all messages
+  for c in command_connections:
+    if c.poll():
+      command = c.recv()
+      print
+      print command
+      print
+      
 # stop processes
-aio_commands.send('stop()')
-vad_commands.send('stop()')
-asr_commands.send('stop()')
+aio_commands.send(Command('stop()'))
+vad_commands.send(Command('stop()'))
+asr_commands.send(Command('stop()'))
 
 # clean connections
 for c in non_command_connections:

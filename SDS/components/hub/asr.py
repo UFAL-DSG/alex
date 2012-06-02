@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
+import time
 import sys
 
 import SDS.components.asr.google as GASR
 
-from SDS.utils.exception import SDSException
-
-class ASRException(SDSException):
-  pass
+from SDS.components.hub.messages import Command, Frame
+from SDS.utils.exception import ASRException
 
 class ASR(multiprocessing.Process):
   """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
@@ -52,61 +51,67 @@ class ASR(multiprocessing.Process):
     while self.commands.poll():
       command = self.commands.recv()
 
-      if command == 'stop()':
-        return True
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          return True
 
-      if command == 'flush()':
-        # discard all data in in input buffers
-        while self.audio_in.poll():
-          data_in = self.audio_in.recv()
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in in input buffers
+          while self.audio_in.poll():
+            data_in = self.audio_in.recv()
 
-        self.asr.flush()
+          self.asr.flush()
 
-        return False
+          return False
 
   def read_audio_write_asr_hypotheses(self):
     # read input audio
     while self.audio_in.poll():
       # read recorded audio
       data_rec = self.audio_in.recv()
+      
+      if isinstance(data_rec, Frame):
+        dr_speech_start = False
+        if data_rec == "speech_start()":
+          dr_speech_start = "speech_start()"
+        elif data_rec == "speech_end()":
+          dr_speech_start = "speech_end()"
 
-      dr_speech_start = False
-      if data_rec == "speech_start()":
-        dr_speech_start = "speech_start()"
-      elif data_rec == "speech_end()":
-        dr_speech_start = "speech_end()"
+        # check consistency of the input command
+        if dr_speech_start:
+          if not ( (self.speech_start == False and dr_speech_start == "speech_start()") or
+                   (self.speech_start == "speech_start()" and dr_speech_start == "speech_end()")
+                 ):
+            raise ASRException('Commands received by ASR components are inconsistent - last command: %s - new command: %s' % (self.speech_start, data_rec))
 
-      # check consistency of the input command
-      if dr_speech_start:
-        if not ( (self.speech_start == False and dr_speech_start == "speech_start()") or
-                 (self.speech_start == "speech_start()" and dr_speech_start == "speech_end()")
-               ):
-          raise ASRException('Commands received by ASR components are inconsistent - last command: %s - new command: %s' % (self.speech_start, data_rec))
+        if data_rec == "speech_start()":
+          self.commands.send(Command("asr_start()"), 'ASR')
+          self.speech_start = "speech_start()"
 
-      if data_rec == "speech_start()":
-        self.speech_start = "speech_start()"
+          if self.cfg['ASR']['debug']:
+            print 'ASR: speech_start()'
+            sys.stdout.flush()
 
-        if self.cfg['ASR']['debug']:
-          print 'ASR: speech_start()'
-          sys.stdout.flush()
+        elif data_rec == "speech_end()":
+          self.speech_start = False
 
-      elif data_rec == "speech_end()":
-        self.speech_start = False
+          if self.cfg['ASR']['debug']:
+            print 'ASR: speech_end()'
+            sys.stdout.flush()
 
-        if self.cfg['ASR']['debug']:
-          print 'ASR: speech_end()'
-          sys.stdout.flush()
+          hyp = self.asr.hyp_out()
+          self.hypotheses_out.send(ASRHyp(hyp))
+          self.commands.send(Command("asr_end()", 'ASR'))
 
-        hyp = self.asr.hyp_out()
-        self.hypotheses_out.send(hyp)
-
-      elif self.speech_start == "speech_start()":
-        self.asr.rec_in(data_rec)
+        elif self.speech_start == "speech_start()":
+          self.asr.rec_in(data_rec)
 
   def run(self):
     self.speech_start = False
 
     while 1:
+      time.sleep(0.002)
+      
       # process all pending commands
       if self.process_pending_commands():
         return

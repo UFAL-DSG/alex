@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
+import time
 import sys
 
 import SDS.components.tts.google as GTTS
 import SDS.utils.various as various
 
-from SDS.utils.exception import SDSException
-
-class TTSException(SDSException):
-  pass
+from SDS.components.hub.messages import Command, Frame, TTSText
+from SDS.utils.exception import TTSException
 
 class TTS(multiprocessing.Process):
   """ TTS synthesizes input text and returns speech audio signal.
@@ -47,35 +46,50 @@ class TTS(multiprocessing.Process):
     while self.commands.poll():
       command = self.commands.recv()
 
-      if command == 'stop()':
-        return True
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          return True
 
-      if command == 'flush()':
-        # discard all data in in input buffers
-        while self.text_in.poll():
-          data_in = self.text_in.recv()
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in in input buffers
+          while self.text_in.poll():
+            data_in = self.text_in.recv()
 
-        return False
+          return False
 
   def read_text_write_audio(self):
     # read input audio
     while self.text_in.poll():
-      # read recorded audio
-      text = self.text_in.recv()
+      # read the text be synthesised
+      data_tts = self.text_in.recv()
 
-      if self.cfg['TTS']['debug']:
-        print 'TTS: Synthesize: ', text
-        sys.stdout.flush()
+      if isinstance(data_tts, TTSText):
+        self.commands.send(Command('tts_start()', 'TTS'))
+        text = data_tts.text
         
-      wav = self.tts.synthesize(text)
-      wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
-      
-      for frame in wav:
-        self.audio_out.send(frame)
+        if self.cfg['TTS']['debug']:
+          print 'TTS: Synthesize: ', text
+          sys.stdout.flush()
+          
+        wav = self.tts.synthesize(text)
+        
+        # FIXME: split the wave so that the last bin is of the size of the full frame
+        # this bug is at many places in the code
+        wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
+        
+        self.audio_out.send(Command('utterance_start()', 'TTS'))
+        for frame in wav:
+          self.audio_out.send(Frame(frame))
+        self.audio_out.send(Command('utterance_end()', 'TTS'))
+          
+        self.commands.send(Command('tts_end()', 'TTS'))
       
   def run(self):
     self.command = None
+    
     while 1:
+      time.sleep(0.002)
+      
       # process all pending commands
       if self.process_pending_commands():
         return

@@ -80,7 +80,7 @@ class GoogleASR():
     Output hypotheses is obtained by calling hyp_out().
     """
 
-    self.rec_buffer.append(frame)
+    self.rec_buffer.append(frame.payload)
     return
 
   def hyp_out(self):

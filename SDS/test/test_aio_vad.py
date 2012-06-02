@@ -11,6 +11,7 @@ import SDS.utils.various as various
 
 from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD
+from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
@@ -56,6 +57,8 @@ vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read outpu
 aio = AudioIO(cfg, aio_child_commands, child_audio_record, child_audio_play, child_audio_played)
 vad = VAD(cfg, vad_child_commands, audio_record, audio_played, vad_child_audio_out)
 
+command_connections = [aio_commands, vad_commands]
+
 aio.start()
 vad.start()
 
@@ -69,19 +72,28 @@ while count < max_count:
   if wav:
     data_play = wav.pop(0)
     #print len(wav), len(data_play)
-    audio_play.send(data_play)
+    audio_play.send(Frame(data_play))
 
   # read all VAD output audio
-  while vad_audio_out.poll():
-    data_rec = vad_audio_out.recv()
+  if vad_audio_out.poll():
+    data_vad = vad_audio_out.recv()
 
-    if data_rec == 'speech_start()':
-      print 'Speech start'
-    if data_rec == 'speech_end()':
-      print 'Speech end'
+    if isinstance(data_vad, Command):
+      if data_vad.parsed['__name__'] == 'speech_start':
+        print 'Speech start'
+      if data_vad.parsed['__name__'] == 'speech_end':
+        print 'Speech end'
 
-aio_commands.send('stop()')
-vad_commands.send('stop()')
+  # read all messages
+  for c in command_connections:
+    if c.poll():
+      command = c.recv()
+      print
+      print command
+      print
+      
+aio_commands.send(Command('stop()'))
+vad_commands.send(Command('stop()'))
 aio.join()
 vad.join()
 

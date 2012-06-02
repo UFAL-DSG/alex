@@ -15,6 +15,8 @@ from datetime import datetime
 import SDS.utils.audio as audio
 import SDS.utils.various as various
 
+from SDS.components.hub.messages import Command, Frame
+
 """
 FIXME: There is confusion in naming packets, frames, and samples.
        Ideally frames should be blocks of samples.
@@ -71,26 +73,27 @@ class AudioIO(multiprocessing.Process):
 
     while self.commands.poll():
       command = self.commands.recv()
+      
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
 
-      if command == 'stop()':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
+          # stop recording and playing
+          stream.stop_stream()
+          stream.close()
+          p.terminate()
+          wf.close()
 
-        # stop recording and playing
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-        wf.close()
+          return True
 
-        return True
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
 
-      if command == 'flush()':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
-
-        return False
+          return False
 
   def read_write_audio(self, p, stream, wf, play_buffer):
     """Send some of the available data to the output.
@@ -107,16 +110,23 @@ class AudioIO(multiprocessing.Process):
 
         # send to play frames from input
         data_play = self.audio_play.recv()
-        stream.write(data_play)
+        if isinstance(data_play, Frame):
+          stream.write(data_play.payload)
 
-        play_buffer.append(data_play)
+          play_buffer.append(data_play)
 
-        if self.cfg['AudioIO']['debug']:
-          print '.',
-          sys.stdout.flush()
+          if self.cfg['AudioIO']['debug']:
+            print '.',
+            sys.stdout.flush()
+            
+        elif isinstance(data_play, Command):
+          if data_play.parsed['__name__'] == 'utterance_start':
+            self.commands.send(Command('play_utterance_start()', 'AudioIO'))
+          if data_play.parsed['__name__'] == 'utterance_end':
+            self.commands.send(Command('play_utterance_end()', 'AudioIO'))
 
     else:
-      data_play = b"\x00\x00"*self.cfg['Audio']['samples_per_frame']
+      data_play = Frame(b"\x00\x00"*self.cfg['Audio']['samples_per_frame'])
 
       play_buffer.append(data_play)
       if self.cfg['AudioIO']['debug']:
@@ -127,7 +137,7 @@ class AudioIO(multiprocessing.Process):
     # it will be blocked until the data is recorded
     data_rec = stream.read(self.cfg['Audio']['samples_per_frame'])
     # send recorded data it must be read at the other end
-    self.audio_record.send(data_rec)
+    self.audio_record.send(Frame(data_rec))
 
     # get played audio block
     data_play = play_buffer.pop(0)

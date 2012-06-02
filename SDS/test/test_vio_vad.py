@@ -12,6 +12,7 @@ import SDS.utils.various as various
 
 from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
+from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
@@ -33,8 +34,7 @@ cfg = {
     'power_threshold_multiplier': 1,
     'power_adaptation_frames': 20,
     'power_decision_frames': 25,
-#    'power_decision_speech_threshold': 0.7,
-    'power_decision_speech_threshold': 0.3,
+    'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
   },
   'Logging': {
@@ -62,6 +62,8 @@ vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read outpu
 vio = VoipIO(cfg, vio_child_commands, child_audio_record, child_audio_play, child_audio_played)
 vad = VAD(cfg, vad_child_commands, audio_record, audio_played, vad_child_audio_out)
 
+command_connections = [vio_commands, vad_commands]
+
 vio.start()
 vad.start()
 
@@ -75,31 +77,30 @@ while count < max_count:
   if wav:
     data_play = wav.pop(0)
     #print len(wav), len(data_play)
-    audio_play.send(data_play)
+    audio_play.send(Frame(data_play))
 
   # read all VAD output audio
   if vad_audio_out.poll():
-    data_rec = vad_audio_out.recv()
-
-    if data_rec == 'speech_start()':
-      print 'VAD:', 'Speech start'
-    if data_rec == 'speech_end()':
-      print 'VAD:', 'Speech end'
-
-  # read all messages from VoipIO
-  if vio_commands.poll():
-    message = vio_commands.recv()
-    print 'VoipIO:', message
+    data_vad = vad_audio_out.recv()
     
-  # read all messages from VAD
-  if vad_commands.poll():
-    message = vad_commands.recv()
-    print 'VAD:', message
+    if isinstance(data_vad, Command):
+      if data_vad.parsed['__name__'] == 'speech_start':
+        print 'VAD:', 'Speech start'
+      if data_vad.parsed['__name__'] == 'speech_end':
+        print 'VAD:', 'Speech end'
+
+  # read all messages
+  for c in command_connections:
+    if c.poll():
+      command = c.recv()
+      print
+      print command
+      print
 
   sys.stdout.flush()
   
-vio_commands.send('stop()')
-vad_commands.send('stop()')
+vio_commands.send(Command('stop()'))
+vad_commands.send(Command('stop()'))
 vio.join()
 vad.join()
 

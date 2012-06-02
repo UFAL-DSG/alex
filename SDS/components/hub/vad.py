@@ -6,9 +6,13 @@ import os.path
 import struct
 import wave
 import sys
-from datetime import datetime
 import math
+import time
+
+from datetime import datetime
 from collections import deque
+
+from SDS.components.hub.messages import Command, Frame
 
 """
 FIXME: There is confusion in naming packets, frames, and samples.
@@ -61,21 +65,22 @@ class VAD(multiprocessing.Process):
     while self.commands.poll():
       command = self.commands.recv()
 
-      if command == 'stop()':
-        # stop recording and playing
-        if self.wf:
-          self.wf.close()
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          # stop recording and playing
+          if self.wf:
+            self.wf.close()
 
-        return True
+          return True
 
-      if command == 'flush()':
-        # discard all data in in input buffers
-        while self.audio_recorded_in.poll():
-          data_play = self.audio_recorded_in.recv()
-        while self.audio_played_in.poll():
-          data_play = self.audio_played_in.recv()
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in in input buffers
+          while self.audio_recorded_in.poll():
+            data_play = self.audio_recorded_in.recv()
+          while self.audio_played_in.poll():
+            data_play = self.audio_played_in.recv()
 
-        return False
+          return False
 
   def vad(self, data):
     speech_segment = False
@@ -128,88 +133,91 @@ class VAD(multiprocessing.Process):
     while self.audio_recorded_in.poll():
       # read recorded audio
       data_rec = self.audio_recorded_in.recv()
-      # read played audio
-      if self.audio_played_in.poll():
-        data_played = self.audio_played_in.recv()
-      else:
-        data_played = b"\x00"*len(data_rec)
-
-      # buffer the recorded and played audio
-      self.deque_audio_recorded_in.append(data_rec)
-      self.deque_audio_played_in.append(data_played)
-
-      vad, change = self.vad(data_rec)
-
-      if self.cfg['VAD']['debug']:
-        print vad, change,
-
-      if change:
-        if change == 'speech':
-          # inform both the parent and the consumer
-          self.audio_out.send('speech_start()')
-          self.commands.send('speech_start()')
-          # create new logging file
-          self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
-                                               'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
-
-          if self.cfg['VAD']['debug']:
-            print self.output_file_name
-
-          self.wf = wave.open(self.output_file_name, 'w')
-          self.wf.setnchannels(2)
-          self.wf.setsampwidth(2)
-          self.wf.setframerate(self.cfg['Audio']['sample_rate'])
-
-        if change == 'non-speech':
-          # inform both the parent and the consumer
-          self.audio_out.send('speech_end()')
-          self.commands.send('speech_end()')
-          # close the current logging file
-          if self.wf:
-            self.wf.close()
-
-      if self.cfg['VAD']['debug']:
-        if vad:
-            print '+',
-            sys.stdout.flush()
+      
+      if isinstance(data_rec, Frame):
+        # read played audio
+        if self.audio_played_in.poll():
+          data_played = self.audio_played_in.recv()
         else:
-            print '-',
-            sys.stdout.flush()
+          data_played = Frame(b"\x00"*len(data_rec))
 
+        # buffer the recorded and played audio
+        self.deque_audio_recorded_in.append(data_rec)
+        self.deque_audio_played_in.append(data_played)
 
-      if vad:
-        while self.deque_audio_recorded_in:
-          # send or save all potentially queued data
-          # when there is change to speech there will be several frames of audio
-          #   if there is no change then there will be only one queued frame
+        vad, change = self.vad(data_rec.payload)
 
-          data_rec = self.deque_audio_recorded_in.popleft()
-          data_played = self.deque_audio_played_in.popleft()
+        if self.cfg['VAD']['debug']:
+          print vad, change,
 
-          # send the result
-          self.audio_out.send(data_rec)
+        if change:
+          if change == 'speech':
+            # inform both the parent and the consumer
+            self.audio_out.send(Command('speech_start()', 'VAD'))
+            self.commands.send(Command('speech_start()'), 'VAD')
+            # create new logging file
+            self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
+                                                 'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
-          # save the recorded and played data
-          data_stereo = bytearray()
-          for i in range(self.cfg['Audio']['samples_per_frame']):
-            data_stereo.extend(data_rec[i*2])
-            data_stereo.extend(data_rec[i*2+1])
-            # there might not be enough data to be played
-            # then add zeros
-            try:
-              data_stereo.extend(data_played[i*2])
-            except IndexError:
-              data_stereo.extend(b'\x00')
+            if self.cfg['VAD']['debug']:
+              print self.output_file_name
 
-            try:
-              data_stereo.extend(data_played[i*2+1])
-            except IndexError:
-              data_stereo.extend(b'\x00')
+            self.wf = wave.open(self.output_file_name, 'w')
+            self.wf.setnchannels(2)
+            self.wf.setsampwidth(2)
+            self.wf.setframerate(self.cfg['Audio']['sample_rate'])
 
-          self.wf.writeframes(data_stereo)
+          if change == 'non-speech':
+            # inform both the parent and the consumer
+            self.audio_out.send(Command('speech_end()', 'VAD'))
+            self.commands.send(Command('speech_end()', 'VAD'))
+            # close the current logging file
+            if self.wf:
+              self.wf.close()
+
+        if self.cfg['VAD']['debug']:
+          if vad:
+              print '+',
+              sys.stdout.flush()
+          else:
+              print '-',
+              sys.stdout.flush()
+
+        if vad:
+          while self.deque_audio_recorded_in:
+            # send or save all potentially queued data
+            # when there is change to speech there will be several frames of audio
+            #   if there is no change then there will be only one queued frame
+
+            data_rec = self.deque_audio_recorded_in.popleft()
+            data_played = self.deque_audio_played_in.popleft()
+
+            # send the result
+            self.audio_out.send(data_rec)
+
+            # save the recorded and played data
+            data_stereo = bytearray()
+            for i in range(self.cfg['Audio']['samples_per_frame']):
+              data_stereo.extend(data_rec[i*2])
+              data_stereo.extend(data_rec[i*2+1])
+              # there might not be enough data to be played
+              # then add zeros
+              try:
+                data_stereo.extend(data_played[i*2])
+              except IndexError:
+                data_stereo.extend(b'\x00')
+
+              try:
+                data_stereo.extend(data_played[i*2+1])
+              except IndexError:
+                data_stereo.extend(b'\x00')
+
+            self.wf.writeframes(data_stereo)
 
   def run(self):
     while 1:
+      time.sleep(0.002)
+
       # process all pending commands
       if self.process_pending_commands():
         return

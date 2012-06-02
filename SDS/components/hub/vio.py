@@ -11,13 +11,15 @@ import os.path
 import struct
 import array
 import threading
-from datetime import datetime
-
 import pjsuaxt as pj
+
+from datetime import datetime
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
 import SDS.utils.string as string
+
+from SDS.components.hub.messages import Command, Frame
 
 """
 FIXME: There is confusion in naming packets, frames, and samples.
@@ -28,12 +30,6 @@ FIXME: There is confusion in naming packets, frames, and samples.
 # Logging callback
 def log_cb(level, str, len):
     print str,
-
-def get_random_word(wordLen):
-  word = ''
-  for i in range(wordLen):
-    word += random.choice('\0x00ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\xFF')
-  return word
 
 class AccountCallback(pj.AccountCallback):
   """ Callback to receive events from account
@@ -203,39 +199,38 @@ class VoipIO(multiprocessing.Process):
     while self.commands.poll():
       command = self.commands.recv()
 
-      if command == 'stop()':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
 
-        return True
+          return True
 
-      if command == 'flush()':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
 
-        #self.mem_player.flush()
+          self.mem_player.flush()
 
-        return False
+          return False
 
-      if command.startswith('call('):
-        args = string.parse_command(command)
-        self.make_call(args['destination'])
+        if command.parsed['__name__'] == 'call':
+          args = string.parse_command(command)
+          self.make_call(args['destination'])
 
-        return False
+          return False
 
-      if command.startswith('transfer('):
-        args = string.parse_command(command)
-        self.transfer(args['destination'])
+        if command.parsed['__name__'] == 'transfer':
+          self.transfer(command.parsed['destination'])
 
-        return False
+          return False
 
-      if command == 'hangup()':
-        self.hungup()
+        if command.parsed['__name__'] == 'hangup':
+          self.hungup()
 
-        return False
-
+          return False
 
       return False
 
@@ -248,17 +243,29 @@ class VoipIO(multiprocessing.Process):
     if self.audio_play.poll() and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
       # send a frame from input to be played
       data_play = self.audio_play.recv()
-      if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
-        self.mem_player.put_frame(data_play)
-
-        if self.cfg['VoipIO']['debug']:
-          print '.',
-          sys.stdout.flush()
-
+      
+      if isinstance(data_play, Frame):
+        if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
+          self.mem_player.put_frame(data_play.payload)
+          
+          if self.cfg['VoipIO']['debug']:
+            print '.',
+            sys.stdout.flush()
+            
+          # send played audio
+          self.audio_played.send(data_play)
+          
+      elif isinstance(data_play, Command):
+        if data_play.parsed['__name__'] == 'utterance_start':
+          self.commands.send(Command('play_utterance_start()', 'VoipIO'))
+        if data_play.parsed['__name__'] == 'utterance_end':
+          self.commands.send(Command('play_utterance_end()', 'VoipIO'))
+    
     if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
       # get and send recorded data, it must be read at the other end
       data_rec = self.mem_capture.get_frame()
-      self.audio_record.send(data_rec)
+      self.audio_record.send(Frame(data_rec))
+      
       if self.cfg['VoipIO']['debug']:
         print ',',
         sys.stdout.flush()
@@ -304,28 +311,29 @@ class VoipIO(multiprocessing.Process):
       print "VoipIO::on_incoming_call - from ", remote_uri
 
     # send a message that there is a new incoming call
-    self.commands.send('incoming_call("%s")' % remote_uri)
+    # FIXME: escape the quotes in SIP uri
+    self.commands.send(Command('incoming_call(remote_uri="%s")' % remote_uri, 'VoipIO'))
     
   def on_call_connecting(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_connecting"
       
     # send a message that the call is connecting
-    self.commands.send('call_connecting()')
+    self.commands.send(Command('call_connecting()', 'VoipIO'))
 
   def on_call_confirmed(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_confirmed"
 
     # send a message that the call is confirmed
-    self.commands.send('call_confirmed()')
+    self.commands.send(Command('call_confirmed()', 'VoipIO'))
     
   def on_call_disconnected(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_disconnected"
       
     # send a message that the call is disconnected
-    self.commands.send('call_disconnected()')
+    self.commands.send(Command('call_disconnected()', VoipIO))
 
   def run(self):
     try:
@@ -344,7 +352,6 @@ class VoipIO(multiprocessing.Process):
       media_cfg = pj.MediaConfig()
       media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
       media_cfg.audio_frame_ptime = int(1000*self.cfg['Audio']['samples_per_frame']/self.cfg['Audio']['sample_rate'])
-      print self.cfg['Audio']['samples_per_frame'], media_cfg.audio_frame_ptime
       media_cfg.no_vad = True
       media_cfg.enable_ice = False
 
@@ -383,14 +390,14 @@ class VoipIO(multiprocessing.Process):
       self.mem_capture.create()
 
       while 1:
+        time.sleep(0.002)
+        
         # process all pending commands
         if self.process_pending_commands():
           return
 
         # process audio data
         self.read_write_audio()
-
-        time.sleep(0.002)
 
       # Shutdown the library
       self.transport = None

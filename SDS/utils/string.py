@@ -76,7 +76,7 @@ def parse_command(command):
 
     E.g. call(destination="1245",opt="X") will be parsed into:
 
-      { "name":        "call",
+      { "__name__":    "call",
         "destination": "1245",
         "opt":         "X"}
 
@@ -89,7 +89,7 @@ def parse_command(command):
     raise Exception("Parsing error in: %s. Missing opening parenthesis." % command)
 
   name = command[:i]
-  d = {"name": name}
+  d = {"__name__": name}
 
   # remove the parentheses
   command_svs = command[i+1:len(command)-1]
