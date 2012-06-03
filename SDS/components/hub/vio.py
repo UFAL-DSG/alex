@@ -257,9 +257,9 @@ class VoipIO(multiprocessing.Process):
           
       elif isinstance(data_play, Command):
         if data_play.parsed['__name__'] == 'utterance_start':
-          self.commands.send(Command('play_utterance_start()', 'VoipIO'))
+          self.commands.send(Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO'))
         if data_play.parsed['__name__'] == 'utterance_end':
-          self.commands.send(Command('play_utterance_end()', 'VoipIO'))
+          self.commands.send(Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO'))
     
     if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
       # get and send recorded data, it must be read at the other end

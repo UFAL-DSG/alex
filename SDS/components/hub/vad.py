@@ -154,7 +154,7 @@ class VAD(multiprocessing.Process):
           if change == 'speech':
             # inform both the parent and the consumer
             self.audio_out.send(Command('speech_start()', 'VAD'))
-            self.commands.send(Command('speech_start()'), 'VAD')
+            self.commands.send(Command('speech_start()', 'VAD'))
             # create new logging file
             self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                                  'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')

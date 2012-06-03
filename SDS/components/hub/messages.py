@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import multiprocessing
+
 from SDS.utils.string import parse_command
+from SDS.utils.multiprocessing import InstanceID
 
 # TODO: add comments
 
-class Command:
+class Command(InstanceID):
   def __init__(self, command, source = None, target = None):
+    self.id = self.get_instance_id()
+    
     self.command = command
     self.source = source
     self.target = target
@@ -16,8 +21,10 @@ class Command:
   def __str__(self):
     return "From: %s To: %s Commamnd: %s " % (self.source, self.target, self.command)
 
-class ASRHyp:
+class ASRHyp(InstanceID):
   def __init__(self, hyp, source = None, target = None):
+    self.id = self.get_instance_id()
+
     self.hyp = hyp
     self.source = source
     self.target = target
@@ -31,8 +38,10 @@ class ASRHyp:
   def __getitem__(self, key):
     return self.payload[key]
     
-class TTSText:
+class TTSText(InstanceID):
   def __init__(self, text, source = None, target = None):
+    self.id = self.get_instance_id()
+
     self.text = text
     self.source = source
     self.target = target
@@ -40,8 +49,10 @@ class TTSText:
   def __str__(self):
     return "From: %s To: %s Text: %s " % (self.source, self.target, self.text)
 
-class Frame:
+class Frame(InstanceID):
   def __init__(self, payload, source = None, target = None):
+    self.id = self.get_instance_id()
+    
     self.payload = payload
     self.source = source
     self.target = target

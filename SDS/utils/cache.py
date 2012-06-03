@@ -3,13 +3,13 @@
 
 import collections
 import functools
-from itertools import ifilterfalse
-from heapq import nsmallest
-from operator import itemgetter
 import os
 import os.path
 import cPickle as pickle
 
+from itertools import ifilterfalse
+from heapq import nsmallest
+from operator import itemgetter
 
 persistent_cache_directory = '~/.SDS_persistent_cache'
 
@@ -90,7 +90,9 @@ def lru_cache(maxsize=100):
 
         wrapper.hits = wrapper.misses = 0
         wrapper.clear = clear
+        
         return wrapper
+        
     return decorator
 
 
@@ -140,7 +142,9 @@ def lfu_cache(maxsize=100):
         wrapper.hits = wrapper.misses = 0
         wrapper.clear = clear
         wrapper.cache = cache
+        
         return wrapper
+        
     return decorator
 
 
@@ -197,6 +201,7 @@ def persistent_cache(method=False, file_prefix='',file_suffix=''):
             return result
             
         wrapper.hits = wrapper.misses = 0
+        
         return wrapper
         
     return decorator

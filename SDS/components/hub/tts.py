@@ -64,7 +64,7 @@ class TTS(multiprocessing.Process):
       data_tts = self.text_in.recv()
 
       if isinstance(data_tts, TTSText):
-        self.commands.send(Command('tts_start()', 'TTS'))
+        self.commands.send(Command('tts_start(id="%d")' % data_tts.id, 'TTS'))
         text = data_tts.text
         
         if self.cfg['TTS']['debug']:
@@ -77,12 +77,12 @@ class TTS(multiprocessing.Process):
         # this bug is at many places in the code
         wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
         
-        self.audio_out.send(Command('utterance_start()', 'TTS'))
+        self.audio_out.send(Command('utterance_start(id="%d")' % data_tts.id, 'TTS'))
         for frame in wav:
           self.audio_out.send(Frame(frame))
-        self.audio_out.send(Command('utterance_end()', 'TTS'))
+        self.audio_out.send(Command('utterance_end(id="%d")' % data_tts.id, 'TTS'))
           
-        self.commands.send(Command('tts_end()', 'TTS'))
+        self.commands.send(Command('tts_end(id="%d")' % data_tts.id, 'TTS'))
       
   def run(self):
     self.command = None
