@@ -110,7 +110,7 @@ class ASR(multiprocessing.Process):
     self.speech_start = False
 
     while 1:
-      time.sleep(0.002)
+      time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
       
       # process all pending commands
       if self.process_pending_commands():

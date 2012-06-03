@@ -32,6 +32,9 @@ cfg = {
     'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
   },
+  'Hub': {
+    'main_loop_sleep_time': 0.005,
+  }, 
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -65,7 +68,7 @@ vad.start()
 count = 0
 max_count = 5000
 while count < max_count:
-  time.sleep(0.002)
+  time.sleep(cfg['Hub']['main_loop_sleep_time'])
   count += 1
 
   # write one frame into the audio output

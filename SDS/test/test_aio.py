@@ -22,6 +22,9 @@ cfg = {
     'samples_per_frame': 80,
     'play_buffer_size': 70,
   },
+  'Hub': {
+    'main_loop_sleep_time': 0.005,
+  }, 
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -48,7 +51,7 @@ aio.start()
 count = 0
 max_count = 2500
 while count < max_count:
-  time.sleep(0.002)
+  time.sleep(cfg['Hub']['main_loop_sleep_time'])
   count += 1
 
   # write one frame into the audio output

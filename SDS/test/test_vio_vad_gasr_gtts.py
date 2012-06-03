@@ -52,6 +52,9 @@ cfg = {
       'language' : 'en'
     }
   },
+  'Hub': {
+    'main_loop_sleep_time': 0.005,
+  }, 
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -99,7 +102,7 @@ tts_text_in.send(TTSText('Say something and the recognized text will be played b
 count = 0
 max_count = 50000
 while count < max_count:
-  time.sleep(0.002)
+  time.sleep(cfg['Hub']['main_loop_sleep_time'])
   count += 1
 
   if asr_hypotheses_out.poll():

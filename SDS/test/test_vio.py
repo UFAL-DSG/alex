@@ -26,6 +26,9 @@ cfg = {
     'user': 'your_user',
     'password': 'your_password',
   },
+  'Hub': {
+    'main_loop_sleep_time': 0.005,
+  }, 
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -53,7 +56,7 @@ vio.start()
 count = 0
 max_count = 25000
 while count < max_count:
-  time.sleep(0.002)
+  time.sleep(cfg['Hub']['main_loop_sleep_time'])
   count += 1
     
   # write one frame into the audio output
