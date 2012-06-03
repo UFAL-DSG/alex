@@ -21,12 +21,6 @@ import SDS.utils.string as string
 
 from SDS.components.hub.messages import Command, Frame
 
-"""
-FIXME: There is confusion in naming packets, frames, and samples.
-       Ideally frames should be blocks of samples.
-
-"""
-
 # Logging callback
 def log_cb(level, str, len):
     print str,
@@ -59,10 +53,16 @@ class AccountCallback(pj.AccountCallback):
     call.answer()
 
   def wait(self):
+    """Wait for the registration to finish.
+    """
+    
     self.sem = threading.Semaphore(0)
     self.sem.acquire()
 
   def on_reg_state(self):
+    """Stop waiting if the registration process ended.
+    """
+    
     if self.sem:
       if self.account.info().reg_status >= 200:
         self.sem.release()
@@ -176,10 +176,27 @@ class VoipIO(multiprocessing.Process):
     self.audio_record = audio_record
     self.audio_play = audio_play
     self.audio_played = audio_played
-
+    self.last_frame_id = 1
+    self.message_queue = []
+    
     self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                          'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
+  def process_pending_messages(self):
+    """ Send all messages for which corresponding frame was already played.
+    """
+    num_played_frames = self.mem_player.get_num_played_frames()
+    
+    del_messages = []
+    
+    for i, (message, frame_id) in enumerate(self.message_queue):
+      if frame_id <= num_played_frames:
+        self.commands.send(message)
+        del_messages.append(frame_id) 
+        
+    # delete the messages which were already sent
+    self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
+      
   def process_pending_commands(self):
     """Process all pending commands.
 
@@ -246,7 +263,7 @@ class VoipIO(multiprocessing.Process):
       
       if isinstance(data_play, Frame):
         if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
-          self.mem_player.put_frame(data_play.payload)
+          self.last_frame_id = self.mem_player.put_frame(data_play.payload)
           
           if self.cfg['VoipIO']['debug']:
             print '.',
@@ -257,9 +274,9 @@ class VoipIO(multiprocessing.Process):
           
       elif isinstance(data_play, Command):
         if data_play.parsed['__name__'] == 'utterance_start':
-          self.commands.send(Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO'))
+          self.message_queue.append((Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO'), self.last_frame_id))
         if data_play.parsed['__name__'] == 'utterance_end':
-          self.commands.send(Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO'))
+          self.message_queue.append((Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO'), self.last_frame_id))
     
     if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
       # get and send recorded data, it must be read at the other end
@@ -270,13 +287,20 @@ class VoipIO(multiprocessing.Process):
         print ',',
         sys.stdout.flush()
 
-
   def get_sip_uri_for_phone_number(self, dst):
     sip_uri = "sip:"+dst+self.cfg['VoipIO']['domain']
     return sip_uri
 
   def is_sip_uri(self, dst):
     return dst.startswith('sip:')
+
+  def escape_sip_uri(self, uri):
+    uri = uri.replace('"', "'")
+    uri = uri.replace(' ', "_")
+    uri = uri.replace('/', "_")
+    uri = uri.replace('\\', "_")
+    
+    return uri
 
   def make_call(self, uri):
     try:
@@ -311,8 +335,7 @@ class VoipIO(multiprocessing.Process):
       print "VoipIO::on_incoming_call - from ", remote_uri
 
     # send a message that there is a new incoming call
-    # FIXME: escape the quotes in SIP uri
-    self.commands.send(Command('incoming_call(remote_uri="%s")' % remote_uri, 'VoipIO'))
+    self.commands.send(Command('incoming_call(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO'))
     
   def on_call_connecting(self):
     if self.cfg['VoipIO']['debug']:
@@ -399,6 +422,9 @@ class VoipIO(multiprocessing.Process):
         # process audio data
         self.read_write_audio()
 
+        # send all pending messages which has to be synchronized with played frames
+        self.process_pending_messages()
+        
       # Shutdown the library
       self.transport = None
       self.acc.delete()
