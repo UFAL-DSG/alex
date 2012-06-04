@@ -159,6 +159,8 @@ class CallCallback(pj.CallCallback):
       print "CallCallback::on_media_state : Media is inactive"
 
   def on_dtmf_digit(self, digits):
+    self.voipio.on_dtmf_digit(digits)
+
     print "Received digits:", digits
 
 
@@ -459,6 +461,13 @@ class VoipIO(multiprocessing.Process):
 
     # send a message that the call is disconnected
     self.commands.send(Command('call_disconnected()', 'VoipIO', 'HUB'))
+
+  def on_dtmf_digit(self, digits):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_dtmf_digit"
+
+    # send a message that a digit was recieved
+    self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
   def run(self):
     try:
