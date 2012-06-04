@@ -25,7 +25,11 @@ cfg = {
     'call_back': True,
     'wait_time_before_calling_back': 10,
     'allowed_phone_numbers': r"(^[234567])",
-    'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
+    'forbidden_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
+    'allowed_users': r"(^[234567])",
+    'forbidden_users': r"(^112$|^150$|^155$|^156$|^158$)",
+    'allowed_hosts': r"",
+    'forbidden_hosts': r"",
 
     'domain': 'your_domain',
     'user': 'your_user',
@@ -50,7 +54,7 @@ cfg = {
     }
   },
   'TTS': {
-    'debug': True,
+    'debug': False,
     'type': 'Google',
     'Google' : {
       'debug': False,
@@ -65,7 +69,7 @@ cfg = {
   }
 }
 
-print "Test of the AudioIO, VAD, ASR and TTS components:"
+print "Test of the VoipIO, VAD, ASR, and TTS components:"
 print "="*120
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO

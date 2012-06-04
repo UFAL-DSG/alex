@@ -19,7 +19,7 @@ class Command(InstanceID):
     self.parsed = parse_command(self.command)
     
   def __str__(self):
-    return "From: %s To: %s Commamnd: %s " % (self.source, self.target, self.command)
+    return "From: %s To: %s - Commamnd: %s " % (self.source, self.target, self.command)
 
 class ASRHyp(InstanceID):
   def __init__(self, hyp, source = None, target = None):
@@ -30,7 +30,7 @@ class ASRHyp(InstanceID):
     self.target = target
     
   def __str__(self):
-    return "From: %s To: %s Hyp: %s " % (self.source, self.target, self.hyp)
+    return "From: %s To: %s - Hyp: %s " % (self.source, self.target, self.hyp)
 
   def __len__(self):
     return len(self.payload)
@@ -47,7 +47,7 @@ class TTSText(InstanceID):
     self.target = target
     
   def __str__(self):
-    return "From: %s To: %s Text: %s " % (self.source, self.target, self.text)
+    return "From: %s To: %s - Text: %s " % (self.source, self.target, self.text)
 
 class Frame(InstanceID):
   def __init__(self, payload, source = None, target = None):
@@ -58,7 +58,7 @@ class Frame(InstanceID):
     self.target = target
     
   def __str__(self):
-    return "From: %s To: %s Len: %d " % (self.source, target, self.len(self.payload))
+    return "From: %s To: %s - Len: %d " % (self.source, target, self.len(self.payload))
 
   def __len__(self):
     return len(self.payload)

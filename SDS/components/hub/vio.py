@@ -318,7 +318,7 @@ class VoipIO(multiprocessing.Process):
         sys.stdout.flush()
 
   def is_sip_uri(self, dst):
-    """ Check whether it is a SIP uri.
+    """ Check whether it is a SIP URI.
     """
     return dst.startswith('sip:')
 
@@ -345,8 +345,8 @@ class VoipIO(multiprocessing.Process):
 
     return True
 
-  def get_sip_uri_for_phone_number(self, dst):
-    """ Construct a valid SIP uri for given phone number.
+  def construct_sip_uri_from_phone_number(self, dst):
+    """ Construct a valid SIP URI for given phone number.
     """
     sip_uri = "sip:"+dst+'@'+self.cfg['VoipIO']['domain']
     return sip_uri
@@ -355,13 +355,43 @@ class VoipIO(multiprocessing.Process):
     """ Check the phone number against the positive and negative patterns.
     """
 
-    p = re.search(self.cfg['VoipIO']['allowed_phone_numbers'], dst)
-    if not p:
-      return False
+    if self.cfg['VoipIO']['allowed_phone_numbers']:
+      p = re.search(self.cfg['VoipIO']['allowed_phone_numbers'], dst)
+      if not p:
+        return False
 
-    p = re.search(self.cfg['VoipIO']['forbidden_match_phone_number'], dst)
-    if p:
-      return False
+    if self.cfg['VoipIO']['forbidden_phone_number']:
+      p = re.search(self.cfg['VoipIO']['forbidden_phone_number'], dst)
+      if p:
+        return False
+
+    return True
+
+  def is_accepted_sip_uri(self, dst):
+    """ Check the SIP URI against the positive and negative patterns.
+    """
+
+    sip_uri = pj.SIPUri(dst)
+    
+    if self.cfg['VoipIO']['allowed_users']:
+      p = re.search(self.cfg['VoipIO']['allowed_users'], sip_uri.user)
+      if not p:
+        return False
+    
+    if self.cfg['VoipIO']['forbidden_users']:
+      p = re.search(self.cfg['VoipIO']['forbidden_users'], sip_uri.user)
+      if p:
+        return False
+
+    if self.cfg['VoipIO']['allowed_hosts']:
+      p = re.search(self.cfg['VoipIO']['allowed_hosts'], sip_uri.host)
+      if not p:
+        return False
+
+    if self.cfg['VoipIO']['forbidden_hosts']:
+      p = re.search(self.cfg['VoipIO']['forbidden_hosts'], sip_uri.host)
+      if p:
+        return False
 
     return True
 
@@ -373,35 +403,52 @@ class VoipIO(multiprocessing.Process):
 
     return uri
 
+  def normalize_uri(self, uri):
+    """ Normalize the phone number or sip uri with a contact name into a clear SIP URI.
+    """
+    
+    if self.is_phone_number(uri):
+      if self.is_accepted_phone_number(uri):
+        uri = self.construct_sip_uri_from_phone_number(uri)
+      else:
+        return "blocked"
+    elif self.has_sip_uri(uri):
+      uri = self.get_sip_uri(uri)
+      if self.is_accepted_sip_uri(uri):
+        uri = self.get_sip_uri(uri)
+      else:
+        return "blocked"
+        
+    return uri
+
   def make_call(self, uri):
+    """ Call privided URI. Check whether it is allowed.
+    """
     try:
+      uri = self.normalize_uri(uri)
+      
       if self.cfg['VoipIO']['debug']:
         print "Making a call to", uri
-
-      if self.is_phone_number(uri):
-        if self.is_accepted_phone_number(uri):
-          uri = self.get_sip_uri_for_phone_number(uri)
-        else:
-          if self.cfg['VoipIO']['debug']:
-            print 'VoipIO : Blocked call to forbidden phone number -', uri
-            sys.stdout.flush()
-          return
-      elif self.has_sip_uri(uri):
-        uri = self.get_sip_uri(uri)
-
+        
       if self.is_sip_uri(uri):
         # create a call back for the call
         call_cb = CallCallback(self.cfg, None, self)
+        return self.acc.make_call(uri, cb=call_cb)
+      elif uri == "blocked":
+        if self.cfg['VoipIO']['debug']:
+          print 'VoipIO : Blocked call to a forbidden phone number -', uri
+          sys.stdout.flush()
       else:
-        raise VoipIOException('Making call to SIP uri which is not SIP UIR - ' + uri)
+        raise VoipIOException('Making call to SIP URI which is not SIP URI - ' + uri)
 
-      return self.acc.make_call(uri, cb=call_cb)
     except pj.Error, e:
       print "Exception: " + str(e)
       return None
 
   def transfer(self, uri):
     """FIXME: This does not work yet!"""
+    return
+    
     try:
       if self.cfg['VoipIO']['debug']:
         print "Transferring the call to", uri
