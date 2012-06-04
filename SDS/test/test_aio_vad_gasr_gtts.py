@@ -10,11 +10,11 @@ from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
 from SDS.components.hub.tts import TTS
-from SDS.components.hub.messages import Command, TTSText
+from SDS.components.hub.messages import Command, ASRHyp, TTSText
 
 cfg = {
   'Audio': {
-    'sample_rate': 16000, 
+    'sample_rate': 16000,
     'samples_per_frame': 80,
   },
   'AudioIO': {
@@ -49,7 +49,7 @@ cfg = {
   },
   'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
+  },
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -103,10 +103,10 @@ while count < max_count:
   if asr_hypotheses_out.poll():
     asr_hyp = asr_hypotheses_out.recv()
 
-    if isinstance(asr_hyp.hyp, ASRHyp):
+    if isinstance(asr_hyp, ASRHyp):
       if len(asr_hyp.hyp):
         print asr_hyp.hyp
-        
+
         # get top hypotheses text
         top_text = asr_hyp.hyp[0][1]
 
@@ -122,7 +122,7 @@ while count < max_count:
       print
       print command
       print
-      
+
 # stop processes
 aio_commands.send(Command('stop()'))
 vad_commands.send(Command('stop()'))

@@ -13,8 +13,8 @@ from SDS.utils.exception import TTSException
 
 class TTS(multiprocessing.Process):
   """ TTS synthesizes input text and returns speech audio signal.
-  
-  This component is a wrapper around multiple TTS engines which handles multiprocessing 
+
+  This component is a wrapper around multiple TTS engines which handles multiprocessing
   communication.
   """
 
@@ -25,13 +25,13 @@ class TTS(multiprocessing.Process):
     self.commands = commands
     self.text_in = text_in
     self.audio_out = audio_out
-    
+
     self.tts = None
     if self.cfg['TTS']['type'] == 'Google':
       self.tts = GTTS.GoogleTTS(cfg)
     else:
       raise TTSException('Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
-    
+
   def process_pending_commands(self):
     """Process all pending commands.
 
@@ -64,32 +64,32 @@ class TTS(multiprocessing.Process):
       data_tts = self.text_in.recv()
 
       if isinstance(data_tts, TTSText):
-        self.commands.send(Command('tts_start(id="%d")' % data_tts.id, 'TTS'))
+        self.commands.send(Command('tts_start(id="%d")' % data_tts.id, 'TTS', 'HUB'))
         text = data_tts.text
-        
+
         if self.cfg['TTS']['debug']:
           print 'TTS: Synthesize: ', text
           sys.stdout.flush()
-          
+
         wav = self.tts.synthesize(text)
-        
+
         # FIXME: split the wave so that the last bin is of the size of the full frame
         # this bug is at many places in the code
         wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
-        
-        self.audio_out.send(Command('utterance_start(id="%d")' % data_tts.id, 'TTS'))
+
+        self.audio_out.send(Command('utterance_start(id="%d")' % data_tts.id, 'TTS', 'AudioOut'))
         for frame in wav:
           self.audio_out.send(Frame(frame))
-        self.audio_out.send(Command('utterance_end(id="%d")' % data_tts.id, 'TTS'))
-          
-        self.commands.send(Command('tts_end(id="%d")' % data_tts.id, 'TTS'))
-      
+        self.audio_out.send(Command('utterance_end(id="%d")' % data_tts.id, 'TTS', 'AudioOut'))
+
+        self.commands.send(Command('tts_end(id="%d")' % data_tts.id, 'TTS', 'HUB'))
+
   def run(self):
     self.command = None
-    
+
     while 1:
       time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-      
+
       # process all pending commands
       if self.process_pending_commands():
         return

@@ -11,11 +11,11 @@ from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
 from SDS.components.hub.tts import TTS
-from SDS.components.hub.messages import Command, TTSText
+from SDS.components.hub.messages import Command, ASRHyp, TTSText
 
 cfg = {
   'Audio': {
-    'sample_rate': 8000, 
+    'sample_rate': 8000,
     'samples_per_frame': 128,
   },
   'VoipIO': {
@@ -29,15 +29,15 @@ cfg = {
   'VAD': {
     'debug': False,
     'type': 'power',
-    'power_threshold': 300,
+    'power_threshold': 90,
     'power_threshold_multiplier': 1,
-    'power_adaptation_frames': 20,
-    'power_decision_frames': 25,
+    'power_adaptation_frames': 30,
+    'power_decision_frames': 20,
     'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
   },
   'ASR': {
-    'debug': False,
+    'debug': True,
     'type': 'Google',
     'Google': {
       'debug': False,
@@ -54,7 +54,7 @@ cfg = {
   },
   'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
+  },
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -108,10 +108,10 @@ while count < max_count:
   if asr_hypotheses_out.poll():
     asr_hyp = asr_hypotheses_out.recv()
 
-    if isinstance(asr_hyp.hyp, ASRHyp):
+    if isinstance(asr_hyp, ASRHyp):
       if len(asr_hyp.hyp):
         print asr_hyp.hyp
-        
+
         # get top hypotheses text
         top_text = asr_hyp.hyp[0][1]
 
@@ -127,7 +127,7 @@ while count < max_count:
       print
       print command
       print
-      
+
 # stop processes
 vio_commands.send(Command('stop()'))
 vad_commands.send(Command('stop()'))

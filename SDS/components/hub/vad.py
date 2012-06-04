@@ -133,7 +133,7 @@ class VAD(multiprocessing.Process):
     while self.audio_recorded_in.poll():
       # read recorded audio
       data_rec = self.audio_recorded_in.recv()
-      
+
       if isinstance(data_rec, Frame):
         # read played audio
         if self.audio_played_in.poll():
@@ -153,8 +153,8 @@ class VAD(multiprocessing.Process):
         if change:
           if change == 'speech':
             # inform both the parent and the consumer
-            self.audio_out.send(Command('speech_start()', 'VAD'))
-            self.commands.send(Command('speech_start()', 'VAD'))
+            self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
+            self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
             # create new logging file
             self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                                  'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
@@ -169,8 +169,8 @@ class VAD(multiprocessing.Process):
 
           if change == 'non-speech':
             # inform both the parent and the consumer
-            self.audio_out.send(Command('speech_end()', 'VAD'))
-            self.commands.send(Command('speech_end()', 'VAD'))
+            self.audio_out.send(Command('speech_end()', 'VAD', 'AudioIn'))
+            self.commands.send(Command('speech_end()', 'VAD', 'HUB'))
             # close the current logging file
             if self.wf:
               self.wf.close()

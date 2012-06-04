@@ -7,7 +7,7 @@ import sys
 
 import SDS.components.asr.google as GASR
 
-from SDS.components.hub.messages import Command, Frame
+from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import ASRException
 
 class ASR(multiprocessing.Process):
@@ -69,49 +69,51 @@ class ASR(multiprocessing.Process):
     while self.audio_in.poll():
       # read recorded audio
       data_rec = self.audio_in.recv()
-      
+
       if isinstance(data_rec, Frame):
+        if self.recognition_on:
+          self.asr.rec_in(data_rec)
+      elif isinstance(data_rec, Command):
         dr_speech_start = False
-        if data_rec == "speech_start()":
-          dr_speech_start = "speech_start()"
-        elif data_rec == "speech_end()":
-          dr_speech_start = "speech_end()"
+
+        if data_rec.parsed['__name__'] == "speech_start":
+          dr_speech_start = "speech_start"
+        elif data_rec.parsed['__name__'] == "speech_end":
+          dr_speech_start = "speech_end"
 
         # check consistency of the input command
         if dr_speech_start:
-          if not ( (self.speech_start == False and dr_speech_start == "speech_start()") or
-                   (self.speech_start == "speech_start()" and dr_speech_start == "speech_end()")
-                 ):
-            raise ASRException('Commands received by ASR components are inconsistent - last command: %s - new command: %s' % (self.speech_start, data_rec))
+          if self.recognition_on == False and dr_speech_start != "speech_start" and \
+             self.recognition_on == True and dr_speech_start != "speech_end":
+            raise ASRException('Commands received by the ASR component are inconsistent - recognition_on = %s - the new command: %s' % (self.recognition_on, dr_speech_start))
 
-        if data_rec == "speech_start()":
-          self.commands.send(Command("asr_start()"), 'ASR')
-          self.speech_start = "speech_start()"
+        if dr_speech_start == "speech_start":
+          self.commands.send(Command("asr_start()", 'ASR', 'HUB'))
+          self.recognition_on = True
 
           if self.cfg['ASR']['debug']:
             print 'ASR: speech_start()'
             sys.stdout.flush()
 
-        elif data_rec == "speech_end()":
-          self.speech_start = False
+        elif dr_speech_start == "speech_end":
+          self.recognition_on = False
 
           if self.cfg['ASR']['debug']:
             print 'ASR: speech_end()'
             sys.stdout.flush()
 
           hyp = self.asr.hyp_out()
+          self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
           self.hypotheses_out.send(ASRHyp(hyp))
-          self.commands.send(Command("asr_end()", 'ASR'))
-
-        elif self.speech_start == "speech_start()":
-          self.asr.rec_in(data_rec)
+      else:
+        raise ASRException('Unsupported input.')
 
   def run(self):
-    self.speech_start = False
+    self.recognition_on = False
 
     while 1:
       time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-      
+
       # process all pending commands
       if self.process_pending_commands():
         return

@@ -73,7 +73,7 @@ class AudioIO(multiprocessing.Process):
 
     while self.commands.poll():
       command = self.commands.recv()
-      
+
       if isinstance(command, Command):
         if command.parsed['__name__'] == 'stop':
           # discard all data in play buffer
@@ -118,12 +118,12 @@ class AudioIO(multiprocessing.Process):
           if self.cfg['AudioIO']['debug']:
             print '.',
             sys.stdout.flush()
-            
+
         elif isinstance(data_play, Command):
           if data_play.parsed['__name__'] == 'utterance_start':
-            self.commands.send(Command('play_utterance_start()', 'AudioIO'))
+            self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
           if data_play.parsed['__name__'] == 'utterance_end':
-            self.commands.send(Command('play_utterance_end()', 'AudioIO'))
+            self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
 
     else:
       data_play = Frame(b"\x00\x00"*self.cfg['Audio']['samples_per_frame'])

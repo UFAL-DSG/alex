@@ -55,14 +55,14 @@ class AccountCallback(pj.AccountCallback):
   def wait(self):
     """Wait for the registration to finish.
     """
-    
+
     self.sem = threading.Semaphore(0)
     self.sem.acquire()
 
   def on_reg_state(self):
     """Stop waiting if the registration process ended.
     """
-    
+
     if self.sem:
       if self.account.info().reg_status >= 200:
         self.sem.release()
@@ -178,7 +178,7 @@ class VoipIO(multiprocessing.Process):
     self.audio_played = audio_played
     self.last_frame_id = 1
     self.message_queue = []
-    
+
     self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                          'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
@@ -186,17 +186,17 @@ class VoipIO(multiprocessing.Process):
     """ Send all messages for which corresponding frame was already played.
     """
     num_played_frames = self.mem_player.get_num_played_frames()
-    
+
     del_messages = []
-    
+
     for i, (message, frame_id) in enumerate(self.message_queue):
       if frame_id <= num_played_frames:
         self.commands.send(message)
-        del_messages.append(frame_id) 
-        
+        del_messages.append(frame_id)
+
     # delete the messages which were already sent
     self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
-      
+
   def process_pending_commands(self):
     """Process all pending commands.
 
@@ -254,35 +254,35 @@ class VoipIO(multiprocessing.Process):
   def read_write_audio(self):
     """Send some of the available data to the output.
     It should be a non-blocking operation.
-    
+
     """
 
     if self.audio_play.poll() and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
       # send a frame from input to be played
       data_play = self.audio_play.recv()
-      
+
       if isinstance(data_play, Frame):
         if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
           self.last_frame_id = self.mem_player.put_frame(data_play.payload)
-          
+
           if self.cfg['VoipIO']['debug']:
             print '.',
             sys.stdout.flush()
-            
+
           # send played audio
           self.audio_played.send(data_play)
-          
+
       elif isinstance(data_play, Command):
         if data_play.parsed['__name__'] == 'utterance_start':
-          self.message_queue.append((Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO'), self.last_frame_id))
+          self.message_queue.append((Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO', 'HUB'), self.last_frame_id))
         if data_play.parsed['__name__'] == 'utterance_end':
-          self.message_queue.append((Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO'), self.last_frame_id))
-    
+          self.message_queue.append((Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO', 'HUB'), self.last_frame_id))
+
     if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
       # get and send recorded data, it must be read at the other end
       data_rec = self.mem_capture.get_frame()
       self.audio_record.send(Frame(data_rec))
-      
+
       if self.cfg['VoipIO']['debug']:
         print ',',
         sys.stdout.flush()
@@ -299,7 +299,7 @@ class VoipIO(multiprocessing.Process):
     uri = uri.replace(' ', "_")
     uri = uri.replace('/', "_")
     uri = uri.replace('\\', "_")
-    
+
     return uri
 
   def make_call(self, uri):
@@ -335,28 +335,28 @@ class VoipIO(multiprocessing.Process):
       print "VoipIO::on_incoming_call - from ", remote_uri
 
     # send a message that there is a new incoming call
-    self.commands.send(Command('incoming_call(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO'))
-    
+    self.commands.send(Command('incoming_call(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
+
   def on_call_connecting(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_connecting"
-      
+
     # send a message that the call is connecting
-    self.commands.send(Command('call_connecting()', 'VoipIO'))
+    self.commands.send(Command('call_connecting()', 'VoipIO', 'HUB'))
 
   def on_call_confirmed(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_confirmed"
 
     # send a message that the call is confirmed
-    self.commands.send(Command('call_confirmed()', 'VoipIO'))
-    
+    self.commands.send(Command('call_confirmed()', 'VoipIO', 'HUB'))
+
   def on_call_disconnected(self):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_disconnected"
-      
+
     # send a message that the call is disconnected
-    self.commands.send(Command('call_disconnected()', VoipIO))
+    self.commands.send(Command('call_disconnected()', 'VoipIO', 'HUB'))
 
   def run(self):
     try:
@@ -414,7 +414,7 @@ class VoipIO(multiprocessing.Process):
 
       while 1:
         time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-        
+
         # process all pending commands
         if self.process_pending_commands():
           return
@@ -424,7 +424,7 @@ class VoipIO(multiprocessing.Process):
 
         # send all pending messages which has to be synchronized with played frames
         self.process_pending_messages()
-        
+
       # Shutdown the library
       self.transport = None
       self.acc.delete()
