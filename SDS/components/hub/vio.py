@@ -11,15 +11,18 @@ import os.path
 import struct
 import array
 import threading
+import re
 import pjsuaxt as pj
 
 from datetime import datetime
+from collections import deque
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
 import SDS.utils.string as string
 
 from SDS.components.hub.messages import Command, Frame
+from SDS.utils.exception import VoipIOException
 
 # Logging callback
 def log_cb(level, str, len):
@@ -43,14 +46,22 @@ class AccountCallback(pj.AccountCallback):
     """ Notification on incoming call
     """
 
-    self.voipio.on_incoming_call(call.info().remote_uri)
+    if not self.cfg['VoipIO']['reject_calls']:
+      self.voipio.on_incoming_call(call.info().remote_uri)
 
-    print "Incoming call from ", call.info().remote_uri
+      print "Incoming call from ", call.info().remote_uri
 
-    call_cb = CallCallback(self.cfg, call, self.voipio)
-    call.set_callback(call_cb)
+      call_cb = CallCallback(self.cfg, call, self.voipio)
+      call.set_callback(call_cb)
 
-    call.answer()
+      call.answer()
+    else:
+      remote_uri = call.info().remote_uri
+      print "Rejected call from ", remote_uri
+      # respond by "Busy here"
+      call.answer(486)
+
+      self.voipio.on_rejected_call(remote_uri)
 
   def wait(self):
     """Wait for the registration to finish.
@@ -84,6 +95,9 @@ class CallCallback(pj.CallCallback):
     self.output_file_name_played = os.path.join(self.cfg['Logging']['output_dir'],
       'all-'+datetime.now().isoformat('-').replace(':', '-')+'.played.wav')
 
+    self.recorded_id = None
+    self.played_id = None
+
   # Notification when call state has changed
   def on_state(self):
     print "CallCallback::on_state : Call with", self.call.info().remote_uri,
@@ -97,8 +111,10 @@ class CallCallback(pj.CallCallback):
       self.voipio.on_call_confirmed()
 
     if self.call.info().state == pj.CallState.DISCONNECTED:
-      pj.Lib.instance().recorder_destroy(self.recorded_id)
-      pj.Lib.instance().recorder_destroy(self.played_id)
+      if self.recorded_id:
+        pj.Lib.instance().recorder_destroy(self.recorded_id)
+      if self.played_id:
+        pj.Lib.instance().recorder_destroy(self.played_id)
       self.voipio.on_call_disconnected()
 
   def on_transfer_status(self, code, reason, final, cont):
@@ -173,6 +189,7 @@ class VoipIO(multiprocessing.Process):
 
     self.cfg = cfg
     self.commands = commands
+    self.local_commands = deque()
     self.audio_record = audio_record
     self.audio_play = audio_play
     self.audio_played = audio_played
@@ -197,8 +214,8 @@ class VoipIO(multiprocessing.Process):
     # delete the messages which were already sent
     self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
 
-  def process_pending_commands(self):
-    """Process all pending commands.
+  def execute_command(self, command):
+    """ Execute the passed command.
 
     Available commands:
       stop()    - stop processing and exit the process
@@ -211,45 +228,56 @@ class VoipIO(multiprocessing.Process):
       hungup()      - hung up the existing call
 
     Return True if the process should terminate.
+
     """
 
-    while self.commands.poll():
+    if isinstance(command, Command):
+      if command.parsed['__name__'] == 'stop':
+        # discard all data in play buffer
+        while self.audio_play.poll():
+          data_play = self.audio_play.recv()
+
+        return True
+
+      if command.parsed['__name__'] == 'flush':
+        # discard all data in play buffer
+        while self.audio_play.poll():
+          data_play = self.audio_play.recv()
+
+        self.mem_player.flush()
+
+        return False
+
+      if command.parsed['__name__'] == 'make_call':
+        self.make_call(command.parsed['destination'])
+
+        return False
+
+      if command.parsed['__name__'] == 'transfer':
+        self.transfer(command.parsed['destination'])
+
+        return False
+
+      if command.parsed['__name__'] == 'hangup':
+        self.hungup()
+
+        return False
+
+      raise VoipIOException('Unsupported command: ' + command)
+
+  def process_pending_commands(self):
+    """Process all pending commands.
+    """
+
+    if self.commands.poll():
       command = self.commands.recv()
+      return self.execute_command(command)
 
-      if isinstance(command, Command):
-        if command.parsed['__name__'] == 'stop':
-          # discard all data in play buffer
-          while self.audio_play.poll():
-            data_play = self.audio_play.recv()
+    if self.local_commands:
+      command = self.local_commands.popleft()
+      return self.execute_command(command)
 
-          return True
-
-        if command.parsed['__name__'] == 'flush':
-          # discard all data in play buffer
-          while self.audio_play.poll():
-            data_play = self.audio_play.recv()
-
-          self.mem_player.flush()
-
-          return False
-
-        if command.parsed['__name__'] == 'call':
-          args = string.parse_command(command)
-          self.make_call(args['destination'])
-
-          return False
-
-        if command.parsed['__name__'] == 'transfer':
-          self.transfer(command.parsed['destination'])
-
-          return False
-
-        if command.parsed['__name__'] == 'hangup':
-          self.hungup()
-
-          return False
-
-      return False
+    return False
 
   def read_write_audio(self):
     """Send some of the available data to the output.
@@ -287,12 +315,53 @@ class VoipIO(multiprocessing.Process):
         print ',',
         sys.stdout.flush()
 
+  def is_sip_uri(self, dst):
+    """ Check whether it is a SIP uri.
+    """
+    return dst.startswith('sip:')
+
+  def has_sip_uri(self, dst):
+    p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+    if not p:
+      return False
+
+    return True
+
+  def get_sip_uri(self, dst):
+    p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+    if not p:
+      return None
+
+    return p.group(0)
+
+  def is_phone_number(self, dst):
+    """ Check whether it is a phone number.
+    """
+    p = re.search('(^\+?[0-9]{1,12}$)', dst)
+    if not p:
+      return False
+
+    return True
+
   def get_sip_uri_for_phone_number(self, dst):
-    sip_uri = "sip:"+dst+self.cfg['VoipIO']['domain']
+    """ Construct a valid SIP uri for given phone number.
+    """
+    sip_uri = "sip:"+dst+'@'+self.cfg['VoipIO']['domain']
     return sip_uri
 
-  def is_sip_uri(self, dst):
-    return dst.startswith('sip:')
+  def is_accepted_phone_number(self, dst):
+    """ Check the phone number against the positive and negative patterns.
+    """
+
+    p = re.search(self.cfg['VoipIO']['allowed_phone_numbers'], dst)
+    if not p:
+      return False
+
+    p = re.search(self.cfg['VoipIO']['forbidden_match_phone_number'], dst)
+    if p:
+      return False
+
+    return True
 
   def escape_sip_uri(self, uri):
     uri = uri.replace('"', "'")
@@ -304,31 +373,49 @@ class VoipIO(multiprocessing.Process):
 
   def make_call(self, uri):
     try:
-        if self.cfg['VoipIO']['debug']:
-          print "Making a call to", uri
-        return self.acc.make_call(uri, cb=CallCallback())
+      if self.cfg['VoipIO']['debug']:
+        print "Making a call to", uri
+
+      if self.is_phone_number(uri):
+        if self.is_accepted_phone_number(uri):
+          uri = self.get_sip_uri_for_phone_number(uri)
+        else:
+          if self.cfg['VoipIO']['debug']:
+            print 'VoipIO : Blocked call to forbidden phone number -', uri
+            sys.stdout.flush()
+          return
+      elif self.has_sip_uri(uri):
+        uri = self.get_sip_uri(uri)
+
+      if self.is_sip_uri(uri):
+        # create a call back for the call
+        call_cb = CallCallback(self.cfg, None, self)
+      else:
+        raise VoipIOException('Making call to SIP uri which is not SIP UIR - ' + uri)
+
+      return self.acc.make_call(uri, cb=call_cb)
     except pj.Error, e:
-        print "Exception: " + str(e)
-        return None
+      print "Exception: " + str(e)
+      return None
 
   def transfer(self, uri):
     """FIXME: This does not work yet!"""
     try:
-        if self.cfg['VoipIO']['debug']:
-          print "Transferring the call to", uri
-        return self.call.transfer(uri)
+      if self.cfg['VoipIO']['debug']:
+        print "Transferring the call to", uri
+      return self.call.transfer(uri)
     except pj.Error, e:
-        print "Exception: " + str(e)
-        return None
+      print "Exception: " + str(e)
+      return None
 
   def hangup(self):
     try:
-        if self.cfg['VoipIO']['debug']:
-          print "Hung up the call"
-        return self.call.hungup()
+      if self.cfg['VoipIO']['debug']:
+        print "Hung up the call"
+      return self.call.hungup()
     except pj.Error, e:
-        print "Exception: " + str(e)
-        return None
+      print "Exception: " + str(e)
+      return None
 
   def on_incoming_call(self, remote_uri):
     if self.cfg['VoipIO']['debug']:
@@ -336,6 +423,21 @@ class VoipIO(multiprocessing.Process):
 
     # send a message that there is a new incoming call
     self.commands.send(Command('incoming_call(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
+
+  def on_rejected_call(self, remote_uri):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_rejected_call - from ", remote_uri
+
+    # send a message that we rejected an incoming call
+    self.commands.send(Command('rejected_call(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
+
+    if self.cfg['VoipIO']['call_back']:
+      # wait for all SIP messages to be send
+      time.sleep(self.cfg['VoipIO']['wait_time_before_calling_back'])
+
+      # call back to the caller
+      # use the queue since we cannot make calls from a callback
+      self.local_commands.append(Command('make_call(destination="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'VoipIO'))
 
   def on_call_connecting(self):
     if self.cfg['VoipIO']['debug']:

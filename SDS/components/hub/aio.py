@@ -71,7 +71,7 @@ class AudioIO(multiprocessing.Process):
 
     #TO-DO: I could use stream.abort() function to flush output buffers of pyaudio()
 
-    while self.commands.poll():
+    if self.commands.poll():
       command = self.commands.recv()
 
       if isinstance(command, Command):
@@ -94,6 +94,8 @@ class AudioIO(multiprocessing.Process):
             data_play = self.audio_play.recv()
 
           return False
+
+    return False
 
   def read_write_audio(self, p, stream, wf, play_buffer):
     """Send some of the available data to the output.

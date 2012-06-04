@@ -43,7 +43,7 @@ class TTS(multiprocessing.Process):
     Return True if the process should terminate.
     """
 
-    while self.commands.poll():
+    if self.commands.poll():
       command = self.commands.recv()
 
       if isinstance(command, Command):
@@ -56,6 +56,8 @@ class TTS(multiprocessing.Process):
             data_in = self.text_in.recv()
 
           return False
+
+    return False
 
   def read_text_write_audio(self):
     # read input audio

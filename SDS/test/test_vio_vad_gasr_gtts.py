@@ -21,6 +21,11 @@ cfg = {
   'VoipIO': {
     'pjsip_log_level': 3,
     'debug': True,
+    'reject_calls': True,
+    'call_back': True,
+    'wait_time_before_calling_back': 10,
+    'allowed_phone_numbers': r"(^[234567])",
+    'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
 
     'domain': 'your_domain',
     'user': 'your_user',
@@ -98,6 +103,11 @@ asr.start()
 tts.start()
 
 tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
+
+#vio_commands.send(Command('make_call(destination="\'Bejcek Eduard\' <sip:4366@SECRET:5066>")', 'HUB', 'VoipIO'))
+#vio_commands.send(Command('make_call(destination="sip:4366@SECRET:5066")', 'HUB', 'VoipIO'))
+#vio_commands.send(Command('make_call(destination="4366")', 'HUB', 'VoipIO'))
+#vio_commands.send(Command('make_call(destination="155")', 'HUB', 'VoipIO'))
 
 count = 0
 max_count = 50000

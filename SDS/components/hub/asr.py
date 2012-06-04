@@ -48,7 +48,7 @@ class ASR(multiprocessing.Process):
     Return True if the process should terminate.
     """
 
-    while self.commands.poll():
+    if self.commands.poll():
       command = self.commands.recv()
 
       if isinstance(command, Command):
@@ -63,6 +63,8 @@ class ASR(multiprocessing.Process):
           self.asr.flush()
 
           return False
+
+    return False
 
   def read_audio_write_asr_hypotheses(self):
     # read input audio

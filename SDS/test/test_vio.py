@@ -15,12 +15,16 @@ from SDS.components.hub.messages import Command, Frame
 
 cfg = {
   'Audio': {
-    'sample_rate': 8000, 
+    'sample_rate': 8000,
     'samples_per_frame': 128,
   },
   'VoipIO': {
     'pjsip_log_level': 3,
     'debug': True,
+    'reject_calls': False,
+    'call_back': False,
+    'allowed_phone_numbers': r"(^[234567])",
+    'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
 
     'domain': 'your_domain',
     'user': 'your_user',
@@ -28,7 +32,7 @@ cfg = {
   },
   'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
+  },
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -58,7 +62,7 @@ max_count = 25000
 while count < max_count:
   time.sleep(cfg['Hub']['main_loop_sleep_time'])
   count += 1
-    
+
   # write one frame into the audio output
   if wav:
     data_play = wav.pop(0)
@@ -71,7 +75,7 @@ while count < max_count:
   # read all played audio
   if audio_played.poll():
     data_played = audio_played.recv()
-    
+
   # read all messages from VoipIO
   if vio_commands.poll():
     command = vio_commands.recv()
@@ -79,11 +83,10 @@ while count < max_count:
       print
       print command
       print
-    
+
   sys.stdout.flush()
-    
+
 vio_commands.send(Command('stop()'))
 vio.join()
 
 print
-

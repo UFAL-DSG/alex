@@ -62,7 +62,7 @@ class VAD(multiprocessing.Process):
     Return True if the process should terminate.
     """
 
-    while self.commands.poll():
+    if self.commands.poll():
       command = self.commands.recv()
 
       if isinstance(command, Command):
@@ -81,6 +81,8 @@ class VAD(multiprocessing.Process):
             data_play = self.audio_played_in.recv()
 
           return False
+
+    return False
 
   def vad(self, data):
     speech_segment = False

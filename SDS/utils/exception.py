@@ -19,6 +19,9 @@ class NLGException(SDSException):
 class TTSException(SDSException):
   pass
 
+class VoipIOException(Exception):
+  pass
+
 class UtteranceException(SLUException):
   pass
 
