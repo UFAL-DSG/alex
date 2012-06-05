@@ -32,6 +32,26 @@ class TTS(multiprocessing.Process):
     else:
       raise TTSException('Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
 
+  def synthesize(self, id, text):
+    self.commands.send(Command('tts_start(id="%d")' % id, 'TTS', 'HUB'))
+
+    if self.cfg['TTS']['debug']:
+      print 'TTS: Synthesize: ', text
+      sys.stdout.flush()
+
+    wav = self.tts.synthesize(text)
+
+    # FIXME: split the wave so that the last bin is of the size of the full frame
+    # this bug is at many places in the code
+    wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
+
+    self.audio_out.send(Command('utterance_start(id="%d")' % id, 'TTS', 'AudioOut'))
+    for frame in wav:
+      self.audio_out.send(Frame(frame))
+    self.audio_out.send(Command('utterance_end(id="%d")' % id, 'TTS', 'AudioOut'))
+
+    self.commands.send(Command('tts_end(id="%d")' % id, 'TTS', 'HUB'))
+
   def process_pending_commands(self):
     """Process all pending commands.
 
@@ -57,6 +77,11 @@ class TTS(multiprocessing.Process):
 
           return False
 
+        if command.parsed['__name__'] == 'synthesize':
+          self.synthesize(command.id, command.parsed['text'])
+
+          return False
+
     return False
 
   def read_text_write_audio(self):
@@ -66,25 +91,7 @@ class TTS(multiprocessing.Process):
       data_tts = self.text_in.recv()
 
       if isinstance(data_tts, TTSText):
-        self.commands.send(Command('tts_start(id="%d")' % data_tts.id, 'TTS', 'HUB'))
-        text = data_tts.text
-
-        if self.cfg['TTS']['debug']:
-          print 'TTS: Synthesize: ', text
-          sys.stdout.flush()
-
-        wav = self.tts.synthesize(text)
-
-        # FIXME: split the wave so that the last bin is of the size of the full frame
-        # this bug is at many places in the code
-        wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
-
-        self.audio_out.send(Command('utterance_start(id="%d")' % data_tts.id, 'TTS', 'AudioOut'))
-        for frame in wav:
-          self.audio_out.send(Frame(frame))
-        self.audio_out.send(Command('utterance_end(id="%d")' % data_tts.id, 'TTS', 'AudioOut'))
-
-        self.commands.send(Command('tts_end(id="%d")' % data_tts.id, 'TTS', 'HUB'))
+        self.synthesize(data_tts.id, data_tts.text)
 
   def run(self):
     self.command = None
