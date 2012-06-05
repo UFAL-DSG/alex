@@ -127,6 +127,7 @@ vio.start()
 vad.start()
 tts.start()
 
+# init the system
 count_intro = 0
 max_intro = len(introduction_cs)
 intro_played = False
@@ -150,14 +151,27 @@ while 1:
 
     if isinstance(command, Command):
       if command.parsed['__name__'] == "call_confirmed":
+        # init the system
+        count_intro = 0
+        max_intro = len(introduction_cs)
+        intro_played = False
+        s_voice_activity = False
+        s_last_voice_activity_time = 0
+        u_voice_activity = False
+        u_last_voice_activity_time = 0
+        
         play_intro(tts_commands)
+        
       if command.parsed['__name__'] == "play_utterance_start":
         s_voice_activity = True
+        
       if command.parsed['__name__'] == "play_utterance_end":
         s_voice_activity = False
         s_last_voice_activity_time = time.time()
+        
         if command.parsed['id'] == str(len(introduction_cs)):
           intro_played = True
+          s_last_voice_activity_time = 0
 
   if vad_commands.poll():
     command = vad_commands.recv()
@@ -179,15 +193,23 @@ while 1:
     print
 
   current_time = time.time()
+  
+  #print intro_played, s_voice_activity, u_voice_activity, current_time, u_last_voice_activity_time, s_last_voice_activity_time
+  #print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
+  
   if intro_played and \
      s_voice_activity == False and \
      u_voice_activity == False and \
-     current_time - s_last_voice_activity_time > 5:
+     (current_time - s_last_voice_activity_time > 5 or u_last_voice_activity_time - s_last_voice_activity_time > 0):
 
     s_voice_activity = True
     s = ram()
+    print 
+    print 'Say:', s, 
     tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
     s = sample_sentence(ss)
+    print s
+    print 
     tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
 
 
