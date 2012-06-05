@@ -49,7 +49,8 @@ class AccountCallback(pj.AccountCallback):
     if not self.cfg['VoipIO']['reject_calls']:
       self.voipio.on_incoming_call(call.info().remote_uri)
 
-      print "Incoming call from ", call.info().remote_uri
+      if self.cfg['VoipIO']['debug']:
+        print "Incoming call from ", call.info().remote_uri
 
       call_cb = CallCallback(self.cfg, call, self.voipio)
       call.set_callback(call_cb)
@@ -57,7 +58,10 @@ class AccountCallback(pj.AccountCallback):
       call.answer()
     else:
       remote_uri = call.info().remote_uri
-      print "Rejected call from ", remote_uri
+      
+      if self.cfg['VoipIO']['debug']:
+        print "Rejected call from ", remote_uri
+        
       # respond by "Busy here"
       call.answer(486)
 
@@ -77,7 +81,6 @@ class AccountCallback(pj.AccountCallback):
     if self.sem:
       if self.account.info().reg_status >= 200:
         self.sem.release()
-
 
 class CallCallback(pj.CallCallback):
   """ Callback to receive events from Call
@@ -100,10 +103,11 @@ class CallCallback(pj.CallCallback):
 
   # Notification when call state has changed
   def on_state(self):
-    print "CallCallback::on_state : Call with", self.call.info().remote_uri,
-    print "is", self.call.info().state_text,
-    print "last code =", self.call.info().last_code,
-    print "(" + self.call.info().last_reason + ")"
+    if self.cfg['VoipIO']['debug']:
+      print "CallCallback::on_state : Call with", self.call.info().remote_uri,
+      print "is", self.call.info().state_text,
+      print "last code =", self.call.info().last_code,
+      print "(" + self.call.info().last_reason + ")"
 
     if self.call.info().state == pj.CallState.CONNECTING:
       self.voipio.on_call_connecting()
@@ -118,25 +122,29 @@ class CallCallback(pj.CallCallback):
       self.voipio.on_call_disconnected()
 
   def on_transfer_status(self, code, reason, final, cont):
-    print "CallCallback::on_transfer_status : Call with", self.call.info().remote_uri,
-    print "is", self.call.info().state_text,
-    print "last code =", self.call.info().last_code,
-    print "(" + self.call.info().last_reason + ")"
+    if self.cfg['VoipIO']['debug']:
+      print "CallCallback::on_transfer_status : Call with", self.call.info().remote_uri,
+      print "is", self.call.info().state_text,
+      print "last code =", self.call.info().last_code,
+      print "(" + self.call.info().last_reason + ")"
 
     print code, reason, final, cont
 
     return True
 
   def on_transfer_request(self, dst, code):
-    print "CallCallback::on_transfer_request : Remote party transferring the call to ",
-    print dst, code
+    if self.cfg['VoipIO']['debug']:
+      print "CallCallback::on_transfer_request : Remote party transferring the call to ",
+      print dst, code
 
     return 202
 
   # Notification when call's media state has changed.
   def on_media_state(self):
     if self.call.info().media_state == pj.MediaState.ACTIVE:
-      print "CallCallback::on_media_state : Media is now active"
+      if self.cfg['VoipIO']['debug']:
+        print "CallCallback::on_media_state : Media is now active"
+        
       if not self.rec_id:
         call_slot = self.call.info().conf_slot
 
@@ -156,12 +164,15 @@ class CallCallback(pj.CallCallback):
         # Connect the memory player to the call
         pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
     else:
-      print "CallCallback::on_media_state : Media is inactive"
+      if self.cfg['VoipIO']['debug']:
+        print "CallCallback::on_media_state : Media is inactive"
 
   def on_dtmf_digit(self, digits):
+    if self.cfg['VoipIO']['debug']:
+      print "Received digits:", digits
+      
     self.voipio.on_dtmf_digit(digits)
 
-    print "Received digits:", digits
 
 
 class VoipIO(multiprocessing.Process):
@@ -190,34 +201,39 @@ class VoipIO(multiprocessing.Process):
     multiprocessing.Process.__init__(self)
 
     self.cfg = cfg
+    
     self.commands = commands
     self.local_commands = deque()
+    
     self.audio_record = audio_record
+    
     self.audio_play = audio_play
+    self.local_audio_play = deque()
+    
     self.audio_played = audio_played
+    
     self.last_frame_id = 1
     self.message_queue = []
 
     self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                          'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
-  def process_pending_messages(self):
-    """ Send all messages for which corresponding frame was already played.
+  def recv_input_localy(self):
+    """ Copy all input from input connections into local queue objects.
+    
+    This will prevent blocking the senders.
     """
-    num_played_frames = self.mem_player.get_num_played_frames()
+    
+    while self.commands.poll():
+      command = self.commands.recv()
+      self.local_commands.append(command)
 
-    del_messages = []
-
-    for i, (message, frame_id) in enumerate(self.message_queue):
-      if frame_id <= num_played_frames:
-        self.commands.send(message)
-        del_messages.append(frame_id)
-
-    # delete the messages which were already sent
-    self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
-
-  def execute_command(self, command):
-    """ Execute the passed command.
+    while self.audio_play.poll():
+      frame = self.audio_play.recv()
+      self.local_audio_play.append(frame)
+  
+  def process_pending_commands(self):
+    """Process all pending commands.
 
     Available commands:
       stop()    - stop processing and exit the process
@@ -233,63 +249,71 @@ class VoipIO(multiprocessing.Process):
 
     """
 
-    if isinstance(command, Command):
-      if command.parsed['__name__'] == 'stop':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
-
-        return True
-
-      if command.parsed['__name__'] == 'flush':
-        # discard all data in play buffer
-        while self.audio_play.poll():
-          data_play = self.audio_play.recv()
-
-        self.mem_player.flush()
-
-        return False
-
-      if command.parsed['__name__'] == 'make_call':
-        self.make_call(command.parsed['destination'])
-
-        return False
-
-      if command.parsed['__name__'] == 'transfer':
-        self.transfer(command.parsed['destination'])
-
-        return False
-
-      if command.parsed['__name__'] == 'hangup':
-        self.hungup()
-
-        return False
-
-      raise VoipIOException('Unsupported command: ' + command)
-
-  def process_pending_commands(self):
-    """Process all pending commands.
-    """
-
-    if self.commands.poll():
-      command = self.commands.recv()
-      return self.execute_command(command)
-
     if self.local_commands:
       command = self.local_commands.popleft()
-      return self.execute_command(command)
+      if isinstance(command, Command):
+        if command.parsed['__name__'] == 'stop':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
 
+          return True
+
+        if command.parsed['__name__'] == 'flush':
+          # discard all data in play buffer
+          while self.audio_play.poll():
+            data_play = self.audio_play.recv()
+
+          self.local_commands.clear()
+          self.local_audio_play.clear()
+          
+          self.mem_player.flush()
+
+          return False
+
+        if command.parsed['__name__'] == 'make_call':
+          self.make_call(command.parsed['destination'])
+
+          return False
+
+        if command.parsed['__name__'] == 'transfer':
+          self.transfer(command.parsed['destination'])
+
+          return False
+
+        if command.parsed['__name__'] == 'hangup':
+          self.hungup()
+
+          return False
+
+        raise VoipIOException('Unsupported command: ' + command)
+        
     return False
+
+  def send_pending_messages(self):
+    """ Send all messages for which corresponding frame was already played.
+    """
+    num_played_frames = self.mem_player.get_num_played_frames()
+
+    del_messages = []
+
+    for i, (message, frame_id) in enumerate(self.message_queue):
+      if frame_id <= num_played_frames:
+        self.commands.send(message)
+        del_messages.append(frame_id)
+
+    # delete the messages which were already sent
+    self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
 
   def read_write_audio(self):
     """Send some of the available data to the output.
+    
     It should be a non-blocking operation.
-
     """
 
-    if self.audio_play.poll() and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
+    if self.local_audio_play and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
       # send a frame from input to be played
-      data_play = self.audio_play.recv()
+      data_play = self.local_audio_play.popleft()
 
       if isinstance(data_play, Frame):
         if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
@@ -573,15 +597,18 @@ class VoipIO(multiprocessing.Process):
       while 1:
         time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+        self.recv_input_localy()
+        
         # process all pending commands
         if self.process_pending_commands():
           return
 
+        # send all pending messages which has to be synchronized with played frames
+        self.send_pending_messages()
+        
         # process audio data
         self.read_write_audio()
 
-        # send all pending messages which has to be synchronized with played frames
-        self.process_pending_messages()
 
       # Shutdown the library
       self.transport = None

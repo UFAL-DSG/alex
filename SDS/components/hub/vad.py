@@ -14,15 +14,11 @@ from collections import deque
 
 from SDS.components.hub.messages import Command, Frame
 
-"""
-FIXME: There is confusion in naming packets, frames, and samples.
-       Ideally frames should always mean be blocks of samples.
-"""
-
 class VAD(multiprocessing.Process):
   """ VAD detects segments of speech in the audio stream.
+  
   It process input signal and outputs only frames with speech. Every time a new speech segment starts, it sends
-  'speech_start()' and everytime a speech segmends ends it sends 'speech_end()'.
+  'speech_start()' and everytime a speech segmends ends it sends 'speech_end()' commands.
 
   These commands has to be properly detected in the output stream by the following component.
   """
@@ -80,6 +76,9 @@ class VAD(multiprocessing.Process):
           while self.audio_played_in.poll():
             data_play = self.audio_played_in.recv()
 
+          self.deque_audio_recorded_in.clear()
+          self.deque_audio_played_in.clear()
+          
           return False
 
     return False
@@ -219,7 +218,7 @@ class VAD(multiprocessing.Process):
   def run(self):
     while 1:
       time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-
+      
       # process all pending commands
       if self.process_pending_commands():
         return
