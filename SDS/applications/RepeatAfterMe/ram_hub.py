@@ -5,6 +5,9 @@ import multiprocessing
 import time
 import sys
 import random
+import cPickle as pickle
+
+from collections import defaultdict
 
 import __init__
 
@@ -76,6 +79,42 @@ def load_sentences(file_name):
 def sample_sentence(l):
   return random.choice(l)
 
+def load_database(file_name):
+  try:
+    f = open(file_name, 'r')
+    db = pickle.load(f)
+    f.close()
+    return db
+  except IOError:
+    return dict()
+
+def save_database(file_name, db):
+  f = open(file_name, 'w+')
+  pickle.dump(db, f)
+  f.close()
+
+def get_stats(db, remote_uri):
+
+  num_all_calls = 0
+  total_time = 0
+  last24_num_calls = 0
+  last24_total_time = 0
+  try:
+    for s, e, l in db['calls_from_start_end_length'][remote_uri]:
+      if l > 0:
+        num_all_calls += 1
+        total_time += l
+
+        # do counts for last 24 hours
+        if s > time.time() - 24*60*60:
+          last24_num_calls += 1
+          last24_total_time += l
+  except:
+    pass
+
+  return num_all_calls, total_time, last24_num_calls, last24_total_time
+
+
 introduction_cs = ["Dobrý den",
 #"Dovolali jste se na telefonní službu Ústavu formální a aplikované lingvistiky",
 #"která pořizuje data pro zlepšování systémů rozpoznávání mluvené řeči",
@@ -134,12 +173,15 @@ tts.start()
 
 # init the constants
 max_intro = len(introduction_cs)
-max_call_length = 10*60
+max_call_length = 10*60         # in seconds
+last24_max_num_calls  = 20
+last24_max_total_time = 50*60   # in seconds
 
 # init the system
 call_start = 0
 count_intro = 0
 intro_played = False
+reject_played = False
 intro_id = 0
 last_intro_id = -1
 end_played = False
@@ -147,6 +189,13 @@ s_voice_activity = False
 s_last_voice_activity_time = 0
 u_voice_activity = False
 u_last_voice_activity_time = 0
+
+db = load_database('call_db.pckl')
+
+if 'calls_from_start_end_length' not in db:
+  db['calls_from_start_end_length'] = dict()
+
+print db
 
 while 1:
   time.sleep(cfg['Hub']['main_loop_sleep_time'])
@@ -162,23 +211,64 @@ while 1:
     print
 
     if isinstance(command, Command):
-      if command.parsed['__name__'] == "call_confirmed":
-        # init the system
-        call_start = time.time()
-        count_intro = 0
-        intro_played = False
-        end_played = False
-        s_voice_activity = False
-        s_last_voice_activity_time = 0
-        u_voice_activity = False
-        u_last_voice_activity_time = 0
+      if command.parsed['__name__'] == "incoming_call":
+        pass
 
-        intro_id, last_intro_id = play_intro(tts_commands, intro_id, last_intro_id)
+      if command.parsed['__name__'] == "call_confirmed":
+        remote_uri = command.parsed['remote_uri']
+        num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
+
+        print '='*120
+        print 'Incoming call from: ', remote_uri
+        print '-'*120
+        print 'Total calls:             ', num_all_calls
+        print 'Total time (s):          ', total_time
+        print 'Last 24h total calls:    ', last24_num_calls
+        print 'Last 24h total time (s): ', last24_total_time
+        print '-'*120
+
+        if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
+          tts_commands.send(Command('synthesize(text="Děkujeme za zavolání, ale už jste volali hodně. '
+          'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")' , 'HUB', 'TTS'))
+          reject_played = True
+          s_voice_activity = True
+          print 'CALL REJECTED'
+        else:
+          # init the system
+          call_start = time.time()
+          count_intro = 0
+          intro_played = False
+          reject_played = False
+          end_played = False
+          s_voice_activity = False
+          s_last_voice_activity_time = 0
+          u_voice_activity = False
+          u_last_voice_activity_time = 0
+
+          intro_id, last_intro_id = play_intro(tts_commands, intro_id, last_intro_id)
+
+          print 'CALL ACCEPTED'
+
+        print '='*120
+
+        try:
+          db['calls_from_start_end_length'][remote_uri].append([time.time(), 0, 0])
+        except:
+          db['calls_from_start_end_length'][remote_uri] = [[time.time(), 0, 0], ]
+        save_database('call_db.pckl', db)
 
       if command.parsed['__name__'] == "call_disconnected":
+        remote_uri = command.parsed['remote_uri']
+
         vio_commands.send(Command('flush()'))
         vad_commands.send(Command('flush()'))
         tts_commands.send(Command('flush()'))
+
+        s, e, l = db['calls_from_start_end_length'][remote_uri][-1]
+        db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
+        save_database('call_db.pckl', db)
+
+        intro_played = False
 
       if command.parsed['__name__'] == "play_utterance_start":
         s_voice_activity = True
@@ -217,6 +307,14 @@ while 1:
 #  print s_voice_activity, u_voice_activity,
 #  print call_start,  current_time, u_last_voice_activity_time, s_last_voice_activity_time
 #  print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
+
+  if reject_played == True and s_voice_activity == False:
+    # be careful it does not hangup immediately
+    reject_played = False
+    vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+    vio_commands.send(Command('flush()'))
+    vad_commands.send(Command('flush()'))
+    tts_commands.send(Command('flush()'))
 
   if intro_played and current_time - call_start > max_call_length and s_voice_activity == False:
     # hovor trval jiz vice nez deset minut

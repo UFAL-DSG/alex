@@ -47,6 +47,7 @@ class AccountCallback(pj.AccountCallback):
     """
 
     if not self.cfg['VoipIO']['reject_calls']:
+      self.voipio.call = call
       self.voipio.on_incoming_call(call.info().remote_uri)
 
       if self.cfg['VoipIO']['debug']:
@@ -110,19 +111,18 @@ class CallCallback(pj.CallCallback):
       print "(" + self.call.info().last_reason + ")"
 
     if self.call.info().state == pj.CallState.CONNECTING:
-      self.voipio.on_call_connecting()
+      self.voipio.on_call_connecting(self.call.info().remote_uri)
     if self.call.info().state == pj.CallState.CONFIRMED:
-      self.voipio.call = self.call
-      self.voipio.on_call_confirmed()
+      self.voipio.on_call_confirmed(self.call.info().remote_uri)
 
     if self.call.info().state == pj.CallState.DISCONNECTED:
-      self.call = None
+      self.voipio.call = None
 
       if self.recorded_id:
         pj.Lib.instance().recorder_destroy(self.recorded_id)
       if self.played_id:
         pj.Lib.instance().recorder_destroy(self.played_id)
-      self.voipio.on_call_disconnected()
+      self.voipio.on_call_disconnected(self.call.info().remote_uri)
 
   def on_transfer_status(self, code, reason, final, cont):
     if self.cfg['VoipIO']['debug']:
@@ -490,7 +490,8 @@ class VoipIO(multiprocessing.Process):
       if self.cfg['VoipIO']['debug']:
         print "Hangup the call"
 
-      return self.call.hangup()
+      if self.call:
+        return self.call.hangup()
     except pj.Error, e:
       print "Exception: " + str(e)
       return None
@@ -517,26 +518,26 @@ class VoipIO(multiprocessing.Process):
       # use the queue since we cannot make calls from a callback
       self.local_commands.append(Command('make_call(destination="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'VoipIO'))
 
-  def on_call_connecting(self):
+  def on_call_connecting(self, remote_uri):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_connecting"
 
     # send a message that the call is connecting
-    self.commands.send(Command('call_connecting()', 'VoipIO', 'HUB'))
+    self.commands.send(Command('call_connecting(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
 
-  def on_call_confirmed(self):
+  def on_call_confirmed(self, remote_uri):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_confirmed"
 
     # send a message that the call is confirmed
-    self.commands.send(Command('call_confirmed()', 'VoipIO', 'HUB'))
+    self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
 
-  def on_call_disconnected(self):
+  def on_call_disconnected(self, remote_uri):
     if self.cfg['VoipIO']['debug']:
       print "VoipIO::on_call_disconnected"
 
     # send a message that the call is disconnected
-    self.commands.send(Command('call_disconnected()', 'VoipIO', 'HUB'))
+    self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
 
   def on_dtmf_digit(self, digits):
     if self.cfg['VoipIO']['debug']:
