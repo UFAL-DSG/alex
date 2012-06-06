@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
+import collections
 
 from SDS.utils.string import parse_command
 from SDS.utils.multiprocessing import InstanceID
@@ -16,7 +17,7 @@ class Command(InstanceID):
     self.source = source
     self.target = target
 
-    self.parsed = parse_command(self.command)
+    self.parsed = collections.defaultdict(str, parse_command(self.command))
 
   def __str__(self):
     return "From: %s To: %s - Command: %s " % (self.source, self.target, self.command)

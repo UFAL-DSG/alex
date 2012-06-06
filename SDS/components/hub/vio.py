@@ -58,10 +58,10 @@ class AccountCallback(pj.AccountCallback):
       call.answer()
     else:
       remote_uri = call.info().remote_uri
-      
+
       if self.cfg['VoipIO']['debug']:
         print "Rejected call from ", remote_uri
-        
+
       # respond by "Busy here"
       call.answer(486)
 
@@ -112,9 +112,12 @@ class CallCallback(pj.CallCallback):
     if self.call.info().state == pj.CallState.CONNECTING:
       self.voipio.on_call_connecting()
     if self.call.info().state == pj.CallState.CONFIRMED:
+      self.voipio.call = self.call
       self.voipio.on_call_confirmed()
 
     if self.call.info().state == pj.CallState.DISCONNECTED:
+      self.call = None
+
       if self.recorded_id:
         pj.Lib.instance().recorder_destroy(self.recorded_id)
       if self.played_id:
@@ -144,7 +147,7 @@ class CallCallback(pj.CallCallback):
     if self.call.info().media_state == pj.MediaState.ACTIVE:
       if self.cfg['VoipIO']['debug']:
         print "CallCallback::on_media_state : Media is now active"
-        
+
       if not self.rec_id:
         call_slot = self.call.info().conf_slot
 
@@ -170,10 +173,8 @@ class CallCallback(pj.CallCallback):
   def on_dtmf_digit(self, digits):
     if self.cfg['VoipIO']['debug']:
       print "Received digits:", digits
-      
+
     self.voipio.on_dtmf_digit(digits)
-
-
 
 class VoipIO(multiprocessing.Process):
   """ VoipIO implements IO operations using a SIP protocol.
@@ -201,17 +202,20 @@ class VoipIO(multiprocessing.Process):
     multiprocessing.Process.__init__(self)
 
     self.cfg = cfg
-    
+    self.acc = None
+    self.acc_cb = None
+    self.call = None
+
     self.commands = commands
     self.local_commands = deque()
-    
+
     self.audio_record = audio_record
-    
+
     self.audio_play = audio_play
     self.local_audio_play = deque()
-    
+
     self.audio_played = audio_played
-    
+
     self.last_frame_id = 1
     self.message_queue = []
 
@@ -220,10 +224,10 @@ class VoipIO(multiprocessing.Process):
 
   def recv_input_localy(self):
     """ Copy all input from input connections into local queue objects.
-    
+
     This will prevent blocking the senders.
     """
-    
+
     while self.commands.poll():
       command = self.commands.recv()
       self.local_commands.append(command)
@@ -231,7 +235,7 @@ class VoipIO(multiprocessing.Process):
     while self.audio_play.poll():
       frame = self.audio_play.recv()
       self.local_audio_play.append(frame)
-  
+
   def process_pending_commands(self):
     """Process all pending commands.
 
@@ -243,7 +247,7 @@ class VoipIO(multiprocessing.Process):
 
       call(dst)     - make a call to the destination dst
       transfer(dst) - transfer the existing call to the destination dst
-      hungup()      - hung up the existing call
+      hangup()      - hang up the existing call
 
     Return True if the process should terminate.
 
@@ -266,7 +270,7 @@ class VoipIO(multiprocessing.Process):
 
           self.local_commands.clear()
           self.local_audio_play.clear()
-          
+
           self.mem_player.flush()
 
           return False
@@ -282,12 +286,12 @@ class VoipIO(multiprocessing.Process):
           return False
 
         if command.parsed['__name__'] == 'hangup':
-          self.hungup()
+          self.hangup()
 
           return False
 
         raise VoipIOException('Unsupported command: ' + command)
-        
+
     return False
 
   def send_pending_messages(self):
@@ -307,7 +311,7 @@ class VoipIO(multiprocessing.Process):
 
   def read_write_audio(self):
     """Send some of the available data to the output.
-    
+
     It should be a non-blocking operation.
     """
 
@@ -328,9 +332,9 @@ class VoipIO(multiprocessing.Process):
 
       elif isinstance(data_play, Command):
         if data_play.parsed['__name__'] == 'utterance_start':
-          self.message_queue.append((Command('play_utterance_start(id="%s")' % data_play.parsed['id'], 'VoipIO', 'HUB'), self.last_frame_id))
+          self.message_queue.append((Command('play_utterance_start(user_id="%s")' % data_play.parsed['user_id'], 'VoipIO', 'HUB'), self.last_frame_id))
         if data_play.parsed['__name__'] == 'utterance_end':
-          self.message_queue.append((Command('play_utterance_end(id="%s")' % data_play.parsed['id'], 'VoipIO', 'HUB'), self.last_frame_id))
+          self.message_queue.append((Command('play_utterance_end(user_id="%s")' % data_play.parsed['user_id'], 'VoipIO', 'HUB'), self.last_frame_id))
 
     if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
       # get and send recorded data, it must be read at the other end
@@ -396,12 +400,12 @@ class VoipIO(multiprocessing.Process):
     """
 
     sip_uri = pj.SIPUri(dst)
-    
+
     if self.cfg['VoipIO']['allowed_users']:
       p = re.search(self.cfg['VoipIO']['allowed_users'], sip_uri.user)
       if not p:
         return False
-    
+
     if self.cfg['VoipIO']['forbidden_users']:
       p = re.search(self.cfg['VoipIO']['forbidden_users'], sip_uri.user)
       if p:
@@ -430,7 +434,7 @@ class VoipIO(multiprocessing.Process):
   def normalize_uri(self, uri):
     """ Normalize the phone number or sip uri with a contact name into a clear SIP URI.
     """
-    
+
     if self.is_phone_number(uri):
       if self.is_accepted_phone_number(uri):
         uri = self.construct_sip_uri_from_phone_number(uri)
@@ -442,7 +446,7 @@ class VoipIO(multiprocessing.Process):
         uri = self.get_sip_uri(uri)
       else:
         return "blocked"
-        
+
     return uri
 
   def make_call(self, uri):
@@ -450,10 +454,10 @@ class VoipIO(multiprocessing.Process):
     """
     try:
       uri = self.normalize_uri(uri)
-      
+
       if self.cfg['VoipIO']['debug']:
         print "Making a call to", uri
-        
+
       if self.is_sip_uri(uri):
         # create a call back for the call
         call_cb = CallCallback(self.cfg, None, self)
@@ -472,7 +476,7 @@ class VoipIO(multiprocessing.Process):
   def transfer(self, uri):
     """FIXME: This does not work yet!"""
     return
-    
+
     try:
       if self.cfg['VoipIO']['debug']:
         print "Transferring the call to", uri
@@ -484,8 +488,9 @@ class VoipIO(multiprocessing.Process):
   def hangup(self):
     try:
       if self.cfg['VoipIO']['debug']:
-        print "Hung up the call"
-      return self.call.hungup()
+        print "Hangup the call"
+
+      return self.call.hangup()
     except pj.Error, e:
       print "Exception: " + str(e)
       return None
@@ -598,14 +603,14 @@ class VoipIO(multiprocessing.Process):
         time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
         self.recv_input_localy()
-        
+
         # process all pending commands
         if self.process_pending_commands():
           return
 
         # send all pending messages which has to be synchronized with played frames
         self.send_pending_messages()
-        
+
         # process audio data
         self.read_write_audio()
 

@@ -41,7 +41,7 @@ cfg = {
     'power_threshold': 190,
     'power_threshold_multiplier': 1,
     'power_adaptation_frames': 30,
-    'power_decision_frames': 20,
+    'power_decision_frames': 40,
     'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
   },
@@ -80,16 +80,21 @@ introduction_cs = ["Dobrý den",
 #"Dovolali jste se na telefonní službu Ústavu formální a aplikované lingvistiky",
 #"která pořizuje data pro zlepšování systémů rozpoznávání mluvené řeči",
 #"Systém vás vyzve k opakování jedné nebo více vět",
+#"Maximální délka hovoru je deset minut",
 #"Pokud budete chtít hovor ukončit, zavěste telefon",
-#"Hovor je nahráván pro výzkumné a komerční účely",
-#"Záznam může být předán jinému subjektu",
-#"Pokud nesouhlasíte, potom zavěste",
+"Hovor je nahráván pro výzkumné a komerční účely",
+"Záznam může být předán jinému subjektu",
+"Pokud nesouhlasíte, potom zavěste",
 "Děkujeme za spolupráci",
 ]
 
-def play_intro(tts_commands):
+def play_intro(tts_commands, intro_id, last_intro_id):
   for i in range(len(introduction_cs)):
-    tts_commands.send(Command('synthesize(text="%s")' % introduction_cs[i], 'HUB', 'TTS'))
+    last_intro_id = str(intro_id)
+    intro_id += 1
+    tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, introduction_cs[i]), 'HUB', 'TTS'))
+
+  return intro_id, last_intro_id
 
 def ram():
   return random.choice(["Řekněte ", "Zopakujte ", "Vyslovte ", "Zopakujte po mně", "Opakujte", "Vyslovte"])
@@ -127,10 +132,17 @@ vio.start()
 vad.start()
 tts.start()
 
-# init the system
-count_intro = 0
+# init the constants
 max_intro = len(introduction_cs)
+max_call_length = 10*60
+
+# init the system
+call_start = 0
+count_intro = 0
 intro_played = False
+intro_id = 0
+last_intro_id = -1
+end_played = False
 s_voice_activity = False
 s_last_voice_activity_time = 0
 u_voice_activity = False
@@ -152,24 +164,30 @@ while 1:
     if isinstance(command, Command):
       if command.parsed['__name__'] == "call_confirmed":
         # init the system
+        call_start = time.time()
         count_intro = 0
-        max_intro = len(introduction_cs)
         intro_played = False
+        end_played = False
         s_voice_activity = False
         s_last_voice_activity_time = 0
         u_voice_activity = False
         u_last_voice_activity_time = 0
-        
-        play_intro(tts_commands)
-        
+
+        intro_id, last_intro_id = play_intro(tts_commands, intro_id, last_intro_id)
+
+      if command.parsed['__name__'] == "call_disconnected":
+        vio_commands.send(Command('flush()'))
+        vad_commands.send(Command('flush()'))
+        tts_commands.send(Command('flush()'))
+
       if command.parsed['__name__'] == "play_utterance_start":
         s_voice_activity = True
-        
+
       if command.parsed['__name__'] == "play_utterance_end":
         s_voice_activity = False
         s_last_voice_activity_time = time.time()
-        
-        if command.parsed['id'] == str(len(introduction_cs)):
+
+        if command.parsed['user_id'] == last_intro_id:
           intro_played = True
           s_last_voice_activity_time = 0
 
@@ -193,23 +211,44 @@ while 1:
     print
 
   current_time = time.time()
-  
-  #print intro_played, s_voice_activity, u_voice_activity, current_time, u_last_voice_activity_time, s_last_voice_activity_time
-  #print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
-  
+
+#  print
+#  print intro_played, end_played
+#  print s_voice_activity, u_voice_activity,
+#  print call_start,  current_time, u_last_voice_activity_time, s_last_voice_activity_time
+#  print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
+
+  if intro_played and current_time - call_start > max_call_length and s_voice_activity == False:
+    # hovor trval jiz vice nez deset minut
+    if not end_played:
+      s_voice_activity = True
+      last_intro_id = str(intro_id)
+      intro_id += 1
+      tts_commands.send(Command('synthesize(text="%s")' % "Uplynulo deset minut. Děkujeme za zavolání.", 'HUB', 'TTS'))
+      end_played = True
+    else:
+      intro_played = False
+      # be careful it does not hangup immediately
+      vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+      vio_commands.send(Command('flush()'))
+      vad_commands.send(Command('flush()'))
+      tts_commands.send(Command('flush()'))
+
   if intro_played and \
      s_voice_activity == False and \
      u_voice_activity == False and \
-     (current_time - s_last_voice_activity_time > 5 or u_last_voice_activity_time - s_last_voice_activity_time > 0):
+     (current_time - s_last_voice_activity_time > 6 or u_last_voice_activity_time - s_last_voice_activity_time > 0):
 
     s_voice_activity = True
     s = ram()
-    print 
-    print 'Say:', s, 
+    print
+    print '='*80
+    print 'Say:', s, '-',
     tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
     s = sample_sentence(ss)
     print s
-    print 
+    print '='*80
+    print
     tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
 
 
@@ -230,7 +269,6 @@ for c in non_command_connections:
 # wait for processes to stop
 vio.join()
 vad.join()
-asr.join()
 tts.join()
 
 print
