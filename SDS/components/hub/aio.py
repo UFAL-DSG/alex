@@ -73,6 +73,8 @@ class AudioIO(multiprocessing.Process):
 
     if self.commands.poll():
       command = self.commands.recv()
+      if self.cfg['AudioIO']['debug']:
+        self.cfg['Logging']['system_logger'].debug(command)
 
       if isinstance(command, Command):
         if command.parsed['__name__'] == 'stop':

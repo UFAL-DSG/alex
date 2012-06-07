@@ -16,6 +16,16 @@ This program extracts short sentences from a list of text files.
 
 """
 
+reject = ["Halo","Ať ","I ","Šak ","Ultimus","Rossum","Busmane","dušinko","V ","Oh, ",
+"S ","Z ","Oh ","A i","RUR","Haha","plemeniti",
+]
+
+replace_by_empty_string = [', prosím vás,', ', ó hleďte,',', slečno Gloryová,', 'Brrr haha,',
+]
+
+replace_by_space = ['d5', ' hr hr', '  ',  '  '
+]
+
 def split_into_sentences(s):
   x = s.split(' ')
 
@@ -85,59 +95,31 @@ if __name__ == '__main__':
     if not (4 < len(ii) < 10):
       continue
 
-    s = s.replace(', prosím vás,', '')
-    s = s.replace('  ', ' ')
-    s = s.replace('  ', ' ')
+    for x in replace_by_space:
+      s = s.replace(x, ' ')
     s = s.strip()
     r2.append(s)
 
   r2 = sorted(r2)
   r3 = []
   for s in r2:
-    s = s.replace(', prosím vás,', '')
-    s = s.replace(', ó hleďte,', '')
-    s = s.replace(', slečno Gloryová,', '')
-    s = s.replace('d5', ' ')
-    s = s.replace(' hr hr', ' ')
-    s = s.replace('Brrr haha,', '')
-    s = s.replace('  ', ' ')
-    s = s.replace('  ', ' ')
+    for x in replace_by_empty_string:
+      s = s.replace(x, '')
+
+    for x in replace_by_space:
+      s = s.replace(x, ' ')
+
     s = s.strip()
 
-    if "ó ó" in s:
+    c = False
+    for x in reject:
+      if x in s:
+        c = True
+        break
+    if c:
       continue
-    if "Halo" in s:
-      continue
-    if "Ať " in s:
-      continue
-    if "I " in s:
-      continue
-    if "Šak " in s:
-      continue
-    if "Ultimus" in s:
-      continue
-    if "Rossum" in s:
-      continue
-    if "Busmane" in s:
-      continue
-    if "V " in s:
-      continue
-    if "Oh, " in s:
-      continue
-    if "S " in s:
-      continue
-    if "Z " in s:
-      continue
-    if "Oh " in s:
-      continue
-    if "A i" in s:
-      continue
-    if "RUR" in s:
-      continue
-    if "Haha" in s:
-      continue
-    if "plemeniti" in s:
-      continue
+
+
     if s.count(',') > 1:
       continue
 
@@ -159,6 +141,8 @@ if __name__ == '__main__':
     s = re.sub(r"^Galle, ", "", s)
     s = re.sub(r"^Jirko, ", "", s)
     s = re.sub(r"^Harry, ", "", s)
+    s = re.sub(r"^My my, ", "my", s)
+    s = re.sub(r"^Ty, ", "", s)
     s = re.sub(r"^Ach [a-zA-Z]+,", "", s)
 #    print s
 #    print '-'
@@ -179,12 +163,12 @@ if __name__ == '__main__':
       r4.append(i)
 
 
-  d = defaultdict(int)
-  for i in r4:
-    for ii in i:
-      d[ii] += 1
-
-
-  for k in sorted(d.keys()):
-    print k, ":", d[k]
-
+#  d = defaultdict(int)
+#  for i in r4:
+#    for ii in i:
+#      d[ii] += 1
+#
+#
+#  for k in sorted(d.keys()):
+#    print k, ":", d[k]
+#

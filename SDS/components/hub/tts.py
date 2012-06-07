@@ -35,10 +35,6 @@ class TTS(multiprocessing.Process):
   def synthesize(self, user_id, text):
     self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
 
-    if self.cfg['TTS']['debug']:
-      print 'TTS: Synthesize: ', text
-      sys.stdout.flush()
-
     wav = self.tts.synthesize(text)
 
     # FIXME: split the wave so that the last bin is of the size of the full frame
@@ -65,6 +61,8 @@ class TTS(multiprocessing.Process):
 
     if self.commands.poll():
       command = self.commands.recv()
+      if self.cfg['TTS']['debug']:
+        self.cfg['Logging']['system_logger'].debug(command)
 
       if isinstance(command, Command):
         if command.parsed['__name__'] == 'stop':

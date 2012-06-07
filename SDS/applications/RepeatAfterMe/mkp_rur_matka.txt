@@ -17,7 +17,6 @@ Ale Prime, nech toho protivného tajemství života
 Ale bylo to vlastně proti předpokladu
 Ale bůh uchovej, slečno Gloryová
 Ale chraň bůh, slečno Gloryová
-Ale dušinko, to není proti tobě
 Ale dítě, co to říkáš
 Ale já jim to řeknu, nemysli si
 Ale já jsem měla vždycky jenom jejich zájmy
@@ -301,7 +300,6 @@ Já jsem jenom psal do novin
 Já jsem moc krásného na své smrti nenašel
 Já jsem neměla žádné jiné poslání než vás
 Já jsem se Robotů bála
-Já jsem se tam děsně zlobil
 Já jsem stará a tvrdohlavá ženská
 Já jsem také měl svůj sen
 Já jsem vám asi nikdy nerozuměla
@@ -326,7 +324,6 @@ Já to ještě nemám hotové
 Já už ani tobě nebudu rozumět
 Já už jsem dal své slovo
 Já už jsem dala dost
-Já už k ničemu nejsem
 Já už mám jen tebe
 Já už mám jenom tebe
 Já vlast volám všechny muže
@@ -410,7 +407,6 @@ Musíte zabíjet a panovat, chceteli být jako lidé
 Musíš být mamince oporou a ochranou
 Muž má být trochu surovec
 My ho tam nesmíme nechat
-My jsme jen tak přišli za tebou
 My jsme popravovali jenom špióny nebo zrádce
 My jsme pořád s tebou
 My jsme pro Toniho špatný příklad
@@ -831,7 +827,6 @@ Ty ses ještě nenaučil strašně věřit
 Ty si pořád něco představuješ
 Ty ty mne tedy pustíš
 Ty věci, to jsi byl ty
-Ty, má takový pokus nějakou cenu
 Tys měl na něho vliv, můj milý
 Tys nebyl nikdy tak mladý a družný
 Tys taky byl samé knížky jako Toni
@@ -980,6 +975,7 @@ kolikpak Robotů jste dohromady zreformoval
 leda že je to smrt za něco
 ledaže by bylo už na návrat pozdě
 my jsme chválabohu aspoň naučili bojovat lid
+má takový pokus nějakou cenu
 má to nějaký význam, takový rekord
 měla bych tě taky ráda
 na chlup po deseti letech
@@ -1017,6 +1013,7 @@ vy ste zneuctili vobraz boží
 zda bych vám zcela výjimečně neukázal naši továrnu
 Ó bože, kdo je tu
 Ó jen mít sto let času
+Ó ó ó, proč jste je zahubili
 Úloha připouští dvojí řešení, vaše blahorodí
 Člověk má být trochu blázen
 Člověče, vždyť je to hudba

@@ -50,6 +50,8 @@ class ASR(multiprocessing.Process):
 
     if self.commands.poll():
       command = self.commands.recv()
+      if self.cfg['ASR']['debug']:
+        self.cfg['Logging']['system_logger'].debug(command)
 
       if isinstance(command, Command):
         if command.parsed['__name__'] == 'stop':
@@ -94,15 +96,13 @@ class ASR(multiprocessing.Process):
           self.recognition_on = True
 
           if self.cfg['ASR']['debug']:
-            print 'ASR: speech_start()'
-            sys.stdout.flush()
+            self.cfg['Logging']['system_logger'].debug('ASR: speech_start()')
 
         elif dr_speech_start == "speech_end":
           self.recognition_on = False
 
           if self.cfg['ASR']['debug']:
-            print 'ASR: speech_end()'
-            sys.stdout.flush()
+            self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
 
           hyp = self.asr.hyp_out()
           self.commands.send(Command("asr_end()", 'ASR', 'HUB'))

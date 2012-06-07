@@ -16,7 +16,7 @@ from SDS.components.hub.messages import Command, Frame
 
 class VAD(multiprocessing.Process):
   """ VAD detects segments of speech in the audio stream.
-  
+
   It process input signal and outputs only frames with speech. Every time a new speech segment starts, it sends
   'speech_start()' and everytime a speech segmends ends it sends 'speech_end()' commands.
 
@@ -60,6 +60,8 @@ class VAD(multiprocessing.Process):
 
     if self.commands.poll():
       command = self.commands.recv()
+      if self.cfg['VAD']['debug']:
+        self.cfg['Logging']['system_logger'].debug(command)
 
       if isinstance(command, Command):
         if command.parsed['__name__'] == 'stop':
@@ -78,7 +80,7 @@ class VAD(multiprocessing.Process):
 
           self.deque_audio_recorded_in.clear()
           self.deque_audio_played_in.clear()
-          
+
           return False
 
     return False
@@ -107,9 +109,7 @@ class VAD(multiprocessing.Process):
       detection_window = self.speech_frames[-self.cfg['VAD']['power_decision_frames']:]
       s = float(sum(detection_window))/len(detection_window)
       if self.cfg['VAD']['debug']:
-        print 'E:', energy,
-        print 'T:', self.power_threshold_adapted,
-        print 'S:', s,
+        self.cfg['Logging']['system_logger'].debug('E: %s T: %s S: %s' % (energy, self.power_threshold_adapted,s))
 
       vad = self.last_vad
       change = None
@@ -149,7 +149,7 @@ class VAD(multiprocessing.Process):
         vad, change = self.vad(data_rec.payload)
 
         if self.cfg['VAD']['debug']:
-          print vad, change,
+          self.cfg['Logging']['system_logger'].debug("vad: %s change:%s" % (vad, change))
 
         if change:
           if change == 'speech':
@@ -157,11 +157,11 @@ class VAD(multiprocessing.Process):
             self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
             self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
             # create new logging file
-            self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
-                                                 'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
+            self.output_file_name = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
+              'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
             if self.cfg['VAD']['debug']:
-              print self.output_file_name
+              self.cfg['Logging']['system_logger'].debug('Output file name: %s' % self.output_file_name)
 
             self.wf = wave.open(self.output_file_name, 'w')
             self.wf.setnchannels(2)
@@ -178,11 +178,9 @@ class VAD(multiprocessing.Process):
 
         if self.cfg['VAD']['debug']:
           if vad:
-              print '+',
-              sys.stdout.flush()
+              self.cfg['Logging']['system_logger'].debug('+')
           else:
-              print '-',
-              sys.stdout.flush()
+              self.cfg['Logging']['system_logger'].debug('-')
 
         if vad:
           while self.deque_audio_recorded_in:
@@ -218,7 +216,7 @@ class VAD(multiprocessing.Process):
   def run(self):
     while 1:
       time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-      
+
       # process all pending commands
       if self.process_pending_commands():
         return

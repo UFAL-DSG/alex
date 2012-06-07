@@ -15,6 +15,7 @@ from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.tts import TTS
 from SDS.components.hub.messages import Command, TTSText
+from SDS.utils.mproc import SystemLogger
 
 cfg = {
   'Audio': {
@@ -23,8 +24,8 @@ cfg = {
   },
   'VoipIO': {
     'pjsip_log_level': 3,
-    'debug': False,
-    'reject_calls': False,
+    'debug': True,
+    'reject_calls': True,
     'call_back': False,
     'wait_time_before_calling_back': 10,
     'allowed_phone_numbers': r"(^[234567])",
@@ -34,6 +35,10 @@ cfg = {
     'allowed_hosts': r"",
     'forbidden_hosts': r"",
 
+#    'domain': 'your_domain',
+#    'user': 'your_user',
+#    'password': 'your_password',
+
     'domain': 'your_domain',
     'user': 'your_user',
     'password': 'your_password',
@@ -41,7 +46,7 @@ cfg = {
   'VAD': {
     'debug': False,
     'type': 'power',
-    'power_threshold': 190,
+    'power_threshold': 100,
     'power_threshold_multiplier': 1,
     'power_adaptation_frames': 30,
     'power_decision_frames': 40,
@@ -49,7 +54,7 @@ cfg = {
     'power_decision_non_speech_threshold': 0.2,
   },
   'TTS': {
-    'debug': False,
+    'debug': True,
     'type': 'Google',
     'Google' : {
       'debug': False,
@@ -60,7 +65,7 @@ cfg = {
     'main_loop_sleep_time': 0.005,
   },
   'Logging': {
-    'output_dir' : './call_logs'
+    'system_logger': SystemLogger(stdout = True, output_dir = './call_logs')
   }
 }
 
@@ -135,12 +140,19 @@ def play_intro(tts_commands, intro_id, last_intro_id):
   return intro_id, last_intro_id
 
 def ram():
-  return random.choice(["Řekněte ", "Zopakujte ", "Vyslovte ", "Zopakujte po mně", "Opakujte", "Vyslovte"])
+  return random.choice(["Řekněte. ", "Zopakujte. ", "Vyslovte. ", "Zopakujte po mně. ", "Opakujte. ", "Vyslovte. "])
 
-print "Repeat After Me dialogue system"
-print "="*120
+#########################################################################
+#########################################################################
 
-ss = load_sentences('mkp_rur_matka.txt')
+cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n"+
+"="*120)
+
+#########################################################################
+#########################################################################
+
+
+sample_sentences = load_sentences('mkp_rur_matka.txt')
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO
 vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
@@ -173,7 +185,7 @@ tts.start()
 # init the constants
 max_intro = len(introduction_cs)
 max_call_length = 10*60         # in seconds
-last24_max_num_calls  = 10
+last24_max_num_calls  = 20
 last24_max_total_time = 50*60   # in seconds
 blacklist_for = 2*60*60         # in seconds
 
@@ -197,23 +209,30 @@ if 'calls_from_start_end_length' not in db:
 
 for remote_uri in db['calls_from_start_end_length']:
   num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
-  print '='*120
-  print 'Remote SIP URI:', remote_uri
-  print '-'*120
-  print 'Total calls:             ', num_all_calls
-  print 'Total time (s):          ', total_time
-  print 'Last 24h total calls:    ', last24_num_calls
-  print 'Last 24h total time (s): ', last24_total_time
-  print '-'*120
+
+  m = []
+  m.append('')
+  m.append('='*120)
+  m.append('Remote SIP URI: %s' % remote_uri)
+  m.append('-'*120)
+  m.append('Total calls:             %d' % num_all_calls)
+  m.append('Total time (s):          %f' % total_time)
+  m.append('Last 24h total calls:    %d' % last24_num_calls)
+  m.append('Last 24h total time (s): %f' % last24_total_time)
+  m.append('-'*120)
 
   current_time = time.time()
   if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
     # add the remote uri to the black list
     vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, current_time+blacklist_for), 'HUB', 'VoipIO'))
-    print 'BLACKLISTED'
+    m.append('BLACKLISTED')
   else:
-    print 'OK'
-  print '-'*120
+    m.append('OK')
+
+  m.append('-'*120)
+  m.append('')
+  cfg['Logging']['system_logger'].info('\n'.join(m))
+
 
 while 1:
   time.sleep(cfg['Hub']['main_loop_sleep_time'])
@@ -224,40 +243,54 @@ while 1:
   # read all messages
   if vio_commands.poll():
     command = vio_commands.recv()
-    print
-    print command
-    print
 
     if isinstance(command, Command):
       if command.parsed['__name__'] == "incoming_call":
-        pass
+        remote_uri = command.parsed['remote_uri']
+
+        cfg['Logging']['system_logger'].call_start(remote_uri)
+        cfg['Logging']['system_logger'].info(command)
+
+      if command.parsed['__name__'] == "rejected_call":
+        time.sleep(3)
+        vio_commands.send(Command('make_call(destination="221914366")', 'HUB', 'VoipIO'))
 
       if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
+        cfg['Logging']['system_logger'].info(command)
+
         remote_uri = command.parsed['remote_uri']
 
         num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
 
-        print '='*120
-        print 'Rejected incoming call from blacklisted URI: ', remote_uri
-        print '-'*120
-        print 'Total calls:             ', num_all_calls
-        print 'Total time (s):          ', total_time
-        print 'Last 24h total calls:    ', last24_num_calls
-        print 'Last 24h total time (s): ', last24_total_time
-        print '='*120
+        m = []
+        m.append('')
+        m.append('='*120)
+        m.append('Rejected incoming call from blacklisted URI: %s' % remote_uri)
+        m.append('-'*120)
+        m.append('Total calls:             %d' % num_all_calls)
+        m.append('Total time (s):          %f' % total_time)
+        m.append('Last 24h total calls:    %d' % last24_num_calls)
+        m.append('Last 24h total time (s): %f' % last24_total_time)
+        m.append('='*120)
+        m.append('')
+        cfg['Logging']['system_logger'].info('\n'.join(m))
 
       if command.parsed['__name__'] == "call_confirmed":
+        cfg['Logging']['system_logger'].info(command)
+
         remote_uri = command.parsed['remote_uri']
         num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
 
-        print '='*120
-        print 'Incoming call from: ', remote_uri
-        print '-'*120
-        print 'Total calls:             ', num_all_calls
-        print 'Total time (s):          ', total_time
-        print 'Last 24h total calls:    ', last24_num_calls
-        print 'Last 24h total time (s): ', last24_total_time
-        print '-'*120
+        m = []
+        m.append('')
+        m.append('='*120)
+        m.append('Incoming call from :     %s' % remote_uri)
+        m.append('-'*120)
+        m.append('Total calls:             %d' % num_all_calls)
+        m.append('Total time (s):          %f' % total_time)
+        m.append('Last 24h total calls:    %d' % last24_num_calls)
+        m.append('Last 24h total time (s): %f' % last24_total_time)
+        m.append('-'*120)
 
         if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
           tts_commands.send(Command('synthesize(text="Děkujeme za zavolání, ale už jste volali hodně. '
@@ -265,7 +298,7 @@ while 1:
           reject_played = True
           s_voice_activity = True
           vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time()+blacklist_for), 'HUB', 'VoipIO'))
-          print 'CALL REJECTED'
+          m.append('CALL REJECTED')
         else:
           # init the system
           call_start = time.time()
@@ -280,9 +313,11 @@ while 1:
 
           intro_id, last_intro_id = play_intro(tts_commands, intro_id, last_intro_id)
 
-          print 'CALL ACCEPTED'
+          m.append('CALL ACCEPTED')
 
-        print '='*120
+        m.append('='*120)
+        m.append('')
+        cfg['Logging']['system_logger'].info('\n'.join(m))
 
         try:
           db['calls_from_start_end_length'][remote_uri].append([time.time(), 0, 0])
@@ -291,11 +326,14 @@ while 1:
         save_database('call_db.pckl', db)
 
       if command.parsed['__name__'] == "call_disconnected":
+        cfg['Logging']['system_logger'].info(command)
+        cfg['Logging']['system_logger'].call_end()
+
         remote_uri = command.parsed['remote_uri']
 
-        vio_commands.send(Command('flush()'))
-        vad_commands.send(Command('flush()'))
-        tts_commands.send(Command('flush()'))
+        vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+        vad_commands.send(Command('flush()', 'HUB', 'VAD'))
+        tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
         s, e, l = db['calls_from_start_end_length'][remote_uri][-1]
         db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
@@ -304,9 +342,12 @@ while 1:
         intro_played = False
 
       if command.parsed['__name__'] == "play_utterance_start":
+        cfg['Logging']['system_logger'].info(command)
         s_voice_activity = True
 
       if command.parsed['__name__'] == "play_utterance_end":
+        cfg['Logging']['system_logger'].info(command)
+
         s_voice_activity = False
         s_last_voice_activity_time = time.time()
 
@@ -316,9 +357,7 @@ while 1:
 
   if vad_commands.poll():
     command = vad_commands.recv()
-    print
-    print command
-    print
+    cfg['Logging']['system_logger'].info(command)
 
     if isinstance(command, Command):
       if command.parsed['__name__'] == "speech_start":
@@ -329,9 +368,7 @@ while 1:
 
   if tts_commands.poll():
     command = tts_commands.recv()
-    print
-    print command
-    print
+    cfg['Logging']['system_logger'].info(command)
 
   current_time = time.time()
 
@@ -345,9 +382,9 @@ while 1:
     # be careful it does not hangup immediately
     reject_played = False
     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
-    vio_commands.send(Command('flush()'))
-    vad_commands.send(Command('flush()'))
-    tts_commands.send(Command('flush()'))
+    vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+    vad_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+    tts_commands.send(Command('flush()', 'HUB', 'VoipIO'))
 
   if intro_played and current_time - call_start > max_call_length and s_voice_activity == False:
     # hovor trval jiz vice nez deset minut
@@ -361,9 +398,9 @@ while 1:
       intro_played = False
       # be careful it does not hangup immediately
       vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
-      vio_commands.send(Command('flush()'))
-      vad_commands.send(Command('flush()'))
-      tts_commands.send(Command('flush()'))
+      vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+      vad_commands.send(Command('flush()', 'HUB', 'VAD'))
+      tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
   if intro_played and \
      s_voice_activity == False and \
@@ -372,22 +409,20 @@ while 1:
      current_time - u_last_voice_activity_time > 0.6:
 
     s_voice_activity = True
-    s = ram()
-    print
-    print '='*80
-    print 'Say:', s, '-',
-    tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
-    s = sample_sentence(ss)
-    print s
-    print '='*80
-    print
+    s = ram() + ' ' + sample_sentence(sample_sentences)
     tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
 
+    m = []
+    m.append('='*120)
+    m.append('Say: '+s)
+    m.append('='*120)
+
+    cfg['Logging']['system_logger'].info('\n'.join(m))
 
 # stop processes
-vio_commands.send(Command('stop()'))
-vad_commands.send(Command('stop()'))
-tts_commands.send(Command('stop()'))
+vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
+vad_commands.send(Command('stop()', 'HUB', 'VAD'))
+tts_commands.send(Command('stop()', 'HUB', 'TTS'))
 
 # clean connections
 for c in command_connections:
