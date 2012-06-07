@@ -94,7 +94,6 @@ def save_database(file_name, db):
   f.close()
 
 def get_stats(db, remote_uri):
-
   num_all_calls = 0
   total_time = 0
   last24_num_calls = 0
@@ -123,7 +122,7 @@ introduction_cs = ["Dobrý den",
 #"Pokud budete chtít hovor ukončit, zavěste telefon",
 "Hovor je nahráván pro výzkumné a komerční účely",
 "Záznam může být předán jinému subjektu",
-"Pokud nesouhlasíte, potom zavěste",
+"Pokud nesouhlasíte, zavěste telefon",
 "Děkujeme za spolupráci",
 ]
 
@@ -174,8 +173,9 @@ tts.start()
 # init the constants
 max_intro = len(introduction_cs)
 max_call_length = 10*60         # in seconds
-last24_max_num_calls  = 20
+last24_max_num_calls  = 10
 last24_max_total_time = 50*60   # in seconds
+blacklist_for = 2*60*60         # in seconds
 
 # init the system
 call_start = 0
@@ -195,7 +195,25 @@ db = load_database('call_db.pckl')
 if 'calls_from_start_end_length' not in db:
   db['calls_from_start_end_length'] = dict()
 
-print db
+for remote_uri in db['calls_from_start_end_length']:
+  num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
+  print '='*120
+  print 'Remote SIP URI:', remote_uri
+  print '-'*120
+  print 'Total calls:             ', num_all_calls
+  print 'Total time (s):          ', total_time
+  print 'Last 24h total calls:    ', last24_num_calls
+  print 'Last 24h total time (s): ', last24_total_time
+  print '-'*120
+
+  current_time = time.time()
+  if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
+    # add the remote uri to the black list
+    vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, current_time+blacklist_for), 'HUB', 'VoipIO'))
+    print 'BLACKLISTED'
+  else:
+    print 'OK'
+  print '-'*120
 
 while 1:
   time.sleep(cfg['Hub']['main_loop_sleep_time'])
@@ -213,6 +231,20 @@ while 1:
     if isinstance(command, Command):
       if command.parsed['__name__'] == "incoming_call":
         pass
+
+      if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
+        remote_uri = command.parsed['remote_uri']
+
+        num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
+
+        print '='*120
+        print 'Rejected incoming call from blacklisted URI: ', remote_uri
+        print '-'*120
+        print 'Total calls:             ', num_all_calls
+        print 'Total time (s):          ', total_time
+        print 'Last 24h total calls:    ', last24_num_calls
+        print 'Last 24h total time (s): ', last24_total_time
+        print '='*120
 
       if command.parsed['__name__'] == "call_confirmed":
         remote_uri = command.parsed['remote_uri']
@@ -232,6 +264,7 @@ while 1:
           'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")' , 'HUB', 'TTS'))
           reject_played = True
           s_voice_activity = True
+          vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time()+blacklist_for), 'HUB', 'VoipIO'))
           print 'CALL REJECTED'
         else:
           # init the system
@@ -335,7 +368,8 @@ while 1:
   if intro_played and \
      s_voice_activity == False and \
      u_voice_activity == False and \
-     (current_time - s_last_voice_activity_time > 6 or u_last_voice_activity_time - s_last_voice_activity_time > 0):
+     current_time - s_last_voice_activity_time > 6 and \
+     current_time - u_last_voice_activity_time > 0.6:
 
     s_voice_activity = True
     s = ram()

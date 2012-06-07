@@ -15,7 +15,7 @@ import re
 import pjsuaxt as pj
 
 from datetime import datetime
-from collections import deque
+from collections import deque, defaultdict
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
@@ -46,20 +46,34 @@ class AccountCallback(pj.AccountCallback):
     """ Notification on incoming call
     """
 
+    current_time = time.time()
+    remote_uri = call.info().remote_uri
+
     if not self.cfg['VoipIO']['reject_calls']:
-      self.voipio.call = call
-      self.voipio.on_incoming_call(call.info().remote_uri)
+      if self.voipio.black_list[self.voipio.escape_sip_uri(remote_uri)] < current_time:
+        # answer the call
+        self.voipio.call = call
+        self.voipio.on_incoming_call(remote_uri)
 
-      if self.cfg['VoipIO']['debug']:
-        print "Incoming call from ", call.info().remote_uri
+        if self.cfg['VoipIO']['debug']:
+          print "Incoming call from ", remote_uri
 
-      call_cb = CallCallback(self.cfg, call, self.voipio)
-      call.set_callback(call_cb)
+        call_cb = CallCallback(self.cfg, call, self.voipio)
+        call.set_callback(call_cb)
 
-      call.answer()
+        call.answer()
+      else:
+        # rejected the call since the caller is blacklisted
+        if self.cfg['VoipIO']['debug']:
+          print "Rejected call from blacklisted remote URI", remote_uri
+          wait_hours = (self.voipio.black_list[self.voipio.escape_sip_uri(remote_uri)] - current_time)/(60*60)
+          print "Must wait for %d hours" % wait_hours
+        # respond by "Busy here"
+        call.answer(486)
+
+        self.voipio.on_rejected_call_from_blacklisted_uri(remote_uri)
     else:
-      remote_uri = call.info().remote_uri
-
+      # reject the call since all calls must be rejected
       if self.cfg['VoipIO']['debug']:
         print "Rejected call from ", remote_uri
 
@@ -219,6 +233,8 @@ class VoipIO(multiprocessing.Process):
     self.last_frame_id = 1
     self.message_queue = []
 
+    self.black_list = defaultdict(int)
+
     self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                          'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
 
@@ -249,6 +265,10 @@ class VoipIO(multiprocessing.Process):
       transfer(dst) - transfer the existing call to the destination dst
       hangup()      - hang up the existing call
 
+      black_list(remote_uri, expire) - black list the specified uri until the expire time
+                      - remote uri is escape_sip_uri provided by the on_call_confirmed call back
+                      - expire is the time in second since the epoch that is time provided by time.time() function
+
     Return True if the process should terminate.
 
     """
@@ -276,17 +296,30 @@ class VoipIO(multiprocessing.Process):
           return False
 
         if command.parsed['__name__'] == 'make_call':
+          # make a call to the passed destination
           self.make_call(command.parsed['destination'])
 
           return False
 
         if command.parsed['__name__'] == 'transfer':
+          # transfer the current call to the passed destination
           self.transfer(command.parsed['destination'])
 
           return False
 
         if command.parsed['__name__'] == 'hangup':
+          # hangup the current call
           self.hangup()
+
+          return False
+
+        if command.parsed['__name__'] == 'black_list':
+          # black list the passed remote uri, VoipIO will not accept any
+          # calls until the current time will be higher then the expire variable
+          remote_uri = command.parsed['remote_uri']
+          expire = int(command.parsed['expire'])
+
+          self.black_list[remote_uri] = expire
 
           return False
 
@@ -517,6 +550,13 @@ class VoipIO(multiprocessing.Process):
       # call back to the caller
       # use the queue since we cannot make calls from a callback
       self.local_commands.append(Command('make_call(destination="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'VoipIO'))
+
+  def on_rejected_call_from_blacklisted_uri(self, remote_uri):
+    if self.cfg['VoipIO']['debug']:
+      print "VoipIO::on_rejected_call - from ", remote_uri
+
+    # send a message that we rejected an incoming call
+    self.commands.send(Command('rejected_call_from_blacklisted_uri(remote_uri="%s")' % self.escape_sip_uri(remote_uri), 'VoipIO', 'HUB'))
 
   def on_call_connecting(self, remote_uri):
     if self.cfg['VoipIO']['debug']:

@@ -3,35 +3,40 @@
 
 import multiprocessing
 import collections
+import time
 
 from SDS.utils.string import parse_command
-from SDS.utils.multiprocessing import InstanceID
+from SDS.utils.mproc import InstanceID
 
 # TODO: add comments
 
-class Command(InstanceID):
-  def __init__(self, command, source = None, target = None):
+class Message(InstanceID):
+  """ Abstract class which implements basic functionality for messages passed between components in the SDS.
+  """
+  def __init__(self, source, target):
     self.id = self.get_instance_id()
-
-    self.command = command
+    self.time = time.time()
     self.source = source
     self.target = target
 
+class Command(Message):
+  def __init__(self, command, source = None, target = None):
+    Message.__init__(self, source, target)
+
+    self.command = command
     self.parsed = collections.defaultdict(str, parse_command(self.command))
 
   def __str__(self):
-    return "From: %s To: %s - Command: %s " % (self.source, self.target, self.command)
+    return "From: %-10s To: %-10s Command: %s " % (self.source, self.target, self.command)
 
-class ASRHyp(InstanceID):
+class ASRHyp(Message):
   def __init__(self, hyp, source = None, target = None):
-    self.id = self.get_instance_id()
+    Message.__init__(self, source, target)
 
     self.hyp = hyp
-    self.source = source
-    self.target = target
 
   def __str__(self):
-    return "From: %s To: %s - Hyp: %s " % (self.source, self.target, self.hyp)
+    return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
 
   def __len__(self):
     return len(self.payload)
@@ -39,27 +44,23 @@ class ASRHyp(InstanceID):
   def __getitem__(self, key):
     return self.payload[key]
 
-class TTSText(InstanceID):
+class TTSText(Message):
   def __init__(self, text, source = None, target = None):
-    self.id = self.get_instance_id()
+    Message.__init__(self, source, target)
 
     self.text = text
-    self.source = source
-    self.target = target
 
   def __str__(self):
-    return "From: %s To: %s - Text: %s " % (self.source, self.target, self.text)
+    return "From: %-10s To: %-10s Text: %s " % (self.source, self.target, self.text)
 
-class Frame(InstanceID):
+class Frame(Message):
   def __init__(self, payload, source = None, target = None):
-    self.id = self.get_instance_id()
+    Message.__init__(self, source, target)
 
     self.payload = payload
-    self.source = source
-    self.target = target
 
   def __str__(self):
-    return "From: %s To: %s - Len: %d " % (self.source, target, self.len(self.payload))
+    return "From: %-10s To: %-10s Len: %d " % (self.source, target, self.len(self.payload))
 
   def __len__(self):
     return len(self.payload)

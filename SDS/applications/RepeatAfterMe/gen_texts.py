@@ -136,8 +136,11 @@ if __name__ == '__main__':
       continue
     if "Haha" in s:
       continue
+    if "plemeniti" in s:
+      continue
     if s.count(',') > 1:
       continue
+
 
 #    print s
     s = re.sub(', Toni$', "", s)

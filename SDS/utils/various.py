@@ -9,7 +9,7 @@ def split_to_bins(A,  S = 4):
   return [A[i*S:(i+1)*S] for i in range(m+bool(n))]
 
 def flatten(l, ltypes=(list, tuple)):
-  """Faltten nested list into a simple list."""
+  """Flatten nested list into a simple list."""
 
   ltype = type(l)
   l = list(l)
@@ -26,6 +26,8 @@ def flatten(l, ltypes=(list, tuple)):
   return ltype(l)
 
 def get_text_from_xml_node(node):
+    """ Get text from all child nodes and concatenate it.
+    """
     rc = []
     for cn in node.childNodes:
         if cn.nodeType == cn.TEXT_NODE:
