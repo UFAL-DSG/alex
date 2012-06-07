@@ -26,7 +26,6 @@ cfg = {
     'pjsip_log_level': 3,
     'debug': True,
     'reject_calls': True,
-    'call_back': False,
     'wait_time_before_calling_back': 10,
     'allowed_phone_numbers': r"(^[234567])",
     'forbidden_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
@@ -233,6 +232,8 @@ for remote_uri in db['calls_from_start_end_length']:
   m.append('')
   cfg['Logging']['system_logger'].info('\n'.join(m))
 
+call_back_time = -1
+call_back_uri = None
 
 while 1:
   time.sleep(cfg['Hub']['main_loop_sleep_time'])
@@ -240,20 +241,26 @@ while 1:
   if vad_audio_out.poll():
     data_vad = vad_audio_out.recv()
 
+
+  if call_back_time != -1 and call_back_time < time.time():
+    vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
+    call_back_time = -1
+    call_back_uri = None
+
   # read all messages
   if vio_commands.poll():
     command = vio_commands.recv()
 
     if isinstance(command, Command):
       if command.parsed['__name__'] == "incoming_call":
-        remote_uri = command.parsed['remote_uri']
-
-        cfg['Logging']['system_logger'].call_start(remote_uri)
         cfg['Logging']['system_logger'].info(command)
 
       if command.parsed['__name__'] == "rejected_call":
-        time.sleep(3)
-        vio_commands.send(Command('make_call(destination="221914366")', 'HUB', 'VoipIO'))
+        cfg['Logging']['system_logger'].info(command)
+
+        call_back_time = time.time() + cfg['VoipIO']['wait_time_before_calling_back']
+        call_back_uri = command.parsed['remote_uri']
+
 
       if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
         cfg['Logging']['system_logger'].info(command)
@@ -274,6 +281,9 @@ while 1:
         m.append('='*120)
         m.append('')
         cfg['Logging']['system_logger'].info('\n'.join(m))
+
+      if command.parsed['__name__'] == "call_connecting":
+        cfg['Logging']['system_logger'].info(command)
 
       if command.parsed['__name__'] == "call_confirmed":
         cfg['Logging']['system_logger'].info(command)
