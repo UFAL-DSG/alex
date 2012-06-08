@@ -70,16 +70,17 @@ cfg = {
     'call_db':          'call_db.pckl',
     'sentences_file':   'sentences.txt',
     'ram':             ["Řekněte. ", "Zopakujte. ", "Vyslovte. ", "Zopakujte po mně. ", "Opakujte. ", "Vyslovte. "],
+
     'introduction':    ["Dobrý den",
                         "Dovolali jste se na telefonní službu Ústavu formální a aplikované lingvistiky",
                         "která pořizuje data pro zlepšování systémů rozpoznávání mluvené řeči",
                         "Systém vás vyzve k opakování jedné nebo více vět",
-#                        "Maximální délka hovoru je deset minut",
-                        "Pokud budete chtít hovor ukončit, zavěste telefon",
+                        "Pokud nebudete rozumět vyslovené větě, potom řekněte co si myslíte že bylo vysloveno",
+                        "Není nutné říct úplně přesně to co řekl systém",
+                        "Až budete chtít hovor ukončit zavěste",
                         "Hovor je nahráván pro výzkumné a komerční účely",
                         "Záznam může být předán jinému subjektu",
                         "Pokud nesouhlasíte, zavěste telefon",
-#                        "Děkujeme za spolupráci",
                         ],
 
     'max_call_length':       10*60,       # in seconds
