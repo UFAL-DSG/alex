@@ -35,7 +35,7 @@ cfg = {
 
 tts = GoogleTTS(cfg)
 
-f = open('mkp_rur_matka.txt', 'r')
+f = open('sentences.txt', 'r')
 r = []
 for s in f:
   s = s.strip()

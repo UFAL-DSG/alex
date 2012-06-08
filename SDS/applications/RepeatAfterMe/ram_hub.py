@@ -65,6 +65,27 @@ cfg = {
   },
   'Logging': {
     'system_logger': SystemLogger(stdout = True, output_dir = './call_logs')
+  },
+  'RepeatAfterMe': {
+    'call_db':          'call_db.pckl',
+    'sentences_file':   'sentences.txt',
+    'ram':             ["Řekněte. ", "Zopakujte. ", "Vyslovte. ", "Zopakujte po mně. ", "Opakujte. ", "Vyslovte. "],
+    'introduction':    ["Dobrý den",
+                        "Dovolali jste se na telefonní službu Ústavu formální a aplikované lingvistiky",
+                        "která pořizuje data pro zlepšování systémů rozpoznávání mluvené řeči",
+                        "Systém vás vyzve k opakování jedné nebo více vět",
+#                        "Maximální délka hovoru je deset minut",
+                        "Pokud budete chtít hovor ukončit, zavěste telefon",
+                        "Hovor je nahráván pro výzkumné a komerční účely",
+                        "Záznam může být předán jinému subjektu",
+                        "Pokud nesouhlasíte, zavěste telefon",
+#                        "Děkujeme za spolupráci",
+                        ],
+
+    'max_call_length':       10*60,       # in seconds
+    'last24_max_num_calls':  20,
+    'last24_max_total_time': 50*60,       # in seconds
+    'blacklist_for' :        2*60*60,     # in seconds
   }
 }
 
@@ -84,13 +105,18 @@ def sample_sentence(l):
   return random.choice(l)
 
 def load_database(file_name):
+  db = dict()
   try:
     f = open(file_name, 'r')
     db = pickle.load(f)
     f.close()
-    return db
   except IOError:
-    return dict()
+    pass
+
+  if 'calls_from_start_end_length' not in db:
+    db['calls_from_start_end_length'] = dict()
+
+  return db
 
 def save_database(file_name, db):
   f = open(file_name, 'w+')
@@ -117,29 +143,17 @@ def get_stats(db, remote_uri):
 
   return num_all_calls, total_time, last24_num_calls, last24_total_time
 
-
-introduction_cs = ["Dobrý den",
-#"Dovolali jste se na telefonní službu Ústavu formální a aplikované lingvistiky",
-#"která pořizuje data pro zlepšování systémů rozpoznávání mluvené řeči",
-#"Systém vás vyzve k opakování jedné nebo více vět",
-#"Maximální délka hovoru je deset minut",
-#"Pokud budete chtít hovor ukončit, zavěste telefon",
-"Hovor je nahráván pro výzkumné a komerční účely",
-"Záznam může být předán jinému subjektu",
-"Pokud nesouhlasíte, zavěste telefon",
-"Děkujeme za spolupráci",
-]
-
-def play_intro(tts_commands, intro_id, last_intro_id):
-  for i in range(len(introduction_cs)):
+def play_intro(cfg, tts_commands, intro_id, last_intro_id):
+  for i in range(len(cfg['RepeatAfterMe']['introduction'])):
     last_intro_id = str(intro_id)
     intro_id += 1
-    tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, introduction_cs[i]), 'HUB', 'TTS'))
+    tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id,
+      cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
 
   return intro_id, last_intro_id
 
 def ram():
-  return random.choice(["Řekněte. ", "Zopakujte. ", "Vyslovte. ", "Zopakujte po mně. ", "Opakujte. ", "Vyslovte. "])
+  return random.choice(cfg['RepeatAfterMe']['ram'])
 
 #########################################################################
 #########################################################################
@@ -151,7 +165,7 @@ cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n"+
 #########################################################################
 
 
-sample_sentences = load_sentences('mkp_rur_matka.txt')
+sample_sentences = load_sentences(cfg['RepeatAfterMe']['sentences_file'])
 
 vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO
 vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
@@ -181,13 +195,6 @@ vio.start()
 vad.start()
 tts.start()
 
-# init the constants
-max_intro = len(introduction_cs)
-max_call_length = 10*60         # in seconds
-last24_max_num_calls  = 20
-last24_max_total_time = 50*60   # in seconds
-blacklist_for = 2*60*60         # in seconds
-
 # init the system
 call_start = 0
 count_intro = 0
@@ -201,10 +208,7 @@ s_last_voice_activity_time = 0
 u_voice_activity = False
 u_last_voice_activity_time = 0
 
-db = load_database('call_db.pckl')
-
-if 'calls_from_start_end_length' not in db:
-  db['calls_from_start_end_length'] = dict()
+db = load_database(cfg['RepeatAfterMe']['call_db'])
 
 for remote_uri in db['calls_from_start_end_length']:
   num_all_calls, total_time, last24_num_calls, last24_total_time = get_stats(db, remote_uri)
@@ -221,9 +225,12 @@ for remote_uri in db['calls_from_start_end_length']:
   m.append('-'*120)
 
   current_time = time.time()
-  if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
+  if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
+    last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
+
     # add the remote uri to the black list
-    vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, current_time+blacklist_for), 'HUB', 'VoipIO'))
+    vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+      current_time+cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
     m.append('BLACKLISTED')
   else:
     m.append('OK')
@@ -302,12 +309,15 @@ while 1:
         m.append('Last 24h total time (s): %f' % last24_total_time)
         m.append('-'*120)
 
-        if last24_num_calls > last24_max_num_calls or last24_total_time > last24_max_total_time:
+        if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
+          last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
+
           tts_commands.send(Command('synthesize(text="Děkujeme za zavolání, ale už jste volali hodně. '
           'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")' , 'HUB', 'TTS'))
           reject_played = True
           s_voice_activity = True
-          vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time()+blacklist_for), 'HUB', 'VoipIO'))
+          vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+            time.time()+cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
           m.append('CALL REJECTED')
         else:
           # init the system
@@ -321,7 +331,7 @@ while 1:
           u_voice_activity = False
           u_last_voice_activity_time = 0
 
-          intro_id, last_intro_id = play_intro(tts_commands, intro_id, last_intro_id)
+          intro_id, last_intro_id = play_intro(cfg, tts_commands, intro_id, last_intro_id)
 
           m.append('CALL ACCEPTED')
 
@@ -333,7 +343,7 @@ while 1:
           db['calls_from_start_end_length'][remote_uri].append([time.time(), 0, 0])
         except:
           db['calls_from_start_end_length'][remote_uri] = [[time.time(), 0, 0], ]
-        save_database('call_db.pckl', db)
+        save_database(cfg['RepeatAfterMe']['call_db'], db)
 
       if command.parsed['__name__'] == "call_disconnected":
         cfg['Logging']['system_logger'].info(command)
@@ -396,13 +406,13 @@ while 1:
     vad_commands.send(Command('flush()', 'HUB', 'VoipIO'))
     tts_commands.send(Command('flush()', 'HUB', 'VoipIO'))
 
-  if intro_played and current_time - call_start > max_call_length and s_voice_activity == False:
+  if intro_played and current_time - call_start > cfg['RepeatAfterMe']['max_call_length'] and s_voice_activity == False:
     # hovor trval jiz vice nez deset minut
     if not end_played:
       s_voice_activity = True
       last_intro_id = str(intro_id)
       intro_id += 1
-      tts_commands.send(Command('synthesize(text="%s")' % "Uplynulo deset minut. Děkujeme za zavolání.", 'HUB', 'TTS'))
+      tts_commands.send(Command('synthesize(text="%s")' % "To bylo všechno. Děkujeme za zavolání.", 'HUB', 'TTS'))
       end_played = True
     else:
       intro_played = False

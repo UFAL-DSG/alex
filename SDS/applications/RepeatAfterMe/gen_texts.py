@@ -46,9 +46,8 @@ if __name__ == '__main__':
 
     """)
 
-
-  parser.add_argument('--indir', action="store", default='./mkp_data',
-                      help='an input directory with the text files files (default: ./mkp_data)')
+  parser.add_argument('--indir', action="store", default='./texts',
+                      help='an input directory with the text files files (default: ./texts)')
   parser.add_argument('-v', action="store_true", default=False, dest="verbose",
                       help='set verbose oputput')
 
