@@ -495,7 +495,8 @@ class VoipIO(multiprocessing.Process):
       if self.is_sip_uri(uri):
         # create a call back for the call
         call_cb = CallCallback(self.cfg, None, self)
-        return self.acc.make_call(uri, cb=call_cb)
+        self.call = self.acc.make_call(uri, cb=call_cb)
+        return self.call
       elif uri == "blocked":
         if self.cfg['VoipIO']['debug']:
           self.cfg['Logging']['system_logger'].debug('VoipIO : Blocked call to a forbidden phone number - %s' % uri)
@@ -520,10 +521,10 @@ class VoipIO(multiprocessing.Process):
 
   def hangup(self):
     try:
-      if self.cfg['VoipIO']['debug']:
-        self.cfg['Logging']['system_logger'].debug("Hangup the call")
-
       if self.call:
+        if self.cfg['VoipIO']['debug']:
+          self.cfg['Logging']['system_logger'].debug("Hangup the call")
+
         return self.call.hangup()
     except pj.Error, e:
       print "Exception: " + str(e)
