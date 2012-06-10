@@ -2,4 +2,4 @@
 call_logs
 tmp
 *.pckl
-
+nohup.out

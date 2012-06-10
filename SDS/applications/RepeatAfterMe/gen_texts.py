@@ -108,6 +108,10 @@ if __name__ == '__main__':
     for x in replace_by_space:
       s = s.replace(x, ' ')
 
+    # remove duplciate words
+    s = re.sub(r'\s(\w+)\s+\1', '\1', s)
+    s = re.sub(r'^(\w+)\s+\1', '\1', s)
+
     s = s.strip()
 
     c = False
@@ -119,7 +123,7 @@ if __name__ == '__main__':
       continue
 
 
-    if s.count(',') > 1:
+    if s.count(',') > 0:
       continue
 
 
@@ -171,3 +175,4 @@ if __name__ == '__main__':
 #  for k in sorted(d.keys()):
 #    print k, ":", d[k]
 #
+
