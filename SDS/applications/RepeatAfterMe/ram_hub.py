@@ -26,7 +26,6 @@ cfg = {
     'pjsip_log_level': 3,
     'debug': True,
     'reject_calls': True,
-    'wait_time_before_calling_back': 10,
     'allowed_phone_numbers': r"(^[234567])",
     'forbidden_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
     'allowed_users': r"(^[234567])",
@@ -67,6 +66,7 @@ cfg = {
     'system_logger': SystemLogger(stdout = True, output_dir = './call_logs')
   },
   'RepeatAfterMe': {
+    'wait_time_before_calling_back': 10,
     'call_db':          'call_db.pckl',
     'sentences_file':   'sentences.txt',
     'ram':             ["Řekněte. ", "Zopakujte. ", "Vyslovte. ", "Zopakujte po mně. ", "Opakujte. ", "Vyslovte. "],
@@ -266,7 +266,7 @@ while 1:
       if command.parsed['__name__'] == "rejected_call":
         cfg['Logging']['system_logger'].info(command)
 
-        call_back_time = time.time() + cfg['VoipIO']['wait_time_before_calling_back']
+        call_back_time = time.time() + cfg['RepeatAfterMe']['wait_time_before_calling_back']
         call_back_uri = command.parsed['remote_uri']
 
 
@@ -356,9 +356,16 @@ while 1:
         vad_commands.send(Command('flush()', 'HUB', 'VAD'))
         tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
-        s, e, l = db['calls_from_start_end_length'][remote_uri][-1]
-        db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
-        save_database('call_db.pckl', db)
+        try:
+          s, e, l = db['calls_from_start_end_length'][remote_uri][-1]
+
+          if e == 0 and l == 0:
+            # there is a record about last confirmed but not disconnected call
+            db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
+            save_database('call_db.pckl', db)
+        except KeyError:
+          # disconnecting call which was not confirmed for URI calling for the first time
+          pass
 
         intro_played = False
 
