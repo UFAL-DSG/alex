@@ -1,113 +1,2267 @@
-X: Největší podíl na výrobě měla elektřina z fotovoltaických elektráren.
-X: stát se snaží veřejný deficit snižovat především pomocí zvyšování daní.
-X: Odhady celoročního vývoje české ekonomiky se různí.
-X: Předpovědi dalších analytiků jsou pesimističtější.
-X: průmyslová výroba v dubnu klesla
-X: Ekonomika našeho hlavního zahraničního partnera meziročně zrychlila
-X: První blok máme dokončit v roce 2014
-X: Montáž první turbíny už začala
-X: Nedávno postoupil drahou modernizaci
-X: jsem přesvědčen, že naše nabídka bude nejlepší
-X: české podniky už znají ruské technologie
-X: podřízení odhadovali podíl českých firem na temelínské zakázce
-X: Stavba třetího a čtvrtého bloku má být hotova nejpozději v roce 2025
-X: v temelínských reaktorech je opět ruské palivo
-X: V posledních letech rostla také výroba energie z biomasy
-X: Nejsilnější ekonomika Evropy má instalované solární elektrárny
-X: Německo nedávno vytvořilo fotovoltaický světový rekord
-X: Solární elektrárny zažily obrovský boom i v Česku
-X: Česko tohoto cíle dosáhne již v příštím roce
-X: Evropa by měla pomoct oslabeným bankám
-X: Řešení jsou tvrdá, ale jsou k dispozici. 
-X: Evropu čekají těžká rozhodnutí
-X: Obama se již dříve shodl s dalšími státníky
-X: Zároveň se snažil přimět své evropské partnery
-X: Dotykové displeje způsobily revoluci v ovládání elektronických zařízení
-X: Počátky elektronických zařízení byly ve znamení velkých a těžkých strojů.
-X: první využití naprosto rovné dotykové plochy
-X: Jeho povrch je totiž stále plochý.
-X: Dotykový povrch vypadá jako každý jiný.
+X: Aby aspoň nějakou hodinu ve škole byl .
+X: Aby mezi sebou pocítili sounáležitost .
+X: Aby nezůstalo jen to pozdě . . .
+X: Aby se lidi nikde nezabíjeli .
+X: Aby se to odrazilo ve vztazích mezi nimi .
+X: Ačkoliv jsem byl nejmladší .
+X: Ačkoliv jsou Slováci našimi tisíciletými sousedy .
+X: Adresát si je bude muset vyzvednout na poště .
+X: Aero nabízí armádě nová letadla
+X: Agnieszka Dajborová , Gazeta Wyborcza
+X: Akademie Dobříš chce nájemní smlouvu jen do vyhodnocení konkurzu
+X: Akce však potvrdila nedostatek policistů .
+X: Akci francouzských divadelníků zorganizoval tamní Syndikát divadelních ředitelů .
+X: Akci zpestřil tradiční příjezd patrona nejvyšších českých hor Krakonoše .
+X: Akcie distributorů plynu a elektřiny budou převedeny před valnými hromadami
+X: Aktivní musíme být v obraně i útoku .
+X: Ale Dublin nejsou jen hospody a knihy .
+X: Ale i tak vezměte prádlo na milost .
+X: Ale je tu i morální aspekt .
+X: Ale lidé měli děsivou zkušenost první světové války .
+X: Ale my jsme více než jen stroje .
+X: Ale na stůl je zapotřebí položit pětistovku .
+X: Ale není bez mnoha obtíží čekajících na řešení .
+X: Ale o pochybnostech se odmítám bavit . 
+X: Ale ona ta scéna je totiž pořád velice syrová .
+X: Ale ono to už dávno tak není .
+X: Ale sebepoznání nikomu neuškodí .
+X: Ale scházeli jsme se pravidelně .
+X: Ale souvisí to i se spoustou jiných věcí .
+X: Ale tak už to v životě slov chodívá .
+X: Ale téměř každý sběratel někdy naletěl .
+X: Ale to jsou jen výjimky .
+X: Ale to přece vůbec není pravda .
+X: Ale více by měla asociace dělat pro zákazníky .
+X: Ale zajímavé osobnosti zde nepochybně jsou .
+X: Ale zůstaňme v západní tradici .
+X: Alergie považuje doktorka Drahoňovská spíše za otázku vnitřního prostředí .
+X: Alespoň u některých zvířat již víme , že mohou .
+X: Aleš Drvota ale politické texty nepsal .
+X: Alois Grussmann se vrací do Vítkovic .
+X: Americká pomoc parlamentu ohrožena spekulacemi
+X: Američany postihla podobná série zranění jako naši reprezentaci .
+X: Ames se nyní nachází ve vězení .
+X: Ani masivní reklama není schopna zaručit dlouhodobý zájem .
+X: Ani pro parlamentní knihovnu nezbude na Malé Straně místo .
+X: Ani Švédové nebudou v Reykjavíku kompletní .
+X: Ani to však neotřáslo sebevědomím Uhrinova týmu .
+X: Ani v časovce se čeští cyklisté neprosadili
+X: Ani zde nejsou čísla alarmující .
+X: Ani zemědělství se nedotkla kolektivizace .
+X: Arogantnost rozhodnutí sněmovny ve smutném příběhu kufrů je zjevná .
+X: Asi to myslí upřímně .
+X: Asistent podnikatele
+X: Atletika se mnou půjde jen pár let .
+X: Austrálie má však i specifickou flóru .
+X: Austrálie předstihla Kubu a je největším světovým vývozcem cukru .
+X: Australský premiér Paul Keating provedl změny ve vládě .
+X: Auta parkují podél silnice , na náměstí .
+X: Auto bylo po nárazu zcela demolováno .
+X: Autobusy jsou již od srpna připraveny v Německu .
+X: Automatický tisk potvrzení o spojení .
+X: Automobilky nabírají dech
+X: Autoři zrušili běžné stereotypy našeho vnímání okolního světa .
+X: Avšak podívejme se na to z jiné stránky .
+X: Avšak situace není tak jednoduchá .
+X: Až do listopadu je vystaveno kvarteto klíčových obrazů .
+X: Až do minulého týdne .
+X: Až do poloviny zápasu se hrál utrápený hokej .
+X: Balašov však skončil v nemocnici s rozpáraným stehnem .
+X: Balladurova pozice byla oslabena
+X: Baránek kritizoval strany vládní koalice za vztah k podnikatelům .
+X: Baťa si schopné studenty hýčkal .
+X: Bavorská banka popírá obvinění
+X: Během včerejší porady se na tom shodli ekonomičtí ministři .
+X: Belgičané jsou nepříjemní výborně zvládnutou defenzívou .
+X: Bez dětí a restituentů .
+X: Bez něj nemůžeme exportovat .
+X: Bez ohledu na to prožívá britský hokej renesanci .
+X: Bez pracovnic z Ukrajiny by to mohla Gala Prostějov zabalit
+X: Bez proher se hrát nedá
+X: Bez radikálního řezu to zřejmě nepůjde .
+X: Bez textu , argumentem je sama Kohlova osobnost .
+X: Bezpéřová lůžka jsou lepší než péřová .
+X: Bezprostředně poté by mělo následovat Uhlovo odvolání premiérem Stráským .
+X: Běžná chřipka přece jen není totéž co žlutá zimnice .
+X: biologické druhy , které v něm žily .
+X: Boby Brno se chce umístit do pátého místa
+X: Bohouš si dál může poručit české pivo .
+X: Bohužel si to nemyslím .
+X: Bohužel také v této oblasti jsou značné čekací lhůty .
+X: Boj s požárem nedaleko Bratislavy byl tvrdý
+X: Boje pokračovaly i kolem města Goražde .
+X: Bosenský ministr předpovídá válku
+X: Bosna se bránit nemůže .
+X: Boží Dar hledá svou novou image .
+X: Brankář Šimurka na Žižkov
+X: Britská vláda americkou iniciativu zřejmě přehlíží .
+X: Britský premiér schůzku s nekompromisním kazatelem neustále odkládal .
+X: Britský premiér také zdůraznil potřebu unii urychleně reformovat .
+X: Brno má na titul ještě mladé mužstvo .
+X: Brno stačilo už pouze díky Maléřovi snížit .
+X: Brožuru vydalo vydavatelství Práh .
+X: Bříza na pozvánku do reprezentace nečeká netrpělivě
+X: Bude postupovat preventivně .
+X: Bude se hrát v září v Německu .
+X: Bude také zařazen do čtvrtletního slosování o 3000 korun .
+X: Budou se tady provádět drobné montáže plastových výrobků .
+X: Budovatelské písně jsou jistě socialistický vynález .
+X: Bundesbanka sazby snižovat nebude
+X: Byl by to další tržní prvek v sociálním zabezpečení .
+X: Byl rovněž matematikem a také se zabýval meteorologií .
+X: Byl to hezký a atraktivní volejbal .
+X: Byl vzdělaný politolog a viděl ji pesimisticky .
+X: Bylo by lehkomyslné se na ni neobrátit . "
+X: Bylo mu asi osm let .
+X: Bylo slyšet pouze je .
+X: Bylo to jediné negativum na jinak skvělém turnaji .
+X: Bylo to včera oficiálně oznámeno v Praze .
+X: Bylo třeba najít prekurzory těchto buněk .
+X: Bylo tvrdě potlačeno .
+X: Byly tu ještě další spory .
+X: Byly tyto dohady opodstatněné .
+X: Bytové stěny a čalouněný nábytek skoro nešly na odbyt .
+X: Býval šéfem tajné služby .
+X: Bývalý estonský ministr obrany Hain Rebas
+X: Bývalý ředitel zpravodajské služby žaluje mluvčího ministerstva vnitra
+X: Cantonu teď čeká nepříjemný týden
+X: Celkem na tři sta padesát stran poezie !
+X: Celkem zaměstnávám zhruba stovku lidí .
+X: Celkový rozsah snížení emisí zůstane přitom zachován .
+X: Cena oblečení pro děti přitom musí být výrazně nižší .
+X: Cena pivovaru je přijatelná pro obě strany .
+X: Ceny malých kamenů horší kvality jsou víceméně stabilní .
+X: Ceny potravin vytrvale rostou
+X: Ceny tepla a vody rychle rostou .
+X: Cepl domněnky o své práci pro StB odmítá .
+X: Cílem brněnských hokejistů je návrat do I . ligy .
+X: Cílem je produkce okolo sedmi až deseti tun denně .
+X: Cílem klubu je kvalitní reprezentace na vrcholných zahraničních závodech .
+X: Cílem tohoto opatření je napomoci naplňování státní pokladny .
+X: Cílovou stanicí spotřební elektroniky mělo být Polsko .
+X: Cítil jsem se v ní dobře .
+X: Cizí vojska tedy vlastně pomohla i jim .
+X: Co polské oči nevidí
+X: Co teče z vodovodního kohoutku
+X: Co znamená být Žid dnes a tady .
+X: Což je na východoasijské poměry velmi , velmi zvláštní .
+X: Čabala z pok . kopu .
+X: Čalfovi ve službách Chemapolu
+X: Čao býval generálním tajemníkem strany a oficiálním Tengovým následníkem .
+X: Čas konfrontace by měl podle něho skončit .
+X: Čáslavská závodnice si dala o víkendu pořádnou porci .
+X: Časově jsem flexibilní a zvyklý pracovat podle potřeb .
+X: Část bavlny tedy podnik nakupoval v Turecku .
+X: Částka je tedy součástí zadání .
+X: Často se představiteli sdružení stávají kmenoví pracovníci dřívějšího podniku .
+X: Čečenci se pokusili prorazit obklíčení
+X: Čeká prostě na příslušnou legislativu .
+X: Čekan je ovšem jejím stoprocentním vlastníkem .
+X: Čekan podal na Češku žalobu
+X: Čemuž může zabránit pouze účinná kontrola .
+X: Česká centra propagují i ekonomiku
+X: Česká filharmonie zahájila devětadevadesátou sezonu
+X: Česká sociální demokracie před volbami
+X: Česká televize podá na Novu žalobu
+X: Česká výprava mohla jistě dokázat víc .
+X: Česká zbrojovka získala ocenění
+X: České Budějovice čeká složité jednání o majetku
+X: České dráhy nyní testují naše hydraulické přestavníky výhybek .
+X: České energetické závody diverzifikují zdroje
+X: České společnosti musí být agresivnější
+X: Československé dějiny pohřbily Slováky
+X: Čestný doktorát University v Ženevě .
+X: Češi a Němci na cestě k dobrému sousedství
+X: Čeští vědci navrhli metodu zkoušek stálosti povlaků .
+X: ČeTel uchazečem o český telecom
+X: Čína proti setkání ostře protestovala .
+X: Čínští politici jedli třídní nepřátele
+X: ČR zřejmě zcela postačuje poloviční počet mlékáren
+X: Čte noviny a nechce být jmenován .
+X: Čtrnáct dnů před vyhlášením vítěze byla firma pod rentgenem .
+X: Čtvrt milionu diků stačí
+X: Čtyřicetiletý rozvoj výzkumu fosforylace proteinů
+X: Dá se pozorně přemístit na mísu .
+X: Dále se komise vyjadřuje k soudním sporům .
+X: Další důvod je složitější a je v podstatě filozofický .
+X: Další důvody pro zahájení výroby byly 
+X: Další možnost omluvy nazval spíše psychologickou .
+X: Další obvinění v kauze Marty Chadimové
+X: Další příměří v Čečensku
+X: Další výsledky nebyly do uzávěrky známy .
+X: Dalšího obránce Nečase posílá Slavia zpátky do Jihlavy .
+X: Dalším letošním sympoziem v Plasích bude Feedback
+X: Dámský kondom nenadchl české ženy
+X: Dánové mají dvě alternativy .
+X: Daňoví úředníci nejsou vítanými hosty
+X: Dárky pro partnera 200
+X: Databáze pro ekologické systémy
+X: debutové album slovenské industriální skupiny vydal Zoon .
+X: Definitivní verdikt nyní leží na poslancích .
+X: Demisi vlády sdělil Ruud Lubbers písemně královně Beatrix .
+X: Demokratická strana je zastoupena svým mužem v Bílém domě .
+X: Demonstrace anarchistů uctila památku Z . Čepely
+X: Demonstrace v Kambodži musí mít napříště oficiální povolení .
+X: Den po finále ligy se sešla reprezentace
+X: Děti v Bosně potřebují vitamíny
+X: Děvče ze Zlatého západu
+X: Devět z nich údajně obsahuje i palivové tyče .
+X: Diamanty z mořského dna
+X: Dienstbier nabídl místo odborům
+X: Dientsbier chce přivést Svobodné demokraty do příštího parlamentu
+X: Díky této skulince přišlo nakladatelství o své budovy .
+X: Díky tomu se stal jedním z nejznámějších lidí Ameriky .
+X: Díky tříbodovému systému je možné všechno .
+X: Divošské násilí u Johannesburgu
+X: Dluhy jsou pro řadu ruských firem velmi nákladné .
+X: Dnes je to pro změnu postátněné školství .
+X: Dnes je více méně každý pod novinářskou diktaturou .
+X: Dnes jsou hranice otřesené velmoci stanoveny jasně .
+X: Dnes rekonstrukce jednoho domu stojí takřka milión .
+X: Dnes se karta obrátila .
+X: Dnes se mi zdá být na referendum pozdě .
+X: Dnes se pitvá asi polovina zemřelých .
+X: Dnes se staví jinak .
+X: Dnes tedy visí nad třetím pražským krematoriem otazník .
+X: Dnes tomu budeme říkat mírový plán .
+X: Dnes už jich má patnáct a jednoho greyhounda .
+X: dnes už ovšem dacan lotra neoznačuje .
+X: Dnešní struktura okresů bezesporu nevyhovuje .
+X: Do EuroDisney přijeli novomanželé z jihofrancouzského letoviska Nice .
+X: Do jejich kompetence spadá i správa příměstských vodních toků .
+X: Do jisté míry dělají politiku , ovlivňují ji .
+X: Do oboru se nikdo moc nehrne .
+X: Do Prahy dvě opery patří
+X: Do takové hory může vést i více tunelů .
+X: Do té doby doposud platná legislativní úprava dostačuje .
+X: Do uzávěrky tohoto vydání nebyl výsledek schůzky znám .
+X: Doba mírného optimizmu
+X: Doba ratifikaci maastrichtských dohod nepřeje
+X: Dobrá shoda existuje mezi předpověďmi a skutečnými srážkami .
+X: Dodávky jsou plynulé a smluvní cena je příznivá . 
+X: Dohoda zní do konce roku a pak se uvidí .
+X: Dohodla se na tom včera většina delegátů .
+X: Dokonce i Australan se učil češtinu
+X: Dokonce založili i svaz na podporu podnikatelů .
+X: Dokumenty
+X: Dolar ohrožen vývojem inflace
+X: Doležal do Norimberka
+X: Domácí byli lepší tak o jednu či dvě branky .
+X: Domácí se postupem času dostávali do otevřené obrany Západočechů .
+X: Domácí úvěrové zdroje jsou nedostatečné .
+X: Domácnosti musely přednostně zabezpečit výdaje na výživu a bydlení .
+X: Domluvit se je tak prosté
+X: Domnívám se , že ne .
+X: Domů odejdou natřeni příjemným nezbarvujícím krémem .
+X: Dopis s výhradami k zákonu o občanství
+X: Doplňující doklady lze předkládat i po tomto termínu .
+X: Doposud se zajímalo hlavně o údaje výškoměru .
+X: Dosáhli jsme ustavení společné komise .
+X: Dost bylo Frankensteina !
+X: Dostali všechno a s nikým se nemuseli dělit .
+X: došlo by k nenapravitelnému poškození ozonové vrstvy ;
+X: Došlo k přestavbě cirkulace na vlhčí variantu .
+X: Dovolat se sem je možné pouze prostřednictvím meziměstské ústředny .
+X: Dovoluji si předložit týmu vyšetřovatelů několik pracovních hypotéz .
+X: Dráha mohla vydělat miliardy za převoz vojenské techniky
+X: Dráha se letos privatizovat asi nestihne
+X: Dráhy nabízejí zajímavá místa
+X: Drahý vstup na Sportprague
+X: Drnovičtí ani po tomto varování nedokázali svou hru zpřesnit .
+X: druhá nejhorší havárie v dějinách jaderné energetiky ;
+X: Druhá reakce přišla z publicistických kruhů .
+X: Druhou příčinou může být vlhké podloží Španělského sálu .
+X: Druhý příklad se týká šimpanzů .
+X: Druhý sjezd kinematografického svazu zahájil " sbírání kamenů "
+X: Druhým sestupujícím bude ale spíše Hradec .
+X: Družstva často přijímají i přísně termínované zakázky .
+X: Dřív jsme byli vysloveně přetrénovaní .
+X: Dříve nebyl problém sestavit reprezentační mužstvo .
+X: Dříve neznámou částí města je doslova okouzlen .
+X: Dubliňané a Irové vůbec jsou na své velikány pyšní .
+X: Důkazem jsou raně křesťanské kříže s motivem keltského kruhu .
+X: Důležitá data vývoje v Severním Irsku před včerejším příměřím
+X: Důležitá je častá výměna ložního prádla .
+X: Důležitá je také perspektiva , aspoň pro příští rok .
+X: Důležitější než výše příjmu je totiž druh zdroje .
+X: Důležitou charakteristikou obrazu je bezpochyby signatura autora .
+X: Dům na nábřeží naproti Žofínu je otevřen .
+X: Důsledkem tohoto trendu je stárnutí obyvatelstva .
+X: Duší ateliéru je jeho majitelka a ředitelka Helena Bedrnová .
+X: Důvodem byl vyšší obsah vody a vyšší počet bakterií .
+X: Důvodem je Romáriův poněkud rozpačitý vztah k reprezentaci .
+X: Dva následující příklady však mohou být inspirativní .
+X: Dva rekordy najednou
+X: Dva suverénní státy .
+X: Dva zjištění viníci byli pokutováni po pěti stech korunách .
+X: Dvakrát bronzové medaile z festivalu amatérských filmů
+X: Dvakrát byla tři nejvyšší místa obsazena fotbalisty jedné země .
+X: Dvě století mu na aktuálnosti neubrala .
+X: Dvě třetiny dotázaných uvádějí , že mají spokojené manželství .
+X: Dvě země a jeden pavilon
+X: Dvořák v lyrické podobě
+X: Džungle pod jednou střechou
+X: Editory toho umějí ovšem mnohem více .
+X: Ekkehard Böhnel položil do bytu křehkou papírovou postel .
+X: Ekologickému chování má stát pomáhat
+X: Ekologicky žádoucí trasa by překročila Krušné hory u Chomutova .
+X: Ekologie je jen jedna .
+X: Ekologie není ani levá ani pravá
+X: Ekologii nelze redukovat pouze na její přírodovědný význam .
+X: Ekologové kritizují ekologickou politiku
+X: Ekonomický důvod k sestavení deficitního rozpočtu neexistuje .
+X: Ekonomický růst asi ještě dlouho nepřivede lidstvo do zkázy .
+X: Ekonomický růst v naší zemi se zřetelně urychluje .
+X: Elektřina v bytech funguje pouze několik hodin denně .
+X: Energovod má monopolní postavení
+X: Epidemie salmonelózy
+X: Euroskeptici vidí už evropskou jednotu v troskách .
+X: Evidentně špatně pochopené zadání .
+X: Evropa nabízí určité jistoty , jejich věrohodnost je ale malá
+X: Evropské sjednocení může Švýcarsko bolet
+X: Experimenty na savcích již započaly .
+X: Fata morgána lepších perspektiv
+X: Fax s integrovaným telefonem .
+X: Fidel Castro se dostal k moci střelbou .
+X: Finance na Gabčíkovo nejen ze slovenského rozpočtu
+X: Finančně se tetování i jeho odstranění podobá .
+X: Firma dlužníky upomíná písemně i telefonicky .
+X: Firma proto dává přednost platbě předem .
+X: Firma se prosazuje i pružností dodávek .
+X: Firma tuto loajalitu dovede ocenit .
+X: Firma zaměstnává na třicet pracovníků .
+X: Fittipaldi byl nakonec klasifikován devátý a Mansell desátý .
+X: Francouzi překvapili favorizovanou Krč nečekaně slabou hrou .
+X: Francouzský deník Le Monde
+X: Funkcionářské boje mě nezajímají .
+X: Gatesova vize se naplňuje
+X: Háfize Asada nepopulární oznámení o ústupcích teprve čeká .
+X: Hasiči našli jeho tělo až po čtyřiadvaceti hodinách .
+X: Házenkáři Kopřivnice mají Pražanům co vracet
+X: Historické údaje neposkytují datum narození Jana z Pomuku .
+X: Historie Zlatého míče takový klubový triumf nepamatuje .
+X: historiograf ekonomických nauk ;
+X: Hladoví zloději snědli zvířata ze zoo
+X: Hlava rodiny nakonec oslovuje mechanika .
+X: Hlavní pomoc ale nacházela v dalších obchodních aktivitách .
+X: Hlavní svátky světového sportu podpoří částkou 40 milionů dolarů .
+X: Hlavním principem změn na železnici je dosažení tržního prostředí
+X: Hlavním symbolem neúspěchu vlády byl rostoucí rozpočtový deficit .
+X: Hodně by mohli pomoci i úspěšní a osvícení podnikatelé .
+X: Hodnota obrazu však nezávisí jen na autorovi .
+X: Hokejisté Vsetína by chtěli mít po sezoně příjemné starosti
+X: Hokejisty čeká liga v pátek i neděli .
+X: Hoteliér z nich ovšem vyráběl likér lahodné chuti .
+X: Hovoří se však o privilegovaných partnerských vztazích .
+X: Hovoříme o nápravě některých majetkových křivd .
+X: Hovořit o konkrétním partnerovi by ale bylo předčasné .
+X: Hrabou nám tady do mužstva a kalí vodu .
+X: Hráč trefil záda našeho obránce .
+X: Hradec Králové se vrací na malšovický stadión s kanonýrem Černým
+X: Hradní stráž prý neměla se zákrokem proti anarchistům nic společného
+X: Hrát v kapele nebo prodávat obrazy jsou subjektivní záležitosti .
+X: Hrbek zřejmě do farmy nepůjde
+X: Hroby sudetských Němců jsou stále majetkem pozůstalých
+X: Hrot skanovacího tunelového mikroskopu štěpí molekuly
+X: Hvězdná hnízda ve tmě a chladu
+X: Chaos je stav s nestabilitou v každém bodě .
+X: Chce vytvořit Eurotelu konkurenční síť pro provoz mobilních telefonů .
+X: Chceme jít do velké věci .
+X: Chceme se proto zaměřit na menší thajské firmy .
+X: Chemapol toto nařčení odmítá .
+X: Chirurg navrhl krátkodobé sledování ve vězeňské nemocnici na Pankráci .
+X: Chléb se tedy bude lámat ve sněmovně .
+X: Chmurné vyhlídky uhlí v Evropské unii
+X: Chovat pštrosy se prý vyplatí
+X: Chráněným dílnám by pomohly státní zakázky
+X: Chřipka zatím příliš nehrozí
+X: Chřipky je prý zatím jen minimálně
+X: Chtějí společně podporovat drobný a střední podnikatelský stav .
+X: Chtěl by spotřebu tepla přesně měřit a také šetřit .
+X: Chtěl jsem udělat něco velice moravského .
+X: chtíče a nacionalismus .
+X: Chyba je samozřejmě na mé straně .
+X: Chystá se teprve její projednání .
+X: Chytat bude určitě Turek .
+X: I když se nikdo nedívá .
+X: I když z poněkud jiných důvodů .
+X: I nevyučené ženy však mohou šít polotovary .
+X: I pokus o ublížení na zdraví .
+X: I Radim Pařízek snad změnil názor .
+X: I s obchodní přirážkou byla laciná .
+X: I taková firma totiž musí vlastnit živnostenský list .
+X: I to svědčí o pubertálním věku naší demokracie .
+X: Ideální není ani finanční situace klubu .
+X: Identifikace Tomáše Vodičky je nejasná
+X: Image důvěry vytvářejí všichni pracovníci zdravotního zařízení
+X: Implantabilní část neobsahuje napájecí zdroje .
+X: Index cen je značně rozdílný v různých krajích ČR .
+X: Indexy služeb a obchodu jsou stabilní
+X: Indie včera vypověděla ze země jednoho z pákistánských diplomatů .
+X: Indurain už ve žlutém
+X: Informace jsou levné a šíří se rychle .
+X: Informaci převzala většina celostátních deníků .
+X: Informoval o tom tiskový mluvčí ministerstva spravedlnosti Vladimír Voráček .
+X: Informoval o tom včera list Juventud Rebelde .
+X: Informovala o tom včera Česká televize .
+X: Informovali jsme ministerstvo privatizace .
+X: Invaze na Haiti je téměř jistá
+X: Investice pro budoucnost
+X: Investice úprav budovy Federálního shromáždění by neměly být vysoké .
+X: Irská hospoda se od české poměrně dost liší .
+X: Ivan Hlinka byl podle Romana Horáka pořádný nervák .
+X: Izetbegovič nežádá zrušení zbrojního embarga
+X: Izrael tedy rozhodl dočasně neuznat pákistánského diplomata .
+X: Izraelci mohou vyrukovat se stejným argumentem .
+X: Já naštěstí padám jen jednou za sezónu .
+X: Jágr k výhře hostů přispěl asistencí na druhou branku .
+X: Jágr se necítí být nejlepším hokejistou
+X: Jak hluboko až může sportovec klesnout .
+X: Jak ustanovit ředitele televize
+X: Jak začalo moje psaní .
+X: Jako by se stroj času dal do pohybu .
+X: Jako Evropa po Mnichovu .
+X: Jako hlavní bude pískat Helmut Krug .
+X: Jako příklad uvedl komisi pro kontrolu Bezpečnostní informační služby .
+X: Jako příklad uvedl libanonského prezidenta Eliase Hrávího .
+X: Jako ti první slavní holubi .
+X: Jaromírovi Jágrovi bude v únoru teprve dvacet let .
+X: Jasno měli do celé záležitosti vnést dva soudní znalci .
+X: Jde o komplikovanou záležitost .
+X: Jde o kubánskou dvojku v šavli .
+X: Jde pouze o kosti a chomáče vlasů .
+X: Jde zejména o vysokou stabilitu makroekonomického prostředí .
+X: Je jím 17letý Ronaldo Luis Nazario de Lima .
+X: Je levnější než doprava zajišťovaná cizími organizacemi .
+X: Je na čase zabývat se odpovědně státními svátky .
+X: Je naprosto jiný než Bob Johnson .
+X: Je obviněn z nedostatečného zajištění sjízdnosti dálnice .
+X: Je plátcem daně z příjmu právnických osob .
+X: Je předčasné uvažovat o nějaké zásadní systémové změně .
+X: Je rozčleněna do tří částí .
+X: Je skutečně silnou osobností .
+X: Je strašné psát nevím a nemohu .
+X: Je to dědictví komunistického rovnostářství .
+X: Je to můj poslední závod tady .
+X: Je to pro nás do určité míry i demotivující .
+X: Je to skličující přehlídka .
+X: Je to však pro ně příliš velké břemeno .
+X: Je to záležitost na dlouhá sezení a diskuse .
+X: Je to zcela legální použití tzv . mírných prostředků .
+X: Je to zlozvyk u nás dnes bohužel dost rozšířený .
+X: Je třeba v tomto mediálním světě žít .
+X: Je třeba začít druhé .
+X: Je určena pouze vzdáleností mezi deskami .
+X: Je zakázáno propagovat pouze cigarety .
+X: Je zařízena zcela nově .
+X: Je zde zjevná averze na politické strany jako takové .
+X: Jeden měsíc nám odpustili za absolvování roku vojenské katedry .
+X: Jeden předražil jízdné dokonce o pět set procent .
+X: Jeden z kandidátů na funkci ústavního soudce rezignoval
+X: Jedině tím prý zabrání nesprávnému výkladu .
+X: Jedna čtvrtina polských fiskálních příjmů pochází z ropného průmyslu .
+X: Jednak se prezentuje na jiné části trhu .
+X: Jednání o spolupráci se zahraničními partnery pokračují .
+X: Jednání s Jarolímem by mělo být uzavřeno už dnes .
+X: Jednání se zúčastní také pozorovatelé z Rakouska a Slovinska .
+X: Jedno však dnes už je jisté .
+X: Jednooký mezi slepými králem .
+X: Jednou z nejdůležitějších podmínek pro investory je vhodná lokalita .
+X: Jednou z těchto zásad je zavedení školného .
+X: Jehly přenášející virus HIV jsou příliš velkým rizikem .
+X: Jeho boom už ale odezněl před několika lety .
+X: Jeho latina hlaholila vsí od rána do noci .
+X: Jeho maximum zatím je o dva centimetry výš .
+X: Jeho pozdní dílo charakterizují barevné fotografie květin .
+X: Jeho retrospektiva přináší důkaz o silném tvůrčím duchu .
+X: Jeho výrobní cena se od benzínu Special výrazně neliší .
+X: Jeho záhadná a tragická smrt zůstávala neobjasněna .
+X: Její oživení se očekává až v příštím roce .
+X: Její příznivce určitě zahřálo u srdce .
+X: Její vědecký název je neblahý .
+X: Její zneužití lze mnohdy obtížně prokázat .
+X: Jejich členové budou pod zvláštní ochranou prezidenta .
+X: Jejich modelová představa připomínala pyramidu .
+X: jejich platnost je mnohem obecnější a širší .
+X: Jejich přestavbu podnik pro nedostatek finančních prostředků musel odložit .
+X: Jejich stav přechodně doplňují brigádníci .
+X: Jejich taktiku posílil i Slobodan Miloševič .
+X: Jejich vypátrání je tak zatím prakticky nemožné .
+X: Jejich vzájemné vynásobení dá dobu potřebnou k provedení programu .
+X: Jen fordů bylo na startovní listině šestnáct .
+X: Jen několik prominentů se občas protlačí tajnými vrátky .
+X: Jen o málo tak předstihl Michaila Gorbačova .
+X: Jen pravděpodobnější pravděpodobnost
+X: Jenže dvě individuální chyby předstoperů je položily na lopatky .
+X: Jenže krátce předtím se Sparta domluvila s trenérem Dobiašem .
+X: Jenže to by bylo po turnaji .
+X: Jenže vše mělo předehru .
+X: Jenže za zády jim stál opět brankář Slabý .
+X: Jeruzalém se musí stát nefanatickou konfederací fanatiků .
+X: Ještě k pravidlům pravopisu
+X: Ještě předtím však stačil otevřít skóre zápasu .
+X: Ježek mohl být odvolán na pátečním zasedání prezidia .
+X: Jídelní lístek doplnil barevnými fotografiemi .
+X: Jinak je tomu ovšem s dřevěnými detaily .
+X: Jiný zákon stanovící pravidla stávky neexistuje .
+X: Jistě se k nim připojí v budoucnosti i další .
+X: Jmenuje se československá koruna .
+X: Jsem profesionální trenér .
+X: Jsem trochu skeptický vůči těmto průzkumům .
+X: Jsme pro sjednocenou a jednotnou správu Afghánistánu .
+X: Jsme v rozhodující fázi .
+X: Jsou postaveni před nelehké rozhodnutí .
+X: Jsou rozděleny do tří navazujících částí .
+X: Jsou spravovány voleným zastupitelstvem .
+X: Jsou to ale jen vnější změny .
+X: Juppé označil krizi za velmi vážnou .
+X: Justiční stráž v podstatě nemá žádné pravomoci .
+X: K Čechám připadl Boží Dar teprve v roce 1556 .
+X: K nižší ceně se liberecký velkoobchod dostává jinou cestou .
+X: K poslednímu červencovému dni předal objekt Státnímu fondu kultury .
+X: K použití za nízký poplatek slunečníky a lehátka .
+X: K příčinám úmrtí v Československu
+X: K takovému přesycení může docházet zcela zákonitě .
+X: K této částce se musí připočíst spotřební daň .
+X: K tomu nynější zákon vůbec nepřihlíží .
+X: K tomu přispívá i výborný tuhý podvozek .
+X: K utkání do Chebu však neodcestoval .
+X: K výhře nad Stuttgartem jsem přispěl jedním gólem .
+X: Kadlec s Hapalem v nelítostném souboji v bundeslize .
+X: Kadlec si zápas s Maltou rád odsedí na lavičce
+X: Kalifornský stát v roli dlužníka
+X: Kámen do půl karátu odkoupí Soluna bez časových prodlev .
+X: Kampaň před valnou hromadou fotbalového svazu .
+X: Kancelář měla tuto plombu provést písemným příkazem .
+X: Kandidátů do komunálních voleb je jako šafránu
+X: Kardinál Vlk převzal v Římě kostel
+X: Karpovovi stačí remíza
+X: Kasparov je ovšem v tomto zápase jasným favoritem .
+X: Kašpárková si připadala jako honicí pes
+X: Katastrofa pro danausy
+X: Katedrála s nadšením a se záplavou chyb
+X: Katolická církev proti potratům
+X: Kauza velmi nadaných dětí
+X: Každá neshoda se pochopitelně ve výsledném produktu promítne .
+X: Každá změna má svůj počátek ve vědomí .
+X: Každé Kantorovo představení je zároveň posledním .
+X: Každé nahlédnutí však stojí průměrně 200 tisíc korun .
+X: Každopádně by si však stát měl ponechat rozhodující tratě .
+X: Každý ale mohl hlasovat podle svého .
+X: Každý člověk má právo být různý
+X: Každý manažer má samozřejmě znát i svoji vlastní cenu .
+X: Každý samozřejmě vyhrát nemůže .
+X: Každý z nich má ve společnosti trochu jinou roli .
+X: Každý ze stavů je popsán jinou vlnovou funkcí .
+X: Kde proti Nizozemsku
+X: Kdykoli ochotně přijímáme novináře .
+X: Když nastanou chřipky
+X: Ke komu odešli voliči aliance
+X: Ke zkoumání používáme radioaktivní látky .
+X: Ke zranění osob nedošlo .
+X: Klady a zápory státní zakázky
+X: Klasickou veřejnou popravou bylo i páteční zastřelení pražské podnikatelky .
+X: Klasickým hromaděním indukcí je experimentování .
+X: Klasickým příkladem je i Longova zpráva .
+X: Klášter pak určoval ráz života jejich obyvatel .
+X: Klaus k reformě v zemědělství
+X: Klientům ale dobrá rada přinese zisky mnohonásobně větší .
+X: Kmotrem knihy bude folkař Oldřich Janota .
+X: Kniha obsahuje rovněž terminologický slovníček nejfrekventovanějších pojmů personálního managementu .
+X: Knihy mají své osudy .
+X: Koalice křesťanských demokratů na Moravě
+X: Kodaňský postoj naproti tomu je nazýván antirealismem ;
+X: Kolem těchto závěrů se rozvinula samozřejmě diskuse .
+X: Kolem této návštěvy bylo ve městě nezvykle rušno .
+X: Kolony na příjezdových komunikacích však nevznikaly .
+X: Komerční diplomacie má svá úskalí
+X: Komorní divadlo snad za tři roky
+X: Komorní filharmonie přidává na desce další dvě Haasovy skladby .
+X: Koncem druhé světové války se Korejci těšili na nezávislost .
+X: Koncem let padesátých jsme měli velmi silnou agenturu ;
+X: Koncentrace pylu se budou sledovat
+X: Koncept fiskální ústavy sám o sobě není prost problémů .
+X: Koncept galerie je zcela otevřený .
+X: Koncept zákaznické karty byl záležitostí týmu vedoucích manažerů .
+X: Koncert Haselböcka pro mne ovšem představoval určité zklamání .
+X: Koncert otevřeli pětipísňovým blokem plzeňští rockeři Alice .
+X: Koncerty jsou součástí Dnů duchovní hudby .
+X: Konec českých vydavatelů v Čechách
+X: Konečné slovo by měla sněmovna říci na květnové schůzi .
+X: Konference má právě posoudit nadějnost takovéto spolupráce .
+X: Konference o populaci zahájena
+X: Konference se koná vždy od pondělka do pátku .
+X: Konkrétní odpověď nemohu dát pro nedostatek informací .
+X: Konkrétní výběr vždy záleží na přání zákazníka .
+X: Konkurence soukromníků
+X: Kordu vyřadila namožená třísla
+X: Koryta vodních toků najdou zřejmě své majitele
+X: Královec uprostřed času
+X: Krásný Serge otevírá dveře do všední lidské existence
+X: Kráter mezi německým západem a východem .
+X: Krátké petry a protekcionismus
+X: Krátkodobým výkyvům nedávám příliš velkou váhu .
+X: Krejčí se k celé záležitosti odmítl vyjádřit .
+X: Kriminalisté dobře znají i kanály úniku .
+X: Kritéria výběru jsou přísná .
+X: Kritizují i protestní akce komory proti důchodovému zákonu .
+X: Krize městské policie
+X: Krizi by měla řešit Kuba
+X: Kromě jiného se totiž barvy v těchto místech rozpíjejí .
+X: Kromě stravovacích služeb firma Sodexho distribuuje stravenky Gastrotur .
+X: Kromě toho byla ošklivá a primátor byl estét .
+X: Křesťanská větev této filozofie později probudí evropskou renesanci .
+X: Kubánci si chystají člun na cestu z ostrova svobody
+X: Kubánští emigranti chtějí mrtvého Fidela Castra
+X: Kuka i Skuhravý rozhodli utkání
+X: Kunce je dalším Čechem v německé reprezentaci
+X: Kupující je povinen uplatnit své nároky bez zbytečného odkladu .
+X: Kurs obchodního jednání v oblasti marketingu a prodeje .
+X: Kvalita poštovních služeb v Kanadě mne příjemně překvapila .
+X: Kvalitní volební zákon a to většinový .
+X: Kvůli embargu nyní v bývalé Jugoslávii neprodáváme nic .
+X: Kvůli zranění nenastoupí ani Desailly .
+X: Laboratoř aplikované matematiky a bioinženýrství
+X: Láce se vždy nevyplácí
+X: Látka je vzápětí vysvětlena na příkladech .
+X: Látku lze poměrně jednoduše chemickou cestou syntetizovat .
+X: Lázně mají méně klientů *
+X: Lebka zlomena nebyla .
+X: Leč skrze pouhé zvyky toto objevit nelze .
+X: Lékařská komora nadále povinná
+X: Lepších časů se naši vývozci letos již asi nedočkají .
+X: Letos naše pořady neuspěly .
+X: Letos se ale neujalo nic . 
+X: Letos se snaží o návrat do politiky .
+X: Letos však ještě ne plně a ne všichni .
+X: Letošní výsledky nejsou ještě kompletní .
+X: Levé křídlo prudce mávne k zemi .
+X: Levnější ovocné šťávy v krabicích
+X: Lhůta k uplynutí nároku však uplynula .
+X: Liberalizačním opatřením je i navrhovaná úprava prokazování odborné způsobilosti .
+X: Liberálové se po hesenské neděli mohou na chvíli nadechnout .
+X: Lidé se pojišťují u více fondů
+X: Lidé však nejsou ochotni jít za prací .
+X: Lidé z Bety žhavili telefony a dopisy hledali .
+X: Lidovci se množí dělením
+X: Liší se často počátkem a závěrem užívání mohylového ritu ;
+X: LN to potvrdila mluvčí ministerstva zdravotnictví K . Potočná .
+X: Loď i s drahocenným nákladem by byla nenávratně ztracena .
+X: Logika buduje svůj aparát nad danou ontologií .
+X: Longova zpráva nebyla ojedinělá .
+X: Loni v prosinci se Bruntálští obrátili na premiéra Klause .
+X: Lustrační zákon znovu odročen
+X: Lyžařské vleky jsou ve společném vlastnictví obce a hoteliérů .
+X: Lze absolvovat také mezinárodní potápěčský kurs .
+X: Macek chce zřídit kontrolu zdravotnictví
+X: Maďarsko by mohlo být v čele procesu uznání Slovenska
+X: Majetek církve byl stejně různým způsobem lidem ukradený .
+X: Mají nepříznivý vliv na ozónovou vrstvu .
+X: Mají své zpravodajce na všech zastupitelských úřadech v zahraničí 
+X: Mají zdravotní potíže a chtějí od vlády náhradu .
+X: Majitel to nechá vyhasnout a celý kolotoč začíná znovu .
+X: Majitele obec vyhnala .
+X: Majitelem lodi je Nadace České námořní divadlo .
+X: Majoritní podíl si ponechává stát .
+X: Malajsie má nového krále
+X: Malé banky tu jistě mají místo .
+X: Maminka se jmenovala Steinová .
+X: Management už udělal rozhodující kroky k transformaci akciové společnosti .
+X: Manažer Baníku se vzdal funkce
+X: Mandlíková podepsala roční kapitánství
+X: Maradona definitivně v Seville
+X: Marihuana na zahrádce
+X: Marné cesty k českému počítači
+X: Martině stojí v cestě klan Malejevových .
+X: Mávali na něho stopkou .
+X: Mečiar chtěl mít na Hradě Klause
+X: Měl by však hlavně sledovat vaše informace .
+X: Měla ty nejnemožnější šaty .
+X: Mělo už samozřejmě vypilované číslo motoru .
+X: Mému synovi před časem vykradli byt .
+X: Město by pak farmu pronajímalo zpět léčebně .
+X: Město vložilo do projektu pozemky a společnost finanční hotovost .
+X: Městu tak bude vyvlastněno sedm budov .
+X: Meteorologové neočekávají v srpnu žádná tropická vedra
+X: Metody používající rentgen a křemíkové lampy dokáží leccos identifikovat .
+X: Metro má zúžené hrdlo
+X: Mexičtí indiáni uvedli své podmínky
+X: Mezi lidmi vznikl poplach a panika .
+X: Mezi největší strašáky podnikatelů - zaměstnavatelů patří manko .
+X: Mezi uchazeči o zaměstnání převažují ženy a dělníci .
+X: Midraš v obecném pojetí je vlastně další komentář .
+X: Michajlovovi by nevadilo u nás trénovat
+X: Milionový podraz způsobený partnerem *
+X: Milovníci staré hudby si přišli na své .
+X: Mimořádná schůze parlamentu možná
+X: Mimořádné volby v Přešovicích zřejmě zajistí sám ministr vnitra
+X: Ministerstvo financí se však údajně o problematiku nezajímá .
+X: Ministerstvo nyní připomínky vlády zapracovává do návrhu zákona .
+X: Ministr Jan Ruml protestu nevyhověl .
+X: Ministr si po těžkém otřesu mozku průběh nehody nepamatoval .
+X: Ministři zahraničí Maďarska a Rumunska zasedli k jednacímu stolu
+X: Minulé století je bohaté na slavná jména .
+X: Mírové řešení bosenského konfliktu je v nedohlednu
+X: Místo práce nakradli za čtvrt milionu
+X: Místo sušárny mléka plánuje podnik zavedení efektivnější výroby sýrů
+X: Mluví se však o dalších výhodách politické elity .
+X: Mnohem kritičtější bylo přijetí knihy v Maďarsku .
+X: Mnohem rozšířenější je střední soukromé školství .
+X: Mnoho věcí se mi na tom nelíbí .
+X: Mnozí již přišli na chuť programu Team Agenda .
+X: Množství pacientů vytváří ekonomické výsledky .
+X: Moderní skládka v Mladé pomůže řešit problémy s komunálními odpady
+X: Mohla totiž nastat i jiná varianta .
+X: Mohli bychom pokračovat zeměpisnými vlastními jmény
+X: Mohlo by to umožnit rychlejší řešení různých hrdelních činů .
+X: Mohou využít velmi levného tankování v turistických bezcelních zónách .
+X: Moje osoba je velmi prostá .
+X: Moje znalosti o obrazech jsou však téměř nulové .
+X: Momentka ze včerejšího jednání Slovenské národní rady .
+X: Mongolské šičky ve Svitu
+X: Morávkova cesta k travičskému příběhu
+X: Moravské derby přineslo dobrý fotbal až po přestávce .
+X: Motiv činu není dosud znám .
+X: Movitější zahraniční studenti se nespokojí s bydlením na kolejích .
+X: Možná nebude nutná ani operace .
+X: Možná že Rusko samo vstoupí do této organizace .
+X: Možnost hypoték parlament projedná koncem letošního roku
+X: Možnost použití jako kopírky .
+X: Možnost přepínání na pulzní nebo tónovou volbu .
+X: mrtvého čtyřiadvacetiletého hráče našel v bytě jeho trenér .
+X: Multis přeměňují svět v jedno velké tržiště a pracoviště .
+X: Musí dbát také o dostatečné zastoupení kvalifikovaných žen .
+X: Musím ovšem přiznat , že naši kriminalisté nezaháleli .
+X: Musím zakončit něčím radostným .
+X: Může nakupovat v jedné ze stovek filiálek supermarketů Standa .
+X: Může předvolat majitele a upozornit ho na jeho povinnosti .
+X: Může to platit jeden .
+X: Muži je v tom bezděky podporují .
+X: Muži v ni přitom věří častěji než ženy .
+X: Mysterium a eros poezie
+X: Myšlení londýnských Timesů je pozoruhodně neevropské .
+X: Mýtus japonského managementu
+X: Mzdovou regulaci označil za protiústavní opatření .
+X: Na auto už Dianě nezbývalo
+X: Na burze nutno ihned platit
+X: Na čele tabulky zůstává Slavia .
+X: Na desce je jiná Laura .
+X: Na dvorci jejich vztah nepřežil první kolo .
+X: Na jeho místě vznikl park .
+X: Na jeho vystoupení poté zareagoval Vladimír Mečiar .
+X: Na jiných místech to není jiné .
+X: Na Lékařské fakultě v Brně však rozdíly nedělají .
+X: Na letadlové lodi běžná rutina .
+X: Na nákup zařízení si museli půjčit .
+X: Na nízké nájemné doplatíme
+X: Na odchodu jsou další čtyři důchodkyně .
+X: Na plyn jezdí jen policisté
+X: Na prvním místě je třeba jmenovat restituce .
+X: Na sjezdu vystoupil také ministr Rubáš .
+X: Na sjezdu zazněl i požadavek na sloučení těchto subjektů .
+X: Na snímku Alois Kovář z Konfederace politických vězňů .
+X: Na stole leží kopie dvou dopisů .
+X: Na stráních se nepase ani jedna kráva .
+X: Na stráních se pase čtyři sta kusů dobytka .
+X: Na šance však došlo až po chybách .
+X: Na takové zakázky se však nedá vždy stoprocentně spolehnout .
+X: Na takovou ránu bych prostě neměl nárok .
+X: Na termínu se prý dohodnou v nejbližší době .
+X: na to se nezapomíná .
+X: Na tomto místě si připomeňme základní charakteristiky skleníkových plynů .
+X: Na trůn nastoupil jako mladík .
+X: Na tuto cestu jsou nasměrováváni i studenti .
+X: Na určitých místech hodlá strana usilovat o voliče samostatně .
+X: Na větších kamenech bývá laserem vypálené evidenční číslo .
+X: Na všechny podal vyšetřovatel návrh na uvalení vazby .
+X: Na vývoz připadlo sedmnáct procent .
+X: Na začátku bylo školení .
+X: Na základě předložených údajů dalo na žádost razítko .
+X: Na zdejší poměry vlastně nicotnost .
+X: Nabídka je určena i studentům - novinářům .
+X: Nabídka škol se přizpůsobuje poptávce
+X: Nabízejí se dvě cesty .
+X: Náboženská studená válka
+X: nacionalismus je tím nejpřirozenějším ventilem lidské bojovnosti .
+X: Nacionalismus v Belgii se chytá československého stébla
+X: Nad letošním sjezdovým rokováním se vznášel přízrak krize .
+X: Nadějné změny v Poldi Kladno
+X: Nadějný vývoj české ekonomiky přináší i negativní jevy .
+X: Náhrada za trvalé porosty
+X: Nahradí ji vystavovaný prototyp z Brna .
+X: Nájemní domy budou chátrat dál
+X: Nájemník hře s cenami jen přihlíží .
+X: Nakonec navštíví Scalfaro brněnskou Masarykovu univerzitu .
+X: Nakonec se radovali Švýcaři .
+X: Nakonec se stal asistentem ředitele .
+X: Nálepkování a zesměšňování partnerů .
+X: naneštěstí jen málokteří mají požadované znalosti fyziky .
+X: Naopak smutno bylo v neděli večer v Plzni .
+X: Naopak u dividendového fondu je naděje na pravidelný příjem .
+X: Napadení však stále odmítali peníze vydat .
+X: Nápis je totiž až příliš podobný americké vodce Smirnoff .
+X: Například plnit i vzdělávací úkoly .
+X: Například za první republiky samostatné ministerstvo kultury neexistovalo .
+X: Národní galerie je samozřejmě otevřena další spolupráci .
+X: Národní galerii i církvi jde o totéž
+X: Nároky některých ministerstev jsme již přinesli v sobotu .
+X: Náruživým čtením si Jaroslav Postránecký trochu ublížil zraku .
+X: Násilníci však stačili z místa činu uprchnout .
+X: Nastávající rok bude rokem nových zákonů .
+X: Nastavování kontrastu manuálně nebo automaticky .
+X: Nasvědčují tomu zkušenosti z minulých let .
+X: Náš právní řád garantuje nezávislost soudů .
+X: Naše cesta je právě opačná .
+X: Naše privatizace má výrazně transformační podobu .
+X: Naše slovo má tři zcela odlišné významy .
+X: Naše ženy nemusí mít všechno .
+X: Našel jsem mladé muzikanty a vyrazili jsme na koncerty .
+X: Naši dnešní policii zajímá leccos .
+X: Naši mladí v rozhodujících momentech nedokázali hrát rozvážně . "
+X: Naši turisté jsou odbavováni průběžně bez čekání .
+X: Naštěstí jim osud nastavil příznivou tvář .
+X: Naštěstí šlo většinou o změny k dobrému .
+X: Nátlak na bosenské Srby musí pokračovat .
+X: Navíc chci toho ještě hodně udělat pro svou zemi .
+X: Navíc padělaný kolek byl zhotoven amatérsky .
+X: Navíc tím získal oporu proti moravským údělným knížatům .
+X: Navíc to má vliv na armádu .
+X: Návrat odvolaných ředitelů
+X: Navrátilová nemá šanci
+X: Navrhujeme prodloužit dobu splácení .
+X: Návštěva českého premiéra má však i nepřímé výsledky .
+X: Ne všechno je však jasné a všeobecně přijímané .
+X: nebo kolikrát tenista udeřil do míčku za tisíc dolarů 
+X: Nebo Německo používá kompromis mezi poměrným a většinovým řešením .
+X: Nebohý spotřebitel nemá ve svém bytě na vybranou .
+X: Nebude daleko od pravdy .
+X: Nebude těžké je naznačit .
+X: Nedalo se už dělat vůbec nic .
+X: Nedám na něj dopustit !
+X: Nedávno ji musel kvůli administrativním překážkám uzavřít .
+X: Nedělní Lidové noviny
+X: Neexistující firma usiluje o privatizaci petrochemie
+X: Nehoda si nevyžádala žádné oběti .
+X: Nechtěl totiž zbytečně platit prázdný byt .
+X: Nejčastějšími návštěvníky Temelína jsou školní děti
+X: Nejdříve se ovšem musí rozdělit majetek konfederace .
+X: Nejdříve ta příznivější verze .
+X: Nejednalo se ani o změnách struktury sekretariátu .
+X: Nejhorším únikem je pak alkohol nebo prášky .
+X: Nejlépe jsou na tom pochopitelně velká a zaběhnutá sanatoria .
+X: Nejlevnější cesta k univerzitnímu vzdělání
+X: Nejlevnější telefony jsou v Británii
+X: Nejsme elitní škola .
+X: Největší poptávku tvoří bankovnictví a pojišťovnictví .
+X: Největší rozdíl vidí Horák v systému tréninků .
+X: Největší úspěch při vymáhání zpožděných plateb mívá osobní jednání .
+X: Nejvíc jsem novinku ocenil po letošním silvestru .
+X: Nejzávažnější změnou je stanovení minimálního počtu pojištěnců .
+X: Někdejší alejí ostřelovačů proudí davy lidí .
+X: Někdo nabídne třeba pouhou práci ve mzdě na čemkoli .
+X: Někdy je záruka až padesátiletá .
+X: Někdy jsou málo potěšitelné .
+X: několik podrobností bylo sestaveno jen podle technických možností sestavovatelů .
+X: Některé díly by možná provázela hvězdička .
+X: Některé jsou negativní nebo ambivalentní .
+X: Některé silnice jsou neprůjezdné a parkovací kapacity jsou vyčerpány .
+X: Některé takové výrobky jsou k dostání v lékárnách .
+X: Některé tolerují teploty letální pro ostatní pouštní členovce .
+X: Někteří zákazníci se i vracejí .
+X: Nelze ho proto ztotožňovat s jeho bratrem Rudolfem Černínem .
+X: Nemá běžné rodinné starosti ani velké životní potřeby .
+X: Německá rodina byla při havárii těžce zraněna .
+X: Německá stávka v době karnevalu
+X: Německé chlapce jsme již nezastihli .
+X: Německo je naše inspirace i naše bolest 
+X: Německo je především drahé
+X: Němečtí akcionáři se výplaty dividend vzdali .
+X: Němečtí poslanci nastolili otázku Benešových dekretů
+X: Neměl podlehnout panice a v klidu vyčkat věcí příštích .
+X: Neměli bychom mít konflikty s Araby .
+X: Nemoc naštěstí odezní během tří až sedmi dnů .
+X: Nenechají ze sebe dělat blbce .
+X: Není možné z obchodního svazku žádat pouze jednostranné výhody .
+X: Není nutný celodenní pobyt na oddělení .
+X: není odklonem od skutečnosti .
+X: Není proto zapotřebí uzavírat nové nájemní smlouvy .
+X: Není snadné na této planetě šířit optimismus .
+X: Není to revoluce s prapory nad barikádami .
+X: Neofašisté a stoupenci různých alternativ zmiňováni nejsou .
+X: Neplatí v současnosti pro mnohé švédské rodiny .
+X: Nepořádek se podnikateli nevyplatí
+X: Nepotrestaný zločin je stimulem pro zločiny budoucí .
+X: Nepotvrdil se však vzájemný vztah karcinogenního a mutagenního efektu .
+X: Nepřiměřená rychlost
+X: Neřekl jsem to tajemně , ale docela normálně .
+X: Nesmíme však nabourat zdroje pro nezbytné výdaje .
+X: Nespravedlivý pocit neviny
+X: Nešťastná Gödelova věta
+X: Neštěstí jedné generace
+X: Netřeba prestižní kostry .
+X: Netscher věří v další zlepšení
+X: Netýká se pouze hospodářství .
+X: Neuvěřitelně jsme se trápili hlavně doma .
+X: Nevraživost televizních ředitelů hrozí přerůst v soudní spor .
+X: Nevynechal ani Slováky žijící v zahraničí .
+X: Nevyzpytatelné je i zdejší publikum .
+X: Nezapomeňte investovat
+X: Nezbytnou podmínkou dodávek do zahraničí byl certifikát řízení jakosti .
+X: Nezletilí stříleli po lidech
+X: Nezměnily se ani tranzitní poplatky u ropovodu z Ruska .
+X: Nezvěstné jsou peníze i podvodník
+X: Nezvyšovat ceny umožňuje i důsledná kontrola fakturace subdodavatelů .
+X: Nic podobného jsem za dobu svého závodění nezažil .
+X: Nic takového se dosud na světě nestalo .
+X: Nicméně ministr nikomu neupírá právo se k zákonu vyjadřovat .
+X: Nicméně zákonodárci musí platit z dovozů clo i daň .
+X: Nikdy jsem nechtěl být spisovatelem z profese .
+X: Nikdy jsem neplánoval moc dopředu .
+X: Nitě se sbíhají u ředitele 
+X: Nízké náklady způsobuje především nákup surovin ve velkém množství .
+X: Normálně jich prodám nanejvýš dvě stě .
+X: Norsko je stále ještě z většiny proti .
+X: Nová kanadská cla na pranýři
+X: Nová pravidla živnostenského podnikání začnou platit zřejmě od ledna
+X: Nováček přežil dva mečboly
+X: Novelou zákona můžeme ztratit jeho mezinárodní prestiž .
+X: Novu podle průzkumů sledují hlavně aktivní a mladí lidé .
+X: Nový většinový vlastník v punčochách
+X: Nový výrobní program a konkurenceschopnost jsou zárukou úspěchu
+X: Nový zákon pro vysoké školství je připraven k projednání
+X: Novým jevem je zájem soukromých podnikatelů .
+X: Nukleární zbraně podléhají přísnějšímu režimu než štěpné látky
+X: Nutná bude účast na různých výstavách .
+X: Nyní je jich o polovinu méně .
+X: Nyní je zástupcem velitele centra přípravy kosmonautů .
+X: Nyní však kapacita zařízení pro děti předškolního věku nestačí .
+X: O byt a práci se musejí postarat sami .
+X: O finanční náhradu mohou žádat do jednoho roku .
+X: O genocidě byla Evropa informována .
+X: O jejich zařazení rozhodnou sněmovny hlasováním .
+X: O liberalismu tehdy nebylo řeči .
+X: O literatuře a tajných láskách
+X: O mnoho hlasitější než dnes .
+X: O Nasrínovou však dnes již ani tolik nejde .
+X: O našich vztazích skutečně nestojí za to příliš mluvit .
+X: O obsahu schránky si ústavy nevedou žádnou evidenci .
+X: O plukovnících a Puškinovi
+X: O pohybu čísel v účetnictví rozhoduje úředník finančního úřadu
+X: O skutečných turistech více vypovídají statistiky vytíženosti ubytovacích zařízení .
+X: O stotisícovém příspěvku rozhodne začátkem října okresní shromáždění .
+X: O to požádali i šéfové slovenské rozvědky a kontrarozvědky .
+X: O to složitější to má týnecká jmenovkyně .
+X: O tři procenta méně občanů důvěřuje samo sobě .
+X: O výsledku jednání tedy můžeme pouze spekulovat .
+X: o Za poslední rok prošel Izrael zásadními změnami .
+X: Oba pocházejí ze Spojených států .
+X: Oba soupeři cestují do Ostravy s patřičným předstihem .
+X: Oba umělce doprovodí orchestr České filharmonie .
+X: Obavy z ruských teorií nejbližšího zahraničí jsou zcela namístě .
+X: Obce budou bohatší o dividendy
+X: Obdobné záměry má management firmy i pro letošní rok .
+X: Obě nové firmy budou plně vlastněny holdingovou skupinou Investor .
+X: Obě vlastnosti mám u hokejisty rád 
+X: Obec sloužící přání hostů a projíždějících automobilistů .
+X: Obecní zájem reprezentují svobodně zvolení zástupci .
+X: Oběti byly ještě druhý den zaživa metány do plamenů .
+X: Obchodníci ponechávali kurz dolaru v úzkých rozpětích .
+X: Obchodníci využili příznivých cen
+X: Obchodníky i zákazníky mohou zlákat levnější cenou .
+X: Obchody však lze iniciovat i z české strany .
+X: Objevují se další padělané bankovky
+X: Obklopená září slavnosti a uctívání .
+X: Obličej je vysoký s krátkými a kolmo postavenými čelistmi .
+X: Obsáhlejšímu pohledu do sněmovny se nikdo nevěnuje .
+X: Obsáhly nekonečnost vesmíru i intimní tajemství lidského těla .
+X: Obyvatelstvo v Německu srovnávat s populací let třicátých .
+X: Obžalovaný se k výše uvedenému jednání doznal .
+X: Oceněná zařízení budou po tuto dobu prověřována .
+X: Očekává se i příjezd Tomáše Bati z Kanady .
+X: Očekávané hospodářské oživení zpomalilo rozdělení Československa .
+X: Očistná energie rockových meditací Tibetu
+X: Od dánského odmítnutí Evropské unie až po rozpad Československa .
+X: Od letošního ledna se stala akciovou společností .
+X: Od té doby se toho mnoho neudělalo .
+X: Od tohoto prohlášení se maďarské strany na Slovensku distancovaly .
+X: Od Trianonu nenapsal v Maďarsku nikdo slovenské dějiny .
+X: Od vlády čekáme autonomní ekologickou politiku
+X: Odborníci naopak doporučují chalupu v době kvetení vynechat úplně .
+X: Odbory nevylučují demonstraci na Staroměstském náměstí
+X: Odbyt Spolchemie letos vzrostl o sedm procent .
+X: Odcizena měď za milión korun
+X: Odezva nedala na sebe čekat .
+X: Odhady německého vedení Umformtechnik jsou podstatně optimističtější .
+X: Odmítl jsem být pasívním účastníkem komedie na svůj účet .
+X: Odmítl proto včera odpovědět na dotazy , proč rezignoval .
+X: Odmítnutí plánu posiluje obavy z obnovení rozsáhlých bojů .
+X: Odpověď arogantní , odpověď ovšem věcná .
+X: Odpovědnost za kvalitu je na producentech
+X: Odsun amerických vojáků ze Somálska
+X: Oficiální zdroje tuto informaci zatím nepotvrdily .
+X: Ohlas z německé strany byl dosud nedostačující .
+X: Ohlasy německého tisku na výsledky referenda ve Francii
+X: Okamžitý zákaz výroby freonových sprejů 
+X: Okres bojuje o telefonizaci okolí Dukovan už dlouho .
+X: Olympijská loď je již plná
+X: Onemocnění je přenosné též na prasata .
+X: Oni budou zřejmě oslavovat spíše směrem na východ .
+X: OP Prostějov byl privatizován ve druhé vlně kupónové privatizace .
+X: Opera Smetanova divadla připravila mimořádná představení :
+X: Opět bylo slyšet pouze je .
+X: Opět zklamali zkušení !
+X: Opozice reaguje plošným bombardováním vládní činnosti a jedovatými bonmoty .
+X: Opozice tehdy jeho snahu odmítla jako zradu národních zájmů .
+X: Opravený zákon o lesích do vlády nejdříve za měsíc
+X: Oproti předchozím je méně explozívní .
+X: Optimistické výhledy pro Opel
+X: Optimistické zprávy přišly i od velkých japonských firem .
+X: Orchestr řídí kanadský dirigent Marco Parisotto .
+X: Originální zpracování přitahuje zájem zákazníků
+X: Oslavy odchodu ruských vojsk z Německa mají hořkou příchuť .
+X: Osmadvacet osob pořádkové síly zatkly .
+X: Osobně jej však za nejlepší dílo nepovažuji .
+X: Ostatně ovlivnil mnoho osobností .
+X: Ostatní banky se do této oblasti moc nehrnou .
+X: Ostatní drželi hrubé a nádenické práce .
+X: Ostatní jsou většinou v rukou Američanů .
+X: Ostatní útočníci byli osvobozeni .
+X: Ostravští provedli dvě radikální změny v sestavě .
+X: Ostře sledované dopisy
+X: Otázka financování by se měla vyřešit na úrovni ministerstev .
+X: Otázka nyní už ovšem stojí jinak .
+X: Otázky k územní reformě pro poslance
+X: Otcova úzkost se naopak netýká budoucnosti ;
+X: Ovšem jenom zdánlivě .
+X: Ovšem tvrdý rock nebyl jedinou inspirací kapely .
+X: Ovšem vláda se obává důsledků uvolnění cen .
+X: Označil je za bezpředmětné .
+X: Oznámil to státní rozhlas .
+X: Oznámil to včera místopředseda strany Daniel Kroupa .
+X: Oznámil to včera mluvčí konference .
+X: Oznámil to včera rumunský statistický úřad .
+X: Oznámila to tisková služba gruzínského ministerstva obrany .
+X: Oznámili to včera představitelé Centra kuponové privatizace .
+X: Oznámilo to v Moskvě ruské ministerstvo obrany .
+X: Oznámilo to včera francouzské ministerstvo vnitra .
+X: Oznámily to vojenské zdroje v hlavním městě Saná .
+X: Oživení je znatelnější v USA než v zemích Evropské unie
+X: Padrnose v závěru potkala smůla v podobě pomalého defektu .
+X: Pak byla pravopisná komise oživena a rekonstruována ještě třikrát .
+X: Pak druhá naděje Gorbačovovy perestrojky .
+X: Pak projevila zájem i televizní společnost Channel Four .
+X: Pak si nás budete teprve vážit .
+X: Paláce neznamenají přepych
+X: Palestinská policie proti extremistům
+X: Palestinské volby by podle Rabina mohly být opět odloženy
+X: Památky v zájmu zlodějů
+X: Pardubický úřad práce registruje celkem 1268 volných míst .
+X: Parlamentní rétorika na jednu notu
+X: Parlamentní volby včera proběhly v Tádžikistánu .
+X: Partnerské či rodičovské vztahy jsou naprosto bez problémů .
+X: Pátečním projevem prezidenta Havla končí zřejmě také toto období .
+X: Pátrání policie v této věci je nadále neúspěšné .
+X: Patří sem i případy tzv . vyšší moci .
+X: Patřil jsem vždycky mezi ranní ptáčata .
+X: Peking vytvoří jednotky k boji proti porušování autorských práv
+X: Peníze pro mě zase tak příliš neznamenají .
+X: Peníze z můstku neprší
+X: Penzijní fond Everest má licenci
+X: Personální problém je skutečně ten hlavní .
+X: Peru a Ekvádor potvrdily příměří
+X: Peruánská Světlá stezka stávkovala
+X: Pes jí v nestřeženém okamžiku roztrhal luxusní punčochy .
+X: Pes požírající svá vlastní vyhřezlá žebra ;
+X: Pěstoval marihuanu na družstevním poli
+X: Peškova pocta katedrále
+X: Pět krátkých příběhů je dokladem absurdní historie střední Evropy .
+X: Pět výbuchů vytrhlo včera ze spánku obyvatele Atén .
+X: Pete si prožil pár drsných chvil .
+X: Pětkrát by tříbodové hodnocení zasáhlo do bojů o záchranu .
+X: Petr Lébl ani tentokráte nezklamal očekávání .
+X: Pink Floyd novou deskou nezklamali .
+X: Píšou o nás v novinách
+X: Pittsburští Tučňáci mají na dosah rekord v Národní hokejové lize
+X: Pivo je radost i starost
+X: Pivovar Bernard nestačí vyrábět
+X: Placení učebnic by nemělo být šokem
+X: Plánuje se rozsáhlá spolupráce s Japonskem .
+X: Plavou v něm zlaté ryby velké asi jako kapr .
+X: Plnit instrukce jiných bych nevydržel
+X: Po atentátnících se intenzivně pátrá .
+X: Po celé dějiny lidé nejčastěji nemají první nebo druhé .
+X: Po čtyři následující neděle budou patřit dostihy Karlovým Varům .
+X: Po dlouhé pauze dáváte o sobě vědět až nyní .
+X: Po dvou letech dostává znovu příležitost Timofte .
+X: Po dvou stech letech jsou plnoprávnými příslušnicemi .
+X: Po obou mužích policie intenzivně pátrá .
+X: Po pachatelích bylo vyhlášeno celostátní pátrání .
+X: Po plavání vedl Kočař o půl minuty před Krňávkem .
+X: Po přesném Jarolímově centru netrefil odkrytou branku hlavou Tymich .
+X: Po rekonstrukci se byty do objektu samozřejmě nevrátí .
+X: Po škole se vyučil zámečníkem .
+X: Po útoku odjel automobilem značky Lada .
+X: Po válce nás vystěhovali do pohraničí .
+X: Po velké námaze mi nakonec prostřelili duši .
+X: Po vyhlášení rozsudku u soudu jsem se vzdal odvolání .
+X: Po vyplacení vkladu automaticky zaniká .
+X: Po vzájemném hlídání začal hokej až ve druhé části .
+X: Pobaltští prezidenti o odsunu vojáků
+X: Pobočka Thajské obchodní komory bude zřízena v Praze .
+X: Počasí je dobrým příkladem .
+X: Počet přerušených a obnovených dodávek se několikanásobně zvyšuje .
+X: Počítá se totiž pět nejlepších výsledků z 12 závodů .
+X: Podél těchto silnic jsou pro podnikání relativně nejlepší podmínky .
+X: Podíl zaměstnanců a důchodců mezi jejími příznivci se vyrovnal .
+X: Podivná tělesa na obloze
+X: Podivné se mu zdály páka i válec zajištěného stroje .
+X: Podle Clarka hraje hlavní úlohu při výběru listů čich .
+X: Podle hry jsme si páté místo nezasloužili .
+X: Podle Hutaře záleží především na přístupu posudkových lékařů .
+X: Podle jeho vyjádření nemá Havana nic proti zahájení jednání .
+X: Podle Lagnera bude na pronájem vypsán konkurz .
+X: Podle mne mohly například Pardubice dát šest gólů .
+X: Podle mne to neodpovídá úrovni ekonomiky obou zemí .
+X: Podle našeho názoru se nesmí v televizi objevit .
+X: Podle našich informací měl Ježek padnout včera .
+X: Podle návrhu to může být kterýkoliv poslanec .
+X: Podle názoru V . Šumana to však lze .
+X: Podle něj promlčen nebyl .
+X: Podle prezidenta Jelcina žádné takové úmysly neexistují .
+X: Podle Rubáše je to ve světě běžné .
+X: Podle údajů policie nebyl v obou případech nikdo zraněn .
+X: Podmínka Václava Havla
+X: Podnět nezávislých odmítnut soudem
+X: Podnik se z toho zatím nevzpamatoval .
+X: Podnikání je obrovská životní škola .
+X: Podnikatel a nájem nebytových prostor
+X: Podobné průpovídky pozbyly vtipnosti a nebyl to jev ojedinělý .
+X: Podobně se může zaměnit směr plynutí času .
+X: Podobně to je u velké a malé banky .
+X: Podobných schránek skrývají krajní pilíře zřejmě osm .
+X: Podpisová akce za propuštění Tysona
+X: PODPORA MYŠLENKY MÍROVÝCH SIL RYCHLÉHO ZÁSAHU
+X: Podrobnější prognózu budeme mít až koncem července .
+X: Podstatně se tak liberalizuje možnost vstupu do podnikání .
+X: Podzemní garáže zaplatí investoři
+X: Pohled tímto směrem přináší mrazivá zjištění .
+X: Pohřešují se desítky lidí
+X: Pohybují se tu miliardy let .
+X: Pochybit může ovšem i Čech .
+X: Pojďme nyní do bližší budoucnosti .
+X: Pokračovat by mělo ještě následující dva dny .
+X: Pokračujeme na zlepšování kvality .
+X: Pokrok není charakteristikou humanitních předmětů ;
+X: Pokus o zkorumpování Baudyšova náměstka nebyl první
+X: Policejní ředitel by se měl omluvit
+X: Policie prověřila řidiče taxislužby
+X: Policisté zbraň zajistili v hotelu Slavia .
+X: Politika bez hodnot je iluze .
+X: Polo má před sebou zřejmě dobrou budoucnost .
+X: Polovinu tvořili žadatelé z Bulharska .
+X: Polská prokuratura zastavila černé televizní vysílání
+X: Polské zemědělství bylo vždy zaostalé .
+X: Polsko podle něj má názor odlišný .
+X: Polsko privatizuje ropný průmysl
+X: Pomáhají slabším
+X: Poměrně příznivé perspektivy
+X: Poměry v útvarech podle něj odpovídají atmosféře ve společnosti .
+X: Pomůže mu matová hrozba .
+X: Popadne jej do stejně rychlé tlamy .
+X: Poplašná zpráva rozčílila Vršovické
+X: Poplatek za tuto službu se dohaduje smluvně .
+X: Poptávka po investičním zboží zatím stagnuje .
+X: Porozpadové zkratkosloví
+X: Porušení pečetí šetří prokuratura
+X: Pořádají Brněnské veletrhy a výstavy .
+X: Pořadí států podle medailí .
+X: Poslanci bojují proti kouření
+X: Poslanci budou zpětně platit clo
+X: Poslanci se nedohodli na jejich sloučení .
+X: Poslanec se odmítá bavit
+X: Poslanec Tomáš Ježek o své představě role odborů ve společnosti
+X: Poslanec Vladimír Šuman se vyjadřuje k případu generála Bárty
+X: Poslední statistické sčítání dopravy proběhlo v roce 1990 .
+X: Posledním případem byla nedávno avizovaná bomba v pantografové soupravě .
+X: Posluhovat přijdou veteráni s bezednými kapsami svých ošuntělých plášťů .
+X: Postrádáme zpravodajství Slovenské televize .
+X: Postup některých úřadů je podle něho někdy zarážející .
+X: Postup připomínal doby totality .
+X: Postupová jistota plzeňských hokejistů
+X: Poškodil by především její jméno .
+X: Poté se sám otočil k Paisleymu zády a odešel .
+X: Potíže obou společností byly podobné .
+X: Potom bude rozhodovat cena .
+X: Potom je žák připraven na pilotní zkoušky .
+X: Potřebujeme je hned a na stůl .
+X: Potřebujeme se v nějakém utkání chytit .
+X: Potřebujeme společný trh .
+X: Potřebuji větší nezávislost a výsledky budou lepší .
+X: Potvrdil to mluvčí německého ministerstva vnitra v Bonnu .
+X: Potvrdil to ředitel podniku Josef Kantor .
+X: Potvrzení hypotézy může být pro obtížnost experimentů vzdálené .
+X: Poučení z Tottenhamu
+X: Pouze na delší vzdálenosti použiji hromadnou dopravu .
+X: Používá normální nebo xeroxový papír .
+X: Používejte jen čistou nebo převařenou vodu .
+X: Pověstné jsou vaše dopisy a vzkazy recenzentům .
+X: Pověstné spravedlnosti se však potom bude dovolávat marně .
+X: Pozdně pliocenní kamenné nástroje ze severního Pákistánu
+X: Pozor na podmíněné zakázky
+X: Pozornost kritiků vzbudila nahrávka Fibichovy Nevěsty messinské .
+X: Pozornost od počátku budila polská účast .
+X: Požadovalo zrovnoprávnění katolíků s protestanty .
+X: Požár strojů v povrchovém dole
+X: Práci charakterizuje osobité setkávání obou složek umělcova talentu .
+X: Práci s osobním počítačem ovládám uživatelsky na vyšší úrovni .
+X: Pracovníci bezpečnosti sál vyklidili .
+X: pracuje jako přístavní dělník , kovodělník a jako novinář .
+X: Práh a maximální hlasitost určuje dynamický rozsah elektrického slyšení .
+X: pramálo však zasáhla obsah otázek samotných .
+X: Pravděpodobným kandidátem je však myosin .
+X: Praxe to potvrzuje i v případě vyspělých států .
+X: Pražanů umírá rok od roku méně
+X: Premiér byl slavnostně povýšen na majora v záloze .
+X: Premiér považuje za klíčový problém stanovit kompetence těchto regionů .
+X: Premiérův návrh láme legislativu i tradiční myšlení Rusů
+X: Prémiová causa uzavřena
+X: Prevence je však záležitost nákladná a dlouhodobá .
+X: Prezident Jelcin před parlamentem
+X: Princ v císařových nových šatech
+X: Principiální otázkou ústavy je vyváženost jednotlivých složek moci .
+X: Privatizační projekt také počítá s dalším kapitálem .
+X: Pro bezpečnou potravu . . .
+X: Pro děti je životní jistotou .
+X: Pro levnější kameny se nevyplatí .
+X: Pro mne znamenali osobní ' maskoty ' .
+X: Pro nás se ovšem lhůta komicky zkrátila . . .
+X: Pro někoho jsou holt peníze více než dobrá pověst .
+X: Pro objasnění problému uveďme několik faktů .
+X: Pro peníze se bude chodit na poštu
+X: Pro radioaktivní odpady byla přijata dvojí koncepce trvalého uložení .
+X: Pro samotného pacienta je proces přeměny pohlaví velice složitý .
+X: Pro Zakládání staveb Praha to však mělo fatální následky .
+X: Pro zvýšení efektu řidič vždy zastavil a ládoval bambitku .
+X: Probuzení Britů z klinické smrti
+X: Proč nejsou nové předpisy
+X: Prodalo se ho již přes tři miliony kusů .
+X: Prodávající na aukci nese zase jiné riziko .
+X: Prodejce si v tomto případě sám stanoví prodejní cenu .
+X: Prodejny mohou získat značku Spokojený zákazník
+X: Prodlužující se mezivládí škodí nejvíc současné vládní koalici .
+X: Profit přemýšlí o důsledcích změn v evropské ekonomice
+X: Prognózy však také počítají se zeslabením mezigeneračního předávání zkušeností .
+X: Program odpovědnosti v chemii
+X: Prohrál jsem jen jednu bitvu .
+X: Projekt na pomoc krajanům v Rumunsku je připraven
+X: Projekt pomoci má ještě letos schválit česká vláda .
+X: Proklamovaná nadstranickost by vzala za své .
+X: Prokuratura podá obžalobu na Wallise příští týden
+X: Promarnili tak jednoduchou možnost změny .
+X: Promněme si oči při pohledu na dnešní Japonsko .
+X: Promočený strahovský stadion aplaudoval věčným hitům Pink Floyd
+X: Proti zajištění majetku se odvolal .
+X: Proto bez zdržování schválí domy v lepším stavu .
+X: Proto budou mít možnost prodávat byty i občané .
+X: Proto bych chtěl lékaře změnit .
+X: Proto bych tu spíš zdůraznil úlohu politiků .
+X: Proto na něj zaútočil sekyrou .
+X: Proto návrh lidovců spíše podporovat nebude .
+X: Proto se raději bavíme německy .
+X: Proto také zůstává její jméno utajeno .
+X: Proto výplatu dividend nelze po několik let očekávat .
+X: Provozovatel kromě toho nesplnil podmínky povolení .
+X: Provozovnu jsme až do vyšetření celé záležitosti uzavřeli .
+X: Prozatím u něj proto budou instalovány měděné rozvody .
+X: Průměrnost nezná nic lepšího než sebe
+X: Průměrnost nezná nic lepšího než sebe .
+X: Průzkum zachytil rovněž politickou orientaci dotázaných .
+X: Průzkumy veřejného mínění patří k trvalkám našeho života .
+X: První dvě možnosti jej spolehlivě připraví o sympatie obyvatel .
+X: První zatěžkávací zkouškou bude silvestrovský večer .
+X: První zdroj trampot ignoruje , druhé zohledňuje souvislosti .
+X: Prý nejsou zkoordinované kmitočty .
+X: Přáním pořadatelů je navodit atmosféru amerického Woodstocku .
+X: Přebujelé houštiny všelijakých pidistraniček plných pidiosobností k tomu navádějí .
+X: Přečetli jsme za vás
+X: Před hangárem zastavuje mercedes s německou značkou .
+X: Před svými pražskými pronásledovateli má tak jen jednobodový náskok .
+X: Před vchodem do kláštera je šipka .
+X: Předepsal mu uklidňující a tlumivé léky .
+X: Především jde o zaměstnanost .
+X: Především opravdu je .
+X: Především však svobodnou .
+X: Přední politici a ekonomové diskutovali v italském Cernobbiu o budoucnosti
+X: Předseda senátu však zatím o jeho žádosti nerozhodl .
+X: Představitelům španělské vlády je v těchto dnech horko .
+X: Představované technologie přitom odpovídají požadavkům pořádajícího státu .
+X: Překážkou je právě délka legislativního procesu .
+X: Překřtěný Tankový prapor
+X: Překvapením kola je prohra Viktorie Žižkov v Hradci Králové .
+X: Překvapil mne zájem o valnou hromadu a volební kampaň .
+X: Přeložil a doslov napsal Petr Horák .
+X: Přesah je z této desky patrný .
+X: Přesídlení kazašských Čechů dostává přesnější podobu
+X: Přesné kritérium pro skončení druhé vlny nebylo přijato .
+X: Přesný tvar probouzí další asociace a volá po interpretaci .
+X: Přesný zdroj nákazy dnes již bezpečně nikdo nezjistí .
+X: Přestal proplácet státnímu podniku faktury .
+X: Přesto je jako součást středních škol podržel .
+X: Přesto se i v Kanadě sportovci činí .
+X: Přesto však pokládal jeho scénář za pochybený .
+X: Přesto však vidím potřebu zlepšení .
+X: Přesto vznikla inscenace na tehdejší poměry dost nekonvenční .
+X: Přestup Obajdina do Frankfurtu .
+X: Přesvědčit nás mohli a mohou jen věcné argumenty .
+X: Převod finančních prostředků není při vypořádání obchodů problémem .
+X: Přežijí silní jedinci
+X: Při bojích byly použity i granátomety .
+X: Při chytání ryb jsou k tomu téměř ideální podmínky .
+X: Při rozdělení majetku půjde především o spravedlnost .
+X: Při současné krizi si zakázky moc vybírat nemůžeme .
+X: Při svém výběru sahá zejména do juniorské reprezentace .
+X: Při třetím pokusu byla operace řízena ručně .
+X: Při útocích byli dva lidé zabiti a několik zraněno .
+X: Při vědomí na Lipnici
+X: Při větší odchylce musí stroj seřídit a opravit chybu .
+X: Příběh Brita v iráckém zajetí
+X: Přibližně pětinou se na ročním obratu firmy podílí export .
+X: Přibližujete slovinskou literaturu českému čtenáři a naopak naši Slovincům .
+X: Příčinou smrti je obvykle mozková mrtvice .
+X: Příčiny havárie se vyšetřují .
+X: Příčky se bourají , stropy se snášejí . . .
+X: Přídavky na děti jablkem sváru
+X: Přihlásilo se jediné město .
+X: Přihlášku do unie již podaly Polsko a Maďarsko .
+X: Přijde nová revoluční vlna
+X: Přijede i mistr světa Ullrich
+X: Přijetí volebního programu ještě letos označil za taktickou chybu .
+X: Přijímací řízení a Listina práv
+X: Přijíždějící sanitka překazila loupežné přepadení
+X: Příliv takovýchto knih neustává .
+X: Přináší někdy vyčkávání a přešlapování na místě .
+X: Případné řešení bude však provizorní .
+X: Připravovali jsme se intenzívně dva roky .
+X: Připravujeme druhé vydání .
+X: Přirozeně proto vznikla potřeba rozvoje alternativních přístupů .
+X: Příslušná dohoda má být podepsána v polovině září .
+X: Přístroj se základním vybavením .
+X: Přístřeší ovšem ještě není dům .
+X: Příště se zaměříme na jiné zboží .
+X: Příštích pět let nelze očekávat dividendy 
+X: Přitom při porušení tohoto pravidla hrozí sankce za přestupek .
+X: Přitom se na místo libera vrátil omilostněný Suchopárek .
+X: Přitom spokojenost roste se vzděláním .
+X: Přitom ves je v ochranném pásmu jaderné elektrárny Dukovany .
+X: Přitom ze strany státu zde není adekvátní reakce .
+X: Přivykli spojenecké podpoře a ochraně .
+X: Příznivá bilance společnosti Canon
+X: Publikování rozhovoru vyvolalo skandál .
+X: Půlené vodoměry táhnou obrat
+X: Puma chce vrátit fotbal do ulic
+X: Působil v Rainbow i Black Sabbath .
+X: Původně bylo pod tímto jménem napsáno Marta Skálová .
+X: Rád pracuji v menším týmu .
+X: Rada žádosti vyhověla .
+X: Rádi bychom ale začali u středních odborných učilišť .
+X: Radotínská Janka zvýšila zisk
+X: Rastafan je česká obdoba rastamana .
+X: Ratzenberger i Barrichello je ovšem přeletěli vzduchem .
+X: Readmisní dohoda podepsána mezi SR a Polskem
+X: Reagoval tak na dohady ohledně jejich tvorby .
+X: Recipročně vznikne v Thajsku zastoupení české hospodářské komory .
+X: Redakce neručí za změny v plánovaných akcích .
+X: Reforma zdravotnictví vyžaduje zároveň reformu životního stylu .
+X: Rekondice pro manažery
+X: rektor Trnavské univerzity
+X: Renault se rozhodl trochu provokovat stojaté vody motoristické veřejnosti .
+X: Renaulty jsou navíc velice odolná auta .
+X: Reprezentace může počítat s Letnou
+X: Republiky o imigrantech
+X: Restituenti jsou lidé ve věku přes sedmdesát let .
+X: Restivo odpovídá ano .
+X: Reverend Paisley se odpovědi vyhnul .
+X: Revizor v orientálním stylu
+X: Robert Axamit Mluvčí Občanského sdružení majitelů domů
+X: Robert Smith je blázen .
+X: Rodina jako depo pro muže
+X: Rodinná pohoda jako by mírně prosákla celou nahrávkou .
+X: Rodiny jsou spíš spokojené
+X: Role Slováků ve válce je historicky strašně složitý problém .
+X: Roli hraje také určitá fluktuace zaměstnanců .
+X: Roušku tajemství však včera nikdo nepoodhrnul .
+X: Rovněž filosofové se pokusili přiživit .
+X: Rovnováha povinností a výhod *
+X: Rozhodl o tom odvolací soud v Lyonu .
+X: Rozhodla o tom v pátek valná hromada banky .
+X: Rozhodně by ušetřili čas i peníze .
+X: Rozhodne ekonomická situace klubů .
+X: Rozhodně nechceme celnice na hranicích mezi ČR a SR .
+X: Rozhodně to není neúcta k oboru .
+X: Rozhodnutí ale zatím není pravomocné .
+X: Rozhodnutí na poslední chvíli
+X: Rozhovor s vůdcem smečky
+X: Rozhovor zveřejnil list Magyar Hírlap .
+X: Rozlišit tvrdé a měkké drogy
+X: Roznášení pití ke stolům je zcela výjimečné .
+X: Rozpočtová krize zde trvá již více než dva měsíce .
+X: Rozpory v obvinění Tomáše Vodičky trvají
+X: Rozřízněme piáno ve dví a hrajme každý zvlášť .
+X: Rozsudek není zatím pravomocný .
+X: Rozšíření na východ je pro Evropu nutností .
+X: Rubikon je prý překročen .
+X: Rumuni berou pod sto dolarů měsíčně
+X: Rus Dračev mohl být ještě smutnější .
+X: Ruská armáda odejde z Pobaltí
+X: Ruské eskalátory v metru budou vyměněny za české
+X: Rusko omezí dovoz amerického obilí
+X: Rvačka diváků v Pardubicích
+X: Rychlá kumulace zisku vyvolává problémy v české společnosti .
+X: Rychlejší než privatizace
+X: Ředitel musí být dobrý manager
+X: Řekl to včera místopředseda strany Jan Kasal .
+X: Řešení se ovšem zdá být navýsost jednoduché .
+X: Řidiče automobilu popadl vztek .
+X: Říkáme tomu hvězdný vítr .
+X: Řízení plně ovládala vnitrodružstevní demokracie .
+X: S angažmá změnil i občanství
+X: S cílem prorazit maltský beton
+X: S Jaromírem jsme teď na ledě pořád spolu .
+X: S policisty se tam setkal podruhé .
+X: S přáním mnoha úspěchů
+X: S představiteli opozice bude diskutovat na téma životní úroveň .
+X: S půjčováním kompaktů ale nesouhlasí světové fonografické koncerny .
+X: S tezemi však nelze souhlasit .
+X: S tím nemohu souhlasit .
+X: Sabah podniká turné po pěti evropských zemích .
+X: Sáčky se proto prodávaly jednotlivě za sníženou cenu .
+X: Sami tomu přitom houbelec rozuměli .
+X: Samoregulace je naivní a nebezpečná iluze .
+X: Samozřejmě je možno vysledovat i záměry s pozitivním jádrem .
+X: Samozřejmě ne každá kapitola ne pro každého rodiče .
+X: Samozřejmě od nás samotných .
+X: Sátoraljaújhely je mé rodné město .
+X: Sdělil to prezidentův mluvčí Ladislav Špaček .
+X: Sdělil to Vadim Petrov z kanceláře předsedy vlády .
+X: Sdělil to včera výkonný místopředseda strany Petr Čermák .
+X: Sedm egyptských extremistů oběšeno
+X: Sehranějším dojmem působil sparťanský útočník .
+X: Senát včera vyslechl jednoho z nejdůležitějších svědků Josefa B .
+X: Senátní volby lze stihnout ještě letos
+X: Servis kuponové privatizace
+X: Setkání významných majorů
+X: Severa a Mašek zpochybňují závěry vyšetřování kauzy BIS
+X: Severní Irsko slaví naději na mír
+X: Severní Irsko v ní nebylo zastoupeno ;
+X: Severoirští katolíci mají ale své malé tajemství .
+X: Sezonním artiklem jsou nátěrové hmoty .
+X: Shetlandské ostrovy se nacházejí severozápadně od skotského pobřeží .
+X: Shodou okolností jsem kvůli poruše auta nestihl odjezd vlaku .
+X: Schopností strhnout posluchače a virtuózním přednesem .
+X: Sic transit gloria mundi .
+X: Signál těchto soudců však není ojedinělý .
+X: Situace se řeší tak jako v ostatních zemích .
+X: Situace se zlepšila díky vydání městských obligací až loni .
+X: Skandál brzy přerostl v odbornou polemiku .
+X: Skauti si připomněli Den přemýšlení
+X: Sklo za dva miliony prý hodil do řeky
+X: Skoro mne dojala oprášená průpovídka o Radeckém .
+X: Skupinky rockových fanoušků bloudí Sedlčany nebo vysedávají po hospodách .
+X: Skutečnost je však mnohem střízlivější .
+X: Skutečným pokrokem je však využití pozitronové emisní tomografie .
+X: Skvěle vstoupil do nové sezony španělský Real Madrid .
+X: Slabý jihovýchodní vítr .
+X: Slavia má podle Růžičky z play off strach
+X: Slečna je přítelkyní majitelů a tady jenom pomáhá .
+X: Sledují pohyb zásilek doslova se stopkami v ruce .
+X: Slotův čin možno hodnotit jako předvolební agitaci .
+X: Sloužící nadporučík se nad stížností jen pousmál .
+X: Slovenští cenzorní strejci to dobře vědí .
+X: Smlouva zavazuje banku nést tuto možnou ztrátu .
+X: Smutní lidé píší veselé knížky a veselí lidé smutné .
+X: Snad mi tuto připomínku nezazlíte .
+X: Snad proto se k ekologii vyjadřuje kdekdo .
+X: Snažíme se vztahy k rodině pokud možno upevňovat ;
+X: Sociální demokrati vypracovali základní verzi svého volebního programu
+X: Sociální otázkou je pouze toto .
+X: Software jsme mohli koupit za miliony od západní firmy .
+X: Sortiment zákazníků se však změnil .
+X: Sotva však v silně mezinárodně propojeném hospodářství .
+X: Souboj dvou devítek na Strahově .
+X: Souboj slávisty Bejbla s jedním z Jihočechů sleduje rozhodčí Bohuněk
+X: Soud s pašeráky drog odročen
+X: Souvisí kolorektáloní karcinom s nutričními faktory
+X: Sparťanského Kožleje sledoval po trávníku žižkovský Kordule .
+X: Sparťanský bobřík mlčení
+X: Spartu čeká v Č . Budějovicích vyprodaná tribuna
+X: Speciální kategorií je cena Komerční banky nejlepší české nahrávce .
+X: Spíš se snažím zlepšovat svou hru . "
+X: Spíše bych měl zájem o nějakého mladého dravečka .
+X: Spíše než ovocem zpestřují dětem snídaně džemy nebo medem .
+X: Společnost Apple Computer rychle vyrostla z Jobsovic garáže .
+X: Společnost privatizovaná v první kupónové vlně zaměstnává 400 osob .
+X: Spolchemie je také schopna nabízet více modifikovaných typů epoxidů .
+X: Spolupráce by měla dostat patřičný rytmus , režim .
+X: Spolupráce při výrobě je víc než jen obchodování
+X: Spolupráce při výzkumu Marsu je skromnější .
+X: Spor s Palestinci byl jeden z nejkomplikovanějších na světě .
+X: Sporožiro má další konkurenty
+X: Spotřební družstva věnují velkou pozornost restrukturalizaci obchodní sítě .
+X: Srbské zdroje nehlásí ze Sarajeva rozsáhlejší ozbrojené střety .
+X: Stabilní rozvoj německé ekonomiky
+X: Stál na špatné straně kolejí .
+X: Stál totiž o holou moc .
+X: Stále totiž nejsem stoprocentně fit .
+X: Stali jsme se mnohem průraznější při vymáhání našich pohledávek .
+X: Stanovit rozdíl mezi modernizací a rekonstrukcí je obtížné .
+X: Stáří obrazu se rozborem barev určí spolehlivě .
+X: Stát se však musí umět o vinaře postarat chytře .
+X: Stát tak přichází o nemalé částky .
+X: Stát vystupuje mocensky .
+X: Statistici by měli anonymně využívat i diskrétní informace
+X: Státní podniky tvoří jen mizivé procento .
+X: Stavbu několika elektráren připravují v nedalekém Jáchymově .
+X: Stavy zvěře z hlediska ekologie a historie krajiny
+X: Stejně hovořil o výstavě i traktorista František Novák .
+X: Stejně jako je pro policii jednoduché sklízet konopí .
+X: Stejně tak částky z některých úvěrů .
+X: Stejně tak dnes neexistuje územněprávně ani Morava .
+X: Stejně tak pekingští byrokraté .
+X: Stejně tak se mnohdy neobtěžují vybavit zboží českým návodem .
+X: Stejně tak výpočetní technika přejde do majetku okresních úřadů .
+X: Stimuluje to domácí výzkum .
+X: Stochastický versus deterministický přístup
+X: Stoper střílí nejvíce gólů
+X: Stranu připravila Alena Plavcová
+X: Streetball na Výstavišti
+X: Strojek byl rozbitý .
+X: Střední Evropa se samozřejmě také bojí o svou bezpečnost .
+X: Studie postihuje souvislosti historického vývoje písemnictví v regionu .
+X: Studoval malířství a sochařství na Prattově institutu v Brooklynu .
+X: Súdán hodlá zvýšit počet příslušníků lidových milicí na milión .
+X: Sudetoněmeckýma očima
+X: Suverénně největšímu zájmu zlodějů se těšily a těší kostely .
+X: Svatovítská kapitula se domáhala svatořečení Jana z Pomuku znovu .
+X: Svědčí o tom právě i velký nedostatek pracovních sil .
+X: Světové rekordy Ščenikova a Johnsona
+X: Svlékání amatérského kabátu
+X: Svůj nenaplněný život končí pod tlakem bezvýchodnosti .
+X: Svůj osud měly už tehdy hodně ve svých rukou .
+X: Svůj postoj by měl asi co nejrychleji změnit .
+X: Sympaťákem roku opět slávista
+X: Sžírá protagonistu Divadla na Vinohradech Jaroslava Satoranského .
+X: Šafra ve funkci vystřídá dosavadní redaktor listu Viktor Krejčí .
+X: Šance pro movité nájemníky
+X: Šance pro podnikatele !
+X: Šéf socialistů půjde před soud
+X: Šest ministerstev by měly řídit ženy .
+X: Široko daleko nebylo vidět žádnou policii .
+X: Škoda je také hlavním sponzorem soutěže .
+X: Škodě pomohl leasing k úspěchu
+X: Škodovky byly nejrychlejší ve své třídě
+X: Školení se pravidelně podle předpisů opakuje .
+X: Školy budou rozprodávat své zásoby knih za poloviční cenu .
+X: Školy totiž získávají peníze podle počtu žáků .
+X: Šlo bezmála o devět miliónů korun .
+X: Šlo by zřejmě o drama s prvky hororu .
+X: Šlo hlavně o kvalitu dílenského zpracování .
+X: Šlo však o vyřizování mezikmenových záležitostí .
+X: Špačci tak instinktivně využívají pesticidního účinku listů .
+X: Španělskou teroristku zatkla francouzská policie na jihu Francie .
+X: Švédskou ekonomiku oživují firmy vyrábějící celulózu a papír .
+X: Ta by měla v budoucnu propojovat všechny archivy ČR .
+X: Ta nevraživost je ovšem oboustranná .
+X: Ta však tuto část sněmu nepovažuje za regulérní .
+X: Táborům v Tanzanii hrozí nemoci
+X: Tady byli umístěni v prostoru cisterciáckého kláštera .
+X: Tahle pasáž není však zcela jasná .
+X: Tajné dodatky dodatků odhaleny !
+X: Tak dává mysl tvar hmotě .
+X: Tak expozici nazval .
+X: Tak jako s mnoha jinými objevy .
+X: Tak je i knížka koncipována .
+X: Tak soudí premiér Václav Klaus .
+X: Tak to stojí v příslušných smlouvách .
+X: Tak začínaly páteční úvodníky ústředních ruských novin .
+X: Také lidé neznají slitování .
+X: Také manuální práce umožňuje růst
+X: Také ruský kolektiv je postaven z domácích hráčů .
+X: Také tyto rostliny jsou přizpůsobeny k přežití častých požárů .
+X: Také zde je vyjádřena jedinečnost každého člověka !
+X: Takhle zpívá půlka Anglie .
+X: Takové firmy jako naše tomu mohou napomoci .
+X: Takovou žádost o odklad splátek bychom považovali za absurdní .
+X: Takový člověk nedostával plat , byl odměňován půdou .
+X: Takový tlak může skoky učinit ještě nebezpečnějšími .
+X: Takže dnes nejcharakterističtější žvýkačková barva je ryzí náhodou .
+X: Takže otec je pověřen pravidelnými odvozy domů .
+X: Takže to není cesta ke snížení ceny .
+X: Talichovci v Míčovně
+X: Tam se to hemží tolika germanismy !
+X: Tam také energii šetří .
+X: Tam také zadrželi strážníci oba pachatele .
+X: Tam vztyčují oltář a připravují rituální scénu .
+X: Taneční vítr v peněžence
+X: Tanvaldský průvod byl klidný
+X: Tato látka spoluvytváří přirozenou ochranu savců proti infekcím .
+X: Tato odstoupení musí zaměstnanec podat zaměstnavateli písemně .
+X: Tato politika byla v minulých letech značně kontroverzní .
+X: Tato přitažlivá idea však neprošla .
+X: Tato změna navíc odpovídá mezinárodnímu standardu .
+X: Taxikář má také možnost se po vyslovení verdiktu odvolat .
+X: Taxikáři předražují jízdné o stovky procent .
+X: Teď jsem trochu ostražitější .
+X: Teď k němu v okolí pomalu přibývají další .
+X: Teď už jde opravdu do tuhého
+X: Tedy aspoň bych si to tak představoval .
+X: Tehdy dosáhli zvýšení platů o jedno procento .
+X: Tehdy se zrodila skutečná žvýkací guma .
+X: Technická zaostalost
+X: Technické kontroly by se řidiči neměli bát .
+X: Technologie je založena na hyperbarické filtraci floatačního uhelného koncentrátu .
+X: Technologie pro Vietnam
+X: Tělesné pozůstatky Jana z Pomuku
+X: Televize dává i další příležitosti k podnikání .
+X: Televizní pořad z nikoho transsexuála neudělá
+X: Tělo se chrání před kyslíkovými radikály
+X: Těm všem padlým i živým je třeba vzdát čest .
+X: Tématem k zamyšlení je i násilí na stadiónech .
+X: Tematická inspirace je v otcovství .
+X: Temelínský tábor jsem loni navštívil .
+X: Téměř až do Vánoc se tu budou vyměňovat eskalátory .
+X: Téměř k nerozeznání se už podobal dnešním pécéčkům .
+X: Téměř nevinní pasáci
+X: Těmto intencím by mohla odpovídat struktura dialogu .
+X: Těmto regionům je věnována mimořádná pozornost .
+X: Ten by pak měl být trvale konzervován politickými prostředky .
+X: Ten bývá totiž vyzkoušen a homologován pro vaše vozidlo .
+X: Ten definitivně zmizel koncem války .
+X: Ten dům měl ale jednu chybu .
+X: Ten ji zajímá jen málo .
+X: Ten má samozřejmě své příčiny .
+X: Ten musí přijmout náležité opatření .
+X: Ten předpokládá automatickou přeregistraci podnikatelského oprávnění na živnost .
+X: Ten s vypětím vůz zabrzdil několik centimetrů před motocyklem .
+X: Ten se vylučuje plícemi .
+X: Ten spotřebuje rákos ke svému růstu .
+X: Ten už ho však neměl .
+X: Ten Vavrouškův je jen jeden z nápadnějších .
+X: Tenhle kluk by určitě na Linku bezpečí zavolal .
+X: Tento dotazník zjišťoval národnost a jazyk obyvatel protektorátu .
+X: Tento krok má patrně své opodstatnění .
+X: Tento počet odpovídá asi dvaceti procentům počtu obyvatel Číny .
+X: Tento postoj má více tváří .
+X: Tento problém však zákon neřeší .
+X: Tento proces je na Slovensku živý .
+X: Tento příklad se vztahuje na všechny veřejné instituce .
+X: Tento stav neurologové nazývají kataplexií .
+X: Tento systém však vede zcela jasně do slepé uličky .
+X: Tento večer zcela změnil jejich život .
+X: Tento výrobce zatím nezaznamenal žádné odhlašování objednávek .
+X: Tento výsledek je zajímavý ze tří hledisek .
+X: Tentokrát pro opravu s instruktorem za zády .
+X: Teplárny představují do určité míry odlišnou skupinu akcií .
+X: Teprve pak se snad konečně ušetří .
+X: Teprve potom se začne zabývat vlastním dopisem .
+X: Teprve tímto výslovným projevem kupujícího nastanou účinky kupní smlouvy .
+X: Teprve výsledný substrát byl hoden žvýkání .
+X: Teprve začátek bitvy
+X: Termín exhibice Navrátilové je znám
+X: Termín židobolševizmus ještě nepoužil .
+X: Těsný výsledek referenda však přesto jejich pozice upevnil .
+X: Texty psala angličtinářka z Krumlova
+X: Těžištěm vládního návrhu je novela zákona o dluhopisech .
+X: Těžké rozhodování mezi Strahovem a Letnou
+X: Thajská pohraniční stráž má černé uniformy .
+X: The Cranberries live
+X: Ti mně pomáhají chápat život v celé jeho šíři .
+X: Ti ošetření nepotřebovali .
+X: Tím pádem narůstá počet příznivců téměř všech stran .
+X: Tím se dostávám k lustračnímu zákonu .
+X: Tím spíše našemu čtenáři děkujeme za vysvětlující doplněk .
+X: Tím spíše nesmí Západ výsledky referenda přecenit .
+X: Tím zlepšujeme postavení lékařů , kteří naše možnosti nemají .
+X: Tisku se však všemožně vyhýbal .
+X: Tito lidé ve skutečnosti žádnými sportovními příznivci nejsou .
+X: Tmavý Radegast jde na odbyt
+X: To ale nesmí být patrné na přístupu k pacientům .
+X: To by ale skutečnou výši škody nemuselo pokrýt .
+X: To by vyžadovalo mimo jiné velké investice .
+X: To byl její poslední veřejný protest .
+X: To byl ovšem jen začátek .
+X: To bylo pro změnu riziko Jiřího Wonky .
+X: To bylo v Latinské Americe něco naprosto revolučního !
+X: To je důležité pro obě zúčastněné strany .
+X: To je naděje pro náš malý kapitálový trh .
+X: To je přece zdravý pohled na invalidu .
+X: To je samozřejmě nesmysl .
+X: To je úkol pro vědu .
+X: To jen zdůrazňuje nasazení .
+X: To jsou nesmyslně silná slova .
+X: To kleslo až na třetí místo za Singapur .
+X: To může trvat velmi dlouho .
+X: To ona vám dá sebevědomí .
+X: To ostatně platilo stejně i o Stalinovi .
+X: To poškozuje jak zákazníky , tak všechny seriozní vydavatele .
+X: To se ověřilo i experimentálně .
+X: To se týká především krůtího masa .
+X: To si pak teprve užijeme .
+X: To slouží především jako údaje pro ergonomii .
+X: To Slováci před rokem 1989 popírali .
+X: To také manažery nejvíce mrzí .
+X: To už byl velký projev důvěry .
+X: To však lidi nevidí .
+X: To však v obchodě nevynikne .
+X: To vše si mladá německá cembalistka uvědomuje .
+X: To zase nechceme slyšet my .
+X: To žádosti o experimentální instalaci sítě v Liberci vyhovělo .
+X: Tohle srovnání je vždycky ošidné .
+X: Topografie mozkových procesů
+X: Totéž se týká recenzentů .
+X: Toto právo však můžete uplatnit jednou za tři měsíce .
+X: Toto tvrzení je velice diskutabilní a nepřesné .
+X: Továrna by měla zůstat zavřena pět týdnů .
+X: Tradičně nejslabší obchodní den pražské burzy včera překročil svůj stín
+X: Trenér Uhrin nacvičoval se svými svěřenci útočné prvky .
+X: Trh s nemovitostmi očima realitních kanceláří
+X: Triatlon a taekwondo na OH v Sydney
+X: Trojánek s Havránkem hráli povýšeně opodál čáru .
+X: Třeba píseň Vandrovali hudci je právě o tom .
+X: Třeba před olympiádou jsme ve Stockholmu vyhráli turnaj .
+X: Třetí do Ledče nad Sázavou a Zruče nad Sázavou .
+X: Tři divadla se příznivě tváří na čtvrté
+X: Tři piva v sobě a potkal policajty .
+X: Tři Zogatovy krvavé cesty ke katarzím
+X: Třináct míst pro Štěchovický poklad
+X: Tu nejvhodnější dobu pan Hrabák propásl .
+X: Tu rovnocennou základnu jim můžeme jen závidět .
+X: Tu začínáme pomalu brát jako samozřejmost .
+X: Tudjman se vyslovil proti extremismu
+X: Turistika se nyní v Chorvatsku soustřeďuje hlavně na Istrii .
+X: Tuto otázku již dostatečně řeší zákon o hospodářské soutěži .
+X: Ty již mají vlastní význam nebo gramatickou funkci .
+X: Ty trpí z hlediska nové české ústavy jednou vadou .
+X: Ty údajně posloužily k financování volební kampaně jejich strany .
+X: Týden ve světové ekonomice
+X: Týká se to hlavně nabídky pro českou armádu .
+X: Typický případ pro Českou obchodní inspekci .
+X: Tyto argumenty je potřeba zvážit vždy .
+X: Tyto buňky převádějí zvukové vlny na elektrické impulsy .
+X: Tyto limity jsou však překračovány .
+X: Tyto skládky budeme likvidovat .
+X: Tyto své intepretace však později popřel . 
+X: Tyto údaje jsou jistě důležité a jsou docela dobré .
+X: U banky Bohemia jsme to ale neudělali .
+X: U nás jeden bez druhého nemůže nic dokázat .
+X: U nás na škole vysoké se zase mocně krade .
+X: U některých položek jsme se nedohodli .
+X: U ostatních zemí je pasivní .
+X: U zvířat k tomu má řadu příležitostí .
+X: Účast rodičů na prodloužené tyto tendence ještě prohloubí .
+X: Účet mají otevřen v Úvěrové bance v Čadci .
+X: Údajný svědek nájemné vraždy stále uniká
+X: Úkolem byla pověřena vládní agentura Czechinvest .
+X: Ukotvením uvnitř evropské unie měli být Němci plně pacifikováni .
+X: Ukradl dítěti horské kolo
+X: Ukrajinské hospodářství pokračuje nadále na své sestupné dráze .
+X: Ukrajinu čeká růst inflace
+X: Ulehčení i rozpaky nad nedělním výsledkem
+X: Úlohu neznámé bude tedy hrát ředitel bojnického muzea .
+X: Ulster připomíná sud s prachem
+X: Ultralevicoví teroristé včera v Německu pohrozili novými atentáty .
+X: Uměle to nepůjde .
+X: Unikátní radioteleskop
+X: Unionisté odmítají mírový proces
+X: Uplatňování zákonů patří k základním účelům existence státu .
+X: Upozornění na závěr .
+X: Urban odchází do Jablonce
+X: Urbionalistické vášně na východě Čech přinesly první oběť
+X: Určitě by si to spousta lidí přála . . .
+X: Úroky přesahující přiměřenou míru jsou zpravidla soudně nevymožitelné .
+X: Úspěšná olomoucká série
+X: Úspěšná střelba často vázne .
+X: Ustavena byla i cena za archeologii .
+X: Ústavně lze zakotvit všechno .
+X: Ústavní zákon o vyrovnaném rozpočtu by byl omylem
+X: Útoky na cizince pokračovaly ve východoněmecké Chotěbuzi
+X: Uvádí to italský deník Corriere della Sera .
+X: Uvedené limity byly vytvořeny pro podmínky uzavřené ekonomiky .
+X: Uvedl to hlavní hygienik České republiky Jiří Vytlačil .
+X: Uvedl to včera ekonomický ředitel koncernu Jiří Škaloud .
+X: Uvedl to včera generální ředitel Kablovny Rudolf Vrabec .
+X: Uvedl to včera londýnský list Guardian .
+X: Uvedl to včera místopředseda strany Jan Kasal .
+X: Uvedl to včera resortní ministr Luděk Rubáš .
+X: Uvedl to včera ústřední ředitel ČOI Petr Pokorný .
+X: Úvěr Albánii byl zamítnut .
+X: Uveřejňování takových článků je nesmírně důležité .
+X: Už od loňského listopadu tu chová dvě bizoní mláďata .
+X: Už se sesunula stěna vedlejší budovy .
+X: Už současného jednání se zúčastňují představitelé republikových orgánů .
+X: Už volba hlasu a violy slibovala zajímavou konfrontaci .
+X: Užší vymezení činnosti bylo podle ředitelky k prospěchu věci .
+X: V Abcházii narůstá napětí
+X: V anonymní i neanonymní anketě odpovídají především zákazníci .
+X: V brance místo Sedláka nastoupí Bernady .
+X: V brance opět nastoupí Šimurka .
+X: V Brazílii je příliš mnoho zkorumpovaných politiků .
+X: V Brazílii zastřeleni fotbaloví fanoušci
+X: V ceně je jen snídaně .
+X: V centru slovenské špionáže stojí prý dnes Maďarsko
+X: V Cernobbiu nejde jen o Evropu
+X: V cestovním ruchu se rozhodla podnikat i řada živnostníků .
+X: V České Lípě se doposud nebouralo .
+X: V člověku se to musí nějak vyrovnat .
+X: V Davisově poháru o finále
+X: V dnešním Rusku je podle něj možný jakýkoli vývoj .
+X: V dohledné době má podepsat v Bělohradě profesionální smlouvu .
+X: V důsledku šíření ledovců klesala hladina světového oceánu .
+X: V Evropě podobný obor zakončený maturitou prý neexistuje .
+X: V horším je ještě obohacena nevhodnými látkami .
+X: V chodu společnosti je láska něco marginálního .
+X: V Izraeli rozlišujeme mezi pacifisty a peaceniky .
+X: V jazyce českém i německém .
+X: V Jihlavanu znovu rozjíždějí leteckou výrobu
+X: V jistých situacích může přispět k větší jednoznačnosti vyjádření .
+X: V Karabachu zahynulo opět několik desítek lidí
+X: V kurzu pro zelináře přednáší i specialista na reklamu .
+X: V labyrintu pracovního práva
+X: V Londýně vzniklo celkem osm remixů skladeb Shalomu .
+X: V Malé řadě vydává Mladá fronta .
+X: V Mazdě pouze na papíře
+X: V mé organizaci se zrádci střílejí .
+X: V minulosti jich byla řada .
+X: V mnoha jiných případech tomu tak ovšem není .
+X: V mnohém si tito dva muži byli podobni .
+X: V mnohých si mohou zájemci zapůjčit celou lyžařskou výstroj .
+X: V Moskvě má být dojednán protokol o dodávkách ropy .
+X: V následujících letech Libye omezovala působnost cizích ropných monopolů .
+X: V našich věznicích pracuje jen padesát procent odsouzených
+X: V Německu se vůbec staví na starších hráčích .
+X: v novém místním výkonném orgánu zastoupena i katolická menšina ;
+X: V obdobích před a po vysvědčení .
+X: V obou společnostech chybí kolektivní vize rozumné budoucnosti .
+X: V okolí jsou možnosti běžné i horské turistiky .
+X: V opačném případě bude muset strana vyhlásit likvidaci .
+X: V pátek odpoledne připomíná Montreal Prahu .
+X: V Plzni zmizela kobaltová bomba
+X: V pondělí očekáváme od severu přechod studené fronty .
+X: V poválečných volbách získala Sinn Féin nadpoloviční většinu .
+X: V praxi tento model samozřejmě nefungoval nikdy a nikde .
+X: V prvním poločase jsme byli lepší .
+X: V přesilové hře stačil už jen korigovat Bernie Nicholls .
+X: V případě nedodržení stanovených kritérií může být značka odebrána .
+X: V reprezentaci je to jiné .
+X: V řadě případů bylo zahájeno správní řízení .
+X: V řadě sportů dojde k poklesu .
+X: V Severním Irsku pokračuje válka bez vítězů
+X: V současné době je už povolena jakákoli reklama .
+X: V současné době se přidal další problém .
+X: V současnosti je totiž nezaměstnaná .
+X: V souvislosti s ní panovaly v tisku určité pochybnosti .
+X: V takovém případě stačilo vyměnit jen porouchaný díl .
+X: V Tatře se bude od září každý pátek odpočívat
+X: V Tbilisi hoří budovy
+X: V těchto oblastech se projevují jejich účinky nejsilněji .
+X: V těchto polohách se neradí příliš vysvětlovat .
+X: V terénu o švýcarské franky
+X: V těsném sousedství je nádraží a hlavní televizní věž .
+X: V této skupině debutuje česká reprezentace .
+X: V tom okamžiku se Adamsovi zúročily roky vynalézání .
+X: V tom ovšem máme i my co dohánět .
+X: V tomhle termínu takováhle akce chyběla .
+X: V tomto oboru intenzívně pracuje do dnešních dnů .
+X: V tomto případě situaci vyřeší právě osobní asistence .
+X: V tomto směru musím Čechům vyslovit velký kompliment .
+X: V tomto smyslu to nejsou nijak nové teze .
+X: V třetí kapitole vystoupí sami naši veteráni .
+X: V uvedené lokalitě vydal ředitel veterinární správy mimořádná opatření .
+X: V základních pohledech je ve vládě shoda .
+X: V září už definitivně archiv převzala Šolcova komise .
+X: V závěru si snad můžeme naopak dovolit trochu optimismu .
+X: V zelené krajině jsou roztroušeny vesnice a malá města .
+X: Váňa je obžalován z ovlivnění čtyř zápasů .
+X: Vars založil svůj rozvoj na holdingové organizaci a počítačích
+X: Varšavská policie zatím žádné oznámení nedostala .
+X: Vaše dotazy očekáváme na adrese Českomoravského profitu v Praze .
+X: Vaše myšlenka mi připadá idealistická .
+X: Vatikán stále ještě očekává některá objasnění z Bosny .
+X: Včera to potvrdil pařížský rozhlas .
+X: Včera to řekl vedoucí marketingu Janky Marek Vodička .
+X: Včera zabředly rozhovory údajně do slepé uličky
+X: Ve druhé lize stále vše při starém
+X: Ve druhé počítají již se společnou výrobou střešních pásů .
+X: Ve prospěch svůj i druhých
+X: Ve skutečných partiích se takové obraty vyskytují méně .
+X: Ve službách byla poprvé překročena padesátiprocentní hranice .
+X: Ve speciálním povlečení však nemají příliš šancí se šířit .
+X: Ve stavebnictví byl zaznamenán dokonce dvacetiprocentní přírůstek .
+X: Ve středu a ve čtvrtek ceny zlata stagnovaly .
+X: Ve svém prostorném bytě působí student Martin velmi vyrovnaně .
+X: Ve světě však jezdí ještě duobus .
+X: Ve vaší nepřítomnosti příchozímu telefonnímu spojení oznámí vaši nepřítomnost .
+X: Věčno nítí všeho nerozvití v dobytí nezbytí .
+X: Vedle inspirace duchovní jsme opomenuli inspiraci hudební .
+X: Velice si vážím poezie .
+X: Velké vášně vyvolávají korektory pracující jako tezaury .
+X: Velkoobchod hutním a stavebním materiálem a využívá prostory bývalého dolu
+X: Velký úspěch si nesliboval premiér od Brazílie .
+X: Velmi podezřelá je podle Slaniny také rychlost trestního řízení .
+X: Veřejněprávní média jsou na principu poplatků přímo založena .
+X: Veřejnost si na podobné výzvy již zvykla .
+X: Veškerý Švarcův majetek byl z rozhodnutí státního zástupce zajištěn .
+X: Větší část migrantů se přistěhovala z ciziny .
+X: Větší počet stupňů šedi využijete jen při přenosu fotografií .
+X: Většina dražených jednotek byla jen na pronájem .
+X: Většina hokejistů má před sebou ještě další cíle .
+X: Většina jeho temně groteskních inscenací vyvolala rozporuplné reakce publika .
+X: Většinou jde o komponenty ke zbraním pro jiné firmy .
+X: Většinou je živí rodiče .
+X: Většinou se používaly na oddělení výkonu trestu .
+X: Většinou se týkají opomenutých restitucí .
+X: Většinou vyhodnocoval uši kuřat bezprostředně po vystavení škodlivému hluku .
+X: Vhodné pro architekty a další stavaře .
+X: Vhodní nepříbuzní dárci se hledají v registrech .
+X: Více asi ostatně udělat nejde .
+X: Více jak před rokem přišla ke slovu privatizace .
+X: Více vozidel brázdí všechny tahy k Praze .
+X: Viníkem přitom je naše největší a nejzkušenější banka .
+X: Visí tam ta moje imitace nohy v Chamonix dodnes .
+X: Vítězné tažení Jezdců
+X: Vítězství před odjezdem
+X: Vítězstvím ve druhé lize hráči Jablonce získali sebevědomí .
+X: Vítkovice začaly s restrukturalizací
+X: Vláda navrhuje daňové úpravy
+X: Vláda odmítá chránit Kovofiniš Ledeč
+X: Vláda včera schválila návrh zásad nového devizového zákona .
+X: Vláda vyhlásila departement za oblast katastrofy .
+X: Vladimír Dlouhý na primátora kandidovat nebude
+X: Vladimír Šmicer oblékne ligový dres Slavie až na podzim
+X: Vladimir Žirinovskij předpovídá příchod vojenské diktatury v Rusku
+X: Vlastně si tak budujeme klientelu .
+X: Vlastní rekreační středisko
+X: Vlastní transformace příspěvkových organizací bude dlouhý proces .
+X: Vlastnímu psaní věnuji jen ukradené hodiny .
+X: Vojáci nebudou smět na vycházky v civilu
+X: Volební boj vstoupil do horké fáze .
+X: Volební urny byly dokonce průhledné .
+X: Volí určitý konzistentní politický program .
+X: Volně navazuje na publikaci Začínáme podnikat .
+X: Vozíky jsou z recyklovatelného materiálu .
+X: Vrátili by mne zase nazpátek .
+X: Vrchní soud zrušil rozsudek nad rozvědčíkem Pavlem Minaříkem
+X: Vsadil jsem na disciplínu a hráči to akceptovali .
+X: Vše dohromady by mělo tvořit tajemný celek .
+X: Vše musí být tedy ještě záležitostí pečlivé legislativní práce .
+X: Vše v hodnotě několika miliónů korun .
+X: Všechno ale má své hranice .
+X: Všechny informace od Chalupy jsme proto brali s rezervou .
+X: Všechny případy musí být evidovány .
+X: Všechny tři se budou hrát v jednom dni .
+X: Všichni byli pod stejným tlakem !
+X: Všichni čtyři složí před parlamentem přísahu .
+X: Všichni jsou spokojeni .
+X: Všichni mladiství odjeli do Dánska .
+X: Vybral jsem si Paříž
+X: Vybrané kapitoly z dějin žvýkačky
+X: Výbuch u Grozného zabil 25 Rusů
+X: Výhoda přivádí do prodejny řadu zákazníků .
+X: Vyhodnocení nabídek potrvá asi měsíc .
+X: Výhody nevidí ani v nákupu materiálů u výrobců .
+X: Vyhrát tuto rallye je snem každého Fina .
+X: vyhýbat se nevhodným slovům .
+X: Vycházejí z ročních plánů výstavních organizací .
+X: Výjimkou jsou exponované tahy .
+X: Výjimkou nejsou třeba ani ženy v porodnicích .
+X: Výjimku tvoří pouze vstupní prohlídka při nástupu do povolání .
+X: Vylíčené parlamentní idyle by nescházel historický předobraz .
+X: Vylízal jsem se díky psům .
+X: Vypadá to na velké změny v celém klubu .
+X: Vyplývá to z informací ministerstva spravedlnosti .
+X: Vyplývá to z konečných výsledků Českého statistického úřadu .
+X: Vyplývá to z pondělní zprávy agentury Reuter .
+X: Vyplývá to z prvního hodnocení polského ministerstva zemědělství .
+X: Výprodej zboží na tržištích trval několik týdnů .
+X: Výrazně byla okleštěna pravomoc církevních soudů .
+X: Výrazný růst je podle národohospodářské prognózy podmíněn změnami ekonomické politiky
+X: Výroba jídla probíhá za dodržování přísných hygienických podmínek .
+X: Výrobě pomáhá ergonomie
+X: Vyrovnání za čtyři roky
+X: Výsledek je spravedlivý .
+X: Výsledek jevů řídících se deterministickým chaosem není však náhodný .
+X: Výsledek měnové odluky lze zatím jen odhadnout
+X: Výsledek prý bude odpovídat nejlepším tradicím ruského státu .
+X: Výsledkem omeškávání parúsie nebyla beznaděj .
+X: Výsledkem tohoto sčítání je ovšem opět náhodný proces .
+X: Výsledky byly pozoruhodné .
+X: Výsledky kontroly oznámí do dvou měsíců .
+X: Vysoká bakteriální mutagenita neznamená tedy automaticky vysoké karcinogenní působení .
+X: Vysoko nad řekou Ohří se klene hřbet Krušných hor .
+X: Výstava je k vidění ještě celý týden .
+X: Výstava zajímala především soukromé zemědělce
+X: Vytasili se však s vládní výjimkou a radnímu zmehlo .
+X: Vytvářejí si své soukromí .
+X: Vytváří se tím samozřejmě i dobré jméno našeho oddělení .
+X: Využívá elektrické dráždivosti přežívajících vláken sluchového nervu .
+X: Vyváží je také do dalších evropských zemí .
+X: Vývojáři musí podle potřeby prokázat i schopnost vyrábět .
+X: Vývoz českého piva na Slovensko by neměl být ohrožen .
+X: Vyžadovaly se určité znalosti a praxe .
+X: Vzácné onemocnění vedlo ke stopadesátiletému výzkumu .
+X: Vzájemná poloha trichobithrií je významným systematickým znakem .
+X: Vzápětí fauloval i brankář Viktorie a Švédové vyrovnali .
+X: Vzápětí poté byli eskortováni do bohunické vazební věznice .
+X: Vzniknou nové možnosti
+X: Vždy se však najdou jejich osvědčení sběratelé .
+X: Wacker byl odsouzen k jednoročnímu podmíněnému trestu .
+X: Witkinovu autorskou metodu popisují jako alchymistickou .
+X: Wonkův případ však otevírá jiný a palčivější problém :
+X: Bez ní to nemá smysl
+X: Brusel se jen omezil na sdělení
 X: Bublina vznikne vytlačováním extrémně malého množství kapaliny
-X: Výrobce ale neuvádí mnoho podrobností
-X: Typickým příkladem může být autorádio v automobilu.
-X: Tam se již začínají dostávat dotykové displeje
-X: Dalším příkladem je dálkový ovladač televizoru
-X: Při psaní na klávesnici mají někteří uživatelé ze stisku kláves lepší pocit
-X: U těchto technologií lze očekávat poměrně vysokou popularitu
-X: přístroje mohou být velmi odolné
-X: Internetová doba si žádá co nejpřístupnější internet
-X: Nové zařízení umožní připojit k internetu téměř cokoli. 
-X: Můžete tak online ovládat celou domácnost. 
-X: Je to však opravdu tak potřebné?
-X: V péči o domácnost jsme si však zatím vystačili téměř bez internetu.
-X: Nebudete ale muset kontrolovat květiny
-X: Výhodou oproti jiným zařízením je jednoduchost použití zařízení
-X: Tvůrci karty musí počítat s pravděpodobně negativním postojem možných uživatelů
-X: Systém využívá principu triangulace
-X: Technologie má jistě vhodně zvolený název
-X: Rozhodnutí Jestřábího oka bylo poněkud podivné 
-X: Televize tento okamžik několikrát přehrávaly
-X: Chladná technologie versus bouřliváci
-X: nový model přenosného externího pevného disku
-X: je vybaven dvěma rychlými rozhraními
 X: Celé tělo je vyrobeno z hliníku
+X: Česká republika má exportní strategii 
+X: české podniky už znají ruské technologie
+X: Česko je přitom na vývozu životně závislé.
+X: Česko tohoto cíle dosáhne již v příštím roce
+X: Čtvrteční aukce nabídla jen pět desítek děl
+X: Dalším příkladem je dálkový ovladač televizoru
 X: Disk nevyžaduje žádné externí napájení
-X: stačí ho tak pouze zapojit do příslušného rozhraní
-X: V prodeji se objeví během léta
+X: Dnes tam panuje obrovská konkurence.
+X: Dostal se tak na čtvrté místo
+X: Dotykové displeje způsobily revoluci v ovládání elektronických zařízení
+X: Dotykový povrch vypadá jako každý jiný.
+X: Ekonomika našeho hlavního zahraničního partnera meziročně zrychlila
+X: Euroskupina má po schůzce vydat tiskovou zprávu.
+X: Evropa by měla pomoct oslabeným bankám
+X: Evropu čekají těžká rozhodnutí
+X: Chladná technologie versus bouřliváci
+X: Internetová doba si žádá co nejpřístupnější internet
+X: Jako dítě chtěl být přitom neurochirurgem.
+X: Jde o správný krok
+X: je vybaven dvěma rychlými rozhraními
+X: Jeho povrch je totiž stále plochý.
+X: jsem přesvědčen, že naše nabídka bude nejlepší
 X: koncová cena zatím nebyla zveřejněna
-X: Systém lze tak provozovat ve dvou režimech
+X: Krásná pohádka s dobrým koncem
+X: Madrid je rozhodnutý požádat o pomoc
+X: Měli bychom pečlivě sledovat
+X: Mluvčí španělské vlády ale reagovala
+X: Montáž první turbíny už začala
+X: Muž byl v silně podnapilém stavu
+X: Muž má bohatý trestní rejstřík
+X: Můžete tak online ovládat celou domácnost. 
+X: Napsal například scénáře dvou posledních filmů
+X: Náš obchod však není dostatečně diverzifikovaný
+X: Natáčení by podle plánu mělo začít v létě příštího roku
+X: Nebudete ale muset kontrolovat květiny
+X: Nedávno postoupil drahou modernizaci
+X: Nedošlo k naplnění závazku partnerem
+X: Nechodí do normální práce
+X: Nejsilnější ekonomika Evropy má instalované solární elektrárny
+X: Nejsou to první neškolení nadšenci
+X: Největší podíl na výrobě měla elektřina z fotovoltaických elektráren.
 X: Několik portů lze nalézt na samotném těle
+X: Německo nedávno vytvořilo fotovoltaický světový rekord
+X: Nevyloučil nepotvrzené zprávy
+X: Nové zařízení umožní připojit k internetu téměř cokoli. 
+X: nový model přenosného externího pevného disku
+X: Obama se již dříve shodl s dalšími státníky
+X: Odhady celoročního vývoje české ekonomiky se různí.
+X: Odhání to část turistů
+X: On standardně chystá reformy a jedná o nich
+X: Operace si proto zkoušel jen doma
+X: Oznámení má během soboty předcházet i telekonference ministrů 
+X: Počátky elektronických zařízení byly ve znamení velkých a těžkých strojů.
+X: podřízení odhadovali podíl českých firem na temelínské zakázce
+X: Program běží již pět let
+X: průmyslová výroba v dubnu klesla
+X: První blok máme dokončit v roce 2014
+X: první využití naprosto rovné dotykové plochy
+X: Předpovědi dalších analytiků jsou pesimističtější.
+X: Při psaní na klávesnici mají někteří uživatelé ze stisku kláves lepší pocit
+X: Příprava filmu je teprve v začátcích. 
+X: Přírůstek je tedy ohromný. 
+X: přístroje mohou být velmi odolné
+X: Putin počítá s prodloužením programu
+X: Rozhodnutí Jestřábího oka bylo poněkud podivné 
+X: Rušení se ale netýká hlavního města
+X: Řešení jsou tvrdá, ale jsou k dispozici. 
+X: Samozřejmě se snaží zabránit zbytečným bouřím.
+X: složitá vízová procedura je odrazuje.
+X: Smyslu však postrádá
+X: Solární elektrárny zažily obrovský boom i v Česku
+X: stačí ho tak pouze zapojit do příslušného rozhraní
+X: stát se snaží veřejný deficit snižovat především pomocí zvyšování daní.
+X: Státní maturita bez povinné matematiky nemá smysl.
+X: Státní maturity zatím příliš nevyužíváme
+X: Stavba třetího a čtvrtého bloku má být hotova nejpozději v roce 2025
+X: Systém lze tak provozovat ve dvou režimech
+X: Systém využívá principu triangulace
+X: Španělské banky se stále nevzpamatovaly
 X: Španělsko o víkendu požádá Evropskou unii o finanční pomoc
 X: Španělsko zřejmě už velmi brzy požádá o pomoc
-X: Nevyloučil nepotvrzené zprávy
-X: Mluvčí španělské vlády ale reagovala
-X: Brusel se jen omezil na sdělení
-X: Oznámení má během soboty předcházet i telekonference ministrů 
-X: Euroskupina má po schůzce vydat tiskovou zprávu.
-X: Madrid je rozhodnutý požádat o pomoc
-X: Výnosy na španělských bondech rostou
-X: Španělské banky se stále nevzpamatovaly
-X: Nechodí do normální práce
-X: zkoumá grafy finančních instrumentů
-X: Živím se tím už pár let
-X: Bez ní to nemá smysl
-X: On standardně chystá reformy a jedná o nich
-X: Samozřejmě se snaží zabránit zbytečným bouřím.
-X: Státní maturity zatím příliš nevyužíváme
-X: Zatím se orientujeme spíše na svá pravidla
-X: Státní maturita bez povinné matematiky nemá smysl.
-X: Měli bychom pečlivě sledovat
-X: Putin počítá s prodloužením programu
-X: Program běží již pět let
-X: Jde o správný krok
-X: Dnes tam panuje obrovská konkurence.
-X: Získat české vízum je poměrně komplikované.
-X: Neohrožuje to naše hospodářské zájmy?
-X: Určitá přísnost má opodstatnění. 
-X: Smyslu však postrádá
+X: Tam se již začínají dostávat dotykové displeje
+X: Technologie má jistě vhodně zvolený název
+X: Televize tento okamžik několikrát přehrávaly
 X: Tím se samozřejmě zhoršuje naše hospodářská pozice. 
-X: Odhání to část turistů
-X: složitá vízová procedura je odrazuje.
-X: Česká republika má exportní strategii 
-X: Náš obchod však není dostatečně diverzifikovaný
-X: Česko je přitom na vývozu životně závislé.
-X: Přírůstek je tedy ohromný. 
-X: Nedošlo k naplnění závazku partnerem
-X: už jsme měli vše připravené
-X: vysvětlila mluvčí brněnských strážníků 
-X: Rušení se ale netýká hlavního města
-X: V dětství jsem měl infarkt  
-X: Jako dítě chtěl být přitom neurochirurgem.
-X: Operace si proto zkoušel jen doma
 X: Tohle byla zřejmě má chvíle
-X: Muž má bohatý trestní rejstřík
-X: Muž byl v silně podnapilém stavu
-X: Příprava filmu je teprve v začátcích. 
-X: Natáčení by podle plánu mělo začít v létě příštího roku
-X: Napsal například scénáře dvou posledních filmů
-X: Dostal se tak na čtvrté místo
-X: Čtvrteční aukce nabídla jen pět desítek děl
-X: Zní to vlastně dojemně. 
-X: Krásná pohádka s dobrým koncem
-X: Nejsou to první neškolení nadšenci
 X: Toto rozhodnutí respektuji
+X: Tvůrci karty musí počítat s pravděpodobně negativním postojem možných uživatelů
+X: Typickým příkladem může být autorádio v automobilu.
+X: U těchto technologií lze očekávat poměrně vysokou popularitu
+X: Určitá přísnost má opodstatnění. 
+X: už jsme měli vše připravené
+X: V dětství jsem měl infarkt 
+X: V péči o domácnost jsme si však zatím vystačili téměř bez internetu.
+X: V posledních letech rostla také výroba energie z biomasy
+X: V prodeji se objeví během léta
+X: v temelínských reaktorech je opět ruské palivo
+X: Výhodou oproti jiným zařízením je jednoduchost použití zařízení
+X: Výnosy na španělských bondech rostou
+X: Výrobce ale neuvádí mnoho podrobností
+X: vysvětlila mluvčí brněnských strážníků 
+X: Zároveň se snažil přimět své evropské partnery
+X: Zatím se orientujeme spíše na svá pravidla
+X: Získat české vízum je poměrně komplikované.
+X: zkoumá grafy finančních instrumentů
+X: Zní to vlastně dojemně. 
+X: Živím se tím už pár let
+X: Z dějinného hlediska pouhých padesát let .
+X: Z držitelů kupónů se stávají akcionáři
+X: Z hlediska kvality je však doplňkový pisárecký zdroj nevyhovující .
+X: Z jejich výsledku se dá ledacos odvodit .
+X: Z nezávislých úst line se pravda .
+X: Z nouze úspěšný Proxis
+X: Z nové ekonomické literatury
+X: Z podpisu však zatím sešlo .
+X: Z pohledu Washingtonu byly všechny náležitosti vyřízeny .
+X: Z praktického hlediska se jedná o dvě skupiny výrobků .
+X: Z premiérova iniciativního návrhu tentokrát ještě sešlo .
+X: Z toho jen necelá třetina jsou vyučení truhláři .
+X: Z uvedených důvodů rabín Weiss se svou skupinou protestoval .
+X: Za autorskou invenci se tedy stydět rozhodně nemusíme .
+X: Za doplatek večeře nebo oběd podle jídelního lístku .
+X: Za dva životy tři roky vězení
+X: Za Klausovu stranu kandiduje málo žen
+X: za konkrétní organizační záležitosti zodpovídá ředitel konferencí .
+X: Za necelé tři hodiny Mike zemřel na operačním stole .
+X: Za necelých devět set miliard korun .
+X: Za normálních okolností se život v Kocourkově odvíjel standardně .
+X: Za pět dní je pomocí detektoru záření gama vyhledal .
+X: Za současného toku peněz termíny plateb nejsme schopni zkrátit .
+X: Za více práce méně peněz
+X: Za výrazný rys ekonomického vývoje považuje stabilizaci cen .
+X: Zabavený hotel Ohře jde do dražby
+X: Zabíjení mezi černochy pokračovalo .
+X: Zabilo dosud neupřesněný počet osob a další zranilo .
+X: Začala likvidace tanků
+X: Začali ho bít a prohledávat byt .
+X: Začaly ale růst i houby jedovaté .
+X: Začátek druhé třetiny vyšel lépe hostům .
+X: začátek roku konec roku
+X: Začne se rozvinovat .
+X: Začne si sám další práci vymýšlet .
+X: Zadlužil se milionovými částkami .
+X: Zadrželi je pracovníci akciové společnosti a předali policii .
+X: Záhada znojemské rotundy
+X: Zahraniční certifikáty u nás neplatí .
+X: Zahraniční investice ve světě rostou
+X: Zahraniční investoři potřebují stabilní prostředí .
+X: Záhy se dostal do finanční tísně .
+X: Záchrana je alfou a omegou budoucnosti klubu .
+X: Zair se chce zbavit uprchlíků z Rwandy
+X: Zájem o jeskyně klesá
+X: Zájem projevili i maďarští Slováci .
+X: Zajisté by oběti zasluhovaly spíš pietní tichou vzpomínku .
+X: Zákaz vstupu do některých severočeských lesů zrušen
+X: Zákazníci ale potřebují všechny druhy kdykoliv , stále .
+X: Zákazníci od nás žádají něco jiného .
+X: Základem všeho je dostatek prostředků na vědu .
+X: Základní jmění Telecomu činí přes 23512 miliardy korun .
+X: Základní životní jistoty občanského principu zde zřejmě nebudou postačovat .
+X: Zákon nejstarší řemeslo neodstraní
+X: Zákon o drahách ukončí monopol na železnici
+X: Zákon o občanství prý diskriminuje
+X: Zákonitě by pak i on musel zvýšit ceny .
+X: Záleží tedy na pocitu odpovědnosti k vlastním dětem .
+X: Zamyšlení Pavla Tigrida nad uplynulým rokem najdete na straně 11
+X: Zanedbatelná není jeho podpora ani mezi komunisty a republikány .
+X: Zápas nakonec vyhrál Ferguson jasně na body .
+X: Zaplavil Ameriku a úspěšně vtrhl do Evropy .
+X: Zápočty závazků a pohledávek skončily podle Dlouhého úspěšně
+X: Zároveň působí jako hudební vydavatelství zaměřené na vážnou hudbu .
+X: Zároveň skončila doba dohodnutých cen .
+X: Zásada porovnatelnosti výrobků
+X: Zasedání zahájil rakouský ministr obrany Werner Fasslabend .
+X: Zasloužit by si měla velkou přípravu a mnoho argumentů .
+X: Zatím se to ale nestalo .
+X: Zatím však obchodní výměna klesá .
+X: Zatím výrobce potvrdil dodávku tisíce aut .
+X: Zavedla dvě měřítka pro olympijskou kvalifikaci .
+X: Závějemi sněhu vede jediná vyšlapaná pěšinka .
+X: závěr patřil španělským zarzuelám .
+X: Záznamní povinnost předpokládá denní , spolehlivě kontrolovatelnou evidenci tržeb .
+X: Zažili jsme i mnohá překvapení .
+X: Zbylá zvířata rozdal cirkusům a jiným zoologickým zahradám .
+X: Zbytek úvěrových zdrojů tvoří eskontované směnky .
+X: Zbývající akcie Agrostavu drží zemědělská družstva .
+X: Zda záruky na výrobek poskytuje přímo výrobní továrna .
+X: Zde je demodulován a využit ke stimulaci .
+X: Zde pokračovaly i včera dělostřelecké výměny .
+X: Zde převzal část problémů svých starších kolegů .
+X: Zdeňkovi však v té době do smíchu nebylo .
+X: Zdravotní účinky elektromagnetických polí
+X: Ze hry však není možné vyloučit ani zaměstnance .
+X: Ze střetu vyšel pouze s lehkým zraněním úst .
+X: Zeď je nejlepší průpravou
+X: Zeithamml sám se o svém díle vyjadřuje sporadicky .
+X: Zejména nově vzniklým zemědělským subjektům tak vznikají nemalé problémy .
+X: Zejména příklad Japonska je fascinující .
+X: Zemědělec utýral koně a selata
+X: Zemi čeká osud Venuše
+X: Zevní část tvoří řečový procesor a vysílač .
+X: Zhodnoťte šance čtenáře přijít levně k unikátní věci .
+X: Zhruba deset maskovaných mužů bleskově šplhá na palubu .
+X: Zisk z nich je v nejvyšším obecním zájmu .
+X: Zjednodušené schéma stavby lidského zrakového systému .
+X: Zlatá horečka po makedonsku
+X: Zlepšuje čitelnost i méně ostrých předloh .
+X: Změna ve vedení Elektrických drah
+X: Zmenšil tak moc pražského arcibiskupa a zvětšil královské příjmy .
+X: Změny musí navíc vycházet z reálných možností .
+X: Změny v dalších institutech
+X: Zmíněné okolnosti však svědčí spíše v jeho prospěch .
+X: Znamenalo to však zvládnout co nejrychleji západní standardy .
+X: Znamení zatahování do kořenů a nostalgie po starém .
+X: Znovunalezená identita
+X: Zpěv a proměnlivá atmosféra
+X: Zpočátku budou společně připravovat celostátní vysílání Zelené vlny .
+X: Zprava doleva a obráceně
+X: Zpráva o přenosu a zpráva o chybách .
+X: Zpravidla se to i osvědčovalo .
+X: Zpřísnění postihu pachatelů by přijít mělo .
+X: Způsobili škodu asi za čtvrt milionu korun .
+X: Zraněno bylo devět lidí .
+X: Zrod nové strany se prý čeká každým dnem .
+X: Zřejmě se tak snažili osušit svá křídla .
+X: Zřídí vlastní prodejny .
+X: Zúčastnily se ho čtyři desítky historických automobilů a motocyklů .
+X: zůstalo pod přímou správou Velké Británie ;
+X: Zůstáváme zapojeni v mírovém procesu . . .
+X: Zvláštní postavení má ekologie .
+X: Zvláštní výjimkou v tomto veletrhu firem je Hilgertův kajak .
+X: Zvýšit se tedy mohou pouze změnou zákona .
+X: Žádná jiná kritéria zde stanovena nejsou .
+X: Žádné tričko už nikdo nekoupil .
+X: Žádné velké zemětřesení to ovšem v klubu nepřineslo .
+X: Žádné zvláštní prémie přitom klub nevypsal .
+X: Žádný jiný konkurenční transformační projekt připraven nebyl .
+X: Žádný obchod na Plodinové burze
+X: Že lepší je stránka z Galuškova Slovácka než meprobamat .
+X: Ženili se a vdávali převážně mezi sebou .
+X: Židé si připomenou první válečný transport
+X: Židovské restituce půjdou k Ústavnímu soudu
+X: Žil na předhradí Levého Hradce u Prahy .
+X: Žila jste nějaký čas ve Francii .
+X: Živá legenda popmusic tráví ve Francii část dovolené .
