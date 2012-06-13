@@ -7,7 +7,6 @@ X: Ačkoliv jsem byl nejmladší .
 X: Ačkoliv jsou Slováci našimi tisíciletými sousedy .
 X: Adresát si je bude muset vyzvednout na poště .
 X: Aero nabízí armádě nová letadla
-X: Agnieszka Dajborová , Gazeta Wyborcza
 X: Akademie Dobříš chce nájemní smlouvu jen do vyhodnocení konkurzu
 X: Akce však potvrdila nedostatek policistů .
 X: Akci francouzských divadelníků zorganizoval tamní Syndikát divadelních ředitelů .
@@ -37,7 +36,6 @@ X: Ale zůstaňme v západní tradici .
 X: Alergie považuje doktorka Drahoňovská spíše za otázku vnitřního prostředí .
 X: Alespoň u některých zvířat již víme , že mohou .
 X: Aleš Drvota ale politické texty nepsal .
-X: Alois Grussmann se vrací do Vítkovic .
 X: Americká pomoc parlamentu ohrožena spekulacemi
 X: Američany postihla podobná série zranění jako naši reprezentaci .
 X: Ames se nyní nachází ve vězení .
@@ -54,8 +52,6 @@ X: Asistent podnikatele
 X: Atletika se mnou půjde jen pár let .
 X: Austrálie má však i specifickou flóru .
 X: Austrálie předstihla Kubu a je největším světovým vývozcem cukru .
-X: Australský premiér Paul Keating provedl změny ve vládě .
-X: Auta parkují podél silnice , na náměstí .
 X: Auto bylo po nárazu zcela demolováno .
 X: Autobusy jsou již od srpna připraveny v Německu .
 X: Automatický tisk potvrzení o spojení .
@@ -92,7 +88,6 @@ X: Boj s požárem nedaleko Bratislavy byl tvrdý
 X: Boje pokračovaly i kolem města Goražde .
 X: Bosenský ministr předpovídá válku
 X: Bosna se bránit nemůže .
-X: Boží Dar hledá svou novou image .
 X: Brankář Šimurka na Žižkov
 X: Britská vláda americkou iniciativu zřejmě přehlíží .
 X: Britský premiér schůzku s nekompromisním kazatelem neustále odkládal .
@@ -103,7 +98,6 @@ X: Brožuru vydalo vydavatelství Práh .
 X: Bříza na pozvánku do reprezentace nečeká netrpělivě
 X: Bude postupovat preventivně .
 X: Bude se hrát v září v Německu .
-X: Bude také zařazen do čtvrtletního slosování o 3000 korun .
 X: Budou se tady provádět drobné montáže plastových výrobků .
 X: Budovatelské písně jsou jistě socialistický vynález .
 X: Bundesbanka sazby snižovat nebude
@@ -111,7 +105,7 @@ X: Byl by to další tržní prvek v sociálním zabezpečení .
 X: Byl rovněž matematikem a také se zabýval meteorologií .
 X: Byl to hezký a atraktivní volejbal .
 X: Byl vzdělaný politolog a viděl ji pesimisticky .
-X: Bylo by lehkomyslné se na ni neobrátit . "
+X: Bylo by lehkomyslné se na ni neobrátit . 
 X: Bylo mu asi osm let .
 X: Bylo slyšet pouze je .
 X: Bylo to jediné negativum na jinak skvělém turnaji .
@@ -124,7 +118,6 @@ X: Bytové stěny a čalouněný nábytek skoro nešly na odbyt .
 X: Býval šéfem tajné služby .
 X: Bývalý estonský ministr obrany Hain Rebas
 X: Bývalý ředitel zpravodajské služby žaluje mluvčího ministerstva vnitra
-X: Cantonu teď čeká nepříjemný týden
 X: Celkem na tři sta padesát stran poezie !
 X: Celkem zaměstnávám zhruba stovku lidí .
 X: Celkový rozsah snížení emisí zůstane přitom zachován .
@@ -133,7 +126,6 @@ X: Cena pivovaru je přijatelná pro obě strany .
 X: Ceny malých kamenů horší kvality jsou víceméně stabilní .
 X: Ceny potravin vytrvale rostou
 X: Ceny tepla a vody rychle rostou .
-X: Cepl domněnky o své práci pro StB odmítá .
 X: Cílem brněnských hokejistů je návrat do I . ligy .
 X: Cílem je produkce okolo sedmi až deseti tun denně .
 X: Cílem klubu je kvalitní reprezentace na vrcholných zahraničních závodech .
@@ -190,15 +182,12 @@ X: Další obvinění v kauze Marty Chadimové
 X: Další příměří v Čečensku
 X: Další výsledky nebyly do uzávěrky známy .
 X: Dalšího obránce Nečase posílá Slavia zpátky do Jihlavy .
-X: Dalším letošním sympoziem v Plasích bude Feedback
 X: Dámský kondom nenadchl české ženy
 X: Dánové mají dvě alternativy .
 X: Daňoví úředníci nejsou vítanými hosty
-X: Dárky pro partnera 200
 X: Databáze pro ekologické systémy
 X: debutové album slovenské industriální skupiny vydal Zoon .
 X: Definitivní verdikt nyní leží na poslancích .
-X: Demisi vlády sdělil Ruud Lubbers písemně královně Beatrix .
 X: Demokratická strana je zastoupena svým mužem v Bílém domě .
 X: Demonstrace anarchistů uctila památku Z . Čepely
 X: Demonstrace v Kambodži musí mít napříště oficiální povolení .
@@ -227,7 +216,6 @@ X: Dnes tomu budeme říkat mírový plán .
 X: Dnes už jich má patnáct a jednoho greyhounda .
 X: dnes už ovšem dacan lotra neoznačuje .
 X: Dnešní struktura okresů bezesporu nevyhovuje .
-X: Do EuroDisney přijeli novomanželé z jihofrancouzského letoviska Nice .
 X: Do jejich kompetence spadá i správa příměstských vodních toků .
 X: Do jisté míry dělají politiku , ovlivňují ji .
 X: Do oboru se nikdo moc nehrne .
@@ -395,14 +383,12 @@ X: Ideální není ani finanční situace klubu .
 X: Identifikace Tomáše Vodičky je nejasná
 X: Image důvěry vytvářejí všichni pracovníci zdravotního zařízení
 X: Implantabilní část neobsahuje napájecí zdroje .
-X: Index cen je značně rozdílný v různých krajích ČR .
 X: Indexy služeb a obchodu jsou stabilní
 X: Indie včera vypověděla ze země jednoho z pákistánských diplomatů .
 X: Indurain už ve žlutém
 X: Informace jsou levné a šíří se rychle .
 X: Informaci převzala většina celostátních deníků .
 X: Informoval o tom tiskový mluvčí ministerstva spravedlnosti Vladimír Voráček .
-X: Informoval o tom včera list Juventud Rebelde .
 X: Informovala o tom včera Česká televize .
 X: Informovali jsme ministerstvo privatizace .
 X: Invaze na Haiti je téměř jistá
@@ -421,9 +407,7 @@ X: Jak ustanovit ředitele televize
 X: Jak začalo moje psaní .
 X: Jako by se stroj času dal do pohybu .
 X: Jako Evropa po Mnichovu .
-X: Jako hlavní bude pískat Helmut Krug .
 X: Jako příklad uvedl komisi pro kontrolu Bezpečnostní informační služby .
-X: Jako příklad uvedl libanonského prezidenta Eliase Hrávího .
 X: Jako ti první slavní holubi .
 X: Jaromírovi Jágrovi bude v únoru teprve dvacet let .
 X: Jasno měli do celé záležitosti vnést dva soudní znalci .
@@ -431,10 +415,8 @@ X: Jde o komplikovanou záležitost .
 X: Jde o kubánskou dvojku v šavli .
 X: Jde pouze o kosti a chomáče vlasů .
 X: Jde zejména o vysokou stabilitu makroekonomického prostředí .
-X: Je jím 17letý Ronaldo Luis Nazario de Lima .
 X: Je levnější než doprava zajišťovaná cizími organizacemi .
 X: Je na čase zabývat se odpovědně státními svátky .
-X: Je naprosto jiný než Bob Johnson .
 X: Je obviněn z nedostatečného zajištění sjízdnosti dálnice .
 X: Je plátcem daně z příjmu právnických osob .
 X: Je předčasné uvažovat o nějaké zásadní systémové změně .
@@ -516,7 +498,6 @@ X: Jsou spravovány voleným zastupitelstvem .
 X: Jsou to ale jen vnější změny .
 X: Juppé označil krizi za velmi vážnou .
 X: Justiční stráž v podstatě nemá žádné pravomoci .
-X: K Čechám připadl Boží Dar teprve v roce 1556 .
 X: K nižší ceně se liberecký velkoobchod dostává jinou cestou .
 X: K poslednímu červencovému dni předal objekt Státnímu fondu kultury .
 X: K použití za nízký poplatek slunečníky a lehátka .
@@ -608,7 +589,6 @@ X: Kritizují i protestní akce komory proti důchodovému zákonu .
 X: Krize městské policie
 X: Krizi by měla řešit Kuba
 X: Kromě jiného se totiž barvy v těchto místech rozpíjejí .
-X: Kromě stravovacích služeb firma Sodexho distribuuje stravenky Gastrotur .
 X: Kromě toho byla ošklivá a primátor byl estét .
 X: Křesťanská větev této filozofie později probudí evropskou renesanci .
 X: Kubánci si chystají člun na cestu z ostrova svobody
@@ -896,7 +876,6 @@ X: Nepřiměřená rychlost
 X: Neřekl jsem to tajemně , ale docela normálně .
 X: Nesmíme však nabourat zdroje pro nezbytné výdaje .
 X: Nespravedlivý pocit neviny
-X: Nešťastná Gödelova věta
 X: Neštěstí jedné generace
 X: Netřeba prestižní kostry .
 X: Netscher věří v další zlepšení
@@ -1045,7 +1024,6 @@ X: Oznámili to včera představitelé Centra kuponové privatizace .
 X: Oznámilo to v Moskvě ruské ministerstvo obrany .
 X: Oznámilo to včera francouzské ministerstvo vnitra .
 X: Oznámily to vojenské zdroje v hlavním městě Saná .
-X: Oživení je znatelnější v USA než v zemích Evropské unie
 X: Padrnose v závěru potkala smůla v podobě pomalého defektu .
 X: Pak byla pravopisná komise oživena a rekonstruována ještě třikrát .
 X: Pak druhá naděje Gorbačovovy perestrojky .
@@ -1208,7 +1186,6 @@ X: Pověstné jsou vaše dopisy a vzkazy recenzentům .
 X: Pověstné spravedlnosti se však potom bude dovolávat marně .
 X: Pozdně pliocenní kamenné nástroje ze severního Pákistánu
 X: Pozor na podmíněné zakázky
-X: Pozornost kritiků vzbudila nahrávka Fibichovy Nevěsty messinské .
 X: Pozornost od počátku budila polská účast .
 X: Požadovalo zrovnoprávnění katolíků s protestanty .
 X: Požár strojů v povrchovém dole
@@ -1380,7 +1357,6 @@ X: Reprezentace může počítat s Letnou
 X: Republiky o imigrantech
 X: Restituenti jsou lidé ve věku přes sedmdesát let .
 X: Restivo odpovídá ano .
-X: Reverend Paisley se odpovědi vyhnul .
 X: Revizor v orientálním stylu
 X: Robert Axamit Mluvčí Občanského sdružení majitelů domů
 X: Robert Smith je blázen .
@@ -1391,8 +1367,7 @@ X: Role Slováků ve válce je historicky strašně složitý problém .
 X: Roli hraje také určitá fluktuace zaměstnanců .
 X: Roušku tajemství však včera nikdo nepoodhrnul .
 X: Rovněž filosofové se pokusili přiživit .
-X: Rovnováha povinností a výhod *
-X: Rozhodl o tom odvolací soud v Lyonu .
+X: Rovnováha povinností a výhod 
 X: Rozhodla o tom v pátek valná hromada banky .
 X: Rozhodně by ušetřili čas i peníze .
 X: Rozhodne ekonomická situace klubů .
@@ -1401,7 +1376,6 @@ X: Rozhodně to není neúcta k oboru .
 X: Rozhodnutí ale zatím není pravomocné .
 X: Rozhodnutí na poslední chvíli
 X: Rozhovor s vůdcem smečky
-X: Rozhovor zveřejnil list Magyar Hírlap .
 X: Rozlišit tvrdé a měkké drogy
 X: Roznášení pití ke stolům je zcela výjimečné .
 X: Rozpočtová krize zde trvá již více než dva měsíce .
@@ -1861,7 +1835,6 @@ X: V současnosti je totiž nezaměstnaná .
 X: V souvislosti s ní panovaly v tisku určité pochybnosti .
 X: V takovém případě stačilo vyměnit jen porouchaný díl .
 X: V Tatře se bude od září každý pátek odpočívat
-X: V Tbilisi hoří budovy
 X: V těchto oblastech se projevují jejich účinky nejsilněji .
 X: V těchto polohách se neradí příliš vysvětlovat .
 X: V terénu o švýcarské franky
@@ -1964,11 +1937,9 @@ X: Všichni jsou spokojeni .
 X: Všichni mladiství odjeli do Dánska .
 X: Vybral jsem si Paříž
 X: Vybrané kapitoly z dějin žvýkačky
-X: Výbuch u Grozného zabil 25 Rusů
 X: Výhoda přivádí do prodejny řadu zákazníků .
 X: Vyhodnocení nabídek potrvá asi měsíc .
 X: Výhody nevidí ani v nákupu materiálů u výrobců .
-X: Vyhrát tuto rallye je snem každého Fina .
 X: vyhýbat se nevhodným slovům .
 X: Vycházejí z ročních plánů výstavních organizací .
 X: Výjimkou jsou exponované tahy .
@@ -2145,7 +2116,6 @@ X: Za doplatek večeře nebo oběd podle jídelního lístku .
 X: Za dva životy tři roky vězení
 X: Za Klausovu stranu kandiduje málo žen
 X: za konkrétní organizační záležitosti zodpovídá ředitel konferencí .
-X: Za necelé tři hodiny Mike zemřel na operačním stole .
 X: Za necelých devět set miliard korun .
 X: Za normálních okolností se život v Kocourkově odvíjel standardně .
 X: Za pět dní je pomocí detektoru záření gama vyhledal .
