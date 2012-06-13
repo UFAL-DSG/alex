@@ -8,6 +8,7 @@ import __init__
 import SDS.utils.audio as audio
 
 from SDS.components.tts.google import GoogleTTS
+from SDS.components.tts.speechtech import SpeechtechTTS
 
 print "Synthesize all sentences"
 print "="*120
@@ -24,16 +25,22 @@ print
 cfg = {
   'Audio': {
       'sample_rate': sample_rate
-    },
+  },
   'TTS': {
     'Google': {
       'debug': False,
-      'language' : language
+      'language' : language,
+  },
+  'SpeechTech': {
+      'login': 'your_login',
+      'password': 'your_password',
+      'debug':    True,
+      'voice':    'Iva210',
     }
   }
 }
 
-tts = GoogleTTS(cfg)
+tts = SpeechtechTTS(cfg)
 
 f = open('sentences.txt', 'r')
 r = []
@@ -48,7 +55,7 @@ for s in r:
 
   n = s.replace(' ', '_')
 
-  print 'saving the TTS audio in ./tmp/gtts_%s.wav' % n
-  audio.save_wav(cfg, './tmp/gtts_%s.wav' %n, wav)
+  print 'saving the TTS audio in ./tmp/tts_%s.wav' % n
+  audio.save_wav(cfg, './tmp/tts_%s.wav' %n, wav)
 
   #time.sleep(random.randint(1, 10))

@@ -53,10 +53,16 @@ cfg = {
   },
   'TTS': {
     'debug': True,
-    'type': 'Google',
+    'type': 'SpeechTech',
     'Google' : {
       'debug': False,
       'language' : 'cs'
+    },
+    'SpeechTech': {
+      'login': 'your_login',
+      'password': 'your_password',
+      'debug':    True,
+      'voice':    'Iva210',
     }
   },
   'Hub': {
@@ -433,12 +439,16 @@ while 1:
   if intro_played and \
      s_voice_activity == False and \
      u_voice_activity == False and \
-     current_time - s_last_voice_activity_time > 6 and \
+     current_time - s_last_voice_activity_time > 5 and \
      current_time - u_last_voice_activity_time > 0.6:
 
     s_voice_activity = True
-    s = ram() + ' ' + sample_sentence(sample_sentences)
-    tts_commands.send(Command('synthesize(text="%s")' % s, 'HUB', 'TTS'))
+    s1 = ram()
+    tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
+    s2 = sample_sentence(sample_sentences)
+    tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
+
+    s = s1 + ' ' + s2
 
     m = []
     m.append('='*120)

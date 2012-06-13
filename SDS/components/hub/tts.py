@@ -6,6 +6,7 @@ import time
 import sys
 
 import SDS.components.tts.google as GTTS
+import SDS.components.tts.speechtech as STTS
 import SDS.utils.various as various
 
 from SDS.components.hub.messages import Command, Frame, TTSText
@@ -29,6 +30,8 @@ class TTS(multiprocessing.Process):
     self.tts = None
     if self.cfg['TTS']['type'] == 'Google':
       self.tts = GTTS.GoogleTTS(cfg)
+    if self.cfg['TTS']['type'] == 'SpeechTech':
+      self.tts = STTS.SpeechtechTTS(cfg)
     else:
       raise TTSException('Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
 
