@@ -605,7 +605,7 @@ X: Laboratoř aplikované matematiky a bioinženýrství
 X: Láce se vždy nevyplácí
 X: Látka je vzápětí vysvětlena na příkladech .
 X: Látku lze poměrně jednoduše chemickou cestou syntetizovat .
-X: Lázně mají méně klientů *
+X: Lázně mají méně klientů
 X: Lebka zlomena nebyla .
 X: Leč skrze pouhé zvyky toto objevit nelze .
 X: Lékařská komora nadále povinná
@@ -625,7 +625,6 @@ X: Lidé však nejsou ochotni jít za prací .
 X: Lidé z Bety žhavili telefony a dopisy hledali .
 X: Lidovci se množí dělením
 X: Liší se často počátkem a závěrem užívání mohylového ritu ;
-X: LN to potvrdila mluvčí ministerstva zdravotnictví K . Potočná .
 X: Loď i s drahocenným nákladem by byla nenávratně ztracena .
 X: Logika buduje svůj aparát nad danou ontologií .
 X: Longova zpráva nebyla ojedinělá .
@@ -688,7 +687,6 @@ X: Mluví se však o dalších výhodách politické elity .
 X: Mnohem kritičtější bylo přijetí knihy v Maďarsku .
 X: Mnohem rozšířenější je střední soukromé školství .
 X: Mnoho věcí se mi na tom nelíbí .
-X: Mnozí již přišli na chuť programu Team Agenda .
 X: Množství pacientů vytváří ekonomické výsledky .
 X: Moderní skládka v Mladé pomůže řešit problémy s komunálními odpady
 X: Mohla totiž nastat i jiná varianta .
