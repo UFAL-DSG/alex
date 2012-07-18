@@ -90,8 +90,8 @@ cfg = {
                         ],
 
     'max_call_length':       10*60,       # in seconds
-    'last24_max_num_calls':  20,
-    'last24_max_total_time': 50*60,       # in seconds
+    'last24_max_num_calls':  10,
+    'last24_max_total_time': 30*60,       # in seconds
     'blacklist_for' :        2*60*60,     # in seconds
   }
 }
