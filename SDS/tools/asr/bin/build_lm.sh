@@ -36,3 +36,7 @@ perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_test $WORK_DIR/cmu_
 # Build the word network as a word loop of words in the testing data
 HBuild -A -T 1 -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdnet_zerogram > $LOG_DIR/hbuild.log
 
+if [ -f $DATA_SOURCE_DIR/wdnet_bigram ]
+then
+  cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
+fi

@@ -10,14 +10,14 @@
 HOME_DIR=`pwd`;export HOME_DIR
 
 # Directories where the speech corpora live
-DATA_DIR=$HOME_DIR/data_voip_en;export DATA_DIR
+DATA_SOURCE_DIR=$HOME_DIR/data_voip_en;export DATA_SOURCE_DIR
 TRAIN_DATA_SOURCE=$DATA_DIR/train;export TRAIN_DATA_SOURCE
 TEST_DATA_SOURCE=$DATA_DIR/test;export TEST_DATA_SOURCE
 
 # Work directory we use during training
 WORK_DIR=$HOME_DIR/model_voip_en;export WORK_DIR
-TRAIN_DATA=$WORK_DIR/train;export TRAIN_DATA_SOURCE
-TEST_DATA=$WORK_DIR/test;export TEST_DATA_SOURCE
+TRAIN_DATA=$WORK_DIR/train;export TRAIN_DATA
+TEST_DATA=$WORK_DIR/test;export TEST_DATA
 
 TEMP_DIR=$HOME_DIR/model_voip_en/temp;export TEMP_DIR
 LOG_DIR=$HOME_DIR/model_voip_en/log;export LOG_DIR
