@@ -84,10 +84,10 @@ $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_zerogram 350.0 -0
 date 
 
 # Evaluate how we did on bigram language model if it is available
-if [ -d $WORK_DIR/wdnet_bigram ]
+if [ -f $WORK_DIR/wdnet_bigram ]
 then
   echo "Decoding bigram language model"
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_bigram 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_bigram 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/cmu_ext_dict_sp_sil
 fi
 
 # Re-align the training data with the best triphone models
