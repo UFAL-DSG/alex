@@ -30,7 +30,7 @@ cd $WORK_DIR
 # We'll run with some reasonable values for insertion penalty and LM scale,
 # but these will need to be tuned.
 
-if [ -n $7 ]
+if [ -n "$7" ]
 then 
   DICT=$7
 else
