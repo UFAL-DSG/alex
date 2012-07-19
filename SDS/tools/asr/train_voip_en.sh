@@ -2,7 +2,7 @@
 
 # Trains up word internal models for English.
 
-. env_voip_en.sh
+source env_voip_en.sh
 
 date
 
