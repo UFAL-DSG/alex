@@ -19,8 +19,8 @@ WORK_DIR=$HOME_DIR/model_voip_en;export WORK_DIR
 TRAIN_DATA=$WORK_DIR/train;export TRAIN_DATA
 TEST_DATA=$WORK_DIR/test;export TEST_DATA
 
-TEMP_DIR=$HOME_DIR/model_voip_en/temp;export TEMP_DIR
-LOG_DIR=$HOME_DIR/model_voip_en/log;export LOG_DIR
+TEMP_DIR=$WORK_DIR/temp;export TEMP_DIR
+LOG_DIR=$WORK_DIR/log;export LOG_DIR
 
 # Where the scripts we use in training are located
 TRAIN_SCRIPTS=$HOME_DIR/bin;export TRAIN_SCRIPTS

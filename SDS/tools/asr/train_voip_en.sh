@@ -90,6 +90,8 @@ then
   $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_bigram 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/cmu_ext_dict_sp_sil
 fi
 
+date 
+
 # Re-align the training data with the best triphone models
 echo "Aligning with triphones ..."
 $TRAIN_SCRIPTS/realign.sh hmm42 tiedlist
