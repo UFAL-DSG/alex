@@ -74,3 +74,39 @@ $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm38 hmm39 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm39 hmm40 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm40 hmm41 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm41 hmm42 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 8->10, sil 16->20
+HHEd -B -H $WORK_DIR/hmm42/macros -H $WORK_DIR/hmm42/hmmdefs -M $WORK_DIR/hmm43 $TRAIN_COMMON/mix10.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix10.log
+
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm42 hmm43 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm43 hmm44 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm44 hmm45 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm45 hmm46 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 10->12, sil 20->24
+HHEd -B -H $WORK_DIR/hmm46/macros -H $WORK_DIR/hmm46/hmmdefs -M $WORK_DIR/hmm47 $TRAIN_COMMON/mix12.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix12.log
+
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm46 hmm47 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm47 hmm48 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm48 hmm49 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm49 hmm50 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 12->14, sil 24->28
+HHEd -B -H $WORK_DIR/hmm50/macros -H $WORK_DIR/hmm50/hmmdefs -M $WORK_DIR/hmm51 $TRAIN_COMMON/mix14.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix14.log
+
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm50 hmm51 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm51 hmm52 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm52 hmm53 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm53 hmm54 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 14->16, sil 28->32
+HHEd -B -H $WORK_DIR/hmm54/macros -H $WORK_DIR/hmm54/hmmdefs -M $WORK_DIR/hmm55 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log
+
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm54 hmm55 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm55 hmm56 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm56 hmm57 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm57 hmm58 tiedlist wintri.mlf 0
