@@ -28,7 +28,6 @@ subst = [('GOOD-BYE', 'GOODBYE'),
          ('RIVER SIDE','RIVERSIDE'),
          ('CHERRY HINTON','CHERRYHINTON'),
          ('FEN DITTON','FENDITTON'),
-         ('POST CODE','POSTCODE'),
          ('PHONENUMBER','PHONE NUMBER'),
          ('OKEY','OK'),
          ('OKAY','OK'),
@@ -313,9 +312,9 @@ def normalization(text):
     
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
   for p in hesitation:
-    t = re.sub('^'+p+' ', '(HESITATION)', t)
-    t = re.sub(' '+p+' ', '(HESITATION)', t)
-    t = re.sub(' '+p+'$', '(HESITATION)', t)
+    t = re.sub('^'+p+' ', '(HESITATION) ', t)
+    t = re.sub(' '+p+' ', ' (HESITATION) ', t)
+    t = re.sub(' '+p+'$', ' (HESITATION)', t)
     t = re.sub('^'+p+'$', '(HESITATION)', t)
 
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
@@ -335,7 +334,7 @@ def exclude(text):
     return True
   if '<' in text:
     return True
-  if len(text) < 3:
+  if len(text) < 2:
     return True 
   
   return False
@@ -362,6 +361,8 @@ def extract_wavs_trns(file, outdir, waves_mapping, verbose):
 
   size = 0
   for el in els:
+    print '-'*120
+    
     transcription = el.getElementsByTagName("transcription")
     audio = el.getElementsByTagName("rec")
 
@@ -370,13 +371,18 @@ def extract_wavs_trns(file, outdir, waves_mapping, verbose):
       continue
 
     audio = audio[0].getAttribute('fname').strip()
-    transcription  = normalization(get_text_from_xml_node(transcription[0]))
+    transcription = get_text_from_xml_node(transcription[0]).encode('ascii','ignore')
+    if verbose:
+      print " # f:", audio, "t:", transcription
+
+    transcription = normalization(transcription)
+    if verbose:
+      print " # f:", audio, "t:", transcription
 
     if exclude(transcription): 
       continue
     
     update_dict(transcription)
-      
     if verbose:
       print " # f:", audio, "t:", transcription
 

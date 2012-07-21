@@ -20,8 +20,8 @@ echo "</s> [] sil" >> $WORK_DIR/cmu_ext_dict_sp_sil
 cat $TEMP_DIR/cmu_ext_dict_sp_sil >> $WORK_DIR/cmu_ext_dict_sp_sil
 
 # Get word list
-python $TRAIN_SCRIPTS/CreateWordList.py $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
-python $TRAIN_SCRIPTS/CreateWordList.py $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/cmu_ext_dict_sp $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/cmu_ext_dict_sp $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
 
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.

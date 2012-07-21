@@ -8,12 +8,25 @@ import collections
 patern1, patern2, patern3, patern4 = None, None, None, None
 
 try:
-  pattern1 = sys.argv[1]
-  pattern2 = sys.argv[2]
-  pattern3 = sys.argv[3]
-  pattern4 = sys.argv[4]
+  dctn = sys.argv[1]
+  pattern1 = sys.argv[2]
+  pattern2 = sys.argv[3]
+  pattern3 = sys.argv[4]
+  pattern4 = sys.argv[5]
 except IndexError:
   pass
+
+dct = {}
+# load dictionary
+dctf = open(dctn, 'r')
+for l in dctf:
+  l = l.strip()
+  l = l.split()
+
+  if len(l) > 0:
+    dct[l[0]] = 1
+    
+dctf.close()
   
 fns = glob.glob(pattern1)
 if patern2:
@@ -38,4 +51,5 @@ for fn in fns:
 word_list = sorted(word_list.keys())
 
 for w in word_list:
+  if w in dct:
     print w
