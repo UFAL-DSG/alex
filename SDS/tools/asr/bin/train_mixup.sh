@@ -14,8 +14,8 @@
 cd $WORK_DIR
 
 # Prepare new directories for all our model files
-rm -f -r hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42
-mkdir hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42
+rm -f -r hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42 hmm43 hmm44 hmm45 hmm46 hmm47 hmm48 hmm49 hmm50 hmm51 hmm52 hmm53 hmm54 hmm55 hmm56 hmm57 hmm58
+mkdir hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42 hmm43 hmm44 hmm45 hmm46 hmm47 hmm48 hmm49 hmm50 hmm51 hmm52 hmm53 hmm54 hmm55 hmm56 hmm57 hmm58
 
 # HERest parameters:
 #  -d    Where to look for the monophone defintions in
