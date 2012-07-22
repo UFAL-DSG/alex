@@ -324,28 +324,21 @@ def normalization(text):
   return t
 
 def exclude(text):
-  if '(' in text:
-    return True
-  if '-' in text:
-    return True
-  if '[' in text:
-    return True
-  if '{' in text:
-    return True
-  if '<' in text:
-    return True
+  for c in ['-', '+', '(', ')', '[', ']', '{', '}',  '<', '>' ]:
+    if c in text:
+      return True
   if len(text) < 2:
     return True 
   
   return False
   
 
-d = {}
+d = collections.defaultdict(int)
 def update_dict(text):
   t = text.split()
   
   for w in t:
-    d[w] = 1 
+    d[w] += 1 
     
 def save_transcription(transcription_file_name, transcription):
   f = open(transcription_file_name, 'w+')
@@ -457,7 +450,7 @@ def convert(indir, indir_audio, outdir, verbose):
   sec  = size / 16000*2
   hour = sec / 3600.0
 
-  print "Length of audio data in hours:", hour
+  print "Length of audio data in hours (for 8kHz 16b WAVs):", hour
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -484,7 +477,7 @@ if __name__ == '__main__':
 
   f = open('word_list', 'w')
   for w in sorted(d.keys()):
-    f.write(w.encode('ascii', 'ignore'))
+    f.write("%s\t%d" % (w.encode('ascii', 'ignore'), d[w]))
     f.write('\n')
   f.close()
   
