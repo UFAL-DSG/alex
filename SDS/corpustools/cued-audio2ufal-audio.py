@@ -286,30 +286,32 @@ subst = [('GOOD-BYE', 'GOODBYE'),
          ('PRICEP','PRICE'),
          ('TNANK','THANK'),
          ('SOMTHING','SOMETHING'),
-         ('WHNAT','WHAT'), 
+         ('WHNAT','WHAT'),
         ]
-        
-hesitation = [ 'AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH", "AHA", "AHH", "AHHH", "AHMA", "AHM", "ANH", "ARA", "-AR", "AR-", 
-"-AR", "ARRH", "AW", "EA-", "-EAR", "-EECH", "\"EECH\"", "-EEP", "-E", "E-", "EH", "EM", "--", "ER", "ERM", "ERR", "ERRM", "EX-", 
-"F-", "HM", "HMM", "HMMM", "-HO", "HUH", "HU", "-", "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU", "MM", "MMHMM", "MMM", "NAH", 
-"OHH", "OH", "SH", "--", "UHHH", "UHH", "UHM", "UH'", "UH", "UHUH", "UHUM", "UMH", "UMM", "UMN", "UM", "URM", "URUH", "UUH", "ARRH", 
-"AW", "EM", "ERM", "ERR", "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM","HUH", "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", 
+
+hesitation = [ 'AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH", "AHA", "AHH", "AHHH", "AHMA", "AHM", "ANH", "ARA", "-AR", "AR-",
+"-AR", "ARRH", "AW", "EA-", "-EAR", "-EECH", "\"EECH\"", "-EEP", "-E", "E-", "EH", "EM", "--", "ER", "ERM", "ERR", "ERRM", "EX-",
+"F-", "HM", "HMM", "HMMM", "-HO", "HUH", "HU", "-", "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU", "MM", "MMHMM", "MMM", "NAH",
+"OHH", "OH", "SH", "--", "UHHH", "UHH", "UHM", "UH'", "UH", "UHUH", "UHUM", "UMH", "UMM", "UMN", "UM", "URM", "URUH", "UUH", "ARRH",
+"AW", "EM", "ERM", "ERR", "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM","HUH", "HUMPH", "HUMN", "HUM", "HU", "SH", "UH",
 "UHUM", "UM", "UMH", "URUH", "MMMM", "MMM", "OHM", "UMMM"]
+
+excluded_caracters = ['-', '+', '(', ')', '[', ']', '{', '}',  '<', '>' ]
 
 def normalization(text):
   t = text.strip().upper()
-  
+
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
   for a, b in [('.',' '),('?',' '),('!',' '),('"',' '),(',',' '),('_',' '),]:
     t = t.replace(a,b)
-         
+
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
   for p, s in subst:
     t = re.sub('^'+p+' ', s+' ', t)
     t = re.sub(' '+p+' ', ' '+s+' ', t)
     t = re.sub(' '+p+'$', ' '+s, t)
     t = re.sub('^'+p+'$', s, t)
-    
+
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
   for p in hesitation:
     t = re.sub('^'+p+' ', '(HESITATION) ', t)
@@ -320,26 +322,26 @@ def normalization(text):
   t = t.strip().replace('    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
 
   t = t.encode('ascii', 'ignore')
-      
+
   return t
 
 def exclude(text):
-  for c in ['-', '+', '(', ')', '[', ']', '{', '}',  '<', '>' ]:
+  for c in excluded_caracters:
     if c in text:
       return True
   if len(text) < 2:
-    return True 
-  
+    return True
+
   return False
-  
+
 
 d = collections.defaultdict(int)
 def update_dict(text):
   t = text.split()
-  
+
   for w in t:
-    d[w] += 1 
-    
+    d[w] += 1
+
 def save_transcription(transcription_file_name, transcription):
   f = open(transcription_file_name, 'w+')
   f.write(transcription.encode('ascii','ignore'))
@@ -355,7 +357,7 @@ def extract_wavs_trns(file, outdir, waves_mapping, verbose):
   size = 0
   for el in els:
     print '-'*120
-    
+
     transcription = el.getElementsByTagName("transcription")
     audio = el.getElementsByTagName("rec")
 
@@ -372,9 +374,9 @@ def extract_wavs_trns(file, outdir, waves_mapping, verbose):
     if verbose:
       print " # f:", audio, "t:", transcription
 
-    if exclude(transcription): 
+    if exclude(transcription):
       continue
-    
+
     update_dict(transcription)
     if verbose:
       print " # f:", audio, "t:", transcription
@@ -427,7 +429,7 @@ def convert(indir, indir_audio, outdir, verbose):
   if len(files) < 2:
     # search for un normalised transcriptions
     print "Normalised transriptions were NOT found. Using unnormalised transcriptions!"
-    
+
     files.append(glob.glob(os.path.join(indir, '*', 'user-transcription.xml')))
     files.append(glob.glob(os.path.join(indir, '*', '*', 'user-transcription.xml')))
     files.append(glob.glob(os.path.join(indir, '*', '*', '*', 'user-transcription.xml')))
@@ -435,7 +437,7 @@ def convert(indir, indir_audio, outdir, verbose):
     files.append(glob.glob(os.path.join(indir, '*', '*', '*', '*', '*', 'user-transcription.xml')))
 
     files = flatten(files)
-    
+
   size = 0
   for f in files:
 
@@ -447,10 +449,10 @@ def convert(indir, indir_audio, outdir, verbose):
 
   print "Size of copied audio data:", size
 
-  sec  = size / 16000*2
+  sec  = size / (16000*2)
   hour = sec / 3600.0
 
-  print "Length of audio data in hours (for 8kHz 16b WAVs):", hour
+  print "Length of audio data in hours (for 16kHz 16b WAVs):", hour
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -480,4 +482,4 @@ if __name__ == '__main__':
     f.write("%s\t%d" % (w.encode('ascii', 'ignore'), d[w]))
     f.write('\n')
   f.close()
-  
+

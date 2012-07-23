@@ -29,7 +29,7 @@ TRAIN_SCRIPTS=$HOME_DIR/bin;export TRAIN_SCRIPTS
 TRAIN_COMMON=$HOME_DIR/common;export TRAIN_COMMON
 
 # This should be set to split the training data into about 1 hour chunks.
-HEREST_SPLIT=10;export HEREST_SPLIT
+HEREST_SPLIT=5;export HEREST_SPLIT
 
 # Causes training to be split amoung multiple threads (for multi-core
 # machines), you'll need to have enough memory as well.

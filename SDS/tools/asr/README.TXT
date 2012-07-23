@@ -31,3 +31,12 @@ We have to ask for permition to distribute hic code.
 2012-07-19 Filip Jurcicek
 
 
+OUTSTANDING TESTS
+------------------------------
+
++ total training data for voip_en is about 40 hours
++ mixtures there is no significant difference between 8 and 16 mixtures
+
+- CVN
+- automatically remove ureliable transcriptions
+- test with Julius and the trigram language model
