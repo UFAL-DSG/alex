@@ -16,18 +16,22 @@ try:
 except IndexError:
   pass
 
-dct = {}
-# load dictionary
-dctf = open(dctn, 'r')
-for l in dctf:
-  l = l.strip()
-  l = l.split()
+dict_test = True
+try:
+  dct = {}
+  # load dictionary
+  dctf = open(dctn, 'r')
+  for l in dctf:
+    l = l.strip()
+    l = l.split()
 
-  if len(l) > 0:
-    dct[l[0]] = 1
-    
-dctf.close()
-  
+    if len(l) > 0:
+      dct[l[0]] = 1
+
+  dctf.close()
+except IOError, e:
+  dict_test = False
+
 fns = glob.glob(pattern1)
 if patern2:
   fns.extend(glob.glob(pattern2))
@@ -45,11 +49,13 @@ for fn in fns:
 
     for w in l:
       word_list[w] += 1
-      
+
   f.close()
-  
+
 word_list = sorted(word_list.keys())
 
 for w in word_list:
-  if w in dct:
+  if dict_test and w in dct:
+    print w
+  else:
     print w

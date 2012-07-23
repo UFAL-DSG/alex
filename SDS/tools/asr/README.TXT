@@ -36,7 +36,8 @@ OUTSTANDING TESTS
 
 + total training data for voip_en is about 40 hours
 + mixtures there is no significant difference between 8 and 16 mixtures
++ there is no signigicant difference in alignment of transcriptions with -t 150 and -t 250
 
+- add to voip_en non speech events also add files only with silence! or noise (hesitation)
 - CVN
-- automatically remove ureliable transcriptions
 - test with Julius and the trigram language model

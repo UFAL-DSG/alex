@@ -2,7 +2,7 @@
 
 # Trains up word internal models for English.
 
-source env_voip_en.sh
+source env_voip_cs.sh
 
 date
 
@@ -26,24 +26,24 @@ echo ""
 
 cd $WORK_DIR
 
-# We need to massage the CMU dictionary for our use
-echo "Preparing CMU English dictionary ..."
-$TRAIN_SCRIPTS/prep_cmu_dict.sh
+# We need to massage the CS dictionary for our use
+echo "Preparing Czech dictionary ..."
+$TRAIN_SCRIPTS/prep_cs_dict.sh
 
 # Code the audio files to MFCC feature vectors
 echo "Coding test audio ..."
-$TRAIN_SCRIPTS/prep_param_test.sh
+#$TRAIN_SCRIPTS/prep_param_test.sh
 
 echo "Coding train audio ..."
-$TRAIN_SCRIPTS/prep_param_train.sh
+#$TRAIN_SCRIPTS/prep_param_train.sh
 
 # Intial setup of language model, dictionary, training and test MLFs
 echo "Building unigram language models and dictionary..."
-$TRAIN_SCRIPTS/build_lm_en.sh
+$TRAIN_SCRIPTS/build_lm_cs.sh
 echo "Building training MLF ..."
-$TRAIN_SCRIPTS/make_mlf_train.sh prune
+$TRAIN_SCRIPTS/make_mlf_train.sh
 echo "Building test MLF ..."
-$TRAIN_SCRIPTS/make_mlf_test.sh prune
+$TRAIN_SCRIPTS/make_mlf_test.sh
 
 date
 

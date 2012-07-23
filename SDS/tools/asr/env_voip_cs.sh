@@ -1,5 +1,5 @@
 #!/bin/bash
-# These are used by the HTK training recipe for English using data from CamInfo
+# These are used by the HTK training recipe for Czech
 #
 # Using the bash shell, you can source it ( `. XXX` ) 
 # from the training script.
@@ -10,12 +10,12 @@
 HOME_DIR=`pwd`;export HOME_DIR
 
 # Directories where the speech corpora live
-DATA_SOURCE_DIR=$HOME_DIR/data_voip_en;export DATA_SOURCE_DIR
+DATA_SOURCE_DIR=$HOME_DIR/data_voip_cs;export DATA_SOURCE_DIR
 TRAIN_DATA_SOURCE=$DATA_SOURCE_DIR/train;export TRAIN_DATA_SOURCE
 TEST_DATA_SOURCE=$DATA_SOURCE_DIR/test;export TEST_DATA_SOURCE
 
 # Work directory we use during training
-WORK_DIR=$HOME_DIR/model_voip_en;export WORK_DIR
+WORK_DIR=$HOME_DIR/model_voip_cs;export WORK_DIR
 TRAIN_DATA=$WORK_DIR/train;export TRAIN_DATA
 TEST_DATA=$WORK_DIR/test;export TEST_DATA
 

@@ -17,7 +17,7 @@ use strict;
 
 if ( @ARGV < 1 )
 {
-    print "$0 <dictionary without sp or sil>\n"; 
+    print "$0 <dictionary without sp or sil>\n";
     exit(1);
 }
 
@@ -35,51 +35,52 @@ my %added;
 my $output;
 
 open(IN, $fullFile);
-while ($line = <IN>) 
-{ 
-	$line =~ s/\n//g;
-	$line =~ s/\r//g;
+while ($line = <IN>)
+{
+  $line =~ s/\n//g;
+  $line =~ s/\r//g;
+  $line =~ s/\[\]//g;
 
-	@chunks = split(/\s{1,}/, $line);
+  @chunks = split(/\s{1,}/, $line);
 
-	for ($i = 1; $i < scalar @chunks; $i++)
-	{
-	    $center = $chunks[$i];
-	    $left = "";
-	    $right = "";
+  for ($i = 1; $i < scalar @chunks; $i++)
+  {
+      $center = $chunks[$i];
+      $left = "";
+      $right = "";
 
-	    # Figure out what phone is to the left or right of this
-	    # one (there might not be one).
-	    if ($i > 1)
-	    {
-		$left = $chunks[$i - 1];
-	    }
+      # Figure out what phone is to the left or right of this
+      # one (there might not be one).
+      if ($i > 1)
+      {
+        $left = $chunks[$i - 1];
+      }
 
-	    if ($i < (scalar @chunks - 1))
-	    {
-		$right = $chunks[$i + 1];
-	    }
+      if ($i < (scalar @chunks - 1))
+      {
+        $right = $chunks[$i + 1];
+      }
 
-	    $output = "";
-	    if (length($left) > 0)
-	    {
-		$output = $output . $left . "-";
-	    }
+      $output = "";
+      if (length($left) > 0)
+      {
+        $output = $output . $left . "-";
+      }
 
-	    $output = $output . $center;
+      $output = $output . $center;
 
-	    if (length($right) > 0)
-	    {
-		$output = $output . "+" . $right;
-	    }
+      if (length($right) > 0)
+      {
+        $output = $output . "+" . $right;
+      }
 
-	    # Only print a unique phone once
-	    if ($added{$output} != 1)
-	    {
-		print $output . "\n";
-		$added{$output} = 1;
-	    }
-	}
+      # Only print a unique phone once
+      if ($added{$output} != 1)
+      {
+        print $output . "\n";
+        $added{$output} = 1;
+      }
+  }
 
 }
 close IN;
@@ -92,4 +93,24 @@ if ($added{"sil"} != 1)
 if ($added{"sp"} != 1)
 {
     print "sp\n";
+}
+
+if ($added{"_inhale_"} != 1)
+{
+    print "_inhale_\n";
+}
+
+if ($added{"_laugh_"} != 1)
+{
+    print "_laugh_\n";
+}
+
+if ($added{"_ehm_hmm_"} != 1)
+{
+    print "_ehm_hmm_\n";
+}
+
+if ($added{"_noise_"} != 1)
+{
+    print "_noise_\n";
 }

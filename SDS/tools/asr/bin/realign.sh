@@ -23,7 +23,7 @@ cd $WORK_DIR
 #  -I       Word level MLF file
 #  -S       File contain the list of MFC files
 
-HVite -B -A -T 1 -l '*' -o SW -b silence -C $TRAIN_COMMON/config -a -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -i $WORK_DIR/aligned_best.mlf -m -t 250.0 -I $WORK_DIR/train_words.mlf -S $WORK_DIR/train.scp $WORK_DIR/cmu_ext_dict_sp_sil $WORK_DIR/$2 >$LOG_DIR/hvite_realign.log
+HVite -B -A -T 1 -l '*' -o SW -b silence -C $TRAIN_COMMON/config -a -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -i $WORK_DIR/aligned_best.mlf -m -t 250.0 -I $WORK_DIR/train_words.mlf -S $WORK_DIR/train.scp $WORK_DIR/dict_full_sp_sil $WORK_DIR/$2 >$LOG_DIR/hvite_realign.log
 
 # We'll get a "sp sil" sequence at the end of each sentance.  Merge these
 # into a single sil phone.  Also might get "sil sil", we'll merge anything
@@ -41,5 +41,4 @@ perl $TRAIN_SCRIPTS/ConvertToMono.pl $WORK_DIR/aligned_best2.mlf > $WORK_DIR/ali
 # what it contains since we make switch to different pronouciations for
 # certain words in the training set.
 HLEd -A -T 1 -n $WORK_DIR/triphones1 -l '*' -i $WORK_DIR/aligned_best3.mlf $TRAIN_COMMON/mktri.led $WORK_DIR/aligned_best_mono.mlf > $LOG_DIR/hled_make_tri.log
-
 

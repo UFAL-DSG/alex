@@ -11,7 +11,7 @@ use strict;
 
 if ( @ARGV < 1 )
 {
-    print "$0 <dictionary> [add sil variant]\n"; 
+    print "$0 <dictionary> [add sil variant]\n";
     exit(1);
 }
 
@@ -22,7 +22,7 @@ my $addSil;
 
 my $line;
 open(IN, $fullFile);
-while ($line = <IN>) 
+while ($line = <IN>)
 {
     $line =~ s/\n//g;
     $line =~ s/\r//g;
@@ -30,20 +30,25 @@ while ($line = <IN>)
     # Make sure the line has some content
     if ($line =~ /\w/)
     {
-	if (index($line, "sil") > 0)
-	{
-	    print $line . "\n";
-	}
-	else
-	{
-	    print $line . " sp\n";
-	    
-	    # See if we are suppose to add a sil variant as well
-	    if ($addSil)
-	    {
-		print $line . " sil\n";
-	    }
-	}
+        if (rindex($line, "sil") > 0)
+        {
+            print $line . "\n";
+        }
+        elsif (rindex($line, "_") > 0)
+        {
+            # skip non speech events
+            print $line . "\n";
+        }
+        else
+        {
+            print $line . " sp\n";
+
+            # See if we are suppose to add a sil variant as well
+            if ($addSil)
+            {
+                print $line . " sil\n";
+            }
+        }
     }
 }
 close IN;

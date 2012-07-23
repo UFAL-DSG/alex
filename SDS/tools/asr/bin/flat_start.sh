@@ -8,7 +8,7 @@ rm -f -r hmm0 hmm1 hmm2 hmm3 hmm4 hmm5
 mkdir hmm0 hmm1 hmm2 hmm3 hmm4 hmm5
 
 # First convert the word level MLF into a phone MLF
-HLEd -A -T 1 -l '*' -d $WORK_DIR/cmu_ext_dict -i $WORK_DIR/phones0.mlf $TRAIN_COMMON/mkphones0.led $WORK_DIR/train_words.mlf > $LOG_DIR/hhed_flat.log
+HLEd -A -T 1 -l '*' -d $WORK_DIR/dict_train -i $WORK_DIR/phones0.mlf $TRAIN_COMMON/mkphones0.led $WORK_DIR/train_words.mlf > $LOG_DIR/hhed_flat.log
 
 # Compute the global mean and variance and set all Gaussians in the given
 # HMM to have the same mean and variance

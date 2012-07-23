@@ -32,15 +32,15 @@ cd $WORK_DIR
 # but these will need to be tuned.
 
 if [ -n "$7" ]
-then 
+then
   DICT=$7
 else
-  DICT=$WORK_DIR/dict_test
+  DICT=$WORK_DIR/dict_test_sp_sil
 fi
 
 HVite -A -T 1 -t $3 -C $TRAIN_COMMON/configwi -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -S $WORK_DIR/test.scp -i $WORK_DIR/recout_test$2.mlf -w $6 -p $4 -s $5 $DICT $WORK_DIR/tiedlist > $LOG_DIR/hvite_test$2.log
 
-# Now lets see how we did!  
+# Now lets see how we did!
 HResults -n -A -T 1 -I $WORK_DIR/test_words.mlf $WORK_DIR/tiedlist $WORK_DIR/recout_test$2.mlf >$WORK_DIR/hresults_test$2.log
 
 # Add on a NIST style output result for good measure

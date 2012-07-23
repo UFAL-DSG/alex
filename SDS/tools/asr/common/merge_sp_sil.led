@@ -1,3 +1,13 @@
 ME sil sp sil
+ME sil sil sp
 ME sil sil sil
-ME sp sil sil
+ME sil sil sil
+# remove sils around non-speech events
+ME _inhale_ _inhale_ sil
+ME _inhale_ sil _inhale_
+ME _laugh_ _laugh_ sil
+ME _laugh_ sil _laugh_
+ME _ehm_hmm_ _ehm_hmm_ sil
+ME _ehm_hmm_ sil _ehm_hmm_
+ME _noise_ _noise_ sil
+ME _noise_ sil _noise_

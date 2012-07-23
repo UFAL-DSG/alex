@@ -15,7 +15,7 @@ use strict;
 
 if ( @ARGV < 3 )
 {
-    print "$0 <word list> <dictionary> <output file> [sentence start] [sentence end]\n"; 
+    print "$0 <word list> <dictionary> <output file> [sentence start] [sentence end]\n";
     exit(1);
 }
 
@@ -61,16 +61,16 @@ while($line = <IN>)
     $phones = "";
     for ($i = 1; $i < scalar @chunks; $i++)
     {
-	$phones = $phones . $chunks[$i];
-	if (($i + 1) < scalar @chunks)
-	{
-	    $phones = $phones . " ";
-	}
+        $phones = $phones . $chunks[$i];
+        if (($i + 1) < scalar @chunks)
+        {
+            $phones = $phones . " ";
+        }
     }
-		
-#print "word = '" . $word . "', phones = '" . $phones . "'\n";
 
-    # We store in the hash all the lines corresponding to this word	
+    #print "word = '" . $word . "', phones = '" . $phones . "'\n";
+
+    # We store in the hash all the lines corresponding to this word
     $words{$word} = $words{$word} . $word . "\t" . $phones . "\n";
 }
 close(IN);
@@ -85,22 +85,22 @@ while($line = <IN>)
 
     @chunks = split(/\s{1,}/, $line);
 
-    $word = $chunks[0];    
+    $word = $chunks[0];
 
     # Escape any leading apostrophes
     if (index($word, "'") == 0)
     {
-      $word = "\\" . $word;
+        $word = "\\" . $word;
     }
 
     if ($words{$word})
     {
-	print OUT $words{$word};
+        print OUT $words{$word};
     }
     else
     {
-	print "Unknown word: " . $line . "\n";
-	print OUT $line . "\t!!UNKNOWN!!\n";
+        print "Unknown word: " . $line . "\n";
+        print OUT $line . "\t!!UNKNOWN!!\n";
     }
 }
 close(IN);
