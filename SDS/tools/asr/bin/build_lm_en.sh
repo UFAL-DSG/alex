@@ -17,7 +17,6 @@ echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_full
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_full
 echo "_NOISE_ _noise_" >> $WORK_DIR/dict_full
 echo "_SIL_ sil" >> $WORK_DIR/dict_full
-echo "silence sil" >> $WORK_DIR/dict_full
 
 echo "<s> [] sil" > $WORK_DIR/dict_train
 echo "</s> [] sil" >> $WORK_DIR/dict_train
@@ -27,7 +26,6 @@ echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_train
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_train
 echo "_NOISE_ _noise_" >> $WORK_DIR/dict_train
 echo "_SIL_ sil" >> $WORK_DIR/dict_train
-echo "silence sil" >> $WORK_DIR/dict_train
 
 echo "<s> [] sil" > $WORK_DIR/dict_test
 echo "</s> [] sil" >> $WORK_DIR/dict_test
@@ -37,7 +35,6 @@ echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_test
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_test
 echo "_NOISE_ _noise_" >> $WORK_DIR/dict_test
 echo "_SIL_ sil" >> $WORK_DIR/dict_test
-echo "silence sil" >> $WORK_DIR/dict_test
 
 # Add pronunciations for each word
 perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_train $WORK_DIR/dict_full $TEMP_DIR/dict_train
