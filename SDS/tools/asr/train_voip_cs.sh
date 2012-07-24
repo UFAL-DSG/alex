@@ -32,10 +32,10 @@ $TRAIN_SCRIPTS/prep_cs_dict.sh
 
 # Code the audio files to MFCC feature vectors
 echo "Coding test audio ..."
-#$TRAIN_SCRIPTS/prep_param_test.sh
+$TRAIN_SCRIPTS/prep_param_test.sh
 
 echo "Coding train audio ..."
-#$TRAIN_SCRIPTS/prep_param_train.sh
+$TRAIN_SCRIPTS/prep_param_train.sh
 
 # Intial setup of language model, dictionary, training and test MLFs
 echo "Building unigram language models and dictionary..."
@@ -79,12 +79,12 @@ date
 
 # Evaluate how we did on zerogram language model
 echo "Decoding zerogram language model"
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 _ro200_tb750_prune350_zerogram_06 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_zerogram_08 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 _ro200_tb750_prune350_zerogram_10 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 _ro200_tb750_prune350_zerogram_12 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 _ro200_tb750_prune350_zerogram_14 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 _ro200_tb750_prune350_zerogram_16 350.0 -0.0 22.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 _ro200_tb750_prune350_zerogram_06 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_zerogram_08 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 _ro200_tb750_prune350_zerogram_10 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 _ro200_tb750_prune350_zerogram_12 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 _ro200_tb750_prune350_zerogram_14 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 _ro200_tb750_prune350_zerogram_16 350.0 -0.0 10.0 $WORK_DIR/wdnet_zerogram &
 wait
 
 date
@@ -93,12 +93,12 @@ date
 if [ -f $WORK_DIR/wdnet_bigram ]
 then
   echo "Decoding bigram language model"
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 _ro200_tb750_prune350_bigram_06 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_bigram_08 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 _ro200_tb750_prune350_bigram_10 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 _ro200_tb750_prune350_bigram_12 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 _ro200_tb750_prune350_bigram_14 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 _ro200_tb750_prune350_bigram_16 350.0 -0.0 15.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 _ro200_tb750_prune350_bigram_06 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 _ro200_tb750_prune350_bigram_08 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 _ro200_tb750_prune350_bigram_10 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 _ro200_tb750_prune350_bigram_12 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 _ro200_tb750_prune350_bigram_14 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 _ro200_tb750_prune350_bigram_16 350.0 -0.0 10.0 $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil &
   wait
 fi
 
@@ -106,7 +106,7 @@ date
 
 # Re-align the training data with the best triphone models
 echo "Aligning with triphones ..."
-$TRAIN_SCRIPTS/realign.sh hmm42 tiedlist
+$TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
 
 echo "End of training"
 

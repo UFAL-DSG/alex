@@ -106,7 +106,7 @@ date
 
 # Re-align the training data with the best triphone models
 echo "Aligning with triphones ..."
-$TRAIN_SCRIPTS/realign.sh hmm42 tiedlist
+$TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
 
 echo "End of training"
 

@@ -4,5 +4,5 @@ echo Insertion penalty: !COL1 >> $TRAIN_WSJ0/hresults_nov92_tune.log
 echo LM scale factor:   !COL2 >> $TRAIN_WSJ0/hresults_nov92_tune.log
 
 HResults -A -T 1 -I $TRAIN_WSJ0/nov92_words.mlf $TRAIN_WSJ0/tiedlist $TRAIN_WSJ0/recout_tune_!COL1_!COL2.mlf >>$TRAIN_WSJ0/hresults_nov92_tune.log
-echo "!COL1	!COL2" >> $TRAIN_WSJ0/nov92_tune.log
+echo "!COL1 !COL2" >> $TRAIN_WSJ0/nov92_tune.log
 grep "WORD" $TRAIN_WSJ0/hresults_nov92_tune.log | tail -1 >>$TRAIN_WSJ0/nov92_tune.log

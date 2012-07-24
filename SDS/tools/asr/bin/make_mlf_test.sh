@@ -10,7 +10,7 @@ find $TEST_DATA -iname '*.mfc' > $WORK_DIR/test_mfc_files.txt
 # Now create the MLF file using a script, we prune out anything that
 # has words that aren't in our dictionary, producing a MLF with only
 # these files and a corresponding script file.
-if [[ $7 != "prune" ]]
+if [[ $1 != "prune" ]]
 then
   python $TRAIN_SCRIPTS/CreateMLF.py "-" $WORK_DIR/test_words.mlf $WORK_DIR/test.scp $TEST_DATA $TEST_DATA_SOURCE'/*.trn' > $LOG_DIR/test_missing_words.log
 else

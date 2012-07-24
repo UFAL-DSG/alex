@@ -10,7 +10,7 @@ cd $WORK_DIR
 
 # HVite parameters:
 #  -l       Path to use in the names in the output MLF
-#  -o SWT   How to output labels, S remove scores, 
+#  -o SWT   How to output labels, S remove scores,
 #           W do not include words, T do not include times
 #  -b       Use this word as the sentence boundary during alignment
 #  -C       Config files
@@ -23,7 +23,7 @@ cd $WORK_DIR
 #  -I       Word level MLF file
 #  -S       File contain the list of MFC files
 
-HVite -B -A -T 1 -l '*' -o SW -b silence -C $TRAIN_COMMON/config -a -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -i $WORK_DIR/aligned_best.mlf -m -t 250.0 -I $WORK_DIR/train_words.mlf -S $WORK_DIR/train.scp $WORK_DIR/dict_full_sp_sil $WORK_DIR/$2 >$LOG_DIR/hvite_realign.log
+HVite -B -A -T 1 -l '*' -o SW -b silence -C $TRAIN_COMMON/config -a -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -i $WORK_DIR/aligned_best.mlf -m -t 250.0 -I $WORK_DIR/train_words.mlf -S $WORK_DIR/train.scp $WORK_DIR/dict_train_sp_sil $WORK_DIR/$2 >$LOG_DIR/hvite_realign.log
 
 # We'll get a "sp sil" sequence at the end of each sentance.  Merge these
 # into a single sil phone.  Also might get "sil sil", we'll merge anything
