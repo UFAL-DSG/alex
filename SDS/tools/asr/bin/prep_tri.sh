@@ -16,4 +16,4 @@ HLEd -A -T 1 -n $WORK_DIR/triphones1 -i $WORK_DIR/wintri.mlf $TRAIN_COMMON/mktri
 perl $TRAIN_SCRIPTS/MakeClonedMono.pl $WORK_DIR/config/monophones1 $WORK_DIR/triphones1 > $WORK_DIR/mktri.hed
 
 # Go go gadget clone monophones and tie transition matricies
-HHEd -A -T 1 -B -H $WORK_DIR/hmm9/macros -H $WORK_DIR/hmm9/hmmdefs -M $WORK_DIR/hmm10 $WORK_DIR/mktri.hed $WORK_DIR/config/monophones1 > $LOG_DIR/hhed_clone_mono.log
+HHEd -A -T 1 -H $WORK_DIR/hmm9/macros -H $WORK_DIR/hmm9/hmmdefs -M $WORK_DIR/hmm10 $WORK_DIR/mktri.hed $WORK_DIR/config/monophones1 > $LOG_DIR/hhed_clone_mono.log
