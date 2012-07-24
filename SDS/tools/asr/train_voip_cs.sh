@@ -68,7 +68,7 @@ $TRAIN_SCRIPTS/train_tri.sh
 # These values of RO and TB seem to work fairly well, but
 # there may be more optimal values.
 echo "Prepping state-tied triphones ..."
-$TRAIN_SCRIPTS/prep_tied.sh 200 750
+$TRAIN_SCRIPTS/prep_tied.sh 100 350
 
 echo "Training state-tied triphones ..."
 $TRAIN_SCRIPTS/train_tied.sh
