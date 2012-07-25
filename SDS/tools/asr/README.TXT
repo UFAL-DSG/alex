@@ -8,8 +8,9 @@ A setup for a new language and recording conditions (RCOND_LANG) would need:
 
 Files:
 
-./env_RCOND_LANG.sh    - settings of all importan directories
-./train_RCOND_LANG.sh  - the complete trainign script
+./env_RCOND_LANG.sh          - settings of all importan directories
+./train_RCOND_LANG.sh        - the complete training script
+./nohup_train_RCOND_LANG.sh  - calling the training script using nohup and redirecting the output into the .log_* file
 
 Directories:
 
@@ -26,7 +27,7 @@ CREDITS AND THE LICENCE
 The scripts are based on the HTK Wall Street Journal Training Recipe written by Keith Vertanen (http://www.keithv.com/software/htk/).
 
 The licence of his code is unclear so any distribution of the code is forbidden.
-We have to ask for permition to distribute hic code.
+We have to ask for permition to distribute his code.
 
 2012-07-19 Filip Jurcicek
 
@@ -35,7 +36,8 @@ OUTSTANDING TESTS
 ------------------------------
 
 + total training data for voip_en is about 40 hours
-+ mixtures there is no significant difference between 8 and 16 mixtures
++ total training data for voip_cs is about 8 hours
++ mixtures - there is 16 mixtures is slightly better than 8 mixtures for voip_en
 + there is no signigicant difference in alignment of transcriptions with -t 150 and -t 250
 
 - add to voip_en non speech events also add files only with silence! or noise (hesitation)
