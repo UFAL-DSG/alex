@@ -17,8 +17,8 @@ except IndexError:
   pass
 
 dict_test = True
+dct = {}
 try:
-  dct = {}
   # load dictionary
   dctf = open(dctn, 'r')
   for l in dctf:
@@ -55,7 +55,8 @@ for fn in fns:
 word_list = sorted(word_list.keys())
 
 for w in word_list:
-  if dict_test and w in dct:
-    print w
+  if dict_test:
+    if w in dct:
+      print w
   else:
     print w
