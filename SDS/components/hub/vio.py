@@ -608,6 +608,17 @@ class VoipIO(multiprocessing.Process):
       self.lib.init(ua_cfg, log_cfg, media_cfg)
       self.lib.set_null_snd_dev()
 
+      # disable all codecs except for PCM?
+      for c in self.lib.enum_codecs():
+        if c.name not in ["PCMU/8000/1", "PCMA/8000/1"]:
+          self.lib.set_codec_priority(c.name, 0)
+      m = []
+      m.append("Enabled codecs:")
+      for c in self.lib.enum_codecs():
+        if c.priority:
+          m.append("  Codec: %s priority: %d" % (c.name, c.priority))
+      self.cfg['Logging']['system_logger'].info('\n'.join(m))
+
       # Create UDP transport which listens to any available port
       self.transport = self.lib.create_transport(pj.TransportType.UDP, pj.TransportConfig(0))
       self.cfg['Logging']['system_logger'].info("Listening on %s port %s" % (self.transport.info().host, self.transport.info().port))
@@ -616,8 +627,8 @@ class VoipIO(multiprocessing.Process):
       self.lib.start()
 
       acc_cfg = pj.AccountConfig(self.cfg['VoipIO']['domain'],
-                                  self.cfg['VoipIO']['user'],
-                                  self.cfg['VoipIO']['password'])
+                                 self.cfg['VoipIO']['user'],
+                                 self.cfg['VoipIO']['password'])
       acc_cfg.allow_contact_rewrite = False
 
       self.acc = self.lib.create_account(acc_cfg)

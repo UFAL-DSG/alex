@@ -180,7 +180,7 @@ def convert(indir, outdir, verbose):
   sec  = size / 16000
   hour = sec / 3600.0
 
-  print "Length of audio data in hours (for 8kHz 16b WAVs):", hour
+  print "Length of audio data in hours (for 8kHz 16bit WAVs):", hour
 
 if __name__ == '__main__':
   random.seed(1)
