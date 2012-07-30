@@ -7,6 +7,7 @@ cd $WORK_DIR
 python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
 python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
 
+
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.
 echo "<s> [] sil" >> $WORK_DIR/dict_full
@@ -62,4 +63,12 @@ HBuild -A -T 1 -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdn
 if [ -f $DATA_SOURCE_DIR/wdnet_bigram ]
 then
   cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
+fi
+
+if [ -f $DATA_SOURCE_DIR/arpa_trigram ]
+then
+  cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
+  
+  python $TRAIN_SCRIPTS/WordListFromARPALM.py $WORK_DIR/arpa_trigram > word_list_hdecode
+  perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_hdecode $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
 fi

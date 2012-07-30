@@ -9,7 +9,7 @@ use strict;
 
 if ( @ARGV < 3 )
 {
-    print "$0 <file> <find> <replace>\n"; 
+    print "$0 <file> <find> <replace>\n";
     exit(1);
 }
 
@@ -23,10 +23,10 @@ open(IN, $dictFile);
 
 my $line;
 
-while ($line = <IN>) 
+while ($line = <IN>)
 {
-	$line =~ s/$find/$replace/g;
-	printf $line;
+  $line =~ s/$find/$replace/g;
+  printf $line;
 }
 
 close IN;

@@ -6,7 +6,7 @@
 # Also adds in extra words we discovered we needed
 #
 
-# the dictionaries are already in the HTK format, so just merge them
+# The dictionaries are already in the HTK format, so just merge them
 
 perl $TRAIN_SCRIPTS/MergeDict.pl $TRAIN_COMMON/csdict $TRAIN_COMMON/csdict.ext > $WORK_DIR/dict_full
 

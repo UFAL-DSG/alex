@@ -182,6 +182,8 @@ sub exceptions {
     s/UNIVER/UNYVER/g;
     s/VENTI/VENTY/g;
     s/VERTIK/VERTYK/g;
+    s/SEDUMNÁCT0HO/VERTYK/g;
+    s/ŠEST6/VERTYK/g;
 }
 
 sub transcription {

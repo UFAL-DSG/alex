@@ -1,10 +1,10 @@
 #!/bin/bash
 # These are used by the HTK training recipe for English using data from CamInfo
 #
-# Using the bash shell, you can source it ( `. XXX` ) 
+# Using the bash shell, you can source it ( `. XXX` )
 # from the training script.
 #
-# You'll obviously need to change the paths to 
+# You'll obviously need to change the paths to
 # reflect reality in your world.
 
 HOME_DIR=`pwd`;export HOME_DIR
@@ -34,3 +34,22 @@ HEREST_SPLIT=5;export HEREST_SPLIT
 # Causes training to be split amoung multiple threads (for multi-core
 # machines), you'll need to have enough memory as well.
 HEREST_THREADS=5;export HEREST_THREADS
+
+# Size of the reduced training set
+N_TRAIN_FILES=500000;export N_TRAIN_FILES
+
+# Triphone state clustering
+RO=200;export RO
+TB=350;export TB
+
+# Word penalty and language model scaling factors
+IP=-0.0;export IP
+SFZ=22.0;export SFZ
+SFB=15.0;export SFB
+SFT=15.0;export SFT
+
+# Train cross word triphone models?
+#CROSS=cross;export CROSS
+CROSS=wit;export CROSS
+
+

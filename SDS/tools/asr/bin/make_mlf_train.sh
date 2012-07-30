@@ -12,7 +12,13 @@ find $TRAIN_DATA -iname '*.mfc' > $WORK_DIR/train_mfc_files.txt
 # these files and a corresponding script file.
 if [[ $1 != "prune" ]]
 then
-  python $TRAIN_SCRIPTS/CreateMLF.py "-" $WORK_DIR/train_words.mlf $WORK_DIR/train.scp $TRAIN_DATA $TRAIN_DATA_SOURCE'/*.trn' > $LOG_DIR/train_missing_words.log
+  python $TRAIN_SCRIPTS/CreateMLF.py "-"                 $WORK_DIR/train_words.mlf $WORK_DIR/train.scp $TRAIN_DATA $TRAIN_DATA_SOURCE'/*.trn' > $LOG_DIR/train_missing_words.log
 else
   python $TRAIN_SCRIPTS/CreateMLF.py $WORK_DIR/dict_full $WORK_DIR/train_words.mlf $WORK_DIR/train.scp $TRAIN_DATA $TRAIN_DATA_SOURCE'/*.trn' > $LOG_DIR/train_missing_words.log
+fi
+
+if [[ -n "$2" ]]
+then
+  head -n $2 $WORK_DIR/train.scp > $TEMP_DIR/train_short.scp
+  cp $TEMP_DIR/train_short.scp $WORK_DIR/train.scp
 fi

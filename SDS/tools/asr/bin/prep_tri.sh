@@ -1,5 +1,5 @@
 #!/bin/bash
-# Convert our monophone models and MLFs into word internal triphones.  
+# Convert our monophone models and MLFs into word internal triphones.
 #
 
 cd $WORK_DIR
@@ -7,8 +7,17 @@ cd $WORK_DIR
 rm -f -r mktri.hed hmm10
 mkdir hmm10
 
-# This converts the monophone MLF into a word internal triphone MLF
-HLEd -A -T 1 -n $WORK_DIR/triphones1 -i $WORK_DIR/wintri.mlf $TRAIN_COMMON/mktri.led $WORK_DIR/aligned2.mlf > $LOG_DIR/hled_make_tri.log
+# Check to see if we are doing cross word triphones or not
+if [[ $1 != "cross" ]]
+then
+  # This converts the monophone MLF into a word internal triphone MLF
+  HLEd -A -T 1 -n $WORK_DIR/triphones1 -i $WORK_DIR/wintri.mlf $TRAIN_COMMON/mktri.led $WORK_DIR/aligned2.mlf > $LOG_DIR/hled_make_tri.log
+else
+  # This version makes it into a cross word triphone MLF, the short pause
+  # phone will not block context across words.
+  HLEd -A -T 1 -n $WORK_DIR/triphones1 -i $WORK_DIR/wintri.mlf $TRAIN_COMMON/mktri_cross.led aligned2.mlf > $LOG_DIR/hled_make_tri_cross.log
+fi
+
 
 # Prepare the script that will be used to clone the monophones into
 # their cooresponding triphones.  The script will also tie the transition

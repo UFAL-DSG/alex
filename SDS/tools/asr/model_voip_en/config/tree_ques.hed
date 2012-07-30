@@ -160,6 +160,11 @@ QS "R_th"       {*+th}
 QS "R_uh"       {*+uh}
 QS "R_zh"       {*+zh}
 QS "R_sil"      {*+sil}
+QS "R_sp"       {*+sp}
+QS "R_inhale"   {*+_inhale_}
+QS "R_laugh"    {*+_laugh_}
+QS "R_ehm_hmm"  {*+_ehm_hmm_}
+QS "R_noise"    {*+_noise_}
 
 QS "L_ah"       {ah-*}
 QS "L_ey"       {ey-*}
@@ -201,3 +206,9 @@ QS "L_th"       {th-*}
 QS "L_uh"       {uh-*}
 QS "L_zh"       {zh-*}
 QS "L_sil"      {sil-*}
+QS "L_sp"       {sp-*}
+QS "L_inhale"   {_inhale_-*}
+QS "L_laugh"    {_laugh_-*}
+QS "L_ehm_hmm"  {_ehm_hmm_-*}
+QS "L_noise"    {_noise_-*}
+

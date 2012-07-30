@@ -10,7 +10,7 @@ use strict;
 
 if ( @ARGV < 1 )
 {
-    print "$0 <monophone list without sp> \n"; 
+    print "$0 <monophone list without sp> \n";
     exit(1);
 }
 
@@ -27,13 +27,13 @@ my $monoCount = 0;
 # Output all monophones including sp
 while($line = <IN>)
 {
-    $line =~ s/[\n\r]//g;		
+    $line =~ s/[\n\r]//g;
 
     if (length($line) > 0)
     {
-	$mono[$monoCount] = $line;	
-	$monoCount++;
-	print $line . "\n";
+      $mono[$monoCount] = $line;
+      $monoCount++;
+      print $line . "\n";
     }
 }
 close(IN);
@@ -45,25 +45,25 @@ my $j;
 
 for ($i = 0; $i < $monoCount; $i++)
 {
-    for ($j = 0; $j < $monoCount; $j++)
+  for ($j = 0; $j < $monoCount; $j++)
+  {
+    if ($mono[$j] !~ /sil/)
     {
-	if ($mono[$j] !~ /sil/)
-	{
-	    print $mono[$i] . "-" . $mono[$j] . "\n";
-	}
+      print $mono[$i] . "-" . $mono[$j] . "\n";
     }
+  }
 }
 
 # Right biphones
 for ($i = 0; $i < $monoCount; $i++)
 {
-    for ($j = 0; $j < $monoCount; $j++)
+  for ($j = 0; $j < $monoCount; $j++)
+  {
+    if ($mono[$i] !~ /sil/) 
     {
-	if ($mono[$i] !~ /sil/)
-	{
-	    print $mono[$i] . "+" . $mono[$j] . "\n";
-	}
+      print $mono[$i] . "+" . $mono[$j] . "\n";
     }
+  }
 }
 
 # Triphones
@@ -71,22 +71,15 @@ my $k;
 
 for ($i = 0; $i < $monoCount; $i++)
 {
-    for ($j = 0; $j < $monoCount; $j++)
+  for ($j = 0; $j < $monoCount; $j++)
+  {
+    if ($mono[$j] !~ /sil/)
     {
-	if ($mono[$j] !~ /sil/)
-	{
-	    for ($k = 0; $k < $monoCount; $k++)
-	    {
-		print $mono[$i] . "-" . $mono[$j] . "+" . $mono[$k] . "\n";	
-	    }
-	}
+      for ($k = 0; $k < $monoCount; $k++)
+      {
+        print $mono[$i] . "-" . $mono[$j] . "+" . $mono[$k] . "\n";
+      }
     }
+  }
 }
-
-
-
-
-
-
-
 

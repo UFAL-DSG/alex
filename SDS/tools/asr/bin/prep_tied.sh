@@ -17,8 +17,15 @@ mkdir hmm13
 # We have our own script which generate all possible monophone,
 # left and right biphones, and triphones.  It will also add
 # an entry for sp and sil
-perl $TRAIN_SCRIPTS/CreateFullListWI.pl $WORK_DIR/dict_full > $TEMP_DIR/fulllist
+#if [[ $3 != "cross" ]]
+#then
+#  perl $TRAIN_SCRIPTS/CreateFullListWI.pl $WORK_DIR/dict_full > $TEMP_DIR/fulllist
+#else
+#  perl $TRAIN_SCRIPTS/CreateFullList.pl $WORK_DIR/config/monophones1 > $TEMP_DIR/fulllist
+#fi
+perl $TRAIN_SCRIPTS/CreateFullList.pl $WORK_DIR/config/monophones0 > $TEMP_DIR/fulllist
 cat $TEMP_DIR/fulllist triphones1 | sort | uniq > $WORK_DIR/fulllist
+
 
 # Now create the instructions for doing the decision tree clustering
 
