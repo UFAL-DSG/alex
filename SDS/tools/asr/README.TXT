@@ -1,6 +1,6 @@
 INTRODUCTION
 -------------------------------
-The acoustic modelling is using the HTK and the aim is to build word internal triphone models for different languages, for example English and Czech.
+The acoustic modelling is using the HTK and the aim is to build triphone models for different languages, for example English and Czech.
 
 For each language or recording conditions a seperate direoctry based on some previous direcotry must be created: 
 
@@ -8,7 +8,7 @@ A setup for a new language and recording conditions (RCOND_LANG) would need:
 
 Files:
 
-./env_RCOND_LANG.sh          - settings of all importan directories
+./env_RCOND_LANG.sh          - settings of all important directories, and training options, e.g. cross word or word internal triphones, language model weights
 ./train_RCOND_LANG.sh        - the complete training script
 ./nohup_train_RCOND_LANG.sh  - calling the training script using nohup and redirecting the output into the .log_* file
 
@@ -32,14 +32,20 @@ We have to ask for permition to distribute his code.
 2012-07-19 Filip Jurcicek
 
 
-OUTSTANDING TESTS
+TEST RESULTS
 ------------------------------
 
 + total training data for voip_en is about 40 hours
 + total training data for voip_cs is about 8 hours
 + mixtures - there is 16 mixtures is slightly better than 8 mixtures for voip_en
 + there is no signigicant difference in alignment of transcriptions with -t 150 and -t 250
++ the Julius ASR performance is about the same as of HDecode
+- HDecode works well when cross word phones are trained, however the perfomance of HVite decreases significantly
+- when only word internal triphones are trained then the HDecode works, however, its perfomance is worse than the HVite with a bigram LM
++ word internal triphones work well with Julius ASR, do not forget disable CCD (it does not need context handling - though it still uses triphones)
++ there is not much gain with the trigram LM in the Caminfo domain (about 1%)
 
-- add to voip_en non speech events also add files only with silence! or noise (hesitation)
+OUTSTANDING TESTS
+------------------------------
+
 - CVN
-- test with Julius and the trigram language model
