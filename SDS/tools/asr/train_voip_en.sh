@@ -137,4 +137,6 @@ $TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
 
 echo "End of training"
 
+$TRAIN_SCRIPTS/export_models.sh hmm58
+
 date
