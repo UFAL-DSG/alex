@@ -1,0 +1,19 @@
+HResults -n -A -T 1 -I /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/test_words.mlf /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/tiedlist /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/recout_test_wit_ro100_tb350_prune350_zerogram_16.mlf 
+====================== HTK Results Analysis =======================
+  Date: Tue Jul 31 09:44:45 2012
+  Ref : /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/test_words.mlf
+  Rec : >sr/model_voip_cs/recout_test_wit_ro100_tb350_prune350_zerogram_16.mlf
+------------------------ Overall Results --------------------------
+SENT: %Correct=3.70 [H=16, S=417, N=433]
+WORD: %Corr=43.88, Acc=30.45 [H=1003, D=290, S=993, I=307, N=2286]
+===================================================================
+HResults -n -h -A -T 1 -I /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/test_words.mlf /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/tiedlist /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_cs/recout_test_wit_ro100_tb350_prune350_zerogram_16.mlf 
+    ,-------------------------------------------------------------.
+    | HTK Results Analysis at Tue Jul 31 09:44:45 2012            |
+    | Ref: >/vystadial/SDS/tools/asr/model_voip_cs/test_words.mlf |
+    | Rec: >/recout_test_wit_ro100_tb350_prune350_zerogram_16.mlf |
+    |=============================================================|
+    |           # Snt |  Corr    Sub    Del    Ins    Err  S. Err |
+    |-------------------------------------------------------------|
+    | Sum/Avg |  433  |  43.88  43.44  12.69  13.43  69.55  96.30 |
+    `-------------------------------------------------------------'
