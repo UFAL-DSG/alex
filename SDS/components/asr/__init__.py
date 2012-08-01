@@ -18,3 +18,23 @@ class ASRInterface:
     asrHyp = []
     #asrHyp = [0.X, "word string"]*N
     return asrHyp
+
+  def rec_in(self, frame):
+    """ This defines asynchronous interface for speech recognition.
+
+    Call this input function with audio data belonging into one speech segment that should be
+    recognized.
+
+    Output hypotheses is obtained by calling hyp_out().
+    """
+
+    return
+
+  def hyp_out(self):
+    """ This defines asynchronous interface for speech recognition.
+
+    Returns recognizers hypotheses about the input speech audio.
+    """
+
+    return
+

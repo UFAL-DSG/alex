@@ -6,6 +6,7 @@ import time
 import sys
 
 import SDS.components.asr.google as GASR
+import SDS.components.asr.julius as JASR
 
 from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import ASRException
@@ -34,6 +35,8 @@ class ASR(multiprocessing.Process):
     self.asr = None
     if self.cfg['ASR']['type'] == 'Google':
       self.asr = GASR.GoogleASR(cfg)
+    elif self.cfg['ASR']['type'] == 'Julius':
+      self.asr = JASR.JuliusASR(cfg)
     else:
       raise ASRException('Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
 
