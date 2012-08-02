@@ -10,6 +10,8 @@ from tempfile import mkstemp
 
 import SDS.utils.audio as audio
 
+from SDS.components.asr.utterance import *
+
 class GoogleASR():
   """ Uses Google ASR service to recognize recorded audio in a specific language, e.g. en, cs.
 
@@ -49,7 +51,12 @@ class GoogleASR():
     return json_hypotheses
 
   def recognize(self, wav):
-    """ Produces hypotheses for the input audio data """
+    """ Produces hypotheses for the input audio data.
+
+    Remember that GoogleASR works only with complete wave files.
+
+    Returns an n-best list of hypotheses
+    """
 
     #making a file temp for manipulation
     handle, flac_file_name = mkstemp('TmpSpeechFile.flac')
@@ -63,11 +70,14 @@ class GoogleASR():
 
     try:
       hyp = json.loads(json_hypotheses)
-      hyp = [(h['confidence'], h['utterance']) for h in hyp['hypotheses']]
-    except:
-      hyp = None
+      nblist = UtteranceNBList()
 
-    return hyp
+      for h in hyp['hypotheses']:
+        nblist.add(h['confidence'], Utterance(h['utterance']))
+    except:
+      nblist = UtteranceNBList()
+
+    return nblist
 
   def rec_in(self, frame):
     """ This defines asynchronous interface for speech recognition.
@@ -86,12 +96,12 @@ class GoogleASR():
   def hyp_out(self):
     """ This defines asynchronous interface for speech recognition.
 
-    Returns recognizers hypotheses about the input speech audio.
+    Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
     """
     wav = ''.join(self.rec_buffer)
     self.rec_buffer = []
 
-    hypotheses = self.recognize(wav)
+    nblist = self.recognize(wav)
 
-    return hypotheses
+    return nblist
 

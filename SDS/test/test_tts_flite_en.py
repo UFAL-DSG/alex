@@ -13,12 +13,10 @@ print "="*120
 print
 
 text = 'Hello. Thank you for calling. '
-language = 'en'
 voice = 'kal'
 sample_rate = 16000
 
 print "Synthesize text:", text
-print "Language:       ", language
 print "Voice:          ", voice
 print "Sample rate:    ", sample_rate
 print
@@ -30,8 +28,7 @@ cfg = {
   'TTS': {
     'Flite': {
       'debug': False,
-      'language' : language,
-      'voice': voice
+      'voice': 'kal'
     }
   }
 }

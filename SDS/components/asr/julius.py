@@ -4,9 +4,16 @@
 import socket
 import struct
 import time
+import xml.dom.minidom
 
 from os import remove
 from tempfile import mkstemp
+
+import __init__
+
+from SDS.components.asr.utterance import *
+from SDS.utils.exception import ASRException
+from SDS.utils.various import get_text_from_xml_node
 
 class JuliusASR():
   """ Uses Julius ASR service to recognize recorded audio.
@@ -63,27 +70,202 @@ class JuliusASR():
     self.socket.a_setblocking(1)
     return cmd
 
-  def read_server(self):
-    """Reads messages from the Julius ASR server. """
+  def read_server_message(self,  timeout = 0.5):
+    """Reads a complete message from the Julius ASR server.
+
+    A complete message is denoted by a period on a new line at the end of the string.
+
+    Timeout specifies how long it will wait for the end of message.
+    """
     results = ""
+
+    to = 0.0
     while True:
+      if to >= timeout:
+        raise ASRException("Timeout when waiting for the Julius server message.")
+
       try:
         results += self.s_socket.recv(1)
       except socket.error:
-        pass
+        # FIX: you should check the type of error. If the server dies then there will be a deadlock
 
-      if results and results[-1] == ".":
+        if not results:
+          # there are no data waiting for us
+          return None
+        else:
+          # we already read some data but we did not received the final period, so continue reading
+          time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+          to += self.cfg['Hub']['main_loop_sleep_time']
+          continue
+
+      if results.endswith("\n.\n"):
+        results = results[:-3].strip()
         break
 
-    return results[-1].strip()
+    return results
 
-  def get_results(self):
+  def get_results(self, timeout = 0.5):
+    """"Waits for the recognition results from the Julius ASR server.
+
+    Timeout specifies how long it will wait for the end of message.
+    """
     msg = ""
 
+    # get results from the server
+    to = 0.0
     while True:
-      msg += self.read_server()+'\n'
-      if '<INPUT STATUS="LISTEN"' in msg:
-        return msg
+      if to >= timeout:
+        raise ASRException("Timeout when waiting for the Julius server results.")
+
+      m = self.read_server_message()
+      if not m:
+        # wait and check whether there is a message
+        time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        to += self.cfg['Hub']['main_loop_sleep_time']
+        continue
+
+      msg += m+'\n'
+
+      if '<CONFNET>' in msg:
+        break
+
+    if self.cfg['ASR']['Julius']['debug']:
+      print msg
+
+    #process the results
+    """ Typical result returned by the Julius ASR.
+
+      <STARTPROC/>
+      <INPUT STATUS="LISTEN" TIME="1343896296"/>
+      <INPUT STATUS="STARTREC" TIME="1343896311"/>
+      <STARTRECOG/>
+      <INPUT STATUS="ENDREC" TIME="1343896312"/>
+      <ENDRECOG/>
+      <INPUTPARAM FRAMES="164" MSEC="1640"/>
+      <RECOGOUT>
+        <SHYPO RANK="1" SCORE="-7250.111328">
+          <WHYPO WORD="" CLASSID="<s>" PHONE="sil" CM="0.887"/>
+          <WHYPO WORD="I'M" CLASSID="I'M" PHONE="ah m" CM="0.705"/>
+          <WHYPO WORD="LOOKING" CLASSID="LOOKING" PHONE="l uh k ih ng" CM="0.992"/>
+          <WHYPO WORD="FOR" CLASSID="FOR" PHONE="f er" CM="0.757"/>
+          <WHYPO WORD="A" CLASSID="A" PHONE="ah" CM="0.672"/>
+          <WHYPO WORD="PUB" CLASSID="PUB" PHONE="p ah b" CM="0.409"/>
+          <WHYPO WORD="" CLASSID="</s>" PHONE="sil" CM="1.000"/>
+        </SHYPO>
+      </RECOGOUT>
+      <GRAPHOUT NODENUM="43" ARCNUM="70">
+          <NODE GID="0" WORD="" CLASSID="<s>" PHONE="sil" BEGIN="0" END="2"/>
+          <NODE GID="1" WORD="" CLASSID="<s>" PHONE="sil" BEGIN="0" END="3"/>
+          <NODE GID="2" WORD="" CLASSID="<s>" PHONE="sil" BEGIN="0" END="4"/>
+          <NODE GID="3" WORD="I" CLASSID="I" PHONE="ay" BEGIN="3" END="5"/>
+          <NODE GID="4" WORD="NO" CLASSID="NO" PHONE="n ow" BEGIN="3" END="7"/>
+          <NODE GID="5" WORD="I" CLASSID="I" PHONE="ay" BEGIN="4" END="6"/>
+          <NODE GID="6" WORD="UH" CLASSID="UH" PHONE="ah" BEGIN="4" END="6"/>
+          <NODE GID="7" WORD="I'M" CLASSID="I'M" PHONE="ay m" BEGIN="4" END="27"/>
+
+          ...
+
+          <NODE GID="38" WORD="PUB" CLASSID="PUB" PHONE="p ah b" BEGIN="79" END="104"/>
+          <NODE GID="39" WORD="AH" CLASSID="AH" PHONE="aa" BEGIN="81" END="110"/>
+          <NODE GID="40" WORD="LOT" CLASSID="LOT" PHONE="l aa t" BEGIN="81" END="110"/>
+          <NODE GID="41" WORD="" CLASSID="</s>" PHONE="sil" BEGIN="105" END="163"/>
+          <NODE GID="42" WORD="" CLASSID="</s>" PHONE="sil" BEGIN="111" END="163"/>
+          <ARC FROM="0" TO="4"/>
+          <ARC FROM="0" TO="3"/>
+          <ARC FROM="1" TO="7"/>
+          <ARC FROM="1" TO="5"/>
+          <ARC FROM="1" TO="6"/>
+
+          ...
+
+          <ARC FROM="38" TO="41"/>
+          <ARC FROM="39" TO="42"/>
+          <ARC FROM="40" TO="42"/>
+      </GRAPHOUT>
+      <CONFNET>
+        <WORD>
+          <ALTERNATIVE PROB="1.000"></ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="0.950">I</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.020">HI</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.013">NO</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.010"></ALTERNATIVE>
+          <ALTERNATIVE PROB="0.006">UH</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="0.945">AM</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.055">I'M</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="1.000">LOOKING</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="1.000">FOR</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="1.000">A</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="0.963">PUB</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.016">AH</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.012">BAR</ALTERNATIVE>
+          <ALTERNATIVE PROB="0.008">LOT</ALTERNATIVE>
+        </WORD>
+        <WORD>
+          <ALTERNATIVE PROB="1.000"></ALTERNATIVE>
+        </WORD>
+      </CONFNET>
+      <INPUT STATUS="LISTEN" TIME="1343896312"/>
+
+    """
+    msg = "<RESULTS>"+msg+"</RESULTS>"
+    msg = msg.replace("<s>", "&lt;s&gt;").replace("</s>", "&lt;/s&gt;")
+
+    nblist = UtteranceNBList()
+
+    doc = xml.dom.minidom.parseString(msg)
+    recogout = doc.getElementsByTagName("RECOGOUT")
+    for el in recogout:
+      shypo = el.getElementsByTagName("SHYPO")
+      for el in shypo:
+        whypo = el.getElementsByTagName("WHYPO")
+        utterance = ""
+        cm = 1.0
+        for el in whypo:
+          word = el.getAttribute("WORD")
+          utterance += " "+word
+          if word:
+            cm *= float(el.getAttribute("CM"))
+        nblist.add(cm, Utterance(utterance))
+
+    nblist.merge()
+    nblist.normalise()
+    nblist.sort()
+
+    cn = UtteranceConfusionNetwork()
+
+    confnet = doc.getElementsByTagName("CONFNET")
+    for el in confnet:
+      word = el.getElementsByTagName("WORD")
+      for el in word:
+        alternative = el.getElementsByTagName("ALTERNATIVE")
+        word_list = []
+        for el in alternative:
+          prob = float(el.getAttribute("PROB"))
+          text = get_text_from_xml_node(el)
+          word_list.append((prob, text))
+
+        # filter out empty hypotheses
+        if len(word_list) == 0:
+          continue
+        if len(word_list) == 1 and len(word_list[0][1]) == 0:
+          continue
+
+        # add the word into the confusion network
+        cn.add(word_list)
+
+    return nblist, cn
 
   def flush(self):
     """Sends command to the Julius AST to terminate the recognition and get ready for new recognition
@@ -108,13 +290,12 @@ class JuliusASR():
   def hyp_out(self):
     """ This defines asynchronous interface for speech recognition.
 
-    Returns recognizers hypotheses about the input speech audio.
+    Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
     """
 
     self.audio_finished()
 
-    results = self.get_results()
+    nblist, cn = self.get_results()
 
-    # process the results - generate the hypotheses
+    return cn
 
-    return results

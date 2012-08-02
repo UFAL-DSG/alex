@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__=['google',]
+__all__ = ['']
+
+import sys
+import os.path
+
+# Add the directory containing the SDS package to python path
+path, directory = os.path.split(os.path.abspath(__file__))
+while directory and directory != 'SDS':
+    path, directory = os.path.split(path)
+if directory == 'SDS':
+    sys.path.append(path)
 
 class ASRInterface:
   """ This class basic interface which has to be provided by all ASR modules to fully function within
   the SDS project.
   """
 
-  def recognise(self, wav):
-    """ Recognise the audio signal in the wav string.
-
-    Returns a list of word hypotheses each with assigned probability confidence score.
-
-    The probability scores must sum to one.
-    """
-    asrHyp = []
-    #asrHyp = [0.X, "word string"]*N
-    return asrHyp
 
   def rec_in(self, frame):
     """ This defines asynchronous interface for speech recognition.

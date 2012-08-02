@@ -8,6 +8,9 @@ import subprocess
 import SDS.utils.cache as cache
 import SDS.utils.audio as audio
 
+from SDS.utils.exception import TTSException
+from SDS.utils.string import escape_special_characters_shell
+
 class FliteTTS():
   """ Uses Flite TTS to synthesize sentences in a English language.
 
@@ -19,7 +22,7 @@ class FliteTTS():
     self.cfg = cfg
 
   @cache.persistent_cache(True, 'FliteTTS.get_tts_wav.')
-  def get_tts_wav(self, language, voice, text):
+  def get_tts_wav(self, voice, text):
     """ Run flite from a command line and get synthesized audio.
     Note that the returned audio is in the resampled PCM audio format.
 
@@ -31,10 +34,10 @@ class FliteTTS():
       voice = 'awb'
 
     try:
-      subprocess.call("flite -voice %s -t '%s' -o %s 2> /dev/null" % (voice, text, wav_file_name), shell=True)
+      subprocess.call("flite -voice %s -t \"%s\" -o %s 2> /dev/null" % (voice, text, wav_file_name), shell=True)
       wav = audio.load_wav(self.cfg, wav_file_name)
-    finally:
-      pass
+    except:
+      raise TTSException("No data synthesised.")
 
     return wav
 
@@ -42,8 +45,12 @@ class FliteTTS():
   def synthesize(self, text):
     """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
-    wav = self.get_tts_wav(self.cfg['TTS']['Flite']['language'],
-                           self.cfg['TTS']['Flite']['voice'], text)
+    try:
+      wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
+    except TTSException:
+      # send empty wave data
+      # FIX: log the exception
+      return ""
 
     return wav
 

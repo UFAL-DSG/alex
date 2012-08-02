@@ -126,10 +126,10 @@ while count < max_count:
       if len(asr_hyp.hyp):
         print asr_hyp.hyp
 
-        # get top hypotheses text
+        # get the top hypotheses text
         top_text = asr_hyp.hyp[0][1]
 
-        tts_text_in.send(TTSText('Recognized text: ' + top_text))
+        tts_text_in.send(TTSText('Recognized text: %s' % top_text))
       else:
         # nothing was recognised
         print 'Nothing was recognised.'

@@ -29,6 +29,11 @@ def load_utterances(file_name, limit = None):
 
   return utterances
 
+class ASRHypotheses:
+  pass
+
+class Features:
+  pass
 
 class Utterance:
   def __init__(self, utterance):
@@ -53,12 +58,16 @@ class Utterance:
     if other == None:
       return False
 
-    return self.utterance == other.utterance
-  def __ne__(self, other):
-    if other == None:
-      return True
+    if isinstance(other, Utterance):
+      return self.utterance == other.utterance
+    elif isinstance(other, str):
+      return self.utterance == Utterance(other)
+    else:
+      return False
 
-    return self.utterance != other.utterance
+  def __ne__(self, other):
+    return not self.__eq__(other.utterance)
+
   def __gt__(self, other):
     return self.utterance > other.utterance
   def __ge__(self, other):
@@ -102,7 +111,7 @@ class Utterance:
 
     self.utterance[i:i+len(s)] = r
 
-class UtteranceFeatures:
+class UtteranceFeatures(Features):
   def __init__(self, type = 'ngram', size = 3, utterance = None):
     self.type = type
     self.size = size
@@ -170,10 +179,10 @@ class UtteranceFeatures:
         if f in self.features:
           del self.features[f]
 
-class UtteranceNBList:
+class UtteranceNBList(ASRHypotheses):
   """Provides a convenient interface for processing N-best lists of recognised utterances.
 
-  When updating the N-best list, one should do the follwing.
+  When updating the N-best list, one should do the following.
 
   1. add utterances or parse a confusion network
   2. merge
@@ -184,6 +193,13 @@ class UtteranceNBList:
   def __init__(self):
     self.n_best = []
 
+  def __str__(self):
+    s = []
+    for h in self.n_best:
+      s.append("%.3f %s" % (h[0], h[1]))
+
+    return '\n'.join(s)
+
   def __len__(self):
     return len(self.n_best)
 
@@ -193,6 +209,12 @@ class UtteranceNBList:
   def __iter__(self):
     for i in self.n_best:
       yield i
+
+  def get_best_utterance(self):
+    if self.n_best[0][1] == '__other__':
+      return self.n_best[1][1]
+
+    return self.n_best[0][1]
 
   def parse_utterance_confusion_network(self, utterance_cn, n = 10, expand_upto_total_prob_mass = 0.9):
     """Parses the input utterance confusion network and generates N-best hypotheses.
@@ -205,13 +227,15 @@ class UtteranceNBList:
     #TODO: expand the utterance confusion network
 
     self.merge()
-    self.normalize()
+    self.normalise()
     self.sort()
 
   def add(self, probability, utterance):
     self.n_best.append([probability, utterance])
 
   def merge(self):
+    """Adds up probabilities for the same hypotheses.
+    """
     new_n_best = []
 
     if len(self.n_best) <= 1:
@@ -221,50 +245,83 @@ class UtteranceNBList:
 
       for i in range(1, len(self.n_best)):
         for j in range(len(new_n_best)):
-          if new_n_best[j][1] == n_best[i][1]:
+          if new_n_best[j][1] == self.n_best[i][1]:
             # merge, add the probabilities
-            new_n_best[j][1][0] += n_best[i][0]
+            new_n_best[j][1][0] += self.n_best[i][0]
             break
         else:
-          new_n_best.append(n_best[i])
+          new_n_best.append(self.n_best[i])
 
     self.n_best = new_n_best
 
   def normalise(self):
     sum = 0.0
     other_utt = -1
-    for i in range(len(n_best)):
-      sum += n_best[i][0]
+    for i in range(len(self.n_best)):
+      sum += self.n_best[i][0]
 
-      if n_best[i][1] == '__other__':
+      if self.n_best[i][1] == '__other__':
         if other_utt != -1:
           raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' %str(n_best))
         other_utt = i
 
     if other_utt == -1:
       if sum > 1.0:
-        raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.5: %8.6f' % sum)
+        raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.0: %8.6f' % sum)
       prob_other = 1.0-sum
-      n_best.append([prob_other, '__other__'])
-
+      self.n_best.append([prob_other, '__other__'])
     else:
       for i in range(len(n_best)):
         # __other__ utterance is already there, therefore just normalize
-        n_best[i][0] /= sum
+        self.n_best[i][0] /= sum
 
   def sort(self):
     self.n_best.sort(reverse=True)
 
+class UtteranceNBListFeatures(Features):
+  pass
 #TODO: You can implement UtteranceConfusionNetwork and UtteranceConfusionNetworkFeatures to
 # serve the similar purpose for DAILogRegClassifier as Utterance and UtteranceFeatures
 #
 # - then the code will be more general
 
-class UtteranceConfusionNetwork:
-  pass
+class UtteranceConfusionNetwork(ASRHypotheses):
 
-  def best_hyp(self):
-    return None
+  def __init__(self):
+    self.cn = []
+    pass
 
-class UtteranceConfusionNetworkFeatures:
+  def __str__(self):
+    s = []
+    for alts in self.cn:
+      ss = []
+      for w in alts:
+        ss.append("(%.3f : %s) " % (w[0], w[1] if w[1] else '-'))
+      s.append(' '.join(ss))
+
+    return '\n'.join(s)
+
+  def add(self, words):
+    """Adds next word with its alternatives"""
+
+    self.cn.append(words)
+
+  def get_best_utterance(self):
+    utterance = []
+    for alts in self.cn:
+      utterance.append(alts[0][1])
+
+    return ' '.join(utterance)
+
+  def get_best_hyp(self):
+    utterance = []
+    prob = 1.0
+    for alt in self.cn:
+      utterance.append(alt[1])
+      prob *= alt[0]
+
+    return (prob, Utterance(' '.join(utterance)))
+
+
+class UtteranceConfusionNetworkFeatures(Features):
   pass

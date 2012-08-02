@@ -23,7 +23,6 @@ cfg = {
     'pjsip_log_level': 3,
     'debug': True,
     'reject_calls': False,
-    'call_back': False,
     'allowed_phone_numbers': r"(^[234567])",
     'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
 

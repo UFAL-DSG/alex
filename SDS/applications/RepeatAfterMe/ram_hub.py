@@ -98,9 +98,11 @@ if __name__ == '__main__':
 
       The systems calls back to the user to prevent any call fees on the user's side.
 
-      The program reads the default config in the current directory ('defaul.cfg') and any
-      additional config files passed as an argument of a '-c'. The additional config file
-      overwrites any default or previous values.
+      The program reads the default config in the resources directory ('../resources/default.cfg')
+      and the ram_hub.cfg config in the current directory.
+
+      In addition, it reads all config file passed as an argument of a '-c'.
+      The additional config files overwrites any default or previous values.
 
     """)
 
@@ -108,7 +110,9 @@ if __name__ == '__main__':
                       help='additional configure file')
   args = parser.parse_args()
 
-  cfg = Config('default.cfg')
+  cfg = Config('../resources/default.cfg')
+  cfg.merge('ram_hub.cfg')
+
   if args.configs:
     for c in args.configs:
       cfg.merge(c)
@@ -426,4 +430,3 @@ if __name__ == '__main__':
   vad.join()
   tts.join()
 
-  print

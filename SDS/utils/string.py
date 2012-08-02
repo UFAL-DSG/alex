@@ -111,3 +111,8 @@ def parse_command(command):
       raise Exception("Parsing error in: %s: %s" % (command, str(i)))
 
   return d
+
+def escape_special_characters_shell(text, characters = "'\""):
+    for character in characters:
+        text = text.replace( character, '\\' + character )
+    return text
