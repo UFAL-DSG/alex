@@ -60,7 +60,9 @@ class JuliusASR():
       config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
     config.close()
 
-    self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log), bufsize = 1, shell=True)
+    # start the server with the -debug options
+    # with this option it does not generates seg faults
+    self.julius_server = subprocess.Popen('julius -debug -C %s > %s' % (jconf, log), bufsize = 1, shell=True)
 
   def connect_to_server(self):
     """Connects to the Julius ASR server to start recognition and receive the recognition oputput."""
