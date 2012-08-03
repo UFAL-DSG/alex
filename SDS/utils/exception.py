@@ -22,6 +22,9 @@ class TTSException(SDSException):
 class VoipIOException(Exception):
   pass
 
+class JuliusASRException(ASRException):
+  pass
+
 class UtteranceException(SLUException):
   pass
 

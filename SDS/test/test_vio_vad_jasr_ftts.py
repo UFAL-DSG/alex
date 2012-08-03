@@ -21,6 +21,8 @@ if __name__ == '__main__':
     description="""
       test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS components.
 
+      This application uses the Julisu ASR and Flite TTS.
+
       The program reads the default config in the resources directory ('../resources/default.cfg') and any
       additional config files passed as an argument of a '-c'. The additional config file
       overwrites any default or previous values.

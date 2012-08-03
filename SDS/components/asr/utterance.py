@@ -316,12 +316,34 @@ class UtteranceConfusionNetwork(ASRHypotheses):
   def get_best_hyp(self):
     utterance = []
     prob = 1.0
-    for alt in self.cn:
-      utterance.append(alt[1])
-      prob *= alt[0]
+    for alts in self.cn:
+      utterance.append(alts[0][1])
+      prob *= alt[0][0]
 
     return (prob, Utterance(' '.join(utterance)))
 
+  def merge(self):
+    """Adds up probabilities for the same hypotheses.
+
+    TODO: not implemented yet
+    """
+    pass
+
+  def normalise(self):
+    """Makes sure that all probabilities adds up to one."""
+    for alts in self.cn:
+      sum = 0.0
+      for p, w in alts:
+        sum += p
+
+      for i in range(len(alts)):
+        alts[i][0] /= sum
+
+  def sort(self):
+    """Sort the alternatives for each word according their probability."""
+
+    for alts in self.cn:
+      alts.sort(reverse=True)
 
 class UtteranceConfusionNetworkFeatures(Features):
   pass

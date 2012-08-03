@@ -9,7 +9,7 @@ import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
 
 from SDS.components.hub.messages import Command, Frame, ASRHyp
-from SDS.utils.exception import ASRException
+from SDS.utils.exception import ASRException, JuliusASRException
 
 class ASR(multiprocessing.Process):
   """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
@@ -107,7 +107,11 @@ class ASR(multiprocessing.Process):
           if self.cfg['ASR']['debug']:
             self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
 
-          hyp = self.asr.hyp_out()
+          try:
+            hyp = self.asr.hyp_out()
+          except JuliusASRException:
+            hyp = None
+
           self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
           self.hypotheses_out.send(ASRHyp(hyp))
       else:

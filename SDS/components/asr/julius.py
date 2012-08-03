@@ -5,6 +5,8 @@ import socket
 import struct
 import time
 import xml.dom.minidom
+import subprocess
+import os.path
 
 from os import remove
 from tempfile import mkstemp
@@ -24,14 +26,41 @@ class JuliusASR():
   """
 
   def __init__(self, cfg):
+    self.recognition_on = False
+
     self.cfg = cfg
     self.hostname = self.cfg['ASR']['Julius']['hostname']
     self.serverport = self.cfg['ASR']['Julius']['serverport']
     self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
 
-    self.connect_to_server()
+    try:
+      self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
+      self.start_server()
+      time.sleep(1)
+      self.cfg['Logging']['system_logger'].debug("Connecting to the Julius ASR server")
+      self.connect_to_server()
+      time.sleep(1)
+      self.cfg['Logging']['system_logger'].debug("Opening the adinnet connection with the Julius ASR ")
+      self.open_adinnet()
+    except:
+      # always kill the Julius ASR server when there is a problem
+      self.julius_server.kill()
+
+  def __del__(self):
+    self.julius_server.terminate()
     time.sleep(1)
-    self.open_adinnet()
+    self.julius_server.kill()
+
+  def start_server(self):
+    jconf = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
+    log = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
+
+    config = open(jconf, "w")
+    for k in sorted(self.cfg['ASR']['Julius']['jconf']):
+      config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
+    config.close()
+
+    self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log), bufsize = 1, shell=True)
 
   def connect_to_server(self):
     """Connects to the Julius ASR server to start recognition and receive the recognition oputput."""
@@ -56,6 +85,7 @@ class JuliusASR():
     """"Informs the Julius ASR about the end of segment and that the hypothesis should be finalised."""
 
     self.a_socket.sendall(struct.pack("i", 0))
+    self.recognition_on = False
 
   def read_audio_command(self):
     """Reads audio command from the Julius adinnet interface.
@@ -70,7 +100,7 @@ class JuliusASR():
     self.socket.a_setblocking(1)
     return cmd
 
-  def read_server_message(self,  timeout = 0.5):
+  def read_server_message(self,  timeout = 0.1):
     """Reads a complete message from the Julius ASR server.
 
     A complete message is denoted by a period on a new line at the end of the string.
@@ -104,7 +134,7 @@ class JuliusASR():
 
     return results
 
-  def get_results(self, timeout = 0.5):
+  def get_results(self, timeout = 0.4):
     """"Waits for the recognition results from the Julius ASR server.
 
     Timeout specifies how long it will wait for the end of message.
@@ -115,7 +145,8 @@ class JuliusASR():
     to = 0.0
     while True:
       if to >= timeout:
-        raise ASRException("Timeout when waiting for the Julius server results.")
+        print msg
+        raise JuliusASRException("Timeout when waiting for the Julius server results.")
 
       m = self.read_server_message()
       if not m:
@@ -254,7 +285,7 @@ class JuliusASR():
         for el in alternative:
           prob = float(el.getAttribute("PROB"))
           text = get_text_from_xml_node(el)
-          word_list.append((prob, text))
+          word_list.append([prob, text])
 
         # filter out empty hypotheses
         if len(word_list) == 0:
@@ -264,14 +295,25 @@ class JuliusASR():
 
         # add the word into the confusion network
         cn.add(word_list)
+    cn.merge()
+    cn.normalise()
+    cn.sort()
 
     return nblist, cn
 
   def flush(self):
-    """Sends command to the Julius AST to terminate the recognition and get ready for new recognition
-
-    FIX: not implemented
+    """Sends command to the Julius ASR to terminate the recognition and get ready for new recognition.
     """
+
+    if self.recognition_on:
+      self.audio_finished()
+
+      nblist, cn = self.get_results()
+      # read any leftovers
+      while True:
+        if self.read_server_messages() == None:
+          break
+
     return
 
   def rec_in(self, frame):
@@ -283,6 +325,7 @@ class JuliusASR():
     Output hypotheses is obtained by calling hyp_out().
     """
 
+    self.recognition_on = True
     self.send_frame(frame.payload)
 
     return
@@ -293,9 +336,21 @@ class JuliusASR():
     Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
     """
 
-    self.audio_finished()
+    # read all messages accidentally left in the socket from the Julius ASR server before
+    # a new ASR hypothesis is decoded
+    while True:
+      m = self.read_server_message()
+      if m == None:
+        break
 
-    nblist, cn = self.get_results()
+    if self.recognition_on:
+      self.audio_finished()
 
-    return cn
+      nblist, cn = self.get_results()
+
+      return cn
+
+    raise JuliusASRException("No ASR hypothesis is available since the recognition has not started.")
+
+
 

@@ -4,12 +4,19 @@
 import collections
 import cStringIO
 import pprint
+import os.path
+
 from SDS.utils.mproc import SystemLogger
 
 class Config:
   """ Config handles configuration data necessary for all the components
   in the SDS. It implements a dictionary so that any component could
   store arbitrary structured data.
+
+  When the configure file is loaded several automatic transformations are applied.
+    1) '{cfg_abs_path}' at the beginning of strings is replaced by an absolute path of the configure files.
+                        This can be used to make the configure file independent of the location of programs
+                        using the configure file.
 
   """
 
@@ -40,6 +47,9 @@ class Config:
     execfile(file_name, globals())
     self.config = config
 
+    cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
+    self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
+
   def merge(self, file_name):
     execfile(file_name, globals())
     self.update_dict(self.config, config)
@@ -53,3 +63,11 @@ class Config:
             d[k] = u[k]
     return d
 
+  def config_replace(self, p, s, d):
+    for k, v in d.iteritems():
+        if isinstance(v, collections.Mapping):
+          self.config_replace(p, s, v)
+        elif isinstance(v, str):
+          d[k] = d[k].replace(p, s)
+
+    return
