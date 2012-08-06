@@ -297,7 +297,10 @@ class JuliusASR():
 
         # add the word into the confusion network
         cn.add(word_list)
+
     cn.merge()
+    cn.normalise()
+    cn.prune()
     cn.normalise()
     cn.sort()
 

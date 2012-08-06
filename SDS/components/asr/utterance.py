@@ -295,8 +295,8 @@ class UtteranceConfusionNetwork(ASRHypotheses):
     s = []
     for alts in self.cn:
       ss = []
-      for w in alts:
-        ss.append("(%.3f : %s) " % (w[0], w[1] if w[1] else '-'))
+      for p, w in alts:
+        ss.append("(%.3f : %s) " % (p, w if w else '-'))
       s.append(' '.join(ss))
 
     return '\n'.join(s)
@@ -328,6 +328,29 @@ class UtteranceConfusionNetwork(ASRHypotheses):
     TODO: not implemented yet
     """
     pass
+
+  def prune(self, prune_prob = 0.001):
+    pruned_cn = []
+    for alts in self.cn:
+      if not alts[0][1] and alts[0][0] > 1.0 - prune_prob:
+        # prune out silences
+        continue
+
+      pruned_alts = []
+      for p, w in alts:
+        if p < prune_prob:
+          continue
+        else:
+          pruned_alts.append([p, w])
+
+      if pruned_alts[0][1] == "" and len(pruned_alts) == 1:
+        # I pruned out all alternatives except for silence,
+        # then skip this
+        continue
+
+      pruned_cn.append(alts)
+
+    self.cn = pruned_cn
 
   def normalise(self):
     """Makes sure that all probabilities adds up to one."""
