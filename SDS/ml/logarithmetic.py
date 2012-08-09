@@ -69,7 +69,7 @@ def dot(a, b):
   return sp.misc.logsumexp(a+b)
 
 def sum(a, axis=None):
-  # scipy implementation of logsumexp is
+  # scipy implementation of logsumexp
   # -----------------------------------------------------------------------
   # def logsumexp(a):
   #   """Compute the log of the sum of exponentials log(e^{a_1}+...e^{a_n})

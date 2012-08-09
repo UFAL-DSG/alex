@@ -31,6 +31,11 @@ We have to ask for permition to distribute his code.
 
 2012-07-19 Filip Jurcicek
 
+Keith clarified the license. His code is relised under the new BSD licence. The lucence note is at http://www.keithv.com/software/htk/.
+
+The note says: The scripts and configuration files in the recipe are released under a new BSD license. This excludes the decision tree phonetic questions (tree_ques.hed) and the test set index files (si_dt_05_odd.ndx, si_dt_s2.ndx, si_dt_s6.ndx) which I did not write.
+
+2012-08-07 Filip Jurcicek
 
 TEST RESULTS
 ------------------------------
