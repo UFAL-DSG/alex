@@ -16,8 +16,8 @@ from SDS.utils.htk import *
 train_data = 'asr_model_voip_en/train/*.mfc'
 train_data_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-filter_length = 1
-prob_speech_up = 0.6
+filter_length = 5
+prob_speech_up = 0.3
 prob_speech_stay = 0.1
 
 max_files = 100
@@ -43,9 +43,9 @@ print '-'*120
 print 'VAD GMM test'
 print '-'*120
 gmm_speech = GMM(n_features = 0)
-gmm_speech.load_model('vad_speech.gmm')
+gmm_speech.load_model('model_voip_en/vad_speech_htk_mfcc.gmm')
 gmm_sil = GMM(n_features = 0)
-gmm_sil.load_model('vad_sil.gmm')
+gmm_sil.load_model('model_voip_en/vad_sil_htk_mfcc.gmm')
 
 vta = MLFFeaturesAlignedArray()
 vta.append_mlf(mlf)

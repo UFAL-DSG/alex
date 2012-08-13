@@ -9,12 +9,19 @@ from collections import deque
 class MFCCFrontEnd:
   """This is an a CLOSE approximation of MFCC coefficients computed by the HTK.
 
+  The frame size should be a number of power of 2.
+
+  TODO: CMN is not implemented. It should normalise only teh cepstrum, not the delta or acc coefficients.
+
   It was not tested to give exactly the same results the HTK. As a result,
   it should not be used in conjunction with models trained on speech
   parametrised with the HTK.
+
+  Over all it appears that this implementation of MFCC is worse than the one from the HTK.
+  On the VAD task, the HTK features score 90.8% and the this features scores only 88.7%.
   """
 
-  def __init__(self, sourcerate = 16000, framesize = 400,
+  def __init__(self, sourcerate = 16000, framesize = 512,
                usehamming = True, preemcoef = 0.97,
                numchans = 26, ceplifter = 22, numceps = 12,
                enormalize = True, zmeansource = True, usepower = True, usec0 = True, usecmn = True,
@@ -38,21 +45,19 @@ class MFCCFrontEnd:
     self.hifreq = hifreq
 
     self.prior = 0.0
-    self.total_coefs = (numceps + int(usec0))*(1 + int(usedelta) + int(useacc))
-    self.cmn = np.zeros(( self.total_coefs, ))
-    self.cmn_alpha = 0.99
-    self.mfcc_queue = deque(maxlen=3)
-    self.mfcc_delta_queue = deque(maxlen=3)
+
+    self.mfcc_queue = deque(maxlen=4)
+    self.mfcc_delta_queue = deque(maxlen=4)
 
     self.init_hamming()
     self.init_mel_filter_bank()
     self.init_cep_liftering_weights()
 
   def freq_to_mel(self, freq):
-    return 1127 * np.log(1 + freq / 700.0)
+    return 1127 * np.log(1.0 + freq / 700.0)
 
   def mel_to_freq(self, mel):
-    return 700 * (np.exp(freq / 1127 - 1))
+    return 700 * (np.exp(mel / 1127) - 1.0)
 
   def init_hamming(self):
     self.hamming = np.hamming(self.framesize)
@@ -60,22 +65,24 @@ class MFCCFrontEnd:
   def init_mel_filter_bank(self):
     """Initialise the triangular mel freq filters."""
 
-    minMel = int(self.freq_to_mel(self.lofreq))
-    maxMel = int(self.freq_to_mel(self.hifreq))
+    minMel = self.freq_to_mel(self.lofreq)
+    maxMel = self.freq_to_mel(self.hifreq)
+
+#    print "MM", minMel, "MM", maxMel
 
     # Create a matrix for triangular filters, one row per filter
-    filterMatrix = np.zeros((self.numchans, self.framesize))
+    filterMatrix = np.zeros((self.numchans, self.framesize/2+1))
 
     melRange = np.array(xrange(self.numchans + 2))
+#    print "MR", melRange
 
     melCenterFilters = melRange * (maxMel - minMel) / (self.numchans + 1) + minMel
+#    print "MCF", melCenterFilters
 
+    dfreq = self.sourcerate / self.framesize
     # each array index represent the center of each triangular filter
-    aux = np.log(1 + 1000.0 / 700.0) / 1000.0
-    aux = (np.exp(melCenterFilters * aux) - 1) / 22050
-    aux = 0.5 + 700 * self.framesize * aux
-    aux = np.floor(aux)
-    centerIndex = np.array(aux, int)  # Get int values
+    centerIndex = np.array(np.round(self.mel_to_freq(melCenterFilters)/dfreq), int)
+#    print "CI", centerIndex
 
     for i in xrange(self.numchans):
       start, centre, end = centerIndex[i:i + 3]
@@ -88,6 +95,7 @@ class MFCCFrontEnd:
       filterMatrix[i][centre:end] = down
 
     self.mel_filter_bank = filterMatrix.transpose()
+#    print "SMFB", self.mel_filter_bank.shape
 
   def init_cep_liftering_weights(self):
     cep_lift_weights = np.zeros((self.numceps, ))
@@ -104,7 +112,7 @@ class MFCCFrontEnd:
     for i in range(1, len(frame)):
       out_frame[i] = frame[i] - self.preemcoef*frame[i-1]
 
-    self.prior = frame[1]
+    self.prior = frame[-1]
 
     return out_frame
 
@@ -119,16 +127,20 @@ class MFCCFrontEnd:
     if self.usehamming:
       frame = self.hamming*frame
 
-    complex_spectrum = np.fft.fft(frame)
-    power_spectrum = abs(complex_spectrum) ** 2
+    complex_spectrum = np.fft.rfft(frame)
+#    print "LCS", len(complex_spectrum)
+    power_spectrum = complex_spectrum.real*complex_spectrum.real+complex_spectrum.imag*complex_spectrum.imag
+    # compute only power spectrum if required
+    if not self.usepower:
+      power_spectrum = np.sqrt(power_spectrum)
+
+#    print "SPS",power_spectrum.shape
     mel_spectrum = np.dot(power_spectrum, self.mel_filter_bank)
     # apply mel floor
     for i in range(len(mel_spectrum)):
       if mel_spectrum[i] < 1.0:
         mel_spectrum[i] = 1.0
-    # compute power spectrum if required
-    if self.usepower:
-      mel_spectrum = np.log(mel_spectrum)
+    mel_spectrum = np.log(mel_spectrum)
 
     cepstrum = dct(mel_spectrum, type=2, norm='ortho')
     c0 = cepstrum[0]
@@ -145,22 +157,22 @@ class MFCCFrontEnd:
     self.mfcc_queue.append(mfcc)
     if self.usedelta:
 #      print "LMQ", len(self.mfcc_queue)
-      if len(self.mfcc_queue) > 2:
+      if len(self.mfcc_queue) >= 2:
         delta = np.zeros_like(mfcc)
         for i in range(1, len(self.mfcc_queue)):
           delta += self.mfcc_queue[i] - self.mfcc_queue[i-1]
-        delta /= len(self.mfcc_queue)
+        delta /= len(self.mfcc_queue)-1
 
         self.mfcc_delta_queue.append(delta)
       else:
         delta = np.zeros_like(mfcc)
 
     if self.useacc:
-      if len(self.mfcc_delta_queue) > 2:
+      if len(self.mfcc_delta_queue) >= 2:
         acc = np.zeros_like(mfcc)
         for i in range(1, len(self.mfcc_delta_queue)):
           acc += self.mfcc_delta_queue[i] - self.mfcc_delta_queue[i-1]
-        acc /= len(self.mfcc_delta_queue)
+        acc /= len(self.mfcc_delta_queue)-1
       else:
         acc = np.zeros_like(mfcc)
 
@@ -168,16 +180,6 @@ class MFCCFrontEnd:
       mfcc = np.append(mfcc, delta)
     if self.useacc:
       mfcc = np.append(mfcc, acc)
-
-#    print cepstrum
-#    print c0
-#    print cep_lift_mfcc
-#    print "MFCC", mfcc
-#    print "LMFCC", len(mfcc)
-#
-    if self.usecmn:
-      mfcc -= self.cmn
-      self.cmn = self.cmn_alpha*self.cmn + (1.0-self.cmn_alpha)*mfcc
 
     return mfcc
 

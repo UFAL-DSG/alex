@@ -4,7 +4,6 @@
 import numpy as np
 
 from multiprocessing import *
-from sklearn import mixture
 from scipy.misc import logsumexp
 from collections import deque
 
@@ -13,7 +12,7 @@ import __init__
 from SDS.ml.gmm import GMM
 from SDS.utils.htk import *
 
-train_data = 'asr_model_voip_en/train/*.mfc'
+train_data = 'data_voip_en/train/*.wav'
 train_data_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
 filter_length = 5
@@ -43,11 +42,11 @@ print '-'*120
 print 'VAD GMM test'
 print '-'*120
 gmm_speech = GMM(n_features = 0)
-gmm_speech.load_model('vad_speech_wav.gmm')
+gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
 gmm_sil = GMM(n_features = 0)
-gmm_sil.load_model('vad_sil_wav.gmm')
+gmm_sil.load_model('model_voip_en/vad_sil_sds_mfcc.gmm')
 
-vta = MLFFeaturesAlignedArray()
+vta = MLFMFCCOnlineAlignedArray()
 vta.append_mlf(mlf)
 vta.append_trn(train_data)
 

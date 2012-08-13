@@ -20,7 +20,7 @@ class GMM:
 
   """
 
-  def __init__(self, n_features, n_components = 1, thresh=1e-3, min_covar = 1e-3, n_iter = 1):
+  def __init__(self, n_features = 1, n_components = 1, thresh=1e-3, min_covar = 1e-3, n_iter = 1):
     self.n_features = n_features
     self.n_components = n_components
     self.thresh = thresh

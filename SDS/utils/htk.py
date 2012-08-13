@@ -4,10 +4,12 @@
 import numpy
 import re
 import glob
+import wave
 
 from struct import unpack, pack
 
 from SDS.utils.cache import *
+from SDS.utils.mfcc import *
 
 LPC = 1
 LPCREFC = 2
@@ -129,7 +131,9 @@ class MLF:
       l = l.strip()
 
       if l.startswith('"'):
-        param_file_name = l[1:-1].replace(".rec", '').replace(".lab", '').replace("*/", '')
+        param_file_name = l[1:-1].replace("*/", '')
+        param_file_name = re.sub(r"\.rec$", "", param_file_name)
+        param_file_name = re.sub(r"\.lab$", "", param_file_name)
         transcription = []
         continue
 
@@ -247,7 +251,7 @@ class MLFFeaturesAlignedArray:
     self.filter = filter
     self.mlfs = []
     self.trns = []
-    self.last_param_file_name = None
+    self.last_file_name = None
     self.last_param_file_features = None
 
   def __iter__(self):
@@ -275,6 +279,7 @@ class MLFFeaturesAlignedArray:
   def append_trn(self, trn):
     """Adds files with audio data (param files) based on the provided pattern."""
     trn_files = glob.glob(trn)
+#    print "TF", trn_files
     self.trns.extend(trn_files)
 
   @lru_cache(maxsize=100000)
@@ -286,11 +291,83 @@ class MLFFeaturesAlignedArray:
 
   def get_frame(self, file_name, frame_id):
     """Returns a frame from a specific param file."""
-    if self.last_param_file_name != file_name:
+    if self.last_file_name != file_name:
       # find matching param file
-      self.last_param_file_name = self.get_param_file_name(file_name)
+      param_file_name = self.get_param_file_name(file_name)
 
       # open the param file
-      self.last_param_file_features = Features(self.last_param_file_name)
+      self.last_param_file_features = Features(param_file_name)
+
+      self.last_file_name = file_name
 
     return self.last_param_file_features[frame_id]
+
+class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
+  """This is an extension of MLFFeaturesAlignedArray which computes the features on the fly from
+  the input wav files.
+
+  It uses our own implementation of the MFCC computation so that it does not give the same results
+  as the HTK HCopy.
+
+  """
+  def __init__(self, windowsize = 250000, targetrate = 100000,  filter = None, usec0 = False):
+    """Initialise the MFCC frontend.
+
+    windowsize - defines the length of the window (frame) in the HTK's 100ns units
+    targetrate - defines the period with wich new coefficents should be generated (again in 100ns units)
+    """
+    MLFFeaturesAlignedArray.__init__(self, filter)
+
+    self.windowsize = windowsize
+    self.targetrate = targetrate
+    self.usec0 = usec0
+
+    self.mfcc_front_end = None
+
+  def get_frame(self, file_name, frame_id):
+    """Returns a frame from a specific param file."""
+    if self.last_file_name != file_name:
+      self.last_file_name = file_name
+
+#      print "FN", file_name
+
+      # find matching param file
+      param_file_name = self.get_param_file_name(file_name)
+
+#      print "PFN", param_file_name
+
+      # open the param file
+      self.last_param_file_features = wave.open(param_file_name, 'r')
+
+      if self.last_param_file_features.getnchannels() != 1:
+        raise Exception('Input wave is not in mono')
+
+      if self.last_param_file_features.getsampwidth() != 2:
+        raise Exception('Input wave is not in 16bit')
+
+      sample_rate = self.last_param_file_features.getframerate()
+      self.frame_size = int(sample_rate*self.windowsize/10000000)
+      if self.frame_size > 1024:
+        self.frame_size = 2048
+      elif self.frame_size > 512:
+        self.frame_size = 1024
+      elif self.frame_size > 256:
+        self.frame_size = 512
+      elif self.frame_size > 128:
+        self.frame_size = 256
+      elif self.frame_size > 64:
+        self.frame_size = 128
+
+      self.frame_shift = int(sample_rate*self.targetrate/10000000)
+      self.mfcc_front_end = MFCCFrontEnd(sample_rate, self.frame_size, usec0 = self.usec0)
+
+#    print "FS", self.frame_size
+    self.last_param_file_features.setpos(max(frame_id*self.frame_shift-int(self.frame_size/2),0))
+    frame = self.last_param_file_features.readframes(self.frame_size)
+#    print "LN", len(frame)
+
+    frame = np.frombuffer(frame, dtype=np.int16)
+
+    mfcc_params = self.mfcc_front_end.param(frame)
+
+    return mfcc_params

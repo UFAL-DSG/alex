@@ -16,7 +16,7 @@ from SDS.utils.htk import *
 train_data = 'asr_model_voip_en/train/*.mfc'
 train_data_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-max_files = 10000
+max_files = 10
 n_iter = 10
 n_mixies = 16
 
@@ -53,7 +53,7 @@ def train_speech_gmm():
     print gmm_speech.weights
     print "Speech LP:", gmm_speech.log_probs[-1]
     print "-"*120
-  gmm_speech.save_model('vad_speech.gmm')
+  gmm_speech.save_model('model_voip_en/vad_speech_htk_mfcc.gmm')
   return
 
 def train_sil_gmm():
@@ -72,7 +72,7 @@ def train_sil_gmm():
     print gmm_sil.weights
     print "Sil LP:", gmm_sil.log_probs[-1]
     print "-"*120
-  gmm_sil.save_model('vad_sil.gmm')
+  gmm_sil.save_model('model_voip_en/vad_sil_htk_mfcc.gmm')
 
 p_speech = Process(target=train_speech_gmm)
 p_sil = Process(target=train_sil_gmm)
@@ -89,9 +89,9 @@ print '-'*120
 print 'VAD GMM test'
 print '-'*120
 gmm_speech = GMM(n_features = 0)
-gmm_speech.load_model('vad_speech.gmm')
+gmm_speech.load_model('model_voip_en/vad_speech_htk_mfcc.gmm')
 gmm_sil = GMM(n_features = 0)
-gmm_sil.load_model('vad_sil.gmm')
+gmm_sil.load_model('model_voip_en/vad_sil_htk_mfcc.gmm')
 
 
 vta = MLFFeaturesAlignedArray()

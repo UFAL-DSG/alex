@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from os import remove
-from tempfile import mkstemp
 import struct
 import StringIO
 import mad
@@ -11,6 +9,9 @@ import audioop
 import wave
 import subprocess
 import time
+
+from os import remove
+from tempfile import mkstemp
 
 import SDS.utils.various as various
 

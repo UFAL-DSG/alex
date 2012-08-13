@@ -3,22 +3,29 @@
 
 import multiprocessing
 import os.path
-import struct
 import wave
 import sys
-import math
 import time
 
 from datetime import datetime
 from collections import deque
+
+import SDS.components.vad.power as PVAD
+import SDS.components.vad.gmm as GVAD
 
 from SDS.components.hub.messages import Command, Frame
 
 class VAD(multiprocessing.Process):
   """ VAD detects segments of speech in the audio stream.
 
+  It implements two smoothing windows, one for detection speech and one for detection of silence.
+  1) The speech window is typically shorter so that the detection if more responsive towards the speech,
+     it is easy to activate for the speech.
+  2) The silence windows should be longer so that short pauses are not triggered and only one speech segment
+     including the short pauses is generated.
+
   It process input signal and outputs only frames with speech. Every time a new speech segment starts, it sends
-  'speech_start()' and everytime a speech segmends ends it sends 'speech_end()' commands.
+  'speech_start()' and every time a speech segments ends it sends 'speech_end()' commands.
 
   These commands has to be properly detected in the output stream by the following component.
   """
@@ -36,13 +43,17 @@ class VAD(multiprocessing.Process):
     self.wf = None # wave file for logging
 
     if self.cfg['VAD']['type'] == 'power':
-      self.in_frames = 1
-      self.power_threshold_adapted = self.cfg['VAD']['power_threshold']
+      self.vad = PVAD.PowerVAD(cfg)
+    elif self.cfg['VAD']['type'] == 'gmm':
+      self.vad = GVAD.GMMVAD(cfg)
+    else:
+      raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
-    # stores information about each frame whet it was speech or non speech
-    self.speech_frames = [False, ]
-    self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['power_decision_frames'])
-    self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['power_decision_frames'])
+    # stores information about each frame whether it was classified as speech or non speech
+    self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+    self.detection_window_sil = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
+    self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+    self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
 
     # keeps last decision about whether there is speech or non speech
     self.last_vad = False
@@ -85,49 +96,30 @@ class VAD(multiprocessing.Process):
 
     return False
 
-  def vad(self, data):
-    speech_segment = False
+  def smoothe_decison(self, decision):
+    self.detection_window_speech.append(decision)
+    self.detection_window_sil.append(decision)
 
-    if self.cfg['VAD']['type'] == 'power':
-      self.in_frames += 1
+    speech = float(sum(self.detection_window_speech))/len(self.detection_window_speech)
+    sil = float(sum(self.detection_window_sil))/len(self.detection_window_sil)
+    if self.cfg['VAD']['debug']:
+      self.cfg['Logging']['system_logger'].debug('SPEECH: %s SIL: %s S: %s' % (speech, sil))
 
-      a = struct.unpack('%dh'% (len(data)/2, ), data)
-      a = [abs(x)**2 for x in a]
-      energy = math.sqrt(sum(a))/len(a)
+    vad = self.last_vad
+    change = None
+    if self.last_vad:
+      # last decision was speech
+      if sil < self.cfg['VAD']['decision_non_speech_threshold']:
+        vad = False
+        change = 'non-speech'
+    else:
+      if speech > self.cfg['VAD']['decision_speech_threshold']:
+        vad = True
+        change = 'speech'
 
-      if self.in_frames < self.cfg['VAD']['power_adaptation_frames']:
-        self.power_threshold_adapted = self.in_frames*self.power_threshold_adapted
-        self.power_threshold_adapted += energy
-        self.power_threshold_adapted /= self.in_frames+1
+    self.last_vad = vad
 
-
-      if energy > self.cfg['VAD']['power_threshold_multiplier']*self.power_threshold_adapted:
-        speech_segment = 1.0
-
-      self.speech_frames.append(speech_segment)
-
-      detection_window = self.speech_frames[-self.cfg['VAD']['power_decision_frames']:]
-      s = float(sum(detection_window))/len(detection_window)
-      if self.cfg['VAD']['debug']:
-        self.cfg['Logging']['system_logger'].debug('E: %s T: %s S: %s' % (energy, self.power_threshold_adapted,s))
-
-      vad = self.last_vad
-      change = None
-      if self.last_vad:
-        # last decision was speech
-        if s < self.cfg['VAD']['power_decision_non_speech_threshold']:
-          vad = False
-          change = 'non-speech'
-      else:
-        if s > self.cfg['VAD']['power_decision_speech_threshold']:
-          vad = True
-          change = 'speech'
-
-      self.last_vad = vad
-
-      return vad, change
-
-    return False, None
+    return vad, change
 
   def read_write_audio(self):
     # read input audio
@@ -146,7 +138,8 @@ class VAD(multiprocessing.Process):
         self.deque_audio_recorded_in.append(data_rec)
         self.deque_audio_played_in.append(data_played)
 
-        vad, change = self.vad(data_rec.payload)
+        decison = self.vad.decide(data_rec.payload)
+        vad, change = self.smoothe_decison(decison)
 
         if self.cfg['VAD']['debug']:
           self.cfg['Logging']['system_logger'].debug("vad: %s change:%s" % (vad, change))
