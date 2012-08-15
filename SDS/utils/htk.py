@@ -146,14 +146,15 @@ class MLF:
 
       if len(c) == 3:
         # I get aligned mlf
-        label = c[2]
+        s, e, label = c
+        s, e = int(s), int(e)
 
         m = label.find('-')
         p = label.rfind('+')
         if m != -1 and p != -1:
           label = label[m+1:p]
 
-        transcription.append([int(c[0]), int(c[1]), label])
+        transcription.append([s, e, label])
       elif len(c) == 1:
         # non aligned data
         pass
@@ -225,6 +226,21 @@ class MLF:
         else:
           # skip this segment as it is too short to be accuratelly aligned
           pass
+
+      self.mlf[f] = transcription
+
+  def shorten_segments(self, n = 100):
+    """Shorten segments to n-frames."""
+
+    for f in self.mlf:
+      transcription = []
+      for s, e, l in self.mlf[f]:
+        if e - s > n:
+          # shorten
+          transcription.append([s,s+n,l])
+        else:
+          # it is short enough
+          transcription.append([s,e,l])
 
       self.mlf[f] = transcription
 
@@ -324,6 +340,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
     self.mfcc_front_end = None
 
+  @lru_cache(maxsize=1000000)
   def get_frame(self, file_name, frame_id):
     """Returns a frame from a specific param file."""
     if self.last_file_name != file_name:

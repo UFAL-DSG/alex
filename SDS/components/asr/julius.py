@@ -14,7 +14,7 @@ from tempfile import mkstemp
 import __init__
 
 from SDS.components.asr.utterance import *
-from SDS.utils.exception import ASRException
+from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException
 from SDS.utils.various import get_text_from_xml_node
 
 class JuliusASR():
@@ -36,10 +36,10 @@ class JuliusASR():
     try:
       self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
       self.start_server()
-      time.sleep(1)
+      time.sleep(3)
       self.cfg['Logging']['system_logger'].debug("Connecting to the Julius ASR server")
       self.connect_to_server()
-      time.sleep(1)
+      time.sleep(3)
       self.cfg['Logging']['system_logger'].debug("Opening the adinnet connection with the Julius ASR ")
       self.open_adinnet()
     except:
@@ -136,7 +136,7 @@ class JuliusASR():
 
     return results
 
-  def get_results(self, timeout = 0.4):
+  def get_results(self, timeout = 0.6):
     """"Waits for the recognition results from the Julius ASR server.
 
     Timeout specifies how long it will wait for the end of message.
@@ -148,7 +148,7 @@ class JuliusASR():
     while True:
       if to >= timeout:
         print msg
-        raise JuliusASRException("Timeout when waiting for the Julius server results.")
+        raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
 
       m = self.read_server_message()
       if not m:

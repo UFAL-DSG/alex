@@ -9,7 +9,7 @@ import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
 
 from SDS.components.hub.messages import Command, Frame, ASRHyp
-from SDS.utils.exception import ASRException, JuliusASRException
+from SDS.utils.exception import *
 
 class ASR(multiprocessing.Process):
   """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
@@ -109,7 +109,7 @@ class ASR(multiprocessing.Process):
 
           try:
             hyp = self.asr.hyp_out()
-          except JuliusASRException:
+          except JuliusASRTimeoutException:
             hyp = None
 
           self.commands.send(Command("asr_end()", 'ASR', 'HUB'))

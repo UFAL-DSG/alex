@@ -102,11 +102,10 @@ if __name__ == '__main__':
         # get top hypotheses text
         top_text = asr_hyp.hyp.get_best_utterance()
 
-        tts_text_in.send(TTSText('Recognized text: %s' % top_text))
-
-#        else:
-#          # nothing was recognised
-#          cfg['Logging']['system_logger'].info('Nothing was recognised.\n')
+        if top_text:
+          tts_text_in.send(TTSText('Recognized text: %s' % top_text))
+        else:
+          tts_text_in.send(TTSText('Nothing was recognised'))
 
     # read all messages
     for c in command_connections:

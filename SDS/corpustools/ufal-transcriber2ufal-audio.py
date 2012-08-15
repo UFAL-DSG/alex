@@ -94,7 +94,7 @@ def unique_str():
   return hex(random.randint(0, 256*256*256*256-1))[2:]
 
 def cut_wavs(s_audio_file_name, t_audio_file_name, time_s, time_e):
-  cmd = "sox %s %s trim %f %f" % (s_audio_file_name, t_audio_file_name, time_s, time_e - time_s)
+  cmd = "sox --ignore-length %s %s trim %f %f" % (s_audio_file_name, t_audio_file_name, time_s, time_e - time_s)
   print cmd
 
   subprocess.call(cmd, shell=True)
@@ -123,7 +123,7 @@ def extract_wavs_trns(file, outdir, verbose):
     try:
       time_e = float(el.nextSibling.nextSibling.getAttribute('time').strip())
     except:
-      time_e = 999.000
+      time_e = 9999.000
 
     s_audio_file_name = file.replace('.trs', '.wav')
     t_ext = '-%07.2f-%07.2f-%s.wav' % (time_s, time_e, unique_str())

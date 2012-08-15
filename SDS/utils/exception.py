@@ -25,6 +25,9 @@ class VoipIOException(Exception):
 class JuliusASRException(ASRException):
   pass
 
+class JuliusASRTimeoutException(ASRException):
+  pass
+
 class UtteranceException(SLUException):
   pass
 

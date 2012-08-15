@@ -311,7 +311,7 @@ class UtteranceConfusionNetwork(ASRHypotheses):
     for alts in self.cn:
       utterance.append(alts[0][1])
 
-    return ' '.join(utterance)
+    return ' '.join(utterance).strip()
 
   def get_best_hyp(self):
     utterance = []
@@ -320,7 +320,8 @@ class UtteranceConfusionNetwork(ASRHypotheses):
       utterance.append(alts[0][1])
       prob *= alt[0][0]
 
-    return (prob, Utterance(' '.join(utterance)))
+    utterance = ' '.join(utterance).strip()
+    return (prob, Utterance(utterance))
 
   def merge(self):
     """Adds up probabilities for the same hypotheses.
