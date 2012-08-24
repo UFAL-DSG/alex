@@ -3,6 +3,7 @@
 
 import numpy as np
 import datetime
+import itertools
 
 from multiprocessing import *
 
@@ -15,9 +16,10 @@ from SDS.utils.htk import *
 
 max_files = 100000
 max_frames_per_segment = 100000
+trim_segments = 30
 n_iter = 10
-n_mixies = 64 # 128 # 64 # 32 # 16
-
+n_mixies = 256 # 64 # 32 # 16
+           
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
   mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
   mlf_sil.filter_zero_segments()
@@ -31,77 +33,52 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
   mlf_sil.merge()
   #mlf_sil.times_to_seconds()
   mlf_sil.times_to_frames()
-  mlf_sil.trim_segments(30)
+  mlf_sil.trim_segments(trim_segments)
   mlf_sil.shorten_segments(max_frames_per_segment)
 
   return mlf_sil
 
-def train_speech_gmm():
-  vta_speech = MLFMFCCOnlineAlignedArray(filter='speech', usec0 = False)
-  vta_speech.append_mlf(mlf_sil)
-  vta_speech.append_trn(train_data_sil)
-  vta_speech.append_mlf(mlf_speech)
-  vta_speech.append_trn(train_data_speech)
+def mixup(gmm, vta, name):
+  i = len(gmm.weights)
 
-  data_speech = list(vta_speech)
+  if i >= 256:
+    gmm.mixup(12)
+  if i >= 128:
+    gmm.mixup(10)
+  if i >= 64:
+    gmm.mixup(8)
+  elif i >= 32:
+    gmm.mixup(6)
+  elif i >= 16:
+    gmm.mixup(4)
+  elif i >= 8:
+    gmm.mixup(2)
+  else:
+    gmm.mixup(1)
 
-  gmm_speech = GMM(n_features = 36, n_components = 1, n_iter = n_iter)
-  gmm_speech.fit(data_speech)
-  while len(gmm_speech.weights) < n_mixies:
-    i = len(gmm_speech.weights)
+  gmm.fit(vta)
+  print "%s weights: %d" %(name, len(gmm.weights))
+  print gmm.weights
+  print "%s LP: %f" %(name, gmm.log_probs[-1])
+  print datetime.datetime.now()
+  print "-"*120
 
-    if i >= 64:
-      gmm_speech.mixup(8)
-    elif i >= 32:
-      gmm_speech.mixup(6)
-    elif i >= 16:
-      gmm_speech.mixup(4)
-    elif i >= 8:
-      gmm_speech.mixup(2)
-    else:
-      gmm_speech.mixup(1)
+def train_gmm(name):
+  vta = MLFMFCCOnlineAlignedArray(filter=name, usec0 = False)
+  vta.append_mlf(mlf_sil)
+  vta.append_trn(train_data_sil)
+  vta.append_mlf(mlf_speech)
+  vta.append_trn(train_data_speech)
 
-    gmm_speech.fit(data_speech)
-    print "Speech weights:", len(gmm_speech.weights)
-    print gmm_speech.weights
-    print "Speech LP:", gmm_speech.log_probs[-1]
-    print datetime.datetime.now()
-    print "-"*120
-  gmm_speech.save_model('model_voip_en/vad_speech_sds_mfcc.gmm')
+  vta = list(vta)[::2]
+
+  gmm = GMM(n_features = 36, n_components = 1, n_iter = n_iter)
+  gmm.fit(vta)
+  while len(gmm.weights) < n_mixies:
+    mixup(gmm, vta, name)
+  gmm.save_model('model_voip_en/vad_%s_sds_mfcc.gmm' % name)
   return
 
-def train_sil_gmm():
-  vta_sil = MLFMFCCOnlineAlignedArray(filter='sil', usec0 = False)
-  vta_sil.append_mlf(mlf_sil)
-  vta_sil.append_trn(train_data_sil)
-  vta_sil.append_mlf(mlf_speech)
-  vta_sil.append_trn(train_data_speech)
-
-  data_sil = list(vta_sil)
-
-  gmm_sil = GMM(n_features = 36, n_components = 1, n_iter = n_iter)
-  gmm_sil.fit(data_sil)
-  while len(gmm_sil.weights) < n_mixies:
-    i = len(gmm_sil.weights)
-
-    if i >= 64:
-      gmm_sil.mixup(8)
-    elif i >= 32:
-      gmm_sil.mixup(6)
-    elif i >= 16:
-      gmm_sil.mixup(4)
-    elif i >= 8:
-      gmm_sil.mixup(2)
-    else:
-      gmm_sil.mixup(1)
-
-    gmm_sil.fit(data_sil)
-    print "Sil weights:", len(gmm_sil.weights)
-    print gmm_sil.weights
-    print "Sil LP:", gmm_sil.log_probs[-1]
-    print datetime.datetime.now()
-    print "-"*120
-  gmm_sil.save_model('model_voip_en/vad_sil_sds_mfcc.gmm')
 
 train_data_sil = 'data_vad_sil/data/*.wav'
 train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
@@ -119,8 +96,8 @@ print "The length of sil segments in speech:    ", mlf_speech.count_length('sil'
 print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
 
-p_speech = Process(target=train_speech_gmm)
-p_sil = Process(target=train_sil_gmm)
+p_speech = Process(target=train_gmm, args=('speech',))
+p_sil = Process(target=train_gmm, args=('sil', ))
 p_speech.start()
 p_sil.start()
 
@@ -133,6 +110,7 @@ print datetime.datetime.now()
 
 #train_speech_gmm()
 #train_sil_gmm()
+
 
 
 print '-'*120
@@ -149,6 +127,11 @@ vta.append_mlf(mlf_sil)
 vta.append_trn(train_data_sil)
 vta.append_mlf(mlf_speech)
 vta.append_trn(train_data_speech)
+
+vta = list(vta)[1::2]
+
+print "Length of test data:", len(vta)
+print datetime.datetime.now()
 
 accuracy = 0.0
 n = 0

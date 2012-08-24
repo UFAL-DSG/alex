@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import datetime
 
 from multiprocessing import *
 from scipy.misc import logsumexp
@@ -15,62 +16,54 @@ from SDS.utils.htk import *
 train_data = 'data_voip_en/train/*.wav'
 train_data_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-filter_length = 5
-prob_speech_up = 0.3
-prob_speech_stay = 0.1
+filter_length = 5 # 5
+prob_speech_up = 0.3 # 0.3
+prob_speech_stay = 0.1 # 0.1
 
 max_files = 100
-max_frames_per_segment = 1000
+max_frames_per_segment = 100#0
+trim_segments = 30
 
 train_data_sil = 'data_vad_sil/data/*.wav'
 train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
-mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
-mlf_sil.filter_zero_segments()
-# map all sp, _noise_, _laugh_, _inhale_ to sil
-mlf_sil.sub('sp', 'sil')
-mlf_sil.sub('_noise_', 'sil')
-mlf_sil.sub('_laugh_', 'sil')
-mlf_sil.sub('_inhale_', 'sil')
-# map everything except of sil to speech
-mlf_sil.sub('sil', 'speech', False)
-mlf_sil.merge()
-#mlf_sil.times_to_seconds()
-mlf_sil.times_to_frames()
-#mlf_sil.trim_segments(3)
-mlf_sil.shorten_segments(max_frames_per_segment)
+def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
+  mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
+  mlf_sil.filter_zero_segments()
+  # map all sp, _noise_, _laugh_, _inhale_ to sil
+  mlf_sil.sub('sp', 'sil')
+  mlf_sil.sub('_noise_', 'sil')
+  mlf_sil.sub('_laugh_', 'sil')
+  mlf_sil.sub('_inhale_', 'sil')
+  # map everything except of sil to speech
+  mlf_sil.sub('sil', 'speech', False)
+  mlf_sil.merge()
+  #mlf_sil.times_to_seconds()
+  mlf_sil.times_to_frames()
+  mlf_sil.trim_segments(trim_segments)
+  mlf_sil.shorten_segments(max_frames_per_segment)
 
-print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+  return mlf_sil
 
-
+train_data_sil = 'data_vad_sil/data/*.wav'
+train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
 train_data_speech = 'data_voip_en/train/*.wav'
 train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-mlf_speech = MLF(train_data_speech_aligned, max_files = max_files)
-mlf_speech.filter_zero_segments()
-# map all sp, _noise_, _laugh_, _inhale_ to sil
-mlf_speech.sub('sp', 'sil')
-mlf_speech.sub('_noise_', 'sil')
-mlf_speech.sub('_laugh_', 'sil')
-mlf_speech.sub('_inhale_', 'sil')
-# map everything except of sil to speech
-mlf_speech.sub('sil', 'speech', False)
-mlf_speech.merge()
-#mlf_speech.times_to_seconds()
-mlf_speech.times_to_frames()
-#mlf_speech.trim_segments(3)
-mlf_speech.shorten_segments(max_frames_per_segment)
+mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
+mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
 
+print datetime.datetime.now()
+print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
 print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
 print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
 
-
-
 print '-'*120
 print 'VAD GMM test'
+print datetime.datetime.now()
 print '-'*120
 gmm_speech = GMM(n_features = 0)
 gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
@@ -82,6 +75,11 @@ vta.append_mlf(mlf_sil)
 vta.append_trn(train_data_sil)
 vta.append_mlf(mlf_speech)
 vta.append_trn(train_data_speech)
+
+vta = list(vta)[1::2]
+
+print "Length of test data:", len(vta)
+print datetime.datetime.now()
 
 accuracy = 0.0
 n = 0
@@ -124,3 +122,4 @@ for frame, label in vta:
 accuracy = accuracy*100.0/n
 
 print "VAD accuracy : %0.3f%% " % accuracy
+print datetime.datetime.now()
