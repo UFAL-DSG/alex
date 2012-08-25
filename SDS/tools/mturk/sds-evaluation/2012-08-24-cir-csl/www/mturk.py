@@ -16,8 +16,9 @@ cgitb.enable()
 import sys
 if '' not in sys.path:
     sys.path.append('')
-from utils import *
+from common.utils import *
 
+task_xml_filename = "../CIRtasks_V7.xml"
 
 def include(fileName):
     f = open(fileName, "r")
@@ -45,7 +46,7 @@ def getTask():
     random.seed()
     
     try:
-        doc = xml.dom.minidom.parse("CIRtasks_V7.xml")
+        doc = xml.dom.minidom.parse(task_xml_filename)
         tasks = doc.getElementsByTagName("task")
 
         # sample the task
@@ -79,11 +80,11 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
         <TITLE>Amazon Mechanical Turk - Cambridge Information System</TITLE>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 
-        <link rel="stylesheet" href="../mt-common/mturk.css" TYPE="text/css" MEDIA="screen">
-        <script type="text/javascript" src="../mt-common/tabber-minimized.js"></script>
-        <script type="text/javascript" src="../mt-common/jquery-1.4.2.min.js"></script>
-        <script type="text/javascript" src="../mt-common/feedback.js"></script>
-        <script type="text/javascript" src="../mt-common/submitFeedback.js"></script>
+        <link rel="stylesheet" href="common/mturk.css" TYPE="text/css" MEDIA="screen">
+        <script type="text/javascript" src="common/tabber-minimized.js"></script>
+        <script type="text/javascript" src="common/jquery-1.4.2.min.js"></script>
+        <script type="text/javascript" src="common/feedback.js"></script>
+        <script type="text/javascript" src="common/submitFeedback.js"></script>
         
         <script type="text/javascript">
             /* Optional: Temporarily hide the "tabber" class so it does not "flash"*/
@@ -202,17 +203,20 @@ print """
         'assignmentId':assignmentId,'workerId':workerId,'hitId':hitId}
 
 print """
-        <img src="../enghp/UNIBAN-S.gif" style="float:left;margin:5px;">
-        <img src="../enghp/ENGBAN-S.gif" style="float:right;margin:5px;">
-        <H2 style="padding-left:300px;padding-right:300px;text-align:center;">
+        <img src="common/UNIBAN-S.gif" style="float:left;margin:5px;" height="100">
+        <img src="common/ENGBAN-S.gif" style="float:right;margin:5px;" height="100">
+        <H2 style="padding-left:100px;padding-right:100px;text-align:center;">
             Evaluate and rate automated tourist information service
         </H2>
+        <br/>
+        <br/>
+        <br/>
 
         <div class="tabber" id="mytab1">
         <div class="tabbertab">
         <h2>Intro</h2>
             <div>
-            <img src="../mt-common/mturk-computer-headset.png" width="200" height="200"
+            <img src="common/mturk-computer-headset.png" width="200" height="200"
             style="float:right;margin:15px;">
             <p>
                 This HIT requires you to <b>talk naturally</b> to an automated tourist
@@ -295,19 +299,19 @@ print """
         </div>
         <div class="tabbertab">
 """
-include('../mt-common/mturk-example1.html')
+include('common/mturk-example1.html')
 print """
         </div>
         <div class="tabbertab">
 """
-include('../mt-common/mturk-consent.html')
+include('common/mturk-consent.html')
 print """
         </div>
         </div>
 """
 # no poll for now
 #if status != "test":
-#    include('../mt-common/mturk-poll.html')
+#    include('common/mturk-poll.html')
 print """
         <p>
             <strong> Please try to talk about the following topic: </strong>
@@ -407,7 +411,7 @@ print """
         </div>
 """
     
-#include('../mt-common/mturk-comments.html')
+#include('common/mturk-comments.html')
 # print """
 #        <p>
 #            If you have any problems, you can find help
