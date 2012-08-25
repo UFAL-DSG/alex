@@ -1,0 +1,13 @@
+ExpiresActive On
+
+ExpiresDefault A0
+
+ExpiresByType text/css A0
+ExpiresByType text/html A0
+ExpiresByType text/js A0
+
+ExpiresByType image/gif A3600
+ExpiresByType image/png A3600
+ExpiresByType image/jpg A3600
+ExpiresByType image/jpeg A3600
+
