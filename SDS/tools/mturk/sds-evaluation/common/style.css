@@ -1,0 +1,137 @@
+BODY
+{ 
+   font-family: Georgia, Garamond, Times New Roman, Times, serif; 
+}
+
+P.footer
+{ 
+   font-size: x-small;
+   text-align: right;
+   margin-top: 12pt;
+} 
+
+P.navigation
+{ 
+   font-size: x-small;
+   text-align: left;
+   margin-top: 12pt;
+} 
+
+P.figure
+{ 
+   font-size: x-small;
+   text-align: center;
+   margin-left: 36pt;
+   margin-right: 36pt;
+} 
+
+P.equation
+{ 
+   text-align: center;
+   margin-left: 36pt;
+   margin-right: 36pt;
+} 
+
+P.contents
+{ 
+   font-size: small;
+   text-align: left;
+   margin-top: -10pt;
+   margin-bottom: 30pt;
+} 
+
+
+A.but:link { background-color: #6699cc; color: white; text-decoration: none; }
+A.but:visited { background-color: #6699cc; color: white; text-decoration: none; }
+A.but:hover { background-color: #6699cc; color: white; text-decoration: underline; }
+
+A.butcurrent:link { background-color: white; color: #6699cc; text-decoration: none; }
+A.butcurrent:visited { background-color: white; color: #6699cc; text-decoration: none; }
+A.butcurrent:hover { background-color: white; color: #6699cc; text-decoration: underline; }
+
+HR
+{
+	padding-bottom: 0px;
+	padding-top:0px;
+	margin-top:0px;
+	margin-bottom:0px;
+
+}
+
+H1
+{
+   font-family: Albertus Medium, Georgia Bold Italic, sans-serif;
+   font-weight: normal;
+   text-align: center;
+   color: black;
+   background-color: white; 
+   padding-right: 0px;
+   padding-bottom: 5px;
+   padding-top: 0px;
+   margin-bottom: 5px;
+   margin-top: 5px;
+}
+
+H2
+{
+   font-family: Albertus Medium, Verdana, sans-serif;
+   font-weight: bold;
+   clear: both;
+}
+
+H3
+{
+   font-family: Albertus Medium, Verdana, sans-serif;
+   font-weight: bold;
+   clear: both;
+}
+
+P.button
+{ 
+   font-family: Albertus Medium, Verdana, sans-serif;
+   font-weight: normal;
+   font-size: small;
+   text-align: right;
+   color: white;
+   background-color: #6699cc;
+   padding-right: 10px;
+   padding-bottom: 8px;
+   padding-top: 6px;
+   margin-top: 10px;
+   margin-bottom: 0px;
+}
+
+P.title
+{
+   font-family: Albertus Medium, Verdana, sans-serif;
+   font-weight: normal;
+   font-size: small;
+   text-align: right;
+   color: white;
+   background-color: #6699cc;
+   padding-right: 10px;
+   padding-bottom: 8px;
+   padding-top: 6px;
+   margin-top: 10px;
+   margin-bottom: 0px;
+   width: 130px;
+   float: right;
+}
+
+P.current
+{ 
+   font-family: Albertus Medium, Verdana, sans-serif;
+   font-weight: normal;
+   font-size: small;
+   text-align: right;
+   padding-right: 10px;
+   padding-bottom: 8px;
+   padding-top: 6px;
+   margin-top: 10px;
+   margin-bottom: 0px;
+   border-width: 1px; 
+   border-style: solid;
+   border-color: #6699cc;
+   color: #6699cc;
+   background-color: white;
+}
