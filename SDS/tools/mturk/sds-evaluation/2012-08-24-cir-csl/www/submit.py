@@ -12,7 +12,7 @@ import os
 import sys
 if '' not in sys.path:
     sys.path.append('')
-from utils import *
+from common.utils import *
 
 def getWorkerID(xmlFeedback):
     i = xmlFeedback.find("<workerId>")

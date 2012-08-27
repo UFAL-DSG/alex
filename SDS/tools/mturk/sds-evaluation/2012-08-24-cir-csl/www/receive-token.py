@@ -10,7 +10,7 @@ import cgitb
 import sys
 if '' not in sys.path:
     sys.path.append('')
-from utils import *
+from common.utils import *
 
 print "Content-type: text/html\n\n"
 
