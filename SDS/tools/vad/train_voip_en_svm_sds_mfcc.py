@@ -11,7 +11,7 @@ import __init__
 
 from SDS.utils.htk import *
 
-max_files = 100 # 4000
+max_files = 10000 # 4000
 max_frames_per_segment = 100#000
 trim_segments = 30
 nu = 0.1
