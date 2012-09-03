@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<!-- Note the inclusion of the $urls variable which is defined as a field in the input file.  Apache Velocity is the template engine that is
-used to perform the merging of variables into template files. You can learn more about Velocity's capabilities at http://velocity.apache.org.
--->
-<ExternalQuestion xmlns="http://mechanicalturk.amazonaws.com/AWSMechanicalTurkDataSchemas/2006-07-14/ExternalQuestion.xsd">
-    <ExternalURL>https://vystadial.ms.mff.cuni.cz/~jurcicek/2012-08-25-cir-csl/mturk.py?url=${helper.urlencode($urls)}</ExternalURL>
-    <FrameHeight>2500</FrameHeight>
-</ExternalQuestion>
-

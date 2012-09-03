@@ -65,9 +65,8 @@ def getTask():
     return goal, task
 
 def getPhone():
-    #phones = ["1-800-3444-124","01223-851-531","01223-852-907"]
     # the multiple phones are not necessary anymore as the PBX randomly distribute the calls among the tested systems
-    phones = ["1-800-3444-124",]
+    phones = ["1-888-826-5115",]
     return random.choice(phones)
 
 form = cgi.FieldStorage()
@@ -113,14 +112,19 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
     <!--
     <BODY onload="tabberAutomatic();" >
     -->
-        <script type="text/javascript">
-        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-        </script>
-        <script type="text/javascript">
-        try {
-        var pageTracker = _gat._getTracker("UA-349008-12");
-        } catch(err) {}</script>
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-349008-15']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>
 """
 
 print '<H2 style="color:red;" id="locationWarning"></H2><BR>'
@@ -131,34 +135,29 @@ workerId = form.getfirst('workerId','None')
 hitId = form.getfirst('hitId','None')
 goal = 'None'
 task = 'None'
-caller = "10004@eldoradovm1.eng.cam.ac.uk"
-callee = "11111@eldoradovm1.eng.cam.ac.uk"
 
-if assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE':
+if assignmentId == 'ASSIGNENT_ID_NOT_AVAILABLE':
     status = "preview"
     print '<H2 style="color:red;">This is a preview of the HIT. Accept the HIT before you call the service.</H2><BR>'
-    caller = "10005@eldoradovm1.eng.cam.ac.uk"
     print """
     <script type="text/javascript">
-        pageTracker._trackPageview('/~fj228/G1/preview');
+        pageTracker._trackPageview('/~jurcicek/G1/preview');
     </script>
 """
 elif assignmentId == 'None':
     status = "test"
     print '<H2 style="color:red;">This page is not loaded from MTURK.</H2>'
-    caller = "10007@eldoradovm1.eng.cam.ac.uk"
     print """
     <script type="text/javascript">
-        pageTracker._trackPageview('/~fj228/G1/test');
+        pageTracker._trackPageview('/~jurcicek/G1/test');
     </script>
 """
 else:
     status = "accepted"
     # assignmentId was provided
-    caller = "10006@eldoradovm1.eng.cam.ac.uk"
     print """
     <script type="text/javascript">
-        pageTracker._trackPageview('/~fj228/G1/accepted');
+        pageTracker._trackPageview('/~jurcicek/G1/accepted');
     </script>
 """
 
@@ -199,8 +198,7 @@ print """
     var hitId = "%(hitId)s";
 
 </script>
-""" % {'task':task, 'goal':goal,'caller':caller,'callee':callee,
-        'assignmentId':assignmentId,'workerId':workerId,'hitId':hitId}
+""" % {'task':task, 'goal':goal, 'assignmentId':assignmentId, 'workerId':workerId, 'hitId':hitId}
 
 print """
         <img src="common/UNIBAN-S.gif" style="float:left;margin:5px;" height="100">
@@ -229,7 +227,7 @@ print """
             <p>
                 You must be a <b>NATIVE</b> speaker of English (with UK, USA, Canadian, Australian, or South African accents).
             </p>
-            <!--<p>
+            <p>
                 When you call the provided toll free phone number, you will be
                 connect with the automated tourist information service.
                 Please, try to talk about the
@@ -239,8 +237,8 @@ print """
                 At the end of the call, the system will give you a
                 <b>four digit code</b> which you have to enter into the feedback form.
                 This is used to verify the genuine HIT submissions.
-            </p>-->
-            <p>
+            </p>
+            <!--<p>
                 When you call the provided toll free phone number, you will be 
                 connect with the automated tourist information service. 
                 Please, try to talk about the topic which is presented in the green box below. 
@@ -249,7 +247,7 @@ print """
                 The system will then ask you to press 1 if you were satisfied and 0 if you were not satisfied. 
                 Once you do that, the system will give you a <b>four digit code</b> which you have to enter into the feedback form. 
                 This is used to verify the genuine HIT submissions.
-            </p>
+            </p>-->
             <p>
                 <b> Once the call is finished, please fill in the feedback form.
                 Please enter the provided code, answer the questions
@@ -257,11 +255,11 @@ print """
                 The feedback is very important as only the calls with
                 completed feedback and the correct code will be approved. </b>
             </p>
-            <p>
+            <!--<p>
                 Be patient -- the system may make an error on purpose. However, if you cannot get all requested information,
                 end the call by saying "Thank you. Good bye." Such calls are valid and are accepted.
                 Remember to press 1 or 0 to indicate your satisfaction and wait for the code!
-            </p>
+            </p>-->
             <!--<p>
                 If you cannot get all requested information <b>in less than 3 minutes</b>, 
                 end the call by saying <span style="color: red;">"Thank you. Good bye."</span>
@@ -269,10 +267,9 @@ print """
                 Remeber to wait for the code!
             </p>-->
             <p style="color:red;font-weight: bold;">
-                All data is collected anonymously and it will be used only for
-                research purposes by
-                <a href="http://mi.eng.cam.ac.uk/research/dialogue">
-                Dialogue Systems Group, Cambridge University Engineering Department</a>.
+                All data is collected anonymously and by
+                <a href="http://ufal.mff.cuni.cz/">
+                the Institute of Formal and Applied Linguistics, Charles University in Prague</a>.
             </p>
             <p>
                 PLEASE READ THE INSTUCTIONS BEFORE YOU PARTICIPATE IN THIS
@@ -282,7 +279,7 @@ print """
                 Also, submit <b>a maximum 20 HITs in one day</b>.
                 You are welcome to come the next day and do another 20 HITs.
                 Please do not submit more than 40 HITs in total.
-                You can bookmark the following <a target="_top" href="https://www.mturk.com/mturk/searchbar?searchWords=automated+tourist+information">
+                You can bookmark the following <a target="_top" href="https://www.mturk.com/mturk/searchbar?searchWords=UFAL+automated+tourist+information">
                 link on MTURK search</a>.
             </p>
             <!--<p style="color:red;">
