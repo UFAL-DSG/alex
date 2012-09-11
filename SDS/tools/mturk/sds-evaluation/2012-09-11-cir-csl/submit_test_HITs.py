@@ -14,7 +14,7 @@ import mturk
 
 n_hits = 1
 
-external_url = "https://SECRET/~jurcicek/2012-08-24-cir-csl/hit_view.py"
+external_url = "https://SECRET/~jurcicek/2012-09-11-cir-csl/hit_view.py"
 frame_height = 2500
 EQ = ExternalQuestion(external_url, frame_height)
 

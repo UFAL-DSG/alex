@@ -16,8 +16,6 @@ function submitFeedback() {
         // submit to voiphub
         $.post("submit.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
             function(data) {
-                // inform google analytics
-                pageTracker._trackPageview('/~fj228/G1/submitted');
 
                 //alert("Submit voiphub data: " + data);
 

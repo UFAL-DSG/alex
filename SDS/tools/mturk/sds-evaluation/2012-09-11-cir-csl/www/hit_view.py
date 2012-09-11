@@ -139,27 +139,12 @@ task = 'None'
 if assignmentId == 'ASSIGNENT_ID_NOT_AVAILABLE':
     status = "preview"
     print '<H2 style="color:red;">This is a preview of the HIT. Accept the HIT before you call the service.</H2><BR>'
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/preview');
-    </script>
-"""
 elif assignmentId == 'None':
     status = "test"
     print '<H2 style="color:red;">This page is not loaded from MTURK.</H2>'
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/test');
-    </script>
-"""
 else:
     status = "accepted"
     # assignmentId was provided
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/accepted');
-    </script>
-"""
 
 if not workerId == 'None':
     vw = verifyWorker(workerId)
