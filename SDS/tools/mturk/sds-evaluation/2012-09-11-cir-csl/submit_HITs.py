@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import mturk
 
-n_hits = 5
+n_hits = 100
 
 external_url = "https://SECRET/~jurcicek/2012-09-11-cir-csl/hit_view.py"
 frame_height = 2500
