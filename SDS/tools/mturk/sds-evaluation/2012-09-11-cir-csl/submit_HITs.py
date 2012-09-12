@@ -21,7 +21,7 @@ EQ = ExternalQuestion(external_url, frame_height)
 title = "UFAL - Test an automated tourist information service (it takes 2 minutes on average)"
 description = "Rate a speech enabled tourist infomation system."
 keywords = "speech,test,voice,evaluation,call,conversation,dialog,dialogue,chat,quick,fast,mark,rate"
-reward = 0.10
+reward = 0.20
 max_assignments = 1
 
 duration = datetime.timedelta(minutes=100)

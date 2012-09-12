@@ -89,7 +89,7 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
             /* Optional: Temporarily hide the "tabber" class so it does not "flash"*/
             document.write('<style type="text/css">.tabber{display:none;}<\/style>');
         </script>
-        <script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
         <script>
             google.load("search", "1",{callback: getLocation});
             var glocation = "";
@@ -135,6 +135,18 @@ workerId = form.getfirst('workerId','None')
 hitId = form.getfirst('hitId','None')
 goal = 'None'
 task = 'None'
+
+print """
+<script>
+  if (document.referrer.lastIndexOf("sandbox") >= 0) {
+    document.write('<H2 style="color:red;">This is a SANDBOX HIT.</H2><BR>')
+    var sandbox = true;
+  } 
+  else {
+    var sandbox = false;
+  }
+</script>
+"""
 
 if assignmentId == 'ASSIGNENT_ID_NOT_AVAILABLE':
     status = "preview"
