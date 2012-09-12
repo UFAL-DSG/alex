@@ -22,7 +22,7 @@ def sterr(inlist):
     Usage:   sterr(inlist)
     """
     return std(inlist) / float(math.sqrt(len(inlist)))
-    
+
 def feedbackYes(feedback):
     fb = open(feedback, "r")
     fbl = fb.readlines()
@@ -51,10 +51,10 @@ def getText(node):
         if cn.nodeType == cn.TEXT_NODE:
             rc.append(cn.data)
     return ''.join(rc).strip()
-    
+
 def convertScoring(score):
     score = score.strip()
-    
+
     if score == "strongly disagree":
         return 0.0
     if score == "disagree":
@@ -69,11 +69,11 @@ def convertScoring(score):
         return 5.0
 
     raise "Unexpected input: %s" % score
-    
+
 def getScoring(feedbackName):
     # scores: q1, q2, q3, q4, comments
     scores = [0.0,0.0,0.0,0.0, "", ""]
-    
+
     # load the file
     doc = xml.dom.minidom.parse(feedbackName)
     els = doc.getElementsByTagName("question")
@@ -103,9 +103,9 @@ def getScoring(feedbackName):
 
     if verbose:
         print scores
-    
+
     return scores
-    
+
 print "-"*80
 print "MTURK LOG STATS"
 print "-"*80
@@ -124,12 +124,12 @@ for call in calls:
     if verbose:
         print "Processing call: ", os.path.split(call)[1]
     feedback = os.path.join(call,'feedback.xml')
-    
+
     phone = os.path.split(call)[1].replace("voip-", "")
     phone = phone[:phone.index("-")]
     if verbose:
         print phone
-    
+
     try:
         if feedbackYes(feedback):
             allInfoYes += 1
@@ -137,11 +137,11 @@ for call in calls:
             allInfoNo += 1
     except IOError:
         continue
-        
+
     score = getScoring(feedback)
     scores.append(score)
     comments.append(score[4])
-    
+
     turns = len(glob.glob(os.path.join(call,'*.wav'))) - 1
     if verbose:
         print "  # of turns:", turns
@@ -168,7 +168,7 @@ print "The max number of turns:          ", maxCallLengths
 print "The min number of turns:          ", minCallLengths
 print "The median number of turns:       ", medCallLengths
 print
-print "Historgam of the call lengths:    ", histogram(callLengths, range(0,60,4), new=True)
+print "Historgam of the call lengths:    ", histogram(callLengths, range(0,60,4))
 print
 print "Number of different phone numbers:            ", len(phones)
 print "The average number of calls per phone number: ", avgPhoneNumCalls
@@ -176,7 +176,7 @@ print "The max number of calls per phone number:     ", maxPhoneNumCalls
 print "The min number of calls per phone number:     ", minPhoneNumCalls
 print "The median number of calls per phone number:  ", medPhoneNumCalls
 print
-print "Historgam of the number of calls: ", histogram(phoneNumCalls, range(0,30,2), new=True)
+print "Histogram of the number of calls: ", histogram(phoneNumCalls, range(0,30,2))
 print
 print
 print "Did you find all the information you were looking for?"
