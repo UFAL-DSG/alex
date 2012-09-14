@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import mturk
 
-print "Delete aproved or rejected HITs"
+print "Delete aproved, rejected, expired HITs"
 
 conn = mturk.get_connection()
 

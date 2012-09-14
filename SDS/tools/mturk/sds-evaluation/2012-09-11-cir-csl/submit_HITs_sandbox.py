@@ -10,18 +10,18 @@ from boto.mturk.question import *
 from boto.mturk.qualification import *
 from collections import defaultdict
 
-import mturk
+import mturk_sandbox as mturk
 
 n_hits = 1
 
-external_url = "https://SECRET/~jurcicek/2012-08-24-cir-csl/hit_view.py"
+external_url = "https://SECRET/~jurcicek/2012-09-11-cir-csl/hit_view.py"
 frame_height = 2500
 EQ = ExternalQuestion(external_url, frame_height)
 
 title = "UFAL - Test an automated tourist information service (it takes 2 minutes on average)"
 description = "Rate a speech enabled tourist infomation system."
 keywords = "speech,test,voice,evaluation,call,conversation,dialog,dialogue,chat,quick,fast,mark,rate"
-reward = 0.01
+reward = 0.20
 max_assignments = 1
 
 duration = datetime.timedelta(minutes=100)

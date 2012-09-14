@@ -89,7 +89,7 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
             /* Optional: Temporarily hide the "tabber" class so it does not "flash"*/
             document.write('<style type="text/css">.tabber{display:none;}<\/style>');
         </script>
-        <script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
+        <script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
         <script>
             google.load("search", "1",{callback: getLocation});
             var glocation = "";
@@ -136,30 +136,27 @@ hitId = form.getfirst('hitId','None')
 goal = 'None'
 task = 'None'
 
+print """
+<script>
+  if (document.referrer.lastIndexOf("sandbox") >= 0) {
+    document.write('<H2 style="color:red;">This is a SANDBOX HIT.</H2><BR>')
+    var sandbox = true;
+  } 
+  else {
+    var sandbox = false;
+  }
+</script>
+"""
+
 if assignmentId == 'ASSIGNENT_ID_NOT_AVAILABLE':
     status = "preview"
     print '<H2 style="color:red;">This is a preview of the HIT. Accept the HIT before you call the service.</H2><BR>'
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/preview');
-    </script>
-"""
 elif assignmentId == 'None':
     status = "test"
     print '<H2 style="color:red;">This page is not loaded from MTURK.</H2>'
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/test');
-    </script>
-"""
 else:
     status = "accepted"
     # assignmentId was provided
-    print """
-    <script type="text/javascript">
-        pageTracker._trackPageview('/~jurcicek/G1/accepted');
-    </script>
-"""
 
 if not workerId == 'None':
     vw = verifyWorker(workerId)

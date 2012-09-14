@@ -16,16 +16,22 @@ function submitFeedback() {
         // submit to voiphub
         $.post("submit.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
             function(data) {
-                // inform google analytics
-                pageTracker._trackPageview('/~fj228/G1/submitted');
 
                 //alert("Submit voiphub data: " + data);
 
                 // after submiting to voiphub submit to mturk
                 if (assignmentId != "ASSIGNMENT_ID_NOT_AVAILABLE" &&
                     assignmentId != "None") {
-
-                    var mturk = "https://www.mturk.com/mturk/externalSubmit?"+
+                    
+                    // is it on sandbox? 
+                    if (sandbox) {
+                      var mt = "https://workersandbox.mturk.com";
+                    } 
+                    else {
+                      var mt = "https://www.mturk.com";
+                    }
+                                         
+                    var mturk = mt +"/mturk/externalSubmit?"+
                         'assignmentId='+urlencode(assignmentId)+'&'+
                         'token='+urlencode(tokenValue)+'&'+
                         'xmlFeedback='+urlencode(xmlFeedbackContent);

@@ -75,10 +75,10 @@ if tokenTuple:
 
 
     # submit the feedback back to the voiphub (dialogue manager)
-    print "Submitting to ./voiphub"
-    print httpPost("http://SECRET/demo-log.php",
-                    {'dialogueID': dialogueID,
-                     'xmlFeedback': xmlFeedback})
+#    print "Submitting to ./voiphub"
+#    print httpPost("http://SECRET/jurcicek/mturk-log.php",
+#                    {'dialogueID': dialogueID,
+#                     'xmlFeedback': xmlFeedback})
 
     # remove the used token
     removeToken(tokenTuple)

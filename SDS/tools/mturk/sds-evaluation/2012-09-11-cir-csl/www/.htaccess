@@ -11,3 +11,17 @@ ExpiresByType image/png A3600
 ExpiresByType image/jpg A3600
 ExpiresByType image/jpeg A3600
 
+Options -Indexes
+
+<Files ~ "\.xml$">
+Order allow,deny
+Deny from all
+</Files>
+<Files ~ "\.question$">
+Order allow,deny
+Deny from all
+</Files>
+<Files ~ "\.properties$">
+Order allow,deny
+Deny from all
+</Files>
