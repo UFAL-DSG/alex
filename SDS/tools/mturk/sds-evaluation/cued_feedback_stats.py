@@ -8,7 +8,7 @@ import glob
 import os.path
 import collections
 import xml.dom.minidom
-from numpy import *
+import numpy as np
 import math
 
 verbose = True
@@ -21,7 +21,7 @@ def sterr(inlist):
 
     Usage:   sterr(inlist)
     """
-    return std(inlist) / float(math.sqrt(len(inlist)))
+    return np.std(inlist) / float(math.sqrt(len(inlist)))
     
 def getText(node):
     rc = []
@@ -31,13 +31,13 @@ def getText(node):
     return ''.join(rc).strip()
 
 def printStats(callLengths,phones, success):
-    avgCallLengths = mean(callLengths)
+    avgCallLengths = np.mean(callLengths)
     maxCallLengths = max(callLengths)
     minCallLengths = min(callLengths)
     medCallLengths = median(callLengths)
 
     phoneNumCalls = [len(phones[x]) for x in phones]
-    avgPhoneNumCalls = mean(phoneNumCalls)
+    avgPhoneNumCalls = np.mean(phoneNumCalls)
     maxPhoneNumCalls = max(phoneNumCalls)
     minPhoneNumCalls = min(phoneNumCalls)
     medPhoneNumCalls = median(phoneNumCalls)
@@ -67,13 +67,13 @@ def printStats(callLengths,phones, success):
     print "  No:  %d (%.2f%% +-%.2f)" % (allInfoNo, (1.0-b)*100.0, allInfoYesCI*100)
     print
     print "The system understood me well."
-    print "  Score: %.2f +-%.2f" % (mean([x[1] for x in scores]), sterr([x[1] for x in scores])*1.96)
+    print "  Score: %.2f +-%.2f" % (np.mean([x[1] for x in scores]), sterr([x[1] for x in scores])*1.96)
     print
     print "The phrasing of the system's responses was good."
-    print "  Score: %.2f +-%.2f" % (mean([x[2] for x in scores]), sterr([x[2] for x in scores])*1.96)
+    print "  Score: %.2f +-%.2f" % (np.mean([x[2] for x in scores]), sterr([x[2] for x in scores])*1.96)
     print
     print "The system's voice was of good quality."
-    print "  Score: %.2f +-%.2f" % (mean([x[3] for x in scores]), sterr([x[3] for x in scores])*1.96)
+    print "  Score: %.2f +-%.2f" % (np.mean([x[3] for x in scores]), sterr([x[3] for x in scores])*1.96)
     print
 
 #    f = open('comments.txt', "w")
@@ -224,12 +224,15 @@ class FeedbackFilter:
         l = [getattr(f,attribute) for f in self.feedbacks]
         return l
 
-def getSuccessStats(feebacks):
-    success = sum(feebacks.getList('success'))
-    failure = len(feebacks) - success
-    ratio = success/len(feebacks)
-    ci = math.sqrt(ratio*(1-ratio)/len(feebacks))*1.96
-
+def getSuccessStats(feedbacks):
+    if len(feedbacks):
+      success = sum(feedbacks.getList('success'))
+      failure = len(feedbacks) - success
+      ratio = success / float(len(feedbacks))
+      ci = math.sqrt(ratio*(1-ratio)/len(feedbacks))*1.96
+    else:
+      return (None, None, None, None)
+      
     return (success, failure, ratio, ci)
 
 
@@ -260,15 +263,15 @@ def perSystemAnalysis(feedbacks):
         print
 
         print "     The system understood me well."
-        print "         Score: %.2f +-%.2f" % (mean(perSystemFeedbacks.getList('slu')), sterr(perSystemFeedbacks.getList('slu'))*1.96)
+        print "         Score: %.2f +-%.2f" % (np.mean(perSystemFeedbacks.getList('slu')), sterr(perSystemFeedbacks.getList('slu'))*1.96)
         print
 
         print "     The phrasing of the system's responses was good."
-        print "         Score: %.2f +-%.2f" % (mean(perSystemFeedbacks.getList('nlg')), sterr(perSystemFeedbacks.getList('nlg'))*1.96)
+        print "         Score: %.2f +-%.2f" % (np.mean(perSystemFeedbacks.getList('nlg')), sterr(perSystemFeedbacks.getList('nlg'))*1.96)
         print
 
         print "     The system's voice was of good quality."
-        print "         Score: %.2f +-%.2f" % (mean(perSystemFeedbacks.getList('tts')), sterr(perSystemFeedbacks.getList('tts'))*1.96)
+        print "         Score: %.2f +-%.2f" % (np.mean(perSystemFeedbacks.getList('tts')), sterr(perSystemFeedbacks.getList('tts'))*1.96)
         print
 
 
@@ -294,8 +297,9 @@ def perPhoneAnalysis(feedbacks):
         for system in sorted(systems):
             perSystemFeedbacks = perPhoneFeedbacks.has('system',system)
 
-            success, failure, ratio, ci = getSuccessStats(perSystemFeedbacks)
-            print " %35.2f #%3.0f" % (ratio*100,success + failure),
+            if len(perSystemFeedbacks):
+              success, failure, ratio, ci = getSuccessStats(perSystemFeedbacks)
+              print " %35.2f #%3.0f" % (ratio*100,success + failure),
 
         print
         numPhones += 1
