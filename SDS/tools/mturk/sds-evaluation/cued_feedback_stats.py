@@ -168,7 +168,10 @@ class Feedback:
         systemHigh = os.path.dirname(systemLow)
         systemLow = os.path.basename(systemLow)
         systemHigh = os.path.basename(systemHigh)
-        system = systemHigh+":"+systemLow
+        if systemHigh in systemLow:
+          system = systemHigh
+        else: 
+          system = systemHigh+":"+systemLow
         self.system = system
         
         # get number fo turns
@@ -314,6 +317,8 @@ print "-"*80
 
 pth = "./*/voip-*"
 calls = glob.glob(pth)
+pth = "./*/*/voip-*"
+calls.extend(glob.glob(pth))
 
 feedbacks = []
 for call in calls:
