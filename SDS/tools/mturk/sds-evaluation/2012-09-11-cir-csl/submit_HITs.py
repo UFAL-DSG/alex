@@ -26,7 +26,7 @@ max_assignments = 1
 
 duration = datetime.timedelta(minutes=100)
 lifetime = datetime.timedelta(days=7)
-approval_delay = datetime.timedelta(days=2)
+approval_delay = datetime.timedelta(days=1)
                    
 q1 = PercentAssignmentsApprovedRequirement('GreaterThan', 90)
 q2 = NumberHitsApprovedRequirement('GreaterThan', 10)

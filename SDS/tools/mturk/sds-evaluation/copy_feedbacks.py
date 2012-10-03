@@ -70,7 +70,7 @@ if __name__ == '__main__':
           print "Target: ", target
         
         cmd = "pscp -p -pw %s %s %s@%s:%s" % (password,f,user,server,target)
-        
+
         subprocess.call(cmd, shell=True)
         
         fc = open(f+".copied", "w")
