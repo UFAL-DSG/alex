@@ -7,6 +7,7 @@ import os.path
 import argparse
 import xml.dom.minidom
 import shutil
+import collections
 
 import __init__
 

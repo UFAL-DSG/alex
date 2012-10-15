@@ -8,7 +8,7 @@ print "Delete aproved, rejected, expired HITs"
 
 conn = mturk.get_connection()
 
-for pnum in range(1, 150):
+for pnum in range(1, 350):
     for hit in conn.get_reviewable_hits(page_size=100, page_number=pnum):
         print "HITId:", hit.HITId
         
