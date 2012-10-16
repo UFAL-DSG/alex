@@ -52,8 +52,8 @@ class VAD(multiprocessing.Process):
     # stores information about each frame whether it was classified as speech or non speech
     self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
     self.detection_window_sil = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
-    self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
-    self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+    self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
+    self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
     # keeps last decision about whether there is speech or non speech
     self.last_vad = False
