@@ -211,6 +211,7 @@ class UtteranceNBList(ASRHypotheses):
       yield i
 
   def get_best_utterance(self):
+    """Returns the most probable utterance."""
     if self.n_best[0][1] == '__other__':
       return self.n_best[1][1]
 

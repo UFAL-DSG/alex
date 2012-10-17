@@ -42,3 +42,9 @@ class DialogueActNBListException(SLUException):
 
 class DAIKernelException(SLUException):
   pass
+
+class DialogueManagerException(Exception):
+  pass
+
+class DummyDialogueManagerException(DialogueManagerException):
+  pass

@@ -41,7 +41,19 @@ def save_das(file_name, das):
   f.close()
 
 class DialogueActItem:
+  """Represents dialogue act item which is a component of a dialogue act. Each dialogue act item is composed of
+
+  1) dialogue act type - e.g. inform, confirm, request, select, hello, ...
+  2) slot and value pair - e.g. area, pricerange, food and respectively centre, cheap, Italian
+
+
+  """
   def __init__(self, dialogue_act_type = None, name = None, value = None):
+    """Initialise the dialogue act item. Assigns the default values to dialogue act type (dat), slot name (name),
+    and slot value (value).
+
+    """
+
     self.dat = dialogue_act_type
     self.name = name
     self.value = value
@@ -156,18 +168,26 @@ class DialogueAct:
       self.dais.append(dai_parsed)
 
 class DialogueActNBList:
-  """Provides N-best lists for dialogue acts.
+  """Provides functionality of N-best lists for dialogue acts.
 
-  When updating the N-best list, one should do the follwing.
+  When updating the N-best list, one should do the following.
 
   1. add utterances or parse a confusion network
   2. merge
   3. normalise
   4. sort
+
   """
 
   def __init__(self):
     self.n_best = []
+
+  def __str__(self):
+    s = []
+    for h in self.n_best:
+      s.append("%.3f %s" % (h[0], h[1]))
+
+    return '\n'.join(s)
 
   def __len__(self):
     return len(self.n_best)
@@ -178,6 +198,10 @@ class DialogueActNBList:
   def __iter__(self):
     for i in self.n_best:
       yield i
+
+  def get_best_da(self):
+    """Returns the most probable dialogue act."""
+    return self.n_best[0]
 
   def parse_dai_confusion_network(self, dai_cn, n = 10, expand_upto_total_prob_mass = 0.9):
     """Parses the input dialogue act item confusion network and generates N-best hypotheses.
