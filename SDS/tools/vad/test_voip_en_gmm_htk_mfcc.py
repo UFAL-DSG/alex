@@ -59,35 +59,35 @@ log_probs_sil = deque(maxlen = filter_length)
 prev_rec_label = 'sil'
 
 for frame, label in vta:
-  log_prob_speech = gmm_speech.score(frame)
-  log_prob_sil = gmm_sil.score(frame)
+    log_prob_speech = gmm_speech.score(frame)
+    log_prob_sil = gmm_sil.score(frame)
 
-  log_probs_speech.append(log_prob_speech)
-  log_probs_sil.append(log_prob_sil)
+    log_probs_speech.append(log_prob_speech)
+    log_probs_sil.append(log_prob_sil)
 
-  log_prob_speech_avg = 0.0
-  for log_prob_speech, log_prob_sil in zip(log_probs_speech, log_probs_sil):
-    log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
-  log_prob_speech_avg /= float(filter_length)
+    log_prob_speech_avg = 0.0
+    for log_prob_speech, log_prob_sil in zip(log_probs_speech, log_probs_sil):
+        log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
+    log_prob_speech_avg /= float(filter_length)
 
-  if prev_rec_label == 'sil':
-    if log_prob_speech_avg >= np.log(prob_speech_up):
-      rec_label = 'speech'
-    else:
-      rec_label = 'sil'
-  elif prev_rec_label == 'speech':
-    if log_prob_speech_avg >= np.log(prob_speech_stay):
-      rec_label = 'speech'
-    else:
-      rec_label = 'sil'
+    if prev_rec_label == 'sil':
+        if log_prob_speech_avg >= np.log(prob_speech_up):
+            rec_label = 'speech'
+        else:
+            rec_label = 'sil'
+    elif prev_rec_label == 'speech':
+        if log_prob_speech_avg >= np.log(prob_speech_stay):
+            rec_label = 'speech'
+        else:
+            rec_label = 'sil'
 
-  prev_rec_label = rec_label
+    prev_rec_label = rec_label
 #  print rec_label
 
-  if rec_label == label:
-    accuracy += 1.0
+    if rec_label == label:
+        accuracy += 1.0
 
-  n += 1
+    n += 1
 
 accuracy = accuracy*100.0/n
 

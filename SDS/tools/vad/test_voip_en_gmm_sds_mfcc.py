@@ -28,22 +28,22 @@ train_data_sil = 'data_vad_sil/data/*.wav'
 train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
-  mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
-  mlf_sil.filter_zero_segments()
-  # map all sp, _noise_, _laugh_, _inhale_ to sil
-  mlf_sil.sub('sp', 'sil')
-  mlf_sil.sub('_noise_', 'sil')
-  mlf_sil.sub('_laugh_', 'sil')
-  mlf_sil.sub('_inhale_', 'sil')
-  # map everything except of sil to speech
-  mlf_sil.sub('sil', 'speech', False)
-  mlf_sil.merge()
-  #mlf_sil.times_to_seconds()
-  mlf_sil.times_to_frames()
-  mlf_sil.trim_segments(trim_segments)
-  mlf_sil.shorten_segments(max_frames_per_segment)
+    mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
+    mlf_sil.filter_zero_segments()
+    # map all sp, _noise_, _laugh_, _inhale_ to sil
+    mlf_sil.sub('sp', 'sil')
+    mlf_sil.sub('_noise_', 'sil')
+    mlf_sil.sub('_laugh_', 'sil')
+    mlf_sil.sub('_inhale_', 'sil')
+    # map everything except of sil to speech
+    mlf_sil.sub('sil', 'speech', False)
+    mlf_sil.merge()
+    #mlf_sil.times_to_seconds()
+    mlf_sil.times_to_frames()
+    mlf_sil.trim_segments(trim_segments)
+    mlf_sil.shorten_segments(max_frames_per_segment)
 
-  return mlf_sil
+    return mlf_sil
 
 train_data_sil = 'data_vad_sil/data/*.wav'
 train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
@@ -89,35 +89,35 @@ log_probs_sil = deque(maxlen = filter_length)
 prev_rec_label = 'sil'
 
 for frame, label in vta:
-  log_prob_speech = gmm_speech.score(frame)
-  log_prob_sil = gmm_sil.score(frame)
+    log_prob_speech = gmm_speech.score(frame)
+    log_prob_sil = gmm_sil.score(frame)
 
-  log_probs_speech.append(log_prob_speech)
-  log_probs_sil.append(log_prob_sil)
+    log_probs_speech.append(log_prob_speech)
+    log_probs_sil.append(log_prob_sil)
 
-  log_prob_speech_avg = 0.0
-  for log_prob_speech, log_prob_sil in zip(log_probs_speech, log_probs_sil):
-    log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
-  log_prob_speech_avg /= float(filter_length)
+    log_prob_speech_avg = 0.0
+    for log_prob_speech, log_prob_sil in zip(log_probs_speech, log_probs_sil):
+        log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
+    log_prob_speech_avg /= float(filter_length)
 
-  if prev_rec_label == 'sil':
-    if log_prob_speech_avg >= np.log(prob_speech_up):
-      rec_label = 'speech'
-    else:
-      rec_label = 'sil'
-  elif prev_rec_label == 'speech':
-    if log_prob_speech_avg >= np.log(prob_speech_stay):
-      rec_label = 'speech'
-    else:
-      rec_label = 'sil'
+    if prev_rec_label == 'sil':
+        if log_prob_speech_avg >= np.log(prob_speech_up):
+            rec_label = 'speech'
+        else:
+            rec_label = 'sil'
+    elif prev_rec_label == 'speech':
+        if log_prob_speech_avg >= np.log(prob_speech_stay):
+            rec_label = 'speech'
+        else:
+            rec_label = 'sil'
 
-  prev_rec_label = rec_label
+    prev_rec_label = rec_label
 #  print rec_label
 
-  if rec_label == label:
-    accuracy += 1.0
+    if rec_label == label:
+        accuracy += 1.0
 
-  n += 1
+    n += 1
 
 accuracy = accuracy*100.0/n
 

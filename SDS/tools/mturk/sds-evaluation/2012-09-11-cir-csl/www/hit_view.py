@@ -30,12 +30,12 @@ def include(fileName):
 def getTextFromNode(node):
     text = ""
     for n in node.childNodes:
-      if n.nodeType == Node.TEXT_NODE:
-        text += n.data
+        if n.nodeType == Node.TEXT_NODE:
+            text += n.data
 
     text = text.strip()
     text = re.sub("\s+" , " ", text)
-   
+
     return text
 
 def getTask():
@@ -44,7 +44,7 @@ def getTask():
     selects one of the tasks.
     """
     random.seed()
-    
+
     try:
         doc = xml.dom.minidom.parse(task_xml_filename)
         tasks = doc.getElementsByTagName("task")
@@ -56,7 +56,7 @@ def getTask():
         task = getTextFromNode(node.getElementsByTagName("text")[0])
     except Exception, e:
         print e
-        
+
         goal = "inform(food=French);request(name,phone)"
         task = "You are thinking of having some French food later, so you want" +\
                "to get the name and phone number of a suitable restaurant."
@@ -84,7 +84,7 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
         <script type="text/javascript" src="common/jquery-1.4.2.min.js"></script>
         <script type="text/javascript" src="common/feedback.js"></script>
         <script type="text/javascript" src="common/submitFeedback.js"></script>
-        
+
         <script type="text/javascript">
             /* Optional: Temporarily hide the "tabber" class so it does not "flash"*/
             document.write('<style type="text/css">.tabber{display:none;}<\/style>');
@@ -141,7 +141,7 @@ print """
   if (document.referrer.lastIndexOf("sandbox") >= 0) {
     document.write('<H2 style="color:red;">This is a SANDBOX HIT.</H2><BR>')
     var sandbox = true;
-  } 
+  }
   else {
     var sandbox = false;
   }
@@ -236,13 +236,13 @@ print """
                 This is used to verify the genuine HIT submissions.
             </p>
             <!--<p>
-                When you call the provided toll free phone number, you will be 
-                connect with the automated tourist information service. 
-                Please, try to talk about the topic which is presented in the green box below. 
-                Once you get the required information, you can finish the call 
-                by saying "Thank you. Good bye." to the system. 
-                The system will then ask you to press 1 if you were satisfied and 0 if you were not satisfied. 
-                Once you do that, the system will give you a <b>four digit code</b> which you have to enter into the feedback form. 
+                When you call the provided toll free phone number, you will be
+                connect with the automated tourist information service.
+                Please, try to talk about the topic which is presented in the green box below.
+                Once you get the required information, you can finish the call
+                by saying "Thank you. Good bye." to the system.
+                The system will then ask you to press 1 if you were satisfied and 0 if you were not satisfied.
+                Once you do that, the system will give you a <b>four digit code</b> which you have to enter into the feedback form.
                 This is used to verify the genuine HIT submissions.
             </p>-->
             <p>
@@ -258,7 +258,7 @@ print """
                 Remember to press 1 or 0 to indicate your satisfaction and wait for the code!
             </p>-->
             <!--<p>
-                If you cannot get all requested information <b>in less than 3 minutes</b>, 
+                If you cannot get all requested information <b>in less than 3 minutes</b>,
                 end the call by saying <span style="color: red;">"Thank you. Good bye."</span>
                 Such calls are valid and are accepted.
                 Remeber to wait for the code!
@@ -313,7 +313,7 @@ print """
         <div class=task>
             <strong>%(task)s</strong>
         </div>
-     
+
 """ % {'task':task}
 
 if assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE':
@@ -324,7 +324,7 @@ if assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE':
         </div>
         </div>
 """
-    
+
 print """
         <div align="center">
         <div class=warning>
@@ -404,7 +404,7 @@ print """
         </div>
         </div>
 """
-    
+
 #include('common/mturk-comments.html')
 # print """
 #        <p>
@@ -419,4 +419,4 @@ if assignmentId == "ASSIGNMENT_ID_NOT_AVAILABLE":
 print """
     </BODY>
 </HTML>
-""" 
+"""

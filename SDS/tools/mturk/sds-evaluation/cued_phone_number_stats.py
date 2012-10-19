@@ -213,4 +213,3 @@ print
 for (phone, number) in items:
     if workerId[phone] != "None":
         print "Phone: %14s #calls: %2d    worker: requester.mturk.com/bulk/workers/%s" % (phone, number, workerId[phone])
-

@@ -19,65 +19,65 @@ max_frames_per_segment = 100000
 trim_segments = 30
 n_iter = 10
 n_mixies = 256 # 64 # 32 # 16
-           
-def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
-  mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
-  mlf_sil.filter_zero_segments()
-  # map all sp, _noise_, _laugh_, _inhale_ to sil
-  mlf_sil.sub('sp', 'sil')
-  mlf_sil.sub('_noise_', 'sil')
-  mlf_sil.sub('_laugh_', 'sil')
-  mlf_sil.sub('_inhale_', 'sil')
-  # map everything except of sil to speech
-  mlf_sil.sub('sil', 'speech', False)
-  mlf_sil.merge()
-  #mlf_sil.times_to_seconds()
-  mlf_sil.times_to_frames()
-  mlf_sil.trim_segments(trim_segments)
-  mlf_sil.shorten_segments(max_frames_per_segment)
 
-  return mlf_sil
+def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
+    mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
+    mlf_sil.filter_zero_segments()
+    # map all sp, _noise_, _laugh_, _inhale_ to sil
+    mlf_sil.sub('sp', 'sil')
+    mlf_sil.sub('_noise_', 'sil')
+    mlf_sil.sub('_laugh_', 'sil')
+    mlf_sil.sub('_inhale_', 'sil')
+    # map everything except of sil to speech
+    mlf_sil.sub('sil', 'speech', False)
+    mlf_sil.merge()
+    #mlf_sil.times_to_seconds()
+    mlf_sil.times_to_frames()
+    mlf_sil.trim_segments(trim_segments)
+    mlf_sil.shorten_segments(max_frames_per_segment)
+
+    return mlf_sil
 
 def mixup(gmm, vta, name):
-  i = len(gmm.weights)
+    i = len(gmm.weights)
 
-  if i >= 256:
-    gmm.mixup(12)
-  if i >= 128:
-    gmm.mixup(10)
-  if i >= 64:
-    gmm.mixup(8)
-  elif i >= 32:
-    gmm.mixup(6)
-  elif i >= 16:
-    gmm.mixup(4)
-  elif i >= 8:
-    gmm.mixup(2)
-  else:
-    gmm.mixup(1)
+    if i >= 256:
+        gmm.mixup(12)
+    if i >= 128:
+        gmm.mixup(10)
+    if i >= 64:
+        gmm.mixup(8)
+    elif i >= 32:
+        gmm.mixup(6)
+    elif i >= 16:
+        gmm.mixup(4)
+    elif i >= 8:
+        gmm.mixup(2)
+    else:
+        gmm.mixup(1)
 
-  gmm.fit(vta)
-  print "%s weights: %d" %(name, len(gmm.weights))
-  print gmm.weights
-  print "%s LP: %f" %(name, gmm.log_probs[-1])
-  print datetime.datetime.now()
-  print "-"*120
+    gmm.fit(vta)
+    print "%s weights: %d" %(name, len(gmm.weights))
+    print gmm.weights
+    print "%s LP: %f" %(name, gmm.log_probs[-1])
+    print datetime.datetime.now()
+    print "-"*120
 
 def train_gmm(name):
-  vta = MLFMFCCOnlineAlignedArray(filter=name, usec0 = False)
-  vta.append_mlf(mlf_sil)
-  vta.append_trn(train_data_sil)
-  vta.append_mlf(mlf_speech)
-  vta.append_trn(train_data_speech)
+    vta = MLFMFCCOnlineAlignedArray(filter=name, usec0 = False)
+    vta.append_mlf(mlf_sil)
+    vta.append_trn(train_data_sil)
+    vta.append_mlf(mlf_speech)
+    vta.append_trn(train_data_speech)
 
-  vta = list(vta)[::2]
+    vta = list(vta)[::2]
 
-  gmm = GMM(n_features = 36, n_components = 1, n_iter = n_iter)
-  gmm.fit(vta)
-  while len(gmm.weights) < n_mixies:
-    mixup(gmm, vta, name)
-  gmm.save_model('model_voip_en/vad_%s_sds_mfcc.gmm' % name)
-  return
+    gmm = GMM(n_features = 36, n_components = 1, n_iter = n_iter)
+    gmm.fit(vta)
+    while len(gmm.weights) < n_mixies:
+        mixup(gmm, vta, name)
+    gmm.save_model('model_voip_en/vad_%s_sds_mfcc.gmm' % name)
+    return
 
 
 train_data_sil = 'data_vad_sil/data/*.wav'
@@ -136,19 +136,19 @@ print datetime.datetime.now()
 accuracy = 0.0
 n = 0
 for frame, label in vta:
-  log_prob_speech = gmm_speech.score(frame)
-  log_prob_sil = gmm_sil.score(frame)
+    log_prob_speech = gmm_speech.score(frame)
+    log_prob_sil = gmm_sil.score(frame)
 
-  ratio = log_prob_speech - log_prob_sil
-  if ratio >= 0:
-    rec_label = 'speech'
-  else:
-    rec_label = 'sil'
+    ratio = log_prob_speech - log_prob_sil
+    if ratio >= 0:
+        rec_label = 'speech'
+    else:
+        rec_label = 'sil'
 
-  if rec_label == label:
-    accuracy += 1.0
+    if rec_label == label:
+        accuracy += 1.0
 
-  n += 1
+    n += 1
 
 accuracy = accuracy*100.0/n
 

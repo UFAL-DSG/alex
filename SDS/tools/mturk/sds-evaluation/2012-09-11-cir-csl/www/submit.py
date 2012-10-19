@@ -49,13 +49,13 @@ if tokenTuple:
 
     # insert the retrived dialogueID into the xmlFeedback
     xmlFeedback = xmlFeedback.replace("<dialogueId></dialogueId>", "<dialogueId>"+dialogueID+"</dialogueId>")
-    
+
     workerID = getWorkerID(xmlFeedback)
     phone = os.path.split(dialogueID)[1].replace("voip-", "")
     phone = phone[:phone.index("-")]
 
     saveWorker(workerID, phone)
-    
+
     # save the feedback locally
     print "Saving locally"
     try:

@@ -12,45 +12,44 @@ from SDS.utils.exception import TTSException
 from SDS.utils.string import escape_special_characters_shell
 
 class FliteTTS():
-  """ Uses Flite TTS to synthesize sentences in a English language.
+    """ Uses Flite TTS to synthesize sentences in a English language.
 
-  The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.
-
-  """
-
-  def __init__(self, cfg):
-    self.cfg = cfg
-
-  @cache.persistent_cache(True, 'FliteTTS.get_tts_wav.')
-  def get_tts_wav(self, voice, text):
-    """ Run flite from a command line and get synthesized audio.
-    Note that the returned audio is in the resampled PCM audio format.
+    The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.
 
     """
 
-    handle, wav_file_name = mkstemp('TmpSpeechFile.wav')
+    def __init__(self, cfg):
+        self.cfg = cfg
 
-    if voice not in ['awb', 'rms', 'slt', 'kal', 'awb_time', 'kal16']:
-      voice = 'awb'
+    @cache.persistent_cache(True, 'FliteTTS.get_tts_wav.')
+    def get_tts_wav(self, voice, text):
+        """ Run flite from a command line and get synthesized audio.
+        Note that the returned audio is in the resampled PCM audio format.
 
-    try:
-      subprocess.call("flite -voice %s -t \"%s\" -o %s 2> /dev/null" % (voice, text, wav_file_name), shell=True)
-      wav = audio.load_wav(self.cfg, wav_file_name)
-    except:
-      raise TTSException("No data synthesised.")
+        """
 
-    return wav
+        handle, wav_file_name = mkstemp('TmpSpeechFile.wav')
+
+        if voice not in ['awb', 'rms', 'slt', 'kal', 'awb_time', 'kal16']:
+            voice = 'awb'
+
+        try:
+            subprocess.call("flite -voice %s -t \"%s\" -o %s 2> /dev/null" % (voice, text, wav_file_name), shell=True)
+            wav = audio.load_wav(self.cfg, wav_file_name)
+        except:
+            raise TTSException("No data synthesised.")
+
+        return wav
 
 
-  def synthesize(self, text):
-    """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
+    def synthesize(self, text):
+        """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
-    try:
-      wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
-    except TTSException:
-      # send empty wave data
-      # FIX: log the exception
-      return ""
+        try:
+            wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
+        except TTSException:
+            # send empty wave data
+            # FIX: log the exception
+            return ""
 
-    return wav
-
+        return wav

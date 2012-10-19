@@ -12,7 +12,7 @@ class Node(object):
         self.name = name
         self.desc = desc
         self.cardinality = card
-        self.values = {} 
+        self.values = {}
 
     def __getitem__(self, key):
         return self.values[key]
@@ -324,5 +324,3 @@ class ConstChangeGoal(GroupingGoal):
 
         # update the __others__ value
         self.values['__others__'] = 1 - sum(self.values.values())
-
-

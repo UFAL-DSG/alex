@@ -128,5 +128,3 @@ except IOError, e:
     print "No Output devices: %s" % e[0]
 
 p.terminate()
-
-

@@ -2,64 +2,64 @@
 # -*- coding: utf-8 -*-
 
 class SDSException(Exception):
-  pass
+    pass
 
 class ASRException(SDSException):
-  pass
+    pass
 
 class SLUException(SDSException):
-  pass
+    pass
 
 class DMException(SDSException):
-  pass
+    pass
 
 class NLGException(SDSException):
-  pass
+    pass
 
 class TTSException(SDSException):
-  pass
+    pass
 
 class HubException(SDSException):
-  pass
+    pass
 
 class SemHubException(HubException):
-  pass
+    pass
 
 class TextHubEception(HubException):
-  pass
+    pass
 
 class VoipHubException(HubException):
-  pass
+    pass
 
 class VoipIOException(Exception):
-  pass
+    pass
 
 class JuliusASRException(ASRException):
-  pass
+    pass
 
 class JuliusASRTimeoutException(ASRException):
-  pass
+    pass
 
 class UtteranceException(SLUException):
-  pass
+    pass
 
 class UtteranceNBListException(SLUException):
-  pass
+    pass
 
 class DialogueActException(SLUException):
-  pass
+    pass
 
 class DialogueActItemException(SLUException):
-  pass
+    pass
 
 class DialogueActNBListException(SLUException):
-  pass
+    pass
 
 class DAIKernelException(SLUException):
-  pass
+    pass
 
 class DialogueManagerException(SDSException):
-  pass
+    pass
 
 class DummyDialogueManagerException(DialogueManagerException):
-  pass
+    pass

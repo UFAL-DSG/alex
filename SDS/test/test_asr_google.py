@@ -42,5 +42,3 @@ hyp = asr.recognize(wav)
 
 print 'hypotheses'
 print hyp
-
-

@@ -45,11 +45,11 @@ class DialogueState:
         def request(da_item):
             self._update_item_value(self._get_rh_name(da_item.name),
                                     RH_USER_REQUESTED)
-            
+
         def confirm(da_item):
             self._update_item_value(self._get_ch_name(da_item.name),
                                     da_item.value)
-            
+
         return {
             'inform': inform,
             'deny': deny,
@@ -63,14 +63,14 @@ class DialogueState:
                RH_USER_REQUESTED:
                 self._update_item_value(self._get_rh_name(da_item.name),
                                         RH_SYSTEM_INFORMED)
-                
+
             if self.values.get(self._get_ch_name(da_item.name)) is not \
                None:
                 self._update_item_value(self._get_ch_name(da_item.name),
                                         CH_SYSTEM_INFORMED)
 
             return True
-            
+
         def deny(da_item):
             if self.values.get(self._get_ch_name(da_item.name)) is not \
                None:
@@ -90,15 +90,15 @@ class DialogueState:
     @classmethod
     def _get_rh_name(cls, name):
         return "rh_%s" % name
-        
+
     @classmethod
     def _get_sh1_name(cls, name):
         return "sh1_%s" % name
-        
+
     @classmethod
     def _get_sh2_name(cls, name):
         return "sh2_%s" % name
-        
+
     @classmethod
     def _get_ch_name(cls, name):
         return "ch_%s" % name
@@ -120,7 +120,7 @@ class DialogueState:
 
     def update_system(self, da):
         self._update_act(self.SYSTEM_ACTS, da)
-        
+
     def copy(self, ds):
         self.slots = list(ds.slots)
         self.values = dict(ds.values.items())
@@ -131,7 +131,7 @@ class DialogueState:
 
     def __str__(self):
         return unicode(self)
-  
+
 
 class DM:
     def __init__(self, ontology_file):

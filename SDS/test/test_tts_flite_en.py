@@ -43,4 +43,3 @@ audio.save_wav(cfg, './tmp/flite_tts.wav', wav)
 
 print 'playing audio'
 audio.play(cfg, wav)
-

@@ -42,4 +42,3 @@ audio.save_wav(cfg, './tmp/google_tts.wav', wav)
 
 print 'playing audio'
 audio.play(cfg, wav)
-

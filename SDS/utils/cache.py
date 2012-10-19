@@ -90,9 +90,9 @@ def lru_cache(maxsize=100):
 
         wrapper.hits = wrapper.misses = 0
         wrapper.clear = clear
-        
+
         return wrapper
-        
+
     return decorator
 
 
@@ -142,24 +142,24 @@ def lfu_cache(maxsize=100):
         wrapper.hits = wrapper.misses = 0
         wrapper.clear = clear
         wrapper.cache = cache
-        
+
         return wrapper
-        
+
     return decorator
 
 
 def get_persitent_cache_content(key):
     key_name = persistent_cache_directory+'/'+'_'.join([str(i) for i in key]).replace(' ', '_')
     try:
-      f = open(key_name, 'rb')
+        f = open(key_name, 'rb')
     except IOError:
-      raise KeyError
-      
+        raise KeyError
+
     data = pickle.load(f)
     f.close()
-    
+
     return data
-    
+
 def set_persitent_cache_content(key, value):
     key_name = persistent_cache_directory+'/'+'_'.join([str(i) for i in key]).replace(' ', '_')
     f = open(key_name, 'wb')
@@ -180,10 +180,10 @@ def persistent_cache(method=False, file_prefix='',file_suffix=''):
             key = (file_prefix,)
 
             if method:
-              key += args[1:]
+                key += args[1:]
             else:
-              key += args
-            
+                key += args
+
             if kwds:
                 key += tuple(sorted(kwds.items()))
 
@@ -195,26 +195,26 @@ def persistent_cache(method=False, file_prefix='',file_suffix=''):
             except KeyError:
                 result = user_function(*args, **kwds)
                 wrapper.misses += 1
-                    
+
                 set_persitent_cache_content(key, result)         # record this key
-                
+
             return result
-            
+
         wrapper.hits = wrapper.misses = 0
-        
+
         return wrapper
-        
+
     return decorator
 
 persistent_cache_directory = os.path.expanduser(persistent_cache_directory)
 if not os.path.exists(persistent_cache_directory):
     os.makedirs(persistent_cache_directory)
-         
+
 if __name__ == '__main__':
     print "Testing the LRU and LFU cache decorators."
     print "="*120
 
-    print "LRU cache"    
+    print "LRU cache"
     @lru_cache(maxsize=40)
     def f(x, y):
         return 3*x+y
@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
     print(f.hits, f.misses)
 
-    print "LFU cache"    
+    print "LFU cache"
     @lfu_cache(maxsize=40)
     def f(x, y):
         return 3*x+y
@@ -237,9 +237,9 @@ if __name__ == '__main__':
         r = f(choice(domain), choice(domain))
 
     print(f.hits, f.misses)
-    
-    
-    print "persistent LRU cache"    
+
+
+    print "persistent LRU cache"
     @persistent_cache()
     def f(x, y):
         return 3*x+y
@@ -250,4 +250,3 @@ if __name__ == '__main__':
         r = f(choice(domain), choice(domain))
 
     print(f.hits, f.misses)
-    

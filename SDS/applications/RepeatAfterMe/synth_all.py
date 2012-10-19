@@ -45,17 +45,17 @@ tts = SpeechtechTTS(cfg)
 f = open('sentences.txt', 'r')
 r = []
 for s in f:
-  s = s.strip()
-  r.append(s)
+    s = s.strip()
+    r.append(s)
 f.close()
 
 for s in r:
-  print 'calling TTS: ', s
-  wav = tts.synthesize(s)
+    print 'calling TTS: ', s
+    wav = tts.synthesize(s)
 
-  n = s.replace(' ', '_')
+    n = s.replace(' ', '_')
 
-  print 'saving the TTS audio in ./tmp/tts_%s.wav' % n
-  audio.save_wav(cfg, './tmp/tts_%s.wav' %n, wav)
+    print 'saving the TTS audio in ./tmp/tts_%s.wav' % n
+    audio.save_wav(cfg, './tmp/tts_%s.wav' %n, wav)
 
-  #time.sleep(random.randint(1, 10))
+    #time.sleep(random.randint(1, 10))

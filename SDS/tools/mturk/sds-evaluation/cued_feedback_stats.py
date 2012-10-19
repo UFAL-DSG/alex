@@ -22,7 +22,7 @@ def sterr(inlist):
     Usage:   sterr(inlist)
     """
     return np.std(inlist) / float(math.sqrt(len(inlist)))
-    
+
 def getText(node):
     rc = []
     for cn in node.childNodes:
@@ -169,11 +169,11 @@ class Feedback:
         systemLow = os.path.basename(systemLow)
         systemHigh = os.path.basename(systemHigh)
         if systemHigh in systemLow:
-          system = systemHigh
-        else: 
-          system = systemHigh+":"+systemLow
+            system = systemHigh
+        else:
+            system = systemHigh+":"+systemLow
         self.system = system
-        
+
         # get number fo turns
         self.turns = len(glob.glob(os.path.join(dirName,'*.wav'))) - 1
 
@@ -229,13 +229,13 @@ class FeedbackFilter:
 
 def getSuccessStats(feedbacks):
     if len(feedbacks):
-      success = sum(feedbacks.getList('success'))
-      failure = len(feedbacks) - success
-      ratio = success / float(len(feedbacks))
-      ci = math.sqrt(ratio*(1-ratio)/len(feedbacks))*1.96
+        success = sum(feedbacks.getList('success'))
+        failure = len(feedbacks) - success
+        ratio = success / float(len(feedbacks))
+        ci = math.sqrt(ratio*(1-ratio)/len(feedbacks))*1.96
     else:
-      return (None, None, None, None)
-      
+        return (None, None, None, None)
+
     return (success, failure, ratio, ci)
 
 
@@ -282,7 +282,7 @@ def perPhoneAnalysis(feedbacks):
     phones = FeedbackFilter(feedbacks).getSet('phone')
     workers = FeedbackFilter(feedbacks).getSet('worker')
     systems = FeedbackFilter(feedbacks).getSet('system')
-    
+
     print "="*80
     print "Per phone analysis"
     print "="*80
@@ -301,8 +301,8 @@ def perPhoneAnalysis(feedbacks):
             perSystemFeedbacks = perPhoneFeedbacks.has('system',system)
 
             if len(perSystemFeedbacks):
-              success, failure, ratio, ci = getSuccessStats(perSystemFeedbacks)
-              print " %35.2f #%3.0f" % (ratio*100,success + failure),
+                success, failure, ratio, ci = getSuccessStats(perSystemFeedbacks)
+                print " %35.2f #%3.0f" % (ratio*100,success + failure),
 
         print
         numPhones += 1
@@ -333,7 +333,7 @@ for call in calls:
         continue
 
     feedbacks.append(feedback)
-    
+
 phones = FeedbackFilter(feedbacks).getSet('phone')
 workers = FeedbackFilter(feedbacks).getSet('worker')
 systems = FeedbackFilter(feedbacks).getSet('system')
@@ -345,7 +345,7 @@ minCalls = 3
 exludePhones = []
 for phone in phones:
     perPhone = FeedbackFilter(feedbacks).has('phone',phone)
-    
+
     succTest = 0
     for system in systems:
         perSystem = perPhone.has('system',system)
@@ -363,4 +363,3 @@ print "Filtered stats: minimum 3 calls for at least 2 systems each per user"
 print "*"*80
 perSystemAnalysis(filteredFeedbacks.feedbacks)
 perPhoneAnalysis(filteredFeedbacks.feedbacks)
-

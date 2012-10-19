@@ -23,12 +23,12 @@ def lock():
 def unlock():
     fcntl.lockf(lockFile, fcntl.LOCK_UN)
     lockFile.close()
-    
+
 def httpPost(url, data):
     # data = {'spam': 1, 'eggs': 2, 'bacon': 0}
     #print url,'\n'
     #print data,'\n'
-    
+
     url = urlparse.urlsplit(url)
     params = urllib.urlencode(data)
 
@@ -71,7 +71,7 @@ def findTokenTuple(token):
         # allow only tokens which are not older than 10 minutes
         if each[0] == token and each[2] > (tm - 600):
             return each
-        
+
     return None
 
 def removeToken(tokenTuple):
@@ -207,4 +207,3 @@ def verifyWorker(workerID):
         return ">40in4w"
 
     return "OK"
-

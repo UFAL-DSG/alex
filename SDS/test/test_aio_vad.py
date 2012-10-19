@@ -34,7 +34,7 @@ cfg = {
   },
   'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
+  },
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -68,37 +68,36 @@ vad.start()
 count = 0
 max_count = 5000
 while count < max_count:
-  time.sleep(cfg['Hub']['main_loop_sleep_time'])
-  count += 1
+    time.sleep(cfg['Hub']['main_loop_sleep_time'])
+    count += 1
 
-  # write one frame into the audio output
-  if wav:
-    data_play = wav.pop(0)
-    #print len(wav), len(data_play)
-    audio_play.send(Frame(data_play))
+    # write one frame into the audio output
+    if wav:
+        data_play = wav.pop(0)
+        #print len(wav), len(data_play)
+        audio_play.send(Frame(data_play))
 
-  # read all VAD output audio
-  if vad_audio_out.poll():
-    data_vad = vad_audio_out.recv()
+    # read all VAD output audio
+    if vad_audio_out.poll():
+        data_vad = vad_audio_out.recv()
 
-    if isinstance(data_vad, Command):
-      if data_vad.parsed['__name__'] == 'speech_start':
-        print 'Speech start'
-      if data_vad.parsed['__name__'] == 'speech_end':
-        print 'Speech end'
+        if isinstance(data_vad, Command):
+            if data_vad.parsed['__name__'] == 'speech_start':
+                print 'Speech start'
+            if data_vad.parsed['__name__'] == 'speech_end':
+                print 'Speech end'
 
-  # read all messages
-  for c in command_connections:
-    if c.poll():
-      command = c.recv()
-      print
-      print command
-      print
-      
+    # read all messages
+    for c in command_connections:
+        if c.poll():
+            command = c.recv()
+            print
+            print command
+            print
+
 aio_commands.send(Command('stop()'))
 vad_commands.send(Command('stop()'))
 aio.join()
 vad.join()
 
 print
-

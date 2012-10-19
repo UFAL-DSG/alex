@@ -27,7 +27,7 @@ max_assignments = 1
 duration = datetime.timedelta(minutes=100)
 lifetime = datetime.timedelta(days=7)
 approval_delay = datetime.timedelta(days=2)
-                   
+
 q1 = PercentAssignmentsApprovedRequirement('GreaterThan', 90)
 q2 = NumberHitsApprovedRequirement('GreaterThan', 10)
 q3 = LocaleRequirement('EqualTo', 'US')
@@ -39,9 +39,9 @@ print "Submiting HITs"
 conn = mturk.get_connection()
 
 for n in range(n_hits):
-  print "Hit #", n
-  
-  conn.create_hit(question=EQ, lifetime=lifetime, max_assignments=max_assignments, 
-    title=title, description=description, keywords=keywords, reward=reward, 
-    duration=duration, approval_delay=approval_delay, 
-    qualifications=qualifications, response_groups=response_groups)
+    print "Hit #", n
+
+    conn.create_hit(question=EQ, lifetime=lifetime, max_assignments=max_assignments,
+      title=title, description=description, keywords=keywords, reward=reward,
+      duration=duration, approval_delay=approval_delay,
+      qualifications=qualifications, response_groups=response_groups)

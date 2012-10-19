@@ -18,27 +18,27 @@ nu = 0.1
 gamma = .0005
 
 def save_svc(svc, file_name):
-  f = open(file_name, 'w+')
-  pickle.dump(svc, f)
-  f.close()
+    f = open(file_name, 'w+')
+    pickle.dump(svc, f)
+    f.close()
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
-  mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
-  mlf_sil.filter_zero_segments()
-  # map all sp, _noise_, _laugh_, _inhale_ to sil
-  mlf_sil.sub('sp', 'sil')
-  mlf_sil.sub('_noise_', 'sil')
-  mlf_sil.sub('_laugh_', 'sil')
-  mlf_sil.sub('_inhale_', 'sil')
-  # map everything except of sil to speech
-  mlf_sil.sub('sil', 'speech', False)
-  mlf_sil.merge()
-  #mlf_sil.times_to_seconds()
-  mlf_sil.times_to_frames()
-  mlf_sil.trim_segments(trim_segments)
-  mlf_sil.shorten_segments(max_frames_per_segment)
+    mlf_sil = MLF(train_data_sil_aligned, max_files = max_files)
+    mlf_sil.filter_zero_segments()
+    # map all sp, _noise_, _laugh_, _inhale_ to sil
+    mlf_sil.sub('sp', 'sil')
+    mlf_sil.sub('_noise_', 'sil')
+    mlf_sil.sub('_laugh_', 'sil')
+    mlf_sil.sub('_inhale_', 'sil')
+    # map everything except of sil to speech
+    mlf_sil.sub('sil', 'speech', False)
+    mlf_sil.merge()
+    #mlf_sil.times_to_seconds()
+    mlf_sil.times_to_frames()
+    mlf_sil.trim_segments(trim_segments)
+    mlf_sil.shorten_segments(max_frames_per_segment)
 
-  return mlf_sil
+    return mlf_sil
 
 
 train_data_sil = 'data_vad_sil/data/*.wav'

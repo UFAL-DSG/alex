@@ -24,7 +24,7 @@ cfg = {
   },
   'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
+  },
   'Logging': {
     'output_dir' : './tmp'
   }
@@ -51,24 +51,23 @@ aio.start()
 count = 0
 max_count = 2500
 while count < max_count:
-  time.sleep(cfg['Hub']['main_loop_sleep_time'])
-  count += 1
+    time.sleep(cfg['Hub']['main_loop_sleep_time'])
+    count += 1
 
-  # write one frame into the audio output
-  if wav:
-    data_play = wav.pop(0)
-    #print len(wav), len(data_play)
-    audio_play.send(Frame(data_play))
+    # write one frame into the audio output
+    if wav:
+        data_play = wav.pop(0)
+        #print len(wav), len(data_play)
+        audio_play.send(Frame(data_play))
 
-  # read all recorded audio
-  if audio_record.poll():
-    data_rec = audio_record.recv()
-  # read all played audio
-  if audio_played.poll():
-    data_played = audio_played.recv()
+    # read all recorded audio
+    if audio_record.poll():
+        data_rec = audio_record.recv()
+    # read all played audio
+    if audio_played.poll():
+        data_played = audio_played.recv()
 
 aio_commands.send(Command('stop()'))
 aio.join()
 
 print
-

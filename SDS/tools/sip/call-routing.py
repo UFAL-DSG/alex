@@ -174,7 +174,7 @@ class MyCallCallback(pj.CallCallback):
             print "Media is inactive"
 
     def on_dtmf_digit(self, digits):
-      print "Received digits:", digits
+        print "Received digits:", digits
 
 # Function to make call
 def make_call(acc, uri):
@@ -239,4 +239,3 @@ except pj.Error, e:
     print "Exception: " + str(e)
     lib.destroy()
     lib = None
-

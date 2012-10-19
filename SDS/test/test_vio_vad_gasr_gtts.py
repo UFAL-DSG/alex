@@ -116,31 +116,31 @@ tts_text_in.send(TTSText('Say something and the recognized text will be played b
 count = 0
 max_count = 50000
 while count < max_count:
-  time.sleep(cfg['Hub']['main_loop_sleep_time'])
-  count += 1
+    time.sleep(cfg['Hub']['main_loop_sleep_time'])
+    count += 1
 
-  if asr_hypotheses_out.poll():
-    asr_hyp = asr_hypotheses_out.recv()
+    if asr_hypotheses_out.poll():
+        asr_hyp = asr_hypotheses_out.recv()
 
-    if isinstance(asr_hyp, ASRHyp):
-      if len(asr_hyp.hyp):
-        print asr_hyp.hyp
+        if isinstance(asr_hyp, ASRHyp):
+            if len(asr_hyp.hyp):
+                print asr_hyp.hyp
 
-        # get the top hypotheses text
-        top_text = asr_hyp.hyp[0][1]
+                # get the top hypotheses text
+                top_text = asr_hyp.hyp[0][1]
 
-        tts_text_in.send(TTSText('Recognized text: %s' % top_text))
-      else:
-        # nothing was recognised
-        print 'Nothing was recognised.'
+                tts_text_in.send(TTSText('Recognized text: %s' % top_text))
+            else:
+                # nothing was recognised
+                print 'Nothing was recognised.'
 
-  # read all messages
-  for c in command_connections:
-    if c.poll():
-      command = c.recv()
-      print
-      print command
-      print
+    # read all messages
+    for c in command_connections:
+        if c.poll():
+            command = c.recv()
+            print
+            print command
+            print
 
 # stop processes
 vio_commands.send(Command('stop()'))
@@ -150,12 +150,12 @@ tts_commands.send(Command('stop()'))
 
 # clean connections
 for c in command_connections:
-  while c.poll():
-    c.recv()
+    while c.poll():
+        c.recv()
 
 for c in non_command_connections:
-  while c.poll():
-    c.recv()
+    while c.poll():
+        c.recv()
 
 # wait for processes to stop
 vio.join()
