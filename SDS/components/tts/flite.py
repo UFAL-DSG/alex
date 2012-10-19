@@ -11,6 +11,7 @@ import SDS.utils.audio as audio
 from SDS.utils.exception import TTSException
 from SDS.utils.string import escape_special_characters_shell
 
+
 class FliteTTS():
     """ Uses Flite TTS to synthesize sentences in a English language.
 
@@ -34,13 +35,13 @@ class FliteTTS():
             voice = 'awb'
 
         try:
-            subprocess.call("flite -voice %s -t \"%s\" -o %s 2> /dev/null" % (voice, text, wav_file_name), shell=True)
+            subprocess.call("flite -voice %s -t \"%s\" -o %s 2> /dev/null" %
+                            (voice, text, wav_file_name), shell=True)
             wav = audio.load_wav(self.cfg, wav_file_name)
         except:
             raise TTSException("No data synthesised.")
 
         return wav
-
 
     def synthesize(self, text):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """

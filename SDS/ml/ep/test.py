@@ -42,7 +42,7 @@ constPrior.normalise()
 constPrior.explain()
 constNodes.append(constPrior)
 
-print('=='*60)
+print('==' * 60)
 
 start = time()
 
@@ -62,13 +62,14 @@ for turn in range(1, numTurns):
 
     # print values
     observation.explain()
-    print('. '*60)
+    print('. ' * 60)
 
     # create goal for this turn
     #-----------------------------------------------------------------------------
-    goal = Goal(name='Goal', desc=str(turn), card=cardinality, parameters=goalParams)
-    goal.setParents({'previous':nodes[-1],
-                     'observation':observations[-1]})
+    goal = Goal(
+        name='Goal', desc=str(turn), card=cardinality, parameters=goalParams)
+    goal.setParents({'previous': nodes[-1],
+                     'observation': observations[-1]})
     nodes.append(goal)
 
     # update belief for the goal
@@ -76,14 +77,14 @@ for turn in range(1, numTurns):
 
     # print values
     goal.explain()
-    print('. '*60)
+    print('. ' * 60)
 
     # create grouping goal for this turn
     #-----------------------------------------------------------------------------
     groupingGoal = GroupingGoal(name='GroupingGoal', desc=str(turn),
                                 card=cardinality, parameters=goalParams)
-    groupingGoal.setParents({'previous':groupingNodes[-1],
-                             'observation':observations[-1]})
+    groupingGoal.setParents({'previous': groupingNodes[-1],
+                             'observation': observations[-1]})
     groupingNodes.append(groupingGoal)
 
     # update belief for the goal
@@ -91,14 +92,14 @@ for turn in range(1, numTurns):
 
     # print values
     groupingGoal.explain()
-    print('. '*60)
+    print('. ' * 60)
 
     # create const change goal for this turn
     #-----------------------------------------------------------------------------
     constGoal = ConstChangeGoal(name='ConstChangeGoal', desc=str(turn),
                                 card=cardinality, parameters=goalParams)
-    constGoal.setParents({'previous':constNodes[-1],
-                          'observation':observations[-1]})
+    constGoal.setParents({'previous': constNodes[-1],
+                          'observation': observations[-1]})
     constNodes.append(constGoal)
 
     # update belief for the goal
@@ -106,6 +107,6 @@ for turn in range(1, numTurns):
 
     # print values
     constGoal.explain()
-    print('--'*60)
+    print('--' * 60)
 
-print('Time: %.2f' % (time()-start))
+print('Time: %.2f' % (time() - start))

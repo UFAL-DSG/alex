@@ -15,6 +15,7 @@ import SDS.components.vad.gmm as GVAD
 
 from SDS.components.hub.messages import Command, Frame
 
+
 class VAD(multiprocessing.Process):
     """ VAD detects segments of speech in the audio stream.
 
@@ -40,20 +41,25 @@ class VAD(multiprocessing.Process):
         self.audio_out = audio_out
 
         self.output_file_name = None
-        self.wf = None # wave file for logging
+        self.wf = None  # wave file for logging
 
         if self.cfg['VAD']['type'] == 'power':
             self.vad = PVAD.PowerVAD(cfg)
         elif self.cfg['VAD']['type'] == 'gmm':
             self.vad = GVAD.GMMVAD(cfg)
         else:
-            raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
+            raise ASRException(
+                'Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
         # stores information about each frame whether it was classified as speech or non speech
-        self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
-        self.detection_window_sil = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
-        self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
-        self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
+        self.detection_window_speech = deque(
+            maxlen=self.cfg['VAD']['decision_frames_speech'])
+        self.detection_window_sil = deque(
+            maxlen=self.cfg['VAD']['decision_frames_sil'])
+        self.deque_audio_recorded_in = deque(
+            maxlen=self.cfg['VAD']['speech_buffer_frames'])
+        self.deque_audio_played_in = deque(
+            maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
@@ -100,10 +106,13 @@ class VAD(multiprocessing.Process):
         self.detection_window_speech.append(decision)
         self.detection_window_sil.append(decision)
 
-        speech = float(sum(self.detection_window_speech))/len(self.detection_window_speech)
-        sil = float(sum(self.detection_window_sil))/len(self.detection_window_sil)
+        speech = float(sum(
+            self.detection_window_speech)) / len(self.detection_window_speech)
+        sil = float(
+            sum(self.detection_window_sil)) / len(self.detection_window_sil)
         if self.cfg['VAD']['debug']:
-            self.cfg['Logging']['system_logger'].debug('SPEECH: %s SIL: %s S: %s' % (speech, sil))
+            self.cfg['Logging']['system_logger'].debug(
+                'SPEECH: %s SIL: %s S: %s' % (speech, sil))
 
         vad = self.last_vad
         change = None
@@ -132,7 +141,7 @@ class VAD(multiprocessing.Process):
                 if self.audio_played_in.poll():
                     data_played = self.audio_played_in.recv()
                 else:
-                    data_played = Frame(b"\x00"*len(data_rec))
+                    data_played = Frame(b"\x00" * len(data_rec))
 
                 # buffer the recorded and played audio
                 self.deque_audio_recorded_in.append(data_rec)
@@ -142,16 +151,21 @@ class VAD(multiprocessing.Process):
                 vad, change = self.smoothe_decison(decison)
 
                 if self.cfg['VAD']['debug']:
-                    self.cfg['Logging']['system_logger'].debug("vad: %s change:%s" % (vad, change))
+                    self.cfg['Logging']['system_logger'].debug(
+                        "vad: %s change:%s" % (vad, change))
 
                 if change:
                     if change == 'speech':
                         # inform both the parent and the consumer
-                        self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
+                        self.audio_out.send(
+                            Command('speech_start()', 'VAD', 'AudioIn'))
+                        self.commands.send(
+                            Command('speech_start()', 'VAD', 'HUB'))
                         # create new logging file
-                        self.output_file_name = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
-                          'vad-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
+                        self.output_file_name = os.path.join(
+                            self.cfg['Logging'][
+                                'system_logger'].get_call_dir_name(),
+                            'vad-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
 
                         if self.cfg['VAD']['debug']:
                             self.cfg['Logging']['system_logger'].debug('Output file name: %s' % self.output_file_name)
@@ -163,8 +177,10 @@ class VAD(multiprocessing.Process):
 
                     if change == 'non-speech':
                         # inform both the parent and the consumer
-                        self.audio_out.send(Command('speech_end()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_end()', 'VAD', 'HUB'))
+                        self.audio_out.send(
+                            Command('speech_end()', 'VAD', 'AudioIn'))
+                        self.commands.send(
+                            Command('speech_end()', 'VAD', 'HUB'))
                         # close the current logging file
                         if self.wf:
                             self.wf.close()
@@ -190,17 +206,17 @@ class VAD(multiprocessing.Process):
                         # save the recorded and played data
                         data_stereo = bytearray()
                         for i in range(self.cfg['Audio']['samples_per_frame']):
-                            data_stereo.extend(data_rec[i*2])
-                            data_stereo.extend(data_rec[i*2+1])
+                            data_stereo.extend(data_rec[i * 2])
+                            data_stereo.extend(data_rec[i * 2 + 1])
                             # there might not be enough data to be played
                             # then add zeros
                             try:
-                                data_stereo.extend(data_played[i*2])
+                                data_stereo.extend(data_played[i * 2])
                             except IndexError:
                                 data_stereo.extend(b'\x00')
 
                             try:
-                                data_stereo.extend(data_played[i*2+1])
+                                data_stereo.extend(data_played[i * 2 + 1])
                             except IndexError:
                                 data_stereo.extend(b'\x00')
 

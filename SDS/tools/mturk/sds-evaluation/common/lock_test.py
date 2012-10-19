@@ -3,8 +3,8 @@
 # To change this template, choose Tools | Templates
 # and open the template in the editor.
 
-__author__="Filip"
-__date__ ="$12-Nov-2010 17:06:00$"
+__author__ = "Filip"
+__date__ = "$12-Nov-2010 17:06:00$"
 
 import utils
 import time

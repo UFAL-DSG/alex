@@ -6,7 +6,8 @@ from collections import defaultdict
 from SDS.utils.string import split_by
 from SDS.utils.exception import *
 
-def load_das(file_name, limit = None):
+
+def load_das(file_name, limit=None):
     f = open(file_name)
 
     semantics = defaultdict(list)
@@ -30,15 +31,17 @@ def load_das(file_name, limit = None):
 
     return semantics
 
+
 def save_das(file_name, das):
     f = open(file_name, 'w+')
 
     for u in sorted(das):
         f.write(u)
         f.write(" => ")
-        f.write(str(das[u])+'\n')
+        f.write(str(das[u]) + '\n')
 
     f.close()
+
 
 class DialogueActItem:
     """Represents dialogue act item which is a component of a dialogue act. Each dialogue act item is composed of
@@ -48,7 +51,7 @@ class DialogueActItem:
 
 
     """
-    def __init__(self, dialogue_act_type = None, name = None, value = None):
+    def __init__(self, dialogue_act_type=None, name=None, value=None):
         """Initialise the dialogue act item. Assigns the default values to dialogue act type (dat), slot name (name),
         and slot value (value).
 
@@ -59,13 +62,13 @@ class DialogueActItem:
         self.value = value
 
     def __str__(self):
-        r = self.dat+'('
+        r = self.dat + '('
 
         if self.name:
             r += self.name
 
         if self.value:
-            r += '="'+self.value+'"'
+            r += '="' + self.value + '"'
 
         r += ')'
         return r
@@ -91,12 +94,13 @@ class DialogueActItem:
         try:
             i = dai.index('(')
         except ValueError:
-            raise DialogueActItemException("Parsing error in: %s. Missing opening parenthesis." % dai)
+            raise DialogueActItemException(
+                "Parsing error in: %s. Missing opening parenthesis." % dai)
 
         self.dat = dai[:i]
 
         # remove the parentheses
-        dai_sv = dai[i+1:len(dai)-1]
+        dai_sv = dai[i + 1:len(dai) - 1]
         if not dai_sv:
             # there is no slot name or value
             return
@@ -110,10 +114,12 @@ class DialogueActItem:
             self.name = r[0]
             self.value = r[1][1:-1]
         else:
-            raise DialogueActItemException("Parsing error in: %s: %s" % (dai, str(r)))
+            raise DialogueActItemException(
+                "Parsing error in: %s: %s" % (dai, str(r)))
+
 
 class DialogueAct:
-    def __init__(self, da = None):
+    def __init__(self, da=None):
         self.dais = []
 
         if da:
@@ -136,14 +142,19 @@ class DialogueAct:
 
     def __lt__(self, other):
         return self.dais < other.dais
+
     def __le__(self, other):
         return self.dais <= other.dais
+
     def __eq__(self, other):
         return self.dais == other.dais
+
     def __ne__(self, other):
         return self.dais != other.dais
+
     def __gt__(self, other):
         return self.dais > other.dais
+
     def __ge__(self, other):
         return self.dais >= other.dais
 
@@ -172,7 +183,9 @@ class DialogueAct:
         if isinstance(dai, DialogueActItem):
             self.dais.append(dai)
         else:
-            raise DialogueActException("Only DialogueActItems can be appended.")
+            raise DialogueActException(
+                "Only DialogueActItems can be appended.")
+
 
 class DialogueActNBList:
     """Provides functionality of N-best lists for dialogue acts.
@@ -210,7 +223,7 @@ class DialogueActNBList:
         """Returns the most probable dialogue act."""
         return self.n_best[0]
 
-    def parse_dai_confusion_network(self, dai_cn, n = 10, expand_upto_total_prob_mass = 0.9):
+    def parse_dai_confusion_network(self, dai_cn, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates N-best hypotheses.
 
         The result is a list of dialogue act hypotheses each with a with assigned probability.
@@ -256,13 +269,13 @@ class DialogueActNBList:
 
             if self.n_best[i][1] == 'null()':
                 if null_da != -1:
-                    raise DialogueActNBListException('Dialogue act list include multiple null() dialogue acts: %s' %str(self.n_best))
+                    raise DialogueActNBListException('Dialogue act list include multiple null() dialogue acts: %s' % str(self.n_best))
                 null_da = i
 
         if null_da == -1:
             if sum > 1.0:
                 raise DialogueActNBListException('Sum of probabilities in dialogue act list > 1.5: %8.6f' % sum)
-            prob_null = 1.0-sum
+            prob_null = 1.0 - sum
             self.n_best.append([prob_null, DialogueAct('null()')])
 
         else:
@@ -272,6 +285,7 @@ class DialogueActNBList:
 
     def sort(self):
         self.n_best.sort(reverse=True)
+
 
 class DialogueActConfusionNetwork:
     def __init__(self):

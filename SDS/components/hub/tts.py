@@ -13,6 +13,7 @@ import SDS.utils.various as various
 from SDS.components.hub.messages import Command, Frame, TTSText
 from SDS.utils.exception import TTSException
 
+
 class TTS(multiprocessing.Process):
     """ TTS synthesizes input text and returns speech audio signal.
 
@@ -36,23 +37,29 @@ class TTS(multiprocessing.Process):
         elif self.cfg['TTS']['type'] == 'SpeechTech':
             self.tts = STTS.SpeechtechTTS(cfg)
         else:
-            raise TTSException('Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
+            raise TTSException(
+                'Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
 
     def synthesize(self, user_id, text):
-        self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_start(user_id="%s",text="%s")' %
+                           (user_id, text), 'TTS', 'HUB'))
 
         wav = self.tts.synthesize(text)
 
         # FIXME: split the wave so that the last bin is of the size of the full frame
         # this bug is at many places in the code
-        wav = various.split_to_bins(wav, 2*self.cfg['Audio']['samples_per_frame'])
+        wav = various.split_to_bins(
+            wav, 2 * self.cfg['Audio']['samples_per_frame'])
 
-        self.audio_out.send(Command('utterance_start(user_id="%s",text="%s")' % (user_id, text),  'TTS', 'AudioOut'))
+        self.audio_out.send(Command('utterance_start(user_id="%s",text="%s")' %
+                            (user_id, text), 'TTS', 'AudioOut'))
         for frame in wav:
             self.audio_out.send(Frame(frame))
-        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'AudioOut'))
+        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s")' %
+                            (user_id, text), 'TTS', 'AudioOut'))
 
-        self.commands.send(Command('tts_end(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_end(user_id="%s",text="%s")' %
+                           (user_id, text), 'TTS', 'HUB'))
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -82,7 +89,8 @@ class TTS(multiprocessing.Process):
                     return False
 
                 if command.parsed['__name__'] == 'synthesize':
-                    self.synthesize(command.parsed['user_id'], command.parsed['text'])
+                    self.synthesize(
+                        command.parsed['user_id'], command.parsed['text'])
 
                     return False
 

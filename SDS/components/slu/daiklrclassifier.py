@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from da import DialogueActItem, DialogueAct
 from dailrclassifier import *
 
+
 class DAIDotKernel:
     """Compute dot kernel function for specific feature vectors.
     """
@@ -25,9 +26,10 @@ class DAIDotKernel:
         r = 0.0
         for f in f1:
             if f in f2:
-                r += f1[f]*f2[f]
+                r += f1[f] * f2[f]
 
         return r
+
 
 class DAIAprxDotKernel:
     """Compute approximate dot kernel function for specific feature vectors.
@@ -40,10 +42,11 @@ class DAIAprxDotKernel:
         """
         return len(f1.set & f2.set)
 
+
 class DAIRadialKernel:
     """Compute radial kernel function for specific feature vectors.
     """
-    def __init__(self,  gamma = 1.0):
+    def __init__(self, gamma=1.0):
         self.gamma = gamma
 
     def __call__(self, f1, f2):
@@ -53,19 +56,20 @@ class DAIRadialKernel:
 
         for f in f1:
             if f in f2:
-                r += (f1[f]-f2[f])**2
+                r += (f1[f] - f2[f]) ** 2
             else:
-                r += (f1[f])**2
+                r += (f1[f]) ** 2
         for f in f2:
             if f not in f1:
-                r += (f2[f])**2
+                r += (f2[f]) ** 2
 
-        return exp(-self.gamma*r)
+        return exp(-self.gamma * r)
+
 
 class DAIAprxRadialKernel:
     """Compute approximate radial kernel function for specific feature vectors.
     """
-    def __init__(self,  gamma = 1.0):
+    def __init__(self, gamma=1.0):
         self.gamma = gamma
 
     def __call__(self, f1, f2):
@@ -73,18 +77,19 @@ class DAIAprxRadialKernel:
         """
         r = len(f1.set ^ f2.set)
 
-        return exp(-self.gamma*r)
+        return exp(-self.gamma * r)
+
 
 class DAIKerLogRegClassifierLearning:
     """ Implements learning of dialogue act item classifiers based on kernelized logistic regression.
     """
 
     def __init__(self,
-                 preprocessing = None,
-                 kernel_type = 'adot',
-                 kernel_gamma = 0.05,
-                 features_type = 'ngram',
-                 features_size = 3):
+                 preprocessing=None,
+                 kernel_type='adot',
+                 kernel_gamma=0.05,
+                 features_type='ngram',
+                 features_size=3):
         self.kernel_type = kernel_type
         self.kernel_gamma = kernel_gamma
         self.features_type = features_type
@@ -101,7 +106,7 @@ class DAIKerLogRegClassifierLearning:
         elif self.kernel_type == 'radial':
             self.kernel = DAIRadialKernel(kernel_gamma)
 
-    def process_data(self, utterances, das, verbose = False):
+    def process_data(self, utterances, das, verbose=False):
         self.utterances = utterances
         self.das = das
 
@@ -114,11 +119,12 @@ class DAIKerLogRegClassifierLearning:
         # generate utterance features
         self.utterance_features = {}
         for k in self.utterances:
-            self.utterance_features[k] = UtteranceFeatures(self.features_type, self.features_size, self.utterances[k])
+            self.utterance_features[k] = UtteranceFeatures(
+                self.features_type, self.features_size, self.utterances[k])
 
         self.utterance_features_list = self.utterance_features.keys()
 
-    def extract_classifiers(self, prune = 10, verbose = False):
+    def extract_classifiers(self, prune=10, verbose=False):
         # get the classifiers
         self.classifiers = defaultdict(int)
 
@@ -128,7 +134,7 @@ class DAIKerLogRegClassifierLearning:
 
                 if verbose:
                     if dai.value and '-' not in dai.value:
-                        print '#'*120
+                        print '#' * 120
                         print self.das[k]
                         print self.utterances[k]
                         print self.category_labels[k]
@@ -160,18 +166,19 @@ class DAIKerLogRegClassifierLearning:
                     self.classifiers_training_data[c].append(0.0)
 
         for c in self.classifiers:
-            self.classifiers_training_data[c] = np.array(self.classifiers_training_data[c])
+            self.classifiers_training_data[c] = np.array(
+                self.classifiers_training_data[c])
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
-        print "-"*120
+        print "-" * 120
         print "Number of classifiers: ", len(self.classifiers)
-        print "-"*120
+        print "-" * 120
 
         for k in sorted(self.classifiers):
             print('%40s = %d' % (k, self.classifiers[k]))
 
-    def prune_features(self, verbose = False):
+    def prune_features(self, verbose=False):
         """Prune those features that are unique. They are irrelevant for computing dot kernels.
         """
         # collect all features and prune those occurring only once
@@ -204,18 +211,21 @@ class DAIKerLogRegClassifierLearning:
         if verbose:
             print "Total number of features: ", len(features)
 
-    def compute_kernel_matrix(self, verbose = False):
-        self.kernel_matrix = np.zeros((len(self.utterance_features_list), len(self.utterance_features_list)))
+    def compute_kernel_matrix(self, verbose=False):
+        self.kernel_matrix = np.zeros((len(
+            self.utterance_features_list), len(self.utterance_features_list)))
 
-        every_n_feature = int(len(self.utterance_features_list)/100)
+        every_n_feature = int(len(self.utterance_features_list) / 100)
         for i, f1 in enumerate(self.utterance_features_list):
             if verbose and (i % every_n_feature == 0):
-                print "Computing: %s row, Processed %6.1f%%" % (f1, 100.0*i/len(self.utterance_features_list))
+                print "Computing: %s row, Processed %6.1f%%" % (
+                    f1, 100.0 * i / len(self.utterance_features_list))
 
             for j, f2 in enumerate(self.utterance_features_list):
-                self.kernel_matrix[i][j] = self.kernel(self.utterance_features[f1], self.utterance_features[f2])
+                self.kernel_matrix[i][j] = self.kernel(
+                    self.utterance_features[f1], self.utterance_features[f2])
 
-    def train(self, sparsification = 0.5, verbose = True):
+    def train(self, sparsification=0.5, verbose=True):
         self.trained_classifiers = {}
 
         non_zero = np.zeros(shape=(1, len(self.utterance_features_list)))
@@ -224,22 +234,23 @@ class DAIKerLogRegClassifierLearning:
             if verbose:
                 print "Training classifier: ", c
 
-            lr = LogisticRegression('l2', C = sparsification, tol=1e-6)
+            lr = LogisticRegression('l2', C=sparsification, tol=1e-6)
             lr.fit(self.kernel_matrix, self.classifiers_training_data[c])
             self.trained_classifiers[c] = lr
 
             non_zero += lr.coef_
 
             if verbose:
-                mean_accuracy = lr.score(self.kernel_matrix, self.classifiers_training_data[c])
-                print "Training data prediction mean accuracy of the training data: %6.2f" % (100.0*mean_accuracy, )
+                mean_accuracy = lr.score(
+                    self.kernel_matrix, self.classifiers_training_data[c])
+                print "Training data prediction mean accuracy of the training data: %6.2f" % (100.0 * mean_accuracy, )
                 print "Size of the params:", lr.coef_.shape, "Number of non-zero params:", np.count_nonzero(lr.coef_)
 
         if verbose:
-            print "Total number of non-zero params:", np.count_nonzero(non_zero)
+            print "Total number of non-zero params:", np.count_nonzero(
+                non_zero)
 
         # perform sparsification
-
 
     def get_trained_classfiers(self):
         return self.trained_classifiers
@@ -253,6 +264,7 @@ class DAIKerLogRegClassifierLearning:
 
         pickle.dump(d, f)
         f.close()
+
 
 class DAIKerLogRegClassifier:
     """
@@ -270,9 +282,9 @@ class DAIKerLogRegClassifier:
 
     """
     def __init__(self,
-                 preprocessing = None,
-                 features_type = 'ngram',
-                 features_size = 3):
+                 preprocessing=None,
+                 features_type='ngram',
+                 features_size=3):
         self.features_type = features_type
         self.features_size = features_size
 
@@ -287,7 +299,7 @@ class DAIKerLogRegClassifier:
     def get_size(self):
         return len(self.utterance_features_list)
 
-    def parse(self, utterance,  verbose = False):
+    def parse(self, utterance, verbose=False):
         """Parse utterance and generate the best interpretation in the form of an dialogue act (an instance
         of DialogueAct.
         """
@@ -302,14 +314,16 @@ class DAIKerLogRegClassifier:
             print category_labels
 
         # generate utterance features
-        utterance_features = UtteranceFeatures(self.features_type, self.features_size, utterance)
+        utterance_features = UtteranceFeatures(
+            self.features_type, self.features_size, utterance)
 
         if verbose:
             print utterance_features
 
         kernel_vector = np.zeros((1, len(self.utterance_features_list)))
         for j, f in enumerate(self.utterance_features_list):
-            kernel_vector[0][j] = self.kernel(utterance_features, self.utterance_features[f])
+            kernel_vector[0][j] = self.kernel(
+                utterance_features, self.utterance_features[f])
 
         da = []
         dacn = {}
@@ -325,9 +339,10 @@ class DAIKerLogRegClassifier:
 
             if p[0][0] < 0.5:
                 da.append(c)
-                prob *= p[0][1] # multiply with probability of presence of a dialogue act
+                prob *= p[0][1]
+                    # multiply with probability of presence of a dialogue act
             else:
-                prob *= p[0][0] # multiply with probability of exclusion  of a dialogue act
+                prob *= p[0][0]  # multiply with probability of exclusion  of a dialogue act
 
         if not da:
             da.append('null()')
@@ -338,6 +353,7 @@ class DAIKerLogRegClassifier:
             print "DA: ", da
 
         da = DialogueAct(da)
-        da = self.preprocessing.category_labels2values_in_da(da, category_labels)
+        da = self.preprocessing.category_labels2values_in_da(
+            da, category_labels)
 
         return da, prob

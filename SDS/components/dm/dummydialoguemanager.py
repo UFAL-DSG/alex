@@ -7,6 +7,7 @@ from SDS.components.dm.__init__ import *
 from SDS.components.slu.da import *
 from SDS.utils.exception import *
 
+
 class DummyDialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
 
@@ -39,7 +40,8 @@ class DummyDialogueState(object):
             # get only the best dialogue act
             da = da.get_best_da(user_da)
         else:
-            raise DummyDialogueManagerException("Unsupported input for the dialogue manager.")
+            raise DummyDialogueManagerException(
+                "Unsupported input for the dialogue manager.")
 
         # store the input
         self.turns.append([user_da, last_system_da])
@@ -55,26 +57,33 @@ class DummyDialogueState(object):
 
         for user_dai in user_da:
             if last_system_da == "confirm" and user_dai.dat == "affirm":
-                user_dai = DialogueActItem("inform", last_system_da.name, last_system_da.value)
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, last_system_da.value)
 
             elif last_system_da == "confirm" and user_dai.dat == "negate":
-                user_dai = DialogueActItem("deny", last_system_da.name, last_system_da.value)
+                user_dai = DialogueActItem(
+                    "deny", last_system_da.name, last_system_da.value)
 
             elif last_system_da == "request" and user_dai.dat == "inform" and \
-                user_dai.name == "" and user_dai.value == "dontcare":
-                user_dai = DialogueActItem("inform", last_system_da.name, last_system_da.value)
+                    user_dai.name == "" and user_dai.value == "dontcare":
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, last_system_da.value)
 
             elif last_system_da == "request" and user_dai.dat == "affirm" and user_dai.name.startswith("has_"):
-                user_dai = DialogueActItem("inform", last_system_da.name, "true")
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, "true")
 
             elif last_system_da == "request" and user_dai.dat == "negate" and user_dai.name.startswith("has_"):
-                user_dai = DialogueActItem("inform", last_system_da.name, "false")
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, "false")
 
             elif last_system_da == "request" and user_dai.dat == "affirm" and user_dai.name.endswith("_allowed"):
-                user_dai = DialogueActItem("inform", last_system_da.name, "true")
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, "true")
 
             elif last_system_da == "request" and user_dai.dat == "negate" and user_dai.name.endswith("_allowed"):
-                user_dai = DialogueActItem("inform", last_system_da.name, "false")
+                user_dai = DialogueActItem(
+                    "inform", last_system_da.name, "false")
 
         return user_da
 
@@ -85,9 +94,9 @@ class DummyDialogueState(object):
         for dai in last_system_da:
             if dai.dat == "inform":
                 # set that the system already informed about the slot
-                self.slots["rh_"+dai.name] = "system-informed"
-                self.slots["ch_"+dai.name] = "system-informed"
-                self.slots["sh_"+dai.name] = "system-informed"
+                self.slots["rh_" + dai.name] = "system-informed"
+                self.slots["ch_" + dai.name] = "system-informed"
+                self.slots["sh_" + dai.name] = "system-informed"
 
         # now process the user dialogue act
         for dai in user_da:
@@ -103,13 +112,13 @@ class DummyDialogueState(object):
                     # the value of the slot is different. therefore it does not conflict with the provided information
                     pass
             elif dai.dat == "request":
-                self.slots["rh_"+dai.name] = dai.value
+                self.slots["rh_" + dai.name] = dai.value
             elif dai.dat == "confirm":
-                self.slots["ch_"+dai.name] = dai.value
+                self.slots["ch_" + dai.name] = dai.value
             elif dai.dat == "select":
-                self.slots["sh_"+dai.name] = dai.value
-            elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null", \
-              "repeat", "reqalts", "reqmore", "restart", "thankyou"]:
+                self.slots["sh_" + dai.name] = dai.value
+            elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null",
+                             "repeat", "reqalts", "reqmore", "restart", "thankyou"]:
                 self.slots["lda"] = dai.dat
 
     def get_requested_slots(self):
@@ -127,10 +136,11 @@ class DummyDialogueState(object):
         confirmed_slots = {}
 
         for slot in self.slots:
-            if slot.startswith("ch_") and self.slots[slot] != "None" and self.slots[slot] != "system-informed" :
+            if slot.startswith("ch_") and self.slots[slot] != "None" and self.slots[slot] != "system-informed":
                 confimed_slots[slot[3:]] = self.slots[slot]
 
         return confimed_slots_slots
+
 
 class DummyPolicy(object):
     """This is a trivial policy just to demonstrate basic functionality DM."""
@@ -173,7 +183,8 @@ class DummyPolicy(object):
             # inform about all requested slots
             self.last_dialogue_act = DialogueAct()
             for slot in requested_slots:
-                dai = DiaqlogueActItem("inform", slot, dialogue_state.slots[slot])
+                dai = DiaqlogueActItem(
+                    "inform", slot, dialogue_state.slots[slot])
                 self.last_dialogue_act.append(dai)
 
         elif confirmed_slots:
@@ -182,13 +193,15 @@ class DummyPolicy(object):
             for slot in confirmed_slots:
                 if confirmed_slots[slot] == dialogue_state[slot]:
                     # it is as user expected
-                    dai = DialogueActItem("inform", slot, dialogue_state.slots[slot])
+                    dai = DialogueActItem(
+                        "inform", slot, dialogue_state.slots[slot])
                     self.last_dialogue_act.append(DialogueActItem("affirm"))
                     self.last_dialogue_act.append(dai)
                 else:
                     # it is something else to what user expected
                     self.last_dialogue_act.append(DialogueActItem("negate"))
-                    dai = DiaqlogueActItem("deny", slot, dialogue_state.slots[slot])
+                    dai = DiaqlogueActItem(
+                        "deny", slot, dialogue_state.slots[slot])
                     self.last_dialogue_act.append(dai)
         else:
             # NLG("Can I help you with anything else?")
@@ -198,6 +211,7 @@ class DummyPolicy(object):
         # record the system dialogue acts
         self.das.append(self.last_dialogue_act)
         return self.last_dialogue_act
+
 
 class DummyDM(DialogueManager):
     """This is an example of an dialogue manager. It is fully handcrafted and it has a limited functionality.

@@ -10,6 +10,7 @@ from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.utils.config import *
 from SDS.utils.exception import *
 
+
 class SemHub(Hub):
     """
       SemHub builds a text based testing environment for the dialogue manager components.
@@ -24,7 +25,8 @@ class SemHub(Hub):
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
-            raise SemHubException('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+            raise SemHubException(
+                'Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. """
@@ -34,7 +36,7 @@ class SemHub(Hub):
 
         if ri != -1:
             da = l[:ri]
-            prob = l[ri+1:]
+            prob = l[ri + 1:]
 
             try:
                 prob = float(prob)
@@ -98,8 +100,9 @@ class SemHub(Hub):
 #########################################################################
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
         SemHub is a text based testing environment for the dialogue manager components.
 
         It reads dialogue acts from the standard input and passes it to the selected dialogue manager.
@@ -113,8 +116,9 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
-                        help='additional configure file')
+    parser.add_argument(
+        '-c', action="store", dest="configs", default=None, nargs='+',
+        help='additional configure file')
     args = parser.parse_args()
 
     cfg = Config('../../resources/default.cfg')
@@ -124,11 +128,9 @@ if __name__ == '__main__':
             cfg.merge(c)
     cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
-
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Sem Hub\n"+"="*120)
-
+    cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * 120)
 
     shub = SemHub(cfg)
 

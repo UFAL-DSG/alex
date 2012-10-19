@@ -14,6 +14,7 @@ import SDS.utils.audio as audio
 
 from SDS.utils.exception import TTSException
 
+
 class SpeechtechTTS():
     """ Uses SpeechTech TTS service to synthesize sentences in a specific language, e.g. en, cs.
 
@@ -53,13 +54,15 @@ class SpeechtechTTS():
             urllib2.install_opener(opener)
 
             params = urllib.urlencode([('text', text), ('engine', voice)])
-            task_id = urllib2.urlopen('%s/add_to_queue' % ROOT_URI, params).read().strip()
+            task_id = urllib2.urlopen(
+                '%s/add_to_queue' % ROOT_URI, params).read().strip()
 
             uri = None
             i = 20
             while i:
                 params = urllib.urlencode([('task_id', task_id)])
-                resp = urllib2.urlopen('%s/query_status' % ROOT_URI, params).read().splitlines()
+                resp = urllib2.urlopen(
+                    '%s/query_status' % ROOT_URI, params).read().splitlines()
                 code = int(resp[0])
                 #print 'Status is', code
                 if code == 3:
@@ -71,8 +74,8 @@ class SpeechtechTTS():
                 i -= 1
 
             if uri:
-                request  = urllib2.Request(uri)
-                request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11" )
+                request = urllib2.Request(uri)
+                request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
                 mp3response = urllib2.urlopen(request)
 
                 return mp3response.read()
@@ -85,7 +88,8 @@ class SpeechtechTTS():
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
         try:
-            mp3 = self.get_tts_mp3(self.cfg['TTS']['SpeechTech']['voice'], text)
+            mp3 = self.get_tts_mp3(
+                self.cfg['TTS']['SpeechTech']['voice'], text)
             wav = audio.convert_mp3_to_wav(self.cfg, mp3)
         except TTSException:
             # send empty wave data

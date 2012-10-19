@@ -14,7 +14,7 @@ max_apis = p.get_host_api_count()
 max_devs = p.get_device_count()
 
 print "PortAudio System Info:"
-print "="*120
+print "=" * 120
 print "Version: %d" % pyaudio.get_portaudio_version()
 print "Version Text: %s" % pyaudio.get_portaudio_version_text()
 print "Number of Host APIs: %d" % max_apis
@@ -41,7 +41,7 @@ for i in range(max_devs):
 
         if name == 'hostApi':
             value = str(value) + \
-                    " (%s)" % p.get_host_api_info_by_index(k[1])['name']
+                " (%s)" % p.get_host_api_info_by_index(k[1])['name']
         print "\t%s: %s" % (name, value)
 
     # print out supported format rates
@@ -56,9 +56,9 @@ for i in range(max_devs):
             try:
                 if p.is_format_supported(
                     f,
-                    input_device = devinfo['index'],
-                    input_channels = devinfo['maxInputChannels'],
-                    input_format = pyaudio.paInt16):
+                    input_device=devinfo['index'],
+                    input_channels=devinfo['maxInputChannels'],
+                        input_format=pyaudio.paInt16):
                     input_supported_rates.append(f)
             except ValueError:
                 pass
@@ -67,9 +67,9 @@ for i in range(max_devs):
             try:
                 if p.is_format_supported(
                     f,
-                    output_device = devinfo['index'],
-                    output_channels = devinfo['maxOutputChannels'],
-                    output_format = pyaudio.paInt16):
+                    output_device=devinfo['index'],
+                    output_channels=devinfo['maxOutputChannels'],
+                        output_format=pyaudio.paInt16):
                     output_supported_rates.append(f)
             except ValueError:
                 pass
@@ -79,12 +79,12 @@ for i in range(max_devs):
             try:
                 if p.is_format_supported(
                     f,
-                    input_device = devinfo['index'],
-                    input_channels = devinfo['maxInputChannels'],
-                    input_format = pyaudio.paInt16,
-                    output_device = devinfo['index'],
-                    output_channels = devinfo['maxOutputChannels'],
-                    output_format = pyaudio.paInt16):
+                    input_device=devinfo['index'],
+                    input_channels=devinfo['maxInputChannels'],
+                    input_format=pyaudio.paInt16,
+                    output_device=devinfo['index'],
+                    output_channels=devinfo['maxOutputChannels'],
+                        output_format=pyaudio.paInt16):
                     full_duplex_rates.append(f)
             except ValueError:
                 pass
@@ -107,7 +107,7 @@ try:
         name, value = k
         if name == 'hostApi':
             value = str(value) + \
-                    " (%s)" % p.get_host_api_info_by_index(k[1])['name']
+                " (%s)" % p.get_host_api_info_by_index(k[1])['name']
         print "\t%s: %s" % (name, value)
     print "\t--------------------------------"
 except IOError, e:
@@ -121,7 +121,7 @@ try:
         name, value = k
         if name == 'hostApi':
             value = str(value) + \
-                    " (%s)" % p.get_host_api_info_by_index(k[1])['name']
+                " (%s)" % p.get_host_api_info_by_index(k[1])['name']
         print "\t%s: %s" % (name, value)
     print "\t--------------------------------"
 except IOError, e:

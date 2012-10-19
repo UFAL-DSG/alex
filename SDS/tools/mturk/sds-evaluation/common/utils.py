@@ -1,8 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-__author__="Filip Jurcicek"
-__date__ ="$08-Mar-2010 13:45:34$"
+__author__ = "Filip Jurcicek"
+__date__ = "$08-Mar-2010 13:45:34$"
 
 import pickle
 import time
@@ -15,14 +15,18 @@ tokenFileName = './mylogdir/tokens.pkl'
 workerFileName = './mylogdir/workers.pkl'
 
 lockFile = 0
+
+
 def lock():
     global lockFile
     lockFile = open('./mylogdir/lock.file', 'w')
     fcntl.lockf(lockFile, fcntl.LOCK_EX)
 
+
 def unlock():
     fcntl.lockf(lockFile, fcntl.LOCK_UN)
     lockFile.close()
+
 
 def httpPost(url, data):
     # data = {'spam': 1, 'eggs': 2, 'bacon': 0}
@@ -35,7 +39,7 @@ def httpPost(url, data):
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
     conn = httplib.HTTPConnection(url[1])
-    conn.request("POST", url[2]+"?"+url[3], params, headers)
+    conn.request("POST", url[2] + "?" + url[3], params, headers)
     response = conn.getresponse()
 
     print response.status, response.reason
@@ -44,6 +48,7 @@ def httpPost(url, data):
     conn.close()
 
     return resp
+
 
 def findTokenTuple(token):
     try:
@@ -73,6 +78,7 @@ def findTokenTuple(token):
             return each
 
     return None
+
 
 def removeToken(tokenTuple):
     try:
@@ -106,6 +112,7 @@ def removeToken(tokenTuple):
     finally:
         unlock()
 
+
 def saveToken(token, dialogueID):
     try:
         lock()
@@ -119,11 +126,12 @@ def saveToken(token, dialogueID):
             tokens = []
 
         # update the pickle
-        tokens.append((token,dialogueID,tm))
+        tokens.append((token, dialogueID, tm))
         # filter out tokens older than 10 minutes
         tokens = [x for x in tokens if x[2] > tm - 600]
         tokens = [x for x in tokens if x[0] != 'voipheslo']
-        tokens.append(('voipheslo','/data/dial/classic/Aug09VoIP-CamInfo/voipheslo',tm))
+        tokens.append(('voipheslo',
+                      '/data/dial/classic/Aug09VoIP-CamInfo/voipheslo', tm))
 
         # save the updated pickle
         try:
@@ -136,6 +144,7 @@ def saveToken(token, dialogueID):
         pkl_file.close()
     finally:
         unlock()
+
 
 def saveWorker(workerID, phone):
     try:
@@ -150,9 +159,9 @@ def saveWorker(workerID, phone):
             workers = []
 
         # update the pickle
-        workers.append((workerID,tm,phone))
+        workers.append((workerID, tm, phone))
         # filter out workers older than 4 weeks
-        workers = [x for x in workers if x[1] > tm - 60*60*24*7*4]
+        workers = [x for x in workers if x[1] > tm - 60 * 60 * 24 * 7 * 4]
 
         # save the updated pickle
         try:
@@ -165,6 +174,7 @@ def saveWorker(workerID, phone):
         pkl_file.close()
     finally:
         unlock()
+
 
 def verifyWorker(workerID):
     try:
@@ -194,11 +204,11 @@ def verifyWorker(workerID):
     numberSubmitions4w = 0
     for each in workers:
         # allow only tokens which are not older than 24 hours
-        if each[0] in phonesWorkers and each[1] > (tm - 60*60*24):
+        if each[0] in phonesWorkers and each[1] > (tm - 60 * 60 * 24):
             numberSubmitions24h += 1
 
         # allow only tokens which are not older than 4 weekss
-        if each[0] in phonesWorkers and each[1] > (tm - 60*60*24*7*4):
+        if each[0] in phonesWorkers and each[1] > (tm - 60 * 60 * 24 * 7 * 4):
             numberSubmitions4w += 1
 
     if numberSubmitions24h > 20:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ = ['da','dailrclassifier','daiklrclassifier', 'templateclassifier']
+__all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
 
 import copy
 
@@ -11,6 +11,7 @@ from SDS.utils.string import split_by
 from SDS.utils.exception import SDSException
 
 import SDS.components.slu.da
+
 
 class CategoryLabelDatabase:
     """ Provides a convenient interface to a database of slot value pairs aka category labels.
@@ -48,10 +49,11 @@ class CategoryLabelDatabase:
         for name in self.database:
             for value in self.database[name]:
                 for synonym in self.database[name][value]:
-                    self.synonym_value_catogery.append((synonym,  value, name))
+                    self.synonym_value_catogery.append((synonym, value, name))
 
+        self.synonym_value_catogery.sort(
+            key=lambda svc: len(svc[0]), reverse=True)
 
-        self.synonym_value_catogery.sort(key = lambda svc: len(svc[0]), reverse=True)
 
 class SLUPreprocessing:
     """ Implements precessing of utterances or utterances and dialogue acts. The main purpose is to replace
@@ -63,22 +65,20 @@ class SLUPreprocessing:
     it can be updated by providing normalisation patterns.
     """
 
-    def __init__(self, cldb, text_normalization = None):
+    def __init__(self, cldb, text_normalization=None):
         self.cldb = cldb
 
         if text_normalization:
             self.text_normalization_mapping = text_normalization
         else:
             self.text_normalization_mapping = [(['erm', ], []),
-                                              (['uhm', ], []),
-                                              (['um', ], []),
-                                              (["I'm", ], ['I', 'am']),
-                                              (['(sil)', ], []),
-                                              (['(%hesitation)', ], []),
-                                              (['(hesitation)', ], [])
-                                              ]
-
-
+                                               (['uhm', ], []),
+                                               (['um', ], []),
+                                               (["I'm", ], ['I', 'am']),
+                                               (['(sil)', ], []),
+                                               (['(%hesitation)', ], []),
+                                               (['(hesitation)', ], [])
+                                               ]
 
     def text_normalization(self, utterance):
         """ It normalise the input utterances (the output of an ASR engine).
@@ -107,8 +107,9 @@ class SLUPreprocessing:
 
         for s, value, name in self.cldb:
             if s in utterance:
-                category_label = name.upper()+'-'+str(catgeory_label_counter[name.upper()])
-                catgeory_label_counter[name.upper()] +=1
+                category_label = name.upper(
+                ) + '-' + str(catgeory_label_counter[name.upper()])
+                catgeory_label_counter[name.upper()] += 1
 
                 category_labels[category_label] = (value, s)
                 utterance.replace(s, [category_label, ])
@@ -129,7 +130,8 @@ class SLUPreprocessing:
         da = copy.deepcopy(da)
         utterance = copy.deepcopy(utterance)
 
-        utterance, category_labels = self.values2category_labels_in_utterance(utterance)
+        utterance, category_labels = self.values2category_labels_in_utterance(
+            utterance)
 
         for cl in category_labels:
             for dai in da:
@@ -163,6 +165,7 @@ class SLUPreprocessing:
                 dai.value = category_labels[dai.value][0]
 
         return da
+
 
 class SLUInterface:
     """ Defines a prototypical interface each parser should provide for parsing.

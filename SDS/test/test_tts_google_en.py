@@ -8,7 +8,7 @@ import SDS.utils.audio as audio
 from SDS.components.tts.google import GoogleTTS
 
 print "Testing Google TTS service"
-print "="*120
+print "=" * 120
 print
 
 text = 'Hello. Thank you for calling.'
@@ -21,15 +21,15 @@ print "Sample rate:    ", sample_rate
 print
 
 cfg = {
-  'Audio': {
-      'sample_rate': sample_rate
+    'Audio': {
+        'sample_rate': sample_rate
     },
-  'TTS': {
+    'TTS': {
     'Google': {
-      'debug': False,
-      'language' : language
+        'debug': False,
+        'language': language
     }
-  }
+    }
 }
 
 tts = GoogleTTS(cfg)

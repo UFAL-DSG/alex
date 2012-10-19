@@ -10,7 +10,7 @@ import shutil
 from glob import glob
 
 new_dir = 'VYSTADIAL-RAM'
-new_dir += '-'+datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+new_dir += '-' + datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
 
 os.mkdir(new_dir)
 
@@ -28,7 +28,7 @@ for f in sorted(pcm_files):
         print 'Copying: ', f, ' to ', new_f_name
 
         # channel A
-        shutil.copy2(f,new_f_name)
+        shutil.copy2(f, new_f_name)
 
     else:
         print '# Ignoring: ', f

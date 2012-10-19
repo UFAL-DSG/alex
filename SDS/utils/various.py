@@ -3,10 +3,12 @@
 
 from collections import defaultdict
 
-def split_to_bins(A,  S = 4):
+
+def split_to_bins(A, S=4):
     """Split the A array into bins of size N."""
     m, n = divmod(len(A), S)
-    return [A[i*S:(i+1)*S] for i in range(m+bool(n))]
+    return [A[i * S:(i + 1) * S] for i in range(m + bool(n))]
+
 
 def flatten(l, ltypes=(list, tuple)):
     """Flatten nested list into a simple list."""
@@ -25,6 +27,7 @@ def flatten(l, ltypes=(list, tuple)):
         i += 1
     return ltype(l)
 
+
 def get_text_from_xml_node(node):
     """ Get text from all child nodes and concatenate it.
     """
@@ -33,6 +36,7 @@ def get_text_from_xml_node(node):
         if cn.nodeType == cn.TEXT_NODE:
             rc.append(cn.data)
     return ''.join(rc).strip()
+
 
 class nesteddict(defaultdict):
     def __init__(self):

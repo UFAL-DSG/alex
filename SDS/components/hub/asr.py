@@ -11,6 +11,7 @@ import SDS.components.asr.julius as JASR
 from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import *
 
+
 class ASR(multiprocessing.Process):
     """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
 
@@ -38,7 +39,8 @@ class ASR(multiprocessing.Process):
         elif self.cfg['ASR']['type'] == 'Julius':
             self.asr = JASR.JuliusASR(cfg)
         else:
-            raise ASRException('Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
+            raise ASRException(
+                'Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -91,7 +93,7 @@ class ASR(multiprocessing.Process):
                 # check consistency of the input command
                 if dr_speech_start:
                     if self.recognition_on == False and dr_speech_start != "speech_start" and \
-                       self.recognition_on == True and dr_speech_start != "speech_end":
+                            self.recognition_on == True and dr_speech_start != "speech_end":
                         raise ASRException('Commands received by the ASR component are inconsistent - recognition_on = %s - the new command: %s' % (self.recognition_on, dr_speech_start))
 
                 if dr_speech_start == "speech_start":
@@ -99,13 +101,15 @@ class ASR(multiprocessing.Process):
                     self.recognition_on = True
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging']['system_logger'].debug('ASR: speech_start()')
+                        self.cfg['Logging'][
+                            'system_logger'].debug('ASR: speech_start()')
 
                 elif dr_speech_start == "speech_end":
                     self.recognition_on = False
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
+                        self.cfg['Logging'][
+                            'system_logger'].debug('ASR: speech_end()')
 
                     try:
                         hyp = self.asr.hyp_out()

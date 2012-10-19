@@ -23,6 +23,7 @@ FIXME: There is confusion in naming packets, frames, and samples.
 
 """
 
+
 class AudioIO(multiprocessing.Process):
     """ AudioIO implements IO operation with a soundcard. Currently, it uses the default sound device for both input
     and output. I enabled then it logs all recorded and played audio into a file.
@@ -55,7 +56,7 @@ class AudioIO(multiprocessing.Process):
         self.audio_played = audio_played
 
         self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
-                                             'all-'+datetime.now().isoformat('-').replace(':', '-')+'.wav')
+                                             'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
 
     def process_pending_commands(self, p, stream, wf):
         """Process all pending commands.
@@ -109,8 +110,8 @@ class AudioIO(multiprocessing.Process):
         """
         if self.audio_play.poll():
             while self.audio_play.poll() \
-                  and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size'] \
-                  and stream.get_write_available() > self.cfg['Audio']['samples_per_frame']:
+                and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size'] \
+                    and stream.get_write_available() > self.cfg['Audio']['samples_per_frame']:
 
                 # send to play frames from input
                 data_play = self.audio_play.recv()
@@ -125,12 +126,15 @@ class AudioIO(multiprocessing.Process):
 
                 elif isinstance(data_play, Command):
                     if data_play.parsed['__name__'] == 'utterance_start':
-                        self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
+                        self.commands.send(Command(
+                            'play_utterance_start()', 'AudioIO', 'HUB'))
                     if data_play.parsed['__name__'] == 'utterance_end':
-                        self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
+                        self.commands.send(
+                            Command('play_utterance_end()', 'AudioIO', 'HUB'))
 
         else:
-            data_play = Frame(b"\x00\x00"*self.cfg['Audio']['samples_per_frame'])
+            data_play = Frame(
+                b"\x00\x00" * self.cfg['Audio']['samples_per_frame'])
 
             play_buffer.append(data_play)
             if self.cfg['AudioIO']['debug']:
@@ -152,18 +156,18 @@ class AudioIO(multiprocessing.Process):
         # save the recorded and played data
         data_stereo = bytearray()
         for i in range(self.cfg['Audio']['samples_per_frame']):
-            data_stereo.extend(data_rec[i*2])
-            data_stereo.extend(data_rec[i*2+1])
+            data_stereo.extend(data_rec[i * 2])
+            data_stereo.extend(data_rec[i * 2 + 1])
 
             # there might not be enough data to be played
             # then add zeros
             try:
-                data_stereo.extend(data_play[i*2])
+                data_stereo.extend(data_play[i * 2])
             except IndexError:
                 data_stereo.extend(b'\x00')
 
             try:
-                data_stereo.extend(data_play[i*2+1])
+                data_stereo.extend(data_play[i * 2 + 1])
             except IndexError:
                 data_stereo.extend(b'\x00')
 
@@ -179,13 +183,12 @@ class AudioIO(multiprocessing.Process):
 
         p = pyaudio.PyAudio()
         # open stream
-        stream = p.open(format = p.get_format_from_width(pyaudio.paInt32),
-                        channels = 1,
-                        rate = self.cfg['Audio']['sample_rate'],
-                        input = True,
-                        output = True,
-                        frames_per_buffer = self.cfg['Audio']['samples_per_frame'])
-
+        stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
+                        channels=1,
+                        rate=self.cfg['Audio']['sample_rate'],
+                        input=True,
+                        output=True,
+                        frames_per_buffer=self.cfg['Audio']['samples_per_frame'])
 
         # this is a play buffer for synchronization with recorded audio
         play_buffer = []

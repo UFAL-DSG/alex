@@ -7,6 +7,7 @@ import urllib2
 import SDS.utils.cache as cache
 import SDS.utils.audio as audio
 
+
 class GoogleTTS():
     """ Uses Google TTS service to synthesize sentences in a specific language, e.g. en, cs.
 
@@ -26,15 +27,14 @@ class GoogleTTS():
 
         """
 
-        baseurl  = "http://translate.google.com/translate_tts"
-        values   = { 'q': text, 'tl': language }
-        data     = urllib.urlencode(values)
-        request  = urllib2.Request(baseurl, data)
-        request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11" )
+        baseurl = "http://translate.google.com/translate_tts"
+        values = {'q': text, 'tl': language}
+        data = urllib.urlencode(values)
+        request = urllib2.Request(baseurl, data)
+        request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
         mp3response = urllib2.urlopen(request)
 
         return mp3response.read()
-
 
     def synthesize(self, text):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """

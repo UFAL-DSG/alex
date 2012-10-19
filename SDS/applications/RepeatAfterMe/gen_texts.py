@@ -16,15 +16,16 @@ This program extracts short sentences from a list of text files.
 
 """
 
-reject = ["Halo","Ať ","I ","Šak ","Ultimus","Rossum","Busmane","dušinko","V ","Oh, ",
-"S ","Z ","Oh ","A i","RUR","Haha","plemeniti",
-]
+reject = ["Halo", "Ať ", "I ", "Šak ", "Ultimus", "Rossum", "Busmane", "dušinko", "V ", "Oh, ",
+          "S ", "Z ", "Oh ", "A i", "RUR", "Haha", "plemeniti",
+          ]
 
-replace_by_empty_string = [', prosím vás,', ', ó hleďte,',', slečno Gloryová,', 'Brrr haha,',
-]
+replace_by_empty_string = [', prosím vás,', ', ó hleďte,', ', slečno Gloryová,', 'Brrr haha,',
+                           ]
 
-replace_by_space = ['d5', ' hr hr', '  ',  '  '
-]
+replace_by_space = ['d5', ' hr hr', '  ', '  '
+                    ]
+
 
 def split_into_sentences(s):
     x = s.split(' ')
@@ -40,24 +41,25 @@ def split_into_sentences(s):
     return x
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
       This program process extracts short sentences from a list of text files.
 
       """)
 
     parser.add_argument('--indir', action="store", default='./texts',
                         help='an input directory with the text files files (default: ./texts)')
-    parser.add_argument('-v', action="store_true", default=False, dest="verbose",
-                        help='set verbose oputput')
+    parser.add_argument(
+        '-v', action="store_true", default=False, dest="verbose",
+        help='set verbose oputput')
 
     args = parser.parse_args()
-
 
     indir = args.indir
     verbose = args.verbose
 
-    txt_files = glob.glob(os.path.join(indir,'*.txt'))
+    txt_files = glob.glob(os.path.join(indir, '*.txt'))
 
     r = []
 
@@ -122,10 +124,8 @@ if __name__ == '__main__':
         if c:
             continue
 
-
         if s.count(',') > 0:
             continue
-
 
 #    print s
         s = re.sub(', Toni$', "", s)

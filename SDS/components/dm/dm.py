@@ -21,10 +21,10 @@ class DialogueState:
 
     def __init__(self, slots):
         self.slots = slots + \
-                     [self._get_rh_name(s) for s in slots] + \
-                     [self._get_sh1_name(s) for s in slots] + \
-                     [self._get_sh2_name(s) for s in slots] + \
-                     [self._get_ch_name(s) for s in slots]
+            [self._get_rh_name(s) for s in slots] + \
+            [self._get_sh1_name(s) for s in slots] + \
+            [self._get_sh2_name(s) for s in slots] + \
+            [self._get_ch_name(s) for s in slots]
         self.values = {s: None for s in self.slots}
 
         self.USER_ACTS = self.build_user_acts()
@@ -60,12 +60,12 @@ class DialogueState:
     def build_system_acts(self):
         def inform(da_item):
             if self.values.get(self._get_rh_name(da_item.name)) == \
-               RH_USER_REQUESTED:
+                    RH_USER_REQUESTED:
                 self._update_item_value(self._get_rh_name(da_item.name),
                                         RH_SYSTEM_INFORMED)
 
             if self.values.get(self._get_ch_name(da_item.name)) is not \
-               None:
+                    None:
                 self._update_item_value(self._get_ch_name(da_item.name),
                                         CH_SYSTEM_INFORMED)
 
@@ -73,7 +73,7 @@ class DialogueState:
 
         def deny(da_item):
             if self.values.get(self._get_ch_name(da_item.name)) is not \
-               None:
+                    None:
                 self._update_item_value(self._get_ch_name(da_item.name),
                                         CH_SYSTEM_INFORMED)
 

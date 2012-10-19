@@ -14,15 +14,15 @@ from SDS.components.hub.vad import VAD
 from SDS.components.hub.messages import Command, Frame
 
 cfg = {
-  'Audio': {
-      'sample_rate': 16000
-  },
-  'AudioIO': {
+    'Audio': {
+        'sample_rate': 16000
+    },
+    'AudioIO': {
     'debug': True,
     'samples_per_frame': 80,
     'play_buffer_size': 70,
-  },
-  'VAD': {
+    },
+    'VAD': {
     'debug': False,
     'type': 'power',
     'power_threshold': 300,
@@ -31,34 +31,42 @@ cfg = {
     'power_decision_frames': 25,
     'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
-  },
-  'Hub': {
+    },
+    'Hub': {
     'main_loop_sleep_time': 0.005,
-  },
-  'Logging': {
-    'output_dir' : './tmp'
-  }
+    },
+    'Logging': {
+    'output_dir': './tmp'
+    }
 }
 
 print "Test of the AudioIO and VAD components:"
-print "="*120
+print "=" * 120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
+wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
 # remove the last frame
 
-aio_commands, aio_child_commands = multiprocessing.Pipe() # used to send commands to AudioIO
-audio_record, child_audio_record = multiprocessing.Pipe() # I read from this connection recorded audio
-audio_play, child_audio_play = multiprocessing.Pipe()     # I write in audio to be played
-audio_played, child_audio_played = multiprocessing.Pipe() # I read from this to get played audio
+aio_commands, aio_child_commands = multiprocessing.Pipe(
+)  # used to send commands to AudioIO
+audio_record, child_audio_record = multiprocessing.Pipe(
+)  # I read from this connection recorded audio
+audio_play, child_audio_play = multiprocessing.Pipe(
+)     # I write in audio to be played
+audio_played, child_audio_played = multiprocessing.Pipe(
+)  # I read from this to get played audio
                                                           #   which in sync with recorded signal
 
-vad_commands, vad_child_commands = multiprocessing.Pipe() # used to send commands to VAD
-vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+vad_commands, vad_child_commands = multiprocessing.Pipe(
+)  # used to send commands to VAD
+vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
+)  # used to read output audio from VAD
 
-aio = AudioIO(cfg, aio_child_commands, child_audio_record, child_audio_play, child_audio_played)
-vad = VAD(cfg, vad_child_commands, audio_record, audio_played, vad_child_audio_out)
+aio = AudioIO(cfg, aio_child_commands, child_audio_record,
+              child_audio_play, child_audio_played)
+vad = VAD(
+    cfg, vad_child_commands, audio_record, audio_played, vad_child_audio_out)
 
 command_connections = [aio_commands, vad_commands]
 

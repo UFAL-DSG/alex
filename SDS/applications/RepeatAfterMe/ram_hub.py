@@ -20,6 +20,7 @@ from SDS.components.hub.messages import Command, TTSText
 from SDS.utils.mproc import SystemLogger
 from SDS.utils.config import Config
 
+
 def load_sentences(file_name):
     f = open(file_name, 'r')
 
@@ -32,8 +33,10 @@ def load_sentences(file_name):
 
     return r
 
+
 def sample_sentence(l):
     return random.choice(l)
+
 
 def load_database(file_name):
     db = dict()
@@ -49,10 +52,12 @@ def load_database(file_name):
 
     return db
 
+
 def save_database(file_name, db):
     f = open(file_name, 'w+')
     pickle.dump(db, f)
     f.close()
+
 
 def get_stats(db, remote_uri):
     num_all_calls = 0
@@ -66,7 +71,7 @@ def get_stats(db, remote_uri):
                 total_time += l
 
                 # do counts for last 24 hours
-                if s > time.time() - 24*60*60:
+                if s > time.time() - 24 * 60 * 60:
                     last24_num_calls += 1
                     last24_total_time += l
     except:
@@ -74,14 +79,17 @@ def get_stats(db, remote_uri):
 
     return num_all_calls, total_time, last24_num_calls, last24_total_time
 
+
 def play_intro(cfg, tts_commands, intro_id, last_intro_id):
     for i in range(len(cfg['RepeatAfterMe']['introduction'])):
         last_intro_id = str(intro_id)
         intro_id += 1
-        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id,
-          cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
+        tts_commands.send(
+            Command('synthesize(user_id="%s",text="%s")' % (last_intro_id,
+                                                            cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
 
     return intro_id, last_intro_id
+
 
 def ram():
     return random.choice(cfg['RepeatAfterMe']['ram'])
@@ -89,8 +97,9 @@ def ram():
 #########################################################################
 #########################################################################
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
         Repeat After Me dialogue system records repeated utterances by users of the system.
         When a user calls the system, the systems rejects the call. Then in a few seconds,
         it calls back to the user, informs about how to use the system and the recording data.
@@ -106,8 +115,9 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
-                        help='additional configure file')
+    parser.add_argument(
+        '-c', action="store", dest="configs", default=None, nargs='+',
+        help='additional configure file')
     args = parser.parse_args()
 
     cfg = Config('../../resources/default.cfg')
@@ -118,26 +128,32 @@ if __name__ == '__main__':
             cfg.merge(c)
     cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
-
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n"+
-    "="*120)
-
+    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n" +
+                                         "=" * 120)
 
     sample_sentences = load_sentences(cfg['RepeatAfterMe']['sentences_file'])
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO
-    vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
-    vio_play, vio_child_play = multiprocessing.Pipe()         # I write in audio to be played
-    vio_played, vio_child_played = multiprocessing.Pipe()     # I read from this to get played audio
+    vio_commands, vio_child_commands = multiprocessing.Pipe(
+    )  # used to send commands to VoipIO
+    vio_record, vio_child_record = multiprocessing.Pipe(
+    )     # I read from this connection recorded audio
+    vio_play, vio_child_play = multiprocessing.Pipe(
+    )         # I write in audio to be played
+    vio_played, vio_child_played = multiprocessing.Pipe(
+    )     # I read from this to get played audio
                                                               #   which in sync with recorded signal
 
-    vad_commands, vad_child_commands = multiprocessing.Pipe() # used to send commands to VAD
-    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+    vad_commands, vad_child_commands = multiprocessing.Pipe(
+    )  # used to send commands to VAD
+    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
+    )  # used to read output audio from VAD
 
-    tts_commands, tts_child_commands = multiprocessing.Pipe() # used to send commands to TTS
-    tts_text_in, tts_child_text_in = multiprocessing.Pipe()   # used to send TTS text
+    tts_commands, tts_child_commands = multiprocessing.Pipe(
+    )  # used to send commands to TTS
+    tts_text_in, tts_child_text_in = multiprocessing.Pipe(
+    )   # used to send TTS text
 
     command_connections = [vio_commands, vad_commands, tts_commands]
 
@@ -147,8 +163,10 @@ if __name__ == '__main__':
                                vad_audio_out, vad_child_audio_out,
                                tts_text_in, tts_child_text_in]
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
-    vad = VAD(cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record,
+                 vio_child_play, vio_child_played)
+    vad = VAD(
+        cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
     tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
 
     vio.start()
@@ -168,7 +186,6 @@ if __name__ == '__main__':
     u_voice_activity = False
     u_last_voice_activity_time = 0
 
-
     db = load_database(cfg['RepeatAfterMe']['call_db'])
 
     for remote_uri in db['calls_from_start_end_length']:
@@ -176,27 +193,29 @@ if __name__ == '__main__':
 
         m = []
         m.append('')
-        m.append('='*120)
+        m.append('=' * 120)
         m.append('Remote SIP URI: %s' % remote_uri)
-        m.append('-'*120)
+        m.append('-' * 120)
         m.append('Total calls:             %d' % num_all_calls)
         m.append('Total time (s):          %f' % total_time)
         m.append('Last 24h total calls:    %d' % last24_num_calls)
         m.append('Last 24h total time (s): %f' % last24_total_time)
-        m.append('-'*120)
+        m.append('-' * 120)
 
         current_time = time.time()
         if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
-          last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
+                last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
             # add the remote uri to the black list
-            vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
-              current_time+cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
+            vio_commands.send(
+                Command(
+                    'black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+                                                                 current_time + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
             m.append('BLACKLISTED')
         else:
             m.append('OK')
 
-        m.append('-'*120)
+        m.append('-' * 120)
         m.append('')
         cfg['Logging']['system_logger'].info('\n'.join(m))
 
@@ -209,9 +228,9 @@ if __name__ == '__main__':
         if vad_audio_out.poll():
             data_vad = vad_audio_out.recv()
 
-
         if call_back_time != -1 and call_back_time < time.time():
-            vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
+            vio_commands.send(Command('make_call(destination="%s")' %
+                              call_back_uri, 'HUB', 'VoipIO'))
             call_back_time = -1
             call_back_uri = None
 
@@ -229,7 +248,6 @@ if __name__ == '__main__':
                     call_back_time = time.time() + cfg['RepeatAfterMe']['wait_time_before_calling_back']
                     call_back_uri = command.parsed['remote_uri']
 
-
                 if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                     cfg['Logging']['system_logger'].info(command)
 
@@ -239,14 +257,14 @@ if __name__ == '__main__':
 
                     m = []
                     m.append('')
-                    m.append('='*120)
+                    m.append('=' * 120)
                     m.append('Rejected incoming call from blacklisted URI: %s' % remote_uri)
-                    m.append('-'*120)
+                    m.append('-' * 120)
                     m.append('Total calls:             %d' % num_all_calls)
                     m.append('Total time (s):          %f' % total_time)
                     m.append('Last 24h total calls:    %d' % last24_num_calls)
                     m.append('Last 24h total time (s): %f' % last24_total_time)
-                    m.append('='*120)
+                    m.append('=' * 120)
                     m.append('')
                     cfg['Logging']['system_logger'].info('\n'.join(m))
 
@@ -261,24 +279,26 @@ if __name__ == '__main__':
 
                     m = []
                     m.append('')
-                    m.append('='*120)
+                    m.append('=' * 120)
                     m.append('Incoming call from :     %s' % remote_uri)
-                    m.append('-'*120)
+                    m.append('-' * 120)
                     m.append('Total calls:             %d' % num_all_calls)
                     m.append('Total time (s):          %f' % total_time)
                     m.append('Last 24h total calls:    %d' % last24_num_calls)
                     m.append('Last 24h total time (s): %f' % last24_total_time)
-                    m.append('-'*120)
+                    m.append('-' * 120)
 
                     if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
-                      last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
+                            last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
                         tts_commands.send(Command('synthesize(text="Děkujeme za zavolání, ale už jste volali hodně. '
-                        'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")' , 'HUB', 'TTS'))
+                                                  'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")', 'HUB', 'TTS'))
                         reject_played = True
                         s_voice_activity = True
-                        vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
-                          time.time()+cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
+                        vio_commands.send(
+                            Command(
+                                'black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+                                                                             time.time() + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
                         m.append('CALL REJECTED')
                     else:
                         # init the system
@@ -292,18 +312,21 @@ if __name__ == '__main__':
                         u_voice_activity = False
                         u_last_voice_activity_time = 0
 
-                        intro_id, last_intro_id = play_intro(cfg, tts_commands, intro_id, last_intro_id)
+                        intro_id, last_intro_id = play_intro(
+                            cfg, tts_commands, intro_id, last_intro_id)
 
                         m.append('CALL ACCEPTED')
 
-                    m.append('='*120)
+                    m.append('=' * 120)
                     m.append('')
                     cfg['Logging']['system_logger'].info('\n'.join(m))
 
                     try:
-                        db['calls_from_start_end_length'][remote_uri].append([time.time(), 0, 0])
+                        db['calls_from_start_end_length'][
+                            remote_uri].append([time.time(), 0, 0])
                     except:
-                        db['calls_from_start_end_length'][remote_uri] = [[time.time(), 0, 0], ]
+                        db['calls_from_start_end_length'][
+                            remote_uri] = [[time.time(), 0, 0], ]
                     save_database(cfg['RepeatAfterMe']['call_db'], db)
 
                 if command.parsed['__name__'] == "call_disconnected":
@@ -317,11 +340,13 @@ if __name__ == '__main__':
                     tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
                     try:
-                        s, e, l = db['calls_from_start_end_length'][remote_uri][-1]
+                        s, e, l = db[
+                            'calls_from_start_end_length'][remote_uri][-1]
 
                         if e == 0 and l == 0:
                             # there is a record about last confirmed but not disconnected call
-                            db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
+                            db['calls_from_start_end_length'][remote_uri][
+                                -1] = [s, time.time(), time.time() - s]
                             save_database('call_db.pckl', db)
                     except KeyError:
                         # disconnecting call which was not confirmed for URI calling for the first time
@@ -391,23 +416,25 @@ if __name__ == '__main__':
                 tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
         if intro_played and \
-           s_voice_activity == False and \
-           u_voice_activity == False and \
-           current_time - s_last_voice_activity_time > 5 and \
-           current_time - u_last_voice_activity_time > 0.6:
+            s_voice_activity == False and \
+            u_voice_activity == False and \
+            current_time - s_last_voice_activity_time > 5 and \
+                current_time - u_last_voice_activity_time > 0.6:
 
             s_voice_activity = True
             s1 = ram()
-            tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
+            tts_commands.send(
+                Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
             s2 = sample_sentence(sample_sentences)
-            tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
+            tts_commands.send(
+                Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
 
             s = s1 + ' ' + s2
 
             m = []
-            m.append('='*120)
-            m.append('Say: '+s)
-            m.append('='*120)
+            m.append('=' * 120)
+            m.append('Say: ' + s)
+            m.append('=' * 120)
 
             cfg['Logging']['system_logger'].info('\n'.join(m))
 

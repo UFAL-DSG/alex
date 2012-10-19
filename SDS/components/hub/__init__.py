@@ -13,6 +13,7 @@ class Hub:
     def run(self):
         pass
 
+
 class VoipHub(Hub):
     """
       VoipHub builds full featured VOIP telephone system.

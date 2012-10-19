@@ -13,8 +13,9 @@ from SDS.utils.various import get_text_from_xml_node
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
         This program copies the collected feedbacks using SCP to the specified destination.
         It is possible that it has to be run under sudo, since the Apache server created
         the log directories under www-data user and no-one else can write in these directories.
@@ -23,14 +24,15 @@ if __name__ == '__main__':
         It scans 'feedback.xml' to extract the target location of the feedback.
       """)
 
-    parser.add_argument('indir', action="store", default = './',
+    parser.add_argument('indir', action="store", default='./',
                         help='an input directory with feedback.xml files (default value "./")')
     parser.add_argument('user', action="store",
                         help='the target user name')
     parser.add_argument('server', action="store",
                         help='the target server')
-    parser.add_argument('-v', action="store_true", default=False, dest="verbose",
-                        help='set verbose oputput')
+    parser.add_argument(
+        '-v', action="store_true", default=False, dest="verbose",
+        help='set verbose oputput')
     parser.add_argument('-f', action="store_true", default=False, dest="force",
                         help='force copy, copy feedback.xml file even if it was coppued before')
 
@@ -50,14 +52,16 @@ if __name__ == '__main__':
     files.extend(glob.glob(os.path.join(indir, '*', 'feedback.xml')))
     files.extend(glob.glob(os.path.join(indir, '*', '*', 'feedback.xml')))
     files.extend(glob.glob(os.path.join(indir, '*', '*', '*', 'feedback.xml')))
-    files.extend(glob.glob(os.path.join(indir, '*', '*', '*', '*', 'feedback.xml')))
-    files.extend(glob.glob(os.path.join(indir, '*', '*', '*', '*', '*', 'feedback.xml')))
+    files.extend(
+        glob.glob(os.path.join(indir, '*', '*', '*', '*', 'feedback.xml')))
+    files.extend(glob.glob(
+        os.path.join(indir, '*', '*', '*', '*', '*', 'feedback.xml')))
 
     for f in sorted(files):
         if verbose:
             print "Input feedback:", f
 
-        copy_feedback = force or not os.path.exists(f+".copied")
+        copy_feedback = force or not os.path.exists(f + ".copied")
 
         if copy_feedback:
             doc = xml.dom.minidom.parse(f)
@@ -69,11 +73,12 @@ if __name__ == '__main__':
                 if verbose:
                     print "Target: ", target
 
-                cmd = "pscp -p -pw %s %s %s@%s:%s" % (password,f,user,server,target)
+                cmd = "pscp -p -pw %s %s %s@%s:%s" % (
+                    password, f, user, server, target)
 
                 subprocess.call(cmd, shell=True)
 
-                fc = open(f+".copied", "w")
+                fc = open(f + ".copied", "w")
                 fc.write("copied\n")
                 fc.close()
         else:

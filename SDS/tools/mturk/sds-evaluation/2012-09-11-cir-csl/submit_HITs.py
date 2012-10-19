@@ -1,6 +1,7 @@
 #! /usr/bin/python
 
-import sys, os.path
+import sys
+import os.path
 # Add the directory containing the mturk package to python path
 sys.path.append(os.path.abspath("../../bin"))
 
@@ -41,7 +42,8 @@ conn = mturk.get_connection()
 for n in range(n_hits):
     print "Hit #", n
 
-    conn.create_hit(question=EQ, lifetime=lifetime, max_assignments=max_assignments,
-      title=title, description=description, keywords=keywords, reward=reward,
-      duration=duration, approval_delay=approval_delay,
-      qualifications=qualifications, response_groups=response_groups)
+    conn.create_hit(
+        question=EQ, lifetime=lifetime, max_assignments=max_assignments,
+        title=title, description=description, keywords=keywords, reward=reward,
+        duration=duration, approval_delay=approval_delay,
+        qualifications=qualifications, response_groups=response_groups)

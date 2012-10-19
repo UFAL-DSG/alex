@@ -5,6 +5,7 @@ exludedValues = set(['__silence__', ])
 
 ####################################################################################
 
+
 class Node(object):
     """A base class for all nodes in a belief state."""
 
@@ -33,11 +34,11 @@ class Node(object):
 
         try:
             for value, prob in self.values.iteritems():
-                self.values[value] = prob/norm
+                self.values[value] = prob / norm
         except ZeroDivisionError:
             if len(self.values) > 0:
                 for value, prob in self.values.iteritems():
-                    self.values[value] = prob/len(self.values)
+                    self.values[value] = prob / len(self.values)
 
     def getMostProbableValue(self):
         """The function returns the most probable value and its probability
@@ -69,13 +70,13 @@ class Node(object):
             if p > pMax1:
                 pMax2, pMax1 = pMax1, p
                 vMax2, vMax1 = vMax1, v
-            elif p >pMax2:
+            elif p > pMax2:
                 pMax2 = p
                 vMax2 = v
 
         return ((vMax1, pMax1), (vMax2, pMax2))
 
-    def explain(self,  full=None):
+    def explain(self, full=None):
         """This function prints the values and their probailities
             for this node.
         """
@@ -89,10 +90,11 @@ class Node(object):
                 print("Name: %20s:%-10s Value: %-15s Probability: % .17f"
                       % (self.name, self.desc, v[0], v[1]))
 
-        print(('Cardinality: %.4d'+' '*49+' Total: % .17f')
-               % (self.cardinality, sum(self.values.values())))
+        print(('Cardinality: %.4d' + ' ' * 49 + ' Total: % .17f')
+              % (self.cardinality, sum(self.values.values())))
 
 ####################################################################################
+
 
 class Goal(Node):
     """Goal can contain only the same values as the observations.
@@ -100,7 +102,7 @@ class Goal(Node):
         As a consequence, it can contain values of its previous node.
     """
 
-    def __init__(self, name, desc, card, parameters, parents = None):
+    def __init__(self, name, desc, card, parameters, parents=None):
         Node.__init__(self, name, desc, card)
         self.parameters = parameters
         self.parents = parents
@@ -130,10 +132,10 @@ class Goal(Node):
             for prev in self.parents['previous'].values:
                 for obs in self.parents['observation'].values:
                     self.values[cur] += self.probTable(cur,
-                                        {'previous': (prev, self.parents['previous'].cardinality),
-                                         'observation': (obs, self.parents['observation'].cardinality)}) \
-                                        * self.parents['previous'].values[prev] \
-                                        * self.parents['observation'].values[obs]
+                                                       {'previous': (prev, self.parents['previous'].cardinality),
+                                                        'observation': (obs, self.parents['observation'].cardinality)}) \
+                        * self.parents['previous'].values[prev] \
+                        * self.parents['observation'].values[obs]
 
 #                    print('Prev: %10s:p=%.4f Obs: %10s:p=%.4f -> p=%.4f Cur: %10s:p=%.4f'
 #                          % (prev,
@@ -156,7 +158,7 @@ class Goal(Node):
             if parents['previous'][0] == value:
                 return self.parameters['pRemebering']
             else:
-                return (1-self.parameters['pRemebering'])/(parents['previous'][1] - 1)
+                return (1 - self.parameters['pRemebering']) / (parents['previous'][1] - 1)
         else:
             # there is observation
             if parents['observation'][1] == 1:
@@ -165,9 +167,10 @@ class Goal(Node):
             elif parents['observation'][0] == value:
                 return self.parameters['pObserving']
             else:
-                return (1-self.parameters['pObserving'])/(parents['observation'][1] - 1)
+                return (1 - self.parameters['pObserving']) / (parents['observation'][1] - 1)
 
 ####################################################################################
+
 
 class GroupingNode(Node):
     def __init__(self, name, desc, card):
@@ -189,7 +192,7 @@ class GroupingNode(Node):
             self.others.remove(key)
 
     def __len__(self):
-        return len(self.values)+len(self.others)
+        return len(self.values) + len(self.others)
 
     def __str__(self):
         self.explain()
@@ -214,19 +217,20 @@ class GroupingNode(Node):
         """
 
         if value in self.others:
-            p = self.values['__others__']/len(self.others)
+            p = self.values['__others__'] / len(self.others)
             self.others.remove(value)
             self.values['__others__'] -= p
             self.values[value] = p
 
 ####################################################################################
 
+
 class GroupingGoal(GroupingNode, Goal):
     """GroupingGoal implements all functionality as is include in Goal; however,
     it only update the values for which was observed some evidence.
     """
 
-    def __init__(self, name, desc, card, parameters, parents = None):
+    def __init__(self, name, desc, card, parameters, parents=None):
         GroupingNode.__init__(self, name, desc, card)
         self.parameters = parameters
         self.parents = parents
@@ -262,10 +266,10 @@ class GroupingGoal(GroupingNode, Goal):
             for prev in self.parents['previous'].values:
                 for obs in self.parents['observation'].values:
                     self.values[cur] += self.probTable(cur,
-                                        {'previous': (prev, self.parents['previous'].cardinality),
-                                         'observation': (obs, self.parents['observation'].cardinality)}) \
-                                        * self.parents['previous'].values[prev] \
-                                        * self.parents['observation'].values[obs]
+                                                       {'previous': (prev, self.parents['previous'].cardinality),
+                                                        'observation': (obs, self.parents['observation'].cardinality)}) \
+                        * self.parents['previous'].values[prev] \
+                        * self.parents['observation'].values[obs]
 
         # update the __others__ value
         self.values['__others__'] = 1 - sum(self.values.values())
@@ -284,13 +288,14 @@ class GroupingGoal(GroupingNode, Goal):
 
 ####################################################################################
 
+
 class ConstChangeGoal(GroupingGoal):
     """ConstChangeGoal implements all functionality as is include in GroupingGoal; however,
     it that there are only two transition probabilites for transitions between
     the same values and the different values.
     """
 
-    def __init__(self, name, desc, card, parameters, parents = None):
+    def __init__(self, name, desc, card, parameters, parents=None):
         GroupingGoal.__init__(self, name, desc, card, parameters, parents)
 
     def update(self):
@@ -309,18 +314,18 @@ class ConstChangeGoal(GroupingGoal):
                 # now compute transitions from the same value to the same value
                 #  => use cur as previous
                 self.values[cur] += self.probTable(cur,
-                                    {'previous': (cur, self.parents['previous'].cardinality),
-                                     'observation': (obs, self.parents['observation'].cardinality)}) \
-                                    * self.parents['previous'].values[cur] \
-                                    * self.parents['observation'].values[obs]
+                                                   {'previous': (cur, self.parents['previous'].cardinality),
+                                                    'observation': (obs, self.parents['observation'].cardinality)}) \
+                    * self.parents['previous'].values[cur] \
+                    * self.parents['observation'].values[obs]
 
                 # now compute transitions from the other values to the cur value
                 #  => use cur as previous
                 self.values[cur] += self.probTable(cur,
-                                    {'previous': ('__other__', self.parents['previous'].cardinality),
-                                     'observation': (obs, self.parents['observation'].cardinality)}) \
-                                    * (1-self.parents['previous'].values[cur]) \
-                                    * self.parents['observation'].values[obs]
+                                                   {'previous': ('__other__', self.parents['previous'].cardinality),
+                                                    'observation': (obs, self.parents['observation'].cardinality)}) \
+                    * (1 - self.parents['previous'].values[cur]) \
+                    * self.parents['observation'].values[obs]
 
         # update the __others__ value
         self.values['__others__'] = 1 - sum(self.values.values())

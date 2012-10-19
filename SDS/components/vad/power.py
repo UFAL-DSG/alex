@@ -4,6 +4,7 @@
 import struct
 import math
 
+
 class PowerVAD():
     """ This is implementation of a simple power based voice activity detector.
 
@@ -25,16 +26,17 @@ class PowerVAD():
 
         self.in_frames += 1
 
-        a = struct.unpack('%dh'% (len(frame)/2, ), frame)
-        a = [abs(x)**2 for x in a]
-        energy = math.sqrt(sum(a))/len(a)
+        a = struct.unpack('%dh' % (len(frame) / 2, ), frame)
+        a = [abs(x) ** 2 for x in a]
+        energy = math.sqrt(sum(a)) / len(a)
 
         if self.in_frames < self.cfg['VAD']['power']['adaptation_frames']:
-            self.power_threshold_adapted = self.in_frames*self.power_threshold_adapted
+            self.power_threshold_adapted = self.in_frames * \
+                self.power_threshold_adapted
             self.power_threshold_adapted += energy
-            self.power_threshold_adapted /= self.in_frames+1
+            self.power_threshold_adapted /= self.in_frames + 1
 
-        if energy > self.cfg['VAD']['power']['threshold_multiplier']*self.power_threshold_adapted:
+        if energy > self.cfg['VAD']['power']['threshold_multiplier'] * self.power_threshold_adapted:
             speech_segment = 1.0
 
         return speech_segment

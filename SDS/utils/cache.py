@@ -13,10 +13,12 @@ from operator import itemgetter
 
 persistent_cache_directory = '~/.SDS_persistent_cache'
 
+
 class Counter(dict):
     'Mapping where default values are zero'
     def __missing__(self, key):
         return 0
+
 
 def lru_cache(maxsize=100):
     '''Least-recently-used cache decorator.
@@ -28,10 +30,11 @@ def lru_cache(maxsize=100):
 
     '''
     maxqueue = maxsize * 10
+
     def decorator(user_function,
-            len=len, iter=iter, tuple=tuple, sorted=sorted, KeyError=KeyError):
+                  len=len, iter=iter, tuple=tuple, sorted=sorted, KeyError=KeyError):
         cache = {}                  # mapping of args to results
-        queue = collections.deque() # order that keys have been used
+        queue = collections.deque()  # order that keys have been used
         refcount = Counter()        # times each key is in the queue
         sentinel = object()         # marker for looping around the queue
         kwd_mark = object()         # separate positional and keyword args
@@ -79,7 +82,6 @@ def lru_cache(maxsize=100):
                     queue_appendleft(key)
                     refcount[key] = 1
 
-
             return result
 
         def clear():
@@ -125,8 +127,8 @@ def lfu_cache(maxsize=100):
                 # need to add something to the cache, make room if necessary
                 if len(cache) == maxsize:
                     for k, _ in nsmallest(maxsize // 10 or 1,
-                                            use_count.iteritems(),
-                                            key=itemgetter(1)):
+                                          use_count.iteritems(),
+                                          key=itemgetter(1)):
                         del cache[k], use_count[k]
                 cache[key] = user_function(*args, **kwargs)
                 result = cache[key]
@@ -149,7 +151,8 @@ def lfu_cache(maxsize=100):
 
 
 def get_persitent_cache_content(key):
-    key_name = persistent_cache_directory+'/'+'_'.join([str(i) for i in key]).replace(' ', '_')
+    key_name = persistent_cache_directory + '/' + '_'.join([str(
+        i) for i in key]).replace(' ', '_')
     try:
         f = open(key_name, 'rb')
     except IOError:
@@ -160,13 +163,16 @@ def get_persitent_cache_content(key):
 
     return data
 
+
 def set_persitent_cache_content(key, value):
-    key_name = persistent_cache_directory+'/'+'_'.join([str(i) for i in key]).replace(' ', '_')
+    key_name = persistent_cache_directory + '/' + '_'.join([str(
+        i) for i in key]).replace(' ', '_')
     f = open(key_name, 'wb')
     data = pickle.dump(value, f)
     f.close()
 
-def persistent_cache(method=False, file_prefix='',file_suffix=''):
+
+def persistent_cache(method=False, file_prefix='', file_suffix=''):
     '''Persistent cache decorator.
 
     It grows indefinitely.
@@ -196,7 +202,8 @@ def persistent_cache(method=False, file_prefix='',file_suffix=''):
                 result = user_function(*args, **kwds)
                 wrapper.misses += 1
 
-                set_persitent_cache_content(key, result)         # record this key
+                set_persitent_cache_content(
+                    key, result)         # record this key
 
             return result
 
@@ -212,12 +219,13 @@ if not os.path.exists(persistent_cache_directory):
 
 if __name__ == '__main__':
     print "Testing the LRU and LFU cache decorators."
-    print "="*120
+    print "=" * 120
 
     print "LRU cache"
+
     @lru_cache(maxsize=40)
     def f(x, y):
-        return 3*x+y
+        return 3 * x + y
 
     domain = range(5)
     from random import choice
@@ -227,9 +235,10 @@ if __name__ == '__main__':
     print(f.hits, f.misses)
 
     print "LFU cache"
+
     @lfu_cache(maxsize=40)
     def f(x, y):
-        return 3*x+y
+        return 3 * x + y
 
     domain = range(5)
     from random import choice
@@ -238,11 +247,11 @@ if __name__ == '__main__':
 
     print(f.hits, f.misses)
 
-
     print "persistent LRU cache"
+
     @persistent_cache()
     def f(x, y):
-        return 3*x+y
+        return 3 * x + y
 
     domain = range(5)
     from random import choice

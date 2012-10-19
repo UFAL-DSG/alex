@@ -1,8 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-__author__="Filip Jurcicek"
-__date__ ="$08-Mar-2010 13:45:34$"
+__author__ = "Filip Jurcicek"
+__date__ = "$08-Mar-2010 13:45:34$"
 
 import xml.dom.minidom
 import re
@@ -20,12 +20,14 @@ from common.utils import *
 
 task_xml_filename = "../CIRtasks_V7.xml"
 
+
 def include(fileName):
     f = open(fileName, "r")
 
-    print "<!-- include('", fileName,"') -->"
+    print "<!-- include('", fileName, "') -->"
     for line in f:
         print line,
+
 
 def getTextFromNode(node):
     text = ""
@@ -34,9 +36,10 @@ def getTextFromNode(node):
             text += n.data
 
     text = text.strip()
-    text = re.sub("\s+" , " ", text)
+    text = re.sub("\s+", " ", text)
 
     return text
+
 
 def getTask():
     """
@@ -50,7 +53,7 @@ def getTask():
         tasks = doc.getElementsByTagName("task")
 
         # sample the task
-        i = random.randint(0,len(tasks)-1)
+        i = random.randint(0, len(tasks) - 1)
         node = tasks[i]
         goal = getTextFromNode(node.getElementsByTagName("goal")[0])
         task = getTextFromNode(node.getElementsByTagName("text")[0])
@@ -61,12 +64,13 @@ def getTask():
         task = "You are thinking of having some French food later, so you want" +\
                "to get the name and phone number of a suitable restaurant."
 
-    goal = goal.replace('"','\\"')
+    goal = goal.replace('"', '\\"')
     return goal, task
+
 
 def getPhone():
     # the multiple phones are not necessary anymore as the PBX randomly distribute the calls among the tested systems
-    phones = ["1-888-826-5115",]
+    phones = ["1-888-826-5115", ]
     return random.choice(phones)
 
 form = cgi.FieldStorage()
@@ -87,7 +91,8 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 
         <script type="text/javascript">
             /* Optional: Temporarily hide the "tabber" class so it does not "flash"*/
-            document.write('<style type="text/css">.tabber{display:none;}<\/style>');
+            document.write(
+                '<style type="text/css">.tabber{display:none;}<\/style>');
         </script>
         <script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
         <script>
@@ -130,9 +135,9 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 print '<H2 style="color:red;" id="locationWarning"></H2><BR>'
 
 status = None
-assignmentId = form.getfirst('assignmentId','None')
-workerId = form.getfirst('workerId','None')
-hitId = form.getfirst('hitId','None')
+assignmentId = form.getfirst('assignmentId', 'None')
+workerId = form.getfirst('workerId', 'None')
+hitId = form.getfirst('hitId', 'None')
 goal = 'None'
 task = 'None'
 
@@ -195,7 +200,7 @@ print """
     var hitId = "%(hitId)s";
 
 </script>
-""" % {'task':task, 'goal':goal, 'assignmentId':assignmentId, 'workerId':workerId, 'hitId':hitId}
+""" % {'task': task, 'goal': goal, 'assignmentId': assignmentId, 'workerId': workerId, 'hitId': hitId}
 
 print """
         <img src="common/UNIBAN-S.gif" style="float:left;margin:5px;" height="100">
@@ -287,7 +292,7 @@ print """
             </div>
         </div>
         <div class="tabbertab">
-""" % {'phone':phone}
+""" % {'phone': phone}
 include('mturk-instructions.html')
 print """
         </div>
@@ -314,7 +319,7 @@ print """
             <strong>%(task)s</strong>
         </div>
 
-""" % {'task':task}
+""" % {'task': task}
 
 if assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE':
     print """
@@ -325,12 +330,7 @@ if assignmentId == 'ASSIGNMENT_ID_NOT_AVAILABLE':
         </div>
 """
 
-print """
-        <div align="center">
-        <div class=warning>
-            To complete the HIT, call this toll free phone number: (USA) <b>%(phone)s</b>
-        </div>
-"""  % {'phone':phone}
+print """         <div align="center">         <div class=warning>             To complete the HIT, call this toll free phone number: (USA) <b>%(phone)s</b>         </div> """ % {'phone': phone}
 print """
         <div class=feedback>
         <form>

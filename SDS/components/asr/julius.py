@@ -17,6 +17,7 @@ from SDS.components.asr.utterance import *
 from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException
 from SDS.utils.various import get_text_from_xml_node
 
+
 class JuliusASR():
     """ Uses Julius ASR service to recognize recorded audio.
 
@@ -34,13 +35,16 @@ class JuliusASR():
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
 
         try:
-            self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
+            self.cfg['Logging']['system_logger'].debug(
+                "Starting the Julius ASR server")
             self.start_server()
             time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug("Connecting to the Julius ASR server")
+            self.cfg['Logging']['system_logger'].debug(
+                "Connecting to the Julius ASR server")
             self.connect_to_server()
             time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug("Opening the adinnet connection with the Julius ASR ")
+            self.cfg['Logging']['system_logger'].debug(
+                "Opening the adinnet connection with the Julius ASR ")
             self.open_adinnet()
         except:
             # always kill the Julius ASR server when there is a problem
@@ -52,17 +56,21 @@ class JuliusASR():
         self.julius_server.kill()
 
     def start_server(self):
-        jconf = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
-        log = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
+        jconf = os.path.join(
+            self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
+        log = os.path.join(
+            self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
-            config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
+            config.write(
+                '%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
         config.close()
 
         # start the server with the -debug options
         # with this option it does not generates seg faults
-        self.julius_server = subprocess.Popen('julius -debug -C %s > %s' % (jconf, log), bufsize = 1, shell=True)
+        self.julius_server = subprocess.Popen('julius -debug -C %s > %s' % (
+            jconf, log), bufsize=1, shell=True)
 
     def connect_to_server(self):
         """Connects to the Julius ASR server to start recognition and receive the recognition oputput."""
@@ -102,7 +110,7 @@ class JuliusASR():
         self.socket.a_setblocking(1)
         return cmd
 
-    def read_server_message(self,  timeout = 0.1):
+    def read_server_message(self, timeout=0.1):
         """Reads a complete message from the Julius ASR server.
 
         A complete message is denoted by a period on a new line at the end of the string.
@@ -114,7 +122,8 @@ class JuliusASR():
         to = 0.0
         while True:
             if to >= timeout:
-                raise ASRException("Timeout when waiting for the Julius server message.")
+                raise ASRException(
+                    "Timeout when waiting for the Julius server message.")
 
             try:
                 results += self.s_socket.recv(1)
@@ -136,7 +145,7 @@ class JuliusASR():
 
         return results
 
-    def get_results(self, timeout = 0.6):
+    def get_results(self, timeout=0.6):
         """"Waits for the recognition results from the Julius ASR server.
 
         Timeout specifies how long it will wait for the end of message.
@@ -148,7 +157,8 @@ class JuliusASR():
         while True:
             if to >= timeout:
                 print msg
-                raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
+                raise JuliusASRTimeoutException(
+                    "Timeout when waiting for the Julius server results.")
 
             m = self.read_server_message()
             if not m:
@@ -157,7 +167,7 @@ class JuliusASR():
                 to += self.cfg['Hub']['main_loop_sleep_time']
                 continue
 
-            msg += m+'\n'
+            msg += m + '\n'
 
             if '<CONFNET>' in msg:
                 break
@@ -252,7 +262,7 @@ class JuliusASR():
           <INPUT STATUS="LISTEN" TIME="1343896312"/>
 
         """
-        msg = "<RESULTS>"+msg+"</RESULTS>"
+        msg = "<RESULTS>" + msg + "</RESULTS>"
         msg = msg.replace("<s>", "&lt;s&gt;").replace("</s>", "&lt;/s&gt;")
 
         nblist = UtteranceNBList()
@@ -267,7 +277,7 @@ class JuliusASR():
                 cm = 1.0
                 for el in whypo:
                     word = el.getAttribute("WORD")
-                    utterance += " "+word
+                    utterance += " " + word
                     if word:
                         cm *= float(el.getAttribute("CM"))
                 nblist.add(cm, Utterance(utterance))
@@ -316,7 +326,7 @@ class JuliusASR():
             nblist, cn = self.get_results()
             # read any leftovers
             while True:
-                if self.read_server_messages() == None:
+                if self.read_server_messages() is None:
                     break
 
         return
@@ -345,7 +355,7 @@ class JuliusASR():
         # a new ASR hypothesis is decoded
         while True:
             m = self.read_server_message()
-            if m == None:
+            if m is None:
                 break
 
         if self.recognition_on:

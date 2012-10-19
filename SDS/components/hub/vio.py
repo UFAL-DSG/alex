@@ -26,8 +26,11 @@ from SDS.utils.exception import VoipIOException
 
 # Logging callback
 logger = None
+
+
 def log_cb(level, str, len):
     logger.info(str)
+
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account
@@ -67,7 +70,7 @@ class AccountCallback(pj.AccountCallback):
                 # rejected the call since the caller is blacklisted
                 if self.cfg['VoipIO']['debug']:
                     self.cfg['Logging']['system_logger'].debug("AccountCallback::on_incoming_call - Rejected call from blacklisted remote URI %s " % remote_uri)
-                    wait_hours = (self.voipio.black_list[self.voipio.get_user_from_uri(remote_uri)] - current_time)/(60*60)
+                    wait_hours = (self.voipio.black_list[self.voipio.get_user_from_uri(remote_uri)] - current_time) / (60 * 60)
                     self.cfg['Logging']['system_logger'].debug("AccountCallback::on_incoming_call - Must wait for %d hours" % wait_hours)
                 # respond by "Busy here"
                 call.answer(486)
@@ -98,6 +101,7 @@ class AccountCallback(pj.AccountCallback):
             if self.account.info().reg_status >= 200:
                 self.sem.release()
 
+
 class CallCallback(pj.CallCallback):
     """ Callback to receive events from Call
     """
@@ -119,7 +123,8 @@ class CallCallback(pj.CallCallback):
     def on_state(self):
         if self.cfg['VoipIO']['debug']:
             m = []
-            m.append("CallCallback::on_state : Call with %s " % self.call.info().remote_uri)
+            m.append("CallCallback::on_state : Call with %s " %
+                     self.call.info().remote_uri)
             m.append("is %s " % self.call.info().state_text)
             m.append("last code = %s " % self.call.info().last_code)
             m.append("(%s)" % self.call.info().last_reason)
@@ -132,26 +137,34 @@ class CallCallback(pj.CallCallback):
             call_slot = self.call.info().conf_slot
 
             # assign the file names
-            self.output_file_name_recorded = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
-              'all-'+datetime.now().isoformat('-').replace(':', '-')+'.recorded.wav')
-            self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
-              'all-'+datetime.now().isoformat('-').replace(':', '-')+'.played.wav')
+            self.output_file_name_recorded = os.path.join(
+                self.cfg['Logging']['system_logger'].get_call_dir_name(),
+                'all-' + datetime.now().isoformat('-').replace(':', '-') + '.recorded.wav')
+            self.output_file_name_played = os.path.join(
+                self.cfg['Logging']['system_logger'].get_call_dir_name(),
+                'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
 
             # Create wave recorders
-            self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
-            recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
-            self.played_id = pj.Lib.instance().create_recorder(self.output_file_name_played)
+            self.recorded_id = pj.Lib.instance(
+            ).create_recorder(self.output_file_name_recorded)
+            recorded_slot = pj.Lib.instance(
+            ).recorder_get_slot(self.recorded_id)
+            self.played_id = pj.Lib.instance(
+            ).create_recorder(self.output_file_name_played)
             played_slot = pj.Lib.instance().recorder_get_slot(self.played_id)
 
             # Connect the call to the wave recorder
             pj.Lib.instance().conf_connect(call_slot, recorded_slot)
             # Connect the memory player to the wave recorder
-            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, played_slot)
+            pj.Lib.instance(
+            ).conf_connect(self.voipio.mem_player.port_slot, played_slot)
 
             # Connect the call to the memory capture
-            pj.Lib.instance().conf_connect(call_slot, self.voipio.mem_capture.port_slot)
+            pj.Lib.instance(
+            ).conf_connect(call_slot, self.voipio.mem_capture.port_slot)
             # Connect the memory player to the call
-            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
+            pj.Lib.instance(
+            ).conf_connect(self.voipio.mem_player.port_slot, call_slot)
 
             # send the callback
             self.voipio.on_call_confirmed(self.call.info().remote_uri)
@@ -168,7 +181,8 @@ class CallCallback(pj.CallCallback):
     def on_transfer_status(self, code, reason, final, cont):
         if self.cfg['VoipIO']['debug']:
             m = []
-            m.append("CallCallback::on_transfer_status : Call with %s " % self.call.info().remote_uri)
+            m.append("CallCallback::on_transfer_status : Call with %s " %
+                     self.call.info().remote_uri)
             m.append("is %s " % self.call.info().state_text)
             m.append("last code = %s " % self.call.info().last_code)
             m.append("(%s)" % self.call.info().last_reason)
@@ -189,16 +203,20 @@ class CallCallback(pj.CallCallback):
     def on_media_state(self):
         if self.call.info().media_state == pj.MediaState.ACTIVE:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is now active")
+                self.cfg['Logging']['system_logger'].debug(
+                    "CallCallback::on_media_state : Media is now active")
         else:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is inactive")
+                self.cfg['Logging']['system_logger'].debug(
+                    "CallCallback::on_media_state : Media is inactive")
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("Received digits: %s" % digits)
+            self.cfg['Logging']['system_logger'].debug(
+                "Received digits: %s" % digits)
 
         self.voipio.on_dtmf_digit(digits)
+
 
 class VoipIO(multiprocessing.Process):
     """ VoipIO implements IO operations using a SIP protocol.
@@ -350,7 +368,8 @@ class VoipIO(multiprocessing.Process):
                 del_messages.append(frame_id)
 
         # delete the messages which were already sent
-        self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
+        self.message_queue = [x for x in self.message_queue if x[1]
+                              not in del_messages]
 
     def read_write_audio(self):
         """Send some of the available data to the output.
@@ -358,13 +377,14 @@ class VoipIO(multiprocessing.Process):
         It should be a non-blocking operation.
         """
 
-        if self.local_audio_play and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame']*2:
+        if self.local_audio_play and self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame'] * 2:
             # send a frame from input to be played
             data_play = self.local_audio_play.popleft()
 
             if isinstance(data_play, Frame):
-                if len(data_play) == self.cfg['Audio']['samples_per_frame']*2:
-                    self.last_frame_id = self.mem_player.put_frame(data_play.payload)
+                if len(data_play) == self.cfg['Audio']['samples_per_frame'] * 2:
+                    self.last_frame_id = self.mem_player.put_frame(
+                        data_play.payload)
 
                     # send played audio
                     self.audio_played.send(data_play)
@@ -375,7 +395,7 @@ class VoipIO(multiprocessing.Process):
                 if data_play.parsed['__name__'] == 'utterance_end':
                     self.message_queue.append((Command('play_utterance_end(user_id="%s")' % data_play.parsed['user_id'], 'VoipIO', 'HUB'), self.last_frame_id))
 
-        if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame']*2:
+        if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2:
             # get and send recorded data, it must be read at the other end
             data_rec = self.mem_capture.get_frame()
             self.audio_record.send(Frame(data_rec))
@@ -386,21 +406,24 @@ class VoipIO(multiprocessing.Process):
         return dst.startswith('sip:')
 
     def has_sip_uri(self, dst):
-        p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+        p = re.search(
+            r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
         if not p:
             return False
 
         return True
 
     def get_sip_uri(self, dst):
-        p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+        p = re.search(
+            r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
         if not p:
             return None
 
         return p.group(0)
 
     def get_user_from_uri(self, uri):
-        p = re.search(r'sip:([a-zA-Z0-9_\.]+)@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?', uri)
+        p = re.search(
+            r'sip:([a-zA-Z0-9_\.]+)@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?', uri)
         if not p:
             return None
 
@@ -418,7 +441,7 @@ class VoipIO(multiprocessing.Process):
     def construct_sip_uri_from_phone_number(self, dst):
         """ Construct a valid SIP URI for given phone number.
         """
-        sip_uri = "sip:"+dst+'@'+self.cfg['VoipIO']['domain']
+        sip_uri = "sip:" + dst + '@' + self.cfg['VoipIO']['domain']
         return sip_uri
 
     def is_accepted_phone_number(self, dst):
@@ -501,7 +524,8 @@ class VoipIO(multiprocessing.Process):
                 if self.cfg['VoipIO']['debug']:
                     self.cfg['Logging']['system_logger'].debug('VoipIO : Blocked call to a forbidden phone number - %s' % uri)
             else:
-                raise VoipIOException('Making call to SIP URI which is not SIP URI - ' + uri)
+                raise VoipIOException(
+                    'Making call to SIP URI which is not SIP URI - ' + uri)
 
         except pj.Error, e:
             print "Exception: " + str(e)
@@ -513,7 +537,8 @@ class VoipIO(multiprocessing.Process):
 
         try:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug("Transferring the call to %" % uri)
+                self.cfg['Logging']['system_logger'].debug(
+                    "Transferring the call to %" % uri)
             return self.call.transfer(uri)
         except pj.Error, e:
             print "Exception: " + str(e)
@@ -523,7 +548,8 @@ class VoipIO(multiprocessing.Process):
         try:
             if self.call:
                 if self.cfg['VoipIO']['debug']:
-                    self.cfg['Logging']['system_logger'].debug("Hangup the call")
+                    self.cfg['Logging'][
+                        'system_logger'].debug("Hangup the call")
 
                 return self.call.hangup()
         except pj.Error, e:
@@ -532,16 +558,19 @@ class VoipIO(multiprocessing.Process):
 
     def on_incoming_call(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("VoipIO::on_incoming_call - from %s" % remote_uri)
+            self.cfg['Logging']['system_logger'].debug(
+                "VoipIO::on_incoming_call - from %s" % remote_uri)
 
-        self.cfg['Logging']['system_logger'].call_start(self.get_user_from_uri(remote_uri))
+        self.cfg['Logging']['system_logger'].call_start(
+            self.get_user_from_uri(remote_uri))
 
         # send a message that there is a new incoming call
         self.commands.send(Command('incoming_call(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_rejected_call(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("VoipIO::on_rejected_call - from %s" % remote_uri)
+            self.cfg['Logging']['system_logger'].debug(
+                "VoipIO::on_rejected_call - from %s" % remote_uri)
 
         # send a message that we rejected an incoming call
         self.commands.send(Command('rejected_call(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
@@ -555,23 +584,27 @@ class VoipIO(multiprocessing.Process):
 
     def on_call_connecting(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_connecting")
+            self.cfg['Logging']['system_logger'].debug(
+                "VoipIO::on_call_connecting")
 
-        self.cfg['Logging']['system_logger'].call_start(self.get_user_from_uri(remote_uri))
+        self.cfg['Logging']['system_logger'].call_start(
+            self.get_user_from_uri(remote_uri))
 
         # send a message that the call is connecting
         self.commands.send(Command('call_connecting(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_confirmed(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_confirmed")
+            self.cfg['Logging']['system_logger'].debug(
+                "VoipIO::on_call_confirmed")
 
         # send a message that the call is confirmed
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_disconnected(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_disconnected")
+            self.cfg['Logging']['system_logger'].debug(
+                "VoipIO::on_call_disconnected")
 
         # send a message that the call is disconnected
         self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
@@ -581,7 +614,8 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_dtmf_digit")
 
         # send a message that a digit was recieved
-        self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
+        self.commands.send(
+            Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
     def run(self):
         try:
@@ -601,7 +635,7 @@ class VoipIO(multiprocessing.Process):
 
             media_cfg = pj.MediaConfig()
             media_cfg.clock_rate = self.cfg['Audio']['sample_rate']
-            media_cfg.audio_frame_ptime = int(1000*self.cfg['Audio']['samples_per_frame']/self.cfg['Audio']['sample_rate'])
+            media_cfg.audio_frame_ptime = int(1000 * self.cfg['Audio']['samples_per_frame'] / self.cfg['Audio']['sample_rate'])
             media_cfg.no_vad = True
             media_cfg.enable_ice = False
 
@@ -620,7 +654,8 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
             # Create UDP transport which listens to any available port
-            self.transport = self.lib.create_transport(pj.TransportType.UDP, pj.TransportConfig(0))
+            self.transport = self.lib.create_transport(
+                pj.TransportType.UDP, pj.TransportConfig(0))
             self.cfg['Logging']['system_logger'].info("Listening on %s port %s" % (self.transport.info().host, self.transport.info().port))
 
             # Start the library
@@ -638,16 +673,19 @@ class VoipIO(multiprocessing.Process):
             self.acc_cb.wait()
 
             self.cfg['Logging']['system_logger'].info("Registration complete, status = %s (%s)" %
-                                                      (self.acc.info().reg_status,  self.acc.info().reg_reason))
+                                                      (self.acc.info().reg_status, self.acc.info().reg_reason))
 
-            my_sip_uri = "sip:" + self.transport.info().host + ":" + str(self.transport.info().port)
+            my_sip_uri = "sip:" + self.transport.info(
+            ).host + ":" + str(self.transport.info().port)
 
             # Create memory player
-            self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+            self.mem_player = pj.MemPlayer(
+                pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
             self.mem_player.create()
 
             # Create memory capture
-            self.mem_capture = pj.MemCapture(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+            self.mem_capture = pj.MemCapture(
+                pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
             self.mem_capture.create()
 
             while 1:
@@ -664,7 +702,6 @@ class VoipIO(multiprocessing.Process):
 
                 # process audio data
                 self.read_write_audio()
-
 
             # Shutdown the library
             self.transport = None

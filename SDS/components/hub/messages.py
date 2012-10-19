@@ -10,6 +10,7 @@ from SDS.utils.mproc import InstanceID
 
 # TODO: add comments
 
+
 class Message(InstanceID):
     """ Abstract class which implements basic functionality for messages passed between components in the SDS.
     """
@@ -19,8 +20,9 @@ class Message(InstanceID):
         self.source = source
         self.target = target
 
+
 class Command(Message):
-    def __init__(self, command, source = None, target = None):
+    def __init__(self, command, source=None, target=None):
         Message.__init__(self, source, target)
 
         self.command = command
@@ -29,8 +31,9 @@ class Command(Message):
     def __str__(self):
         return "From: %-10s To: %-10s Command: %s " % (self.source, self.target, self.command)
 
+
 class ASRHyp(Message):
-    def __init__(self, hyp, source = None, target = None):
+    def __init__(self, hyp, source=None, target=None):
         Message.__init__(self, source, target)
 
         self.hyp = hyp
@@ -44,8 +47,9 @@ class ASRHyp(Message):
     def __getitem__(self, key):
         return self.payload[key]
 
+
 class TTSText(Message):
-    def __init__(self, text, source = None, target = None):
+    def __init__(self, text, source=None, target=None):
         Message.__init__(self, source, target)
 
         self.text = text
@@ -53,8 +57,9 @@ class TTSText(Message):
     def __str__(self):
         return "From: %-10s To: %-10s Text: %s " % (self.source, self.target, self.text)
 
+
 class Frame(Message):
-    def __init__(self, payload, source = None, target = None):
+    def __init__(self, payload, source=None, target=None):
         Message.__init__(self, source, target)
 
         self.payload = payload

@@ -49,7 +49,7 @@ class CUEDSlot:
 
 
 class CUEDDialogueAct:
-    def __init__(self, text, da, database = None, dictionary = None):
+    def __init__(self, text, da, database=None, dictionary=None):
         self.text = text
         self.cuedDA = da
         self.db = database
@@ -89,55 +89,55 @@ class CUEDDialogueAct:
         if self.dialogue_act_type == 'inform':
             for slt in self.slots:
                 if slt.equal == '=':
-                    s.append('inform('+str(slt)+')')
+                    s.append('inform(' + str(slt) + ')')
                 else:
-                    s.append('deny('+slt.name+'="'+slt.value+'")')
+                    s.append('deny(' + slt.name + '="' + slt.value + '")')
 
         if self.dialogue_act_type == 'request':
             for slt in self.slots:
                 if slt.value:
                     if slt.equal == '=':
-                        s.append('inform('+str(slt)+')')
+                        s.append('inform(' + str(slt) + ')')
                     else:
-                        s.append('deny('+slt.name+'="'+slt.value+'")')
+                        s.append('deny(' + slt.name + '="' + slt.value + '")')
                 else:
-                    s.append('request('+slt.name+')')
+                    s.append('request(' + slt.name + ')')
 
         if self.dialogue_act_type == 'confirm':
             for slt in self.slots:
                 if slt.name == 'name':
-                    s.append('inform('+str(slt)+')')
+                    s.append('inform(' + str(slt) + ')')
                 else:
-                    s.append('confirm('+str(slt)+')')
+                    s.append('confirm(' + str(slt) + ')')
 
         if self.dialogue_act_type == 'select':
-            ss  = 'select('
-            ss += str(self.slots[0])+','+str(self.slots[1])
+            ss = 'select('
+            ss += str(self.slots[0]) + ',' + str(self.slots[1])
             ss += ')'
 
             s.append(ss)
 
-        if self.dialogue_act_type in ['silence','thankyou','ack','bye','hangup','repeat','help','restart','null']:
-            s.append(self.dialogue_act_type+'()')
+        if self.dialogue_act_type in ['silence', 'thankyou', 'ack', 'bye', 'hangup', 'repeat', 'help', 'restart', 'null']:
+            s.append(self.dialogue_act_type + '()')
 
-        if self.dialogue_act_type in ['hello', 'affirm', 'negate','reqalts', 'reqmore']:
-            s.append(self.dialogue_act_type+'()')
+        if self.dialogue_act_type in ['hello', 'affirm', 'negate', 'reqalts', 'reqmore']:
+            s.append(self.dialogue_act_type + '()')
             for slt in self.slots:
                 if slt.equal == '=':
-                    s.append('inform('+str(slt)+')')
+                    s.append('inform(' + str(slt) + ')')
                 else:
-                    s.append('deny('+slt.name+'="'+slt.value+'")')
+                    s.append('deny(' + slt.name + '="' + slt.value + '")')
 
         if self.dialogue_act_type == 'deny':
             i = 1
             for slt in self.slots:
                 if i == 1:
-                    s.append('deny('+slt.name+'="'+slt.value+'")')
+                    s.append('deny(' + slt.name + '="' + slt.value + '")')
                 else:
                     if slt.equal == '=':
-                        s.append('inform('+str(slt)+')')
+                        s.append('inform(' + str(slt) + ')')
                     else:
-                        s.append('deny('+slt.name+'="'+slt.value+'")')
+                        s.append('deny(' + slt.name + '="' + slt.value + '")')
 
                 i += 1
 
@@ -185,11 +185,11 @@ class CUEDDialogueAct:
 
         if not s:
             print '# CUEDDialogueAct.get_ufal_da()'
-            print '#'+'='*120
+            print '#' + '=' * 120
             print '#', self.text
             print '#', self.cuedDA
             print '#', 'null()'
-            print '#'+'.'*120
+            print '#' + '.' * 120
 
         if not s:
             s = 'null()'

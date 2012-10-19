@@ -13,11 +13,11 @@ while directory and directory != 'SDS':
 if directory == 'SDS':
     sys.path.append(path)
 
+
 class ASRInterface:
     """ This class basic interface which has to be provided by all ASR modules to fully function within
     the SDS project.
     """
-
 
     def rec_in(self, frame):
         """ This defines asynchronous interface for speech recognition.

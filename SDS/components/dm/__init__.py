@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class DialogueManager(object):
     """This is a base class for a dialogue manager. The purpose of a dialogue manager is to accept input
     in the form dialogue acts and respond again in the form of dialogue acts.
@@ -27,7 +28,6 @@ class DialogueManager(object):
     def da_out(self):
         """Produces output dialogue act."""
         pass
-
 
     def end_dialogue(self):
         """Ends the dialogue and post-process the data."""

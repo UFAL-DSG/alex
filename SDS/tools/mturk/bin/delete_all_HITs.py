@@ -13,7 +13,7 @@ for pnum in range(1, 50):
         print "HITId:", hit.HITId
 
         hitStatus = defaultdict(int)
-        for ass in conn.get_assignments(hit.HITId, status = 'Submitted', page_size=10, page_number=1):
+        for ass in conn.get_assignments(hit.HITId, status='Submitted', page_size=10, page_number=1):
             #print "Dir ass:", dir(ass)
 
             hitStatus[ass.AssignmentStatus] += 1

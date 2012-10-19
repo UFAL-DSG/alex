@@ -10,6 +10,7 @@ import re
 
 from datetime import datetime
 
+
 def local_lock():
     """This decorator makes the decorated function thread safe.
 
@@ -32,6 +33,7 @@ def local_lock():
 
     return decorator
 
+
 def global_lock(lock):
     """This decorator makes the decorated function thread safe.
 
@@ -52,6 +54,7 @@ def global_lock(lock):
 
     return decorator
 
+
 class InstanceID:
     """ This class provides unique ids to all instances of objects inheriting from this class.
     """
@@ -64,26 +67,27 @@ class InstanceID:
         InstanceID.instance_id += 1
         return InstanceID.instance_id
 
+
 class SystemLogger:
     """ This multiproces safe logger. It should be used by all components in the SDS.
     """
 
     lock = multiprocessing.RLock()
-    levels = {'INFO':       0,
-              'DEBUG':     10,
-              'WARNING':   20,
-              'CRITICAL':  30,
+    levels = {'INFO': 0,
+              'DEBUG': 10,
+              'WARNING': 20,
+              'CRITICAL': 30,
               'EXCEPTION': 40,
-              'ERROR':     50,
-             }
+              'ERROR': 50,
+              }
 
-    def __init__(self, stdout_log_level = 'ERROR', stdout = True, file_log_level = 'ERROR', output_dir = None):
+    def __init__(self, stdout_log_level='ERROR', stdout=True, file_log_level='ERROR', output_dir=None):
         self.stdout_log_level = stdout_log_level
         self.stdout = stdout
         self.file_log_level = stdout_log_level
         self.output_dir = output_dir
 
-        self.current_call_log_dir_name = multiprocessing.Array('c', ' '*1000)
+        self.current_call_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.current_call_log_dir_name.value = ''
 
     @global_lock(lock)
@@ -98,8 +102,9 @@ class SystemLogger:
     def call_start(self, remote_uri):
         """ Create a specific directory for logging a specific call.
         """
-        call_name = self.get_time_str()+'-'+remote_uri
-        self.current_call_log_dir_name.value = os.path.join(self.output_dir, call_name)
+        call_name = self.get_time_str() + '-' + remote_uri
+        self.current_call_log_dir_name.value = os.path.join(
+            self.output_dir, call_name)
         os.makedirs(self.current_call_log_dir_name.value)
 
     @global_lock(lock)
@@ -120,15 +125,15 @@ class SystemLogger:
 
     @global_lock(lock)
     def formatter(self, lvl, message):
-        s  = self.get_time_str()
+        s = self.get_time_str()
         s += '  %-10s : ' % multiprocessing.current_process().name
         s += '%-10s ' % lvl
         s += '\n'
 
-        ss = '    '+str(message)
+        ss = '    ' + str(message)
         ss = re.sub(r'\n', '\n    ', ss)
 
-        return s+ss+'\n'
+        return s + ss + '\n'
 
     @global_lock(lock)
     def log(self, lvl, message):
@@ -148,11 +153,11 @@ class SystemLogger:
 
                 if self.current_call_log_dir_name.value:
                     # log to the call specific log
-                    f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
+                    f = open(os.path.join(self.current_call_log_dir_name.value,
+                             'system.log'), "a+", 0)
                     f.write(self.formatter(lvl, message))
                     f.write('\n')
                     f.close()
-
 
     @global_lock(lock)
     def info(self, message):

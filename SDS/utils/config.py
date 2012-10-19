@@ -8,6 +8,7 @@ import os.path
 
 from SDS.utils.mproc import SystemLogger
 
+
 class Config:
     """ Config handles configuration data necessary for all the components
     in the SDS. It implements a dictionary so that any component could

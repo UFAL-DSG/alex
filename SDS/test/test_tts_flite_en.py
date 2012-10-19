@@ -9,7 +9,7 @@ import SDS.utils.audio as audio
 from SDS.components.tts.flite import FliteTTS
 
 print "Testing Flite TTS"
-print "="*120
+print "=" * 120
 print
 
 text = 'Hello. Thank you for calling. '
@@ -22,15 +22,15 @@ print "Sample rate:    ", sample_rate
 print
 
 cfg = {
-  'Audio': {
-      'sample_rate': sample_rate
+    'Audio': {
+        'sample_rate': sample_rate
     },
-  'TTS': {
+    'TTS': {
     'Flite': {
-      'debug': False,
-      'voice': 'kal'
+        'debug': False,
+        'voice': 'kal'
     }
-  }
+    }
 }
 
 tts = FliteTTS(cfg)

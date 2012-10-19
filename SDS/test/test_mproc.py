@@ -30,7 +30,6 @@ if __name__ == "__main__":
             self.var += 2
             return self.var
 
-
     t1 = TestLocalLock()
     t1.inc_var()
     t1.inc_var()

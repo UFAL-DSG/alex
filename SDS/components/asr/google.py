@@ -12,6 +12,7 @@ import SDS.utils.audio as audio
 
 from SDS.components.asr.utterance import *
 
+
 class GoogleASR():
     """ Uses Google ASR service to recognize recorded audio in a specific language, e.g. en, cs.
 
@@ -35,14 +36,14 @@ class GoogleASR():
         Note that the returned hypotheses are in JSON format.
 
         """
-        baseurl  = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=%s" % self.language
+        baseurl = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=%s" % self.language
 
-        header   = {"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11",
-                    "Content-Type": "audio/x-flac; rate=%d" % self.cfg['Audio']['sample_rate']}
+        header = {"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11",
+                  "Content-Type": "audio/x-flac; rate=%d" % self.cfg['Audio']['sample_rate']}
 
-        data = open(flac_file_name,"rb").read()
+        data = open(flac_file_name, "rb").read()
 
-        request  = urllib2.Request(baseurl, data, header)
+        request = urllib2.Request(baseurl, data, header)
         json_hypotheses = urllib2.urlopen(request).read()
 
         if self.cfg['ASR']['Google']['debug']:

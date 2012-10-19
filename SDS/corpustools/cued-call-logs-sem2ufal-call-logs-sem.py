@@ -21,24 +21,26 @@ The files are processed in-place.
 
 """
 
-def process_log(infile,outfile,verbose):
+
+def process_log(infile, outfile, verbose):
 
     # We only need to find the <semitrans> line in each user turn in the file and
     # append a <semitran_ufal> line with the converted dialogue state.
-    f = open(infile,'r')
-    g = open(outfile,'w')
+    f = open(infile, 'r')
+    g = open(outfile, 'w')
     for line in f:
-        isSemitran = re.search(r'([^<]*)<semitran>(.*)</semitran>',line)
+        isSemitran = re.search(r'([^<]*)<semitran>(.*)</semitran>', line)
 
         if isSemitran:
             whitespace_at_start_of_line = isSemitran.group(1)
             cued_da = isSemitran.group(2)
-            da = CUEDDialogueAct("",cued_da) # Doesn't need any text.
+            da = CUEDDialogueAct("", cued_da)  # Doesn't need any text.
             da.parse()
 
             ufal_da = da.get_ufal_da()
             g.write(line)
-            g.write(whitespace_at_start_of_line + "<semitran_ufal>" + ufal_da + "</semitran_ufal>\n")
+            g.write(whitespace_at_start_of_line +
+                    "<semitran_ufal>" + ufal_da + "</semitran_ufal>\n")
         else:
             g.write(line)
 
@@ -49,8 +51,9 @@ def process_log(infile,outfile,verbose):
 ###############################################
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
       This program processes the CUED call logs for <semitran> tags, converts the UCED semantic annotations
       therein to the UFAL semantic format and stores them in a <semitran_ufal> tag.
 
@@ -72,8 +75,9 @@ if __name__ == '__main__':
                         help='a prefix for the modified files.')
     parser.add_argument('--outdir', action="store", default='NONE',
                         help='optional output directory where all the modified files will be written (without dir. structure)')
-    parser.add_argument('-v', action="store_true", default=False, dest="verbose",
-                        help='set verbose output')
+    parser.add_argument(
+        '-v', action="store_true", default=False, dest="verbose",
+        help='set verbose output')
 
     args = parser.parse_args()
 
@@ -83,7 +87,8 @@ if __name__ == '__main__':
     verbose = args.verbose
 
     # Searching for all call logs:
-    logs = glob.glob(os.path.join(indir, '*', '*', 'user-transcription.norm.xml'))
+    logs = glob.glob(
+        os.path.join(indir, '*', '*', 'user-transcription.norm.xml'))
     logs.sort()
 
     index = 0
@@ -96,7 +101,7 @@ if __name__ == '__main__':
             outfile = os.path.join(os.path.dirname(log), prefix + '-' + bnfn)
         else:
             bnfn = os.path.basename(log)
-            pathmatch = re.search(r'([^/]*$)',os.path.dirname(log))
+            pathmatch = re.search(r'([^/]*$)', os.path.dirname(log))
             midpath = ""
             if pathmatch:
                 midpath = pathmatch.group(1)
@@ -106,4 +111,4 @@ if __name__ == '__main__':
             print 'Processing: ', log
             print 'Output to: ', outfile
 
-        process_log(log,outfile,verbose)
+        process_log(log, outfile, verbose)

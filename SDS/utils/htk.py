@@ -23,16 +23,16 @@ USER = 9
 DISCRETE = 10
 PLP = 11
 
-_E = 0000100 # has energy
-_N = 0000200 # absolute energy supressed
-_D = 0000400 # has delta coefficients
-_A = 0001000 # has acceleration (delta-delta) coefficients
-_C = 0002000 # is compressed
-_Z = 0004000 # has zero mean static coefficients
-_K = 0010000 # has CRC checksum
-_O = 0020000 # has 0th cepstral coefficient
-_V = 0040000 # has VQ data
-_T = 0100000 # has third differential coefficients
+_E = 0000100  # has energy
+_N = 0000200  # absolute energy supressed
+_D = 0000400  # has delta coefficients
+_A = 0001000  # has acceleration (delta-delta) coefficients
+_C = 0002000  # is compressed
+_Z = 0004000  # has zero mean static coefficients
+_K = 0010000  # has CRC checksum
+_O = 0020000  # has 0th cepstral coefficient
+_V = 0040000  # has VQ data
+_T = 0100000  # has third differential coefficients
 
 
 class Features:
@@ -61,7 +61,8 @@ class Features:
 
         # read header
         spam = f.read(12)
-        self.nSamples, self.sampPeriod, self.sampSize, self.parmKind = unpack(">IIHH", spam)
+        self.nSamples, self.sampPeriod, self.sampSize, self.parmKind = unpack(
+            ">IIHH", spam)
 
         # get coefficients for compressed data
         if self.parmKind & _C:
@@ -83,11 +84,11 @@ class Features:
         self.hdrlen = f.tell()
 
         data = numpy.fromfile(f, self.dtype)
-        if self.parmKind & _K: #
+        if self.parmKind & _K:
             # remove and ignore check-sum
             data = data[:-1]
 
-        data = data.reshape(len(data)/self.veclen, self.veclen)
+        data = data.reshape(len(data) / self.veclen, self.veclen)
 
         if self.swap:
             data = data.byteswap()
@@ -100,10 +101,11 @@ class Features:
 
         f.close()
 
+
 class MLF:
     """Read HTK MLF files."""
 
-    def __init__(self, file_name=None, max_files = None):
+    def __init__(self, file_name=None, max_files=None):
         self.mlf = {}
         self.max_files = max_files
 
@@ -152,7 +154,7 @@ class MLF:
                 m = label.find('-')
                 p = label.rfind('+')
                 if m != -1 and p != -1:
-                    label = label[m+1:p]
+                    label = label[m + 1:p]
 
                 transcription.append([s, e, label])
             elif len(c) == 1:
@@ -174,7 +176,7 @@ class MLF:
 
             self.mlf[f] = transcription
 
-    def sub(self, pattern, repl, pos = True):
+    def sub(self, pattern, repl, pos=True):
         for f in self.mlf:
             for i, [s, e, l] in enumerate(self.mlf[f]):
                 if pos and l == pattern:
@@ -209,27 +211,29 @@ class MLF:
                 self.mlf[f][i][0] /= 10000000
                 self.mlf[f][i][1] /= 10000000
 
-    def times_to_frames(self, frame_length = 0.010):
+    def times_to_frames(self, frame_length=0.010):
         for f in self.mlf:
             for i in range(len(self.mlf[f])):
-                self.mlf[f][i][0] = int(self.mlf[f][i][0]/frame_length/10000000)
-                self.mlf[f][i][1] = int(self.mlf[f][i][1]/frame_length/10000000)
+                self.mlf[f][i][0] = int(self.mlf[f][i][0] /
+                                        frame_length / 10000000)
+                self.mlf[f][i][1] = int(self.mlf[f][i][1] /
+                                        frame_length / 10000000)
 
-    def trim_segments(self, n = 3):
+    def trim_segments(self, n=3):
         """Remove n-frames from the beginning and the end of a segment."""
         for f in self.mlf:
             transcription = []
             for s, e, l in self.mlf[f]:
-                if s + n <  e - n:
+                if s + n < e - n:
                     # trim
-                    transcription.append([s+n,e-n,l])
+                    transcription.append([s + n, e - n, l])
                 else:
                     # skip this segment as it is too short to be accuratelly aligned
                     pass
 
             self.mlf[f] = transcription
 
-    def shorten_segments(self, n = 100):
+    def shorten_segments(self, n=100):
         """Shorten segments to n-frames."""
 
         for f in self.mlf:
@@ -237,10 +241,10 @@ class MLF:
             for s, e, l in self.mlf[f]:
                 if e - s > n:
                     # shorten
-                    transcription.append([s,s+n,l])
+                    transcription.append([s, s + n, l])
                 else:
                     # it is short enough
-                    transcription.append([s,e,l])
+                    transcription.append([s, e, l])
 
             self.mlf[f] = transcription
 
@@ -255,6 +259,7 @@ class MLF:
 
         return length
 
+
 class MLFFeaturesAlignedArray:
     """Creates array like object from multiple mlf files and corresponding audio data.
     For each aligned frame it returns a feature vector and its label.
@@ -263,7 +268,7 @@ class MLFFeaturesAlignedArray:
     In this case, the label is returned when iterating through the array.
 
     """
-    def __init__(self, filter = None):
+    def __init__(self, filter=None):
         self.filter = filter
         self.mlfs = []
         self.trns = []
@@ -318,6 +323,7 @@ class MLFFeaturesAlignedArray:
 
         return self.last_param_file_features[frame_id]
 
+
 class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
     """This is an extension of MLFFeaturesAlignedArray which computes the features on the fly from
     the input wav files.
@@ -326,7 +332,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
     as the HTK HCopy.
 
     """
-    def __init__(self, windowsize = 250000, targetrate = 100000,  filter = None, usec0 = False):
+    def __init__(self, windowsize=250000, targetrate=100000, filter=None, usec0=False):
         """Initialise the MFCC frontend.
 
         windowsize - defines the length of the window (frame) in the HTK's 100ns units
@@ -363,7 +369,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
                 raise Exception('Input wave is not in 16bit')
 
             sample_rate = self.last_param_file_features.getframerate()
-            self.frame_size = int(sample_rate*self.windowsize/10000000)
+            self.frame_size = int(sample_rate * self.windowsize / 10000000)
             if self.frame_size > 1024:
                 self.frame_size = 2048
             elif self.frame_size > 512:
@@ -375,11 +381,13 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
             elif self.frame_size > 64:
                 self.frame_size = 128
 
-            self.frame_shift = int(sample_rate*self.targetrate/10000000)
-            self.mfcc_front_end = MFCCFrontEnd(sample_rate, self.frame_size, usec0 = self.usec0)
+            self.frame_shift = int(sample_rate * self.targetrate / 10000000)
+            self.mfcc_front_end = MFCCFrontEnd(
+                sample_rate, self.frame_size, usec0=self.usec0)
 
 #    print "FS", self.frame_size
-        self.last_param_file_features.setpos(max(frame_id*self.frame_shift-int(self.frame_size/2),0))
+        self.last_param_file_features.setpos(
+            max(frame_id * self.frame_shift - int(self.frame_size / 2), 0))
         frame = self.last_param_file_features.readframes(self.frame_size)
 #    print "LN", len(frame)
 

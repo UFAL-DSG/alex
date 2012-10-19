@@ -5,7 +5,8 @@ import numpy as np
 
 from collections import defaultdict
 
-def load_utterances(file_name, limit = None):
+
+def load_utterances(file_name, limit=None):
     f = open(file_name)
 
     utterances = {}
@@ -29,11 +30,14 @@ def load_utterances(file_name, limit = None):
 
     return utterances
 
+
 class ASRHypotheses:
     pass
 
+
 class Features:
     pass
+
 
 class Utterance:
     def __init__(self, utterance):
@@ -52,10 +56,12 @@ class Utterance:
 
     def __lt__(self, other):
         return self.utterance < other.utterance
+
     def __le__(self, other):
         return self.utterance <= other.utterance
+
     def __eq__(self, other):
-        if other == None:
+        if other is None:
             return False
 
         if isinstance(other, Utterance):
@@ -70,6 +76,7 @@ class Utterance:
 
     def __gt__(self, other):
         return self.utterance > other.utterance
+
     def __ge__(self, other):
         return self.utterance >= other.utterance
 
@@ -96,10 +103,11 @@ class Utterance:
 
         for j in range(1, len(s)):
             try:
-                if self.utterance[i+j] != s[j]:
+                if self.utterance[i + j] != s[j]:
                     raise IndexError
             except IndexError:
-                raise ValueError('Missing %s in %s' % (str(s), str(self.utterance)))
+                raise ValueError(
+                    'Missing %s in %s' % (str(s), str(self.utterance)))
 
         return i
 
@@ -109,15 +117,16 @@ class Utterance:
         except ValueError:
             return
 
-        self.utterance[i:i+len(s)] = r
+        self.utterance[i:i + len(s)] = r
+
 
 class UtteranceFeatures(Features):
-    def __init__(self, type = 'ngram', size = 3, utterance = None):
+    def __init__(self, type='ngram', size=3, utterance=None):
         self.type = type
         self.size = size
         self.features = defaultdict(float)
 
-        if utterance != None:
+        if utterance is not None:
             self.parse(utterance)
 
     def __str__(self):
@@ -146,12 +155,12 @@ class UtteranceFeatures(Features):
 
     def parse(self, u):
         if self.type == 'ngram':
-            for k in range(1, self.size+1):
+            for k in range(1, self.size + 1):
                 for i in range(len(u)):
-                    if i+k > len(u):
+                    if i + k > len(u):
                         break
 
-                    self.features[tuple(u[i:i+k])] += 1.0
+                    self.features[tuple(u[i:i + k])] += 1.0
 
         if u.isempty():
             self.features['__empty__'] += 1.0
@@ -178,6 +187,7 @@ class UtteranceFeatures(Features):
 
                 if f in self.features:
                     del self.features[f]
+
 
 class UtteranceNBList(ASRHypotheses):
     """Provides a convenient interface for processing N-best lists of recognised utterances.
@@ -217,7 +227,7 @@ class UtteranceNBList(ASRHypotheses):
 
         return self.n_best[0][1]
 
-    def parse_utterance_confusion_network(self, utterance_cn, n = 10, expand_upto_total_prob_mass = 0.9):
+    def parse_utterance_confusion_network(self, utterance_cn, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input utterance confusion network and generates N-best hypotheses.
 
         The result is a list of utterance hypotheses each with a with assigned probability.
@@ -263,13 +273,13 @@ class UtteranceNBList(ASRHypotheses):
 
             if self.n_best[i][1] == '__other__':
                 if other_utt != -1:
-                    raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' %str(n_best))
+                    raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' % str(n_best))
                 other_utt = i
 
         if other_utt == -1:
             if sum > 1.0:
                 raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.0: %8.6f' % sum)
-            prob_other = 1.0-sum
+            prob_other = 1.0 - sum
             self.n_best.append([prob_other, '__other__'])
         else:
             for i in range(len(n_best)):
@@ -279,12 +289,14 @@ class UtteranceNBList(ASRHypotheses):
     def sort(self):
         self.n_best.sort(reverse=True)
 
+
 class UtteranceNBListFeatures(Features):
     pass
 #TODO: You can implement UtteranceConfusionNetwork and UtteranceConfusionNetworkFeatures to
 # serve the similar purpose for DAILogRegClassifier as Utterance and UtteranceFeatures
 #
 # - then the code will be more general
+
 
 class UtteranceConfusionNetwork(ASRHypotheses):
 
@@ -331,7 +343,7 @@ class UtteranceConfusionNetwork(ASRHypotheses):
         """
         pass
 
-    def prune(self, prune_prob = 0.001):
+    def prune(self, prune_prob=0.001):
         pruned_cn = []
         for alts in self.cn:
             if not alts[0][1] and alts[0][0] > 1.0 - prune_prob:
@@ -369,6 +381,7 @@ class UtteranceConfusionNetwork(ASRHypotheses):
 
         for alts in self.cn:
             alts.sort(reverse=True)
+
 
 class UtteranceConfusionNetworkFeatures(Features):
     pass

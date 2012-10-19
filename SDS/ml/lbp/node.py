@@ -10,12 +10,14 @@ from collections import defaultdict, OrderedDict
 import SDS.ml.logarithmetic as la
 from SDS.utils.cache import lru_cache
 
+
 class GenericNode(object):
     """ This is a base class for all nodes in the Bayesian Network.
     """
     def __init__(self, name, desc):
         self.name = name
         self.desc = desc
+
 
 class Factor(GenericNode):
     """ This is a base class for all factor nodes in the Bayesian Network.
@@ -33,10 +35,12 @@ class Factor(GenericNode):
 
     def detach_variable(self, variable):
         # FIXME: it can be faster if a dictionary would be used for self.variables
-        del self.variables[self.variables.index(lambda v: v.name == variable.name)]
+        del self.variables[self.variables.index(lambda v:
+                                                v.name == variable.name)]
 
     def get_variables(self):
         return self.variables
+
 
 class DiscreteFactor(Factor):
     """ This is a base class for discrete factor nodes in the Bayesian Network.
@@ -61,7 +65,8 @@ class DiscreteFactor(Factor):
 
         # FIXME: make this faster by using a dictionary
         variable_index = [v.name for v in self.variables].index(variable.name)
-        selected_variables = [ (i, v) for i, v in enumerate(self.variables) if v.name != variable.name]
+        selected_variables = [(i, v) for i, v in enumerate(
+            self.variables) if v.name != variable.name]
 
         list_of_lists_of_values = [v.get_values() for v in self.variables]
 
@@ -86,6 +91,7 @@ class DiscreteFactor(Factor):
         for v in self.variables:
             self.input_messages[v.name] = v.get_output_message(self)
 
+
 class VariableNode(GenericNode):
     """ This is a base class for all variable nodes in the Bayesian Network.
     """
@@ -107,11 +113,13 @@ class VariableNode(GenericNode):
 
     def detach_factor(self, factor):
         # FIXME: you can use an ordered dict to make it faster
-        del self.forward_factors[self.forward_factors.index(lambda f: f.name == factor.name)]
-        del self.backward_factors[self.backward_factors.index(lambda f: f.name == factor.name)]
+        del self.forward_factors[self.forward_factors.index(
+            lambda f: f.name == factor.name)]
+        del self.backward_factors[self.backward_factors.index(
+            lambda f: f.name == factor.name)]
 
     def get_factors(self):
-        return self.forward_factors+self.backward_factors
+        return self.forward_factors + self.backward_factors
 
 
 class DiscreteNode(VariableNode):
@@ -120,7 +128,7 @@ class DiscreteNode(VariableNode):
     The probabilities are stored in log format.
     """
 
-    def __init__(self, name, desc, card, observed = False):
+    def __init__(self, name, desc, card, observed=False):
         VariableNode.__init__(self, name, desc)
 
         # number of max values in a table
@@ -240,13 +248,13 @@ class DiscreteNode(VariableNode):
             if p > pMax1:
                 pMax2, pMax1 = pMax1, p
                 vMax2, vMax1 = vMax1, v
-            elif p >pMax2:
+            elif p > pMax2:
                 pMax2 = p
                 vMax2 = v
 
         return ((vMax1, pMax1), (vMax2, pMax2))
 
-    def explain(self,  full=False, linear_prob=False):
+    def explain(self, full=False, linear_prob=False):
         """This function prints the values and their probabilities for this node.
         """
 
@@ -267,33 +275,33 @@ class DiscreteNode(VariableNode):
         p = la.sum(self.log_probs)
         if linear_prob:
             p = np.exp(p)
-        print(('Cardinality: %.4d'+' '*54+' Total: % .17f')
-               % (self.cardinality, p))
+        print(('Cardinality: %.4d' + ' ' * 54 + ' Total: % .17f')
+              % (self.cardinality, p))
 
         print
 
 if __name__ == '__main__':
 
     trans_table = {
-      'save': {
+        'save': {
         'save': 0.9,
         'del': 0.1
-      },
-      'del': {
+        },
+        'del': {
         'save': 0.0,
         'del': 1.0
-      }
+        }
     }
 
     obs_table = {
-      'save': {
+        'save': {
         'osave': 0.8,
         'odel': 0.2
-      },
-      'del': {
+        },
+        'del': {
         'osave': 0.2,
         'odel': 0.8
-      }
+        }
     }
 
     def prob_table(pt_in, *vars):
@@ -315,11 +323,11 @@ if __name__ == '__main__':
     def prob_table_obs(*vars):
         return prob_table(obs_table, *vars)
 
-    hid1 = DiscreteNode('hid1','',2,observed=False)
+    hid1 = DiscreteNode('hid1', '', 2, observed=False)
     hid1['save'] = la.zero_prob
     hid1['del'] = la.zero_prob
 
-    obs1 = DiscreteNode('obs1','',2,observed=True)
+    obs1 = DiscreteNode('obs1', '', 2, observed=True)
     obs1['osave'] = la.one_prob
     obs1['odel'] = la.zero_prob
 
@@ -327,7 +335,7 @@ if __name__ == '__main__':
     fact_h1_o1.attach_variable(hid1)
     fact_h1_o1.attach_variable(obs1)
 
-    hid2 = DiscreteNode('hid2','',2,observed=False)
+    hid2 = DiscreteNode('hid2', '', 2, observed=False)
     hid2['save'] = la.zero_prob
     hid2['del'] = la.zero_prob
 
@@ -335,7 +343,7 @@ if __name__ == '__main__':
     fact_h1_h2.attach_variable(hid1)
     fact_h1_h2.attach_variable(hid2)
 
-    obs2 = DiscreteNode('obs2','',2,True)
+    obs2 = DiscreteNode('obs2', '', 2, True)
     obs2['osave'] = la.zero_prob
     obs2['odel'] = la.one_prob
 
@@ -350,8 +358,8 @@ if __name__ == '__main__':
     hid2.attach_factor(fact_h2_o2, forward=True)
     obs2.attach_factor(fact_h2_o2)
 
-    nodes_all = [obs1,hid1,hid2,obs2]
-    nodes_hid = [hid1,hid2]
+    nodes_all = [obs1, hid1, hid2, obs2]
+    nodes_hid = [hid1, hid2]
 
     # the update sweeps through the nodes
     for n in nodes_hid:
@@ -365,6 +373,6 @@ if __name__ == '__main__':
         n.update_backward_messages()
         n.update_marginals()
 
-    print '-'*120
+    print '-' * 120
     for n in nodes_all:
         n.explain(full=True, linear_prob=True)

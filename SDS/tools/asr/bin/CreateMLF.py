@@ -12,7 +12,7 @@ try:
     dctn = sys.argv[1]
     mlfn = sys.argv[2]
     scpn = sys.argv[3]
-    dir  = sys.argv[4]
+    dir = sys.argv[4]
     pattern1 = sys.argv[5]
     pattern2 = sys.argv[6]
     pattern3 = sys.argv[7]
@@ -73,21 +73,21 @@ for fn in fns:
             continue
 
     new_fn = os.path.join(dir, os.path.basename(fn))
-    scp.append(new_fn.replace('.wav.trn','.mfc'))
+    scp.append(new_fn.replace('.wav.trn', '.mfc'))
 
-    mlf.append('"%s"' % new_fn.replace('.wav.trn','.lab'))
+    mlf.append('"%s"' % new_fn.replace('.wav.trn', '.lab'))
     for w in l:
         mlf.append('%s' % w)
     mlf.append('.')
 
     f.close()
 
-mlff = open(mlfn,'w')
+mlff = open(mlfn, 'w')
 for l in mlf:
-    mlff.write(l+'\n')
+    mlff.write(l + '\n')
 mlff.close()
 
-scpf = open(scpn,'w')
+scpf = open(scpn, 'w')
 for l in scp:
-    scpf.write(l+'\n')
+    scpf.write(l + '\n')
 scpf.close()

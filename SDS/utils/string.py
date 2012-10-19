@@ -1,29 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 def split_by_comma(text):
     parentheses = 0
     splitList = []
 
-    oldI=0
+    oldI = 0
     for i in range(len(text)):
         if text[i] == '(':
-            parentheses +=1
+            parentheses += 1
         elif text[i] == ')':
-            parentheses -=1
+            parentheses -= 1
             if parentheses < 0:
                 raise ValueError("Missing a left parenthesis.")
         elif text[i] == ',':
             if parentheses == 0:
                 if oldI == i:
-                    raise ValueError("Spited segment do not have to start with a comma.")
+                    raise ValueError(
+                        "Spited segment do not have to start with a comma.")
                 else:
                     splitList.append(text[oldI:i].strip())
-                    oldI = i+1
+                    oldI = i + 1
     else:
         splitList.append(text[oldI:].strip())
 
     return splitList
+
 
 def split_by(text, splitter, opening_parentheses, closing_parentheses, quotes):
     """ Splits the input text at each occurrence of the splitter only of it is not enclosed in parentheses.
@@ -38,7 +41,7 @@ def split_by(text, splitter, opening_parentheses, closing_parentheses, quotes):
     split_list = []
 
     parentheses_counter = {}
-    for p in opening_parentheses+quotes:
+    for p in opening_parentheses + quotes:
         parentheses_counter[p] = 0
 
     map_closing_to_opening = {}
@@ -50,14 +53,15 @@ def split_by(text, splitter, opening_parentheses, closing_parentheses, quotes):
     while segment_end < len(text):
         cur_char = text[segment_end]
         if cur_char in opening_parentheses:
-            parentheses_counter[cur_char] +=1
+            parentheses_counter[cur_char] += 1
         elif cur_char in closing_parentheses:
-            parentheses_counter[map_closing_to_opening[cur_char]] -=1
+            parentheses_counter[map_closing_to_opening[cur_char]] -= 1
 
             if parentheses_counter[map_closing_to_opening[cur_char]] < 0:
-                raise ValueError("Missing a opening parenthesis for: %s in the text: %s" %(cur_char, text))
+                raise ValueError("Missing a opening parenthesis for: %s in the text: %s" % (cur_char, text))
         elif cur_char in quotes:
-            parentheses_counter[cur_char] = (parentheses_counter[cur_char] + 1) % 2
+            parentheses_counter[cur_char] = (
+                parentheses_counter[cur_char] + 1) % 2
         elif text[segment_end:].startswith(splitter):
             # test that all parentheses are closed
             if all([c == 0 for c in parentheses_counter.values()]):
@@ -70,6 +74,7 @@ def split_by(text, splitter, opening_parentheses, closing_parentheses, quotes):
         split_list.append(text[segment_start:segment_end].strip())
 
     return split_list
+
 
 def parse_command(command):
     """Parse the command name(var1="val1",...) into a dictionary strucure:
@@ -86,13 +91,14 @@ def parse_command(command):
     try:
         i = command.index('(')
     except ValueError:
-        raise Exception("Parsing error in: %s. Missing opening parenthesis." % command)
+        raise Exception(
+            "Parsing error in: %s. Missing opening parenthesis." % command)
 
     name = command[:i]
     d = {"__name__": name}
 
     # remove the parentheses
-    command_svs = command[i+1:len(command)-1]
+    command_svs = command[i + 1:len(command) - 1]
 
     if not command_svs:
         # there are no parameters
@@ -112,7 +118,8 @@ def parse_command(command):
 
     return d
 
-def escape_special_characters_shell(text, characters = "'\""):
+
+def escape_special_characters_shell(text, characters="'\""):
     for character in characters:
-        text = text.replace( character, '\\' + character )
+        text = text.replace(character, '\\' + character)
     return text

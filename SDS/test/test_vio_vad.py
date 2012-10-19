@@ -19,8 +19,9 @@ from SDS.utils.config import Config
 #########################################################################
 #########################################################################
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-      description="""
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
         test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS components.
 
         This application uses the Julisu ASR and Flite TTS.
@@ -31,8 +32,9 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
-                        help='additional configure file')
+    parser.add_argument(
+        '-c', action="store", dest="configs", default=None, nargs='+',
+        help='additional configure file')
     args = parser.parse_args()
 
     cfg = Config('../resources/default.cfg')
@@ -41,27 +43,35 @@ if __name__ == '__main__':
             cfg.merge(c)
     cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
-
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Test of the VoipIO and VAD components\n"+"="*120)
+    cfg['Logging']['system_logger'].info(
+        "Test of the VoipIO and VAD components\n" + "=" * 120)
 
     wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
     # split audio into frames
-    wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
+    wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
     # remove the last frame
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send vio_commands
-    audio_record, child_audio_record = multiprocessing.Pipe() # I read from this connection recorded audio
-    audio_play, child_audio_play = multiprocessing.Pipe()     # I write in audio to be played
-    audio_played, child_audio_played = multiprocessing.Pipe() # I read from this to get played audio
+    vio_commands, vio_child_commands = multiprocessing.Pipe(
+    )  # used to send vio_commands
+    audio_record, child_audio_record = multiprocessing.Pipe(
+    )  # I read from this connection recorded audio
+    audio_play, child_audio_play = multiprocessing.Pipe(
+    )     # I write in audio to be played
+    audio_played, child_audio_played = multiprocessing.Pipe(
+    )  # I read from this to get played audio
                                                               #   which in sync with recorded signal
 
-    vad_commands, vad_child_commands = multiprocessing.Pipe() # used to send commands to VAD
-    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+    vad_commands, vad_child_commands = multiprocessing.Pipe(
+    )  # used to send commands to VAD
+    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
+    )  # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, child_audio_record, child_audio_play, child_audio_played)
-    vad = VAD(cfg, vad_child_commands, audio_record, audio_played, vad_child_audio_out)
+    vio = VoipIO(cfg, vio_child_commands, child_audio_record,
+                 child_audio_play, child_audio_played)
+    vad = VAD(cfg, vad_child_commands, audio_record, audio_played,
+              vad_child_audio_out)
 
     command_connections = [vio_commands, vad_commands]
 

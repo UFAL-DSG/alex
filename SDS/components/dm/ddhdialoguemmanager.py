@@ -3,6 +3,7 @@
 
 from __init__ import *
 
+
 class DeterministicDiscriminativeHandcraftedDM(DialogueManager):
     """This dialogue manager implements
       1) deterministic discriminative dialogue state update
