@@ -26,7 +26,7 @@ class Node(object):
     def __str__(self):
         self.explain()
 
-    def normalize(self):
+    def normalise(self):
         """This function normlize the sum of all probabilities to 1.0"""
 
         norm = sum(self.values.values())
@@ -324,6 +324,5 @@ class ConstChangeGoal(GroupingGoal):
 
         # update the __others__ value
         self.values['__others__'] = 1 - sum(self.values.values())
-
 
 

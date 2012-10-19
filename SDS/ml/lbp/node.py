@@ -197,7 +197,7 @@ class DiscreteNode(VariableNode):
   def update_marginals(self):
     """ Update the marginal probabilities in the node by collecting all input messages and summing them in the log domain.
 
-    Finally, probabilities are normalized to sum to 1.0.
+    Finally, probabilities are normalised to sum to 1.0.
     """
 
     if not self.observed:
@@ -206,10 +206,10 @@ class DiscreteNode(VariableNode):
       for k, im in self.input_messages.iteritems():
         self.log_probs += im
 
-      self.normalize()
+      self.normalise()
 
-  def normalize(self):
-    """This function normalize the sum of all probabilities to 1.0"""
+  def normalise(self):
+    """This function normalise the sum of all probabilities to 1.0"""
 
     self.log_probs -= la.sum(self.log_probs)
 

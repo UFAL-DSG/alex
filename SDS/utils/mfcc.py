@@ -24,7 +24,7 @@ class MFCCFrontEnd:
   def __init__(self, sourcerate = 16000, framesize = 512,
                usehamming = True, preemcoef = 0.97,
                numchans = 26, ceplifter = 22, numceps = 12,
-               enormalize = True, zmeansource = True, usepower = True, usec0 = True, usecmn = True,
+               enormalise = True, zmeansource = True, usepower = True, usec0 = True, usecmn = True,
                usedelta = True,  useacc= True,
                lofreq = 125, hifreq = 3800):
     self.sourcerate = sourcerate
@@ -33,7 +33,7 @@ class MFCCFrontEnd:
     self.preemcoef = preemcoef
     self.numchans = numchans
     self.ceplifter = ceplifter
-    self.enormalize = enormalize
+    self.enormalise = enormalise
     self.zmeansource = zmeansource
     self.usepower = usepower
     self.usec0 = usec0
@@ -182,5 +182,4 @@ class MFCCFrontEnd:
       mfcc = np.append(mfcc, acc)
 
     return mfcc
-
 

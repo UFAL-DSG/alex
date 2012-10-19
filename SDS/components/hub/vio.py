@@ -465,8 +465,8 @@ class VoipIO(multiprocessing.Process):
 
     return True
 
-  def normalize_uri(self, uri):
-    """ Normalize the phone number or sip uri with a contact name into a clear SIP URI.
+  def normalise_uri(self, uri):
+    """ normalise the phone number or sip uri with a contact name into a clear SIP URI.
     """
 
     if self.is_phone_number(uri):
@@ -487,7 +487,7 @@ class VoipIO(multiprocessing.Process):
     """ Call privided URI. Check whether it is allowed.
     """
     try:
-      uri = self.normalize_uri(uri)
+      uri = self.normalise_uri(uri)
 
       if self.cfg['VoipIO']['debug']:
         print "Making a call to", uri

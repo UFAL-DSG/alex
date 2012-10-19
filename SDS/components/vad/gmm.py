@@ -35,7 +35,7 @@ class GMMVAD():
       self.front_end = MFCCFrontEnd(self.cfg['Audio']['sample_rate'], self.cfg['VAD']['gmm']['framesize'],
                                     self.cfg['VAD']['gmm']['usehamming'], self.cfg['VAD']['gmm']['preemcoef'],
                                     self.cfg['VAD']['gmm']['numchans'], self.cfg['VAD']['gmm']['ceplifter'],
-                                    self.cfg['VAD']['gmm']['numceps'], self.cfg['VAD']['gmm']['enormalize'],
+                                    self.cfg['VAD']['gmm']['numceps'], self.cfg['VAD']['gmm']['enormalise'],
                                     self.cfg['VAD']['gmm']['zmeansource'], self.cfg['VAD']['gmm']['usepower'],
                                     self.cfg['VAD']['gmm']['usec0'], self.cfg['VAD']['gmm']['usecmn'],
                                     self.cfg['VAD']['gmm']['usedelta'], self.cfg['VAD']['gmm']['useacc'],
@@ -79,4 +79,3 @@ class GMMVAD():
 
     # returns a speech / non-speech decisions
     return self.last_decision
-

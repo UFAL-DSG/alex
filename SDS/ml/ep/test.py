@@ -24,21 +24,21 @@ observations = []
 prior = Node(name='Prior', desc='0', card=cardinality)
 for v in values:
     prior[v] = 1.0
-prior.normalize()
+prior.normalise()
 prior.explain()
 nodes.append(prior)
 
 groupingPrior = GroupingNode(name='GroupingPrior', desc='0', card=cardinality)
 for v in values:
     groupingPrior.addOthers(v, 1.0)
-groupingPrior.normalize()
+groupingPrior.normalise()
 groupingPrior.explain()
 groupingNodes.append(groupingPrior)
 
 constPrior = GroupingNode(name='ConstChangePrior', desc='0', card=cardinality)
 for v in values:
     constPrior.addOthers(v, 1.0)
-constPrior.normalize()
+constPrior.normalise()
 constPrior.explain()
 constNodes.append(constPrior)
 
@@ -57,7 +57,7 @@ for turn in range(1, numTurns):
     if random() > 0.1:
         observation['__silence__'] = random()
 
-    observation.normalize()
+    observation.normalise()
     observations.append(observation)
 
     # print values

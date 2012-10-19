@@ -4,7 +4,7 @@
 from collections import defaultdict
 
 from SDS.utils.string import split_by
-from SDS.utils.exception import DialogueActItemException, DialogueActNBListException
+from SDS.utils.exception import *
 
 def load_das(file_name, limit = None):
   f = open(file_name)
@@ -167,6 +167,13 @@ class DialogueAct:
       dai_parsed.parse(dai)
       self.dais.append(dai_parsed)
 
+  def append(self, dai):
+    """Append dialogue act item to the current dialogue act."""
+    if isinstance(dai, DialogueActItem):
+      self.dais.append(dai)
+    else:
+      raise DialogueActException("Only DialogueActItems can be appended.")
+
 class DialogueActNBList:
   """Provides functionality of N-best lists for dialogue acts.
 
@@ -214,52 +221,54 @@ class DialogueActNBList:
     #FIXME: expand the DAI confusion network
 
     self.merge()
-    self.normalize()
+    self.normalise()
     self.sort()
 
   def add(self, probability, da):
     self.n_best.append([probability, da])
 
   def merge(self):
+    """Adds up probabilities for the same hypotheses.
+    """
     new_n_best = []
 
     if len(self.n_best) <= 1:
       return
     else:
-      new_n_best[0]  = self.n_best[0]
+      new_n_best.append(self.n_best[0])
 
       for i in range(1, len(self.n_best)):
         for j in range(len(new_n_best)):
-          if new_n_best[j][1] == n_best[i][1]:
+          if new_n_best[j][1] == self.n_best[i][1]:
             # merge, add the probabilities
-            new_n_best[j][1][0] += n_best[i][0]
+            new_n_best[j][1][0] += self.n_best[i][0]
             break
         else:
-          new_n_best.append(n_best[i])
+          new_n_best.append(self.n_best[i])
 
     self.n_best = new_n_best
 
-  def normalize(self):
+  def normalise(self):
     sum = 0.0
     null_da = -1
-    for i in range(len(n_best)):
-      sum += n_best[i][0]
+    for i in range(len(self.n_best)):
+      sum += self.n_best[i][0]
 
-      if n_best[i][1] == 'null()':
+      if self.n_best[i][1] == 'null()':
         if null_da != -1:
-          raise DialogueActNBListException('Dialogue act list include multiple null() dialogue acts: %s' %str(n_best))
+          raise DialogueActNBListException('Dialogue act list include multiple null() dialogue acts: %s' %str(self.n_best))
         null_da = i
 
     if null_da == -1:
       if sum > 1.0:
         raise DialogueActNBListException('Sum of probabilities in dialogue act list > 1.5: %8.6f' % sum)
       prob_null = 1.0-sum
-      n_best.append([prob_null, DialogueAct('null()')])
+      self.n_best.append([prob_null, DialogueAct('null()')])
 
     else:
-      for i in range(len(n_best)):
-        # null act is already there, therefore just normalize
-        n_best[i][0] /= sum
+      for i in range(len(self.n_best)):
+        # null act is already there, therefore just normalise
+        self.n_best[i][0] /= sum
 
   def sort(self):
     self.n_best.sort(reverse=True)
@@ -268,6 +277,5 @@ class DialogueActConfusionNetwork:
   def __init__(self):
     pass
 
-  def normalize(self):
+  def normalise(self):
     pass
-

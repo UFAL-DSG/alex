@@ -30,11 +30,11 @@ class CategoryLabelDatabase:
     execfile(file_name, globals())
     self.database = database
 
-    self.normalize_database()
+    self.normalise_database()
     self.gen_synonym_value_catogery()
 
-  def normalize_database(self):
-    """Normalize database. E.g. split utterances into sequences of words.
+  def normalise_database(self):
+    """normalise database. E.g. split utterances into sequences of words.
     """
     for name in self.database:
       for value in self.database[name]:

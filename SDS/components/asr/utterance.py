@@ -242,7 +242,7 @@ class UtteranceNBList(ASRHypotheses):
     if len(self.n_best) <= 1:
       return
     else:
-      new_n_best[0]  = self.n_best[0]
+      new_n_best.append(self.n_best[0])
 
       for i in range(1, len(self.n_best)):
         for j in range(len(new_n_best)):
@@ -273,7 +273,7 @@ class UtteranceNBList(ASRHypotheses):
       self.n_best.append([prob_other, '__other__'])
     else:
       for i in range(len(n_best)):
-        # __other__ utterance is already there, therefore just normalize
+        # __other__ utterance is already there, therefore just normalise
         self.n_best[i][0] /= sum
 
   def sort(self):

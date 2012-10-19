@@ -19,6 +19,18 @@ class NLGException(SDSException):
 class TTSException(SDSException):
   pass
 
+class HubException(SDSException):
+  pass
+
+class SemHubException(HubException):
+  pass
+
+class TextHubEception(HubException):
+  pass
+
+class VoipHubException(HubException):
+  pass
+
 class VoipIOException(Exception):
   pass
 
@@ -34,6 +46,9 @@ class UtteranceException(SLUException):
 class UtteranceNBListException(SLUException):
   pass
 
+class DialogueActException(SLUException):
+  pass
+
 class DialogueActItemException(SLUException):
   pass
 
@@ -43,7 +58,7 @@ class DialogueActNBListException(SLUException):
 class DAIKernelException(SLUException):
   pass
 
-class DialogueManagerException(Exception):
+class DialogueManagerException(SDSException):
   pass
 
 class DummyDialogueManagerException(DialogueManagerException):

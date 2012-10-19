@@ -26,8 +26,8 @@ def log_to_linear(a):
   """Converts a vector from the log domain to the linear domain."""
   return np.exp(a)
 
-def normalize(a):
-  """Normalizes the input probability vector to sum to one in the log domain.
+def normalise(a):
+  """normalises the input probability vector to sum to one in the log domain.
 
   This is equivalent to a/sum(a) in the linear domain.
   """
@@ -91,4 +91,3 @@ def sum(a, axis=None):
   s = np.log(np.exp(np.a - a_max.reshape(shp)).sum(axis=axis))
   lse  = a_max + s
   return lse
-
