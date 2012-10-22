@@ -28,8 +28,8 @@ duration = datetime.timedelta(minutes=100)
 lifetime = datetime.timedelta(days=7)
 approval_delay = datetime.timedelta(days=1)
                    
-q1 = PercentAssignmentsApprovedRequirement('GreaterThan', 90)
-q2 = NumberHitsApprovedRequirement('GreaterThan', 10)
+q1 = PercentAssignmentsApprovedRequirement('GreaterThan', 95)
+q2 = NumberHitsApprovedRequirement('GreaterThan', 500)
 q3 = LocaleRequirement('EqualTo', 'US')
 qualifications = Qualifications([q1, q2, q3])
 
