@@ -1,8 +1,8 @@
-#! /usr/bin/python 
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-__author__="Filip Jurcicek"
-__date__ ="$08-Mar-2010 13:45:34$"
+__author__ = "Filip Jurcicek"
+__date__ = "$08-Mar-2010 13:45:34$"
 
 import cgi
 import cgitb
@@ -17,9 +17,10 @@ print "Content-type: text/html\n\n"
 cgitb.enable()
 
 form = cgi.FieldStorage()
-token = str(form.getfirst('token','None'))
-dialogueID = str(form.getfirst('dialogueID','None'))
-dialogueID = dialogueID.replace("//","/")             # fix an error in the AHub.cpp
+token = str(form.getfirst('token', 'None'))
+dialogueID = str(form.getfirst('dialogueID', 'None'))
+dialogueID = dialogueID.replace(
+    "//", "/")             # fix an error in the AHub.cpp
 
 saveToken(token, dialogueID)
 

@@ -8,7 +8,7 @@ import SDS.utils.audio as audio
 from SDS.components.asr.google import GoogleASR
 
 print "Testing Google ASR service"
-print "="*120
+print "=" * 120
 print
 language = 'en'
 sample_rate = 16000
@@ -18,15 +18,15 @@ print "Sample rate:    ", sample_rate
 print
 
 cfg = {
-  'Audio': {
+    'Audio': {
     'sample_rate': sample_rate
-  },
-  'ASR': {
+    },
+    'ASR': {
     'Google': {
-      'debug': False,
-      'language' : language
+        'debug': False,
+        'language': language
     }
-  }
+    }
 }
 
 asr = GoogleASR(cfg)
@@ -42,5 +42,3 @@ hyp = asr.recognize(wav)
 
 print 'hypotheses'
 print hyp
-
-

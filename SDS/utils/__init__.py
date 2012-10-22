@@ -1,1 +1,1 @@
-__all__=['string','audio','various','htk']
+__all__ = ['string', 'audio', 'various', 'htk']

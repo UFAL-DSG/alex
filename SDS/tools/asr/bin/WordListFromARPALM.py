@@ -7,23 +7,23 @@ import collections
 import os.path
 
 try:
-  lm = sys.argv[1]
+    lm = sys.argv[1]
 except IndexError, e:
-  print "An ARPA N-gram language model needed"
-  exit()
+    print "An ARPA N-gram language model needed"
+    exit()
 
 # load dictionary
 f = open(lm, 'r')
 gram = 0
 for l in f:
-  l = l.strip()
+    l = l.strip()
 
-  if "1-grams:" in l:
-    gram = 1
-  if "2-grams:" in l:
-    gram = 2
+    if "1-grams:" in l:
+        gram = 1
+    if "2-grams:" in l:
+        gram = 2
 
-  l = l.split()
+    l = l.split()
 
-  if gram == 1 and len(l) > 1:
-    print l[1]
+    if gram == 1 and len(l) > 1:
+        print l[1]

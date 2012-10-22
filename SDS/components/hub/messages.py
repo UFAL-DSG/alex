@@ -10,60 +10,65 @@ from SDS.utils.mproc import InstanceID
 
 # TODO: add comments
 
+
 class Message(InstanceID):
-  """ Abstract class which implements basic functionality for messages passed between components in the SDS.
-  """
-  def __init__(self, source, target):
-    self.id = self.get_instance_id()
-    self.time = time.time()
-    self.source = source
-    self.target = target
+    """ Abstract class which implements basic functionality for messages passed between components in the SDS.
+    """
+    def __init__(self, source, target):
+        self.id = self.get_instance_id()
+        self.time = time.time()
+        self.source = source
+        self.target = target
+
 
 class Command(Message):
-  def __init__(self, command, source = None, target = None):
-    Message.__init__(self, source, target)
+    def __init__(self, command, source=None, target=None):
+        Message.__init__(self, source, target)
 
-    self.command = command
-    self.parsed = collections.defaultdict(str, parse_command(self.command))
+        self.command = command
+        self.parsed = collections.defaultdict(str, parse_command(self.command))
 
-  def __str__(self):
-    return "From: %-10s To: %-10s Command: %s " % (self.source, self.target, self.command)
+    def __str__(self):
+        return "From: %-10s To: %-10s Command: %s " % (self.source, self.target, self.command)
+
 
 class ASRHyp(Message):
-  def __init__(self, hyp, source = None, target = None):
-    Message.__init__(self, source, target)
+    def __init__(self, hyp, source=None, target=None):
+        Message.__init__(self, source, target)
 
-    self.hyp = hyp
+        self.hyp = hyp
 
-  def __str__(self):
-    return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
+    def __str__(self):
+        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
 
-  def __len__(self):
-    return len(self.payload)
+    def __len__(self):
+        return len(self.payload)
 
-  def __getitem__(self, key):
-    return self.payload[key]
+    def __getitem__(self, key):
+        return self.payload[key]
+
 
 class TTSText(Message):
-  def __init__(self, text, source = None, target = None):
-    Message.__init__(self, source, target)
+    def __init__(self, text, source=None, target=None):
+        Message.__init__(self, source, target)
 
-    self.text = text
+        self.text = text
 
-  def __str__(self):
-    return "From: %-10s To: %-10s Text: %s " % (self.source, self.target, self.text)
+    def __str__(self):
+        return "From: %-10s To: %-10s Text: %s " % (self.source, self.target, self.text)
+
 
 class Frame(Message):
-  def __init__(self, payload, source = None, target = None):
-    Message.__init__(self, source, target)
+    def __init__(self, payload, source=None, target=None):
+        Message.__init__(self, source, target)
 
-    self.payload = payload
+        self.payload = payload
 
-  def __str__(self):
-    return "From: %-10s To: %-10s Len: %d " % (self.source, target, self.len(self.payload))
+    def __str__(self):
+        return "From: %-10s To: %-10s Len: %d " % (self.source, target, self.len(self.payload))
 
-  def __len__(self):
-    return len(self.payload)
+    def __len__(self):
+        return len(self.payload)
 
-  def __getitem__(self, key):
-    return self.payload[key]
+    def __getitem__(self, key):
+        return self.payload[key]

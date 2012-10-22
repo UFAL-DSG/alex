@@ -1,8 +1,8 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
 
-__author__="Filip Jurcicek"
-__date__ ="$08-Mar-2010 13:45:34$"
+__author__ = "Filip Jurcicek"
+__date__ = "$08-Mar-2010 13:45:34$"
 
 import cgi
 import cgitb
@@ -12,7 +12,7 @@ cgitb.enable()
 
 form = cgi.FieldStorage()
 
-p = form.getfirst('p','None')
+p = form.getfirst('p', 'None')
 
 print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
@@ -34,5 +34,3 @@ print """<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
     </BODY>
 </HTML>
 """
-
-

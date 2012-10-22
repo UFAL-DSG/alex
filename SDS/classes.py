@@ -3,9 +3,10 @@
 
 
 class DM:
-  def observe(self, systemAct, userAct):
-    pass
+    def observe(self, systemAct, userAct):
+        pass
+
 
 class NLG:
-  def generate(self, act):
-    pass
+    def generate(self, act):
+        pass

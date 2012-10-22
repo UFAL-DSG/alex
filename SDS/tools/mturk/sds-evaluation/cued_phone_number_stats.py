@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__="Filip Jurcicek"
-__date__ ="$08-Mar-2010 13:45:34$"
+__author__ = "Filip Jurcicek"
+__date__ = "$08-Mar-2010 13:45:34$"
 
 import glob
 import os.path
@@ -14,6 +14,7 @@ import math
 verbose = True
 verbose = False
 
+
 def sterr(inlist):
     """
     Returns the standard error of the values in the passed list using N-1
@@ -22,6 +23,7 @@ def sterr(inlist):
     Usage:   sterr(inlist)
     """
     return std(inlist) / float(math.sqrt(len(inlist)))
+
 
 def feedbackYes(feedback):
     fb = open(feedback, "r")
@@ -34,6 +36,7 @@ def feedbackYes(feedback):
 
     return False
 
+
 def feedbackNo(feedback):
     fb = open(feedback, "r")
     fbl = fb.readlines()
@@ -45,12 +48,14 @@ def feedbackNo(feedback):
 
     return False
 
+
 def getText(node):
     rc = []
     for cn in node.childNodes:
         if cn.nodeType == cn.TEXT_NODE:
             rc.append(cn.data)
     return ''.join(rc).strip()
+
 
 def convertScoring(score):
     score = score.strip()
@@ -70,9 +75,10 @@ def convertScoring(score):
 
     raise "Unexpected input: %s" % score
 
+
 def getScoring(feedbackName):
     # scores: q1, q2, q3, q4, comments
-    scores = [0.0,0.0,0.0,0.0, "", ""]
+    scores = [0.0, 0.0, 0.0, 0.0, "", ""]
 
     # load the file
     doc = xml.dom.minidom.parse(feedbackName)
@@ -106,9 +112,9 @@ def getScoring(feedbackName):
 
     return scores
 
-print "-"*80
+print "-" * 80
 print "MTURK LOG STATS"
-print "-"*80
+print "-" * 80
 
 pth = "./*/voip-*"
 calls = glob.glob(pth)
@@ -123,7 +129,7 @@ comments = []
 for call in calls:
     if verbose:
         print "Processing call: ", os.path.split(call)[1]
-    feedback = os.path.join(call,'feedback.xml')
+    feedback = os.path.join(call, 'feedback.xml')
 
     phone = os.path.split(call)[1].replace("voip-", "")
     phone = phone[:phone.index("-")]
@@ -142,7 +148,7 @@ for call in calls:
     scores.append(score)
     comments.append(score[4])
 
-    turns = len(glob.glob(os.path.join(call,'*.wav'))) - 1
+    turns = len(glob.glob(os.path.join(call, '*.wav'))) - 1
     if verbose:
         print "  # of turns:", turns
     callLengths.append(turns)
@@ -168,7 +174,8 @@ print "The max number of turns:          ", maxCallLengths
 print "The min number of turns:          ", minCallLengths
 print "The median number of turns:       ", medCallLengths
 print
-print "Historgam of the call lengths:    ", histogram(callLengths, range(0,60,4))
+print "Historgam of the call lengths:    ", histogram(
+    callLengths, range(0, 60, 4))
 print
 print "Number of different phone numbers:            ", len(phones)
 print "The average number of calls per phone number: ", avgPhoneNumCalls
@@ -176,30 +183,35 @@ print "The max number of calls per phone number:     ", maxPhoneNumCalls
 print "The min number of calls per phone number:     ", minPhoneNumCalls
 print "The median number of calls per phone number:  ", medPhoneNumCalls
 print
-print "Histogram of the number of calls: ", histogram(phoneNumCalls, range(0,30,2))
+print "Histogram of the number of calls: ", histogram(
+    phoneNumCalls, range(0, 30, 2))
 print
 print
 print "Did you find all the information you were looking for?"
-b = float(allInfoYes)/len(callLengths)
-allInfoYesCI = math.sqrt(b*(1-b)/len(callLengths))*1.96
-print "  Yes: %d (%.2f%% +-%.2f)" % (allInfoYes, b*100, allInfoYesCI*100)
-print "  No:  %d (%.2f%% +-%.2f)" % (allInfoNo, (1.0-b)*100.0, allInfoYesCI*100)
+b = float(allInfoYes) / len(callLengths)
+allInfoYesCI = math.sqrt(b * (1 - b) / len(callLengths)) * 1.96
+print "  Yes: %d (%.2f%% +-%.2f)" % (allInfoYes, b * 100, allInfoYesCI * 100)
+print "  No:  %d (%.2f%% +-%.2f)" % (
+    allInfoNo, (1.0 - b) * 100.0, allInfoYesCI * 100)
 print
 print "The system understood me well."
-print "  Score: %.2f +-%.2f" % (mean([x[1] for x in scores]), sterr([x[1] for x in scores])*1.96)
+print "  Score: %.2f +-%.2f" % (
+    mean([x[1] for x in scores]), sterr([x[1] for x in scores]) * 1.96)
 print
 print "The phrasing of the system's responses was good."
-print "  Score: %.2f +-%.2f" % (mean([x[2] for x in scores]), sterr([x[2] for x in scores])*1.96)
+print "  Score: %.2f +-%.2f" % (
+    mean([x[2] for x in scores]), sterr([x[2] for x in scores]) * 1.96)
 print
 print "The system's voice was of good quality."
-print "  Score: %.2f +-%.2f" % (mean([x[3] for x in scores]), sterr([x[3] for x in scores])*1.96)
+print "  Score: %.2f +-%.2f" % (
+    mean([x[3] for x in scores]), sterr([x[3] for x in scores]) * 1.96)
 print
 
 f = open('comments.txt', "w")
 for each in comments:
     if not each:
         continue
-    f.write("-"*80 + "\n")
+    f.write("-" * 80 + "\n")
     f.write(each + "\n")
 f.close()
 
@@ -213,4 +225,3 @@ print
 for (phone, number) in items:
     if workerId[phone] != "None":
         print "Phone: %14s #calls: %2d    worker: requester.mturk.com/bulk/workers/%s" % (phone, number, workerId[phone])
-

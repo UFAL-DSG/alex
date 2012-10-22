@@ -15,15 +15,15 @@ from SDS.components.hub.asr import ASR
 from SDS.components.hub.messages import Command, Frame
 
 cfg = {
-  'Audio': {
-    'sample_rate': 8000, 
+    'Audio': {
+    'sample_rate': 8000,
     'samples_per_frame': 80,
-  },
-  'AudioIO': {
+    },
+    'AudioIO': {
     'debug': False,
     'play_buffer_size': 70,
-  },
-  'VAD': {
+    },
+    'VAD': {
     'debug': False,
     'type': 'power',
     'power_threshold': 300,
@@ -32,44 +32,53 @@ cfg = {
     'power_decision_frames': 25,
     'power_decision_speech_threshold': 0.7,
     'power_decision_non_speech_threshold': 0.2,
-  },
-  'ASR': {
+    },
+    'ASR': {
     'debug': True,
     'type': 'Google',
     'Google': {
-      'debug': False,
-      'language' : 'en'
+        'debug': False,
+        'language': 'en'
     }
-  },
-  'Hub': {
+    },
+    'Hub': {
     'main_loop_sleep_time': 0.005,
-  }, 
-  'Logging': {
-    'output_dir' : './tmp'
-  }
+    },
+    'Logging': {
+    'output_dir': './tmp'
+    }
 }
 
 print "Test of the AudioIO, VAD and ASR components:"
-print "="*120
+print "=" * 120
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
-wav = various.split_to_bins(wav, 2*cfg['Audio']['samples_per_frame'])
+wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
 # remove the last frame
 
-aio_commands, aio_child_commands = multiprocessing.Pipe() # used to send commands to AudioIO
-aio_record, aio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
-aio_play, aio_child_play = multiprocessing.Pipe()         # I write in audio to be played
-aio_played, aio_child_played = multiprocessing.Pipe()     # I read from this to get played audio
+aio_commands, aio_child_commands = multiprocessing.Pipe(
+)  # used to send commands to AudioIO
+aio_record, aio_child_record = multiprocessing.Pipe(
+)     # I read from this connection recorded audio
+aio_play, aio_child_play = multiprocessing.Pipe(
+)         # I write in audio to be played
+aio_played, aio_child_played = multiprocessing.Pipe(
+)     # I read from this to get played audio
                                                           #   which in sync with recorded signal
 
-vad_commands, vad_child_commands = multiprocessing.Pipe() # used to send commands to VAD
-vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+vad_commands, vad_child_commands = multiprocessing.Pipe(
+)  # used to send commands to VAD
+vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
+)  # used to read output audio from VAD
 
-asr_commands, asr_child_commands = multiprocessing.Pipe() # used to send commands to ASR
-asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe() # used to read ASR hypotheses
+asr_commands, asr_child_commands = multiprocessing.Pipe(
+)  # used to send commands to ASR
+asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe(
+)  # used to read ASR hypotheses
 
-aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play, aio_child_played)
+aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play,
+              aio_child_played)
 vad = VAD(cfg, vad_child_commands, aio_record, aio_played, vad_child_audio_out)
 asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
 
@@ -88,30 +97,30 @@ asr.start()
 count = 0
 max_count = 5000
 while count < max_count:
-  time.sleep(cfg['Hub']['main_loop_sleep_time'])
-  count += 1
+    time.sleep(cfg['Hub']['main_loop_sleep_time'])
+    count += 1
 
-  # write one frame into the audio output
-  if wav:
-    data_play = wav.pop(0)
-    #print len(wav), len(data_play)
-    aio_play.send(Frame(data_play))
+    # write one frame into the audio output
+    if wav:
+        data_play = wav.pop(0)
+        #print len(wav), len(data_play)
+        aio_play.send(Frame(data_play))
 
-  # read all ASR output audio
-  if asr_hypotheses_out.poll():
-    asr_hyp = asr_hypotheses_out.recv()
+    # read all ASR output audio
+    if asr_hypotheses_out.poll():
+        asr_hyp = asr_hypotheses_out.recv()
 
-    if isinstance(asr_hyp.hyp, ASRHyp):
-      print asr_hyp.hyp
+        if isinstance(asr_hyp.hyp, ASRHyp):
+            print asr_hyp.hyp
 
-  # read all messages
-  for c in command_connections:
-    if c.poll():
-      command = c.recv()
-      print
-      print command
-      print
-      
+    # read all messages
+    for c in command_connections:
+        if c.poll():
+            command = c.recv()
+            print
+            print command
+            print
+
 # stop processes
 aio_commands.send(Command('stop()'))
 vad_commands.send(Command('stop()'))
@@ -119,8 +128,8 @@ asr_commands.send(Command('stop()'))
 
 # clean connections
 for c in non_command_connections:
-  while c.poll():
-    c.recv()
+    while c.poll():
+        c.recv()
 
 # wait for processes to stop
 aio.join()
@@ -128,4 +137,3 @@ vad.join()
 asr.join()
 
 print
-

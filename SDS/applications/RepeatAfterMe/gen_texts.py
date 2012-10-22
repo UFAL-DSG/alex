@@ -16,154 +16,154 @@ This program extracts short sentences from a list of text files.
 
 """
 
-reject = ["Halo","Ať ","I ","Šak ","Ultimus","Rossum","Busmane","dušinko","V ","Oh, ",
-"S ","Z ","Oh ","A i","RUR","Haha","plemeniti",
-]
+reject = ["Halo", "Ať ", "I ", "Šak ", "Ultimus", "Rossum", "Busmane", "dušinko", "V ", "Oh, ",
+          "S ", "Z ", "Oh ", "A i", "RUR", "Haha", "plemeniti",
+          ]
 
-replace_by_empty_string = [', prosím vás,', ', ó hleďte,',', slečno Gloryová,', 'Brrr haha,',
-]
+replace_by_empty_string = [', prosím vás,', ', ó hleďte,', ', slečno Gloryová,', 'Brrr haha,',
+                           ]
 
-replace_by_space = ['d5', ' hr hr', '  ',  '  '
-]
+replace_by_space = ['d5', ' hr hr', '  ', '  '
+                    ]
+
 
 def split_into_sentences(s):
-  x = s.split(' ')
+    x = s.split(' ')
 
-  if len(x) < 3:
-    return []
+    if len(x) < 3:
+        return []
 
-  if len(x) < 10:
-    return [s, ]
+    if len(x) < 10:
+        return [s, ]
 
-  x = s.split('.')
+    x = s.split('.')
 
-  return x
+    return x
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
-    description="""
-    This program process extracts short sentences from a list of text files.
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+      This program process extracts short sentences from a list of text files.
 
-    """)
+      """)
 
-  parser.add_argument('--indir', action="store", default='./texts',
-                      help='an input directory with the text files files (default: ./texts)')
-  parser.add_argument('-v', action="store_true", default=False, dest="verbose",
-                      help='set verbose oputput')
+    parser.add_argument('--indir', action="store", default='./texts',
+                        help='an input directory with the text files files (default: ./texts)')
+    parser.add_argument(
+        '-v', action="store_true", default=False, dest="verbose",
+        help='set verbose oputput')
 
-  args = parser.parse_args()
+    args = parser.parse_args()
 
+    indir = args.indir
+    verbose = args.verbose
 
-  indir = args.indir
-  verbose = args.verbose
+    txt_files = glob.glob(os.path.join(indir, '*.txt'))
 
-  txt_files = glob.glob(os.path.join(indir,'*.txt'))
+    r = []
 
-  r = []
+    for fn in txt_files:
+        f = open(fn, 'r')
 
-  for fn in txt_files:
-    f = open(fn, 'r')
+        for l in f:
+            l = l.strip()
+            l = re.split(r"[A-Z]+: ", l)
 
-    for l in f:
-      l = l.strip()
-      l = re.split(r"[A-Z]+: ", l)
+            if len(l) != 2:
+                continue
 
-      if len(l) != 2:
-        continue
+            s = l[1].replace('-', '')
+            s = s.replace('(', '')
+            s = s.replace(')', '')
+            s = s.replace(':', '')
+            s = s.replace(';', '')
+            s = s.replace('…', ' ')
+            s = s.replace('"', '')
+            s = s.replace('"', '')
 
-      s = l[1].replace('-', '')
-      s = s.replace('(', '')
-      s = s.replace(')', '')
-      s = s.replace(':', '')
-      s = s.replace(';', '')
-      s = s.replace('…', ' ')
-      s = s.replace('"', '')
-      s = s.replace('"', '')
+            s = re.split(r'[\.!\?]', s)
 
-      s = re.split(r'[\.!\?]', s)
+            r.extend(s)
 
-      r.extend(s)
+        f.close()
 
-    f.close()
+    r = [s for s in r if s != "" and s != " "]
+    r1 = sorted(r)
+    r2 = []
+    for s in r1:
+        ii = s.split(' ')
+        if not (4 < len(ii) < 10):
+            continue
 
-  r = [s for s in r if s != "" and s != " "]
-  r1 = sorted(r)
-  r2 = []
-  for s in r1:
-    ii = s.split(' ')
-    if not (4 < len(ii) < 10):
-      continue
+        for x in replace_by_space:
+            s = s.replace(x, ' ')
+        s = s.strip()
+        r2.append(s)
 
-    for x in replace_by_space:
-      s = s.replace(x, ' ')
-    s = s.strip()
-    r2.append(s)
+    r2 = sorted(r2)
+    r3 = []
+    for s in r2:
+        for x in replace_by_empty_string:
+            s = s.replace(x, '')
 
-  r2 = sorted(r2)
-  r3 = []
-  for s in r2:
-    for x in replace_by_empty_string:
-      s = s.replace(x, '')
+        for x in replace_by_space:
+            s = s.replace(x, ' ')
 
-    for x in replace_by_space:
-      s = s.replace(x, ' ')
+        # remove duplciate words
+        s = re.sub(r'\s(\w+)\s+\1', '\1', s)
+        s = re.sub(r'^(\w+)\s+\1', '\1', s)
 
-    # remove duplciate words
-    s = re.sub(r'\s(\w+)\s+\1', '\1', s)
-    s = re.sub(r'^(\w+)\s+\1', '\1', s)
+        s = s.strip()
 
-    s = s.strip()
+        c = False
+        for x in reject:
+            if x in s:
+                c = True
+                break
+        if c:
+            continue
 
-    c = False
-    for x in reject:
-      if x in s:
-        c = True
-        break
-    if c:
-      continue
-
-
-    if s.count(',') > 0:
-      continue
-
+        if s.count(',') > 0:
+            continue
 
 #    print s
-    s = re.sub(', Toni$', "", s)
-    s = re.sub(', Ondro$', "", s)
-    s = re.sub(', Heleno$', "", s)
-    s = re.sub(', [^\ ]+$', "", s)
-    s = re.sub(' Promiňte$', "", s)
-    s = re.sub(", hm$", "", s)
-    s = re.sub(r", že$", "", s)
-    s = re.sub(r", viď$", "", s)
-    s = re.sub(r", víš$", "", s)
-    s = re.sub(r", ne$", "", s)
-    s = re.sub(r"^A ", "", s)
-    s = re.sub(r"^Fi, ", "", s)
-    s = re.sub(r"^Gall ", "", s)
-    s = re.sub(r"^Galle, ", "", s)
-    s = re.sub(r"^Jirko, ", "", s)
-    s = re.sub(r"^Harry, ", "", s)
-    s = re.sub(r"^My my, ", "my", s)
-    s = re.sub(r"^Ty, ", "", s)
-    s = re.sub(r"^Ach [a-zA-Z]+,", "", s)
+        s = re.sub(', Toni$', "", s)
+        s = re.sub(', Ondro$', "", s)
+        s = re.sub(', Heleno$', "", s)
+        s = re.sub(', [^\ ]+$', "", s)
+        s = re.sub(' Promiňte$', "", s)
+        s = re.sub(", hm$", "", s)
+        s = re.sub(r", že$", "", s)
+        s = re.sub(r", viď$", "", s)
+        s = re.sub(r", víš$", "", s)
+        s = re.sub(r", ne$", "", s)
+        s = re.sub(r"^A ", "", s)
+        s = re.sub(r"^Fi, ", "", s)
+        s = re.sub(r"^Gall ", "", s)
+        s = re.sub(r"^Galle, ", "", s)
+        s = re.sub(r"^Jirko, ", "", s)
+        s = re.sub(r"^Harry, ", "", s)
+        s = re.sub(r"^My my, ", "my", s)
+        s = re.sub(r"^Ty, ", "", s)
+        s = re.sub(r"^Ach [a-zA-Z]+,", "", s)
 #    print s
 #    print '-'
 
-    s = s.strip()
+        s = s.strip()
 
-    r3.append(s)
+        r3.append(s)
 
-  r3 = sorted(r3)
-  r4 = []
-  for i in r3:
-    i = i.strip()
-    i = i.replace('  ', ' ')
-    i = i.replace('  ', ' ')
-    ii = i.split(' ')
-    if 4 < len(ii) < 10:
-      print i
-      r4.append(i)
+    r3 = sorted(r3)
+    r4 = []
+    for i in r3:
+        i = i.strip()
+        i = i.replace('  ', ' ')
+        i = i.replace('  ', ' ')
+        ii = i.split(' ')
+        if 4 < len(ii) < 10:
+            print i
+            r4.append(i)
 
 
 #  d = defaultdict(int)
@@ -175,4 +175,3 @@ if __name__ == '__main__':
 #  for k in sorted(d.keys()):
 #    print k, ":", d[k]
 #
-

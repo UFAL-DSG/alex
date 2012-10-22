@@ -36,7 +36,7 @@ destinations = ["sip:4366@SECRET:5066",
 
 destPriorities = {"sip:4366@SECRET:5066": 1,
                   "sip:4279@SECRET:5066": 1,
-                 }
+                  }
 
 conn = sqlite3.connect('./call_counts.sqlite3')
 
@@ -45,6 +45,7 @@ call_counts = sqlite3.connect('./call_counts.sqlite3')
 call_counts.execute('''CREATE TABLE IF NOT EXISTS call_counts (caller text, destination text)''')
 call_counts.commit()
 call_counts.close()
+
 
 def findLeastCalledDestination(caller):
     call_counts = sqlite3.connect('./call_counts.sqlite3')
@@ -60,7 +61,7 @@ def findLeastCalledDestination(caller):
     minDestinations = []
     print
     print 'Caller                                             Destinations                            #calls'
-    print '-'*100
+    print '-' * 100
     for row in c:
         print row[0], " | ", row[1], " | ", row[2]
         userDestinations[row[1]] = row[2]
@@ -70,16 +71,18 @@ def findLeastCalledDestination(caller):
 
     call_counts.close()
 
-    missingDestinations = list(set(destinations) - set(userDestinations.keys()))
+    missingDestinations = list(
+        set(destinations) - set(userDestinations.keys()))
     if len(missingDestinations):
         return random.choice(missingDestinations)
 
     # this is a hack due to a threading problem
-    minDestinations = list(set(destinations) - (set(destinations) - set(minDestinations)))
+    minDestinations = list(
+        set(destinations) - (set(destinations) - set(minDestinations)))
     # reflect the sampling priorities
     minDestNew = []
     for destination in minDestinations:
-        minDestNew.extend([destination,]*destPriorities[destination])
+        minDestNew.extend([destination, ] * destPriorities[destination])
     minDestinations = sorted(minDestNew)
 
     print "Randomly selecting among: "
@@ -87,10 +90,12 @@ def findLeastCalledDestination(caller):
 
     return random.choice(minDestinations)
 
+
 def addCallTransfer(caller, destination):
     call_counts = sqlite3.connect('./call_counts.sqlite3')
     c = call_counts.cursor()
-    c.execute('''INSERT INTO call_counts VALUES (?,?)''', (caller, destination))
+    c.execute(
+        '''INSERT INTO call_counts VALUES (?,?)''', (caller, destination))
     call_counts.commit()
     call_counts.close()
 
@@ -129,23 +134,27 @@ class MyCallCallback(pj.CallCallback):
 
     # Notification when call state has changed
     def on_state(self):
-        print "MyCallCallback::on_state : Call with", self.call.info().remote_uri,
+        print "MyCallCallback::on_state : Call with", self.call.info(
+        ).remote_uri,
         print "is", self.call.info().state_text,
         print "last code =", self.call.info().last_code,
         print "(" + self.call.info().last_reason + ")"
 
         if self.call.info().state == pj.CallState.CONFIRMED:
-            destination = findLeastCalledDestination(self.call.info().remote_uri)
+            destination = findLeastCalledDestination(
+                self.call.info().remote_uri)
             addCallTransfer(self.call.info().remote_uri, destination)
             print
-            print "="*80
-            print "Transferring:", self.call.info().remote_uri, " to:", destination
-            print "="*80
+            print "=" * 80
+            print "Transferring:", self.call.info(
+            ).remote_uri, " to:", destination
+            print "=" * 80
             print
             self.call.transfer(destination)
 
     def on_transfer_status(self, code, reason, final, cont):
-        print "MyCallCallback::on_transfer_status : Call with", self.call.info().remote_uri,
+        print "MyCallCallback::on_transfer_status : Call with", self.call.info(
+        ).remote_uri,
         print "is", self.call.info().state_text,
         print "last code =", self.call.info().last_code,
         print "(" + self.call.info().last_reason + ")"
@@ -174,9 +183,11 @@ class MyCallCallback(pj.CallCallback):
             print "Media is inactive"
 
     def on_dtmf_digit(self, digits):
-      print "Received digits:", digits
+        print "Received digits:", digits
 
 # Function to make call
+
+
 def make_call(acc, uri):
     try:
         print "Making call to", uri
@@ -191,11 +202,12 @@ try:
 
     # Init library with default config and some customized
     # logging config.
-    lib.init(log_cfg = pj.LogConfig(level=LOG_LEVEL, callback=log_cb))
+    lib.init(log_cfg=pj.LogConfig(level=LOG_LEVEL, callback=log_cb))
     lib.set_null_snd_dev()
 
     # Create UDP transport which listens to any available port
-    transport = lib.create_transport(pj.TransportType.UDP)  # pj.TransportConfig(5080)
+    transport = lib.create_transport(
+        pj.TransportType.UDP)  # pj.TransportConfig(5080)
     print
     print "Listening on", transport.info().host,
     print "port", transport.info().port, "\n"
@@ -211,16 +223,18 @@ try:
 
     print
     print
-    print "Registration complete, status=", acc.info().reg_status,  "(" + acc.info().reg_reason + ")"
+    print "Registration complete, status=", acc.info(
+    ).reg_status, "(" + acc.info().reg_reason + ")"
 
-    my_sip_uri = "sip:" + transport.info().host + ":" + str(transport.info().port)
+    my_sip_uri = "sip:" + transport.info().host + ":" + str(
+        transport.info().port)
 
 #    time.sleep(2)
 #    make_call(acc, "sip:4366@SECRET:5066")
 
     # Menu loop
     while True:
-        print "="*80
+        print "=" * 80
         print "My SIP URI is", my_sip_uri
         print "Menu:  q=quit"
 
@@ -239,4 +253,3 @@ except pj.Error, e:
     print "Exception: " + str(e)
     lib.destroy()
     lib = None
-
