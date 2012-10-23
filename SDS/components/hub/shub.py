@@ -52,11 +52,17 @@ class SemHub(Hub):
 
         return prob, da
 
+    def output_da(self, da):
+        """Prints the system dialogue act to the output."""
+        print "System DA:", da
+        print
+
     def input_da_nblist(self):
+        """Reads an N-best list of dialogue acts from the input. """
         nblist = DialogueActNBList()
         i = 1
         while i < 100:
-            l = raw_input("DA %d: " % i)
+            l = raw_input("User DA %d: " % i)
             if l.startswith("."):
                 break
 
@@ -70,9 +76,8 @@ class SemHub(Hub):
 
             i += 1
 
-        print nblist.n_best
-
         nblist.merge()
+        nblist.scale()
         nblist.normalise()
         nblist.sort()
 
@@ -86,13 +91,17 @@ class SemHub(Hub):
 
         For example:
 
-          DA 1: hello() : 0.6
-          DA 2: hello()&inform(type=bar) : 0.4
-          DA 3: .
-
+          System DA 1: hello() : 0.6
+          System DA 2: hello()&inform(type="bar") : 0.4
+          System DA 3: .
         """)
 
-        nblist = self.input_da_nblist()
+        while True:
+            sys_da = self.dm.da_out()
+            self.output_da(sys_da)
+
+            nblist = self.input_da_nblist()
+            self.dm.da_in(nblist)
 
         print nblist
 
