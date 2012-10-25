@@ -69,11 +69,14 @@ class DummyDialogueState(object):
 
             requested_slots = self.get_requested_slots()
             confirmed_slots = self.get_confirmed_slots()
-
+            non_informed_slots = self.get_non_informed_slots()
+            
             print "Requested slots:"
             print requested_slots
             print "Confirmed slots:"
             print confirmed_slots
+            print "Non-informed slots:"
+            print non_informed_slots
             print
 
     def context_resolution(self, user_da, last_system_da):
@@ -145,17 +148,21 @@ class DummyDialogueState(object):
                 self.slots["lda"] = dai.dat
 
     def get_requested_slots(self):
-        """Return all slots which are currently being requested by the user."""
-        requested_slots = []
+        """Return all slots which are currently being requested by the user along with the correct value."""
+        requested_slots = {}
 
         for slot in self.slots:
-            if slot.startswith("rh_") and self.slots[slot] == "user-requested":
-                requested_slots.append(slot[3:])
-
+            if slot.startswith("rh_"): 
+                if slot[3:] in self.slots:
+                    if self.slots[slot] == "user-requested":
+                        requested_slots[slot[3:]] = self.slots[slot[3:]]
+                else:
+                    requested_slots[slot[3:]] = "None"
+                    
         return requested_slots
 
     def get_confirmed_slots(self):
-        """Return all slots which are currently being confirmed by the user."""
+        """Return all slots which are currently being confirmed by the user along with the value being confirmed."""
         confirmed_slots = {}
 
         for slot in self.slots:
@@ -164,6 +171,30 @@ class DummyDialogueState(object):
 
         return confirmed_slots
 
+    def get_non_informed_slots(self):
+        """Return all slots provided by the use and the system has not informed about them yet along with 
+        the value of the slot. 
+                
+        This will not detect a change in a goal. For example,
+        
+        U: I wan a Chinese restaurant.
+        S: Ok, you want a Chinese restaurant. What price range you have in mind?
+        U: Well, I would rather want an Italian Restaurant.
+        S: Ok, no problem. You want an Italian restaurant. What price range you have in mind?
+        
+        Because the system informed about the food type and stored "system-informed", then 
+        we will not notice that we confirmed a different food type.
+        """
+        non_informed_slots = {}
+
+        for slot in self.slots:
+            if [ 1.0 for x in ['rh_', 'ch_', 'sh_'] if slot.startswith(x)]:
+                continue
+                
+            if self.slots[slot] != "None" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "None"):
+                non_informed_slots[slot] = self.slots[slot]
+                
+        return non_informed_slots
 
 class DummyPolicy(object):
     """This is a trivial policy just to demonstrate basic functionality DM."""
@@ -175,9 +206,13 @@ class DummyPolicy(object):
         self.last_system_dialogue_act = None
 
     def get_da(self, dialogue_state):
+        # all slots being requested by a user
         requested_slots = dialogue_state.get_requested_slots()
+        # all slots being confirmed by a user
         confirmed_slots = dialogue_state.get_confirmed_slots()
-
+        # all slots which had been supplied by a user however they were not implicitly confirmed
+        non_informed_slots = dialogue_state.get_non_informed_slots()
+        
         if len(self.das) == 0:
             # NLG("Thank you for calling. How may I help you?")
             self.last_system_dialogue_act = DialogueAct("thankyou()&hello()")
@@ -207,7 +242,7 @@ class DummyPolicy(object):
             # inform about all requested slots
             self.last_system_dialogue_act = DialogueAct()
             for slot in requested_slots:
-                dai = DialogueActItem("inform", slot, dialogue_state.slots[slot])
+                dai = DialogueActItem("inform", slot, requested_slots[slot])
                 self.last_system_dialogue_act.append(dai)
                 dialogue_state.slots["rh_"+slot] = "None"
 
@@ -215,7 +250,7 @@ class DummyPolicy(object):
             # inform about all slots being confirmed by the user
             self.last_system_dialogue_act = DialogueAct()
             for slot in confirmed_slots:
-                if confirmed_slots[slot] == dialogue_state.slots["ch_"+slot]:
+                if confirmed_slots[slot] == dialogue_state.slots[slot]:
                     # it is as user expected
                     self.last_system_dialogue_act.append(DialogueActItem("affirm"))
                     dai = DialogueActItem("inform", slot, dialogue_state.slots[slot])
@@ -223,12 +258,19 @@ class DummyPolicy(object):
                 else:
                     # it is something else to what user expected
                     self.last_system_dialogue_act.append(DialogueActItem("negate"))
-                    dai = DialogueActItem("deny", slot, dialogue_state.slots[slot])
+                    dai = DialogueActItem("deny", slot, dialogue_state.slots["ch_"+slot])
                     self.last_system_dialogue_act.append(dai)
                     dai = DialogueActItem("inform", slot, dialogue_state.slots[slot])
                     self.last_system_dialogue_act.append(dai)
 
                 dialogue_state.slots["ch_"+slot] = "None"
+        elif non_informed_slots:
+            # implicitly confirm all slots provided but not yet implicitly confirmed
+            self.last_system_dialogue_act = DialogueAct()
+            self.last_system_dialogue_act.append(DialogueActItem("affirm"))
+            for slot in non_informed_slots:
+                dai = DialogueActItem("inform", slot, non_informed_slots[slot])
+                self.last_system_dialogue_act.append(dai)
         else:
             # NLG("Can I help you with anything else?")
             self.last_system_dialogue_act = DialogueAct("reqmore()")

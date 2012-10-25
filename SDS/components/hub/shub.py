@@ -64,6 +64,7 @@ class SemHub(Hub):
         while i < 100:
             l = raw_input("User DA %d: " % i)
             if l.startswith("."):
+                print
                 break
 
             try:
