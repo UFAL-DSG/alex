@@ -7,7 +7,6 @@ from SDS.components.dm.__init__ import *
 from SDS.components.slu.da import *
 from SDS.utils.exception import *
 
-
 class DummyDialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
 
@@ -70,7 +69,7 @@ class DummyDialogueState(object):
             requested_slots = self.get_requested_slots()
             confirmed_slots = self.get_confirmed_slots()
             non_informed_slots = self.get_non_informed_slots()
-            
+
             print "Requested slots:"
             print requested_slots
             print "Confirmed slots:"
@@ -152,13 +151,13 @@ class DummyDialogueState(object):
         requested_slots = {}
 
         for slot in self.slots:
-            if slot.startswith("rh_"): 
+            if slot.startswith("rh_"):
                 if slot[3:] in self.slots:
                     if self.slots[slot] == "user-requested":
                         requested_slots[slot[3:]] = self.slots[slot[3:]]
                 else:
                     requested_slots[slot[3:]] = "None"
-                    
+
         return requested_slots
 
     def get_confirmed_slots(self):
@@ -172,17 +171,17 @@ class DummyDialogueState(object):
         return confirmed_slots
 
     def get_non_informed_slots(self):
-        """Return all slots provided by the use and the system has not informed about them yet along with 
-        the value of the slot. 
-                
+        """Return all slots provided by the use and the system has not informed about them yet along with
+        the value of the slot.
+
         This will not detect a change in a goal. For example,
-        
+
         U: I wan a Chinese restaurant.
         S: Ok, you want a Chinese restaurant. What price range you have in mind?
         U: Well, I would rather want an Italian Restaurant.
         S: Ok, no problem. You want an Italian restaurant. What price range you have in mind?
-        
-        Because the system informed about the food type and stored "system-informed", then 
+
+        Because the system informed about the food type and stored "system-informed", then
         we will not notice that we confirmed a different food type.
         """
         non_informed_slots = {}
@@ -190,10 +189,10 @@ class DummyDialogueState(object):
         for slot in self.slots:
             if [ 1.0 for x in ['rh_', 'ch_', 'sh_'] if slot.startswith(x)]:
                 continue
-                
+
             if self.slots[slot] != "None" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "None"):
                 non_informed_slots[slot] = self.slots[slot]
-                
+
         return non_informed_slots
 
 class DummyPolicy(object):
@@ -212,7 +211,7 @@ class DummyPolicy(object):
         confirmed_slots = dialogue_state.get_confirmed_slots()
         # all slots which had been supplied by a user however they were not implicitly confirmed
         non_informed_slots = dialogue_state.get_non_informed_slots()
-        
+
         if len(self.das) == 0:
             # NLG("Thank you for calling. How may I help you?")
             self.last_system_dialogue_act = DialogueAct("thankyou()&hello()")

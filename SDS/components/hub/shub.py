@@ -10,7 +10,6 @@ from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.utils.config import *
 from SDS.utils.exception import *
 
-
 class SemHub(Hub):
     """
       SemHub builds a text based testing environment for the dialogue manager components.
@@ -30,18 +29,20 @@ class SemHub(Hub):
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. """
-        ri = l.rfind(":")
+        ri = l.find(" ")
 
         prob = 1.0
 
         if ri != -1:
-            da = l[:ri]
-            prob = l[ri + 1:]
+            prob = l[:ri]
+            da = l[ri + 1:]
 
             try:
                 prob = float(prob)
             except:
-                raise SemHub("Cannot convert the probability after the semicolon into a float number: %s" % prob)
+                # I cannot convert the first part of the input as a float
+                # Therefore, assume that all the input is a DA
+                da = l
         else:
             da = l
 
@@ -63,7 +64,7 @@ class SemHub(Hub):
         i = 1
         while i < 100:
             l = raw_input("User DA %d: " % i)
-            if l.startswith("."):
+            if len(l) == 1 and l.startswith("."):
                 print
                 break
 
@@ -92,8 +93,8 @@ class SemHub(Hub):
 
         For example:
 
-          System DA 1: hello() : 0.6
-          System DA 2: hello()&inform(type="bar") : 0.4
+          System DA 1: 0.6 hello()
+          System DA 2: 0.4 hello()&inform(type="bar")
           System DA 3: .
         """)
 
