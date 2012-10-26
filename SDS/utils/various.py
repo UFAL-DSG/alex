@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# pylint: disable-msg=E1101
 
 from collections import defaultdict
 

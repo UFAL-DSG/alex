@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
 
 import numpy
 import re
@@ -57,6 +58,8 @@ class Features:
         return self.frames[i]
 
     def open(self, file_name):
+        # pylint: disable-msg=E1103
+
         f = open(file_name, "rb")
 
         # read header

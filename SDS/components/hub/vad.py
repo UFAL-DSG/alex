@@ -10,6 +10,8 @@ import time
 from datetime import datetime
 from collections import deque
 
+from SDS.utils.exceptions import ASRException
+
 import SDS.components.vad.power as PVAD
 import SDS.components.vad.gmm as GVAD
 
@@ -112,7 +114,7 @@ class VAD(multiprocessing.Process):
             sum(self.detection_window_sil)) / len(self.detection_window_sil)
         if self.cfg['VAD']['debug']:
             self.cfg['Logging']['system_logger'].debug(
-                'SPEECH: %s SIL: %s S: %s' % (speech, sil))
+                'SPEECH: %s SIL: %s' % (speech, sil))
 
         vad = self.last_vad
         change = None

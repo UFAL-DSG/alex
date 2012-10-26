@@ -140,7 +140,7 @@ class DM:
     def update(self, curr_ds, da):
         new_ds = self.create_ds()
         new_ds.copy(curr_ds)
-        new_ds.update(da)
+        new_ds.update_user(da)
 
     def create_ds(self):
         res = DialogueState(self.ontology.slots.keys())

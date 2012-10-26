@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# pylint: disable-msg=E1103
+
 
 import collections
 import functools
@@ -217,45 +220,49 @@ persistent_cache_directory = os.path.expanduser(persistent_cache_directory)
 if not os.path.exists(persistent_cache_directory):
     os.makedirs(persistent_cache_directory)
 
+persistent_cache_directory.asdfasfd()
+
 if __name__ == '__main__':
+    # pylint: disable-msg=E1101
+
     print "Testing the LRU and LFU cache decorators."
     print "=" * 120
 
     print "LRU cache"
 
     @lru_cache(maxsize=40)
-    def f(x, y):
+    def f1(x, y):
         return 3 * x + y
 
     domain = range(5)
     from random import choice
     for i in range(1000):
-        r = f(choice(domain), choice(domain))
+        r = f1(choice(domain), choice(domain))
 
-    print(f.hits, f.misses)
+    print(f1.hits, f1.misses)
 
     print "LFU cache"
 
     @lfu_cache(maxsize=40)
-    def f(x, y):
+    def f2(x, y):
         return 3 * x + y
 
     domain = range(5)
     from random import choice
     for i in range(1000):
-        r = f(choice(domain), choice(domain))
+        r = f2(choice(domain), choice(domain))
 
-    print(f.hits, f.misses)
+    print(f2.hits, f2.misses)
 
     print "persistent LRU cache"
 
     @persistent_cache()
-    def f(x, y):
+    def f3(x, y):
         return 3 * x + y
 
     domain = range(5)
     from random import choice
     for i in range(1000):
-        r = f(choice(domain), choice(domain))
+        r = f3(choice(domain), choice(domain))
 
-    print(f.hits, f.misses)
+    print(f3.hits, f3.misses)

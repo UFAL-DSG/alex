@@ -97,6 +97,6 @@ def sum(a, axis=None):
     shp = list(a.shape)
     shp[axis] = 1
     a_max = a.max(axis=axis)
-    s = np.log(np.exp(np.a - a_max.reshape(shp)).sum(axis=axis))
+    s = np.log(np.exp(a - a_max.reshape(shp)).sum(axis=axis))
     lse = a_max + s
     return lse

@@ -7,6 +7,7 @@ import numpy as np
 from scipy.misc import logsumexp
 from collections import deque
 
+from SDS.utils.exception import ASRException
 from SDS.ml.gmm import GMM
 from SDS.utils.mfcc import MFCCFrontEnd
 

@@ -136,7 +136,7 @@ class DialogueAct:
     def __contains__(self, dai):
         if isinstance(dai, DialogueActItem):
             return dai in self.dais
-        elif isinstance(dai, string):
+        elif isinstance(dai, str):
             l = [str(dai) for dai in self.dais]
             return dai in l
 
