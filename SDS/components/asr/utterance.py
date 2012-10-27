@@ -267,6 +267,15 @@ class UtteranceNBList(ASRHypotheses):
 
         self.n_best = new_n_best
 
+    def scale(self):
+        """The N-best list will be scaled to sum to one."""
+
+        s = sum([p for p, da in self.n_best])
+
+        for i in range(len(self.n_best)):
+            # null act is already there, therefore just normalise
+            self.n_best[i][0] /= s
+    
     def normalise(self):
         sum = 0.0
         other_utt = -1

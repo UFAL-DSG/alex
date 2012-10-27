@@ -8,6 +8,7 @@ import os.path
 
 from SDS.utils.mproc import SystemLogger
 
+config = None
 
 class Config:
     """ Config handles configuration data necessary for all the components
@@ -45,7 +46,9 @@ class Config:
     def load(self, file_name):
         """FIX: Executing external files is not ideal! It should be changed in the future!
         """
+        global config
         config = None
+        
         execfile(file_name, globals())
         if config is None:
             raise Exception("No configuration has been loaded!")
@@ -55,7 +58,9 @@ class Config:
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
 
     def merge(self, file_name):
+        global config
         config = None
+        
         execfile(file_name, globals())
         if config is None:
             raise Exception("No configuration has been loaded!")

@@ -7,8 +7,8 @@ from __init__ import *
 
 from SDS.components.slu.da import *
 from SDS.components.dm.dummydialoguemanager import DummyDM
-from SDS.utils.config import *
-from SDS.utils.exception import *
+from SDS.utils.config import Config
+from SDS.utils.exception import DialogueActException, DialogueActItemException, SemHubException
 
 class SemHub(Hub):
     """
@@ -28,7 +28,12 @@ class SemHub(Hub):
                 'Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
     def parse_input_da(self, l):
-        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. """
+        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. 
+        
+        The input text must have the following form:
+            [prob] the dialogue act
+        
+        """
         ri = l.find(" ")
 
         prob = 1.0
@@ -88,8 +93,8 @@ class SemHub(Hub):
     def run(self):
         """Controls the dialogue manager."""
         cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
-        The probability for each dialogue act must be separated by a semicolon ":" from the dialogue act
-        and be entered at the end of line. When finished, the entry can be terminated by a period ".".
+        The probability for each dialogue act must be be provided before the the dialogue act itself. 
+        When finished, the entry can be terminated by a period ".".
 
         For example:
 

@@ -12,6 +12,7 @@ from SDS.utils.exception import SDSException
 
 import SDS.components.slu.da
 
+databse = None
 
 class CategoryLabelDatabase:
     """ Provides a convenient interface to a database of slot value pairs aka category labels.
@@ -28,6 +29,8 @@ class CategoryLabelDatabase:
             yield i
 
     def load(self, file_name):
+        global database
+        
         database = None
         execfile(file_name, globals())
         if database is None:
