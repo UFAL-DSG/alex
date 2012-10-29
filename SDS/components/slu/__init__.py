@@ -12,7 +12,7 @@ from SDS.utils.exception import SDSException
 
 import SDS.components.slu.da
 
-databse = None
+database = None
 
 class CategoryLabelDatabase:
     """ Provides a convenient interface to a database of slot value pairs aka category labels.
@@ -185,13 +185,26 @@ class SLUInterface:
           - output: confusion network of dialogue acts
     """
 
-    def parse(self, utterance):
-        pass
+    def parse_1_best(self, utterance):
+        raise SLUException("Not implemented")
 
-    def parse_N_best_list(self, hyp_list):
-        sluHyp = []
-        #sluHyp = ["dialogue act", 0.X]*N
-        return sluHyp
+    def parse_N_best_list(self, utterance_list):
+        raise SLUException("Not implemented")
 
     def parse_confusion_network(self, conf_net):
-        pass
+        raise SLUException("Not implemented")
+
+    def parse(self, *args, **kw):
+        """Check what the input is and parse accordingly."""
+        
+        if isinstance(utterance, Utterance):
+            return self.parse_1_best(*args, **kw)
+            
+        elif isinstance(utterance, UtteranceNBList):
+            return self.parse_N_best_list(*args, **kw)
+            
+        elif isinstance(user_da, UtteranceConfusionNetwork):
+            return self.parse_confusion_network(*args, **kw)
+            
+        else:
+            raise DAILRException("Unsupported input in the SLU component.")

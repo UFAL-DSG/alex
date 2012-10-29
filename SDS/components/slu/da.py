@@ -4,7 +4,7 @@
 from collections import defaultdict
 
 from SDS.utils.string import split_by
-from SDS.utils.exception import *
+from SDS.utils.exception import SLUException, DialogueActException, DialogueActItemException, DialogueActNBListException
 
 
 def load_das(file_name, limit=None):
@@ -278,7 +278,7 @@ class DialogueActNBList:
                 for j in range(len(new_n_best)):
                     if new_n_best[j][1] == self.n_best[i][1]:
                         # merge, add the probabilities
-                        new_n_best[j][1][0] += self.n_best[i][0]
+                        new_n_best[j][0] += self.n_best[i][0]
                         break
                 else:
                     new_n_best.append(self.n_best[i])
@@ -329,3 +329,25 @@ class DialogueActConfusionNetwork:
 
     def normalise(self):
         pass
+
+
+def merge_slu_nblists(multiple_nblists):
+    """Merge multiple dialogue act N-best lists."""
+
+    merged_nblists = DialogueActNBList()
+    
+    for prob_nblist, nblist in multiple_nblists:
+        if not isinstance(nblist, DialogueActNBList):
+            raise SLUException("Cannot merge something that is not DialogueActNBList.")
+        nblist.merge()
+        nblist.normalise()
+        
+        for prob, da in nblist:
+            merged_nblists.add(prob_nblist*prob, da)
+        
+    merged_nblists.merge()
+    merged_nblists.normalise()
+    merged_nblists.sort()
+    
+    return merged_nblists
+    

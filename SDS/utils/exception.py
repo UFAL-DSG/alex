@@ -78,6 +78,10 @@ class DAIKernelException(SLUException):
     pass
 
 
+class DAILRException(SLUException):
+    pass
+
+
 class DialogueManagerException(SDSException):
     pass
 

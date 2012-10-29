@@ -9,8 +9,9 @@ from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from SDS.components.asr.utterance import UtteranceFeatures
-from da import DialogueActItem, DialogueAct, DialogueActConfusionNetwork
-
+from SDS.components.slu.__init__ import SLUInterface
+from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
+from SDS.utils.exception import DAILRException
 
 class DAILogRegClassifierLearning:
     """ Implements learning of dialogue act item classifiers based on logistic regression.
@@ -190,7 +191,7 @@ class DAILogRegClassifierLearning:
         f.close()
 
 
-class DAILogRegClassifier:
+class DAILogRegClassifier(SLUInterface):
     """
       This parser implements a parser based on set of classifiers for each dialogue act item. When parsing
       the input utterance, the parse classifies whether a given dialogue act item is present. Then, the output
@@ -217,11 +218,13 @@ class DAILogRegClassifier:
     def get_size(self):
         return len(self.features_list)
 
-    def parse(self, utterance, verbose=False):
+    def parse_1_best(self, utterance, verbose=False):
         """Parse utterance and generate the best interpretation in the form of an dialogue act (an instance
         of DialogueAct.
         """
 
+        #FIXME: I should return N-best lists
+        
         if verbose:
             print utterance
 
@@ -233,8 +236,7 @@ class DAILogRegClassifier:
             print category_labels
 
         # generate utterance features
-        utterance_features = UtteranceFeatures(
-            self.features_type, self.features_size, utterance)
+        utterance_features = UtteranceFeatures(self.features_type, self.features_size, utterance)
 
         if verbose:
             print utterance_features
@@ -271,21 +273,33 @@ class DAILogRegClassifier:
             print "DA: ", da
 
         da = DialogueAct(da)
-        da = self.preprocessing.category_labels2values_in_da(
-            da, category_labels)
+        da = self.preprocessing.category_labels2values_in_da(da, category_labels)
 
-        return da, prob
+        return prob, da
 
-    def parse_N_best_list(self, hyp_list):
-        sluHyp = []
-        #sluHyp = ["dialogue act", 0.X]*N
+    def parse_N_best_list(self, utterance_list):
+        """Parse N-best list by parsing each item in the list and then by merging the results."""
 
-        #TODO: implement
+        if len(utterance_list):
+            raise DAILRException("Empty utterance N-best list.")
 
-        for h in hyp_list:
-            pass
-
-        return sluHyp
+        
+        nblists = []
+        for prob, utt in utterance_list:
+            h = self.parse_1_best(utt)
+            if not isinstance(h, DialogueActNBList) and isinstance(h[1], DialogueAct):
+                nbl = DialogueActNBList()
+                nbl.add(h[0], h[1])
+                nbl.merge()
+                nbl.normalise()
+                nbl.sort()
+                h = nbl
+            
+            da_list.append((prob, h)) 
+ 
+        da_nblist = merge_slu_nblists(nblists)
+        
+        return da_nblist
 
     def parse_confusion_network(self, conf_net, verbose=False):
         utterance = conf_net.best_hyp()
@@ -310,8 +324,7 @@ class DAILogRegClassifier:
             print utterance_features
 
         kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(
-            self.features_mapping)
+        kernel_vector[0] = utterance_features.get_feature_vector(self.features_mapping)
 
         dacn = {}
         da = []
@@ -334,3 +347,5 @@ class DAILogRegClassifier:
             dacn, category_labels)
 
         return dacn
+
+       

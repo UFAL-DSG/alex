@@ -260,7 +260,7 @@ class UtteranceNBList(ASRHypotheses):
                 for j in range(len(new_n_best)):
                     if new_n_best[j][1] == self.n_best[i][1]:
                         # merge, add the probabilities
-                        new_n_best[j][1][0] += self.n_best[i][0]
+                        new_n_best[j][0] += self.n_best[i][0]
                         break
                 else:
                     new_n_best.append(self.n_best[i])
