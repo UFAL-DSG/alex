@@ -3,12 +3,12 @@
 
 import argparse
 
-from __init__ import *
-
-from SDS.components.slu.da import *
+from SDS.components.hub import Hub
+from SDS.components.hub.shub import SemHub
+from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
-from SDS.utils.config import *
-from SDS.utils.exception import *
+from SDS.utils.config import Config
+from SDS.utils.exception import SemHubException, DialogueActException, DialogueActItemException
 
 class TextHub(Hub):
     """
@@ -40,7 +40,7 @@ class TextHub(Hub):
             try:
                 prob = float(prob)
             except:
-                raise SemHub("Cannot convert the probability after the semicolon into a float number: %s" % prob)
+                raise SemHubException("Cannot convert the probability after the semicolon into a float number: %s" % prob)
         else:
             da = l
 

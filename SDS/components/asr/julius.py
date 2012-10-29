@@ -11,9 +11,7 @@ import os.path
 from os import remove
 from tempfile import mkstemp
 
-import __init__
-
-from SDS.components.asr.utterance import *
+from SDS.components.asr.utterance import UtteranceNBList, Utterance, UtteranceConfusionNetwork
 from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException, ASRException
 from SDS.utils.various import get_text_from_xml_node
 

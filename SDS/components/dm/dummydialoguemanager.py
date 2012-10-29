@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import *
+from collections import defaultdict
 
-from SDS.components.dm.__init__ import *
-from SDS.components.slu.da import *
-from SDS.utils.exception import *
+from SDS.components.dm import DialogueManager
+from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
+from SDS.utils.exception import DummyDialogueManagerException
 
 class DummyDialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.

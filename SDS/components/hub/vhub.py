@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __init__ import *
+from SDS.components.hub import Hub
 
 class VoipHub(Hub):
     """
