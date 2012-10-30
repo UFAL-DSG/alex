@@ -86,7 +86,7 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
         The probability for each dialogue act must be separated by a semicolon ":" from the dialogue act
         and be entered at the end of line. When finished, the entry can be terminated by a period ".".
 

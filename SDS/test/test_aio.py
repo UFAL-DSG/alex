@@ -4,7 +4,7 @@
 import multiprocessing
 import time
 
-import __init__
+from . import __init__
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
@@ -14,12 +14,12 @@ from SDS.components.hub.messages import Command, Frame
 
 cfg = {
     'Audio': {
-        'sample_rate': 8000
+        'sample_rate': 8000,
+        'samples_per_frame': 80,
     },
     'AudioIO': {
     'debug': True,
     'vad': True,
-    'samples_per_frame': 80,
     'play_buffer_size': 70,
     },
     'Hub': {
@@ -30,8 +30,8 @@ cfg = {
     }
 }
 
-print "Test of the AudioIO component:"
-print "=" * 120
+print("Test of the AudioIO component:")
+print(("=" * 120))
 
 wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 # split audio into frames
@@ -75,4 +75,4 @@ while count < max_count:
 aio_commands.send(Command('stop()'))
 aio.join()
 
-print
+print()
