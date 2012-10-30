@@ -4,8 +4,6 @@
 import multiprocessing
 import time
 
-from . import __init__
-
 import SDS.utils.audio as audio
 import SDS.utils.various as various
 
