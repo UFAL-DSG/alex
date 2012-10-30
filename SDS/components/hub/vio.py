@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# pylint: disable-msg=E1101
 
 import pyaudio
 import wave
@@ -538,7 +540,7 @@ class VoipIO(multiprocessing.Process):
         try:
             if self.cfg['VoipIO']['debug']:
                 self.cfg['Logging']['system_logger'].debug(
-                    "Transferring the call to %" % uri)
+                    "Transferring the call to %s" % uri)
             return self.call.transfer(uri)
         except pj.Error, e:
             print "Exception: " + str(e)

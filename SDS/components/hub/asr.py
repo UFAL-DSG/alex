@@ -3,13 +3,12 @@
 
 import multiprocessing
 import time
-import sys
 
 import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
 
 from SDS.components.hub.messages import Command, Frame, ASRHyp
-from SDS.utils.exception import *
+from SDS.utils.exception import ASRException, JuliusASRTimeoutException
 
 
 class ASR(multiprocessing.Process):

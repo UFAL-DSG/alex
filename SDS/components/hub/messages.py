@@ -41,12 +41,6 @@ class ASRHyp(Message):
     def __str__(self):
         return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
 
-    def __len__(self):
-        return len(self.payload)
-
-    def __getitem__(self, key):
-        return self.payload[key]
-
 
 class TTSText(Message):
     def __init__(self, text, source=None, target=None):
@@ -65,7 +59,7 @@ class Frame(Message):
         self.payload = payload
 
     def __str__(self):
-        return "From: %-10s To: %-10s Len: %d " % (self.source, target, self.len(self.payload))
+        return "From: %-10s To: %-10s Len: %d " % (self.source, self.target, len(self.payload))
 
     def __len__(self):
         return len(self.payload)

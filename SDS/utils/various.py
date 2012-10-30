@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # vim: set fdm=marker :
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+#
+# pylint: disable-msg=E1101
 
 from collections import defaultdict
 

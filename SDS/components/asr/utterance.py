@@ -5,6 +5,8 @@ import numpy as np
 
 from collections import defaultdict
 
+from SDS.utils.exception import UtteranceNBListException
+
 
 def load_utterances(file_name, limit=None):
     f = open(file_name)
@@ -273,7 +275,7 @@ class UtteranceNBList(ASRHypotheses):
 
             if self.n_best[i][1] == '__other__':
                 if other_utt != -1:
-                    raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' % str(n_best))
+                    raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' % str(self.n_best))
                 other_utt = i
 
         if other_utt == -1:
@@ -282,7 +284,7 @@ class UtteranceNBList(ASRHypotheses):
             prob_other = 1.0 - sum
             self.n_best.append([prob_other, '__other__'])
         else:
-            for i in range(len(n_best)):
+            for i in range(len(self.n_best)):
                 # __other__ utterance is already there, therefore just normalise
                 self.n_best[i][0] /= sum
 
@@ -331,7 +333,7 @@ class UtteranceConfusionNetwork(ASRHypotheses):
         prob = 1.0
         for alts in self.cn:
             utterance.append(alts[0][1])
-            prob *= alt[0][0]
+            prob *= alts[0][0]
 
         utterance = ' '.join(utterance).strip()
         return (prob, Utterance(utterance))

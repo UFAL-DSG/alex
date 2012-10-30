@@ -10,7 +10,7 @@ from tempfile import mkstemp
 
 import SDS.utils.audio as audio
 
-from SDS.components.asr.utterance import *
+from SDS.components.asr.utterance import Utterance, UtteranceNBList
 
 
 class GoogleASR():

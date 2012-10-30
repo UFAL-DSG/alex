@@ -3,7 +3,7 @@
 
 
 class DM:
-    def observe(self, systemAct, userAct):
+    def observe(self, system_act, user_act):
         pass
 
 

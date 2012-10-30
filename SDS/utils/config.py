@@ -45,14 +45,20 @@ class Config:
     def load(self, file_name):
         """FIX: Executing external files is not ideal! It should be changed in the future!
         """
+        config = None
         execfile(file_name, globals())
+        if config is None:
+            raise Exception("No configuration has been loaded!")
         self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
 
     def merge(self, file_name):
+        config = None
         execfile(file_name, globals())
+        if config is None:
+            raise Exception("No configuration has been loaded!")
         self.update_dict(self.config, config)
 
     def update_dict(self, d, u):
