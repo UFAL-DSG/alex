@@ -13,6 +13,7 @@ from SDS.utils.various import flatten, get_text_from_xml_node
 
 
 def create_mlf(indir, outfile, verbose):
+    # pylint: disable-msg=E1103
     # get all transcriptions
     files = []
     files.append(glob.glob(os.path.join(indir, '*.wav')))
