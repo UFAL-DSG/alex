@@ -28,7 +28,6 @@ class CategoryLabelDatabase:
             yield i
 
     def load(self, file_name):
-        database = None
         execfile(file_name, globals())
         if database is None:
             raise Exception("No database loaded!")
