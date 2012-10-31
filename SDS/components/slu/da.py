@@ -42,7 +42,6 @@ def save_das(file_name, das):
 
     f.close()
 
-
 class DialogueActItem:
     """Represents dialogue act item which is a component of a dialogue act. Each dialogue act item is composed of
 
@@ -51,7 +50,7 @@ class DialogueActItem:
 
 
     """
-    def __init__(self, dialogue_act_type=None, name=None, value=None):
+    def __init__(self, dialogue_act_type=None, name=None, value=None, dai = None):
         """Initialise the dialogue act item. Assigns the default values to dialogue act type (dat), slot name (name),
         and slot value (value).
 
@@ -60,6 +59,9 @@ class DialogueActItem:
         self.dat = dialogue_act_type
         self.name = name
         self.value = value
+
+        if dai:
+            self.parse(dai)
 
     def __str__(self):
         r = self.dat + '('
@@ -210,8 +212,24 @@ class DialogueAct:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
 
+class SLUHypothesis:
+    """This is a base class for all forms of probabilistic SLU hypotheses representations."""
+    pass
 
-class DialogueActNBList:
+class DialogueActHyp(SLUHypothesis):
+    """Provides functionality of 1-best hypotheses for dialogue acts."""
+
+    def __init__(self, prob = None, da = None):
+        self.prob = prob
+        self.da = da
+
+    def __str__(self):
+        return "%.3f %s" % (self.prob, self.da)
+
+    def get_best_da(self):
+        return self.da
+
+class DialogueActNBList(SLUHypothesis):
     """Provides functionality of N-best lists for dialogue acts.
 
     When updating the N-best list, one should do the following.
@@ -323,31 +341,110 @@ class DialogueActNBList:
         self.n_best.sort(reverse=True)
 
 
-class DialogueActConfusionNetwork:
+class DialogueActConfusionNetwork(SLUHypothesis):
+    """Dialogue act item confusion network."""
     def __init__(self):
-        pass
+        self.cn = []
 
-    def normalise(self):
-        pass
+    def __str__(self):
+        s = []
+        for prob, dai in self.cn:
+            s.append("%.3f %s\n" % (prob, dai))
+
+        return " ".join(s)
+
+    def add(self, probability, dai):
+        """Append additional dialogue act item into the confusion network."""
+        self.cn.append([probability, dai])
+
+    def add_merge(self, probability, dai):
+        """Add the probability mass of the passed dialogue act item to an existing dialogue act item or adds
+        a new dialogue act item."""
+
+        for i in range(len(self.cn)) :
+            if dai == self.cn[i][1]:
+                # I found a matching DAI
+                self.cn[i][0] += probability
+                return
+        # if not found you should add it
+        self.add(probability, dai)
+
+    def get_best_da(self):
+        """Return the best dialogue act (with the highest probability)."""
+        da = DialogueAct()
+        for prob, dai in self.cn:
+            if prob > 0.5:
+               da.append(dai)
+
+        if len(da) == 0:
+            da.append(DialogueActItem('null'))
+
+        return da
+
+    def get_best_da_hyp(self):
+        """Return the best dialogue act hypothesis."""
+        da = DialogueAct()
+        prob = 1.0
+        for dai_prob, dai in self.cn:
+            if dai_prob > 0.5:
+                da.append(dai)
+                # multiply with probability of presence of a dialogue act
+                prob *= dai_prob
+            else:
+                # multiply with probability of exclusion of the dialogue act
+                prob *= (1-dai_prob)
+
+        if len(da) == 0:
+            da.append(DialogueActItem('null'))
+
+        return DialogueActHyp(prob, da)
+
+    def prune(self, prune_prob=0.001):
+        """Prune all low probability dialogue act items."""
+        pruned_cn = []
+        for prob, dai in self.cn:
+            if prob < prune_prob:
+                # prune out
+                continue
+
+            pruned_cn.append([prob, dai])
+
+        self.cn = pruned_cn
 
 
 def merge_slu_nblists(multiple_nblists):
     """Merge multiple dialogue act N-best lists."""
 
     merged_nblists = DialogueActNBList()
-    
+
     for prob_nblist, nblist in multiple_nblists:
         if not isinstance(nblist, DialogueActNBList):
             raise SLUException("Cannot merge something that is not DialogueActNBList.")
         nblist.merge()
         nblist.normalise()
-        
+
         for prob, da in nblist:
             merged_nblists.add(prob_nblist*prob, da)
-        
+
     merged_nblists.merge()
     merged_nblists.normalise()
     merged_nblists.sort()
-    
+
     return merged_nblists
-    
+
+def merge_slu_confnets(multiple_confnets):
+    """Merge multiple dialogue act confusion networks."""
+
+    merged_confnets = DialogueActConfusionNetwork()
+
+    for prob_confnet, confnet in multiple_confnets:
+        if not isinstance(confnet, DialogueActConfusionNetwork):
+            raise SLUException("Cannot merge something that is not DialogueActConfusionNetwork.")
+
+        for prob, dai in confnet.cn:
+            if dai.dat == "null":
+                continue
+
+            merged_confnets.add_merge(prob_confnet*prob, dai)
+
+    return merged_confnets

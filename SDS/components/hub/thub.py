@@ -12,19 +12,19 @@ from SDS.components.slu.dailrclassifier import DAILogRegClassifier
 from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.components.nlg.template import TemplateNLG
 from SDS.utils.config import Config
-from SDS.utils.exception import UtteranceException, SemHubException
+from SDS.utils.exception import UtteranceException, TextHubEception
 
 class TextHub(Hub):
     """
       TextHub builds a text based testing environment for SLU, DM, and NLG components.
-      It reads the text from the standard input and passes it into SLU. Then the dialogue acts 
-      are processed by a dialogue manager. The output of the dialogue manager in the form of 
-      dialogue acts is then converted by a NLG component into text, which is presented 
-      to the user. 
+      It reads the text from the standard input and passes it into SLU. Then the dialogue acts
+      are processed by a dialogue manager. The output of the dialogue manager in the form of
+      dialogue acts is then converted by a NLG component into text, which is presented
+      to the user.
     """
     def __init__(self, cfg):
         self.cfg = cfg
-        
+
         self.slu = None
         self.dm = None
         self.nlg = None
@@ -36,53 +36,50 @@ class TextHub(Hub):
             self.slu = DAILogRegClassifier(self.preprocessing)
             self.slu.load_model(self.cfg['SLU']['DAILogRegClassifier']['model'])
         else:
-            raise SemHubException(
-                'Unsupported spoken language understanding: %s' % self.cfg['SLU']['type'])
+            raise TextHubEception('Unsupported spoken language understanding: %s' % self.cfg['SLU']['type'])
 
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
-            raise SemHubException(
-                'Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+            raise TextHubEception('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
         if self.cfg['NLG']['type'] == 'Template':
             self.nlg = TemplateNLG(cfg)
         else:
-            raise SemHubException(
-                'Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
+            raise TextHubEception('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
 
     def parse_input_utt(self, l):
-        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. 
-        
+        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
+
         The input text must have the following form:
-            [prob] this is a text intput
+            [prob] this is a text input
         """
         ri = l.find(" ")
 
         prob = 1.0
 
         if ri != -1:
-            prob = l[:ri]
             utt = l[ri + 1:]
 
             try:
-                prob = float(prob)
+                prob = float(l[:ri])
             except:
                 # I cannot convert the first part of the input as a float
                 # Therefore, assume that all the input is a DA
                 utt = l
         else:
             utt = l
+
         try:
             utt = Utterance(utt)
         except UtteranceException:
-            raise SemHubException("Invalid utterance: %s" % utt)
+            raise TextHubEception("Invalid utterance: %s" % utt)
 
         return prob, utt
 
-    def output_utt(self, da):
+    def output_utt(self, utt):
         """Prints the system utterance to the output."""
-        print "System:", da
+        print "System:", utt
         print
 
     def input_utt_nblist(self):
@@ -97,7 +94,7 @@ class TextHub(Hub):
 
             try:
                 prob, da = self.parse_input_utt(l)
-            except SemHubException as e:
+            except TextHubException as e:
                 print e
                 continue
 
@@ -115,7 +112,7 @@ class TextHub(Hub):
     def run(self):
         """Controls the dialogue manager."""
         cfg['Logging']['system_logger'].info("""Enter the first user utterance. You can enter multiple utterances to form an N-best list.
-        The probability for each utterance must be provided before the utterance itself. When finished, the entry 
+        The probability for each utterance must be provided before the utterance itself. When finished, the entry
         can be terminated by a period ".".
 
         For example:
@@ -126,15 +123,36 @@ class TextHub(Hub):
         """)
 
         while True:
+            # new turn
+            print "="*120
+            print
             sys_da = self.dm.da_out()
             sys_utt = self.nlg.generate(sys_da)
             self.output_utt(sys_utt)
 
-            utt_nblist = self.input_utt_nblist()
-            da_nblist = self.slu.parse(utt_nblist)
-            self.dm.da_in(da_nblist)
+            print '-'*120
+            print
 
-        print nblist
+            utt_nblist = self.input_utt_nblist()
+
+            print "User utterance NBList:"
+            print utt_nblist
+            print
+
+            das = self.slu.parse(utt_nblist)
+
+
+            print "User DA:"
+            if isinstance(das, DialogueActConfusionNetwork):
+                print das.get_best_da_hyp()
+            else:
+                raise TextHubExcpetion("Unsupported SLU output.")
+            print
+
+            print '-'*120
+            print
+            self.dm.da_in(das)
+
 
 #########################################################################
 #########################################################################
@@ -144,18 +162,18 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
         TextHub builds a text based testing environment for SLU, DM, and NLG components.
-        
-        It reads the text from the standard input and passes it into SLU. Then the dialogue acts 
-        are processed by a dialogue manager. The output of the dialogue manager in the form of 
-        dialogue acts is then converted by a NLG component into text, which is presented 
-        to the user. 
+
+        It reads the text from the standard input and passes it into SLU. Then the dialogue acts
+        are processed by a dialogue manager. The output of the dialogue manager in the form of
+        dialogue acts is then converted by a NLG component into text, which is presented
+        to the user.
 
         The program reads the default config in the resources directory ('../resources/default.cfg') config
         in the current directory.
 
         In addition, it reads all config file passed as an argument of a '-c'.
         The additional config files overwrites any default or previous values.
-        
+
       """)
 
     parser.add_argument(
