@@ -1,26 +1,52 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+# vim: set fdm=marker :
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-import re
+
+########################################################################
+# An example ignore list file could contain the following three lines: #
+########################################################################
+
+# /home/matej/wc/vystadial/data/call-logs/voip-0012097903339-121001_014358/jurcic-010-121001_014624_0014528_0014655.wav
+# jurcic-006-121001_014526_0008608_0008758.wav
+# jurcic-??[13579]*.wav
+
+# The first one is an example of an ignored path. On UNIX, it has to start with
+# a slash. On other platforms, an analogic convention has to be used.
+#
+# The second one is an example of a literal glob.
+#
+# The last one is an example of a more advanced glob. It says basically that
+# all odd dialogue turns should be ignored.
+
+
+import argparse
+import collections
 import glob
 import os.path
-import argparse
-import xml.dom.minidom
+import re
 import shutil
-import collections
+import sys
+import xml.dom.minidom
 
 import __init__
 
-from SDS.utils.various import flatten, get_text_from_xml_node
+from SDS.utils.various import get_text_from_xml_node
+from SDS.utils.fs import find, normalise_path
 
 """
-This program process CUED call log files and copies all audio into a destination directory.
-It also extracts transcriptions from the log files and saves them alongside the copied wavs.
+This program processes CUED call log files and copies all audio into
+a destination directory.
+It also extracts transcriptions from the log files and saves them alongside the
+copied wavs.
 
-It scans for 'user-transcription.norm.xml' to extract transcriptions and names of wave files.
+It scans for 'user-transcription.norm.xml' to extract transcriptions and names
+of .wav files.
 
 """
 
+# substitutions {{{
 subst = [('GOOD-BYE', 'GOODBYE'),
          ('GOOD BYE', 'GOODBYE'),
          ('PRICE RANGE', 'PRICERANGE'),
@@ -289,24 +315,35 @@ subst = [('GOOD-BYE', 'GOODBYE'),
          ('SOMTHING', 'SOMETHING'),
          ('WHNAT', 'WHAT'),
          ]
+#}}}
 
-hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH", "AHA", "AHH", "AHHH", "AHMA", "AHM", "ANH", "ARA", "-AR", "AR-",
-              "-AR", "ARRH", "AW", "EA-", "-EAR", "-EECH", "\"EECH\"", "-EEP", "-E", "E-", "EH", "EM", "--", "ER", "ERM", "ERR", "ERRM", "EX-",
-              "F-", "HM", "HMM", "HMMM", "-HO", "HUH", "HU", "-", "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU", "MM", "MMHMM", "MMM", "NAH",
-              "OHH", "OH", "SH", "--", "UHHH", "UHH", "UHM", "UH'", "UH", "UHUH", "UHUM", "UMH", "UMM", "UMN", "UM", "URM", "URUH", "UUH", "ARRH",
-              "AW", "EM", "ERM", "ERR", "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH", "HUMPH", "HUMN", "HUM", "HU", "SH", "UH",
-              "UHUM", "UM", "UMH", "URUH", "MMMM", "MMM", "OHM", "UMMM"]
+# hesitation expressions {{{
+hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
+              "AHA", "AHH", "AHHH", "AHMA", "AHM", "ANH", "ARA", "-AR",
+              "AR-", "-AR", "ARRH", "AW", "EA-", "-EAR", "-EECH", "\"EECH\"",
+              "-EEP", "-E", "E-", "EH", "EM", "--", "ER", "ERM", "ERR",
+              "ERRM", "EX-", "F-", "HM", "HMM", "HMMM", "-HO", "HUH", "HU",
+              "-", "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU",
+              "MM", "MMHMM", "MMM", "NAH", "OHH", "OH", "SH", "--", "UHHH",
+              "UHH", "UHM", "UH'", "UH", "UHUH", "UHUM", "UMH", "UMM", "UMN",
+              "UM", "URM", "URUH", "UUH", "ARRH", "AW", "EM", "ERM", "ERR",
+              "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH",
+              "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
+              "URUH", "MMMM", "MMM", "OHM", "UMMM"]
+# }}}
 
-excluded_caracters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
-                      '1', '2', '3', '4', '5', '6', '7', '8', '9']
+excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
+                       '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 
 def normalization(text):
+#{{{
     t = text.strip().upper()
 
     t = t.strip().replace(
         '    ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ')
-    for a, b in [('.', ' '), ('?', ' '), ('!', ' '), ('"', ' '), (',', ' '), ('_', ' '), ]:
+    for a, b in [('.', ' '), ('?', ' '), ('!', ' '), ('"', ' '), (',', ' '),
+                 ('_', ' '), ]:
         t = t.replace(a, b)
 
     t = t.strip().replace(
@@ -331,163 +368,216 @@ def normalization(text):
     t = t.encode('ascii', 'ignore')
 
     return t
+#}}}
 
 
 def exclude(text):
-    for c in excluded_caracters:
+    """
+    Determines whether `text' is not good enough and should be excluded. "Good
+    enough" is defined as containing none of `excluded_characters' and being
+    longer than one word.
+
+    """
+#{{{
+    for c in excluded_characters:
         if c in text:
             return True
     if len(text) < 2:
         return True
 
     return False
+#}}}
 
 
-d = collections.defaultdict(int)
-
-
-def update_dict(text):
-    t = text.split()
-
-    for w in t:
-        d[w] += 1
+wc = collections.Counter()  # word counter
 
 
 def save_transcription(transcription_file_name, transcription):
-    f = open(transcription_file_name, 'w+')
-    f.write(transcription.encode('ascii', 'ignore'))
-    f.close()
+    """
+    Echoes `transcription' into `transcription_file_name'. Returns True iff the
+    output file already existed.
+    """
+#{{{
+    existed = os.path.exists(transcription_file_name)
+    with open(transcription_file_name, 'w') as transcription_file:
+        transcription_file.write(transcription.encode('ascii', 'ignore'))
+    return existed
+#}}}
 
 
-def extract_wavs_trns(file, outdir, waves_mapping, verbose):
-    """Extracts wavs and their transcriptions from the provided CUED call log file."""
+def extract_wavs_trns(file_, outdir, wav_mapping, verbose):
+    """Extracts wavs and their transcriptions from the named in `file_', a CUED
+    call log file. Extracting means copying them to `outdir'. Returns the total
+    size of audio files copied to `outdir', the number of overwritten files
+    by the output files, and the number of files that were missing from the
+    `wav_mapping' dictionary.
 
+    """
+#{{{
     # load the file
-    doc = xml.dom.minidom.parse(file)
+    doc = xml.dom.minidom.parse(file_)
     els = doc.getElementsByTagName("userturn")
 
     size = 0
+    n_overwrites = 0
+    n_missing = 0
     for el in els:
-        print '-' * 120
-
         transcription = el.getElementsByTagName("transcription")
-        audio = el.getElementsByTagName("rec")
+        audio_els = el.getElementsByTagName("rec")
 
-        if len(transcription) != 1 or len(audio) != 1:
-            # skip this node, it contains multiple elements of either transcription or audio.
+        if len(transcription) != 1 or len(audio_els) != 1:
+            # skip this node, it contains multiple elements of either
+            # transcription or audio.
             continue
 
-        audio = audio[0].getAttribute('fname').strip()
-        transcription = get_text_from_xml_node(
-            transcription[0]).encode('ascii', 'ignore')
-        if verbose:
-            print " # f:", audio, "t:", transcription
+        audio_basename = audio_els[0].getAttribute('fname').strip()
+        # Check whether this file should be ignored.
+        if audio_basename in wav_mapping:
+            transcription = get_text_from_xml_node(
+                transcription[0]).encode('ascii', 'ignore')
+            if verbose:
+                print '-' * 120
+                print " # f:", audio_basename, "t:", transcription
 
-        transcription = normalization(transcription)
-        if verbose:
-            print " # f:", audio, "t:", transcription
+            transcription = normalization(transcription)
+            if verbose:
+                print " # f:", audio_basename, "t:", transcription
 
-        if exclude(transcription):
-            continue
+            if exclude(transcription):
+                continue
 
-        update_dict(transcription)
-        if verbose:
-            print " # f:", audio, "t:", transcription
+            wc.update(transcription.split())
+            if verbose:
+                print " # f:", audio_basename, "t:", transcription
 
-        dir = os.path.dirname(file)
+            audio_file_name = wav_mapping[audio_basename]
+            transcription_file_name = \
+                os.path.join(outdir, audio_basename + '.trn')
 
-        audio_file_name = waves_mapping[audio]
-        transcription_file_name = os.path.join(outdir, audio + '.trn')
+            try:
+                size += os.path.getsize(audio_file_name)
+            except OSError:
+                print "Lost audio file:", audio_file_name
+            else:
+                try:
+                    shutil.copy2(audio_file_name, outdir)
+                except shutil.Error as e:
+                    print >>sys.stderr, \
+                        "Isn't the `outdir' with previously copied files "\
+                        "below `indir_audio' within the filesystem?\n"
+                    raise e
+                n_overwrites += save_transcription(transcription_file_name,
+                                                   transcription)
+                shutil.copystat(file_, transcription_file_name)
+        else:
+            n_missing += 1
+            if args.verbose:
+                print '-' * 120
+                print "(WW) Ignoring or missing the file '{}'."\
+                    .format(audio_basename)
 
-        try:
-            size += os.path.getsize(audio_file_name)
-            shutil.copy2(audio_file_name, outdir)
-            save_transcription(transcription_file_name, transcription)
-        except OSError:
-            print "Missing audio file:", audio_file_name
-
-    return size
-
-
-def get_waves_mapping(indir_audio):
-    mapping = {}
-
-    files = []
-    files.append(glob.glob(os.path.join(indir_audio, '*', '*.wav')))
-    files.append(glob.glob(os.path.join(indir_audio, '*', '*', '*.wav')))
-    files.append(glob.glob(os.path.join(indir_audio, '*', '*', '*', '*.wav')))
-    files.append(
-        glob.glob(os.path.join(indir_audio, '*', '*', '*', '*', '*.wav')))
-    files.append(glob.glob(
-        os.path.join(indir_audio, '*', '*', '*', '*', '*', '*.wav')))
-
-    files = flatten(files)
-
-    for f in files:
-        mapping[os.path.basename(f)] = f
-
-    return mapping
+    if verbose:
+        print '-' * 120
+        print
+    return size, n_overwrites, n_missing
+#}}}
 
 
-def convert(indir, indir_audio, outdir, verbose):
-    # get all wave files
-    waves_mapping = get_waves_mapping(indir_audio)
+def convert(args):
+    """
+    Looks for .wav files and transcription logs under the `args.indir'
+    directory.  Copies .wav files and their transcriptions linked from the log
+    to `args.outdir' using the `args.extract_wavs_trns' function.
 
-    # get all transcriptions
-    files = []
-    files.append(
-        glob.glob(os.path.join(indir, '*', 'user-transcription.norm.xml')))
-    files.append(glob.glob(
-        os.path.join(indir, '*', '*', 'user-transcription.norm.xml')))
-    files.append(glob.glob(
-        os.path.join(indir, '*', '*', '*', 'user-transcription.norm.xml')))
-    files.append(glob.glob(os.path.join(
-        indir, '*', '*', '*', '*', 'user-transcription.norm.xml')))
-    files.append(glob.glob(os.path.join(
-        indir, '*', '*', '*', '*', '*', 'user-transcription.norm.xml')))
+    Returns a tuple of:
+        number of collisions (files at different paths with same basename)
+        number of overwrites (files with the same basename as previously
+                             present in `args.outdir')
+        number of ingored files (file basenames referred in transcription logs
+                                but missing in the file system, presumably
+                                because specified by one of the ignoring
+                                mechanisms)
 
-    files = flatten(files)
+    """
+#{{{
+    # Unpack the arguments.
+    indir = args.indir
+    indir_audio = args.indir_audio
+    outdir = args.outdir
+    verbose = args.verbose
+    ignore_list_file = args.ignore
+    # Read in the ignore list.
+    ignore_paths = set()
+    ignore_globs = set()
+    if ignore_list_file:
+        for path_or_glob in ignore_list_file:
+            path_or_glob = path_or_glob.rstrip('\n')
+            # For lines that list absolute paths,
+            if os.path.abspath(path_or_glob) == os.path.normpath(path_or_glob):
+                # add them to the list of paths to ignore.
+                ignore_paths.add(path_or_glob)
+            # For other lines, treat them as basename globs.
+            else:
+                ignore_globs.add(path_or_glob)
+        ignore_list_file.close()
+    # Get all but the ignored .wav files.
+    wav_paths = find(indir_audio, '*.wav',
+                     ignore_globs=ignore_globs, ignore_paths=ignore_paths)
+    wav_mapping = dict()
+    # Map file basenames to their relative paths -- NOTE this can be
+    # destructive if multiple files have the same basename.
+    for fpath in wav_paths:
+        wav_basename = os.path.basename(fpath)
+        wav_mapping[wav_basename] = fpath
+    n_collisions = len(wav_paths) - len(wav_mapping)
 
-    if len(files) < 2:
-        # search for un normalised transcriptions
-        print "Normalised transriptions were NOT found. Using unnormalised transcriptions!"
+    # Get all transcription logs.
+    trn_paths = find(indir, 'user-transcription.norm.xml')
 
-        files.append(
-            glob.glob(os.path.join(indir, '*', 'user-transcription.xml')))
-        files.append(glob.glob(
-            os.path.join(indir, '*', '*', 'user-transcription.xml')))
-        files.append(glob.glob(
-            os.path.join(indir, '*', '*', '*', 'user-transcription.xml')))
-        files.append(glob.glob(os.path.join(
-            indir, '*', '*', '*', '*', 'user-transcription.xml')))
-        files.append(glob.glob(os.path.join(
-            indir, '*', '*', '*', '*', '*', 'user-transcription.xml')))
+    if len(trn_paths) < 2:
+        # Search for unnormalised transcription logs.
+        print "Normalised transriptions were NOT found. Using unnormalised "\
+              "transcriptions!"
+        trn_paths.update(find(indir, 'user-transcription.xml'))
 
-        files = flatten(files)
-
+    # Copy files referred in the transcription logs to `outdir'.
     size = 0
-    for f in files:
-
+    n_overwrites = 0
+    n_missing = 0
+    for trn_path in trn_paths:
         if verbose:
-            print "Processing call log file: ", f
+            print "Processing call log file: ", trn_path
 
-            size += extract_wavs_trns(f, outdir, waves_mapping, verbose)
+        cursize, cur_n_overwrites, cur_n_missing = \
+            extract_wavs_trns(trn_path, outdir, wav_mapping, verbose)
+        size += cursize
+        n_overwrites += cur_n_overwrites
+        n_missing += cur_n_missing
 
+    # Print statistics.
     print "Size of copied audio data:", size
 
     sec = size / (16000 * 2)
     hour = sec / 3600.0
 
     print "Length of audio data in hours (for 16kHz 16b WAVs):", hour
+    # Return the number of file collisions and overwrites.
+    return n_collisions, n_overwrites, n_missing
+#}}}
+
 
 if __name__ == '__main__':
+    # Parse arguments. {{{
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-      This program process CUED call log files and copies all audio into a destination directory.
-      It also extracts transcriptions from the log files and saves them alongside the copied wavs.
+      This program processes CUED call log files and copies all audio into
+      a destination directory.
+      It also extracts transcriptions from the log files and saves them
+      alongside the copied wavs.
 
-      It scans for 'user-transcription.norm.xml' to extract transcriptions and names of wave files.
+      It scans for 'user-transcription.norm.xml' to extract transcriptions and
+      names of .wav files.
 
       """)
 
@@ -496,17 +586,45 @@ if __name__ == '__main__':
     parser.add_argument('indir_audio', action="store",
                         help='an input directory with CUED audio files')
     parser.add_argument('outdir', action="store",
-                        help='an output directory for files with audio and their transcription')
-    parser.add_argument(
-        '-v', action="store_true", default=False, dest="verbose",
-        help='set verbose oputput')
+                        help='an output directory for files with audio and '\
+                             'their transcription')
+    parser.add_argument('-v',
+                        action="store_true",
+                        default=False,
+                        dest="verbose",
+                        help='set verbose output')
+    parser.add_argument('-i', '--ignore',
+                        type=argparse.FileType('r'),
+                        metavar='FILE',
+                        help='Path towards a file listing globs of CUED '\
+                             'call log files that should be ignored.\n'\
+                             'The globs are interpreted wrt. the current '\
+                             'working directory. For an example, see the '\
+                             'source code.')
+    # For an example of the ignore list file, see the top of the script.
+    parser.add_argument('-c', '--count-ignored',
+                        action="store_true",
+                        default=False,
+                        help='output number of files ignored due to the -i '\
+                             'option')
 
     args = parser.parse_args()
+    #}}}
 
-    convert(args.indir, args.indir_audio, args.outdir, args.verbose)
+    # Do the copying.
+    n_collisions, n_overwrites, n_ignores = convert(args)
 
-    f = open('word_list', 'w')
-    for w in sorted(d.keys()):
-        f.write("%s\t%d" % (w.encode('ascii', 'ignore'), d[w]))
-        f.write('\n')
-    f.close()
+    # Report.
+    msg = "# collisions: {};  # overwrites: {}"\
+        .format(n_collisions, n_overwrites)
+    if args.count_ignored:
+        msg += ";  # ignores: {}".format(n_ignores)
+    print msg
+
+    # Print out the contents of the word counter to 'word_list'.
+    # FIXME: Prevent overwrite.
+    with open('word_list', 'w') as word_list_file:
+        for w in sorted(wc):
+            word_list_file.write(
+                "{}\t{}\n".format(
+                    w.encode('ascii', 'ignore'), wc[w]))
