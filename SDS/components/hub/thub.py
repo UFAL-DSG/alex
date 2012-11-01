@@ -77,17 +77,43 @@ class TextHub(Hub):
 
         return prob, utt
 
-    def output_utt(self, utt):
-        """Prints the system utterance to the output."""
-        print "System:", utt
+    def output_sys_da(self, da):
+        """Prints the system dialogue act to the output."""
+        print "System DA:", da
         print
 
-    def input_utt_nblist(self):
+    def output_sys_utt(self, utt):
+        """Prints the system utterance to the output."""
+        print "System:   ", utt
+        print
+
+    def output_usr_utt_nblist(self, utt_nblist):
+        """Print the user input N-best list."""
+        print "User utterance NBList:"
+        print utt_nblist
+        print
+
+    def output_usr_da(self, das):
+        """Print the user input dialogue acts."""
+        if isinstance(das, DialogueActConfusionNetwork):
+            print "User DA confusion network:"
+            print das
+            print
+            print "User best DA hypothesis:"
+            print das.get_best_da_hyp()
+        else:
+            print "User DA:"
+            print das
+            print
+
+
+
+    def input_usr_utt_nblist(self):
         """Reads an N-best list of utterances from the input. """
         nblist = UtteranceNBList()
         i = 1
         while i < 100:
-            l = raw_input("User %d: " % i)
+            l = raw_input("User %d:    " % i)
             if l.startswith("."):
                 print
                 break
@@ -127,27 +153,18 @@ class TextHub(Hub):
             print "="*120
             print
             sys_da = self.dm.da_out()
+            self.output_sys_da(sys_da)
+
             sys_utt = self.nlg.generate(sys_da)
-            self.output_utt(sys_utt)
+            self.output_sys_utt(sys_utt)
 
             print '-'*120
             print
 
-            utt_nblist = self.input_utt_nblist()
-
-            print "User utterance NBList:"
-            print utt_nblist
-            print
-
+            utt_nblist = self.input_usr_utt_nblist()
+            #self.output_usr_utt_nblist(utt_nblist)
             das = self.slu.parse(utt_nblist)
-
-
-            print "User DA:"
-            if isinstance(das, DialogueActConfusionNetwork):
-                print das.get_best_da_hyp()
-            else:
-                raise TextHubExcpetion("Unsupported SLU output.")
-            print
+            self.output_usr_da(das)
 
             print '-'*120
             print

@@ -313,7 +313,7 @@ class DialogueActNBList(SLUHypothesis):
             self.n_best[i][0] /= s
 
     def normalise(self):
-        """The N-best list is extended to include a "null()" dialogue act to represent that semantic hypotheses
+        """The N-best list is extended to include a "other()" dialogue act to represent that semantic hypotheses
         which are not included in the N-best list.
         """
         sum = 0.0
@@ -321,7 +321,7 @@ class DialogueActNBList(SLUHypothesis):
         for i in range(len(self.n_best)):
             sum += self.n_best[i][0]
 
-            if self.n_best[i][1] == 'null()':
+            if self.n_best[i][1] == 'other()':
                 if null_da != -1:
                     raise DialogueActNBListException('Dialogue act list include multiple null() dialogue acts: %s' % str(self.n_best))
                 null_da = i
@@ -330,7 +330,7 @@ class DialogueActNBList(SLUHypothesis):
             if sum > 1.0:
                 raise DialogueActNBListException('Sum of probabilities in dialogue act list > 1.0: %8.6f' % sum)
             prob_null = 1.0 - sum
-            self.n_best.append([prob_null, DialogueAct('null()')])
+            self.n_best.append([prob_null, DialogueAct('other()')])
 
         else:
             for i in range(len(self.n_best)):
@@ -349,9 +349,9 @@ class DialogueActConfusionNetwork(SLUHypothesis):
     def __str__(self):
         s = []
         for prob, dai in self.cn:
-            s.append("%.3f %s\n" % (prob, dai))
+            s.append("%.3f %s" % (prob, dai))
 
-        return " ".join(s)
+        return "\n".join(s)
 
     def add(self, probability, dai):
         """Append additional dialogue act item into the confusion network."""
@@ -411,6 +411,8 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         self.cn = pruned_cn
 
+    def sort(self):
+        self.cn.sort(reverse=True)
 
 def merge_slu_nblists(multiple_nblists):
     """Merge multiple dialogue act N-best lists."""
@@ -442,9 +444,11 @@ def merge_slu_confnets(multiple_confnets):
             raise SLUException("Cannot merge something that is not DialogueActConfusionNetwork.")
 
         for prob, dai in confnet.cn:
-            if dai.dat == "null":
+            if dai.dat == "other":
                 continue
 
             merged_confnets.add_merge(prob_confnet*prob, dai)
+
+    merged_confnets.sort()
 
     return merged_confnets

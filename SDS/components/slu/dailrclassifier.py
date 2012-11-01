@@ -102,10 +102,16 @@ class DAILogRegClassifierLearning:
     def prune_classifiers(self, min_classifier_count=5):
         new_classifiers = {}
         for k in self.classifiers:
+            # prune these classfiers
             if '=' in k and '0' not in k and self.classifiers[k] < min_classifier_count:
                 continue
 
             if '="dontcare"' in k and '(="dontcare")' not in k:
+                continue
+
+            if 'null()' in k:
+                # null() classifier is not necessary since null dialogue act is a complement
+                # to all other dialogue acts
                 continue
 
             new_classifiers[k] = self.classifiers[k]
@@ -269,6 +275,7 @@ class DAILogRegClassifier(SLUInterface):
             print "DA: ", da_conf_net
 
         conf_net = self.preprocessing.category_labels2values_in_conf_net(da_conf_net, category_labels)
+        conf_net.sort()
 
         return conf_net
 
@@ -280,15 +287,20 @@ class DAILogRegClassifier(SLUInterface):
 
         confnets = []
         for prob, utt in utterance_list:
-            if "_other_" in utt:
-                confnet = DialogueActConfusionNetwork()
-                confnet.add(1.0, DialogueActItem("null"))
+            if "__other__" in utt:
+                conf_net = DialogueActConfusionNetwork()
+                conf_net.add(1.0, DialogueActItem("other"))
             else:
                 conf_net = self.parse_1_best(utt)
+
+#            print prob, utt
+#            print conf_net
 
             confnets.append((prob, conf_net))
 
         confnet = merge_slu_confnets(confnets)
+        confnet.prune()
+        confnet.sort()
 
         return confnet
 

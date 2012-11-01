@@ -187,7 +187,8 @@ class DummyDialogueState(object):
         non_informed_slots = {}
 
         for slot in self.slots:
-            if [ 1.0 for x in ['rh_', 'ch_', 'sh_'] if slot.startswith(x)]:
+            # ignore some slots
+            if [ 1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]:
                 continue
 
             if self.slots[slot] != "None" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "None"):
