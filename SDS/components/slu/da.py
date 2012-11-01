@@ -212,6 +212,15 @@ class DialogueAct:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
 
+    def get_slots_and_values(self):
+        """Returns all values and corresponding slot names in the dialogue act."""
+        sv = []
+        for dai in self.dais:
+            if dai.value:
+                sv.append([dai.name, dai.value])
+
+        return sv
+
 class SLUHypothesis:
     """This is a base class for all forms of probabilistic SLU hypotheses representations."""
     pass

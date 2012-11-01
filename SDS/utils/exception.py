@@ -88,3 +88,6 @@ class DialogueManagerException(SDSException):
 
 class DummyDialogueManagerException(DialogueManagerException):
     pass
+
+class TemplateNLGException(NLGException):
+    pass
