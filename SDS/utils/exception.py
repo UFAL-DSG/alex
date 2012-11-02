@@ -34,7 +34,7 @@ class SemHubException(HubException):
     pass
 
 
-class TextHubEception(HubException):
+class TextHubException(HubException):
     pass
 
 

@@ -5,10 +5,10 @@ import argparse
 
 from __init__ import *
 
-from SDS.components.slu.da import *
+from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.utils.config import Config
-from SDS.utils.exception import DialogueActException, DialogueActItemException, SemHubException
+from SDS.utils.exception import SemHubException, DialogueActException, DialogueActItemException
 
 class SemHub(Hub):
     """

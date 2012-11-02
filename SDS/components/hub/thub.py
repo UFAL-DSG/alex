@@ -12,7 +12,7 @@ from SDS.components.slu.dailrclassifier import DAILogRegClassifier
 from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.components.nlg.template import TemplateNLG
 from SDS.utils.config import Config
-from SDS.utils.exception import UtteranceException, TextHubEception
+from SDS.utils.exception import UtteranceException, TextHubException
 
 class TextHub(Hub):
     """
