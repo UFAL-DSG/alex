@@ -220,8 +220,6 @@ persistent_cache_directory = os.path.expanduser(persistent_cache_directory)
 if not os.path.exists(persistent_cache_directory):
     os.makedirs(persistent_cache_directory)
 
-persistent_cache_directory.asdfasfd()
-
 if __name__ == '__main__':
     # pylint: disable-msg=E1101
 
