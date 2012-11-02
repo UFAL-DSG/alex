@@ -103,7 +103,7 @@ class DialogueActItem:
 
         # remove the parentheses
         dai_sv = dai[i + 1:len(dai) - 1]
-        if not dai_sv:
+        if len(dai_sv) == 0:
             # there is no slot name or value
             return
 
@@ -114,17 +114,21 @@ class DialogueActItem:
         elif len(r) == 2:
             # there is slot name and value
             self.name = r[0]
-            self.value = r[1][1:-1]
+            self.value = r[1]
+            if self.value[0] in ["'", '"']:
+                self.value = self.value[1:-1]
         else:
             raise DialogueActItemException(
                 "Parsing error in: %s: %s" % (dai, str(r)))
+
+        return self
 
 
 class DialogueAct:
     def __init__(self, da=None):
         self.dais = []
 
-        if da:
+        if da is not None:
             self.parse(da)
 
     def __str__(self):
