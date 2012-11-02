@@ -83,6 +83,6 @@ class TemplateNLG:
                 return self.random_select(self.match_generic_templates(da))
             except TemplateNLGException:
                 # nothing was find
-                return self.random_select(self.templates[str('reqmore()')])
+                return self.random_select(self.templates[str('notemplate()')])
 
 
