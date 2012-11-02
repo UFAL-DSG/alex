@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from collections import deque
 
-from SDS.utils.exceptions import ASRException
+from SDS.utils.exception import ASRException
 
 import SDS.components.vad.power as PVAD
 import SDS.components.vad.gmm as GVAD
