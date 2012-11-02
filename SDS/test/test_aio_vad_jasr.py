@@ -12,7 +12,7 @@ import SDS.utils.various as various
 from SDS.components.hub.aio import AudioIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
-from SDS.components.hub.messages import Command, Frame
+from SDS.components.hub.messages import Command, Frame, ASRHyp
 
 cfg = {
     'Audio': {

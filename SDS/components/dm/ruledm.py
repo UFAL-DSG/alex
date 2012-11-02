@@ -11,10 +11,18 @@ from SDS.components.slu.da import DialogueAct
 RH_USER_REQUESTED = "user-requested"
 CH_SYSTEM_INFORMED = RH_SYSTEM_INFORMED = "system-informed"
 
-print "%r" % "test"
+
+def _update_act_item(acts, da_item):
+    action = acts[da_item.dat]
+    action(da_item)
 
 
-class DialogueState:
+def _update_act(acts, da_):
+    for da_item in da_:
+        _update_act_item(acts, da_item)
+
+
+class RuleDialogueState:
     slots = None
 
     USER_REQUESTED = "user-requested"
@@ -27,8 +35,8 @@ class DialogueState:
             [self._get_ch_name(s) for s in slots]
         self.values = {s: None for s in self.slots}
 
-        self.USER_ACTS = self.build_user_acts()
-        self.SYSTEM_ACTS = self.build_system_acts()
+        self.user_acts = self.build_user_acts()
+        self.system_acts = self.build_system_acts()
 
     def build_user_acts(self):
         def inform(da_item):
@@ -107,23 +115,15 @@ class DialogueState:
         self._update_item_check(key)
         self.values[key] = value
 
-    def _update_act(self, acts, da):
-        for da_item in da:
-            self._update_act_item(acts, da_item)
+    def update_user(self, da_):
+        _update_act(self.user_acts, da_)
 
-    def _update_act_item(self, acts, da_item):
-        action = acts[da_item.dat]
-        action(da_item)
+    def update_system(self, da_):
+        _update_act(self.system_acts, da_)
 
-    def update_user(self, da):
-        self._update_act(self.USER_ACTS, da)
-
-    def update_system(self, da):
-        self._update_act(self.SYSTEM_ACTS, da)
-
-    def copy(self, ds):
-        self.slots = list(ds.slots)
-        self.values = dict(ds.values.items())
+    def copy(self, ds_):
+        self.slots = list(ds_.slots)
+        self.values = dict(ds_.values.items())
 
     def __unicode__(self):
         vals = pprint.pformat(self.values)
@@ -133,22 +133,22 @@ class DialogueState:
         return unicode(self)
 
 
-class DM:
+class RuleDM:
     def __init__(self, ontology_file):
         self.ontology = imp.load_source('ontology', ontology_file)
 
     def update(self, curr_ds, da):
         new_ds = self.create_ds()
         new_ds.copy(curr_ds)
-        new_ds.update(da)
+        new_ds.update_user(da)
 
     def create_ds(self):
-        res = DialogueState(self.ontology.slots.keys())
+        res = RuleDialogueState(self.ontology.slots.keys())
         return res
 
 
 if __name__ == '__main__':
-    dm = DM("applications/CamInfoRest/ontology.py")
+    dm = RuleDM("applications/CamInfoRest/ontology.py")
     ds = dm.create_ds()
     da = DialogueAct("inform(venue_type='pub')&inform(price_range='cheap')")
     ds.update_user(da)

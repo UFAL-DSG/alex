@@ -9,7 +9,7 @@ from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from SDS.components.asr.utterance import UtteranceFeatures
-from da import DialogueActItem, DialogueAct
+from da import DialogueActItem, DialogueAct, DialogueActConfusionNetwork
 
 
 class DAILogRegClassifierLearning:
@@ -287,8 +287,8 @@ class DAILogRegClassifier:
 
         return sluHyp
 
-    def parse_confusion_network(self, conf_net):
-        utterance = utterance.conf_net.best_hyp()
+    def parse_confusion_network(self, conf_net, verbose=False):
+        utterance = conf_net.best_hyp()
 
         #TODO: implement
 
@@ -314,6 +314,7 @@ class DAILogRegClassifier:
             self.features_mapping)
 
         dacn = {}
+        da = []
         for c in self.trained_classifiers:
             if verbose:
                 print "Classifying classifier: ", c

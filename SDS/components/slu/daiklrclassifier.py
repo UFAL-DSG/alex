@@ -16,7 +16,7 @@ from dailrclassifier import *
 class DAIDotKernel:
     """Compute dot kernel function for specific feature vectors.
     """
-    def __init__(self0):
+    def __init__(self):
         pass
 
     def __call__(self, f1, f2):

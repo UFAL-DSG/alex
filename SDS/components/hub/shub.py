@@ -3,13 +3,11 @@
 
 import argparse
 
-from __init__ import *
-
-from SDS.components.slu.da import *
+from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
-from SDS.utils.config import *
-from SDS.utils.exception import *
-
+from SDS.components.hub import Hub
+from SDS.utils.config import Config
+from SDS.utils.exception import SemHubException, DialogueActException, DialogueActItemException
 
 class SemHub(Hub):
     """
@@ -30,18 +28,20 @@ class SemHub(Hub):
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. """
-        ri = l.rfind(":")
+        ri = l.find(" ")
 
         prob = 1.0
 
         if ri != -1:
-            da = l[:ri]
-            prob = l[ri + 1:]
+            prob = l[:ri]
+            da = l[ri + 1:]
 
             try:
                 prob = float(prob)
             except:
-                raise SemHub("Cannot convert the probability after the semicolon into a float number: %s" % prob)
+                # I cannot convert the first part of the input as a float
+                # Therefore, assume that all the input is a DA
+                da = l
         else:
             da = l
 
@@ -52,12 +52,19 @@ class SemHub(Hub):
 
         return prob, da
 
+    def output_da(self, da):
+        """Prints the system dialogue act to the output."""
+        print "System DA:", da
+        print
+
     def input_da_nblist(self):
+        """Reads an N-best list of dialogue acts from the input. """
         nblist = DialogueActNBList()
         i = 1
         while i < 100:
-            l = raw_input("DA %d: " % i)
-            if l.startswith("."):
+            l = raw_input("User DA %d: " % i)
+            if len(l) == 1 and l.startswith("."):
+                print
                 break
 
             try:
@@ -70,9 +77,8 @@ class SemHub(Hub):
 
             i += 1
 
-        print nblist.n_best
-
         nblist.merge()
+        nblist.scale()
         nblist.normalise()
         nblist.sort()
 
@@ -80,19 +86,23 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
         The probability for each dialogue act must be separated by a semicolon ":" from the dialogue act
         and be entered at the end of line. When finished, the entry can be terminated by a period ".".
 
         For example:
 
-          DA 1: hello() : 0.6
-          DA 2: hello()&inform(type=bar) : 0.4
-          DA 3: .
-
+          System DA 1: 0.6 hello()
+          System DA 2: 0.4 hello()&inform(type="bar")
+          System DA 3: .
         """)
 
-        nblist = self.input_da_nblist()
+        while True:
+            sys_da = self.dm.da_out()
+            self.output_da(sys_da)
+
+            nblist = self.input_da_nblist()
+            self.dm.da_in(nblist)
 
         print nblist
 

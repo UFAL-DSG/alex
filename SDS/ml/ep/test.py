@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from random import *
-from time import *
+from random import seed, random, choice
+from time import time
 
-from node import *
-from turn import *
+from node import Node, GroupingNode, Goal, GroupingGoal, ConstChangeGoal
 
 #-----------------------------------------------------------------------------
 cardinality = 200

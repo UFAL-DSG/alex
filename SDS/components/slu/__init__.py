@@ -29,6 +29,8 @@ class CategoryLabelDatabase:
 
     def load(self, file_name):
         execfile(file_name, globals())
+        if database is None:
+            raise Exception("No database loaded!")
         self.database = database
 
         self.normalise_database()

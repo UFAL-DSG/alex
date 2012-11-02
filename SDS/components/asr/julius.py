@@ -11,10 +11,8 @@ import os.path
 from os import remove
 from tempfile import mkstemp
 
-import __init__
-
-from SDS.components.asr.utterance import *
-from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException
+from SDS.components.asr.utterance import UtteranceNBList, Utterance, UtteranceConfusionNetwork
+from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException, ASRException
 from SDS.utils.various import get_text_from_xml_node
 
 
@@ -107,7 +105,7 @@ class JuliusASR():
         """
         self.a_socket.setblocking(0)
         cmd = self.a_socket.recv(1)
-        self.socket.a_setblocking(1)
+        self.a_socket.setblocking(1)
         return cmd
 
     def read_server_message(self, timeout=0.1):
@@ -326,7 +324,7 @@ class JuliusASR():
             nblist, cn = self.get_results()
             # read any leftovers
             while True:
-                if self.read_server_messages() is None:
+                if self.read_server_message() is None:
                     break
 
         return

@@ -4,7 +4,9 @@
 from collections import defaultdict
 
 from SDS.utils.string import split_by
-from SDS.utils.exception import *
+from SDS.utils.exception import DialogueActItemException
+from SDS.utils.exception import DialogueActNBListException
+from SDS.utils.exception import DialogueActException
 
 
 def load_das(file_name, limit=None):
@@ -136,7 +138,7 @@ class DialogueAct:
     def __contains__(self, dai):
         if isinstance(dai, DialogueActItem):
             return dai in self.dais
-        elif isinstance(dai, string):
+        elif isinstance(dai, str):
             l = [str(dai) for dai in self.dais]
             return dai in l
 
@@ -147,7 +149,13 @@ class DialogueAct:
         return self.dais <= other.dais
 
     def __eq__(self, other):
-        return self.dais == other.dais
+        if isinstance(other, DialogueAct):
+            return self.dais == other.dais
+        elif isinstance(other, str):
+            o = DialogueAct(other)
+            return self.dais == o.dais
+        else:
+            DialogueActException("Unsupported comparison type.")
 
     def __ne__(self, other):
         return self.dais != other.dais
@@ -168,6 +176,24 @@ class DialogueAct:
         for i in self.dais:
             yield i
 
+    def has_dat(self, dat):
+        """Checks whether any of the dialogue act items has a specific dialogue act type."""
+
+        for dai in self.dais:
+            if dat == dai.dat:
+                return True
+
+        return False
+
+    def has_only_dat(self, dat):
+        """Checks whether all the dialogue act items has a specific dialogue act type."""
+
+        for dai in self.dais:
+            if dat != dai.dat:
+                return False
+
+        return True
+
     def parse(self, da):
         """Parse the dialogue act in text format into the structured form.
         """
@@ -179,7 +205,7 @@ class DialogueAct:
             self.dais.append(dai_parsed)
 
     def append(self, dai):
-        """Append dialogue act item to the current dialogue act."""
+        """Append a dialogue act item to the current dialogue act."""
         if isinstance(dai, DialogueActItem):
             self.dais.append(dai)
         else:
@@ -221,7 +247,7 @@ class DialogueActNBList:
 
     def get_best_da(self):
         """Returns the most probable dialogue act."""
-        return self.n_best[0]
+        return self.n_best[0][1]
 
     def parse_dai_confusion_network(self, dai_cn, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates N-best hypotheses.
@@ -261,7 +287,19 @@ class DialogueActNBList:
 
         self.n_best = new_n_best
 
+    def scale(self):
+        """The N-best list will be scaled to sum to one."""
+
+        s = sum([p for p, da in self.n_best])
+
+        for i in range(len(self.n_best)):
+            # null act is already there, therefore just normalise
+            self.n_best[i][0] /= s
+
     def normalise(self):
+        """The N-best list is extended to include a "null()" dialogue act to represent that semantic hypotheses
+        which are not included in the N-best list.
+        """
         sum = 0.0
         null_da = -1
         for i in range(len(self.n_best)):
@@ -274,7 +312,7 @@ class DialogueActNBList:
 
         if null_da == -1:
             if sum > 1.0:
-                raise DialogueActNBListException('Sum of probabilities in dialogue act list > 1.5: %8.6f' % sum)
+                raise DialogueActNBListException('Sum of probabilities in dialogue act list > 1.0: %8.6f' % sum)
             prob_null = 1.0 - sum
             self.n_best.append([prob_null, DialogueAct('null()')])
 

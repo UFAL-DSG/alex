@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
 
 import numpy
 import re
@@ -8,8 +9,8 @@ import wave
 
 from struct import unpack, pack
 
-from SDS.utils.cache import *
-from SDS.utils.mfcc import *
+from SDS.utils.cache import lru_cache
+from SDS.utils.mfcc import MFCCFrontEnd
 
 LPC = 1
 LPCREFC = 2
@@ -57,6 +58,8 @@ class Features:
         return self.frames[i]
 
     def open(self, file_name):
+        # pylint: disable-msg=E1103
+
         f = open(file_name, "rb")
 
         # read header
@@ -391,7 +394,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
         frame = self.last_param_file_features.readframes(self.frame_size)
 #    print "LN", len(frame)
 
-        frame = np.frombuffer(frame, dtype=np.int16)
+        frame = numpy.frombuffer(frame, dtype=numpy.int16)
 
         mfcc_params = self.mfcc_front_end.param(frame)
 
