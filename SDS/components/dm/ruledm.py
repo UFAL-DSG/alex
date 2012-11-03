@@ -24,41 +24,53 @@ def _update_act(acts, da_):
         _update_act_item(acts, da_item)
 
 
-class Trigger(object):
-    def __init__(self):
-        raise NotImplementedError("abstract class")
-
-
-class RuleTrigger(Trigger):
-    def __init__(self, t, n, v):
-        self.da_type = t
-        self.slot_name = n
-        self.slot_value = v
-
-    def match(self, da):
-        """Determine whether the trigger will fire by matching
-        its condition with the da content"""
-
-        for da_item in da:
-            if self.da_type is not None:
-                if not (da_item.dat == self.da_type):
-                    return False
-
-            if self.slot_name is not None:
-                if not (da_item.name == self.slot_name):
-                    return False
-
-            if self.slot_value is not None:
-                if not (da_item.value == self.slot_value):
-                    return False
-
-        return True
-
-
 class TransformationRule(object):
-    def __init__(self):
-        pass
+    def __init__(self, da=None, last_da=None, cond=None, t=None):
+        self.da = da
+        self.last_da = last_da
+        self.cond = cond
+        self.t = t
 
+    def _cond_matches(self, da, last_da, state):
+        if self.cond is not None:
+            res = self.cond(da, last_da, state)
+            assert type(res) is bool
+            return res
+        else:
+            return True
+
+    def eval(self, da, last_da, state):
+        new_dais = []
+        consumed_dais = []
+        if last_da is None:
+            last_da = [None]
+
+        for dai in da:
+            for last_dai in last_da:
+                if self.da is not None and dai.dat != self.da:
+                    continue
+                if self.last_da is not None and \
+                   (last_dai is None or last_dai.dat != self.last_da):
+                    continue
+
+                if self._cond_matches(dai, last_dai, state):
+                    new_dai = self.t(dai, last_dai)
+                    if new_dai is not None:
+                        new_dais += [DialogueActItem.parse(new_dai)]
+                        consumed_dais += [dai]
+
+        for new_dai in new_dais:
+            da.append(new_dai)
+
+        return da
+
+
+
+class UserTransformationRule(TransformationRule):
+    pass
+
+class SystemTransformationRule(TransformationRule):
+    pass
 
 def _da_match_pattern(da_item, pattern):
     if pattern.dat is not None:
@@ -78,42 +90,33 @@ def _da_match_pattern(da_item, pattern):
 
 class Rule(object):
     def __init__(self, da=None, cond=None, action=None):
-        self.da = DialogueActItem().parse(da)
+        self.da = da
         self.cond, self.action = cond, action
+        self.iter_apply = True
 
-    def _da_extract(self, da):
-        "Find out if at least one dai matches the pattern dai for this rule."
-        if self.da is not None:
-            if da_item.dat == self.da.dat:
-                res = {}
-                if self.da.name is not None:
-                    res[self.da.name] = da_item.name
-                if self.da.value is not None:
-                    res[self.da.value] = da_item.value
-                return res
-        return None
-
-    def _cond_matches(self, da_vals, state):
+    def _cond_matches(self, dai, state):
         if self.cond is not None:
-            res = self.cond(state, **da_vals)
+            res = self.cond(dai, state)
             assert type(res) is bool
             return res
         else:
             return True
 
-    def _action(self, da_vals):
+    def _action(self, dai):
         print 'executing action of', self.da, self.cond
-        res = self.action(**da_vals)
+        res = self.action(dai)
         return res
 
     def eval(self, da, state):
-        da_vals = self._da_extract(da)
-        if da_vals is not None:
-            if self._cond_matches(da_vals, state):
-                return self._action(da_vals)
-            return None
-        else:
-            return None
+        res = []
+        for dai in da:
+            if self.da is not None and dai.dat != self.da:
+                continue
+
+            if self._cond_matches(dai, state):
+                res += [self._action(dai)]
+
+        return res
 
 class UserRule(Rule):
     pass
@@ -188,18 +191,23 @@ class RuleDM:
         for i, rule in enumerate(self.state_update_rules):
             rule.id = i
 
-    def _process_rules(self, state, user_da):
+    def _process_rules(self, state, da, last_da):
         new_ds = self.create_ds()
 
+        new_da = da
+        for trule in self.transformation_rules:
+            new_da = trule.eval(new_da, last_da, state)
+
         for rule in self.state_update_rules:
-            new_vals = rule.eval(user_da, state)
-            if new_vals is not None:
-                new_ds.update(new_vals)
+            new_vals = rule.eval(da, state)
+            for new_val in new_vals:
+                if new_val is not None:
+                    new_ds.update(new_val)
 
         return new_ds
 
-    def update(self, curr_ds, da):
-        new_ds = self._process_rules(curr_ds, da)
+    def update(self, curr_ds, da, last_da=None):
+        new_ds = self._process_rules(curr_ds, da, last_da)
         return new_ds
 
     def create_ds(self):

@@ -1,106 +1,93 @@
 #!/usr/bin/env python
 # pylint: disable=E0602
 
-from .ruledm import RuleDM, SystemRule, UserRule, Rule
+import sys
+
+from .ruledm import RuleDM
+from .ruledm import SystemRule, UserRule
+from .ruledm import UserTransformationRule
+
 from SDS.components.slu.da import DialogueAct
 
 class UfalRuleDM(RuleDM):
     # STATE UPDATE RULES
     state_update_rules = [
         UserRule(
-            da="request(X=y)",
-            action=lambda X, y: {'rh_%s' % X: 'user-req'}
+            da="deny",
+            action=lambda da: {da.name: None}
+        ),
+        UserRule(
+            da="request",
+            action=lambda da: {'rh_%s' % da.name: 'user-req'}
         ),
         SystemRule(
-            da="inform(X)",
-            cond=lambda state, X: state['rh_%s' % X] != None,
-            action=lambda X: {'rh_%s' % X: 'user-req'}
+            da="inform",
+            cond=lambda da, state: state['rh_%s' % da.name] != None,
+            action=lambda da: {'rh_%s' % da.name: 'user-req'}
         ),
         UserRule(
-            da="confirm(X=y)",
-            action=lambda X, y: {'ch_%s' % X: y}
+            da="confirm",
+            action=lambda da: {'ch_%s' % da.name: da.value}
         ),
         SystemRule(
-            da="inform(X)",
-            cond=lambda state, X: state['ch_%s' % X] != None,
-            action=lambda X: {'ch_%s' % X: 'sys-inf'}
+            da="inform",
+            cond=lambda da, state: state['ch_%s' % da.name] != None,
+            action=lambda da: {'ch_%s' % da.name: 'sys-inf'}
         ),
         UserRule(
-            da="select(X=y)",
-            action=lambda X, y: {'ch_%s' % X: [y]}
+            da="select",
+            action=lambda da: {'ch_%s' % da.nameX: [da.value]}
         ),
         UserRule(
-            da="inform(X=y)",
-            action=lambda X, y: {X: y}
-        ),
+            da="inform",
+            action=lambda da: {da.name: da.value}
+        )
     ]
-"""
+
     # TRANSFORMATIONS
     transformation_rules = [
         # confirm responses
         UserTransformationRule(
-            "affirm()",
-            Rule(
-                "confirm(X=y)",
-                None,
-                lambda: ["inform({0}={1})".format(X, y),]
-            )
+            da="affirm",
+            last_da="confirm",
+            t=lambda da, last_da: "inform({0}={1})".format(da.name, da.value)
         ),
         UserTransformationRule(
-            "negate()",
-            Rule(
-                "confirm(X=y)",
-                None,
-                lambda: ["deny({0}={1})".format(X, y),]
-            )
+            da="negate",
+            last_da="confirm",
+            t=lambda da, last_da: "deny({0}={1})".format(da.name, da.value),
         ),
 
         # don't care -> dontcare()
         UserTransformationRule(
-            "inform(x=X)",
-            Rule(
-                None,
-                lambda: X == "'dontcare'",
-                lambda: ["dontcare()"]
-            )
+            da="inform",
+            cond=lambda da, last_da, state: da.value == "dontcare",
+            t=lambda da, last_da: "dontcare()"
         ),
 
         # request responses
         UserTransformationRule(
-            "affirm()",
-            Rule(
-                "request(x)",
-                None,
-                lambda: ["inform(%s='true')" % x]
-            )
+            da="affirm",
+            last_da="request",
+            t=lambda da, last_da: "inform(%s='true')" % last_da.name
         ),
         UserTransformationRule(
-            "deny()",
-            Rule(
-                "request(x)",
-                None,
-                lambda: ["inform(%s='false')" % x]
-            )
+            da="deny",
+            last_da="request",
+            t=lambda da, last_da: "inform(%s='false')" % last_da.name
         ),
         UserTransformationRule(
-            "dontcare()",
-            Rule(
-                "request(x)",
-                None,
-                lambda: ["inform(%s='true')" % x]
-            )
+            da="dontcare",
+            last_da="request",
+            t=lambda da, last_da: "inform(%s='true')" % last_da.name
         ),
     ]
-"""
 
 def main():
     u = UfalRuleDM("SDS/applications/CamInfoRest/ontology.py")
     ufal_ds = u.create_ds()
-    u.update(ufal_ds, DialogueAct("inform(area='barnwell')&inform(food_type='American')"))
-    u.update(ufal_ds, DialogueAct("inform(name='test')"))
-    u.update(ufal_ds, DialogueAct("inform(name='test')"))
-    u.update(ufal_ds, DialogueAct("inform(name='test')"))
-    u.update(ufal_ds, DialogueAct("inform(name='test')"))
+    for ln in sys.stdin:
+        u.update(ufal_ds, DialogueAct(ln.strip()))
 
 if __name__ == '__main__':
     main()
