@@ -8,9 +8,10 @@ from math import exp
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
-from SDS.components.asr.utterance import UtteranceFeatures
-from da import DialogueActItem, DialogueAct, DialogueActConfusionNetwork
-
+from SDS.components.asr.utterance import UtteranceFeatures, Utterance, UtteranceHyp
+from SDS.components.slu.__init__ import SLUInterface
+from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActHyp, DialogueActNBList, DialogueActConfusionNetwork, merge_slu_confnets
+from SDS.utils.exception import DAILRException
 
 class DAILogRegClassifierLearning:
     """ Implements learning of dialogue act item classifiers based on logistic regression.
@@ -101,10 +102,16 @@ class DAILogRegClassifierLearning:
     def prune_classifiers(self, min_classifier_count=5):
         new_classifiers = {}
         for k in self.classifiers:
+            # prune these classfiers
             if '=' in k and '0' not in k and self.classifiers[k] < min_classifier_count:
                 continue
 
             if '="dontcare"' in k and '(="dontcare")' not in k:
+                continue
+
+            if 'null()' in k:
+                # null() classifier is not necessary since null dialogue act is a complement
+                # to all other dialogue acts
                 continue
 
             new_classifiers[k] = self.classifiers[k]
@@ -190,7 +197,7 @@ class DAILogRegClassifierLearning:
         f.close()
 
 
-class DAILogRegClassifier:
+class DAILogRegClassifier(SLUInterface):
     """
       This parser implements a parser based on set of classifiers for each dialogue act item. When parsing
       the input utterance, the parse classifies whether a given dialogue act item is present. Then, the output
@@ -217,10 +224,18 @@ class DAILogRegClassifier:
     def get_size(self):
         return len(self.features_list)
 
-    def parse(self, utterance, verbose=False):
+    def parse_1_best(self, utterance, verbose=False):
         """Parse utterance and generate the best interpretation in the form of an dialogue act (an instance
         of DialogueAct.
+
+        The result is the dialogue act confusion network.
         """
+
+        if isinstance(utterance, Utterance):
+            pass
+        elif isinstance(utterance, UtteranceHyp):
+            # parse just the utterance and ignore the confidence score
+            utterance = utterance.utterance
 
         if verbose:
             print utterance
@@ -233,19 +248,18 @@ class DAILogRegClassifier:
             print category_labels
 
         # generate utterance features
-        utterance_features = UtteranceFeatures(
-            self.features_type, self.features_size, utterance)
+        utterance_features = UtteranceFeatures(self.features_type, self.features_size, utterance)
 
         if verbose:
             print utterance_features
 
         kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(
-            self.features_mapping)
+        kernel_vector[0] = utterance_features.get_feature_vector(self.features_mapping)
 
         da = []
         prob = 1.0
 
+        da_conf_net = DialogueActConfusionNetwork()
         for c in self.trained_classifiers:
             if verbose:
                 print "Classifying classifier: ", c
@@ -255,82 +269,43 @@ class DAILogRegClassifier:
             if verbose:
                 print p
 
-            if p[0][0] < 0.5:
-                da.append(c)
-                prob *= p[0][1]
-                    # multiply with probability of presence of a dialogue act
-            else:
-                prob *= p[0][0]  # multiply with probability of exclusion  of a dialogue act
-
-        if not da:
-            da.append('null()')
-
-        da = '&'.join(da)
+            da_conf_net.add(p[0][1], DialogueActItem(dai=c))
 
         if verbose:
-            print "DA: ", da
+            print "DA: ", da_conf_net
 
-        da = DialogueAct(da)
-        da = self.preprocessing.category_labels2values_in_da(
-            da, category_labels)
+        conf_net = self.preprocessing.category_labels2values_in_conf_net(da_conf_net, category_labels)
+        conf_net.sort()
 
-        return da, prob
+        return conf_net
 
-    def parse_N_best_list(self, hyp_list):
-        sluHyp = []
-        #sluHyp = ["dialogue act", 0.X]*N
+    def parse_N_best_list(self, utterance_list):
+        """Parse N-best list by parsing each item in the list and then by merging the results."""
 
-        #TODO: implement
+        if len(utterance_list) == 0:
+            raise DAILRException("Empty utterance N-best list.")
 
-        for h in hyp_list:
-            pass
+        confnets = []
+        for prob, utt in utterance_list:
+            if "__other__" in utt:
+                conf_net = DialogueActConfusionNetwork()
+                conf_net.add(1.0, DialogueActItem("other"))
+            else:
+                conf_net = self.parse_1_best(utt)
 
-        return sluHyp
+#            print prob, utt
+#            print conf_net
+
+            confnets.append((prob, conf_net))
+
+        confnet = merge_slu_confnets(confnets)
+        confnet.prune()
+        confnet.sort()
+
+        return confnet
 
     def parse_confusion_network(self, conf_net, verbose=False):
-        utterance = conf_net.best_hyp()
+        raise DAILRException("Not implemented.")
 
-        #TODO: implement
 
-        if verbose:
-            print utterance
 
-        if self.preprocessing:
-            utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
-
-        if verbose:
-            print utterance
-            print category_labels
-
-        # generate utterance features
-        utterance_features = UtteranceFeatures(
-            self.features_type, self.features_size, utterance)
-
-        if verbose:
-            print utterance_features
-
-        kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(
-            self.features_mapping)
-
-        dacn = {}
-        da = []
-        for c in self.trained_classifiers:
-            if verbose:
-                print "Classifying classifier: ", c
-
-            p = self.trained_classifiers[c].predict_proba(kernel_vector)
-
-            if verbose:
-                print p
-
-            if p[0][0] < 0.5:
-                da.append(c)
-
-            dacn[c] = (p[0][1], p[0][0])
-
-        dacn = DialogueActConfusionNetwork(dacn)
-        dacn = self.preprocessing.category_labels2values_in_da(
-            dacn, category_labels)
-
-        return dacn

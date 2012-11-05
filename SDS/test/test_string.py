@@ -3,6 +3,8 @@
 
 import unittest
 
+import __init__
+
 import SDS.utils.string
 
 
@@ -27,8 +29,7 @@ class TestString(unittest.TestCase):
     def test_parse_command(self):
         # make sure the SDS.utils.string.parse_command splits the command correctly
         r = SDS.utils.string.parse_command('call(destination="1245",opt="X")')
-        self.assertEqual(
-            r, {"name": "call", "destination": "1245", "opt": "X"})
+        self.assertEqual(r, {"__name__": "call", "destination": "1245", "opt": "X"})
 
 if __name__ == '__main__':
     unittest.main()

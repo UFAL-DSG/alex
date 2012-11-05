@@ -356,4 +356,4 @@ class DAIKerLogRegClassifier:
         da = self.preprocessing.category_labels2values_in_da(
             da, category_labels)
 
-        return da, prob
+        return prob, da

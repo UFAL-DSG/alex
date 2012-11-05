@@ -8,6 +8,7 @@ import os.path
 
 from SDS.utils.mproc import SystemLogger
 
+config = None
 
 class Config:
     """ Config handles configuration data necessary for all the components
@@ -45,8 +46,11 @@ class Config:
     def load(self, file_name):
         """FIX: Executing external files is not ideal! It should be changed in the future!
         """
-
         # pylint: disable-msg=E0602
+
+        global config
+        config = None
+        
         execfile(file_name, globals())
         assert config is not None
         self.config = config
@@ -56,6 +60,10 @@ class Config:
 
     def merge(self, file_name):
         # pylint: disable-msg=E0602
+        
+        global config
+        config = None
+        
         execfile(file_name, globals())
         assert config is not None
         self.update_dict(self.config, config)

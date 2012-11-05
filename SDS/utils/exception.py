@@ -34,7 +34,7 @@ class SemHubException(HubException):
     pass
 
 
-class TextHubEception(HubException):
+class TextHubException(HubException):
     pass
 
 
@@ -78,9 +78,16 @@ class DAIKernelException(SLUException):
     pass
 
 
+class DAILRException(SLUException):
+    pass
+
+
 class DialogueManagerException(SDSException):
     pass
 
 
 class DummyDialogueManagerException(DialogueManagerException):
+    pass
+
+class TemplateNLGException(NLGException):
     pass
