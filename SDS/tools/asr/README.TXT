@@ -1,8 +1,10 @@
 INTRODUCTION
 -------------------------------
-The acoustic modelling is using the HTK and the aim is to build triphone models for different languages, for example English and Czech.
+The acoustic modelling uses the HTK toolkit, the aim being to build 
+triphone models for different languages, for example English and Czech.
 
-For each language or recording conditions a seperate direoctry based on some previous direcotry must be created: 
+For each language or recording conditions, a separate directory based on 
+some previous directory must be created: 
 
 A setup for a new language and recording conditions (RCOND_LANG) would need:
 
@@ -27,11 +29,12 @@ CREDITS AND THE LICENCE
 The scripts are based on the HTK Wall Street Journal Training Recipe written by Keith Vertanen (http://www.keithv.com/software/htk/).
 
 The licence of his code is unclear so any distribution of the code is forbidden.
-We have to ask for permition to distribute his code.
+We have to ask for permission to distribute his code.
 
 2012-07-19 Filip Jurcicek
 
-Keith clarified the license. His code is relised under the new BSD licence. The lucence note is at http://www.keithv.com/software/htk/.
+Keith clarified the license. His code is released under the new BSD 
+licence.  The licence note is at http://www.keithv.com/software/htk/.
 
 The note says: The scripts and configuration files in the recipe are released under a new BSD license. This excludes the decision tree phonetic questions (tree_ques.hed) and the test set index files (si_dt_05_odd.ndx, si_dt_s2.ndx, si_dt_s6.ndx) which I did not write.
 
@@ -43,10 +46,12 @@ TEST RESULTS
 + total training data for voip_en is about 40 hours
 + total training data for voip_cs is about 8 hours
 + mixtures - there is 16 mixtures is slightly better than 8 mixtures for voip_en
-+ there is no signigicant difference in alignment of transcriptions with -t 150 and -t 250
++ there is no significant difference in alignment of transcriptions with -t 150 and -t 250
 + the Julius ASR performance is about the same as of HDecode
-- HDecode works well when cross word phones are trained, however the perfomance of HVite decreases significantly
-- when only word internal triphones are trained then the HDecode works, however, its perfomance is worse than the HVite with a bigram LM
+- HDecode works well when cross word phones are trained, however the 
+	performance of HVite decreases significantly
+- when only word internal triphones are trained then the HDecode works, 
+	however, its performance is worse than the HVite with a bigram LM
 + word internal triphones work well with Julius ASR, do not forget disable CCD (it does not need context handling - though it still uses triphones)
 + there is not much gain with the trigram LM in the Caminfo domain (about 1%)
 

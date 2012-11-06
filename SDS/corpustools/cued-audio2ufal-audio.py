@@ -473,7 +473,7 @@ def extract_wavs_trns(file_, outdir, wav_mapping, verbose):
             n_missing += 1
             if args.verbose:
                 print '-' * 120
-                print "(WW) Ignoring or missing the file '{}'."\
+                print "(WW) Ignoring or missing the file '{0}'."\
                     .format(audio_basename)
 
     if verbose:
@@ -615,10 +615,10 @@ if __name__ == '__main__':
     n_collisions, n_overwrites, n_ignores = convert(args)
 
     # Report.
-    msg = "# collisions: {};  # overwrites: {}"\
+    msg = "# collisions: {0};  # overwrites: {1}"\
         .format(n_collisions, n_overwrites)
     if args.count_ignored:
-        msg += ";  # ignores: {}".format(n_ignores)
+        msg += ";  # ignores: {0}".format(n_ignores)
     print msg
 
     # Print out the contents of the word counter to 'word_list'.
@@ -626,5 +626,5 @@ if __name__ == '__main__':
     with open('word_list', 'w') as word_list_file:
         for w in sorted(wc):
             word_list_file.write(
-                "{}\t{}\n".format(
+                "{0}\t{1}\n".format(
                     w.encode('ascii', 'ignore'), wc[w]))

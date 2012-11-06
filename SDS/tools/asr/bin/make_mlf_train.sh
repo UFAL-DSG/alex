@@ -2,7 +2,7 @@
 # Make the train MLF
 #
 # After we do prep_train.sh, we want to create a word level MLF for all
-# the files that were succefully converted to MFC files.
+# the files that were successfully converted to MFC files.
 
 # Create a file listing all the MFC files in the train directory
 find $TRAIN_DATA -iname '*.mfc' > $WORK_DIR/train_mfc_files.txt
