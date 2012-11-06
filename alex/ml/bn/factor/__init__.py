@@ -1,3 +1,6 @@
-from .discrete_factor import DiscreteFactor
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-__all__ = ['discrete_factor']
+from bn.factor.discrete_factor import DiscreteFactor
+
+__all__ = ['DiscreteFactor']

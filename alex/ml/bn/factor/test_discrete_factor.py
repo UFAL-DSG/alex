@@ -5,7 +5,7 @@
 
 import unittest
 
-from .discrete_factor import DiscreteFactor
+from bn.factor import DiscreteFactor
 
 
 class TestFactor(unittest.TestCase):
