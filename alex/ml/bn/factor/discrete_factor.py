@@ -106,7 +106,8 @@ class DiscreteFactor(object):
 
     def __mul__(self, other_factor):
         # The new set of variables will contain variables from both factors.
-        new_variables = list(set(self.variables).union(other_factor.variables))
+        new_variables = sorted(
+            set(self.variables).union(other_factor.variables))
         # New cardinalities will contain cardinalities of all variables.
         new_cardinalities = self.cardinalities
         new_cardinalities.update(other_factor.cardinalities)
@@ -148,4 +149,35 @@ class DiscreteFactor(object):
 
         return DiscreteFactor(new_variables,
                               new_cardinalities,
+                              new_factor_table)
+
+    def __div__(self, other_factor):
+        if not set(self.variables).issuperset(set(other_factor.variables)):
+            raise ValueError(
+                "The denominator is not a subset of the numerator.")
+
+        new_factor_table = np.empty_like(self.factor_table)
+        assignment = defaultdict(int)
+        index_other = 0
+        reversed_variables = self.variables[::-1]
+
+        for i in range(self.factor_length):
+            if self.factor_table[i] == 0:
+                new_factor_table[i] = 0
+            else:
+                new_factor_table[i] = (self.factor_table[i] /
+                                       other_factor.factor_table[index_other])
+
+            for var in reversed_variables:
+                assignment[var] += 1
+                if assignment[var] == self.cardinalities[var]:
+                    assignment[var] = 0
+                    index_other -= ((self.cardinalities[var] - 1) *
+                                    other_factor.strides[var])
+                else:
+                    index_other += other_factor.strides[var]
+                    break
+
+        return DiscreteFactor(self.variables,
+                              self.cardinalities,
                               new_factor_table)
