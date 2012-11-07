@@ -3,13 +3,19 @@
 
 import sys
 
-from .ruledm import RuleDM
+from .ruledm import RuleDM, RuleDMPolicy
 from .ruledm import SystemRule, UserRule
 from .ruledm import UserTransformationRule
 
 from SDS.components.slu.da import DialogueAct
+from SDS.utils.caminfodb import CamInfoDb
+
+class UfalRuleDMPolicy(RuleDMPolicy):
+    db_cls = CamInfoDb
 
 class UfalRuleDM(RuleDM):
+    policy_cls = UfalRuleDMPolicy
+
     # STATE UPDATE RULES
     state_update_rules = [
         UserRule(
@@ -83,11 +89,16 @@ class UfalRuleDM(RuleDM):
         ),
     ]
 
+
 def main():
-    u = UfalRuleDM("SDS/applications/CamInfoRest/ontology.py")
+    u = UfalRuleDM(
+        ontology="SDS/applications/CamInfoRest/ontology.py",
+        db_cfg="/xdisk/devel/vystadial/SDS/applications/CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"
+    )
     ufal_ds = u.create_ds()
     for ln in sys.stdin:
-        u.update(ufal_ds, DialogueAct(ln.strip()))
+        u.da_in(DialogueAct(ln.strip()))
+        print "  >", u.da_out()
 
 if __name__ == '__main__':
     main()

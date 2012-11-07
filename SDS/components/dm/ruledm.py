@@ -12,6 +12,11 @@ from SDS.components.slu.da import DialogueActItem, DialogueAct
 RH_USER_REQUESTED = "user-requested"
 CH_SYSTEM_INFORMED = RH_SYSTEM_INFORMED = "system-informed"
 LDA_SLOT = "__lda"
+ALTS_SLOT = "__alts"
+CHANGES_SLOT = "__changes"
+SLOT_REQ = "rh"
+SLOT_CONFIRM = "ch"
+
 
 
 def _update_act_item(acts, da_item):
@@ -131,17 +136,22 @@ class RuleDialogueState:
 
     def __init__(self, slots):
         self.slots = slots + \
-            [self._get_rh_name(s) for s in slots] + \
+            [self.get_rh_name(s) for s in slots] + \
             [self._get_sh1_name(s) for s in slots] + \
             [self._get_sh2_name(s) for s in slots] + \
-            [self._get_ch_name(s) for s in slots] + \
-            [LDA_SLOT]
+            [self.get_ch_name(s) for s in slots] + \
+            [LDA_SLOT, ALTS_SLOT, CHANGES_SLOT]
         self.values = {s: None for s in self.slots}
+        self.values[ALTS_SLOT] = []
+        self.values[CHANGES_SLOT] = [None]
 
     def update(self, new_values):
         for key, value in new_values.items():
             if not type(value) is list:
                 self.values[key] = value
+                if not key.startswith(SLOT_REQ + "_") and \
+                   not key.startswith(SLOT_CONFIRM + "_"):
+                    self.values[CHANGES_SLOT].insert(0, key)
                 print 'setting', key, value
             else:
                 if self.values[key] is None:
@@ -153,6 +163,10 @@ class RuleDialogueState:
         self.slots = list(ds_.slots)
         self.values = dict(ds_.values.items())
 
+    def clear(self):
+        for key in self.slots:
+            self.slots[key] = None
+
     def __unicode__(self):
         vals = pprint.pformat(self.values)
         return vals
@@ -161,8 +175,8 @@ class RuleDialogueState:
         return unicode(self)
 
     @classmethod
-    def _get_rh_name(cls, name):
-        return "rh_%s" % name
+    def get_rh_name(cls, name):
+        return "%s_%s" % (SLOT_REQ, name,)
 
     @classmethod
     def _get_sh1_name(cls, name):
@@ -174,25 +188,152 @@ class RuleDialogueState:
 
 
     @classmethod
-    def _get_ch_name(cls, name):
-        return "ch_%s" % name
+    def get_ch_name(cls, name):
+        return "%s_%s" % (SLOT_CONFIRM, name,)
 
     def __getitem__(self, key):
         return self.values[key]
+
+    def get(self, key, default=None):
+        return self.values.get(key, default)
+
+    def keys(self, prefix=None):
+        return [x for x in self.values.keys() if prefix is None or x.startswith("%s_" % prefix)]
+
+    def reqkey_to_key(self, req_key):
+        return req_key[len(SLOT_REQ) + 1:]
+
+    def chkey_to_key(self, req_key):
+        return req_key[len(SLOT_REQ) + 1:]
+
+
+class RuleDMPolicy:
+    def __init__(self, slots, db_cfg):
+        self.db = self.db_cls(db_cfg)
+        self.slots = slots
+
+    def query_db(self, state):
+        query = {}
+        for slot in self.slots:
+            if state[slot] != None:
+                query[slot] = state[slot]
+
+        return self.db.get_matching(query)
+
+    def say_bye(self):
+        return DialogueAct("bye()")
+
+    def say_hello(self):
+        return DialogueAct("hello()")
+
+    def get_interesting_slot(self, state):
+        return state[CHANGES_SLOT][0]
+
+    def say_inform(self, state, rec):
+        islot_name = self.get_interesting_slot(state) or self.slots[0]
+        if not islot_name in rec:
+            islot_name = rec.keys()[0]
+        slot_name = 'name'
+        return DialogueAct(
+            "inform(%s='%s')&inform(%s='%s')" % \
+            (slot_name, rec[slot_name], islot_name, rec[islot_name])
+        )
+
+    def say_slots(self, state, res0, slots_to_say):
+        d_str = []
+        for slot in slots_to_say:
+            d_str += ["inform(%s='%s')" % (slot, res0.get(slot, 'dontknow'), )]
+            state.update({state.get_rh_name(slot): CH_SYSTEM_INFORMED})
+
+        return DialogueAct("&".join(d_str))
+
+    def answer_confirm(self, state, res0, slots_to_confirm):
+        conflicts = []
+        for ch_slot, slot_value in slots_to_confirm.items():
+            state.update({ch_slot: None})
+            slot = state.chkey_to_key(ch_slot)
+            if res0[slot] != slot_value:
+                conflicts += [slot]
+
+        if len(conflicts) == 0:
+            return DialogueAct("affirm()")
+        else:
+            conf_acts = []
+            for conflict in conflicts:
+                conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], ) ]
+            return DialogueAct("negate()&" + "&".join(conf_acts))
+
+    def pick_record(self, state, res):
+        ndx = len(state.get(ALTS_SLOT, []))
+        if len(res) > ndx:
+            return res[ndx]
+        elif len(res) > 0:
+            return res[0]
+        else:
+            return None
+
+    def get_slots_to_say(self, state):
+        keys = state.keys(SLOT_REQ)
+        slots = [state.reqkey_to_key(key) for key in keys
+                 if not state[key] in [None, CH_SYSTEM_INFORMED]]
+        return slots
+
+    def get_slots_to_confirm(self, state):
+        keys = state.keys(SLOT_CONFIRM)
+        slots = {key: state[key] for key in keys if state[key] is not None}
+        return slots
+
+    def get_da(self, state, user_da):
+        res = self.query_db(state)
+        slots_to_say = self.get_slots_to_say(state)
+        slots_to_confirm = self.get_slots_to_confirm(state)
+        res_da = None
+        user_dat = user_da[-1].dat
+
+        # state updates
+        if user_dat == "reqalts":
+            state.update({ALTS_SLOT: [True]})
+        elif user_dat == "restart":
+            state.clear()
+
+        res0 = self.pick_record(state, res)
+
+        # determinig what to say
+        if user_dat == "hello":
+            res_da = self.say_hello()
+        elif user_dat == "bye":
+            res_da = self.say_bye()
+        elif user_dat == "repeat":
+            res_da = None
+        elif len(slots_to_confirm) > 0:
+            res_da = self.answer_confirm(state, res0, slots_to_confirm)
+        elif len(slots_to_say) > 0:
+            res_da = self.say_slots(state, res0, slots_to_say)
+        else:
+            res_da = self.say_inform(state, res0)
+            res_da.append(DialogueActItem().parse("count(%d)" % len(res)))
+
+        return state, res_da
 
 
 class RuleDM:
     state_update_rules = None
     transformation_rules = None
 
-    def __init__(self, ontology_file):
-        self.ontology = imp.load_source('ontology', ontology_file)
+    def __init__(self, ontology, db_cfg):
+        self.ontology = imp.load_source('ontology', ontology)
 
         for i, rule in enumerate(self.state_update_rules):
             rule.id = i
 
+        self.dstate = self.create_ds()
+        self.policy = self.policy_cls(self.ontology.slots.keys(), db_cfg)
+        self.last_usr_da = None
+        self.last_sys_da = None
+
     def _process_rules(self, state, da, last_da):
         new_ds = self.create_ds()
+        new_ds.copy(state)
 
         new_da = da
         for trule in self.transformation_rules:
@@ -213,6 +354,17 @@ class RuleDM:
     def create_ds(self):
         res = RuleDialogueState(self.ontology.slots.keys())
         return res
+
+    def da_in(self, da):
+        self.dstate = self.update(self.dstate, da)
+        self.last_usr_da = da
+
+    def da_out(self):
+        self.dstate, new_da = self.policy.get_da(self.dstate, self.last_usr_da)
+        if new_da is not None:
+            self.last_sys_da = new_da
+
+        return self.last_sys_da
 
 def main():
     dm = RuleDM("applications/CamInfoRest/ontology.py")

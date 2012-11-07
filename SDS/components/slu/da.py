@@ -105,7 +105,7 @@ class DialogueActItem:
         dai_sv = dai[i + 1:len(dai) - 1]
         if len(dai_sv) == 0:
             # there is no slot name or value
-            return
+            return self
 
         r = split_by(dai_sv, '=', '', '', '"')
         if len(r) == 1:
