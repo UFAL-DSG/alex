@@ -3,7 +3,7 @@
 
 import argparse
 
-from __init__ import *
+from __init__ import Hub
 
 from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM

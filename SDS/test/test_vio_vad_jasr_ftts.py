@@ -82,10 +82,8 @@ if __name__ == '__main__':
                                asr_hypotheses_out, asr_child_hypotheses,
                                tts_text_in, tts_child_text_in]
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record,
-                 vio_child_play, vio_child_played)
-    vad = VAD(
-        cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
+    vad = VAD(cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
     asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
     tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
 
