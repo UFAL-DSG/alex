@@ -9,7 +9,7 @@ To make sure that you can install all requeried packages it is better to have yo
 
 You can use the following script
 
-  ./thirdparty/akheron-mutipy/multipy install 2.7
+  ./thirdparty/akheron-multipy/multipy install 2.7
 
 to download, compile, and install python 2.7 into ~/multipy directory.
 
