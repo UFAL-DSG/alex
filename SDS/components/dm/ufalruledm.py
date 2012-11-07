@@ -92,7 +92,7 @@ class UfalRuleDM(RuleDM):
 
 def main():
     u = UfalRuleDM(
-        ontology="SDS/applications/CamInfoRest/ontology.py",
+        ontology="SDS/applications/CamInfoRest/ontology.cfg",
         db_cfg="/xdisk/devel/vystadial/SDS/applications/CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"
     )
     ufal_ds = u.create_ds()
