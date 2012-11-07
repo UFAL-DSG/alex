@@ -85,6 +85,8 @@ class AccountCallback(pj.AccountCallback):
 
             # respond by "Busy here"
             call.answer(486)
+            # respond by "Decline"
+            #call.answer(603)
 
             self.voipio.on_rejected_call(remote_uri)
 
@@ -656,8 +658,7 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
             # Create UDP transport which listens to any available port
-            self.transport = self.lib.create_transport(
-                pj.TransportType.UDP, pj.TransportConfig(0))
+            self.transport = self.lib.create_transport(pj.TransportType.UDP, pj.TransportConfig(0))
             self.cfg['Logging']['system_logger'].info("Listening on %s port %s" % (self.transport.info().host, self.transport.info().port))
 
             # Start the library
@@ -677,17 +678,14 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].info("Registration complete, status = %s (%s)" %
                                                       (self.acc.info().reg_status, self.acc.info().reg_reason))
 
-            my_sip_uri = "sip:" + self.transport.info(
-            ).host + ":" + str(self.transport.info().port)
+            my_sip_uri = "sip:" + self.transport.info().host + ":" + str(self.transport.info().port)
 
             # Create memory player
-            self.mem_player = pj.MemPlayer(
-                pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+            self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
             self.mem_player.create()
 
             # Create memory capture
-            self.mem_capture = pj.MemCapture(
-                pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
+            self.mem_capture = pj.MemCapture(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])
             self.mem_capture.create()
 
             while 1:

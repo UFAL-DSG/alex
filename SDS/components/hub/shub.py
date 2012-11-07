@@ -3,9 +3,10 @@
 
 import argparse
 
+from __init__ import *
+
 from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
-from SDS.components.hub import Hub
 from SDS.utils.config import Config
 from SDS.utils.exception import SemHubException, DialogueActException, DialogueActItemException
 
@@ -27,17 +28,21 @@ class SemHub(Hub):
                 'Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
     def parse_input_da(self, l):
-        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability. """
+        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
+
+        The input text must have the following form:
+            [prob] the dialogue act
+
+        """
         ri = l.find(" ")
 
         prob = 1.0
 
         if ri != -1:
-            prob = l[:ri]
             da = l[ri + 1:]
 
             try:
-                prob = float(prob)
+                prob = float(l[:ri])
             except:
                 # I cannot convert the first part of the input as a float
                 # Therefore, assume that all the input is a DA
@@ -86,9 +91,9 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
-        The probability for each dialogue act must be separated by a semicolon ":" from the dialogue act
-        and be entered at the end of line. When finished, the entry can be terminated by a period ".".
+        self.fg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+        The probability for each dialogue act must be be provided before the the dialogue act itself.
+        When finished, the entry can be terminated by a period ".".
 
         For example:
 

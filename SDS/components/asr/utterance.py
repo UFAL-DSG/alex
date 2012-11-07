@@ -33,7 +33,8 @@ def load_utterances(file_name, limit=None):
     return utterances
 
 
-class ASRHypotheses:
+class ASRHypothesis:
+    """This is a base class for all forms of probabilistic ASR hypotheses representations."""
     pass
 
 
@@ -191,7 +192,20 @@ class UtteranceFeatures(Features):
                     del self.features[f]
 
 
-class UtteranceNBList(ASRHypotheses):
+class UtteranceHyp(ASRHypothesis):
+    """Provide an interface for 1-best hypothesis from the ASR component."""
+    def __init__(self, prob = None, utterance = None):
+        self.prob = prob
+        self.utterance = utterance
+
+    def __str__(self):
+        return "%.3f %s" % (self.prob, self.utterance)
+
+    def get_best_utterance(self):
+        return self.utterance
+
+
+class UtteranceNBList(ASRHypothesis):
     """Provides a convenient interface for processing N-best lists of recognised utterances.
 
     When updating the N-best list, one should do the following.
@@ -260,12 +274,21 @@ class UtteranceNBList(ASRHypotheses):
                 for j in range(len(new_n_best)):
                     if new_n_best[j][1] == self.n_best[i][1]:
                         # merge, add the probabilities
-                        new_n_best[j][1][0] += self.n_best[i][0]
+                        new_n_best[j][0] += self.n_best[i][0]
                         break
                 else:
                     new_n_best.append(self.n_best[i])
 
         self.n_best = new_n_best
+
+    def scale(self):
+        """The N-best list will be scaled to sum to one."""
+
+        s = sum([p for p, da in self.n_best])
+
+        for i in range(len(self.n_best)):
+            # null act is already there, therefore just normalise
+            self.n_best[i][0] /= s
 
     def normalise(self):
         sum = 0.0
@@ -282,7 +305,7 @@ class UtteranceNBList(ASRHypotheses):
             if sum > 1.0:
                 raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.0: %8.6f' % sum)
             prob_other = 1.0 - sum
-            self.n_best.append([prob_other, '__other__'])
+            self.n_best.append([prob_other, Utterance('__other__')])
         else:
             for i in range(len(self.n_best)):
                 # __other__ utterance is already there, therefore just normalise
@@ -300,11 +323,12 @@ class UtteranceNBListFeatures(Features):
 # - then the code will be more general
 
 
-class UtteranceConfusionNetwork(ASRHypotheses):
+class UtteranceConfusionNetwork(ASRHypothesis):
+    """Word confusion network"""
 
     def __init__(self):
         self.cn = []
-        pass
+
 
     def __str__(self):
         s = []
@@ -317,7 +341,7 @@ class UtteranceConfusionNetwork(ASRHypotheses):
         return '\n'.join(s)
 
     def add(self, words):
-        """Adds next word with its alternatives"""
+        """Adds the next word with its alternatives"""
 
         self.cn.append(words)
 
