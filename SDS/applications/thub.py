@@ -3,8 +3,9 @@
 
 import argparse
 
-from __init__ import Hub
+import __init__
 
+from SDS.components.hub import Hub
 from SDS.components.asr.utterance import Utterance, UtteranceNBList
 from SDS.components.slu import CategoryLabelDatabase, SLUPreprocessing
 from SDS.components.slu.da import *

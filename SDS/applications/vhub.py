@@ -8,8 +8,9 @@ import random
 import sys
 import argparse
 
-from __init__ import Hub
+import __init__
 
+from SDS.components.hub import Hub
 from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR

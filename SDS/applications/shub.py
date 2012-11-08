@@ -3,8 +3,9 @@
 
 import argparse
 
-from __init__ import Hub
+import __init__
 
+from SDS.components.hub import Hub
 from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.utils.config import Config
@@ -21,6 +22,7 @@ class SemHub(Hub):
         self.cfg = cfg
 
         self.dm = None
+        # do not forget to maintain all supported dialogue managers
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
