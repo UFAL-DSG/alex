@@ -61,6 +61,25 @@ class DiscreteFactor(object):
                 self.factor_table[
                     self._get_index_from_assignment(assignment)] = value
 
+    def __str__(self):
+        ret = ""
+        num_columns = len(self.variables) + 1
+        column_len = 79 / num_columns
+        format_str = "{:^%d}" % column_len
+
+        ret += 79 * "-" + "\n"
+
+        for var in self.variables:
+            ret += format_str.format(var)
+        ret += format_str.format("Value") + "\n"
+        ret += 79 * "-" + "\n"
+        for i in range(len(self.factor_table)):
+            for assignment in self._get_assignment_from_index(i):
+                ret += format_str.format(assignment)
+            ret += format_str.format(self.factor_table[i]) + "\n"
+        ret += 79 * "-" + "\n"
+        return ret
+
     def marginalize(self, variables):
         """Marginalize the factor."""
         # Assignment counter
