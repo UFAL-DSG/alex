@@ -41,6 +41,23 @@ class ASRHyp(Message):
     def __str__(self):
         return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
 
+class SLUHyp(Message):
+    def __init__(self, hyp, source=None, target=None):
+        Message.__init__(self, source, target)
+
+        self.hyp = hyp
+
+    def __str__(self):
+        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
+
+class DMDA(Message):
+    def __init__(self, da, source=None, target=None):
+        Message.__init__(self, source, target)
+
+        self.da = da
+
+    def __str__(self):
+        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.da)
 
 class TTSText(Message):
     def __init__(self, text, source=None, target=None):

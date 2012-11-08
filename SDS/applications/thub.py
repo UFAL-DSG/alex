@@ -42,12 +42,12 @@ class TextHub(Hub):
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
-            raise TextHubEception('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+            raise TextHubException('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
         if self.cfg['NLG']['type'] == 'Template':
             self.nlg = TemplateNLG(cfg)
         else:
-            raise TextHubEception('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
+            raise TextHubException('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
 
     def parse_input_utt(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
