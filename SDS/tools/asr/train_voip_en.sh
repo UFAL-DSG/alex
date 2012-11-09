@@ -45,7 +45,7 @@ echo "Preparing CMU English dictionary..."
 $TRAIN_SCRIPTS/prep_cmu_dict.sh
 
 # Code the audio files to MFCC feature vectors.
-# NOTE: Skip this test in subsequent runs.
+# NOTE: Skip this step in subsequent runs.
 echo "Coding test audio..."
 $TRAIN_SCRIPTS/prep_param_test.sh
 
