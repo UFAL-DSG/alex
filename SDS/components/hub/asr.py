@@ -24,13 +24,13 @@ class ASR(multiprocessing.Process):
     communication.
     """
 
-    def __init__(self, cfg, commands, audio_in, hypotheses_out):
+    def __init__(self, cfg, commands, audio_in, asr_hypotheses_out):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
         self.commands = commands
         self.audio_in = audio_in
-        self.hypotheses_out = hypotheses_out
+        self.asr_hypotheses_out = asr_hypotheses_out
 
         self.asr = None
         if self.cfg['ASR']['type'] == 'Google':
@@ -100,15 +100,13 @@ class ASR(multiprocessing.Process):
                     self.recognition_on = True
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging'][
-                            'system_logger'].debug('ASR: speech_start()')
+                        self.cfg['Logging']['system_logger'].debug('ASR: speech_start()')
 
                 elif dr_speech_start == "speech_end":
                     self.recognition_on = False
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging'][
-                            'system_logger'].debug('ASR: speech_end()')
+                        self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
 
                     try:
                         hyp = self.asr.hyp_out()
@@ -116,7 +114,7 @@ class ASR(multiprocessing.Process):
                         hyp = None
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
-                    self.hypotheses_out.send(ASRHyp(hyp))
+                    self.asr_hypotheses_out.send(ASRHyp(hyp))
             else:
                 raise ASRException('Unsupported input.')
 

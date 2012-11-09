@@ -4,7 +4,8 @@
 from collections import defaultdict
 
 from SDS.utils.string import split_by
-from SDS.utils.exception import SLUException, DialogueActException, DialogueActItemException, DialogueActNBListException
+from SDS.utils.exception import SLUException, DialogueActException, \
+    DialogueActItemException, DialogueActNBListException, DialogueActConfusionNetworkException
 
 def load_das(file_name, limit=None):
     f = open(file_name)
@@ -277,20 +278,6 @@ class DialogueActNBList(SLUHypothesis):
         """Returns the most probable dialogue act."""
         return self.n_best[0][1]
 
-    def parse_dai_confusion_network(self, dai_cn, n=10, expand_upto_total_prob_mass=0.9):
-        """Parses the input dialogue act item confusion network and generates N-best hypotheses.
-
-        The result is a list of dialogue act hypotheses each with a with assigned probability.
-        The list also include a dialogue act for not having the correct dialogue act in the list, e.g. null()
-        """
-        self.n_best = []
-
-        #FIXME: expand the DAI confusion network
-
-        self.merge()
-        self.normalise()
-        self.sort()
-
     def add(self, probability, da):
         self.n_best.append([probability, da])
 
@@ -411,6 +398,24 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return DialogueActHyp(prob, da)
 
+    def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+        """Parses the input dialogue act item confusion network and generates N-best hypotheses.
+
+        The result is a list of dialogue act hypotheses each with a with assigned probability.
+        The list also include a dialogue act for not having the correct dialogue act in the list, e.g. null()
+        """
+
+        raise DialogueActConfusionNetworkException("Not implemented")
+
+        self.n_best = []
+
+        #FIXME: expand the DAI confusion network
+
+        self.merge()
+        self.normalise()
+        self.sort()
+
+
     def prune(self, prune_prob=0.001):
         """Prune all low probability dialogue act items."""
         pruned_cn = []
@@ -456,8 +461,9 @@ def merge_slu_confnets(multiple_confnets):
             raise SLUException("Cannot merge something that is not DialogueActConfusionNetwork.")
 
         for prob, dai in confnet.cn:
-            if dai.dat == "other":
-                continue
+            # it is not clear why I wanted to remove all other() dialogue acts
+#            if dai.dat == "other":
+#                continue
 
             merged_confnets.add_merge(prob_confnet*prob, dai)
 

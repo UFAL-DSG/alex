@@ -93,7 +93,8 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        self.fg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+
+        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
         The probability for each dialogue act must be be provided before the the dialogue act itself.
         When finished, the entry can be terminated by a period ".".
 
@@ -138,7 +139,7 @@ if __name__ == '__main__':
         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config('../../resources/default.cfg')
+    cfg = Config('../resources/default.cfg')
 
     if args.configs:
         for c in args.configs:

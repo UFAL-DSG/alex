@@ -14,6 +14,7 @@ from SDS.components.hub import Hub
 from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.vad import VAD
 from SDS.components.hub.asr import ASR
+from SDS.components.hub.slu import SLU
 from SDS.components.hub.dm import DM
 from SDS.components.hub.nlg import NLG
 from SDS.components.hub.tts import TTS
@@ -43,36 +44,50 @@ class VoipHub(Hub):
         asr_commands, asr_child_commands = multiprocessing.Pipe()          # used to send commands to ASR
         asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
 
-        tts_commands, tts_child_commands = multiprocessing.Pipe()   # used to send commands to TTS
-        tts_text_in, tts_child_text_in = multiprocessing.Pipe()     # used to send TTS text
+        slu_commands, slu_child_commands = multiprocessing.Pipe()          # used to send commands to SLU
+        slu_hypotheses_out, slu_child_hypotheses = multiprocessing.Pipe()  # used to read SLU hypotheses
 
-        command_connections = [vio_commands, vad_commands, asr_commands, tts_commands]
+        dm_commands, dm_child_commands = multiprocessing.Pipe()            # used to send commands to DM
+        dm_actions_out, dm_child_actions = multiprocessing.Pipe()          # used to read DM actions
+
+        nlg_commands, nlg_child_commands = multiprocessing.Pipe()          # used to send commands to NLG
+        nlg_text_out, nlg_child_text = multiprocessing.Pipe()              # used to read NLG output
+
+        tts_commands, tts_child_commands = multiprocessing.Pipe()          # used to send commands to TTS
+
+        command_connections = [vio_commands, vad_commands, asr_commands, slu_commands,
+                                             dm_commands, nlg_commands, tts_commands]
 
         non_command_connections = [vio_record, vio_child_record,
                                    vio_play, vio_child_play,
                                    vio_played, vio_child_played,
                                    vad_audio_out, vad_child_audio_out,
                                    asr_hypotheses_out, asr_child_hypotheses,
-#                                   dm_actions_out, asr_child_actions,
-#                                   nlg_text_out, asr_child_text,
-                                   tts_text_in, tts_child_text_in]
+                                   slu_hypotheses_out, slu_child_hypotheses,
+                                   dm_actions_out, dm_child_actions,
+                                   nlg_text_out, nlg_child_text]
 
         vio = VoipIO(self.cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
         vad = VAD(self.cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
         asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-#        dm = DM(self.cfg, tts_child_commands, asr_hypotheses_out, asr_child_actions)
-#        nlg = NLG(self.cfg, tts_child_commands, dm_actions_out, tts_child_text_in)
-        tts = TTS(self.cfg, tts_child_commands, tts_text_in, vio_play)
+        slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
+        dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)
+        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text)
+        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, vio_play)
 
         vio.start()
         vad.start()
         asr.start()
-        #dm.start()
-        #nlg.start()
+        slu.start()
+        dm.start()
+        nlg.start()
         tts.start()
 
         # init the system
         call_start = 0
+        call_back_time = -1
+        call_back_uri = None
+
         s_voice_activity = False
         s_last_voice_activity_time = 0
         u_voice_activity = False
@@ -80,9 +95,6 @@ class VoipHub(Hub):
 
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-
-            if vad_audio_out.poll():
-                data_vad = vad_audio_out.recv()
 
             if call_back_time != -1 and call_back_time < time.time():
                 vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
@@ -157,14 +169,18 @@ class VoipHub(Hub):
                 command = asr_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
 
-#            if dm_commands.poll():
-#                command = dm_commands.recv()
-#                self.cfg['Logging']['system_logger'].info(command)
-#
-#            if nlg_commands.poll():
-#                command = nlg_commands.recv()
-#                self.cfg['Logging']['system_logger'].info(command)
-#
+            if slu_commands.poll():
+                command = slu_commands.recv()
+                self.cfg['Logging']['system_logger'].info(command)
+
+            if dm_commands.poll():
+                command = dm_commands.recv()
+                self.cfg['Logging']['system_logger'].info(command)
+
+            if nlg_commands.poll():
+                command = nlg_commands.recv()
+                self.cfg['Logging']['system_logger'].info(command)
+
             if tts_commands.poll():
                 command = tts_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
@@ -219,7 +235,7 @@ if __name__ == '__main__':
         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config('../../resources/default.cfg')
+    cfg = Config('../resources/default.cfg')
 
     if args.configs:
         for c in args.configs:

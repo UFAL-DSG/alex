@@ -199,7 +199,7 @@ if __name__ == '__main__':
         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config('../../resources/default.cfg')
+    cfg = Config('../resources/default.cfg')
 
     if args.configs:
         for c in args.configs:

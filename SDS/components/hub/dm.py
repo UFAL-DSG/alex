@@ -6,7 +6,7 @@ import time
 
 import SDS.components.dm.dummydialoguemanager as DummyDM
 
-from SDS.components.hub.messages import Command, Frame
+from SDS.components.hub.messages import Command, SLUHyp, DMDA
 from SDS.utils.exception import DMException
 
 
@@ -26,7 +26,7 @@ class DM(multiprocessing.Process):
         self.cfg = cfg
         self.commands = commands
         self.slu_hypotheses_in = slu_hypotheses_in
-        self.actions_out = actions_out
+        self.dialogue_act_out = dialogue_act_out
 
         self.dm = None
         if self.cfg['DM']['type'] == 'Dummy':
@@ -65,19 +65,21 @@ class DM(multiprocessing.Process):
 
         return False
 
-    def read_asr_hypothesis_write_dialogue_act(self):
+    def read_slu_hypotheses_write_dialogue_act(self):
         # read SLU hypothesis
         while self.slu_hypotheses_in.poll():
             # read SLU hypothesis
-            data_hyp = self.slu_hypotheses_in.recv()
+            data_slu = self.slu_hypotheses_in.recv()
 
-            if isinstance(data_hyp, SLUHyp):
-               self.dm.da_in(data_hyp)
+            if isinstance(data_slu, SLUHyp):
+               self.dm.da_in(data_slu.hyp)
                da = self.dm.da_out()
 
-               self.dialogue
-            elif isinstance(data_hyp, Command):
-                cfg['Logging']['system_logger'].info(data_hyp)
+               self.dialogue_act_out.send(DMDA(da))
+               self.commands.send(Command('dm_generated()', 'DM', 'HUB'))
+
+            elif isinstance(data_slu, Command):
+                cfg['Logging']['system_logger'].info(data_slu)
             else:
                 raise DMException('Unsupported input.')
 
@@ -92,4 +94,4 @@ class DM(multiprocessing.Process):
                 return
 
             # process the incoming SLU hypothesis
-            self.read_SLU_hypothesis_write_dialogue_act()
+            self.read_slu_hypotheses_write_dialogue_act()

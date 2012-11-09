@@ -36,6 +36,7 @@ class DAILogRegClassifierLearning:
         self.category_labels = {}
         if self.preprocessing:
             for k in self.utterances_list:
+                self.utterances[k] = self.preprocessing.text_normalisation(self.utterances[k])
                 self.utterances[k], self.das[k], self.category_labels[k] = self.preprocessing.values2category_labels_in_da(self.utterances[k], self.das[k])
 
         # generate utterance features
@@ -213,6 +214,9 @@ class DAILogRegClassifier(SLUInterface):
 
     """
     def __init__(self, preprocessing=None):
+        # FIX: maybe the SLU components should use the Config class to initialise themselves.
+        # As a result it would create their category label database and pre-processing classes.
+
         self.preprocessing = preprocessing
 
     def load_model(self, file_name):
@@ -241,6 +245,7 @@ class DAILogRegClassifier(SLUInterface):
             print utterance
 
         if self.preprocessing:
+            utterance = self.preprocessing.text_normalisation(utterance)
             utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
 
         if verbose:
@@ -259,7 +264,7 @@ class DAILogRegClassifier(SLUInterface):
         da = []
         prob = 1.0
 
-        da_conf_net = DialogueActConfusionNetwork()
+        da_confnet = DialogueActConfusionNetwork()
         for c in self.trained_classifiers:
             if verbose:
                 print "Classifying classifier: ", c
@@ -269,17 +274,17 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 print p
 
-            da_conf_net.add(p[0][1], DialogueActItem(dai=c))
+            da_confnet.add(p[0][1], DialogueActItem(dai=c))
 
         if verbose:
-            print "DA: ", da_conf_net
+            print "DA: ", da_confnet
 
-        conf_net = self.preprocessing.category_labels2values_in_conf_net(da_conf_net, category_labels)
-        conf_net.sort()
+        confnet = self.preprocessing.category_labels2values_in_confnet(da_confnet, category_labels)
+        confnet.sort()
 
-        return conf_net
+        return confnet
 
-    def parse_N_best_list(self, utterance_list):
+    def parse_nblist(self, utterance_list):
         """Parse N-best list by parsing each item in the list and then by merging the results."""
 
         if len(utterance_list) == 0:
@@ -287,16 +292,18 @@ class DAILogRegClassifier(SLUInterface):
 
         confnets = []
         for prob, utt in utterance_list:
-            if "__other__" in utt:
-                conf_net = DialogueActConfusionNetwork()
-                conf_net.add(1.0, DialogueActItem("other"))
+            if "__other__" == utt:
+                confnet = DialogueActConfusionNetwork()
+                confnet.add(1.0, DialogueActItem("other"))
             else:
-                conf_net = self.parse_1_best(utt)
+                confnet = self.parse_1_best(utt)
+
+            confnets.append((prob, confnet))
 
 #            print prob, utt
-#            print conf_net
-
-            confnets.append((prob, conf_net))
+#            confnet.prune()
+#            confnet.sort()
+#            print confnet
 
         confnet = merge_slu_confnets(confnets)
         confnet.prune()
@@ -304,8 +311,26 @@ class DAILogRegClassifier(SLUInterface):
 
         return confnet
 
-    def parse_confusion_network(self, conf_net, verbose=False):
-        raise DAILRException("Not implemented.")
+    def parse_confnet(self, confnet, verbose=False):
+        """Parse the confusion network by generating an N-best list and parsing this N-best list."""
 
+        #TODO: We should implement a parser which uses features directly from confusion networks.
 
+        print "Confnet"
+        print confnet
+        print
+
+        nblist = confnet.get_utterance_nblist()
+
+        print "NBList"
+        print nblist
+        print
+
+        sem = self.parse_nblist(nblist)
+
+        print "Semantics"
+        print sem
+        print
+
+        return sem
 
