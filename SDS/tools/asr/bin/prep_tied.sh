@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prepare things for the tied state triphones
+# Prepare things for the tied state triphones.
 #
 # Parameters:
 #   1 - RO value for clustering
@@ -14,9 +14,9 @@ cd $WORK_DIR
 rm -f -r hmm13 hhed_cluster.log fullist tree.hed
 mkdir hmm13
 
-# We have our own script which generate all possible monophone,
+# We have our own script which generates all possible monophone,
 # left and right biphones, and triphones.  It will also add
-# an entry for sp and sil
+# an entry for sp and sil.
 #if [[ $3 != "cross" ]]
 #then
 #  perl $TRAIN_SCRIPTS/CreateFullListWI.pl $WORK_DIR/dict_full > $TEMP_DIR/fulllist
@@ -27,17 +27,17 @@ perl $TRAIN_SCRIPTS/CreateFullList.pl $WORK_DIR/config/monophones0 > $TEMP_DIR/f
 cat $TEMP_DIR/fulllist triphones1 | sort | uniq > $WORK_DIR/fulllist
 
 
-# Now create the instructions for doing the decision tree clustering
+# Now create the instructions for doing the decision tree clustering.
 
 # RO sets the outlier threshold and load the stats file from the
-# last round of training
+# last round of training.
 echo "RO $1 stats" > $WORK_DIR/tree.hed
 
-# Add the phoenetic questions used in the decision tree
+# Add the phonetic questions used in the decision tree.
 echo "TR 0" >> $WORK_DIR/tree.hed
 cat $WORK_DIR/config/tree_ques.hed >> $WORK_DIR/tree.hed
 
-# Now the commands that cluster each output state
+# Now the commands that cluster each output state.
 echo "TR 12" >> $WORK_DIR/tree.hed
 perl $TRAIN_SCRIPTS/MakeClusteredTri.pl TB $2 $WORK_DIR/config/monophones1 >> $WORK_DIR/tree.hed
 

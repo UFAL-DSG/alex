@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim: set fdm=marker :
 
 import glob
 import sys
 import collections
 import os.path
 
+# Read arguments.
+#{{{
 pattern1, pattern2, pattern3, pattern4 = None, None, None, None
 
 try:
     dctn = sys.argv[1]
     mlfn = sys.argv[2]
     scpn = sys.argv[3]
-    dir = sys.argv[4]
+    outdir = sys.argv[4]
     pattern1 = sys.argv[5]
     pattern2 = sys.argv[6]
     pattern3 = sys.argv[7]
@@ -32,62 +35,64 @@ if pattern4:
 dict_test = True
 try:
     dct = {}
-    # load dictionary
+    # Load the dictionary.
     dctf = open(dctn, 'r')
-    for l in dctf:
-        l = l.strip()
-        l = l.split()
-
-        if len(l) > 0:
-            dct[l[0]] = 1
-
+    for line in dctf:
+        words = line.strip().split()
+        if len(words) > 0:
+            dct[words[0]] = 1
     dctf.close()
 except IOError, e:
     print e
-
     dict_test = False
+    print "No dictionary will be used to remove any transcriptions."
+#}}}
 
-    print "No dictionary will be used to remove any transcriptions"
+# Initialise buffer-like variables for the output.
+# `mlf_lines' will store a list of lines to write out to the `mlfn' file.
+mlf_lines = []
+mlf_lines.append('#!MLF!#')
+# `scp_lines' will store a list of lines to write out to the `scpn' file.
+scp_lines = []
 
-mlf = []
-mlf.append('#!MLF!#')
-scp = []
-
+# Process the input files.
+#{{{
 for fn in fns:
-    f = open(fn, 'r')
-    l = f.readlines()
-    l = ' '.join(l)
+    with open(fn, 'r') as f:
+        lines = f.readlines()
+        lines = ' '.join(lines)
 
-    l = l.strip()
-    l = l.split()
+        words = lines.strip().split()
 
-    if dict_test:
-        missing_word = False
-        for w in l:
-            if w not in dct:
-                missing_word = True
-                break
-        if missing_word:
-            print "Missing word in: ", fn, "word: ", w
-            print "  - ", l
-            continue
+        # If a dictionary has been specified,
+        if dict_test:
+            # check that all words are present there.
+            missing_word = False
+            for w in words:
+                if w not in dct:
+                    missing_word = True
+                    break
+            # Bail out on the first word in `f' missing from the dictionary.
+            if missing_word:
+                print "Missing word in: ", fn, "word: ", w
+                print "  - ", words
+                continue
 
-    new_fn = os.path.join(dir, os.path.basename(fn))
-    scp.append(new_fn.replace('.wav.trn', '.mfc'))
+        # Store the contents for the output files.
+        new_fn = os.path.join(outdir, os.path.basename(fn))
+        scp_lines.append(new_fn.replace('.wav.trn', '.mfc'))
 
-    mlf.append('"%s"' % new_fn.replace('.wav.trn', '.lab'))
-    for w in l:
-        mlf.append('%s' % w)
-    mlf.append('.')
+        mlf_lines.append('"{0}"'.format(new_fn.replace('.wav.trn', '.lab')))
+        for w in words:
+            mlf_lines.append(w)
+        mlf_lines.append('.')
+#}}}
 
-    f.close()
+# Write out the .mlf and .scp files.
+with open(mlfn, 'w') as mlff:
+    for line in mlf_lines:
+        mlff.write(line + '\n')
 
-mlff = open(mlfn, 'w')
-for l in mlf:
-    mlff.write(l + '\n')
-mlff.close()
-
-scpf = open(scpn, 'w')
-for l in scp:
-    scpf.write(l + '\n')
-scpf.close()
+with open(scpn, 'w') as scpf:
+    for line in scp_lines:
+        scpf.write(line + '\n')

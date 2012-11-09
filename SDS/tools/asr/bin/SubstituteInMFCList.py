@@ -10,13 +10,11 @@ try:
 except IndexError, e:
     exit()
 
-mfcf = open(mfcn, 'r')
-for l in mfcf:
-    l = l.strip().split()
+with open(mfcn, 'r') as mfcf:
+    for line in mfcf:
+        line = line.strip().split()
 
-    fn = os.path.basename(l[1])
-    l[1] = os.path.join(subs, fn)
+        fn = os.path.basename(line[1])
+        line[1] = os.path.join(subs, fn)
 
-    print ' '.join(l)
-
-mfcf.close()
+        print ' '.join(line)

@@ -21,7 +21,7 @@ HLEd -A -T 1 -l '*' -d $WORK_DIR/dict_train -i $WORK_DIR/phones0.mlf $TRAIN_COMM
 #  -M   Where to store the output files
 HCompV -A -T 1 -C $TRAIN_COMMON/config -f 0.01 -m -S $WORK_DIR/train.scp -M $WORK_DIR/hmm0 $WORK_DIR/config/proto > $LOG_DIR/hcompv_flat.log
 
-# Create the master model definition and macros file
+# Create the master model definition and macros file.
 cp $WORK_DIR/config/macros $WORK_DIR/hmm0
 cat $WORK_DIR/hmm0/vFloors >> $WORK_DIR/hmm0/macros
 perl $TRAIN_SCRIPTS/CreateHMMDefs.pl $WORK_DIR/hmm0/proto $WORK_DIR/config/monophones0 > $WORK_DIR/hmm0/hmmdefs

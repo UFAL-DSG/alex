@@ -1,13 +1,13 @@
 #!/bin/bash
-# This encodes the test data
+# This encodes the test data.
 
 cd $WORK_DIR
 
-# Create a file with the filename with wav and mfc extensions on it
+# Create a file with the filename with wav and mfc extensions on it.
 # Only get the files in the training directory.
 find $TEST_DATA_SOURCE -iname '*.wav' > $WORK_DIR/test_wav_files.txt
 
-# Create the list file we need to send to HCopy to convert .wav files to .mfc
+# Create the list file we need to send to HCopy to convert .wav files to .mfc.
 perl $TRAIN_SCRIPTS/CreateMFCList.pl $WORK_DIR/test_wav_files.txt wav mfc > $TEMP_DIR/test_wav_mfc.scp
 python $TRAIN_SCRIPTS/SubstituteInMFCList.py $TEMP_DIR/test_wav_mfc.scp $TEST_DATA > $WORK_DIR/test_wav_mfc.scp
 

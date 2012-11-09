@@ -25,7 +25,7 @@ cd $WORK_DIR
 
 HVite -B -A -T 1 -l '*' -o SW -b silence -C $TRAIN_COMMON/config -a -H $WORK_DIR/$1/macros -H $WORK_DIR/$1/hmmdefs -i $WORK_DIR/aligned_best.mlf -m -t 250.0 -I $WORK_DIR/train_words.mlf -S $WORK_DIR/train.scp $WORK_DIR/dict_train_sp_sil $WORK_DIR/$2 >$LOG_DIR/hvite_realign.log
 
-# We'll get a "sp sil" sequence at the end of each sentance.  Merge these
+# We'll get a "sp sil" sequence at the end of each sentence.  Merge these
 # into a single sil phone.  Also might get "sil sil", we'll merge anything
 # combination of sp and sil into a single sil.
 HLEd -A -T 1 -l '*' -i $WORK_DIR/aligned_best2.mlf $TRAIN_COMMON/merge_sp_sil.led $WORK_DIR/aligned_best.mlf > $LOG_DIR/hled_realign_sp_sil.log
@@ -38,7 +38,7 @@ perl $TRAIN_SCRIPTS/ConvertToMono.pl $WORK_DIR/aligned_best2.mlf > $WORK_DIR/ali
 
 # This converts the monophone MLF into a word internal triphone MLF.
 # Note that this realignment could could the triphones1 file to change
-# what it contains since we make switch to different pronouciations for
+# what it contains since we make switch to different pronunciations for
 # certain words in the training set.
 HLEd -A -T 1 -n $WORK_DIR/triphones1 -l '*' -i $WORK_DIR/aligned_best3.mlf $TRAIN_COMMON/mktri.led $WORK_DIR/aligned_best_mono.mlf > $LOG_DIR/hled_make_tri.log
 

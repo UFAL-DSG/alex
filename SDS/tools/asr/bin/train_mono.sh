@@ -34,5 +34,6 @@ $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm5_text hmm6 config/monophones1 aligned
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm6 hmm7 config/monophones1 aligned2.mlf 3
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm7 hmm8 config/monophones1 aligned2.mlf 3
 
-# Do an extra round just so we end up with hmm9 and synced with the tutorial
+# Do an extra round just so we end up with hmm9 and synced with the 
+# tutorial.
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm8 hmm9 config/monophones1 aligned2.mlf 3

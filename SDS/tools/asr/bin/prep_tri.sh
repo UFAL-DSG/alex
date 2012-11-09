@@ -7,10 +7,10 @@ cd $WORK_DIR
 rm -f -r mktri.hed hmm10
 mkdir hmm10
 
-# Check to see if we are doing cross word triphones or not
+# Check to see if we are doing cross word triphones or not.
 if [[ $1 != "cross" ]]
 then
-  # This converts the monophone MLF into a word internal triphone MLF
+  # This converts the monophone MLF into a word internal triphone MLF.
   HLEd -A -T 1 -n $WORK_DIR/triphones1 -i $WORK_DIR/wintri.mlf $TRAIN_COMMON/mktri.led $WORK_DIR/aligned2.mlf > $LOG_DIR/hled_make_tri.log
 else
   # This version makes it into a cross word triphone MLF, the short pause

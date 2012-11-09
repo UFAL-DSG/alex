@@ -43,8 +43,8 @@ fi
 
 
 
-# Now lets see how we did!
+# Now let's see how we did!
 HResults -n -A -T 1 -I $WORK_DIR/test_words.mlf $WORK_DIR/tiedlist $WORK_DIR/recout_test_$8_$2.mlf > $WORK_DIR/hresults_test_$8_$2.log
 
-# Add on a NIST style output result for good measure
+# Add on a NIST style output result for good measure.
 HResults -n -h -A -T 1 -I $WORK_DIR/test_words.mlf $WORK_DIR/tiedlist $WORK_DIR/recout_test_$8_$2.mlf >> $WORK_DIR/hresults_test_$8_$2.log

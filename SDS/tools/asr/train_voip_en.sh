@@ -4,6 +4,9 @@
 
 source env_voip_en.sh
 
+# # DEBUG
+# set -e
+
 date
 
 echo "Training word internal triphone model for English"
@@ -37,58 +40,59 @@ echo ""
 
 cd $WORK_DIR
 
-# We need to massage the CMU dictionary for our use
-echo "Preparing CMU English dictionary ..."
+# We need to massage the CMU dictionary for our use.
+echo "Preparing CMU English dictionary..."
 $TRAIN_SCRIPTS/prep_cmu_dict.sh
 
-# Code the audio files to MFCC feature vectors
-echo "Coding test audio ..."
-#$TRAIN_SCRIPTS/prep_param_test.sh
+# Code the audio files to MFCC feature vectors.
+# NOTE: Skip this test in subsequent runs.
+echo "Coding test audio..."
+$TRAIN_SCRIPTS/prep_param_test.sh
 
-echo "Coding train audio ..."
-#$TRAIN_SCRIPTS/prep_param_train.sh
+echo "Coding train audio..."
+$TRAIN_SCRIPTS/prep_param_train.sh
 
-# Intial setup of language model, dictionary, training and test MLFs
+# Intial setup of the language model, dictionary, training and test MLFs.
 echo "Building unigram language models and dictionary..."
 $TRAIN_SCRIPTS/build_lm_en.sh
-echo "Building training MLF ..."
+echo "Building training MLF..."
 $TRAIN_SCRIPTS/make_mlf_train.sh prune
-echo "Building test MLF ..."
-$TRAIN_SCRIPTS/make_mlf_test.sh prune $N_TRAIN_FILES
+echo "Building test MLF..."
+$TRAIN_SCRIPTS/make_mlf_test.sh prune "$N_TRAIN_FILES"
 
 date
 
-# Get the basic monophone models trained
-echo "Flat starting monophones ..."
+# Get the basic monophone models trained.
+echo "Flat starting monophones..."
 $TRAIN_SCRIPTS/flat_start.sh
 
-# Create a new MLF that is aligned based on our monophone model
-echo "Aligning with monophones ..."
+# Create a new MLF that is aligned based on our monophone model.
+echo "Aligning with monophones..."
 $TRAIN_SCRIPTS/align_mlf.sh
 
 # More training for the monophones, create triphones, train
 # triphones, tie the triphones, train tied triphones, then
-# mixup the number of Gaussians per state.
-echo "Training monophones ..."
+# mix up the number of Gaussians per state.
+echo "Training monophones..."
 $TRAIN_SCRIPTS/train_mono.sh
-echo "Prepping triphones ..."
+echo "Prepping triphones..."
 $TRAIN_SCRIPTS/prep_tri.sh $CROSS
-echo "Training triphones ..."
+echo "Training triphones..."
 $TRAIN_SCRIPTS/train_tri.sh
 
 # These values of RO and TB seem to work fairly well, but
 # there may be more optimal values.
-echo "Prepping state-tied triphones ..."
+echo "Prepping state-tied triphones..."
 $TRAIN_SCRIPTS/prep_tied.sh $RO $TB $CROSS
 
-echo "Training state-tied triphones ..."
+echo "Training state-tied triphones..."
 $TRAIN_SCRIPTS/train_tied.sh
-echo "Mixing up ..."
+echo "Mixing up..."
 $TRAIN_SCRIPTS/train_mixup.sh
 
 date
 
-# Evaluate how we did on zerogram language model
+# Evaluate how we did on the zerogram language model.
 # Cannot decode zerogram language model with cross word triphone context
 echo "Decoding zerogram language model"
 $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_zerogram_06 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
@@ -101,7 +105,7 @@ wait
 
 date
 
-# Evaluate how we did on bigram language model if it is available
+# Evaluate how we did on the bigram language model if it is available.
 if [ -f $WORK_DIR/wdnet_bigram ]
 then
   echo "Decoding bigram language model"
@@ -116,7 +120,7 @@ fi
 
 date
 
-# Evaluate how we did on trigram language model if it is available
+# Evaluate how we did on the trigram language model if it is available.
 if [ -f $WORK_DIR/arpa_trigram ]
 then
   echo "Decoding trigram language model"
@@ -131,8 +135,8 @@ fi
 
 date
 
-# Re-align the training data with the best triphone models
-echo "Aligning with triphones ..."
+# Re-align the training data with the best triphone models.
+echo "Aligning with triphones..."
 $TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
 
 echo "End of training"

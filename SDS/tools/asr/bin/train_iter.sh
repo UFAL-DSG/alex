@@ -2,8 +2,8 @@
 # Does a single iteration of HERest training.
 #
 # This handles the parallel splitting and recombining
-# of the accumulator files.  This is neccessary to
-# prevent inccuracies and eventual failure with large
+# of the accumulator files.  This is necessary to
+# prevent inaccuracies and eventual failure with large
 # amounts of training data.
 #
 # According to Phil Woodland, one accumulator file
@@ -22,19 +22,20 @@
 # Environment variable $HEREST_SPLIT should be set to how
 # many chunks to split the training data into.
 #
-# This is a version that can split up the work amoung multiple
+# This is a version that can split up the work among multiple
 # processors/cores on the same machine.  The environment variable
 # $HEREST_THREADS controls the number of threads.
 # Thanks to Mikel Penagarikano.
 
-# Delete any existing log file
+# Delete any existing log file.
 rm -f $1/$3.log
 
-# Make sure we have a place to put things
+# Make sure we have a place to put things.
 mkdir -p $1/$3
 rm -f $1/$3/HER*.acc
 
-# Create all the accumulator files, parallaize over $HEREST_THREADS workers
+# Create all the accumulator files, parallelize over $HEREST_THREADS 
+# workers.
 for ((I=1,J=0;I<=$HEREST_SPLIT;)); do
     for ((T=0;T<$HEREST_THREADS&I<=$HEREST_SPLIT;T++,I++,J++)); do
         perl $TRAIN_SCRIPTS/OutputEvery.pl $1/train.scp $HEREST_SPLIT $J > $TEMP_DIR/train_temp_split_$T.scp
@@ -47,7 +48,7 @@ done
 
 ls -1 $1/$3/HER*.acc > acc_files.txt
 
-# Now combine them all and create the new HMM definition
+# Now combine them all and create the new HMM definition.
 if [[ $7 != "text" ]]
 then
   # -B

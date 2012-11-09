@@ -1,7 +1,7 @@
 
 # Creates a list of all combinations of monophones,
 # left and right biphones, and triphones.  This
-# assume sp is context free, sil is context independent,
+# assumes sp is context free, sil is context independent,
 # and all others are context dependent.
 #
 # Copyright 2005 by Keith Vertanen
@@ -24,7 +24,7 @@ open(IN, $listFile);
 
 my $monoCount = 0;
 
-# Output all monophones including sp
+# Output all monophones including sp.
 while($line = <IN>)
 {
     $line =~ s/[\n\r]//g;
@@ -39,7 +39,7 @@ while($line = <IN>)
 close(IN);
 print "sp\n";
 
-# Now all possible left biphones
+# Now all possible left biphones.
 my $i;
 my $j;
 
@@ -54,7 +54,7 @@ for ($i = 0; $i < $monoCount; $i++)
   }
 }
 
-# Right biphones
+# Right biphones.
 for ($i = 0; $i < $monoCount; $i++)
 {
   for ($j = 0; $j < $monoCount; $j++)
@@ -66,7 +66,7 @@ for ($i = 0; $i < $monoCount; $i++)
   }
 }
 
-# Triphones
+# Triphones.
 my $k;
 
 for ($i = 0; $i < $monoCount; $i++)

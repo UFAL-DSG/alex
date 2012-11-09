@@ -1,13 +1,13 @@
 #!/bin/bash
-# Make the train MLF
+# Make the MLF for the training data.
 #
 # After we do prep_train.sh, we want to create a word level MLF for all
-# the files that were successfully converted to MFC files.
+# the files that have been successfully converted to MFC files.
 
-# Create a file listing all the MFC files in the train directory
+# Create a file listing all the MFC files in the train directory.
 find $TRAIN_DATA -iname '*.mfc' > $WORK_DIR/train_mfc_files.txt
 
-# Now create the MLF file using a script, we prune out anything that
+# Now create the MLF file using a script. We prune anything that
 # has words that aren't in our dictionary, producing a MLF with only
 # these files and a corresponding script file.
 if [[ $1 != "prune" ]]
