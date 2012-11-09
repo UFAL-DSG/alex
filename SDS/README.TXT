@@ -3,9 +3,10 @@ Simple (spoken) Dialogue System  (SDS)
 = INSTALL =
 
 == Local python ==
-At this moment, the SDS project is developped and tested in Python 2.7.
+At this moment, the SDS project is developed and tested in Python 2.7.
 
-To make sure that you can install all requeried packages it is better to have your own locally compiled version of python.
+To make sure that you can install all required packages it is better to 
+have your own locally compiled version of python.
 
 You can use the following script
 
@@ -13,18 +14,21 @@ You can use the following script
 
 to download, compile, and install python 2.7 into ~/multipy directory.
 
-To enable this local version, you have to call from your bash commandline
+To enable this local version, you have to call from your bash command line
 
   source ~/multipy/pythons/2.7/bin/activate
 
-You can also add the previous line into .bashrc to activate your local version of python everytime you start a bash console.
+You can also add the previous line into .bashrc to activate your local 
+version of python every time you start a bash console.
 
-== Dependecies ==
+== Dependencies ==
 
-Please follow ./thirdparty/DEPENDENCIES.TXT to install all necessary pakages.
-Some packages are included in there so that you can use the versions which are used by this project.
+Please follow ./thirdparty/DEPENDENCIES.TXT to install all necessary 
+packages.
+Some packages are included in there so that you can use the versions which 
+are used by this project.
 
 = CODING STYLE =
 
-This project follows coding convection defined in PEP8.
+This project follows the coding convention defined in PEP8.
 
