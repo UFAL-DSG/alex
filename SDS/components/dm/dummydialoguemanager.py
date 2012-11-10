@@ -55,6 +55,11 @@ class DummyDialogueState(object):
             raise DummyDialogueManagerException(
                 "Unsupported input for the dialogue manager.")
 
+        
+        print "### Dialogue act in"
+        print da
+        print
+        
         # store the input
         self.turns.append([da, last_system_da])
 
