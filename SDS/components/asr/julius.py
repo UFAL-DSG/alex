@@ -19,7 +19,7 @@ from SDS.utils.various import get_text_from_xml_node
 class JuliusASR():
     """ Uses Julius ASR service to recognize recorded audio.
 
-    The main function recognize returns a list of recognised hypotheses.
+    The main function recognize returns a list of recognized hypotheses.
     One can also obtain a confusion network for the hypotheses.
 
     """
@@ -34,46 +34,44 @@ class JuliusASR():
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
 
         try:
-            self.cfg['Logging']['system_logger'].debug(
-                "Starting the Julius ASR server")
+            self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
             self.start_server()
             time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug(
-                "Connecting to the Julius ASR server")
+            self.cfg['Logging']['system_logger'].debug("Connecting to the Julius ASR server")
             self.connect_to_server()
             time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug(
-                "Opening the adinnet connection with the Julius ASR ")
+            self.cfg['Logging']['system_logger'].debug("Opening the adinnet connection with the Julius ASR ")
             self.open_adinnet()
-        except:
+        except Exception as e:
+            self.cfg['Logging']['system_logger'].debug("There was a problem with starting the Julius ASR server: %s" % e)
+            self.cfg['Logging']['system_logger'].debug("Killing the Julius ASR server!")
             # always kill the Julius ASR server when there is a problem
             if self.julius_server:
                 self.julius_server.kill()
 
+            self.cfg['Logging']['system_logger'].debug("Exiting!")
+            exit(0)
+            
     def __del__(self):
         self.julius_server.terminate()
         time.sleep(1)
         self.julius_server.kill()
 
     def start_server(self):
-        jconf = os.path.join(
-            self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
-        log = os.path.join(
-            self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
+        jconf = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
+        log = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
-            config.write(
-                '%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
+            config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
         config.close()
 
         # start the server with the -debug options
         # with this option it does not generates seg faults
-        self.julius_server = subprocess.Popen('julius -debug -C %s > %s' % (
-            jconf, log), bufsize=1, shell=True)
+        self.julius_server = subprocess.Popen('julius -debug -C %s > %s' % (jconf, log), bufsize=1, shell=True)
 
     def connect_to_server(self):
-        """Connects to the Julius ASR server to start recognition and receive the recognition oputput."""
+        """Connects to the Julius ASR server to start recognition and receive the recognition output."""
 
         self.s_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s_socket.connect((self.hostname, self.serverport))
@@ -86,13 +84,13 @@ class JuliusASR():
         self.a_socket.connect((self.hostname, self.adinnetport))
 
     def send_frame(self, frame):
-        """Sends one frame of audio data to the Julisus ASR"""
+        """Sends one frame of audio data to the Julius ASR"""
 
         self.a_socket.sendall(struct.pack("i", len(frame)))
         self.a_socket.sendall(frame)
 
     def audio_finished(self):
-        """"Informs the Julius ASR about the end of segment and that the hypothesis should be finalised."""
+        """"Informs the Julius ASR about the end of segment and that the hypothesis should be finalized."""
 
         self.a_socket.sendall(struct.pack("i", 0))
         self.recognition_on = False
@@ -157,8 +155,7 @@ class JuliusASR():
         while True:
             if to >= timeout:
                 print msg
-                raise JuliusASRTimeoutException(
-                    "Timeout when waiting for the Julius server results.")
+                raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
 
             m = self.read_server_message()
             if not m:
