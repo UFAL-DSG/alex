@@ -28,6 +28,7 @@ class JuliusASR():
         self.recognition_on = False
 
         self.cfg = cfg
+        self.julius_server = None
         self.hostname = self.cfg['ASR']['Julius']['hostname']
         self.serverport = self.cfg['ASR']['Julius']['serverport']
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
@@ -46,7 +47,8 @@ class JuliusASR():
             self.open_adinnet()
         except:
             # always kill the Julius ASR server when there is a problem
-            self.julius_server.kill()
+            if self.julius_server:
+                self.julius_server.kill()
 
     def __del__(self):
         self.julius_server.terminate()
