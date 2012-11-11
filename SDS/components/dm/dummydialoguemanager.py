@@ -52,8 +52,7 @@ class DummyDialogueState(object):
             # get only the best dialogue act
             da = user_da.get_best_da()
         else:
-            raise DummyDialogueManagerException(
-                "Unsupported input for the dialogue manager.")
+            raise DummyDialogueManagerException("Unsupported input for the dialogue manager.")
 
         
         print "### Dialogue act in"
