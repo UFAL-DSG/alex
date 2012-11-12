@@ -6,6 +6,16 @@
 __all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
 
 import copy
+import sys
+import os.path
+
+# Add the directory containing the SDS package to python path
+path, directory = os.path.split(os.path.abspath(__file__))
+while directory and directory != 'SDS':
+    path, directory = os.path.split(path)
+if directory == 'SDS':
+    sys.path.append(path)
+
 
 from collections import defaultdict
 
@@ -90,21 +100,24 @@ class SLUPreprocessing:
             self.text_normalization_mapping = [(['erm', ], []),
                                                (['uhm', ], []),
                                                (['um', ], []),
-                                               (["I'm", ], ['I', 'am']),
+                                               (["i'm", ], ['i', 'am']),
                                                (['(sil)', ], []),
                                                (['(%hesitation)', ], []),
                                                (['(hesitation)', ], [])
                                                ]
 
-    def text_normalization(self, utterance):
+    def text_normalisation(self, utterance):
         """ It normalises the input utterances (the output of an ASR engine).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
         """
         #{{{
+
+        utterance.lower()
+
         for mapping in self.text_normalization_mapping:
-            utterance = utterance.replace(mapping[0], mapping[1])
+            utterance.replace(mapping[0], mapping[1])
 
         return utterance
         #}}}
@@ -209,19 +222,19 @@ class SLUPreprocessing:
 
         return nblist
 
-    def category_labels2values_in_conf_net(self, conf_net, category_labels):
+    def category_labels2values_in_confnet(self, confnet, category_labels):
         """Reverts the result of the values2category_labels_in_da(...)
         function.
 
         Returns the converted confusion network.
         """
-        conf_net = copy.deepcopy(conf_net)
+        confnet = copy.deepcopy(confnet)
 
-        for prob, dai in conf_net.cn:
+        for prob, dai in confnet.cn:
             if dai.value in category_labels:
                 dai.value = category_labels[dai.value][0]
 
-        return conf_net
+        return confnet
 #}}}
 
 
@@ -243,10 +256,10 @@ class SLUInterface:
     def parse_1_best(self, utterance):
         raise SLUException("Not implemented")
 
-    def parse_N_best_list(self, utterance_list):
+    def parse_nblist(self, utterance_list):
         raise SLUException("Not implemented")
 
-    def parse_confusion_network(self, conf_net):
+    def parse_confnet(self, confnet):
         raise SLUException("Not implemented")
 
     def parse(self, utterance, *args, **kw):
@@ -259,10 +272,10 @@ class SLUInterface:
             return self.parse_1_best(utterance, *args, **kw)
 
         elif isinstance(utterance, UtteranceNBList):
-            return self.parse_N_best_list(utterance, *args, **kw)
+            return self.parse_nblist(utterance, *args, **kw)
 
         elif isinstance(utterance, UtteranceConfusionNetwork):
-            return self.parse_confusion_network(utterance, *args, **kw)
+            return self.parse_confnet(utterance, *args, **kw)
 
         else:
             raise DAILRException("Unsupported input in the SLU component.")

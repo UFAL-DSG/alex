@@ -8,7 +8,7 @@ import __init__
 from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 
-class TestSLUDA(unittest.TestCase):
+class TestDA(unittest.TestCase):
     def test_merge_slu_nblists_full_nbest_lists(self):
         # make sure the SDS.components.slu.da.merge_slu_nblists merges nblists correctly
 
