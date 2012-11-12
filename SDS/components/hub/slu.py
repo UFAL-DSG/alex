@@ -37,8 +37,7 @@ class SLU(multiprocessing.Process):
             self.slu = TNLG.TemplateClassifier(cfg)
         elif self.cfg['SLU']['type'] == 'DAILogRegClassifier':
             # FIX: maybe the SLU components should use the Config class to initialise themselves.
-            # As a result it would create their category label database and pre-processing classes.
-            #  this would have an impact on the SLU training and testing scripts.
+            # As a result it would created their category label database and pre-processing classes.
 
             self.slu = DAILRSLU.DAILogRegClassifier(self.preprocessing)
             self.slu.load_model(self.cfg['SLU']['DAILogRegClassifier']['model'])
@@ -51,7 +50,7 @@ class SLU(multiprocessing.Process):
     def process_pending_commands(self):
         """Process all pending commands.
 
-        Available aio_com:
+        Available commands:
           stop() - stop processing and exit the process
           flush() - flush input buffers.
             Now it only flushes the input connection.
@@ -84,10 +83,19 @@ class SLU(multiprocessing.Process):
             data_asr = self.asr_hypotheses_in.recv()
 
             if isinstance(data_asr, ASRHyp):
-               slu_hyp = self.slu.parse(data_asr.hyp)
+                slu_hyp = self.slu.parse(data_asr.hyp)
 
-               self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
-               self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
+                if self.cfg['SLU']['debug']:
+                    s = []
+                    s.append("SLU Hypothesis")
+                    s.append("-"*60)
+                    s.append(str(slu_hyp))
+                    s.append("")
+                    s = '\n'.join(s)
+                    self.cfg['Logging']['system_logger'].debug(s)
+
+                self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
+                self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
 
             elif isinstance(data_asr, Command):
                 cfg['Logging']['system_logger'].info(data_asr)

@@ -367,7 +367,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
             wh = list(hyp_index)
             wh[i] += 1
             if wh[i] >= len(self.cn[i]):
-                # this generate inadmissible word hypotheis
+                # this generate inadmissible word hypothesis
                 continue
 
             worse_hyp.append(tuple(wh))
@@ -408,7 +408,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
                 closed_hyp[current_hyp_index] = current_prob
 
-#                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
                 for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)

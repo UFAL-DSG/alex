@@ -44,7 +44,7 @@ class ASR(multiprocessing.Process):
     def process_pending_commands(self):
         """Process all pending commands.
 
-        Available aio_com:
+        Available commands:
           stop() - stop processing and exit the process
           flush() - flush input buffers.
             Now it only flushes the input connection.
@@ -109,12 +109,22 @@ class ASR(multiprocessing.Process):
                         self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
 
                     try:
-                        hyp = self.asr.hyp_out()
+                        asr_hyp = self.asr.hyp_out()
+
+                        if self.cfg['ASR']['debug']:
+                            s = []
+                            s.append("ASR Hypothesis")
+                            s.append("-"*60)
+                            s.append(str(asr_hyp))
+                            s.append("")
+                            s = '\n'.join(s)
+                            self.cfg['Logging']['system_logger'].debug(s)
+
                     except JuliusASRTimeoutException:
-                        hyp = None
+                        asr_hyp = None
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
-                    self.asr_hypotheses_out.send(ASRHyp(hyp))
+                    self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
             else:
                 raise ASRException('Unsupported input.')
 

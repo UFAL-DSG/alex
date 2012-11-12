@@ -35,7 +35,7 @@ class NLG(multiprocessing.Process):
     def process_pending_commands(self):
         """Process all pending commands.
 
-        Available aio_com:
+        Available commands:
           stop() - stop processing and exit the process
           flush() - flush input buffers.
             Now it only flushes the input connection.
@@ -67,13 +67,22 @@ class NLG(multiprocessing.Process):
         while self.dialogue_act_in.poll():
             data_da = self.dialogue_act_in.recv()
 
-            if isinstance(data_hyp, DMDA):
-               text = self.nlg.generate(data_da.da)
+            if isinstance(data_da, DMDA):
+                text = self.nlg.generate(data_da.da)
 
-               self.text_out.send(TTSText(text))
-               self.commands.send(Command('nlg_generated()', 'NLG', 'HUB'))
-            elif isinstance(data_hyp, Command):
-                cfg['Logging']['system_logger'].info(data_hyp)
+                if self.cfg['NLG']['debug']:
+                    s = []
+                    s.append("NLG Output")
+                    s.append("-"*60)
+                    s.append(text)
+                    s.append("")
+                    s = '\n'.join(s)
+                    self.cfg['Logging']['system_logger'].debug(s)
+
+                self.text_out.send(TTSText(text))
+                self.commands.send(Command('nlg_generated()', 'NLG', 'HUB'))
+            elif isinstance(data_da, Command):
+                cfg['Logging']['system_logger'].info(data_da)
             else:
                 raise DMException('Unsupported input.')
 

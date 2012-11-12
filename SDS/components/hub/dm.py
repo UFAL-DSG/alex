@@ -37,7 +37,7 @@ class DM(multiprocessing.Process):
     def process_pending_commands(self):
         """Process all pending commands.
 
-        Available aio_com:
+        Available comamnds:
           stop() - stop processing and exit the process
           flush() - flush input buffers.
             Now it only flushes the input connection.
@@ -72,12 +72,20 @@ class DM(multiprocessing.Process):
             data_slu = self.slu_hypotheses_in.recv()
 
             if isinstance(data_slu, SLUHyp):
-               self.dm.da_in(data_slu.hyp)
-               da = self.dm.da_out()
+                self.dm.da_in(data_slu.hyp)
+                da = self.dm.da_out()
 
-               self.dialogue_act_out.send(DMDA(da))
-               self.commands.send(Command('dm_generated()', 'DM', 'HUB'))
+                if self.cfg['DM']['debug']:
+                    s = []
+                    s.append("DM Output")
+                    s.append("-"*60)
+                    s.append(str(da))
+                    s.append("")
+                    s = '\n'.join(s)
+                    self.cfg['Logging']['system_logger'].debug(s)
 
+                self.dialogue_act_out.send(DMDA(da))
+                self.commands.send(Command('dm_generated()', 'DM', 'HUB'))
             elif isinstance(data_slu, Command):
                 cfg['Logging']['system_logger'].info(data_slu)
             else:

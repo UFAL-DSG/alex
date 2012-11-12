@@ -150,10 +150,6 @@ class VoipHub(Hub):
                         s_voice_activity = False
                         s_last_voice_activity_time = time.time()
 
-                        if command.parsed['user_id'] == last_intro_id:
-                            intro_played = True
-                            s_last_voice_activity_time = 0
-
             if vad_commands.poll():
                 command = vad_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
