@@ -15,8 +15,10 @@ class TemplateClassifier:
       The first match is reported as the resulting dialogue act.
     """
     def __init__(self, config):
-        reg_exps = self.readRules(
-            config['SLU']['TemplateParser']['TemplatesFile'])
+        reg_exps = self.readRules(config['SLU']['TemplateParser']['TemplatesFile'])
+
+    def readRules(self, file_name):
+        pass
 
     def parse(self, asrHyp):
         pass

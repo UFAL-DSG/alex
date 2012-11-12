@@ -7,6 +7,7 @@ import time
 import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
 
+from SDS.components.asr.utterance import UtteranceConfusionNetwork
 from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import ASRException, JuliusASRTimeoutException
 
@@ -24,13 +25,13 @@ class ASR(multiprocessing.Process):
     communication.
     """
 
-    def __init__(self, cfg, commands, audio_in, hypotheses_out):
+    def __init__(self, cfg, commands, audio_in, asr_hypotheses_out):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
         self.commands = commands
         self.audio_in = audio_in
-        self.hypotheses_out = hypotheses_out
+        self.asr_hypotheses_out = asr_hypotheses_out
 
         self.asr = None
         if self.cfg['ASR']['type'] == 'Google':
@@ -44,7 +45,7 @@ class ASR(multiprocessing.Process):
     def process_pending_commands(self):
         """Process all pending commands.
 
-        Available aio_com:
+        Available commands:
           stop() - stop processing and exit the process
           flush() - flush input buffers.
             Now it only flushes the input connection.
@@ -100,23 +101,42 @@ class ASR(multiprocessing.Process):
                     self.recognition_on = True
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging'][
-                            'system_logger'].debug('ASR: speech_start()')
+                        self.cfg['Logging']['system_logger'].debug('ASR: speech_start()')
 
                 elif dr_speech_start == "speech_end":
                     self.recognition_on = False
 
                     if self.cfg['ASR']['debug']:
-                        self.cfg['Logging'][
-                            'system_logger'].debug('ASR: speech_end()')
+                        self.cfg['Logging']['system_logger'].debug('ASR: speech_end()')
 
                     try:
-                        hyp = self.asr.hyp_out()
+                        asr_hyp = self.asr.hyp_out()
+
+                        if self.cfg['ASR']['debug']:
+                            s = []
+                            s.append("ASR Hypothesis")
+                            s.append("-"*60)
+                            s.append(str(asr_hyp))
+                            s.append("")
+                            s = '\n'.join(s)
+                            self.cfg['Logging']['system_logger'].debug(s)
+
                     except JuliusASRTimeoutException:
-                        hyp = None
+                        self.cfg['Logging']['system_logger'].debug("Julius ASR Result Timeout.")
+                        if self.cfg['ASR']['debug']:
+                            s = []
+                            s.append("ASR Alternative hypothesis")
+                            s.append("-"*60)
+                            s.append("sil")
+                            s.append("")
+                            s = '\n'.join(s)
+                            self.cfg['Logging']['system_logger'].debug(s)
+
+                        asr_hyp = UtteranceConfusionNetwork()
+                        asr_hyp.add([[1.0, "sil"], ])
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
-                    self.hypotheses_out.send(ASRHyp(hyp))
+                    self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
             else:
                 raise ASRException('Unsupported input.')
 

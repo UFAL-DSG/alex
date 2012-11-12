@@ -72,30 +72,20 @@ cfg = {
 print "Test of the VoipIO, VAD, ASR, and TTS components:"
 print "=" * 120
 
-vio_commands, vio_child_commands = multiprocessing.Pipe(
-)  # used to send commands to VoipIO
-vio_record, vio_child_record = multiprocessing.Pipe(
-)     # I read from this connection recorded audio
-vio_play, vio_child_play = multiprocessing.Pipe(
-)         # I write in audio to be played
-vio_played, vio_child_played = multiprocessing.Pipe(
-)     # I read from this to get played audio
+vio_commands, vio_child_commands = multiprocessing.Pipe() # used to send commands to VoipIO
+vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
+vio_play, vio_child_play = multiprocessing.Pipe()         # I write in audio to be played
+vio_played, vio_child_played = multiprocessing.Pipe()     # I read from this to get played audio
                                                           #   which in sync with recorded signal
 
-vad_commands, vad_child_commands = multiprocessing.Pipe(
-)  # used to send commands to VAD
-vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
-)  # used to read output audio from VAD
+vad_commands, vad_child_commands = multiprocessing.Pipe()    # used to send commands to VAD
+vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()  # used to read output audio from VAD
 
-asr_commands, asr_child_commands = multiprocessing.Pipe(
-)  # used to send commands to ASR
-asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe(
-)  # used to read ASR hypotheses
+asr_commands, asr_child_commands = multiprocessing.Pipe()          # used to send commands to ASR
+asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
 
-tts_commands, tts_child_commands = multiprocessing.Pipe(
-)  # used to send commands to TTS
-tts_text_in, tts_child_text_in = multiprocessing.Pipe(
-)   # used to send TTS text
+tts_commands, tts_child_commands = multiprocessing.Pipe() # used to send commands to TTS
+tts_text_in, tts_child_text_in = multiprocessing.Pipe()   # used to send TTS text
 
 command_connections = [vio_commands, vad_commands, asr_commands, tts_commands]
 
@@ -106,8 +96,7 @@ non_command_connections = [vio_record, vio_child_record,
                            asr_hypotheses_out, asr_child_hypotheses,
                            tts_text_in, tts_child_text_in]
 
-vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play,
-             vio_child_played)
+vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
 vad = VAD(cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
 asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
 tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)

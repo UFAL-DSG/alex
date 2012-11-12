@@ -135,25 +135,17 @@ if __name__ == '__main__':
 
     sample_sentences = load_sentences(cfg['RepeatAfterMe']['sentences_file'])
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe(
-    )  # used to send commands to VoipIO
-    vio_record, vio_child_record = multiprocessing.Pipe(
-    )     # I read from this connection recorded audio
-    vio_play, vio_child_play = multiprocessing.Pipe(
-    )         # I write in audio to be played
-    vio_played, vio_child_played = multiprocessing.Pipe(
-    )     # I read from this to get played audio
-                                                              #   which in sync with recorded signal
+    vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
+    vio_record, vio_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
+    vio_play, vio_child_play = multiprocessing.Pipe()          # I write in audio to be played
+    vio_played, vio_child_played = multiprocessing.Pipe()      # I read from this to get played audio
+                                                               #   which in sync with recorded signal
 
-    vad_commands, vad_child_commands = multiprocessing.Pipe(
-    )  # used to send commands to VAD
-    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
-    )  # used to read output audio from VAD
+    vad_commands, vad_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
+    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
 
-    tts_commands, tts_child_commands = multiprocessing.Pipe(
-    )  # used to send commands to TTS
-    tts_text_in, tts_child_text_in = multiprocessing.Pipe(
-    )   # used to send TTS text
+    tts_commands, tts_child_commands = multiprocessing.Pipe()   # used to send commands to TTS
+    tts_text_in, tts_child_text_in = multiprocessing.Pipe()     # used to send TTS text
 
     command_connections = [vio_commands, vad_commands, tts_commands]
 
