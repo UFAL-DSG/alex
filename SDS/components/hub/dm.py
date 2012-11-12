@@ -59,8 +59,32 @@ class DM(multiprocessing.Process):
                     while self.slu_hypotheses_in.poll():
                         data_in = self.slu_hypotheses_in.recv()
 
-                    self.dm.flush()
+                    self.dm.new_dialogue()
 
+                    return False
+
+                if command.parsed['__name__'] == 'new_dialogue':
+                    self.dm.new_dialogue()
+
+                    # I should generate the first DM output
+                    da = self.dm.da_out()
+
+                    if self.cfg['DM']['debug']:
+                        s = []
+                        s.append("DM Output")
+                        s.append("-"*60)
+                        s.append(str(da))
+                        s.append("")
+                        s = '\n'.join(s)
+                        self.cfg['Logging']['system_logger'].debug(s)
+
+                    self.dialogue_act_out.send(DMDA(da))
+                    self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
+
+                    return False
+
+                if command.parsed['__name__'] == 'end_dialogue':
+                    self.dm.end_dialogue()
                     return False
 
         return False
@@ -85,7 +109,11 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['system_logger'].debug(s)
 
                 self.dialogue_act_out.send(DMDA(da))
-                self.commands.send(Command('dm_generated()', 'DM', 'HUB'))
+                self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
+
+                if da == "bye()":
+                    self.commands.send(Command('hangup()', 'DM', 'HUB'))
+
             elif isinstance(data_slu, Command):
                 cfg['Logging']['system_logger'].info(data_slu)
             else:

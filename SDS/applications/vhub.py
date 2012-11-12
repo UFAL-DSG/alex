@@ -93,6 +93,10 @@ class VoipHub(Hub):
         u_voice_activity = False
         u_last_voice_activity_time = 0
 
+        s_last_dm_activity_time = 0
+
+        hangup = False
+
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
@@ -131,6 +135,9 @@ class VoipHub(Hub):
                         s_last_voice_activity_time = 0
                         u_voice_activity = False
                         u_last_voice_activity_time = 0
+                        hungup = False
+
+                        dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
 
                     if command.parsed['__name__'] == "call_disconnected":
                         self.cfg['Logging']['system_logger'].info(command)
@@ -138,11 +145,18 @@ class VoipHub(Hub):
 
                         vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
                         vad_commands.send(Command('flush()', 'HUB', 'VAD'))
+                        asr_commands.send(Command('flush()', 'HUB', 'ASR'))
+                        slu_commands.send(Command('flush()', 'HUB', 'SLU'))
+                        dm_commands.send(Command('flush()', 'HUB', 'DM'))
+                        nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
                         tts_commands.send(Command('flush()', 'HUB', 'TTS'))
+
+                        dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
                     if command.parsed['__name__'] == "play_utterance_start":
                         self.cfg['Logging']['system_logger'].info(command)
                         s_voice_activity = True
+                        s_last_voice_activity_time = time.time()
 
                     if command.parsed['__name__'] == "play_utterance_end":
                         self.cfg['Logging']['system_logger'].info(command)
@@ -173,6 +187,15 @@ class VoipHub(Hub):
                 command = dm_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
 
+                if isinstance(command, Command):
+                    if command.parsed['__name__'] == "hangup":
+                        # prepare for ending the call
+                        hangup = True
+
+                    if command.parsed['__name__'] == "dm_da_generated":
+                        # record the time of the last system generated dialogue act
+                        s_last_dm_activity_time = time.time()
+
             if nlg_commands.poll():
                 command = nlg_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
@@ -181,16 +204,21 @@ class VoipHub(Hub):
                 command = tts_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
 
-            # read the rest of messages
-            for c in command_connections:
-                if c.poll():
-                    command = c.recv()
-                    cfg['Logging']['system_logger'].info(command)
-
             current_time = time.time()
+
+            if hangup and s_last_dm_activity_time + 1.0 < current_time and \
+                s_voice_activity == False and s_last_voice_activity_time + 1.0 < current_time:
+                # we are ready to hangup only when all voice activity finished,
+                hangup = False
+                vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+
         # stop processes
         vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
         vad_commands.send(Command('stop()', 'HUB', 'VAD'))
+        asr_commands.send(Command('stop()', 'HUB', 'ASR'))
+        slu_commands.send(Command('stop()', 'HUB', 'SLU'))
+        dm_commands.send(Command('stop()', 'HUB', 'DM'))
+        nlg_commands.send(Command('stop()', 'HUB', 'NLG'))
         tts_commands.send(Command('stop()', 'HUB', 'TTS'))
 
         # clean connections

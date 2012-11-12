@@ -408,7 +408,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
                 closed_hyp[current_hyp_index] = current_prob
 
-                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+#                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
                 for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)

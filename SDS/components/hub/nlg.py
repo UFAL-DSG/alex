@@ -57,7 +57,8 @@ class NLG(multiprocessing.Process):
                     while self.dialogue_act_in.poll():
                         data_in = self.dialogue_act_in.recv()
 
-                    self.nlg.flush()
+                    # the NLG component does not have to be flushed
+                    #self.nlg.flush()
 
                     return False
 
@@ -80,7 +81,7 @@ class NLG(multiprocessing.Process):
                     self.cfg['Logging']['system_logger'].debug(s)
 
                 self.text_out.send(TTSText(text))
-                self.commands.send(Command('nlg_generated()', 'NLG', 'HUB'))
+                self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
             elif isinstance(data_da, Command):
                 cfg['Logging']['system_logger'].info(data_da)
             else:

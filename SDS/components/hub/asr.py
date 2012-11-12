@@ -7,6 +7,7 @@ import time
 import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
 
+from SDS.components.asr.utterance import UtteranceConfusionNetwork
 from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import ASRException, JuliusASRTimeoutException
 
@@ -121,7 +122,18 @@ class ASR(multiprocessing.Process):
                             self.cfg['Logging']['system_logger'].debug(s)
 
                     except JuliusASRTimeoutException:
-                        asr_hyp = None
+                        self.cfg['Logging']['system_logger'].debug("Julius ASR Result Timeout.")
+                        if self.cfg['ASR']['debug']:
+                            s = []
+                            s.append("ASR Alternative hypothesis")
+                            s.append("-"*60)
+                            s.append("sil")
+                            s.append("")
+                            s = '\n'.join(s)
+                            self.cfg['Logging']['system_logger'].debug(s)
+
+                        asr_hyp = UtteranceConfusionNetwork()
+                        asr_hyp.add([[1.0, "sil"], ])
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp))

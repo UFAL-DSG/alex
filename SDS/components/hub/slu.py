@@ -72,7 +72,8 @@ class SLU(multiprocessing.Process):
                     while self.asr_hypotheses_in.poll():
                         data_in = self.asr_hypotheses_in.recv()
 
-                    self.slu.flush()
+                    # the SLU components does not have to be flused
+                    #self.slu.flush()
 
                     return False
 

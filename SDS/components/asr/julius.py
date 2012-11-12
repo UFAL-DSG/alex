@@ -51,7 +51,7 @@ class JuliusASR():
 
             self.cfg['Logging']['system_logger'].debug("Exiting!")
             exit(0)
-            
+
     def __del__(self):
         self.julius_server.terminate()
         time.sleep(1)
@@ -65,6 +65,10 @@ class JuliusASR():
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
             config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
         config.close()
+
+        # kill all running instances of the Julius ASR server
+        if self.cfg['ASR']['Julius']['killall']:
+            subprocess.call('killall julius', shell=True)
 
         # start the server with the -debug options
         # with this option it does not generates seg faults
@@ -358,7 +362,7 @@ class JuliusASR():
         if self.recognition_on:
             self.audio_finished()
 
-            nblist, cn = self.get_results()
+            nblist, cn = self.get_results(timeout=self.cfg['ASR']['Julius']['timeout'])
 
             return cn
 

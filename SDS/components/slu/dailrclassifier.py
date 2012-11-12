@@ -316,21 +316,21 @@ class DAILogRegClassifier(SLUInterface):
 
         #TODO: We should implement a parser which uses features directly from confusion networks.
 
-        print "Confnet"
-        print confnet
-        print
+#        print "Confnet"
+#        print confnet
+#        print
 
         nblist = confnet.get_utterance_nblist()
 
-        print "NBList"
-        print nblist
-        print
+#        print "NBList"
+#        print nblist
+#        print
 
         sem = self.parse_nblist(nblist)
 
-        print "Semantics"
-        print sem
-        print
+#        print "Semantics"
+#        print sem
+#        print
 
         return sem
 

@@ -23,7 +23,7 @@ class DummyDialogueState(object):
     def __str__(self):
         """Get the content of the dialogue state in a human readable form."""
         s = []
-        s.append("Dialogue state content:")
+        s.append("DummyDialogueState - Dialogue state content:")
         s.append("")
         for name in sorted(self.slots):
             s.append("%s = %s" % (name, self.slots[name]))
@@ -55,9 +55,8 @@ class DummyDialogueState(object):
             raise DummyDialogueManagerException("Unsupported input for the dialogue manager.")
 
 
-        print "### Dialogue act in"
-        print da
-        print
+        if self.cfg['DM']['Dummy']['debug']:
+            self.cfg['Logging']['system_logger'].debug('DummyDialogueState Dialogue Act in: %s' % da)
 
         # store the input
         self.turns.append([da, last_system_da])
@@ -67,20 +66,25 @@ class DummyDialogueState(object):
         self.state_update(da, last_system_da)
 
         # print the dialogue state if requested
-        if self.cfg['DM']['debug']:
-            print self
+        if self.cfg['DM']['Dummy']['debug']:
+            self.cfg['Logging']['system_logger'].debug(self)
 
             requested_slots = self.get_requested_slots()
             confirmed_slots = self.get_confirmed_slots()
             non_informed_slots = self.get_non_informed_slots()
 
-            print "Requested slots:"
-            print requested_slots
-            print "Confirmed slots:"
-            print confirmed_slots
-            print "Non-informed slots:"
-            print non_informed_slots
-            print
+            s = []
+            s.append('DummyDialogueState')
+            s.append("")
+            s.append("Requested slots:")
+            s.append(str(requested_slots))
+            s.append("Confirmed slots:")
+            s.append(str(confirmed_slots))
+            s.append("Non-informed slots:")
+            s.append(str(non_informed_slots))
+            s = '\n'.join(s)
+
+            self.cfg['Logging']['system_logger'].debug(s)
 
     def context_resolution(self, user_da, last_system_da):
         """Resolves and converts meaning of some user dialogue acts given the context."""
@@ -157,11 +161,11 @@ class DummyDialogueState(object):
 
         for slot in self.slots:
             if slot.startswith("rh_"):
-                if slot[3:] in self.slots:
-                    if self.slots[slot] == "user-requested":
+                if self.slots[slot] == "user-requested":
+                    if slot[3:] in self.slots:
                         requested_slots[slot[3:]] = self.slots[slot[3:]]
-                else:
-                    requested_slots[slot[3:]] = "None"
+                    else:
+                        requested_slots[slot[3:]] = "None"
 
         return requested_slots
 

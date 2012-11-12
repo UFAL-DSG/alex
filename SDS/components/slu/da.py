@@ -75,20 +75,23 @@ class DialogueActItem:
         r += ')'
         return r
 
-    def __eq__(self, dai):
-        if dai.dat:
-            if dai.dat != self.dat:
+    def __eq__(self, other):
+        if other.dat:
+            if other.dat != self.dat:
                 return False
 
-        if dai.name:
-            if dai.name != self.name:
+        if other.name:
+            if other.name != self.name:
                 return False
 
-        if dai.value:
-            if dai.value != self.value:
+        if other.value:
+            if other.value != self.value:
                 return False
 
         return True
+
+    def __lt__(self, other):
+        return str(self) < str(other)
 
     def parse(self, dai):
         """Parse the dialogue act item in text format into a structured form.
@@ -156,8 +159,7 @@ class DialogueAct:
         if isinstance(other, DialogueAct):
             return self.dais == other.dais
         elif isinstance(other, str):
-            o = DialogueAct(other)
-            return self.dais == o.dais
+            return str(self) == other
         else:
             DialogueActException("Unsupported comparison type.")
 
@@ -213,8 +215,7 @@ class DialogueAct:
         if isinstance(dai, DialogueActItem):
             self.dais.append(dai)
         else:
-            raise DialogueActException(
-                "Only DialogueActItems can be appended.")
+            raise DialogueActException("Only DialogueActItems can be appended.")
 
     def get_slots_and_values(self):
         """Returns all values and corresponding slot names in the dialogue act."""
@@ -224,6 +225,11 @@ class DialogueAct:
                 sv.append([dai.name, dai.value])
 
         return sv
+
+    def sort(self):
+#        print "S1", self
+        self.dais.sort()
+#        print "S2", self
 
 class SLUHypothesis:
     """This is a base class for all forms of probabilistic SLU hypotheses representations."""
@@ -398,7 +404,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return DialogueActHyp(prob, da)
 
-    def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+    def get_da_nblist(self, n=40, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates N-best hypotheses.
 
         The result is a list of dialogue act hypotheses each with a with assigned probability.
