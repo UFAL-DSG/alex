@@ -23,8 +23,10 @@ class TextHub(Hub):
       dialogue acts is then converted by a NLG component into text, which is presented
       to the user.
     """
+    hub_type = "THub"
+
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(TextHub, self).__init__(cfg)
 
         self.slu = None
         self.dm = None
@@ -107,10 +109,11 @@ class TextHub(Hub):
             print das
             print
 
-
-
     def input_usr_utt_nblist(self):
         """Reads an N-best list of utterances from the input. """
+
+        self.init_readline()
+
         nblist = UtteranceNBList()
         i = 1
         while i < 100:
