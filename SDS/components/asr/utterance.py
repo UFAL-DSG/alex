@@ -3,10 +3,9 @@
 
 import numpy as np
 
-from collections import defaultdict
+from collections import defaultdict, deque
 
-from SDS.utils.exception import UtteranceNBListException
-
+from SDS.utils.exception import UtteranceNBListException, UtteranceConfusionNetworkException
 
 def load_utterances(file_name, limit=None):
     f = open(file_name)
@@ -70,7 +69,7 @@ class Utterance:
         if isinstance(other, Utterance):
             return self.utterance == other.utterance
         elif isinstance(other, str):
-            return self.utterance == Utterance(other)
+            return self.utterance == other.split()
         else:
             return False
 
@@ -122,6 +121,9 @@ class Utterance:
 
         self.utterance[i:i + len(s)] = r
 
+    def lower(self):
+        for i in range(len(self.utterance)):
+            self.utterance[i] = self.utterance[i].lower()
 
 class UtteranceFeatures(Features):
     def __init__(self, type='ngram', size=3, utterance=None):
@@ -243,20 +245,6 @@ class UtteranceNBList(ASRHypothesis):
 
         return self.n_best[0][1]
 
-    def parse_utterance_confusion_network(self, utterance_cn, n=10, expand_upto_total_prob_mass=0.9):
-        """Parses the input utterance confusion network and generates N-best hypotheses.
-
-        The result is a list of utterance hypotheses each with a with assigned probability.
-        The list also include the utterance "__other__" for not having the correct utterance in the list.
-        """
-        self.n_best = []
-
-        #TODO: expand the utterance confusion network
-
-        self.merge()
-        self.normalise()
-        self.sort()
-
     def add(self, probability, utterance):
         self.n_best.append([probability, utterance])
 
@@ -361,6 +349,88 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
         utterance = ' '.join(utterance).strip()
         return (prob, Utterance(utterance))
+
+    def get_prob(self, hyp_index):
+        """Return a probability of the given hypothesis."""
+
+        prob = 1.0
+        for i, alts in zip(hyp_index, self.cn):
+            prob *= alts[i][0]
+
+        return prob
+
+    def get_next_worse_candidates(self, hyp_index):
+        """Returns such hypotheses that will have lower probability. It assumes that the confusion network is sorted."""
+        worse_hyp = []
+
+        for i in range(len(hyp_index)):
+            wh = list(hyp_index)
+            wh[i] += 1
+            if wh[i] >= len(self.cn[i]):
+                # this generate inadmissible word hypothesis
+                continue
+
+            worse_hyp.append(tuple(wh))
+
+        return worse_hyp
+
+    def get_hyp_index_utterence(self, hyp_index):
+        s = [alts[i][1] for i, alts in zip(hyp_index, self.cn)]
+
+        return Utterance(' '.join(s))
+
+    def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+        """Parses the confusion network and generates N-best hypotheses.
+
+        The result is a list of utterance hypotheses each with a with assigned probability.
+        The list also include the utterance "__other__" for not having the correct utterance in the list.
+        """
+#        print "Confnet:"
+#        print self
+#        print
+
+        open_hyp = []
+        closed_hyp = {}
+
+        # create index for the best hypothesis
+        best_hyp  = tuple([0]*len(self.cn))
+        best_prob = self.get_prob(best_hyp)
+        open_hyp.append((best_prob, best_hyp))
+
+        i = 0
+        while open_hyp and i < n:
+            i += 1
+
+            current_prob, current_hyp_index = open_hyp.pop(0)
+
+            if current_hyp_index not in closed_hyp:
+                # process only those hypotheses which were not processed so far
+
+                closed_hyp[current_hyp_index] = current_prob
+
+#                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+
+                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
+                    prob = self.get_prob(hyp_index)
+                    open_hyp.append((prob, hyp_index))
+
+                open_hyp.sort(reverse=True)
+
+        nblist = UtteranceNBList()
+        for idx in closed_hyp:
+            nblist.add(closed_hyp[idx], self.get_hyp_index_utterence(idx))
+
+#        print nblist
+#        print
+
+        nblist.merge()
+        nblist.normalise()
+        nblist.sort()
+
+#        print nblist
+#        print
+
+        return nblist
 
     def merge(self):
         """Adds up probabilities for the same hypotheses.

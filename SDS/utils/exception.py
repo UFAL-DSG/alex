@@ -62,6 +62,10 @@ class UtteranceNBListException(SLUException):
     pass
 
 
+class UtteranceConfusionNetworkException(SLUException):
+    pass
+
+
 class DialogueActException(SLUException):
     pass
 
@@ -71,6 +75,10 @@ class DialogueActItemException(SLUException):
 
 
 class DialogueActNBListException(SLUException):
+    pass
+
+
+class DialogueActConfusionNetworkException(SLUException):
     pass
 
 
