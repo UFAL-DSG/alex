@@ -3,8 +3,9 @@
 
 import argparse
 
-from __init__ import *
+import __init__
 
+from SDS.components.hub import Hub
 from SDS.components.asr.utterance import Utterance, UtteranceNBList
 from SDS.components.slu import CategoryLabelDatabase, SLUPreprocessing
 from SDS.components.slu.da import *
@@ -22,8 +23,10 @@ class TextHub(Hub):
       dialogue acts is then converted by a NLG component into text, which is presented
       to the user.
     """
+    hub_type = "THub"
+
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(TextHub, self).__init__(cfg)
 
         self.slu = None
         self.dm = None
@@ -41,12 +44,12 @@ class TextHub(Hub):
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
-            raise TextHubEception('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+            raise TextHubException('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
 
         if self.cfg['NLG']['type'] == 'Template':
             self.nlg = TemplateNLG(cfg)
         else:
-            raise TextHubEception('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
+            raise TextHubException('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
 
     def parse_input_utt(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
@@ -106,10 +109,11 @@ class TextHub(Hub):
             print das
             print
 
-
-
     def input_usr_utt_nblist(self):
         """Reads an N-best list of utterances from the input. """
+
+        self.init_readline()
+
         nblist = UtteranceNBList()
         i = 1
         while i < 100:
@@ -198,7 +202,7 @@ if __name__ == '__main__':
         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config('../../resources/default.cfg')
+    cfg = Config('../resources/default.cfg')
 
     if args.configs:
         for c in args.configs:

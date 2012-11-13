@@ -3,8 +3,9 @@
 
 import argparse
 
-from __init__ import *
+import __init__
 
+from SDS.components.hub import Hub
 from SDS.components.slu.da import DialogueAct, DialogueActNBList
 from SDS.components.dm.dummydialoguemanager import DummyDM
 from SDS.utils.config import Config
@@ -17,10 +18,13 @@ class SemHub(Hub):
       It reads dialogue acts from the standard input and passes it to the selected dialogue manager.
       The output is the form dialogue acts.
     """
+    hub_type = "SHub"
+
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(SemHub, self).__init__(cfg)
 
         self.dm = None
+        # do not forget to maintain all supported dialogue managers
         if self.cfg['DM']['type'] == 'Dummy':
             self.dm = DummyDM(cfg)
         else:
@@ -64,6 +68,9 @@ class SemHub(Hub):
 
     def input_da_nblist(self):
         """Reads an N-best list of dialogue acts from the input. """
+
+        self.init_readline()
+
         nblist = DialogueActNBList()
         i = 1
         while i < 100:
@@ -91,7 +98,8 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        self.fg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+
+        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
         The probability for each dialogue act must be be provided before the the dialogue act itself.
         When finished, the entry can be terminated by a period ".".
 
@@ -136,7 +144,7 @@ if __name__ == '__main__':
         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config('../../resources/default.cfg')
+    cfg = Config('../resources/default.cfg')
 
     if args.configs:
         for c in args.configs:

@@ -4,6 +4,8 @@
 import sys
 import os.path
 
+from .hub import Hub
+
 # Add the directory containing the SDS package to python path
 path, directory = os.path.split(os.path.abspath(__file__))
 while directory and directory != 'SDS':
@@ -11,10 +13,5 @@ while directory and directory != 'SDS':
 if directory == 'SDS':
     sys.path.append(path)
 
-
-class Hub(object):
-    def __init__(self):
-        pass
-        
 
 

@@ -5,6 +5,7 @@ import random
 import itertools
 import copy
 
+from SDS.components.slu.da import DialogueAct
 from SDS.utils.exception import TemplateNLGException
 
 templates = None
@@ -25,7 +26,17 @@ class TemplateNLG:
         execfile(file_name, globals())
         if templates is None:
             raise Exception("No templates has been loaded!")
-        self.templates = templates
+
+        # normalise the templates
+        self.templates = {}
+        for k, v in templates.iteritems():
+            k = DialogueAct(k)
+#            print "-"*120
+#            print k, v
+            k.sort()
+            k = str(k)
+#            print k, v
+            self.templates[k] = v
 
     def get_generic_da(self, da, svs):
         """Substitute slot values with generic names."""
@@ -74,6 +85,8 @@ class TemplateNLG:
     def generate(self, da):
         """Generate the natural text output for the given dialogue act."""
 
+        da.sort()
+
         try:
             # try to return exact match
             return self.random_select(self.templates[str(da)])
@@ -83,6 +96,7 @@ class TemplateNLG:
                 return self.random_select(self.match_generic_templates(da))
             except TemplateNLGException:
                 # nothing was find
+                self.cfg['Logging']['system_logger'].warning("TemplateNLG: There is no matching template for %s" % da)
                 return self.random_select(self.templates[str('notemplate()')])
 
 
