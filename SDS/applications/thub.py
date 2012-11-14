@@ -10,7 +10,7 @@ from SDS.components.asr.utterance import Utterance, UtteranceNBList
 from SDS.components.slu import CategoryLabelDatabase, SLUPreprocessing
 from SDS.components.slu.da import *
 from SDS.components.slu.dailrclassifier import DAILogRegClassifier
-from SDS.components.dm.dummydialoguemanager import DummyDM
+from SDS.components.dm.common import dm_factory, get_dm_type
 from SDS.components.nlg.template import TemplateNLG
 from SDS.utils.config import Config
 from SDS.utils.exception import UtteranceException, TextHubException
@@ -41,10 +41,8 @@ class TextHub(Hub):
         else:
             raise TextHubEception('Unsupported spoken language understanding: %s' % self.cfg['SLU']['type'])
 
-        if self.cfg['DM']['type'] == 'Dummy':
-            self.dm = DummyDM(cfg)
-        else:
-            raise TextHubException('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+        dm_type = get_dm_type(cfg)
+        self.dm = dm_factory(dm_type, cfg)
 
         if self.cfg['NLG']['type'] == 'Template':
             self.nlg = TemplateNLG(cfg)

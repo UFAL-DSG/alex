@@ -4,7 +4,8 @@
 import multiprocessing
 import time
 
-import SDS.components.dm.dummydialoguemanager as DummyDM
+from SDS.components.dm.common import dm_factory, get_dm_type
+
 
 from SDS.components.hub.messages import Command, SLUHyp, DMDA
 from SDS.utils.exception import DMException
@@ -28,11 +29,8 @@ class DM(multiprocessing.Process):
         self.slu_hypotheses_in = slu_hypotheses_in
         self.dialogue_act_out = dialogue_act_out
 
-        self.dm = None
-        if self.cfg['DM']['type'] == 'Dummy':
-            self.dm = DummyDM.DummyDM(cfg)
-        else:
-            raise TextHubEception('Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+        dm_type = get_dm_type(cfg)
+        self.dm = dm_factory(dm_type, cfg)
 
     def process_pending_commands(self):
         """Process all pending commands.
