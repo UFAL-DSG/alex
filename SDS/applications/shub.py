@@ -7,7 +7,7 @@ import __init__
 
 from SDS.components.hub import Hub
 from SDS.components.slu.da import DialogueAct, DialogueActNBList
-from SDS.components.dm.dummydialoguemanager import DummyDM
+from SDS.components.dm.common import dm_factory, get_dm_type
 from SDS.utils.config import Config
 from SDS.utils.exception import SemHubException, DialogueActException, DialogueActItemException
 
@@ -23,13 +23,9 @@ class SemHub(Hub):
     def __init__(self, cfg):
         super(SemHub, self).__init__(cfg)
 
-        self.dm = None
-        # do not forget to maintain all supported dialogue managers
-        if self.cfg['DM']['type'] == 'Dummy':
-            self.dm = DummyDM(cfg)
-        else:
-            raise SemHubException(
-                'Unsupported dialogue manager: %s' % self.cfg['DM']['type'])
+        dm_type = get_dm_type(cfg)
+        self.dm = dm_factory(dm_type, cfg)
+
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
