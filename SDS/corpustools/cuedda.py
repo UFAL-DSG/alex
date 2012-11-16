@@ -5,7 +5,7 @@ import collections
 
 import __init__
 
-from SDS.utils.string import split_by_comma
+from SDS.utils.text import split_by_comma
 
 
 class CUEDSlot:

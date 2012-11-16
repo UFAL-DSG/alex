@@ -1,10 +1,7 @@
-This directory contains two types of tests:
-
-* unit tests
-* tests, which can't be automated
+This directory contains only tests, which can't be automated and the results must verified by humans!
 
 
-There are two ways how to run unit tests:
+Note that the unit tests should be placed in the same diractory as the tested module and the name shoud be test_*.py e.g. test_module_name.py
 
 1. Using unittest module:
 

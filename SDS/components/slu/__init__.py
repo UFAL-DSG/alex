@@ -9,19 +9,11 @@ import copy
 import sys
 import os.path
 
-# Add the directory containing the SDS package to python path
-path, directory = os.path.split(os.path.abspath(__file__))
-while directory and directory != 'SDS':
-    path, directory = os.path.split(path)
-if directory == 'SDS':
-    sys.path.append(path)
-
-
 from collections import defaultdict
 
 from SDS.components.asr.utterance \
     import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
-from SDS.utils.string import split_by
+from SDS.utils.text import split_by
 from SDS.utils.exception import SDSException, DAILRException
 
 import SDS.components.slu.da

@@ -141,6 +141,7 @@ class JuliusASR():
                     to += self.cfg['Hub']['main_loop_sleep_time']
                     continue
 
+
             if results.endswith("\n.\n"):
                 results = results[:-3].strip()
                 break

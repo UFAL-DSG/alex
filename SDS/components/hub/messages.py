@@ -5,7 +5,7 @@ import multiprocessing
 import collections
 import time
 
-from SDS.utils.string import parse_command
+from SDS.utils.text import parse_command
 from SDS.utils.mproc import InstanceID
 
 # TODO: add comments

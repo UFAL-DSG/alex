@@ -1,7 +1,5 @@
-2012-04-22
+This code is released under the APACHE 2.0 license. The full wording of 
+the license can be found in the LICENSE-APACHE-2.0.TXT.
 
-This code and data is available only for non-comercial and research purposes.
-It can be only used for work or activities for UFAL, MFF, CUNI. 
-
-Filip Jurcicek
+2012-11-16 Filip Jurcicek
 

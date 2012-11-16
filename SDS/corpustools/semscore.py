@@ -9,7 +9,7 @@ from collections import defaultdict
 import __init__
 
 
-from SDS.utils.string import split_by
+from SDS.utils.text import split_by
 
 
 def load_semantics(file_name):

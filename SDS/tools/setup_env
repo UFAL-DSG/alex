@@ -1,0 +1,3 @@
+#!/bin/bash
+
+export PYTHONPATH="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )/../../" && pwd )"

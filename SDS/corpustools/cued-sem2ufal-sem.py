@@ -9,7 +9,7 @@ import argparse
 
 import __init__
 
-from SDS.utils.string import split_by
+from SDS.utils.text import split_by
 from SDS.corpustools.cuedda import CUEDDialogueAct
 from SDS.corpustools.ufaldatabase import save_database
 
