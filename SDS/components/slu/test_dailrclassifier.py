@@ -14,6 +14,7 @@ from SDS.utils.config import Config
 
 class TestDAILRClassifier(unittest.TestCase):
     def test_confnet_parsing(self):
+        self.assert(False)
 
         A1, A2, A3 = 0.90, 0.05, 0.05
         B1, B2, B3 = 0.70, 0.20, 0.10
