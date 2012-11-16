@@ -7,6 +7,7 @@ import pprint
 import os.path
 
 from SDS.utils.mproc import SystemLogger
+import SDS.utils.env as env
 
 config = None
 
@@ -22,8 +23,11 @@ class Config:
 
     """
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, project_root=False):
         self.config = {}
+
+        if project_root:
+            file_name = os.path.join(env.root(), file_name)
 
         if file_name:
             self.load(file_name)
@@ -50,7 +54,7 @@ class Config:
 
         global config
         config = None
-        
+
         execfile(file_name, globals())
         assert config is not None
         self.config = config
@@ -60,10 +64,10 @@ class Config:
 
     def merge(self, file_name):
         # pylint: disable-msg=E0602
-        
+
         global config
         config = None
-        
+
         execfile(file_name, globals())
         assert config is not None
         self.update_dict(self.config, config)

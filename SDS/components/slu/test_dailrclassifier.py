@@ -29,14 +29,14 @@ class TestDAILRClassifier(unittest.TestCase):
 
         slu_best_da = DialogueAct("inform(food=chinese)&inform(=restaurant)")
 
-        cfg = Config('../../resources/default.cfg')
+        cfg = Config('resources/default.cfg', project_root=True)
         cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
-        preprocessing = SLUPreprocessing(cldb)        
+        preprocessing = SLUPreprocessing(cldb)
         slu = DAILRSLU.DAILogRegClassifier(preprocessing)
-        slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])        
+        slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
         slu_hyp = slu.parse(asr_confnet)
         slu_hyp_best_da = slu_hyp.get_best_da()
-        
+
         s = []
         s.append("")
         s.append("ASR confnet:")
