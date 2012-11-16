@@ -3,7 +3,7 @@
 
 from collections import defaultdict
 
-from SDS.utils.string import split_by
+from SDS.utils.text import split_by
 from SDS.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, DialogueActConfusionNetworkException
 

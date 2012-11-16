@@ -9,7 +9,7 @@ import SDS.utils.cache as cache
 import SDS.utils.audio as audio
 
 from SDS.utils.exception import TTSException
-from SDS.utils.string import escape_special_characters_shell
+from SDS.utils.text import escape_special_characters_shell
 
 
 class FliteTTS():

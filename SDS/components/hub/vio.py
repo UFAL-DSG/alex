@@ -21,7 +21,7 @@ from collections import deque, defaultdict
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
-import SDS.utils.string as string
+import SDS.utils.text as string
 
 from SDS.components.hub.messages import Command, Frame
 from SDS.utils.exception import VoipIOException

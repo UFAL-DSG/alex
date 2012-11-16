@@ -13,7 +13,7 @@ from collections import defaultdict
 
 from SDS.components.asr.utterance \
     import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
-from SDS.utils.string import split_by
+from SDS.utils.text import split_by
 from SDS.utils.exception import SDSException, DAILRException
 
 import SDS.components.slu.da
