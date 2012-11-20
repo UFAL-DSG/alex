@@ -1,5 +1,3 @@
-__all__ = ['']
-
 import sys
 import os.path
 
