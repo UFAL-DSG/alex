@@ -3,6 +3,8 @@
 
 import functools
 import multiprocessing
+import fcntl
+import time
 import os
 import os.path
 import sys
@@ -10,6 +12,8 @@ import re
 
 from datetime import datetime
 
+""" Implements useful classes for handling multiprocessing implementation of the SDS.
+"""
 
 def local_lock():
     """This decorator makes the decorated function thread safe.
@@ -55,6 +59,19 @@ def global_lock(lock):
     return decorator
 
 
+def file_lock(file_name):
+    """ Multiprocessing lock using files. Lock on a specific file.
+    """
+    lock_file = open(file_name, 'w')
+    fcntl.lockf(lock_file, fcntl.LOCK_EX)
+    return lock_file
+
+def file_unlock(lock_file):
+    """ Multiprocessing lock using files. Unlock on a specific file.
+    """
+    fcntl.lockf(lock_file, fcntl.LOCK_UN)
+    lock_file.close()
+
 class InstanceID:
     """ This class provides unique ids to all instances of objects inheriting from this class.
     """
@@ -67,18 +84,19 @@ class InstanceID:
         InstanceID.instance_id += 1
         return InstanceID.instance_id
 
-
 class SystemLogger:
-    """ This multiproces safe logger. It should be used by all components in the SDS.
+    """ This is multiprocessing safe logger. It should be used by all components in the SDS.
+
     """
 
     lock = multiprocessing.RLock()
-    levels = {'INFO': 0,
-              'DEBUG': 10,
-              'WARNING': 20,
-              'CRITICAL': 30,
-              'EXCEPTION': 40,
-              'ERROR': 50,
+    levels = {'INFO':             0,
+              'DEBUG':           10,
+              'WARNING':         20,
+              'CRITICAL':        30,
+              'EXCEPTION':       40,
+              'ERROR':           50,
+              'SYSTEM-LOG': 60,
               }
 
     def __init__(self, stdout_log_level='ERROR', stdout=True, file_log_level='ERROR', output_dir=None):
@@ -87,8 +105,8 @@ class SystemLogger:
         self.file_log_level = stdout_log_level
         self.output_dir = output_dir
 
-        self.current_call_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
-        self.current_call_log_dir_name.value = ''
+        self.current_session_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
+        self.current_session_log_dir_name.value = ''
 
     @global_lock(lock)
     def get_time_str(self):
@@ -99,32 +117,35 @@ class SystemLogger:
         return datetime.now().isoformat('-').replace(':', '-')
 
     @global_lock(lock)
-    def call_start(self, remote_uri):
+    def session_start(self, remote_uri):
         """ Create a specific directory for logging a specific call.
+
+        NOTE: This is not completely safe. It can be called from several processes.
         """
-        call_name = self.get_time_str() + '-' + remote_uri
-        self.current_call_log_dir_name.value = os.path.join(
-            self.output_dir, call_name)
-        os.makedirs(self.current_call_log_dir_name.value)
+        session_name = self.get_time_str() + '-' + remote_uri
+        self.current_session_log_dir_name.value = os.path.join(self.output_dir, session_name)
+        os.makedirs(self.current_session_log_dir_name.value)
 
     @global_lock(lock)
-    def call_end(self):
+    def session_end(self):
         """ Disable logging into the call specific directory
         """
-        self.current_call_log_dir_name.value = ''
+        self.current_session_log_dir_name.value = ''
 
     @global_lock(lock)
-    def get_call_dir_name(self):
-        """ Return directory where all the call related files should be storred.
+    def get_session_dir_name(self):
+        """ Return directory where all the call related files should be stored.
         """
-        if self.current_call_log_dir_name.value:
-            return self.current_call_log_dir_name.value
+        if self.current_session_log_dir_name.value:
+            return self.current_session_log_dir_name.value
 
         # back off to the default logging directory
         return self.output_dir
 
     @global_lock(lock)
     def formatter(self, lvl, message):
+        """ Format the message - pretty print
+        """
         s = self.get_time_str()
         s += '  %-10s : ' % multiprocessing.current_process().name
         s += '%-10s ' % lvl
@@ -136,7 +157,10 @@ class SystemLogger:
         return s + ss + '\n'
 
     @global_lock(lock)
-    def log(self, lvl, message):
+    def log(self, lvl, message, session_system_log = False):
+        """ Log the message based on its level and the logging setting.
+        Before writing into a logging file it locks the file.
+        """
         if self.stdout:
             # log to stdout
             if SystemLogger.levels[lvl] <= SystemLogger.levels[self.stdout_log_level]:
@@ -147,17 +171,21 @@ class SystemLogger:
             if SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
                 # log to the global log
                 f = open(os.path.join(self.output_dir, 'system.log'), "a+", 0)
+                fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')
+                fcntl.lockf(f, fcntl.LOCK_UN)
                 f.close()
 
-                if self.current_call_log_dir_name.value:
-                    # log to the call specific log
-                    f = open(os.path.join(self.current_call_log_dir_name.value,
-                             'system.log'), "a+", 0)
-                    f.write(self.formatter(lvl, message))
-                    f.write('\n')
-                    f.close()
+        if self.current_session_log_dir_name.value:
+            if session_system_log or SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
+                # log to the call specific log
+                f = open(os.path.join(self.current_session_log_dir_name.value, 'system.log'), "a+", 0)
+                fcntl.lockf(f, fcntl.LOCK_EX)
+                f.write(self.formatter(lvl, message))
+                f.write('\n')
+                fcntl.lockf(f, fcntl.LOCK_UN)
+                f.close()
 
     @global_lock(lock)
     def info(self, message):
@@ -182,3 +210,8 @@ class SystemLogger:
     @global_lock(lock)
     def error(self, message):
         self.log('ERROR', message)
+
+    @global_lock(lock)
+    def session_system_log(self, message):
+        """This logs specifically only into call specific system log."""
+        self.log('SYSTEM-LOG', message, session_system_log = True)

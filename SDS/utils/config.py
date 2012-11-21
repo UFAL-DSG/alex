@@ -7,6 +7,8 @@ import pprint
 import os.path
 
 from SDS.utils.mproc import SystemLogger
+from SDS.utils.sessionlogger import SessionLogger
+
 import SDS.utils.env as env
 
 config = None

@@ -19,7 +19,6 @@ from SDS.components.hub.dm import DM
 from SDS.components.hub.nlg import NLG
 from SDS.components.hub.tts import TTS
 from SDS.components.hub.messages import Command
-from SDS.utils.mproc import SystemLogger
 from SDS.utils.config import Config
 
 class VoipHub(Hub):
@@ -111,7 +110,11 @@ class VoipHub(Hub):
 
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "incoming_call":
+                        self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
+                        self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
                         self.cfg['Logging']['system_logger'].info(command)
+
+                        self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
 
                     if command.parsed['__name__'] == "rejected_call":
                         self.cfg['Logging']['system_logger'].info(command)
@@ -141,7 +144,6 @@ class VoipHub(Hub):
 
                     if command.parsed['__name__'] == "call_disconnected":
                         self.cfg['Logging']['system_logger'].info(command)
-                        self.cfg['Logging']['system_logger'].call_end()
 
                         vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
                         vad_commands.send(Command('flush()', 'HUB', 'VAD'))
@@ -152,6 +154,9 @@ class VoipHub(Hub):
                         tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
+
+                        self.cfg['Logging']['system_logger'].session_end()
+                        self.cfg['Logging']['session_logger'].session_end()
 
                     if command.parsed['__name__'] == "play_utterance_start":
                         self.cfg['Logging']['system_logger'].info(command)
