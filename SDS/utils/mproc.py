@@ -3,6 +3,7 @@
 
 import functools
 import multiprocessing
+import time
 import os
 import os.path
 import sys
@@ -69,18 +70,19 @@ class InstanceID:
         InstanceID.instance_id += 1
         return InstanceID.instance_id
 
-
 class SystemLogger:
     """ This is multiprocessing safe logger. It should be used by all components in the SDS.
+
     """
 
     lock = multiprocessing.RLock()
-    levels = {'INFO': 0,
-              'DEBUG': 10,
-              'WARNING': 20,
-              'CRITICAL': 30,
-              'EXCEPTION': 40,
-              'ERROR': 50,
+    levels = {'INFO':             0,
+              'DEBUG':           10,
+              'WARNING':         20,
+              'CRITICAL':        30,
+              'EXCEPTION':       40,
+              'ERROR':           50,
+              'CALL-SYSTEM-LOG': 60,
               }
 
     def __init__(self, stdout_log_level='ERROR', stdout=True, file_log_level='ERROR', output_dir=None):
@@ -115,17 +117,9 @@ class SystemLogger:
         self.current_call_log_dir_name.value = ''
 
     @global_lock(lock)
-    def get_call_dir_name(self):
-        """ Return directory where all the call related files should be storred.
-        """
-        if self.current_call_log_dir_name.value:
-            return self.current_call_log_dir_name.value
-
-        # back off to the default logging directory
-        return self.output_dir
-
-    @global_lock(lock)
     def formatter(self, lvl, message):
+        """ Format the message - pretty print
+        """
         s = self.get_time_str()
         s += '  %-10s : ' % multiprocessing.current_process().name
         s += '%-10s ' % lvl
@@ -137,7 +131,9 @@ class SystemLogger:
         return s + ss + '\n'
 
     @global_lock(lock)
-    def log(self, lvl, message):
+    def log(self, lvl, message, call_system_log = False):
+        """ Log the message based on its level and the logging setting.
+        """
         if self.stdout:
             # log to stdout
             if SystemLogger.levels[lvl] <= SystemLogger.levels[self.stdout_log_level]:
@@ -152,12 +148,13 @@ class SystemLogger:
                 f.write('\n')
                 f.close()
 
-                if self.current_call_log_dir_name.value:
-                    # log to the call specific log
-                    f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
-                    f.write(self.formatter(lvl, message))
-                    f.write('\n')
-                    f.close()
+        if self.current_call_log_dir_name.value:
+            if call_system_log or SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
+                # log to the call specific log
+                f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
+                f.write(self.formatter(lvl, message))
+                f.write('\n')
+                f.close()
 
     @global_lock(lock)
     def info(self, message):
@@ -182,3 +179,8 @@ class SystemLogger:
     @global_lock(lock)
     def error(self, message):
         self.log('ERROR', message)
+
+    @global_lock(lock)
+    def call_system_log(self, message):
+        """This logs specifically only into call specific system log."""
+        self.log('CALL-SYSTEM-LOG', message, call_system_log = True)

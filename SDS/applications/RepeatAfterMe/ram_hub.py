@@ -232,6 +232,8 @@ if __name__ == '__main__':
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call":
+                    cfg['Logging']['system_logger'].call_start(command.parsed['remote_uri'])
+                    cfg['Logging']['system_logger'].call_system_log('config = ' + str(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                 if command.parsed['__name__'] == "rejected_call":
@@ -323,7 +325,6 @@ if __name__ == '__main__':
 
                 if command.parsed['__name__'] == "call_disconnected":
                     cfg['Logging']['system_logger'].info(command)
-                    cfg['Logging']['system_logger'].call_end()
 
                     remote_uri = command.parsed['remote_uri']
 
@@ -331,14 +332,15 @@ if __name__ == '__main__':
                     vad_commands.send(Command('flush()', 'HUB', 'VAD'))
                     tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
+                    cfg['Logging']['system_logger'].call_end()
+
                     try:
                         s, e, l = db[
                             'calls_from_start_end_length'][remote_uri][-1]
 
                         if e == 0 and l == 0:
                             # there is a record about last confirmed but not disconnected call
-                            db['calls_from_start_end_length'][remote_uri][
-                                -1] = [s, time.time(), time.time() - s]
+                            db['calls_from_start_end_length'][remote_uri][-1] = [s, time.time(), time.time() - s]
                             save_database('call_db.pckl', db)
                     except KeyError:
                         # disconnecting call which was not confirmed for URI calling for the first time

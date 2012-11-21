@@ -111,6 +111,8 @@ class VoipHub(Hub):
 
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "incoming_call":
+                        self.cfg['Logging']['system_logger'].call_start(command.parsed['remote_uri'])
+                        self.cfg['Logging']['system_logger'].call_system_log('config = ' + str(self.cfg))
                         self.cfg['Logging']['system_logger'].info(command)
 
                     if command.parsed['__name__'] == "rejected_call":
@@ -141,7 +143,6 @@ class VoipHub(Hub):
 
                     if command.parsed['__name__'] == "call_disconnected":
                         self.cfg['Logging']['system_logger'].info(command)
-                        self.cfg['Logging']['system_logger'].call_end()
 
                         vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
                         vad_commands.send(Command('flush()', 'HUB', 'VAD'))
@@ -152,6 +153,8 @@ class VoipHub(Hub):
                         tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
+
+                        self.cfg['Logging']['system_logger'].call_end()
 
                     if command.parsed['__name__'] == "play_utterance_start":
                         self.cfg['Logging']['system_logger'].info(command)

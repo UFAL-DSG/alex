@@ -546,10 +546,10 @@ class VoipIO(multiprocessing.Process):
             return None
 
     def on_incoming_call(self, remote_uri):
+        """ Signals an incoming call.
+        """
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_incoming_call - from %s" % remote_uri)
-
-        self.cfg['Logging']['system_logger'].call_start(self.get_user_from_uri(remote_uri))
 
         # send a message that there is a new incoming call
         self.commands.send(Command('incoming_call(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
@@ -571,8 +571,6 @@ class VoipIO(multiprocessing.Process):
     def on_call_connecting(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_connecting")
-
-        self.cfg['Logging']['system_logger'].call_start(self.get_user_from_uri(remote_uri))
 
         # send a message that the call is connecting
         self.commands.send(Command('call_connecting(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
