@@ -3,6 +3,7 @@
 
 import functools
 import multiprocessing
+import fcntl
 import time
 import os
 import os.path
@@ -58,6 +59,19 @@ def global_lock(lock):
     return decorator
 
 
+def file_lock(file_name):
+    """ Multiprocessing lock using files. Lock on a specific file.
+    """
+    lock_file = open(file_name, 'w')
+    fcntl.lockf(lock_file, fcntl.LOCK_EX)
+    return lock_file
+
+def file_unlock(lock_file):
+    """ Multiprocessing lock using files. Unlock on a specific file.
+    """
+    fcntl.lockf(lock_file, fcntl.LOCK_UN)
+    lock_file.close()
+
 class InstanceID:
     """ This class provides unique ids to all instances of objects inheriting from this class.
     """
@@ -105,6 +119,8 @@ class SystemLogger:
     @global_lock(lock)
     def call_start(self, remote_uri):
         """ Create a specific directory for logging a specific call.
+
+        NOTE: This is not completely safe. It can be called from several processes.
         """
         call_name = self.get_time_str() + '-' + remote_uri
         self.current_call_log_dir_name.value = os.path.join(self.output_dir, call_name)
@@ -115,6 +131,16 @@ class SystemLogger:
         """ Disable logging into the call specific directory
         """
         self.current_call_log_dir_name.value = ''
+
+    @global_lock(lock)
+    def get_call_dir_name(self):
+        """ Return directory where all the call related files should be stored.
+        """
+        if self.current_call_log_dir_name.value:
+            return self.current_call_log_dir_name.value
+
+        # back off to the default logging directory
+        return self.output_dir
 
     @global_lock(lock)
     def formatter(self, lvl, message):
@@ -133,6 +159,7 @@ class SystemLogger:
     @global_lock(lock)
     def log(self, lvl, message, call_system_log = False):
         """ Log the message based on its level and the logging setting.
+        Before writing into a logging file it locks the file.
         """
         if self.stdout:
             # log to stdout
@@ -144,16 +171,20 @@ class SystemLogger:
             if SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
                 # log to the global log
                 f = open(os.path.join(self.output_dir, 'system.log'), "a+", 0)
+                fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')
+                fcntl.lockf(f, fcntl.LOCK_UN)
                 f.close()
 
         if self.current_call_log_dir_name.value:
             if call_system_log or SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
                 # log to the call specific log
                 f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
+                fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')
+                fcntl.lockf(f, fcntl.LOCK_UN)
                 f.close()
 
     @global_lock(lock)
