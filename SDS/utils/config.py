@@ -62,15 +62,11 @@ class Config:
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
 
-    def merge(self, file_name):
+    def merge(self, cfg):
         # pylint: disable-msg=E0602
-
-        global config
-        config = None
-
-        execfile(file_name, globals())
-        assert config is not None
-        self.update_dict(self.config, config)
+        if type(cfg) is str:
+            cfg = Config(cfg)
+        self.update_dict(self.config, cfg.config)
 
     def update_dict(self, d, u):
         for k, v in u.iteritems():
