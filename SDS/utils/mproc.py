@@ -10,6 +10,8 @@ import re
 
 from datetime import datetime
 
+""" Implements useful classes for handling multiprocessing implementation of the SDS.
+"""
 
 def local_lock():
     """This decorator makes the decorated function thread safe.
@@ -69,7 +71,7 @@ class InstanceID:
 
 
 class SystemLogger:
-    """ This multiproces safe logger. It should be used by all components in the SDS.
+    """ This is multiprocessing safe logger. It should be used by all components in the SDS.
     """
 
     lock = multiprocessing.RLock()
@@ -103,8 +105,7 @@ class SystemLogger:
         """ Create a specific directory for logging a specific call.
         """
         call_name = self.get_time_str() + '-' + remote_uri
-        self.current_call_log_dir_name.value = os.path.join(
-            self.output_dir, call_name)
+        self.current_call_log_dir_name.value = os.path.join(self.output_dir, call_name)
         os.makedirs(self.current_call_log_dir_name.value)
 
     @global_lock(lock)
@@ -153,8 +154,7 @@ class SystemLogger:
 
                 if self.current_call_log_dir_name.value:
                     # log to the call specific log
-                    f = open(os.path.join(self.current_call_log_dir_name.value,
-                             'system.log'), "a+", 0)
+                    f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
                     f.write(self.formatter(lvl, message))
                     f.write('\n')
                     f.close()
