@@ -137,9 +137,9 @@ class CallCallback(pj.CallCallback):
             call_slot = self.call.info().conf_slot
 
             # assign the file names
-            self.output_file_name_recorded = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
+            self.output_file_name_recorded = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                 'all-' + datetime.now().isoformat('-').replace(':', '-') + '.recorded.wav')
-            self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_call_dir_name(),
+            self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                 'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
 
             # Create wave recorders

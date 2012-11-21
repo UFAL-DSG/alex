@@ -96,7 +96,7 @@ class SystemLogger:
               'CRITICAL':        30,
               'EXCEPTION':       40,
               'ERROR':           50,
-              'CALL-SYSTEM-LOG': 60,
+              'SYSTEM-LOG': 60,
               }
 
     def __init__(self, stdout_log_level='ERROR', stdout=True, file_log_level='ERROR', output_dir=None):
@@ -105,8 +105,8 @@ class SystemLogger:
         self.file_log_level = stdout_log_level
         self.output_dir = output_dir
 
-        self.current_call_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
-        self.current_call_log_dir_name.value = ''
+        self.current_session_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
+        self.current_session_log_dir_name.value = ''
 
     @global_lock(lock)
     def get_time_str(self):
@@ -117,27 +117,27 @@ class SystemLogger:
         return datetime.now().isoformat('-').replace(':', '-')
 
     @global_lock(lock)
-    def call_start(self, remote_uri):
+    def session_start(self, remote_uri):
         """ Create a specific directory for logging a specific call.
 
         NOTE: This is not completely safe. It can be called from several processes.
         """
-        call_name = self.get_time_str() + '-' + remote_uri
-        self.current_call_log_dir_name.value = os.path.join(self.output_dir, call_name)
-        os.makedirs(self.current_call_log_dir_name.value)
+        session_name = self.get_time_str() + '-' + remote_uri
+        self.current_session_log_dir_name.value = os.path.join(self.output_dir, session_name)
+        os.makedirs(self.current_session_log_dir_name.value)
 
     @global_lock(lock)
-    def call_end(self):
+    def session_end(self):
         """ Disable logging into the call specific directory
         """
-        self.current_call_log_dir_name.value = ''
+        self.current_session_log_dir_name.value = ''
 
     @global_lock(lock)
-    def get_call_dir_name(self):
+    def get_session_dir_name(self):
         """ Return directory where all the call related files should be stored.
         """
-        if self.current_call_log_dir_name.value:
-            return self.current_call_log_dir_name.value
+        if self.current_session_log_dir_name.value:
+            return self.current_session_log_dir_name.value
 
         # back off to the default logging directory
         return self.output_dir
@@ -157,7 +157,7 @@ class SystemLogger:
         return s + ss + '\n'
 
     @global_lock(lock)
-    def log(self, lvl, message, call_system_log = False):
+    def log(self, lvl, message, session_system_log = False):
         """ Log the message based on its level and the logging setting.
         Before writing into a logging file it locks the file.
         """
@@ -177,10 +177,10 @@ class SystemLogger:
                 fcntl.lockf(f, fcntl.LOCK_UN)
                 f.close()
 
-        if self.current_call_log_dir_name.value:
-            if call_system_log or SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
+        if self.current_session_log_dir_name.value:
+            if session_system_log or SystemLogger.levels[lvl] <= SystemLogger.levels[self.file_log_level]:
                 # log to the call specific log
-                f = open(os.path.join(self.current_call_log_dir_name.value, 'system.log'), "a+", 0)
+                f = open(os.path.join(self.current_session_log_dir_name.value, 'system.log'), "a+", 0)
                 fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')
@@ -212,6 +212,6 @@ class SystemLogger:
         self.log('ERROR', message)
 
     @global_lock(lock)
-    def call_system_log(self, message):
+    def session_system_log(self, message):
         """This logs specifically only into call specific system log."""
-        self.log('CALL-SYSTEM-LOG', message, call_system_log = True)
+        self.log('SYSTEM-LOG', message, session_system_log = True)

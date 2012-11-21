@@ -232,8 +232,8 @@ if __name__ == '__main__':
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call":
-                    cfg['Logging']['system_logger'].call_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].call_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                 if command.parsed['__name__'] == "rejected_call":
@@ -332,7 +332,7 @@ if __name__ == '__main__':
                     vad_commands.send(Command('flush()', 'HUB', 'VAD'))
                     tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
-                    cfg['Logging']['system_logger'].call_end()
+                    cfg['Logging']['system_logger'].session_end()
 
                     try:
                         s, e, l = db[
