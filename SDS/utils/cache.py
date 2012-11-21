@@ -9,6 +9,7 @@ import functools
 import os
 import os.path
 import cPickle as pickle
+import fcntl
 
 from itertools import ifilterfalse
 from heapq import nsmallest
@@ -154,24 +155,29 @@ def lfu_cache(maxsize=100):
 
 
 def get_persitent_cache_content(key):
-    key_name = persistent_cache_directory + '/' + '_'.join([str(
-        i) for i in key]).replace(' ', '_')
+    key_name = persistent_cache_directory + '/' + '_'.join([str(i) for i in key]).replace(' ', '_')
     try:
         f = open(key_name, 'rb')
+        fcntl.lockf(f, fcntl.LOCK_EX)
     except IOError:
         raise KeyError
 
     data = pickle.load(f)
+
+    fcntl.lockf(f, fcntl.LOCK_UN)
     f.close()
 
     return data
 
 
 def set_persitent_cache_content(key, value):
-    key_name = persistent_cache_directory + '/' + '_'.join([str(
-        i) for i in key]).replace(' ', '_')
+    key_name = persistent_cache_directory + '/' + '_'.join([str(i) for i in key]).replace(' ', '_')
     f = open(key_name, 'wb')
+    fcntl.lockf(f, fcntl.LOCK_EX)
+
     data = pickle.dump(value, f)
+
+    fcntl.lockf(f, fcntl.LOCK_UN)
     f.close()
 
 
