@@ -28,33 +28,23 @@ class GMMVAD():
         self.gmm_sil = GMM()
         self.gmm_sil.load_model(self.cfg['VAD']['gmm']['sil_model'])
 
-        self.log_probs_speech = deque(
-            maxlen=self.cfg['VAD']['gmm']['filter_length'])
-        self.log_probs_sil = deque(
-            maxlen=self.cfg['VAD']['gmm']['filter_length'])
+        self.log_probs_speech = deque(maxlen=self.cfg['VAD']['gmm']['filter_length'])
+        self.log_probs_sil = deque(maxlen=self.cfg['VAD']['gmm']['filter_length'])
 
         self.last_decision = 0.0
 
         if self.cfg['VAD']['gmm']['frontend'] == 'MFCC':
             self.front_end = MFCCFrontEnd(
-                self.cfg['Audio']['sample_rate'], self.cfg[
-                    'VAD']['gmm']['framesize'],
-                self.cfg['VAD']['gmm'][
-                    'usehamming'], self.cfg['VAD']['gmm']['preemcoef'],
-                self.cfg['VAD']['gmm'][
-                    'numchans'], self.cfg['VAD']['gmm']['ceplifter'],
-                self.cfg['VAD']['gmm'][
-                    'numceps'], self.cfg['VAD']['gmm']['enormalise'],
-                self.cfg['VAD']['gmm'][
-                    'zmeansource'], self.cfg['VAD']['gmm']['usepower'],
-                self.cfg['VAD']['gmm']['usec0'], self.cfg[
-                    'VAD']['gmm']['usecmn'],
-                self.cfg['VAD']['gmm'][
-                    'usedelta'], self.cfg['VAD']['gmm']['useacc'],
+                self.cfg['Audio']['sample_rate'], self.cfg['VAD']['gmm']['framesize'],
+                self.cfg['VAD']['gmm']['usehamming'], self.cfg['VAD']['gmm']['preemcoef'],
+                self.cfg['VAD']['gmm']['numchans'], self.cfg['VAD']['gmm']['ceplifter'],
+                self.cfg['VAD']['gmm']['numceps'], self.cfg['VAD']['gmm']['enormalise'],
+                self.cfg['VAD']['gmm']['zmeansource'], self.cfg['VAD']['gmm']['usepower'],
+                self.cfg['VAD']['gmm']['usec0'], self.cfg['VAD']['gmm']['usecmn'],
+                self.cfg['VAD']['gmm']['usedelta'], self.cfg['VAD']['gmm']['useacc'],
                 self.cfg['VAD']['gmm']['lofreq'], self.cfg['VAD']['gmm']['hifreq'])
         else:
-            raise ASRException('Unsupported frontend: %s' % (
-                self.cfg['VAD']['gmm']['frontend'], ))
+            raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['gmm']['frontend'], ))
 
     def decide(self, data):
         """Processes the input frame whether the input segment is speech or non speech.
@@ -67,10 +57,8 @@ class GMMVAD():
         self.audio_recorded_in.extend(data)
 
         while len(self.audio_recorded_in) > self.cfg['VAD']['gmm']['framesize']:
-            frame = self.audio_recorded_in[:self.cfg['VAD'][
-                'gmm']['framesize']]
-            self.audio_recorded_in = self.audio_recorded_in[
-                self.cfg['VAD']['gmm']['frameshift']:]
+            frame = self.audio_recorded_in[:self.cfg['VAD']['gmm']['framesize']]
+            self.audio_recorded_in = self.audio_recorded_in[self.cfg['VAD']['gmm']['frameshift']:]
 
             mfcc = self.front_end.param(frame)
 

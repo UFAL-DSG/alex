@@ -166,7 +166,7 @@ class VAD(multiprocessing.Process):
                         # create new logging file
                         self.output_file_name = os.path.join(
                             self.cfg['Logging'][
-                                'system_logger'].get_call_dir_name(),
+                                'system_logger'].get_session_dir_name(),
                             'vad-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
 
                         if self.cfg['VAD']['debug']:

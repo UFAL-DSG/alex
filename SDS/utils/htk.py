@@ -12,6 +12,10 @@ from struct import unpack, pack
 from SDS.utils.cache import lru_cache
 from SDS.utils.mfcc import MFCCFrontEnd
 
+"""
+The htk module implements classes for manipulation with the MLF files.
+"""
+
 LPC = 1
 LPCREFC = 2
 LPCEPSTRA = 3
