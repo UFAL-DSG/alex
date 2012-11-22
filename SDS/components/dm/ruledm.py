@@ -5,7 +5,9 @@
 
 
 import imp
+import re
 import pprint
+from collections import defaultdict
 
 from SDS.components.dm import DialogueManager
 from SDS.components.slu.da import DialogueActItem, DialogueAct, \
@@ -18,6 +20,7 @@ LDA_SLOT = "__lda"
 ALTS_SLOT = "__alts"
 CHANGES_SLOT = "__changes"
 BADSLOT_SLOT = "__badslot"
+PLACE_INFORMED_SLOT = "__placeinformed"
 SLOT_REQ = "rh"
 SLOT_CONFIRM = "ch"
 
@@ -65,7 +68,7 @@ class TransformationRule(object):
                 if self._cond_matches(dai, last_dai, state):
                     new_dai = self.t(dai, last_dai)
                     if new_dai is not None:
-                        new_dais += [DialogueActItem.parse(new_dai)]
+                        new_dais += [DialogueActItem().parse(new_dai)]
                         consumed_dais += [dai]
 
         for new_dai in new_dais:
@@ -163,6 +166,9 @@ class RuleDialogueState:
                 assert type(self.values[key]) is list
                 self.values[key] += value
 
+    def reset_changes(self):
+        self.values[CHANGES_SLOT] = []
+
     def copy(self, ds_):
         self.slots = list(ds_.slots)
         self.values = dict(ds_.values.items())
@@ -172,7 +178,7 @@ class RuleDialogueState:
             self.slots[key] = None
 
     def __unicode__(self):
-        vals = pprint.pformat(self.values)
+        vals = pprint.pformat({k: v for k, v in self.values.items() if v is not None})
         return vals
 
     def __str__(self):
@@ -215,14 +221,52 @@ class RuleDMPolicy:
     def __init__(self, slots, db_cfg):
         self.db = self.db_cls(db_cfg)
         self.slots = slots
+        self.values = self.db.get_possible_values()
+        self.ontology_unknown_re = re.compile(r"^.*-([0-9]+)")
 
-    def query_db(self, state):
+    def build_query(self, state):
         query = {}
         for slot in self.slots:
             if state[slot] != None:
                 query[slot] = state[slot]
 
+        return query
+
+    def query_db(self, state):
+        query = self.build_query(state)
         return self.db.get_matching(query)
+
+    def user_has_specified_something(self, state):
+        return len(self.build_query(state)) > 0
+
+    def filter(self, in_da):
+        new_nblist = DialogueActNBList()
+        for item in in_da:
+            da = item[1]
+            new_da = DialogueAct()
+            for dai in da:
+                if dai.dat in ["inform", "request"]:
+                    if dai.value is not None and not dai.value in self.values:
+                        continue
+                if dai.dat in ["inform", "request", "confirm"]:
+                    if not dai.name in self.slots:
+                        continue
+
+                if type(dai.value) is str and self.ontology_unknown_re.match(dai.value):
+                    continue
+
+
+                if dai.dat in ["inform", "request", "other",
+                               "confirm", "reqalts"]:
+                    new_da.append(dai)
+
+            if item[0] >= 0.5:  # do not consider things bellow 0.5
+                if len(new_da) > 0:
+                    new_nblist.add(item[0], new_da)
+        return new_nblist
+
+    def get_interesting_slot(self, state):
+        return state[CHANGES_SLOT][0]
 
     def say_bye(self):
         return DialogueAct("bye()")
@@ -230,8 +274,16 @@ class RuleDMPolicy:
     def say_hello(self):
         return DialogueAct("hello()")
 
-    def get_interesting_slot(self, state):
-        return state[CHANGES_SLOT][0]
+    def say_instructions(self):
+        return DialogueAct("instructions()")
+
+    def say_nomatch(self):
+        return DialogueAct("nomatch()")
+
+    def say_query(self, state):
+        query = self.build_query(state)
+        act = "&".join(["wants(%s=%s)" % (k, v,) for k, v in query.items()])
+        return DialogueAct(act)
 
     def say_inform(self, state, rec):
         islot_name = self.get_interesting_slot(state) or self.slots[0]
@@ -251,21 +303,41 @@ class RuleDMPolicy:
 
         return DialogueAct("&".join(d_str))
 
+    def say_noentiendo(self):
+        return DialogueAct("noentiendo()")
+
     def answer_confirm(self, state, res0, slots_to_confirm):
         conflicts = []
+        selects = []
+        noclues = []
         for ch_slot, slot_value in slots_to_confirm.items():
-            state.update({ch_slot: None})
             slot = state.chkey_to_key(ch_slot)
-            if res0[slot] != slot_value:
-                conflicts += [slot]
+            print "SLOT VAL:", slot_value
+            state.update({ch_slot: None})
 
-        if len(conflicts) == 0:
-            return DialogueAct("affirm()")
+            if not slot in res0:
+                noclues += [slot]
+            elif not res0[slot].lower() in slot_value:
+                conflicts += [slot]
+                if len(slot_value) > 1:
+                    selects += [(slot, res0[slot], )]
+
+        if len(noclues) > 0:
+            return DialogueAct(
+                "&".join(["noclue(%s)" % n for n in noclues]))
+        elif len(conflicts) == 0:
+            if len(selects) == 0:
+                return DialogueAct("affirm()")
+            else:
+                return DialogueAct(
+                    "&".join(["confirm(%s=%s)" % (n, v, ) for n, v in selects]))
         else:
             conf_acts = []
             for conflict in conflicts:
                 conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], ) ]
-            return DialogueAct("negate()&" + "&".join(conf_acts))
+            res = DialogueAct("negate()")
+            res.merge(DialogueAct("&".join(conf_acts)))
+            return res
 
     def say_bad_slot(self):
         return DialogueAct("sorry()&badslot()")
@@ -293,12 +365,101 @@ class RuleDMPolicy:
     def get_bad_slot(self, state):
         return state[BADSLOT_SLOT] is not None
 
+    def get_understood_dat(self, user_da):
+        pass
+
+    def dat_contains(self, what, dat):
+        if dat is None:
+            return False
+        for _, dai in dat:
+            if dai.dat == what:
+                return True
+
+        return False
+
     def get_da(self, state, user_da):
+        if len(state[CHANGES_SLOT]) > 0:
+            state.update({PLACE_INFORMED_SLOT: False})
+
+        # if it is the first turn, say hello
+        if user_da is None:
+            return state, self.say_hello()
+
+        if user_da.has_dat("bye"):
+            return state, self.say_bye()
+
+        if user_da.has_dat("restart"):
+            state.clear()
+
+        # if we didn't understand tell him
+        if len(user_da) == 0 or user_da.has_dat("null"):
+            return state, self.say_noentiendo()
+
+        # if the user hasn't specified anything (i.e. blank filter)
+        # tell him what he can do
+        if not self.user_has_specified_something(state):
+            return state, self.say_instructions()
+
         res = self.query_db(state)
         slots_to_say = self.get_slots_to_say(state)
         slots_to_confirm = self.get_slots_to_confirm(state)
         was_bad_slot = self.get_bad_slot(state)
         res_da = None
+
+        #u_dat = self.get_understood_dat(user_da)
+        user_dat = user_da # user_da[-1].dat if user_da is not None else None
+
+        # state updates
+        if user_da.has_dat("reqalts"):
+            state.update({ALTS_SLOT: [True]})
+
+        res0 = self.pick_record(state, res)
+        # if nothing matches, tell him
+        if res0 is None:
+            da = self.say_nomatch()
+            da.merge(self.say_query(state))
+            return state, da
+
+        print "USER DA:", user_da, user_da is not None and len(user_da)
+        print "STATE:", state
+        print "CNT(RES):", len(res)
+        print "RES0:", res0
+        print "REQ SLOTS:", slots_to_say
+
+        # if the user requested something, tell him immediatelly
+        if len(slots_to_say) > 0:
+            if not 'name' in slots_to_say and \
+               state['rh_name'] != "system-informed":
+                slots_to_say += ['name']
+            res_da = self.say_slots(state, res0, slots_to_say)
+            return state, res_da
+
+        # if not, be ready to tell him something useful
+        if len(slots_to_say) == 0 and not state[PLACE_INFORMED_SLOT]:
+            slots_to_say = ['name', 'food']
+            sink_da = self.say_slots(state, res0, slots_to_say)
+            # sink_da.append(DialogueActItem().parse("match()"))
+        else:
+            sink_da = DialogueAct("anythingelse()")
+
+        if len(slots_to_confirm) > 0:
+            res_da = self.answer_confirm(state, res0, slots_to_confirm)
+            return state, res_da
+
+        state.update({PLACE_INFORMED_SLOT: True})
+        return state, sink_da
+
+
+
+
+    def get_da_old(self, state, user_da):
+        res = self.query_db(state)
+        slots_to_say = self.get_slots_to_say(state)
+        slots_to_confirm = self.get_slots_to_confirm(state)
+        was_bad_slot = self.get_bad_slot(state)
+        res_da = None
+
+        #u_dat = self.get_understood_dat(user_da)
         user_dat = user_da[-1].dat if user_da is not None else None
 
         # state updates
@@ -318,6 +479,7 @@ class RuleDMPolicy:
             res_da = None
         elif was_bad_slot:
             res_da = self.say_bad_slot()
+            state.update({BADSLOT_SLOT: None})
         elif len(slots_to_confirm) > 0:
             res_da = self.answer_confirm(state, res0, slots_to_confirm)
         elif len(slots_to_say) > 0:
@@ -327,7 +489,7 @@ class RuleDMPolicy:
                 res_da = self.say_inform(state, res0)
             else:
                 res_da = DialogueAct("nomatch()")
-            res_da.append(DialogueActItem().parse("count(%d)" % len(res)))
+            #res_da.append(DialogueActItem().parse("count(%d)" % len(res)))
 
         return state, res_da
 
@@ -356,7 +518,8 @@ class RuleDM(DialogueManager):
             rule.id = i
 
         self.dstate = self.create_ds()
-        self.policy = self.policy_cls(self.ontology.slots.keys(), db_cfg)
+        self.policy = self.policy_cls(self.ontology.slots.keys(),
+                                      db_cfg)
         self.last_usr_da = None
         self.last_sys_da = None
 
@@ -375,13 +538,46 @@ class RuleDM(DialogueManager):
                     if new_val is not None:
                         new_ds.update(new_val)
             except KeyError:
-                new_ds.update({BADSLOT_SLOT: True})
+                pass
+                #new_ds.update({BADSLOT_SLOT: True})
 
 
         return new_ds
 
-    def update(self, curr_ds, da, last_da=None):
-        new_ds = self._process_rules(curr_ds, da, last_da)
+    def update(self, curr_ds, nbda, last_da=None):
+        #new_ds = self._process_rules(curr_ds, da, last_da)
+        new_ds = self.create_ds()
+        new_ds.copy(curr_ds)
+
+        assigned_something = False
+        breaking = False
+        update_history = set()
+        for score, da in nbda:
+            for act in da:
+                if act.dat == "other" and assigned_something:
+                    breaking = True
+                    break
+
+                print update_history
+                if act.name in update_history:
+                    continue
+
+                if act.dat == "inform":
+                    new_ds.update({act.name: act.value})
+                    update_history.add(act.name)
+                    assigned_something = True
+                elif act.dat == "request":
+                    new_ds.update({"rh_%s" % act.name: "user-requested"})
+                    update_history.add(act.name)
+                    assigned_something = True
+                elif act.dat == "confirm":
+                    new_ds.update({"ch_%s" % act.name: [act.value]})
+                    update_history.add(act.name)
+                    assigned_something = True
+
+            if breaking:
+                break
+
         return new_ds
 
     def create_ds(self):
@@ -392,18 +588,27 @@ class RuleDM(DialogueManager):
         if isinstance(das, DialogueActNBList):
             return sorted(das, key=lambda x: -x[0])[0][1]
         elif isinstance(das, DialogueActConfusionNetwork):
-            return das.get_best_da()
+            return das.get_best_nonnull_da()
         else:
             raise Exception('unknown input da of type: %s' % str(das.__class__))
 
+    def da_in(self, in_da):
+        print "in_da", in_da
 
+    def da_out(self):
+        print 'nothing'
 
     def da_in(self, in_da):
-        da = self.pick_best_da(in_da)
-        self.cfg['Logging']['system_logger'].debug("RuleDM: Using this DA: %s" % str(da) )
+        if isinstance(in_da, DialogueActConfusionNetwork):
+            in_da = in_da.get_da_nblist()
 
-        self.dstate = self.update(self.dstate, da)
-        self.last_usr_da = da
+        filtered_da = self.policy.filter(in_da)
+        #da = self.pick_best_da(in_da)
+        self.cfg['Logging']['system_logger'].debug("RuleDM: Using this DA: %s" % str(filtered_da) )
+
+        self.dstate.reset_changes()
+        self.dstate = self.update(self.dstate, filtered_da)
+        self.last_usr_da = filtered_da
 
     def da_out(self):
         self.dstate, new_da = self.policy.get_da(self.dstate, self.last_usr_da)

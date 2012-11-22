@@ -24,6 +24,9 @@ class CamTxtParser(object):
 
     line_expr = re.compile(r"^(?P<name>[^\s]*)\((?P<value>.*)\)$")
 
+    def __init__(self, lower=False):
+        self.lower = lower
+
     def parse(self, f_obj):
         """Parse the given file and return list of dictionaries with parsed values.
 
@@ -40,6 +43,8 @@ class CamTxtParser(object):
         blank = True
 
         for ln in f_obj:
+            if self.lower:
+                ln = ln.lower()
             ln = ln.strip()
             if len(ln) == 0 and not blank:
                 objs += [n_obj]

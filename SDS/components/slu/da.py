@@ -96,6 +96,8 @@ class DialogueActItem:
     def parse(self, dai):
         """Parse the dialogue act item in text format into a structured form.
         """
+        dai = dai.strip()
+
         try:
             i = dai.index('(')
         except ValueError:
@@ -231,6 +233,10 @@ class DialogueAct:
         self.dais.sort()
 #        print "S2", self
 
+    def merge(self, da):
+        for dai in da:
+            self.append(dai)
+
 class SLUHypothesis:
     """This is a base class for all forms of probabilistic SLU hypotheses representations."""
     pass
@@ -345,6 +351,12 @@ class DialogueActNBList(SLUHypothesis):
     def sort(self):
         self.n_best.sort(reverse=True)
 
+    def has_dat(self, dat):
+        for prob, da in self:
+            if da.has_dat(dat):
+                return True
+        return False
+
 
 class DialogueActConfusionNetwork(SLUHypothesis):
     """Dialogue act item confusion network."""
@@ -386,6 +398,26 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return da
 
+    def get_best_nonnull_da(self):
+        """Return the best dialogue act (with the highest probability)."""
+
+        res = self.get_best_da()
+
+        if res[0].dat == "null":
+            da = DialogueAct()
+            for prob, dai in self.cn:
+                if dai.name is not None and len(dai.name) > 0:
+                    da.append(dai)
+                    break
+
+            if len(da) == 0:
+                da.append(DialogueActItem('null'))
+
+            res = da
+
+        return res
+
+
     def get_best_da_hyp(self):
         """Return the best dialogue act hypothesis."""
         da = DialogueAct()
@@ -410,6 +442,14 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         The result is a list of dialogue act hypotheses each with a with assigned probability.
         The list also include a dialogue act for not having the correct dialogue act in the list, e.g. null()
         """
+
+        nblist = DialogueActNBList()
+        for p, dai in self.cn:
+            da = DialogueAct()
+            da.append(dai)
+            nblist.add(p, da)
+
+        return nblist
 
         raise DialogueActConfusionNetworkException("Not implemented")
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import argparse
-
-import __init__
 
 from SDS.components.hub import Hub
 from SDS.components.asr.utterance import Utterance, UtteranceNBList
@@ -11,6 +10,7 @@ from SDS.components.slu import CategoryLabelDatabase, SLUPreprocessing
 from SDS.components.slu.da import *
 from SDS.components.slu.dailrclassifier import DAILogRegClassifier
 from SDS.components.dm.common import dm_factory, get_dm_type
+from SDS.components.nlg.common import nlg_factory, get_nlg_type
 from SDS.components.nlg.template import TemplateNLG
 from SDS.utils.config import Config
 from SDS.utils.exception import UtteranceException, TextHubException
@@ -44,10 +44,8 @@ class TextHub(Hub):
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
 
-        if self.cfg['NLG']['type'] == 'Template':
-            self.nlg = TemplateNLG(cfg)
-        else:
-            raise TextHubException('Unsupported natural language generation: %s' % self.cfg['NLG']['type'])
+        nlg_type = get_nlg_type(cfg)
+        self.nlg = nlg_factory(nlg_type, cfg)
 
     def parse_input_utt(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
@@ -196,7 +194,7 @@ if __name__ == '__main__':
       """)
 
     parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
+        '-c', action="append", dest="configs", default=None,
         help='additional configure file')
     args = parser.parse_args()
 
