@@ -2,7 +2,7 @@ from SDS.utils.parsers import CamTxtParser
 
 class CamInfoDb(object):
     def __init__(self, db_path):
-        ctp = CamTxtParser()
+        ctp = CamTxtParser(lower=True)
         self.data = ctp.parse(db_path)
 
     def matches(self, rec, query):
@@ -19,5 +19,11 @@ class CamInfoDb(object):
                 res += [rec]
 
         return res
+
+    def get_possible_values(self):
+        res = []
+        for item in self.data:
+            res += item.values()
+        return set(res)
 
 

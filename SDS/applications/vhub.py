@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import multiprocessing
 import time
@@ -7,8 +8,6 @@ import sys
 import random
 import sys
 import argparse
-
-import __init__
 
 from SDS.components.hub import Hub
 from SDS.components.hub.vio import VoipIO
@@ -260,7 +259,7 @@ if __name__ == '__main__':
       """)
 
     parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
+        '-c', action="append", dest="configs", default=None,
         help='additional configure file')
     args = parser.parse_args()
 

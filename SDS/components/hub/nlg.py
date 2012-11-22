@@ -4,7 +4,7 @@
 import multiprocessing
 import time
 
-import SDS.components.nlg.template as TNLG
+from SDS.components.nlg.common import nlg_factory, get_nlg_type
 
 from SDS.components.hub.messages import Command, DMDA, TTSText
 from SDS.utils.exception import DMException
@@ -26,11 +26,8 @@ class NLG(multiprocessing.Process):
         self.dialogue_act_in = dialogue_act_in
         self.text_out = text_out
 
-        self.nlg = None
-        if self.cfg['NLG']['type'] == 'Template':
-            self.nlg = TNLG.TemplateNLG(cfg)
-        else:
-            raise VoipHubException('Unsupported NLG component: %s' % self.cfg['NLG']['type'])
+        nlg_type = get_nlg_type(cfg)
+        self.nlg = nlg_factory(nlg_type, cfg)
 
     def process_pending_commands(self):
         """Process all pending commands.
