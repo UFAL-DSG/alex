@@ -6,11 +6,19 @@
 Welcome to Vystadial's documentation!
 =====================================
 
-Contents:
+How to write documentation
+--------------------------
+
+* `Quick cheatsheet for ReST and Sphinx <http://matplotlib.org/sampledoc/cheatsheet.html>`_
+* `More thorough documentation with code examples <http://packages.python.org/an_example_pypi_project/sphinx.html>`_
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 1
 
+   install
    SDS
 
 

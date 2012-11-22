@@ -10,7 +10,8 @@ from SDS.utils.exception import DummyDialogueManagerException
 class DummyDialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
 
-    It uses only the best dialogue act from the input and based on this it updates its state.
+    It uses only the best dialogue act from the input and based on this it
+    updates its state.
 
     """
 
@@ -42,7 +43,15 @@ class DummyDialogueState(object):
     def update(self, user_da, last_system_da):
         """Interface for the dialogue act update.
 
-        It can process dialogue act, dialogue act N best lists, or dialogue act confusion networks.
+        It can process dialogue act, dialogue act N best lists, or dialogue act
+        confusion networks.
+
+        :param user_da: Dialogue act to process.
+        :type user_da: :class:`~SDS.components.slu.da.DialogueAct`,
+            :class:`~SDS.components.slu.da.DialogueActNBList` or
+            :class:`~SDS.components.slu.da.DialogueActConfusionNetwork`
+        :param last_system_da: Last system dialogue act.
+
         """
 
         if isinstance(user_da, DialogueAct):
@@ -183,12 +192,12 @@ class DummyDialogueState(object):
         """Return all slots provided by the use and the system has not informed about them yet along with
         the value of the slot.
 
-        This will not detect a change in a goal. For example,
+        This will not detect a change in a goal. For example::
 
-        U: I wan a Chinese restaurant.
-        S: Ok, you want a Chinese restaurant. What price range you have in mind?
-        U: Well, I would rather want an Italian Restaurant.
-        S: Ok, no problem. You want an Italian restaurant. What price range you have in mind?
+            U: I wan a Chinese restaurant.
+            S: Ok, you want a Chinese restaurant. What price range you have in mind?
+            U: Well, I would rather want an Italian Restaurant.
+            S: Ok, no problem. You want an Italian restaurant. What price range you have in mind?
 
         Because the system informed about the food type and stored "system-informed", then
         we will not notice that we confirmed a different food type.
