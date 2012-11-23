@@ -1,23 +1,21 @@
-"""
-self cloning, automatic path configuration 
+"""Self cloning, automatic path configuration.
 
-copy this into any subdirectory of pypy from which scripts need 
-to be run, typically all of the test subdirs. 
-The idea is that any such script simply issues
+Copy this into any subdirectory of pypy from which scripts need to be run,
+typically all of the test subdirs.  The idea is that any such script simply
+issues::
 
     import autopath
 
-and this will make sure that the parent directory containing "pypy"
-is in sys.path. 
+and this will make sure that the parent directory containing ``pypy`` is in
+``sys.path``.
 
-If you modify the master "autopath.py" version (in pypy/tool/autopath.py) 
-you can directly run it which will copy itself on all autopath.py files
-it finds under the pypy root directory. 
+If you modify the master ``autopath.py`` version (in ``pypy/tool/autopath.py``)
+you can directly run it which will copy itself on all ``autopath.py`` files it
+finds under the pypy root directory.
 
 This module always provides these attributes:
-
-    pypydir    pypy root directory path 
-    this_dir   directory where this autopath.py resides 
+    * pypydir -- pypy root directory path
+    * this_dir -- directory where this autopath.py resides
 
 """
 
