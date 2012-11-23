@@ -114,6 +114,9 @@ class VoipHub(Hub):
                         self.cfg['Logging']['system_logger'].info(command)
 
                         self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
+                        self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
+                        self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
+                        self.cfg['Logging']['session_logger'].input_source("voip")
 
                     if command.parsed['__name__'] == "rejected_call":
                         self.cfg['Logging']['system_logger'].info(command)

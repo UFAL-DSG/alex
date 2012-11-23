@@ -108,13 +108,20 @@ class SystemLogger:
         self.current_session_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
 
+    def __repr__(self):
+        return "SystemLogger(stdout_log_level='%s', stdout=%s, file_log_level='%s', output_dir=%s)" % \
+            (self.stdout_log_level, self.stdout, self.file_log_level, self.output_dir)
+
     @global_lock(lock)
     def get_time_str(self):
         """ Return current time in ISO format.
 
         It is useful when constricting file and directory names.
         """
-        return datetime.now().isoformat('-').replace(':', '-')
+        dt = datetime.now().isoformat('-').replace(':', '-')
+        dt += "-" + time.tzname[time.localtime().tm_isdst]
+
+        return dt
 
     @global_lock(lock)
     def session_start(self, remote_uri):
