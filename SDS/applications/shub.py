@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import argparse
-
-import __init__
 
 from SDS.components.hub import Hub
 from SDS.components.slu.da import DialogueAct, DialogueActNBList

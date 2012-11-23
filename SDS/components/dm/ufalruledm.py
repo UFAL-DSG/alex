@@ -2,13 +2,14 @@
 # pylint: disable=E0602
 
 import sys
+import autopath
+from SDS.components.dm.ruledm import RuleDM, RuleDMPolicy
+from SDS.components.dm.ruledm import SystemRule, UserRule
+from SDS.components.dm.ruledm import UserTransformationRule
 
-from .ruledm import RuleDM, RuleDMPolicy
-from .ruledm import SystemRule, UserRule
-from .ruledm import UserTransformationRule
-
-from SDS.components.slu.da import DialogueAct
+from SDS.components.slu.da import DialogueActItem, DialogueActHyp, DialogueActNBList
 from SDS.utils.caminfodb import CamInfoDb
+from SDS.utils.config import Config
 
 class UfalRuleDMPolicy(RuleDMPolicy):
     db_cls = CamInfoDb
@@ -91,13 +92,23 @@ class UfalRuleDM(RuleDM):
 
 
 def main():
-    u = UfalRuleDM(
-        ontology="SDS/applications/CamInfoRest/ontology.cfg",
-        db_cfg="/xdisk/devel/vystadial/SDS/applications/CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"
-    )
+    import autopath
+    cfg = Config('resources/default-lz.cfg', True)
+    #cfg = {'DM': {'UfalRuleDM': {'ontology':"/xdisk/devel/vystadial/SDS/applications/CamInfoRest/ontology.cfg", 'db_cfg': "/xdisk/devel/vystadial/SDS/applications/CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"}}}
+    u = UfalRuleDM(cfg)
     ufal_ds = u.create_ds()
-    for ln in sys.stdin:
-        u.da_in(DialogueAct(ln.strip()))
+    while 1:
+        curr_acts = DialogueActNBList()
+        for ln in sys.stdin:
+            if len(ln.strip()) == 0:
+                break
+            ln = ln.strip()
+            print ln
+            score, act = ln.split(" ", 1)
+            score = float(score)
+            curr_acts.add(score, DialogueActItem(dai=act))
+
+        u.da_in(curr_acts)
         print "  >", u.da_out()
 
 if __name__ == '__main__':
