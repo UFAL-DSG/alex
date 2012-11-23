@@ -5,6 +5,7 @@ import collections
 import cStringIO
 import pprint
 import os.path
+import re
 
 from SDS.utils.mproc import SystemLogger
 from SDS.utils.sessionlogger import SessionLogger
@@ -45,9 +46,20 @@ class Config:
             yield i
 
     def __str__(self):
+        """ Converts the the config into a pretty print string.
+
+        It removes all lines which include word:
+            - password
+
+        to prevent password logging.
+        """
         sio = cStringIO.StringIO()
         pprint.pprint(self.config, sio, indent=2, width=120)
-        return sio.getvalue()
+        cfg = sio.getvalue()
+
+        cfg = re.sub(r".*password.*", "# this line was removed since it included a password", cfg)
+
+        return cfg
 
     def load(self, file_name):
         """FIX: Executing external files is not ideal! It should be changed in the future!

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# FIX: move the definitions of exceptions into their packages or modules
 
 class SDSException(Exception):
     pass
