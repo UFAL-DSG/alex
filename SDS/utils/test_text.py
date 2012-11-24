@@ -3,10 +3,7 @@
 
 import unittest
 
-import __init__
-
 import SDS.utils.text
-
 
 class TestString(unittest.TestCase):
     def test_split_by(self):

@@ -77,7 +77,7 @@ class DM(multiprocessing.Process):
                         self.cfg['Logging']['system_logger'].debug(s)
 
                     self.cfg['Logging']['session_logger'].turn("system")
-                    self.cfg['Logging']['session_logger'].system_dialogue_act(da)
+                    self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                     self.dialogue_act_out.send(DMDA(da))
                     self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
@@ -110,7 +110,7 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['system_logger'].debug(s)
 
                 self.cfg['Logging']['session_logger'].turn("system")
-                self.cfg['Logging']['session_logger'].system_dialogue_act(da)
+                self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                 self.dialogue_act_out.send(DMDA(da))
                 self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
