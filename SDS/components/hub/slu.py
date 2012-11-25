@@ -36,7 +36,7 @@ class SLU(multiprocessing.Process):
         if self.cfg['SLU']['type'] == 'Template':
             self.slu = TNLG.TemplateClassifier(cfg)
         elif self.cfg['SLU']['type'] == 'DAILogRegClassifier':
-            # FIX: maybe the SLU components should use the Config class to initialise themselves.
+            # FIXME: maybe the SLU components should use the Config class to initialise themselves.
             # As a result it would created their category label database and pre-processing classes.
 
             self.slu = DAILRSLU.DAILogRegClassifier(self.preprocessing)

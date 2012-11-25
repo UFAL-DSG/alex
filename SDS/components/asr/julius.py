@@ -130,7 +130,7 @@ class JuliusASR():
             try:
                 results += self.s_socket.recv(1)
             except socket.error:
-                # FIX: you should check the type of error. If the server dies then there will be a deadlock
+                # FIXME: you should check the type of error. If the server dies then there will be a deadlock
 
                 if not results:
                     # there are no data waiting for us

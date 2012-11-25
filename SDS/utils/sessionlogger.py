@@ -45,7 +45,7 @@ class SessionLogger:
 
         It is useful when constricting file and directory names.
         """
-        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dt += " " + time.tzname[time.localtime().tm_isdst]
 
         return dt
@@ -119,6 +119,7 @@ class SessionLogger:
         for i in range(5):
             x = re.sub(r'\n\t*\n', '\n', x)
             x = re.sub(r'\n *\n', '\n', x)
+#            x = re.sub(r'>\n\t*(\w)', r'>\1', x)
         x = re.sub(r'\t', '    ', x)
 
         self.f.write(x)
@@ -176,9 +177,43 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    def dialogue_rec_start(self, speaker, fname):
+        """ Adds the optional recorded input/output element to the last "speaker" turn.
+        """
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("dialogue")
+
+        if els:
+            da = els[0].appendChild(doc.createElement("dialogue_rec"))
+            if speaker:
+                da.setAttribute("speaker", speaker)
+            da.setAttribute("fname", fname)
+            da.setAttribute("starttime", self.get_time_str())
+        else:
+            raise SessionLoggerException("Missing dialogue element for %s speaker" % speaker)
+
+        self.close_session_xml(doc)
+        
+    @global_lock(lock)
+    def dialogue_rec_end(self, fname):
+        """ Stores the end time in the dialogue_rec element with fname file.
+        """
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("dialogue_rec")
+
+        for i in range(els.length-1, -1, -1):
+            if els[i].getAttribute("fname") == fname:
+                els[i].setAttribute("endtime", self.get_time_str())
+                break
+        else:
+            raise SessionLoggerException("Missing dialogue_rec element for %s fname" % fname)
+
+        self.close_session_xml(doc)
+
+    @global_lock(lock)
     def evaluation(self, num_turns, task_success, user_sat, score):
         """Adds the evaluation optional tag to the header."""
-        pass
+        raise SessionLoggerException("Not implemented")
 
     def turn_count(self, doc, speaker):
         trns = doc.getElementsByTagName("turn")
@@ -230,7 +265,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
 #    @global_lock(lock)
-    def text(self, speaker, text):
+    def text(self, speaker, text, cost = None):
         """ Adds the text (prompt) element to the last "speaker" turn.
         """
         doc = self.open_session_xml()
@@ -240,6 +275,8 @@ class SessionLogger:
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("text"))
                 da.setAttribute("time", self.get_time_str())
+                if cost:
+                    da.setAttribute("cost", str(cost))
                 da.appendChild(doc.createTextNode(str(text)))
                 break
         else:
@@ -281,39 +318,116 @@ class SessionLogger:
 
         self.close_session_xml(doc)
 
-    @global_lock(lock)
-    def text_cost(self, speaker, cost):
-        """ Adds the optional info about the TTS cost of the system prompt to the last system turn.
-        """
-        pass
-
-    @global_lock(lock)
-    def barge_in(self, speaker, tts_time, asr_time):
-        """Add the optional barge_in element to the last system turn."""
-        pass
-
-
-    @global_lock(lock)
+#    @global_lock(lock)
     def asr(self, speaker, nblist, confnet = None):
-        """ Adds the asr nbest list to the last user turn.
+        """ Adds the ASR nblist to the last speaker turn.
 
         SDS Extension: It can also store the confusion network representation.
         """
-        pass
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length-1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                asr = els[i].appendChild(doc.createElement("asr"))
+                
+                for p, h in nblist:
+                    hyp = asr.appendChild(doc.createElement("hypothesis"))
+                    hyp.setAttribute("p", "%.3f" % p)
+                    hyp.appendChild(doc.createTextNode(str(h)))
+                
+                if confnet:
+                    cn = asr.appendChild(doc.createElement("confnet"))
+                    
+                    for alts in confnet:
+                        was = cn.appendChild(doc.createElement("word_alternatives"))
+                        
+                        for p, w in alts:
+                            wa = was.appendChild(doc.createElement("word"))
+                            wa.setAttribute("p", "%.3f" % p)
+                            wa.appendChild(doc.createTextNode(str(w)))
+                            
+                break
+        else:
+            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+
+        self.close_session_xml(doc)
+        
+#    @global_lock(lock)
+    def slu(self, speaker, nblist, confnet = None):
+        """ Adds the slu nbest list to the last speaker turn.
+
+        SDS Extension: It can also store the confusion network representation. The confnet must be an instance of 
+        DialogueActConfusionNetwork.
+        
+        """
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length-1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                asr = els[i].appendChild(doc.createElement("slu"))
+                
+                for p, h in nblist:
+                    hyp = asr.appendChild(doc.createElement("interpretation"))
+                    hyp.setAttribute("p", "%.3f" % p)
+                    hyp.appendChild(doc.createTextNode(str(h)))
+                
+                if confnet:
+                    cn = asr.appendChild(doc.createElement("confnet"))
+                    
+                    for p, dai in confnet:
+                        sas = cn.appendChild(doc.createElement("dai_alternatives"))
+                        
+                        daia = sas.appendChild(doc.createElement("dai"))
+                        daia.setAttribute("p", "%.3f" % p)
+                        daia.appendChild(doc.createTextNode(str(dai)))
+
+                        daia = sas.appendChild(doc.createElement("dai"))
+                        daia.setAttribute("p", "%.3f" % (1-p))
+                        daia.appendChild(doc.createTextNode("null()"))
+
+                break
+        else:
+            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+
+        self.close_session_xml(doc)
 
     @global_lock(lock)
-    def slu(self, speaker, nblist, confnet = None):
-        """ Adds the slu nbest list to the last user turn.
+    def barge_in(self, speaker, tts_time = False, asr_time = False):
+        """Add the optional barge-in element to the last speaker turn."""
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
 
-        SDS Extension: It can also store the confusion network representation.
-        """
-        pass
+        for i in range(els.length-1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                da = els[i].appendChild(doc.createElement("barge-in"))
+                if tts_time:
+                    da.setAttribute("tts_time", self.get_time_str())
+                if asr_time:
+                    da.setAttribute("asr_time", self.get_time_str())
+                break
+        else:
+            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+
+        self.close_session_xml(doc)
 
     @global_lock(lock)
     def hangup(self, speaker):
         """ Adds the user hangup element to the last user turn.
         """
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
 
+        for i in range(els.length-1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                da = els[i].appendChild(doc.createElement("hangup"))
+                break
+        else:
+            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+
+        self.close_session_xml(doc)
+        
     ###########################################################################################
     ## The following functions define functionality above what was set in SDC 2010 XML
     ## logging format.
@@ -325,7 +439,7 @@ class SessionLogger:
 
         This is an SDS extension.
         """
-        pass
+        raise SessionLoggerException("Not implemented")
 
     @global_lock(lock)
     def belief_state(self, speaker, bstate):
@@ -333,4 +447,4 @@ class SessionLogger:
 
         This is an SDS extension.
         """
-        pass
+        raise SessionLoggerException("Not implemented")

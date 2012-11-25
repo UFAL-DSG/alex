@@ -50,7 +50,7 @@ class FliteTTS():
             wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
         except TTSException:
             # send empty wave data
-            # FIX: log the exception
+            # FIXME: log the exception
             return ""
 
         return wav
