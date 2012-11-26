@@ -37,18 +37,12 @@ if __name__ == '__main__':
     wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
     # remove the last frame
 
-    aio_commands, aio_child_commands = multiprocessing.Pipe(
-    )  # used to send aio_commands
-    audio_record, child_audio_record = multiprocessing.Pipe(
-    )  # I read from this connection recorded audio
-    audio_play, child_audio_play = multiprocessing.Pipe(
-    )  # I write in audio to be played
-    audio_played, child_audio_played = multiprocessing.Pipe(
-    )  # I read from this to get played audio
-                                                              #   which in sync with recorded signal
+    aio_commands, aio_child_commands = multiprocessing.Pipe()  # used to send aio_commands
+    audio_record, child_audio_record = multiprocessing.Pipe()  # I read from this connection recorded audio
+    audio_play, child_audio_play = multiprocessing.Pipe()      # I write in audio to be played
 
     aio = AudioIO(cfg, aio_child_commands, child_audio_record,
-                  child_audio_play, child_audio_played)
+                  child_audio_play)
 
     aio.start()
 
@@ -67,9 +61,6 @@ if __name__ == '__main__':
         # read all recorded audio
         if audio_record.poll():
             data_rec = audio_record.recv()
-        # read all played audio
-        if audio_played.poll():
-            data_played = audio_played.recv()
 
     aio_commands.send(Command('stop()'))
     aio.join()

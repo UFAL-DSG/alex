@@ -33,13 +33,12 @@ class VAD(multiprocessing.Process):
     These commands has to be properly detected in the output stream by the following component.
     """
 
-    def __init__(self, cfg, commands, audio_recorded_in, audio_played_in, audio_out):
+    def __init__(self, cfg, commands, audio_recorded_in, audio_out):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
         self.commands = commands
         self.audio_recorded_in = audio_recorded_in
-        self.audio_played_in = audio_played_in
         self.audio_out = audio_out
 
         self.output_file_name = None
@@ -57,7 +56,6 @@ class VAD(multiprocessing.Process):
         self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
         self.detection_window_sil = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
         self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
-        self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
@@ -90,11 +88,8 @@ class VAD(multiprocessing.Process):
                     # discard all data in in input buffers
                     while self.audio_recorded_in.poll():
                         data_play = self.audio_recorded_in.recv()
-                    while self.audio_played_in.poll():
-                        data_play = self.audio_played_in.recv()
 
                     self.deque_audio_recorded_in.clear()
-                    self.deque_audio_played_in.clear()
 
                     return False
 
@@ -132,15 +127,8 @@ class VAD(multiprocessing.Process):
             data_rec = self.audio_recorded_in.recv()
 
             if isinstance(data_rec, Frame):
-                # read played audio
-                if self.audio_played_in.poll():
-                    data_played = self.audio_played_in.recv()
-                else:
-                    data_played = Frame(b"\x00" * len(data_rec))
-
                 # buffer the recorded and played audio
                 self.deque_audio_recorded_in.append(data_rec)
-                self.deque_audio_played_in.append(data_played)
 
                 decison = self.vad.decide(data_rec.payload)
                 vad, change = self.smoothe_decison(decison)
@@ -165,7 +153,7 @@ class VAD(multiprocessing.Process):
                             self.cfg['Logging']['system_logger'].debug('Output file name: %s' % self.output_file_name)
 
                         self.wf = wave.open(self.output_file_name, 'w')
-                        self.wf.setnchannels(2)
+                        self.wf.setnchannels(1)
                         self.wf.setsampwidth(2)
                         self.wf.setframerate(self.cfg['Audio']['sample_rate'])
 
@@ -192,29 +180,17 @@ class VAD(multiprocessing.Process):
                         #   if there is no change then there will be only one queued frame
 
                         data_rec = self.deque_audio_recorded_in.popleft()
-                        data_played = self.deque_audio_played_in.popleft()
 
                         # send the result
                         self.audio_out.send(data_rec)
 
-                        # save the recorded and played data
-                        data_stereo = bytearray()
-                        for i in range(self.cfg['Audio']['samples_per_frame']):
-                            data_stereo.extend(data_rec[i * 2])
-                            data_stereo.extend(data_rec[i * 2 + 1])
-                            # there might not be enough data to be played
-                            # then add zeros
-                            try:
-                                data_stereo.extend(data_played[i * 2])
-                            except IndexError:
-                                data_stereo.extend(b'\x00')
+                        # save the recorded data
+#                        data_stereo = bytearray()
+#                        for i in range(self.cfg['Audio']['samples_per_frame']):
+#                            data_stereo.extend(data_rec[i * 2])
+#                            data_stereo.extend(data_rec[i * 2 + 1])
 
-                            try:
-                                data_stereo.extend(data_played[i * 2 + 1])
-                            except IndexError:
-                                data_stereo.extend(b'\x00')
-
-                        self.wf.writeframes(data_stereo)
+                        self.wf.writeframes(bytearray(data_rec))
 
     def run(self):
         while 1:

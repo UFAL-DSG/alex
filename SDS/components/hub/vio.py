@@ -220,7 +220,7 @@ class VoipIO(multiprocessing.Process):
     played audio.
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play, audio_played):
+    def __init__(self, cfg, commands, audio_record, audio_play):
         """ Initialize VoipIO
 
         cfg - configuration dictionary
@@ -231,8 +231,6 @@ class VoipIO(multiprocessing.Process):
         audio_play - inter-process connection for receiving audio which should to be played.
           Audio must be divided into frames, each with the length of samples_per_frame.
 
-        audio_played - inter-process connection for sending audio which was played.
-          Audio is divided into frames and synchronised with the recorded audio.
         """
 
         multiprocessing.Process.__init__(self)
@@ -249,8 +247,6 @@ class VoipIO(multiprocessing.Process):
 
         self.audio_play = audio_play
         self.local_audio_play = deque()
-
-        self.audio_played = audio_played
 
         self.last_frame_id = 1
         self.message_queue = []
@@ -380,7 +376,8 @@ class VoipIO(multiprocessing.Process):
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
 
                     # send played audio
-                    self.audio_played.send(data_play)
+                    # FIXME: I should save what I am playing
+                    # self.audio_played.send(data_play)
 
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
@@ -500,7 +497,7 @@ class VoipIO(multiprocessing.Process):
         return uri
 
     def make_call(self, uri):
-        """ Call privided URI. Check whether it is allowed.
+        """ Call provided URI. Check whether it is allowed.
         """
         try:
             uri = self.normalise_uri(uri)
@@ -512,6 +509,10 @@ class VoipIO(multiprocessing.Process):
                 # create a call back for the call
                 call_cb = CallCallback(self.cfg, None, self)
                 self.call = self.acc.make_call(uri, cb=call_cb)
+
+                # send a message that there is a new incoming call
+                self.commands.send(Command('make_call(remote_uri="%s")' % self.get_user_from_uri(uri), 'VoipIO', 'HUB'))
+
                 return self.call
             elif uri == "blocked":
                 if self.cfg['VoipIO']['debug']:
