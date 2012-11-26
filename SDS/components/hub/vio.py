@@ -142,6 +142,9 @@ class CallCallback(pj.CallCallback):
             self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                 'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
 
+            self.cfg['Logging']['session_logger'].dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+            self.cfg['Logging']['session_logger'].dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
+
             # Create wave recorders
             self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
             recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
@@ -162,6 +165,9 @@ class CallCallback(pj.CallCallback):
             self.voipio.on_call_confirmed(self.call.info().remote_uri)
 
         if self.call.info().state == pj.CallState.DISCONNECTED:
+            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_played))
+            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
+
             self.voipio.call = None
 
             if self.recorded_id:
@@ -173,8 +179,7 @@ class CallCallback(pj.CallCallback):
     def on_transfer_status(self, code, reason, final, cont):
         if self.cfg['VoipIO']['debug']:
             m = []
-            m.append("CallCallback::on_transfer_status : Call with %s " %
-                     self.call.info().remote_uri)
+            m.append("CallCallback::on_transfer_status : Call with %s " % self.call.info().remote_uri)
             m.append("is %s " % self.call.info().state_text)
             m.append("last code = %s " % self.call.info().last_code)
             m.append("(%s)" % self.call.info().last_reason)
@@ -195,17 +200,14 @@ class CallCallback(pj.CallCallback):
     def on_media_state(self):
         if self.call.info().media_state == pj.MediaState.ACTIVE:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug(
-                    "CallCallback::on_media_state : Media is now active")
+                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is now active")
         else:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug(
-                    "CallCallback::on_media_state : Media is inactive")
+                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is inactive")
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "Received digits: %s" % digits)
+            self.cfg['Logging']['system_logger'].debug("Received digits: %s" % digits)
 
         self.voipio.on_dtmf_digit(digits)
 
@@ -577,16 +579,14 @@ class VoipIO(multiprocessing.Process):
 
     def on_call_confirmed(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "VoipIO::on_call_confirmed")
+            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_confirmed")
 
         # send a message that the call is confirmed
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_disconnected(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "VoipIO::on_call_disconnected")
+            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_disconnected")
 
         # send a message that the call is disconnected
         self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))

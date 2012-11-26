@@ -54,14 +54,10 @@ class VAD(multiprocessing.Process):
                 'Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
         # stores information about each frame whether it was classified as speech or non speech
-        self.detection_window_speech = deque(
-            maxlen=self.cfg['VAD']['decision_frames_speech'])
-        self.detection_window_sil = deque(
-            maxlen=self.cfg['VAD']['decision_frames_sil'])
-        self.deque_audio_recorded_in = deque(
-            maxlen=self.cfg['VAD']['speech_buffer_frames'])
-        self.deque_audio_played_in = deque(
-            maxlen=self.cfg['VAD']['speech_buffer_frames'])
+        self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+        self.detection_window_sil = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
+        self.deque_audio_recorded_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
+        self.deque_audio_played_in = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
@@ -108,13 +104,10 @@ class VAD(multiprocessing.Process):
         self.detection_window_speech.append(decision)
         self.detection_window_sil.append(decision)
 
-        speech = float(sum(
-            self.detection_window_speech)) / len(self.detection_window_speech)
-        sil = float(
-            sum(self.detection_window_sil)) / len(self.detection_window_sil)
+        speech = float(sum(self.detection_window_speech)) / len(self.detection_window_speech)
+        sil = float(sum(self.detection_window_sil)) / len(self.detection_window_sil)
         if self.cfg['VAD']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                'SPEECH: %s SIL: %s' % (speech, sil))
+            self.cfg['Logging']['system_logger'].debug('SPEECH: %s SIL: %s' % (speech, sil))
 
         vad = self.last_vad
         change = None
@@ -153,21 +146,20 @@ class VAD(multiprocessing.Process):
                 vad, change = self.smoothe_decison(decison)
 
                 if self.cfg['VAD']['debug']:
-                    self.cfg['Logging']['system_logger'].debug(
-                        "vad: %s change:%s" % (vad, change))
+                    self.cfg['Logging']['system_logger'].debug("vad: %s change:%s" % (vad, change))
 
                 if change:
                     if change == 'speech':
-                        # inform both the parent and the consumer
-                        self.audio_out.send(
-                            Command('speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(
-                            Command('speech_start()', 'VAD', 'HUB'))
                         # create new logging file
-                        self.output_file_name = os.path.join(
-                            self.cfg['Logging'][
-                                'system_logger'].get_session_dir_name(),
+                        self.output_file_name = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                             'vad-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
+
+                        self.cfg['Logging']['session_logger'].turn("user")
+                        self.cfg['Logging']['session_logger'].rec_start("user", os.path.basename(self.output_file_name))
+
+                        # inform both the parent and the consumer
+                        self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.cfg['Logging']['system_logger'].debug('Output file name: %s' % self.output_file_name)
@@ -178,11 +170,11 @@ class VAD(multiprocessing.Process):
                         self.wf.setframerate(self.cfg['Audio']['sample_rate'])
 
                     if change == 'non-speech':
+                        self.cfg['Logging']['session_logger'].rec_end(os.path.basename(self.output_file_name))
+
                         # inform both the parent and the consumer
-                        self.audio_out.send(
-                            Command('speech_end()', 'VAD', 'AudioIn'))
-                        self.commands.send(
-                            Command('speech_end()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_end()', 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_end()', 'VAD', 'HUB'))
                         # close the current logging file
                         if self.wf:
                             self.wf.close()

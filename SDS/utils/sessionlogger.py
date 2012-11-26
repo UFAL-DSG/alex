@@ -23,9 +23,9 @@ class SessionLoggerException(SDSException):
 class SessionLogger:
     """ This is a multiprocessing safe logger. It should be used by the SDS to log information
     according the SDC 2010 XML format.
-    
+
     Date and times should also include time zone.
-    
+
     Times should be in seconds from the beginning of the dialogue.
 
     """
@@ -35,6 +35,7 @@ class SessionLogger:
     def __init__(self):
         self.session_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.session_dir_name.value = ''
+        self.session_start_time = multiprocessing.Value('d', time.time())
 
     def __repr__(self):
         return "SessionLogger()"
@@ -56,10 +57,10 @@ class SessionLogger:
 
         It is useful when constricting file and directory names.
         """
-        dt = datetime.now() - self.session_start_time
+        dt = time.time() - self.session_start_time.value
 
-        return str(dt.total_seconds())
-        
+        return "%.3f" % dt
+
     @global_lock(lock)
     def session_start(self, output_dir):
         """ Records the target directory and create the template call log.
@@ -75,8 +76,8 @@ class SessionLogger:
         f.write('\n')
         fcntl.lockf(f, fcntl.LOCK_UN)
         f.close()
-        
-        self.session_start_time = datetime.now()
+
+        self.session_start_time.value = time.time()
 
     @global_lock(lock)
     def session_end(self):
@@ -193,7 +194,7 @@ class SessionLogger:
             raise SessionLoggerException("Missing dialogue element for %s speaker" % speaker)
 
         self.close_session_xml(doc)
-        
+
     @global_lock(lock)
     def dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
@@ -218,16 +219,16 @@ class SessionLogger:
     def turn_count(self, doc, speaker):
         trns = doc.getElementsByTagName("turn")
         counter = 0
-        
+
         if trns:
             for i in range(trns.length):
                 if trns[i].getAttribute("speaker") == speaker:
                     counter += 1
-            
+
             return counter
-            
+
         return 0
-        
+
 #    @global_lock(lock)
     def turn(self, speaker):
         """ Adds a new turn at the end of the dialogue element.
@@ -237,7 +238,7 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("dialogue")
         trns = self.turn_count(doc, speaker)
-        
+
         if els:
             turn = els[0].appendChild(doc.createElement("turn"))
             turn.setAttribute("speaker", speaker)
@@ -281,7 +282,7 @@ class SessionLogger:
                 break
         else:
             raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
-            
+
         self.close_session_xml(doc)
 
     @global_lock(lock)
@@ -301,7 +302,7 @@ class SessionLogger:
             raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
 
         self.close_session_xml(doc)
-        
+
     @global_lock(lock)
     def rec_end(self, fname):
         """ Stores the end time in the rec element with fname file.
@@ -330,36 +331,36 @@ class SessionLogger:
         for i in range(els.length-1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 asr = els[i].appendChild(doc.createElement("asr"))
-                
+
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("hypothesis"))
                     hyp.setAttribute("p", "%.3f" % p)
                     hyp.appendChild(doc.createTextNode(str(h)))
-                
+
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
-                    
+
                     for alts in confnet:
                         was = cn.appendChild(doc.createElement("word_alternatives"))
-                        
+
                         for p, w in alts:
                             wa = was.appendChild(doc.createElement("word"))
                             wa.setAttribute("p", "%.3f" % p)
                             wa.appendChild(doc.createTextNode(str(w)))
-                            
+
                 break
         else:
             raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
 
         self.close_session_xml(doc)
-        
+
 #    @global_lock(lock)
     def slu(self, speaker, nblist, confnet = None):
         """ Adds the slu nbest list to the last speaker turn.
 
-        SDS Extension: It can also store the confusion network representation. The confnet must be an instance of 
+        SDS Extension: It can also store the confusion network representation. The confnet must be an instance of
         DialogueActConfusionNetwork.
-        
+
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
@@ -367,18 +368,18 @@ class SessionLogger:
         for i in range(els.length-1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 asr = els[i].appendChild(doc.createElement("slu"))
-                
+
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("interpretation"))
                     hyp.setAttribute("p", "%.3f" % p)
                     hyp.appendChild(doc.createTextNode(str(h)))
-                
+
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
-                    
+
                     for p, dai in confnet:
                         sas = cn.appendChild(doc.createElement("dai_alternatives"))
-                        
+
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % p)
                         daia.appendChild(doc.createTextNode(str(dai)))
@@ -427,7 +428,7 @@ class SessionLogger:
             raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
 
         self.close_session_xml(doc)
-        
+
     ###########################################################################################
     ## The following functions define functionality above what was set in SDC 2010 XML
     ## logging format.
