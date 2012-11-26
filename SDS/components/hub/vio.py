@@ -142,8 +142,18 @@ class CallCallback(pj.CallCallback):
             self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                 'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
 
-            self.cfg['Logging']['session_logger'].dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
-            self.cfg['Logging']['session_logger'].dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
+            while 1:
+                try:
+                    # this can fail if the session.xml is not created yet
+                    self.cfg['Logging']['session_logger'].dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+                    self.cfg['Logging']['session_logger'].dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
+                except IOError:
+                    # sleep for a while to let others to react to the previous messages
+                    time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                    # then try again
+                    continue
+                # everything was OK, so exit the loop
+                break
 
             # Create wave recorders
             self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
@@ -597,8 +607,7 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_dtmf_digit")
 
         # send a message that a digit was recieved
-        self.commands.send(
-            Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
+        self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
     def run(self):
         try:

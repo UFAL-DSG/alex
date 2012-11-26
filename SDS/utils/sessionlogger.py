@@ -177,9 +177,11 @@ class SessionLogger:
 
         self.close_session_xml(doc)
 
-    #@global_lock(lock)
+    @global_lock(lock)
     def dialogue_rec_start(self, speaker, fname):
         """ Adds the optional recorded input/output element to the last "speaker" turn.
+
+        FIXME: It can happen that the session.xml is not created when this function is called.
         """
         doc = self.open_session_xml()
 
@@ -196,7 +198,7 @@ class SessionLogger:
 
         self.close_session_xml(doc)
 
-    #@global_lock(lock)
+    @global_lock(lock)
     def dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
         """
