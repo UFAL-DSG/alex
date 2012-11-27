@@ -36,10 +36,14 @@ class JuliusASR():
         self.reuse_server = self.cfg['ASR']['Julius']['reuse_server']
 
         try:
+            if self.reuse_server:
+                # reinit hack for julius
+                os.system("killall -USR1 julius")
             if self.reuse_server and self.is_server_running():
                 # if we should reuse server and it is running, it's perfect
                 # and do nothing
                 self.cfg['Logging']['system_logger'].debug("Brilliant, Julius is already running.")
+                self.open_adinnet()
                 return
             elif not self.reuse_server and self.is_server_running():
                 self.kill_all_juliuses()
@@ -96,7 +100,7 @@ class JuliusASR():
         # start the server with the -debug options
         # with this option it does not generates seg faults
         if self.reuse_server:
-            os.system("julius -C %s > %s &" % (jconf, log,))
+            os.system("julius -debug -C %s > %s &" % (jconf, log,))
         else:
             self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log, ),
                                               shell=True,
@@ -114,6 +118,7 @@ class JuliusASR():
 
         self.a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.a_socket.connect((self.hostname, self.adinnetport))
+        print 'adinnet opened'
 
     def send_frame(self, frame):
         """Sends one frame of audio data to the Julius ASR"""
@@ -187,7 +192,6 @@ class JuliusASR():
         to = 0.0
         while True:
             if to >= timeout:
-                print msg
                 raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
 
             m = self.read_server_message()
@@ -198,6 +202,8 @@ class JuliusASR():
                 continue
 
             msg += m + '\n'
+
+            print msg
 
             if '<CONFNET>' in msg:
                 break

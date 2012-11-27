@@ -30,8 +30,6 @@ class AudioHub(Hub):
         aio_record, aio_child_record = multiprocessing.Pipe()
         # I write in audio to be played
         aio_play, aio_child_play = multiprocessing.Pipe()
-        # I read from this to get played audio
-        aio_played, aio_child_played = multiprocessing.Pipe()
 
         # VAD pipes
         # used to send commands to VAD
@@ -74,7 +72,6 @@ class AudioHub(Hub):
 
         non_command_connections = [aio_record, aio_child_record,
                                    aio_play, aio_child_play,
-                                   aio_played, aio_child_played,
                                    vad_audio_out, vad_child_audio_out,
                                    asr_hypotheses_out, asr_child_hypotheses,
                                    slu_hypotheses_out, slu_child_hypotheses,
@@ -83,8 +80,8 @@ class AudioHub(Hub):
 
 
         # create the hub components
-        aio = AudioIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play, aio_child_played)
-        vad = VAD(self.cfg, vad_child_commands, aio_record, aio_played, vad_child_audio_out)
+        aio = AudioIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play)
+        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out)
         asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
         slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
         dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)
@@ -115,6 +112,15 @@ class AudioHub(Hub):
         hangup = False
 
         call_start = time.time()
+
+        self.cfg['Logging']['system_logger'].session_start("@LOCAL_CALL")
+        self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
+
+        self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
+        self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
+        self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
+        self.cfg['Logging']['session_logger'].input_source("aio")
+
 
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
