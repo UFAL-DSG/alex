@@ -55,7 +55,7 @@ class AudioIO(multiprocessing.Process):
         self.audio_play = audio_play
         self.audio_played = audio_played
 
-        self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
+        self.output_file_name = os.path.join(self.cfg['AudioIO']['output_dir'],
                                              'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
 
     def process_pending_commands(self, p, stream, wf):
