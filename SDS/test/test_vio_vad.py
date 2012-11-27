@@ -53,25 +53,15 @@ if __name__ == '__main__':
     wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
     # remove the last frame
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe(
-    )  # used to send vio_commands
-    audio_record, child_audio_record = multiprocessing.Pipe(
-    )  # I read from this connection recorded audio
-    audio_play, child_audio_play = multiprocessing.Pipe(
-    )     # I write in audio to be played
-    audio_played, child_audio_played = multiprocessing.Pipe(
-    )  # I read from this to get played audio
-                                                              #   which in sync with recorded signal
+    vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send vio_commands
+    audio_record, child_audio_record = multiprocessing.Pipe()  # I read from this connection recorded audio
+    audio_play, child_audio_play = multiprocessing.Pipe()     # I write in audio to be played
 
-    vad_commands, vad_child_commands = multiprocessing.Pipe(
-    )  # used to send commands to VAD
-    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe(
-    )  # used to read output audio from VAD
+    vad_commands, vad_child_commands = multiprocessing.Pipe()  # used to send commands to VAD
+    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()  # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, child_audio_record,
-                 child_audio_play, child_audio_played)
-    vad = VAD(cfg, vad_child_commands, audio_record, audio_played,
-              vad_child_audio_out)
+    vio = VoipIO(cfg, vio_child_commands, child_audio_record,child_audio_play)
+    vad = VAD(cfg, vad_child_commands, audio_record, vad_child_audio_out)
 
     command_connections = [vio_commands, vad_commands]
 

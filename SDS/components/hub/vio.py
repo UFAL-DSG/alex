@@ -142,6 +142,19 @@ class CallCallback(pj.CallCallback):
             self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
                 'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
 
+            while 1:
+                try:
+                    # this can fail if the session.xml is not created yet
+                    self.cfg['Logging']['session_logger'].dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+                    self.cfg['Logging']['session_logger'].dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
+                except IOError:
+                    # sleep for a while to let others to react to the previous messages
+                    time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                    # then try again
+                    continue
+                # everything was OK, so exit the loop
+                break
+
             # Create wave recorders
             self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
             recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
@@ -162,6 +175,9 @@ class CallCallback(pj.CallCallback):
             self.voipio.on_call_confirmed(self.call.info().remote_uri)
 
         if self.call.info().state == pj.CallState.DISCONNECTED:
+            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_played))
+            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
+
             self.voipio.call = None
 
             if self.recorded_id:
@@ -173,8 +189,7 @@ class CallCallback(pj.CallCallback):
     def on_transfer_status(self, code, reason, final, cont):
         if self.cfg['VoipIO']['debug']:
             m = []
-            m.append("CallCallback::on_transfer_status : Call with %s " %
-                     self.call.info().remote_uri)
+            m.append("CallCallback::on_transfer_status : Call with %s " % self.call.info().remote_uri)
             m.append("is %s " % self.call.info().state_text)
             m.append("last code = %s " % self.call.info().last_code)
             m.append("(%s)" % self.call.info().last_reason)
@@ -195,17 +210,14 @@ class CallCallback(pj.CallCallback):
     def on_media_state(self):
         if self.call.info().media_state == pj.MediaState.ACTIVE:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug(
-                    "CallCallback::on_media_state : Media is now active")
+                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is now active")
         else:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug(
-                    "CallCallback::on_media_state : Media is inactive")
+                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is inactive")
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "Received digits: %s" % digits)
+            self.cfg['Logging']['system_logger'].debug("Received digits: %s" % digits)
 
         self.voipio.on_dtmf_digit(digits)
 
@@ -218,7 +230,7 @@ class VoipIO(multiprocessing.Process):
     played audio.
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play, audio_played):
+    def __init__(self, cfg, commands, audio_record, audio_play):
         """ Initialize VoipIO
 
         cfg - configuration dictionary
@@ -229,8 +241,6 @@ class VoipIO(multiprocessing.Process):
         audio_play - inter-process connection for receiving audio which should to be played.
           Audio must be divided into frames, each with the length of samples_per_frame.
 
-        audio_played - inter-process connection for sending audio which was played.
-          Audio is divided into frames and synchronised with the recorded audio.
         """
 
         multiprocessing.Process.__init__(self)
@@ -247,8 +257,6 @@ class VoipIO(multiprocessing.Process):
 
         self.audio_play = audio_play
         self.local_audio_play = deque()
-
-        self.audio_played = audio_played
 
         self.last_frame_id = 1
         self.message_queue = []
@@ -378,7 +386,8 @@ class VoipIO(multiprocessing.Process):
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
 
                     # send played audio
-                    self.audio_played.send(data_play)
+                    # FIXME: I should save what I am playing
+                    # self.audio_played.send(data_play)
 
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
@@ -498,7 +507,7 @@ class VoipIO(multiprocessing.Process):
         return uri
 
     def make_call(self, uri):
-        """ Call privided URI. Check whether it is allowed.
+        """ Call provided URI. Check whether it is allowed.
         """
         try:
             uri = self.normalise_uri(uri)
@@ -510,6 +519,10 @@ class VoipIO(multiprocessing.Process):
                 # create a call back for the call
                 call_cb = CallCallback(self.cfg, None, self)
                 self.call = self.acc.make_call(uri, cb=call_cb)
+
+                # send a message that there is a new incoming call
+                self.commands.send(Command('make_call(remote_uri="%s")' % self.get_user_from_uri(uri), 'VoipIO', 'HUB'))
+
                 return self.call
             elif uri == "blocked":
                 if self.cfg['VoipIO']['debug']:
@@ -577,16 +590,14 @@ class VoipIO(multiprocessing.Process):
 
     def on_call_confirmed(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "VoipIO::on_call_confirmed")
+            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_confirmed")
 
         # send a message that the call is confirmed
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_disconnected(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                "VoipIO::on_call_disconnected")
+            self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_disconnected")
 
         # send a message that the call is disconnected
         self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
@@ -596,8 +607,7 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_dtmf_digit")
 
         # send a message that a digit was recieved
-        self.commands.send(
-            Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
+        self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
     def run(self):
         try:

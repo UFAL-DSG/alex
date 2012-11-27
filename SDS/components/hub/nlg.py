@@ -77,8 +77,10 @@ class NLG(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                self.text_out.send(TTSText(text))
+                self.cfg['Logging']['session_logger'].text("system", text)
+
                 self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+                self.text_out.send(TTSText(text))
             elif isinstance(data_da, Command):
                 cfg['Logging']['system_logger'].info(data_da)
             else:

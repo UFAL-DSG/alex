@@ -138,8 +138,6 @@ if __name__ == '__main__':
     vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
     vio_record, vio_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
     vio_play, vio_child_play = multiprocessing.Pipe()          # I write in audio to be played
-    vio_played, vio_child_played = multiprocessing.Pipe()      # I read from this to get played audio
-                                                               #   which in sync with recorded signal
 
     vad_commands, vad_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
     vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
@@ -151,14 +149,11 @@ if __name__ == '__main__':
 
     non_command_connections = [vio_record, vio_child_record,
                                vio_play, vio_child_play,
-                               vio_played, vio_child_played,
                                vad_audio_out, vad_child_audio_out,
                                tts_text_in, tts_child_text_in]
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record,
-                 vio_child_play, vio_child_played)
-    vad = VAD(
-        cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
     tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
 
     vio.start()
@@ -221,8 +216,7 @@ if __name__ == '__main__':
             data_vad = vad_audio_out.recv()
 
         if call_back_time != -1 and call_back_time < time.time():
-            vio_commands.send(Command('make_call(destination="%s")' %
-                              call_back_uri, 'HUB', 'VoipIO'))
+            vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
             call_back_time = -1
             call_back_uri = None
 
@@ -231,10 +225,15 @@ if __name__ == '__main__':
             command = vio_commands.recv()
 
             if isinstance(command, Command):
-                if command.parsed['__name__'] == "incoming_call":
+                if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
                     cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
                     cfg['Logging']['system_logger'].info(command)
+
+                    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
+                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
+                    cfg['Logging']['session_logger'].input_source("voip")
 
                 if command.parsed['__name__'] == "rejected_call":
                     cfg['Logging']['system_logger'].info(command)
@@ -333,6 +332,7 @@ if __name__ == '__main__':
                     tts_commands.send(Command('flush()', 'HUB', 'TTS'))
 
                     cfg['Logging']['system_logger'].session_end()
+                    cfg['Logging']['session_logger'].session_end()
 
                     try:
                         s, e, l = db[

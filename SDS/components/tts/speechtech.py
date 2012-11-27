@@ -93,7 +93,7 @@ class SpeechtechTTS():
             wav = audio.convert_mp3_to_wav(self.cfg, mp3)
         except TTSException:
             # send empty wave data
-            # FIX: log the exception
+            # FIXME: log the exception
             return ""
 
         return wav

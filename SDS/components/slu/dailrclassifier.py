@@ -214,7 +214,7 @@ class DAILogRegClassifier(SLUInterface):
 
     """
     def __init__(self, preprocessing=None):
-        # FIX: maybe the SLU components should use the Config class to initialise themselves.
+        # FIXME: maybe the SLU components should use the Config class to initialise themselves.
         # As a result it would create their category label database and pre-processing classes.
 
         self.preprocessing = preprocessing
@@ -320,7 +320,7 @@ class DAILogRegClassifier(SLUInterface):
 #        print confnet
 #        print
 
-        nblist = confnet.get_utterance_nblist()
+        nblist = confnet.get_utterance_nblist(n=40)
 
 #        print "NBList"
 #        print nblist
