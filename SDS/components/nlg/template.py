@@ -7,8 +7,10 @@ import copy
 
 from SDS.components.slu.da import DialogueAct
 from SDS.utils.exception import TemplateNLGException
+from dummynlg import DummyNLG
 
 templates = None
+
 
 class TemplateNLG:
     def __init__(self, cfg):
@@ -16,6 +18,9 @@ class TemplateNLG:
 
         if self.cfg['NLG']['Template']['model']:
             self.load(self.cfg['NLG']['Template']['model'])
+
+        # if there is no match in the templates, back off to the simple DummyNLG
+        self.backoff_nlg = DummyNLG(cfg)
 
     def load(self, file_name):
         """FIXME: Executing external files is not ideal! It should be changed in the future!
@@ -95,8 +100,9 @@ class TemplateNLG:
                 # try to find a relaxed match
                 return self.random_select(self.match_generic_templates(da))
             except TemplateNLGException:
-                # nothing was find
-                self.cfg['Logging']['system_logger'].warning("TemplateNLG: There is no matching template for %s" % da)
-                return self.random_select(self.templates[str('notemplate()')])
+                # nothing was found
+                return self.backoff_nlg.generate(da)
+                #self.cfg['Logging']['system_logger'].warning("TemplateNLG: There is no matching template for %s" % da)
+                #return self.random_select(self.templates[str('notemplate()')])
 
 
