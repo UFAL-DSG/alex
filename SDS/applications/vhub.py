@@ -33,8 +33,6 @@ class VoipHub(Hub):
         vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
         vio_record, vio_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
         vio_play, vio_child_play = multiprocessing.Pipe()          # I write in audio to be played
-        vio_played, vio_child_played = multiprocessing.Pipe()      # I read from this to get played audio
-                                                                   #   which in sync with recorded signal
 
         vad_commands, vad_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
         vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
@@ -58,15 +56,14 @@ class VoipHub(Hub):
 
         non_command_connections = [vio_record, vio_child_record,
                                    vio_play, vio_child_play,
-                                   vio_played, vio_child_played,
                                    vad_audio_out, vad_child_audio_out,
                                    asr_hypotheses_out, asr_child_hypotheses,
                                    slu_hypotheses_out, slu_child_hypotheses,
                                    dm_actions_out, dm_child_actions,
                                    nlg_text_out, nlg_child_text]
 
-        vio = VoipIO(self.cfg, vio_child_commands, vio_child_record, vio_child_play, vio_child_played)
-        vad = VAD(self.cfg, vad_child_commands, vio_record, vio_played, vad_child_audio_out)
+        vio = VoipIO(self.cfg, vio_child_commands, vio_child_record, vio_child_play)
+        vad = VAD(self.cfg, vad_child_commands, vio_record, vad_child_audio_out)
         asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
         slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
         dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)

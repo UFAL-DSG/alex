@@ -36,7 +36,7 @@ class SLU(multiprocessing.Process):
         if self.cfg['SLU']['type'] == 'Template':
             self.slu = TNLG.TemplateClassifier(cfg)
         elif self.cfg['SLU']['type'] == 'DAILogRegClassifier':
-            # FIX: maybe the SLU components should use the Config class to initialise themselves.
+            # FIXME: maybe the SLU components should use the Config class to initialise themselves.
             # As a result it would created their category label database and pre-processing classes.
 
             self.slu = DAILRSLU.DAILogRegClassifier(self.preprocessing)
@@ -95,8 +95,10 @@ class SLU(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
+                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), slu_hyp)
+
                 self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
+                self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
 
             elif isinstance(data_asr, Command):
                 cfg['Logging']['system_logger'].info(data_asr)

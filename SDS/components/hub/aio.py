@@ -32,7 +32,7 @@ class AudioIO(multiprocessing.Process):
     played audio.
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play, audio_played):
+    def __init__(self, cfg, commands, audio_record, audio_play):
         """ Initialize AudioIO
 
         cfg - configuration dictionary
@@ -43,8 +43,6 @@ class AudioIO(multiprocessing.Process):
         audio_play - inter-process connection for receiving audio which should to be played.
           Audio must be divided into frames, each with the length of samples_per_frame.
 
-        audio_played - inter-process connection for sending audio which was played.
-          Audio is divided into frames and synchronised with the recorded audio.
         """
 
         multiprocessing.Process.__init__(self)
@@ -53,7 +51,6 @@ class AudioIO(multiprocessing.Process):
         self.commands = commands
         self.audio_record = audio_record
         self.audio_play = audio_play
-        self.audio_played = audio_played
 
         self.output_file_name = os.path.join(self.cfg['Logging']['output_dir'],
                                              'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
@@ -126,15 +123,12 @@ class AudioIO(multiprocessing.Process):
 
                 elif isinstance(data_play, Command):
                     if data_play.parsed['__name__'] == 'utterance_start':
-                        self.commands.send(Command(
-                            'play_utterance_start()', 'AudioIO', 'HUB'))
+                        self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
                     if data_play.parsed['__name__'] == 'utterance_end':
-                        self.commands.send(
-                            Command('play_utterance_end()', 'AudioIO', 'HUB'))
+                        self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
 
         else:
-            data_play = Frame(
-                b"\x00\x00" * self.cfg['Audio']['samples_per_frame'])
+            data_play = Frame(b"\x00\x00" * self.cfg['Audio']['samples_per_frame'])
 
             play_buffer.append(data_play)
             if self.cfg['AudioIO']['debug']:
@@ -151,7 +145,8 @@ class AudioIO(multiprocessing.Process):
         data_play = play_buffer.pop(0)
 
         # send played audio
-        self.audio_played.send(data_play)
+        # FIXME: I should save what I am playing
+        # self.audio_played.send(data_play)
 
         # save the recorded and played data
         data_stereo = bytearray()

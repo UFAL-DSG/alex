@@ -135,6 +135,8 @@ class ASR(multiprocessing.Process):
                         asr_hyp = UtteranceConfusionNetwork()
                         asr_hyp.add([[1.0, "sil"], ])
 
+                    self.cfg['Logging']['session_logger'].asr("user", asr_hyp.get_utterance_nblist(), asr_hyp)
+
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
             else:

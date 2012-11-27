@@ -46,20 +46,12 @@ if __name__ == '__main__':
     wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
     # remove the last frame
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe(
-    )  # used to send vio_commands
-    vio_messages, vio_child_messages = multiprocessing.Pipe(
-    )  # used to send vio_messages
-    audio_record, child_audio_record = multiprocessing.Pipe(
-    )  # I read from this connection recorded audio
-    audio_play, child_audio_play = multiprocessing.Pipe(
-    )  # I write in audio to be played
-    audio_played, child_audio_played = multiprocessing.Pipe(
-    )  # I read from this to get played audio
-                                                              #   which in sync with recorded signal
+    vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send vio_commands
+    vio_messages, vio_child_messages = multiprocessing.Pipe()  # used to send vio_messages
+    audio_record, child_audio_record = multiprocessing.Pipe()  # I read from this connection recorded audio
+    audio_play, child_audio_play = multiprocessing.Pipe()  # I write in audio to be played
 
-    vio = VoipIO(cfg, vio_child_commands, child_audio_record, child_audio_play,
-                 child_audio_played)
+    vio = VoipIO(cfg, vio_child_commands, child_audio_record, child_audio_play)
 
     vio.start()
 
@@ -78,9 +70,6 @@ if __name__ == '__main__':
         # read all recorded audio
         if audio_record.poll():
             data_rec = audio_record.recv()
-        # read all played audio
-        if audio_played.poll():
-            data_played = audio_played.recv()
 
         # read all messages from VoipIO
         if vio_commands.poll():

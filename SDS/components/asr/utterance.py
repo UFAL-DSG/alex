@@ -328,6 +328,16 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
         return '\n'.join(s)
 
+    def __len__(self):
+        return len(self.cn)
+
+    def __getitem__(self, i):
+        return self.cn[i]
+
+    def __iter__(self):
+        for i in self.cn:
+            yield i
+
     def add(self, words):
         """Adds the next word with its alternatives"""
 

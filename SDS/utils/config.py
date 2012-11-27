@@ -62,7 +62,7 @@ class Config:
         return cfg
 
     def load(self, file_name):
-        """FIX: Executing external files is not ideal! It should be changed in the future!
+        """FIXME: Executing external files is not ideal! It should be changed in the future!
         """
         # pylint: disable-msg=E0602
 

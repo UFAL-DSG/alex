@@ -18,7 +18,7 @@ class TemplateNLG:
             self.load(self.cfg['NLG']['Template']['model'])
 
     def load(self, file_name):
-        """FIX: Executing external files is not ideal! It should be changed in the future!
+        """FIXME: Executing external files is not ideal! It should be changed in the future!
         """
         global templates
         templates = None
