@@ -3,6 +3,8 @@
 
 import unittest
 
+if __name__ == "__main__":
+    import autopath
 import __init__
 
 from SDS.components.asr.utterance import UtteranceConfusionNetwork
