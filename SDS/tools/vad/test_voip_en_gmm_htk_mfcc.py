@@ -8,6 +8,8 @@ from sklearn import mixture
 from scipy.misc import logsumexp
 from collections import deque
 
+if __name__ == "__main__":
+    import autopath
 import __init__
 
 from SDS.ml.gmm import GMM

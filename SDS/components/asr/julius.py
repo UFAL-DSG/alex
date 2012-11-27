@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import socket
+import os
 import struct
 import time
 import xml.dom.minidom
@@ -32,8 +33,22 @@ class JuliusASR():
         self.hostname = self.cfg['ASR']['Julius']['hostname']
         self.serverport = self.cfg['ASR']['Julius']['serverport']
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
+        self.reuse_server = self.cfg['ASR']['Julius']['reuse_server']
 
         try:
+            if self.reuse_server:
+                # reinit hack for julius
+                os.system("killall -USR1 julius")
+            if self.reuse_server and self.is_server_running():
+                # if we should reuse server and it is running, it's perfect
+                # and do nothing
+                self.cfg['Logging']['system_logger'].debug("Brilliant, Julius is already running.")
+                self.open_adinnet()
+                return
+            elif not self.reuse_server and self.is_server_running():
+                self.kill_all_juliuses()
+                self.cfg['Logging']['system_logger'].debug("I just commited murder, Julius is dead!")
+
             self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
             self.start_server()
             time.sleep(3)
@@ -53,9 +68,21 @@ class JuliusASR():
             exit(0)
 
     def __del__(self):
-        self.julius_server.terminate()
-        time.sleep(1)
-        self.julius_server.kill()
+        if not self.reuse_server:
+            self.julius_server.terminate()
+            time.sleep(1)
+            self.julius_server.kill()
+
+    def is_server_running(self):
+        # try to connect to the server
+        try:
+            self.connect_to_server()
+        except socket.error:
+            return False
+        return True
+
+    def kill_all_juliuses(self):
+        subprocess.call('killall julius', shell=True)
 
     def start_server(self):
         jconf = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
@@ -68,11 +95,16 @@ class JuliusASR():
 
         # kill all running instances of the Julius ASR server
         if self.cfg['ASR']['Julius']['killall']:
-            subprocess.call('killall julius', shell=True)
+            self.kill_all_juliuses()
 
         # start the server with the -debug options
         # with this option it does not generates seg faults
-        self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log), bufsize=1, shell=True)
+        if self.reuse_server:
+            os.system("julius -debug -C %s > %s &" % (jconf, log,))
+        else:
+            self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log, ),
+                                              shell=True,
+                                              bufsize=1)
 
     def connect_to_server(self):
         """Connects to the Julius ASR server to start recognition and receive the recognition output."""
@@ -86,6 +118,7 @@ class JuliusASR():
 
         self.a_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.a_socket.connect((self.hostname, self.adinnetport))
+        print 'adinnet opened'
 
     def send_frame(self, frame):
         """Sends one frame of audio data to the Julius ASR"""
@@ -159,7 +192,6 @@ class JuliusASR():
         to = 0.0
         while True:
             if to >= timeout:
-                print msg
                 raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
 
             m = self.read_server_message()
@@ -170,6 +202,8 @@ class JuliusASR():
                 continue
 
             msg += m + '\n'
+
+            print msg
 
             if '<CONFNET>' in msg:
                 break

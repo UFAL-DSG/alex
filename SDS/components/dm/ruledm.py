@@ -1,19 +1,19 @@
-#!/usr/bin/env python
-#
-# author: Lukas Zilka
-#
+"""
+.. module:: ruledm
+    :synopsis: Rule-based dialogue manager implementation.
 
-
+.. moduleauthor:: Lukas Zilka <zilka@ufal.mff.cuni.cz>
+"""
 import imp
 import re
 import pprint
-from collections import defaultdict
 
 from SDS.components.dm import DialogueManager
 from SDS.components.slu.da import DialogueActItem, DialogueAct, \
                                   DialogueActConfusionNetwork, \
                                   DialogueActNBList
 
+# slot names and values
 RH_USER_REQUESTED = "user-requested"
 CH_SYSTEM_INFORMED = RH_SYSTEM_INFORMED = "system-informed"
 LDA_SLOT = "__lda"
@@ -25,127 +25,19 @@ SLOT_REQ = "rh"
 SLOT_CONFIRM = "ch"
 
 
-
-def _update_act_item(acts, da_item):
-    action = acts[da_item.dat]
-    action(da_item)
-
-
-def _update_act(acts, da_):
-    for da_item in da_:
-        _update_act_item(acts, da_item)
-
-
-class TransformationRule(object):
-    def __init__(self, da=None, last_da=None, cond=None, t=None):
-        self.da = da
-        self.last_da = last_da
-        self.cond = cond
-        self.t = t
-
-    def _cond_matches(self, da, last_da, state):
-        if self.cond is not None:
-            res = self.cond(da, last_da, state)
-            assert type(res) is bool
-            return res
-        else:
-            return True
-
-    def eval(self, da, last_da, state):
-        new_dais = []
-        consumed_dais = []
-        if last_da is None:
-            last_da = [None]
-
-        for dai in da:
-            for last_dai in last_da:
-                if self.da is not None and dai.dat != self.da:
-                    continue
-                if self.last_da is not None and \
-                   (last_dai is None or last_dai.dat != self.last_da):
-                    continue
-
-                if self._cond_matches(dai, last_dai, state):
-                    new_dai = self.t(dai, last_dai)
-                    if new_dai is not None:
-                        new_dais += [DialogueActItem().parse(new_dai)]
-                        consumed_dais += [dai]
-
-        for new_dai in new_dais:
-            da.append(new_dai)
-
-        return da
-
-
-
-class UserTransformationRule(TransformationRule):
-    pass
-
-class SystemTransformationRule(TransformationRule):
-    pass
-
-def _da_match_pattern(da_item, pattern):
-    if pattern.dat is not None:
-        if not (da_item.dat == pattern.dat):
-            return False
-
-    if pattern.name is not None:
-        if not (da_item.name == pattern.name):
-            return False
-
-    if pattern.value is not None:
-        if not (da_item.value == pattern.value):
-            return False
-
-    return True
-
-
-class Rule(object):
-    def __init__(self, da=None, cond=None, action=None):
-        self.da = da
-        self.cond, self.action = cond, action
-        self.iter_apply = True
-
-    def _cond_matches(self, dai, state):
-        if self.cond is not None:
-            res = self.cond(dai, state)
-            assert type(res) is bool
-            return res
-        else:
-            return True
-
-    def _action(self, dai):
-        print 'executing action of', self.da, self.cond
-        res = self.action(dai)
-        return res
-
-    def eval(self, da, state):
-        res = []
-        for dai in da:
-            if self.da is not None and dai.dat != self.da:
-                continue
-
-            if self._cond_matches(dai, state):
-                res += [self._action(dai)]
-
-        return res
-
-class UserRule(Rule):
-    pass
-
-
-class SystemRule(Rule):
-    pass
-
-
 class RuleDialogueState:
+    """Represents the state of the dialog."""
+
     slots = None
 
     def __init__(self, slots):
+        """Build default state representation.
+
+        Args:
+           slots (list): list of slot names
+        """
         self.slots = slots + \
             [self.get_rh_name(s) for s in slots] + \
-            [self._get_sh1_name(s) for s in slots] + \
-            [self._get_sh2_name(s) for s in slots] + \
             [self.get_ch_name(s) for s in slots] + \
             [LDA_SLOT, ALTS_SLOT, CHANGES_SLOT, BADSLOT_SLOT]
         self.values = {s: None for s in self.slots}
@@ -153,13 +45,17 @@ class RuleDialogueState:
         self.values[CHANGES_SLOT] = [None]
 
     def update(self, new_values):
+        """Update the values of the state from the new values.
+
+        Args:
+           new_values (dict): dictionary with values for the slots
+        """
         for key, value in new_values.items():
             if not type(value) is list:
                 self.values[key] = value
                 if not key.startswith(SLOT_REQ + "_") and \
                    not key.startswith(SLOT_CONFIRM + "_"):
                     self.values[CHANGES_SLOT].insert(0, key)
-                print 'setting', key, value
             else:
                 if self.values[key] is None:
                     self.values[key] = []
@@ -167,18 +63,29 @@ class RuleDialogueState:
                 self.values[key] += value
 
     def reset_changes(self):
+        """Reset the value of the slot that holds information about
+        what has been changed so far and in what order.
+        """
         self.values[CHANGES_SLOT] = []
 
-    def copy(self, ds_):
-        self.slots = list(ds_.slots)
-        self.values = dict(ds_.values.items())
+    def copy(self, ds):
+        """Copy the dialogue state from the given dialogue state.
+
+        Args:
+           ds (DialogueState): dialogue state to copy from
+        """
+        self.slots = list(ds.slots)
+        self.values = dict(ds.values.items())
 
     def clear(self):
+        """Clear values in the dialogue state."""
         for key in self.slots:
-            self.slots[key] = None
+            self.values[key] = None
 
     def __unicode__(self):
-        vals = pprint.pformat({k: v for k, v in self.values.items() if v is not None})
+        """Pretty print to string the dialogue state."""
+        stateval = {k: v for k, v in self.values.items() if v is not None}
+        vals = pprint.pformat(stateval)
         return vals
 
     def __str__(self):
@@ -186,35 +93,63 @@ class RuleDialogueState:
 
     @classmethod
     def get_rh_name(cls, name):
+        """Get name of request history slot for the given slot name.
+
+        Args:
+           name (str): slot name
+        """
         return "%s_%s" % (SLOT_REQ, name,)
 
     @classmethod
-    def _get_sh1_name(cls, name):
-        return "sh1_%s" % name
-
-    @classmethod
-    def _get_sh2_name(cls, name):
-        return "sh2_%s" % name
-
-
-    @classmethod
     def get_ch_name(cls, name):
+        """Get name of confirm history slot for the given slot name.
+
+        Args:
+           name (str): slot name
+        """
         return "%s_%s" % (SLOT_CONFIRM, name,)
 
     def __getitem__(self, key):
+        """Get the value of the given slot.
+
+        Args:
+           key (str): slot name
+        """
         return self.values[key]
 
     def get(self, key, default=None):
+        """Get the value of the given slot.
+
+        Args:
+           key (str): slot name
+           default: default value if the slot is missing
+        """
         return self.values.get(key, default)
 
     def keys(self, prefix=None):
-        return [x for x in self.values.keys() if prefix is None or x.startswith("%s_" % prefix)]
+        """Return names of all slots that start with the given value.
+
+        Args:
+           prefix (str): prefix of the slot name
+        """
+        return [x for x in self.values.keys()
+                if prefix is None or x.startswith("%s_" % prefix)]
 
     def reqkey_to_key(self, req_key):
+        """Return the name of the slot for the given request slot.
+
+        Args:
+           req_key (str): request slot name
+        """
         return req_key[len(SLOT_REQ) + 1:]
 
-    def chkey_to_key(self, req_key):
-        return req_key[len(SLOT_REQ) + 1:]
+    def chkey_to_key(self, ch_key):
+        """Return the name of the slot for the given confirm history slot.
+
+        Args:
+           ch_key
+        """
+        return ch_key[len(SLOT_CONFIRM) + 1:]
 
 
 class RuleDMPolicy:
@@ -223,6 +158,7 @@ class RuleDMPolicy:
         self.slots = slots
         self.values = self.db.get_possible_values()
         self.ontology_unknown_re = re.compile(r"^.*-([0-9]+)")
+        self.debug = False
 
     def build_query(self, state):
         query = {}
@@ -257,12 +193,13 @@ class RuleDMPolicy:
 
 
                 if dai.dat in ["inform", "request", "other",
-                               "confirm", "reqalts"]:
+                               "confirm", "reqalts", "bye"]:
                     new_da.append(dai)
 
-            if item[0] >= 0.5:  # do not consider things bellow 0.5
+            if item[0] >= 0.3:  # do not consider things bellow 0.3
                 if len(new_da) > 0:
                     new_nblist.add(item[0], new_da)
+
         return new_nblist
 
     def get_interesting_slot(self, state):
@@ -282,7 +219,7 @@ class RuleDMPolicy:
 
     def say_query(self, state):
         query = self.build_query(state)
-        act = "&".join(["wants(%s=%s)" % (k, v,) for k, v in query.items()])
+        act = "&".join(["want(%s=%s)" % (k, v,) for k, v in query.items()])
         return DialogueAct(act)
 
     def say_inform(self, state, rec):
@@ -312,7 +249,6 @@ class RuleDMPolicy:
         noclues = []
         for ch_slot, slot_value in slots_to_confirm.items():
             slot = state.chkey_to_key(ch_slot)
-            print "SLOT VAL:", slot_value
             state.update({ch_slot: None})
 
             if not slot in res0:
@@ -420,11 +356,12 @@ class RuleDMPolicy:
             da.merge(self.say_query(state))
             return state, da
 
-        print "USER DA:", user_da, user_da is not None and len(user_da)
-        print "STATE:", state
-        print "CNT(RES):", len(res)
-        print "RES0:", res0
-        print "REQ SLOTS:", slots_to_say
+        if self.debug:
+            print "USER DA:", user_da, user_da is not None and len(user_da)
+            print "STATE:", state
+            print "CNT(RES):", len(res)
+            print "RES0:", res0
+            print "REQ SLOTS:", slots_to_say
 
         # if the user requested something, tell him immediatelly
         if len(slots_to_say) > 0:
@@ -493,12 +430,6 @@ class RuleDMPolicy:
 
         return state, res_da
 
-from SDS.utils.interface import Interface, interface_method
-
-class IDM(Interface):
-    def update(self, curr_ds, da, last_da):
-        pass
-
 
 class RuleDM(DialogueManager):
     state_update_rules = None
@@ -513,9 +444,6 @@ class RuleDM(DialogueManager):
         db_cfg = cfg['DM'][cls_name]['db_cfg']
 
         self.ontology = imp.load_source('ontology', ontology)
-
-        for i, rule in enumerate(self.state_update_rules):
-            rule.id = i
 
         self.dstate = self.create_ds()
         self.policy = self.policy_cls(self.ontology.slots.keys(),
@@ -558,7 +486,6 @@ class RuleDM(DialogueManager):
                     breaking = True
                     break
 
-                print update_history
                 if act.name in update_history:
                     continue
 
@@ -593,12 +520,6 @@ class RuleDM(DialogueManager):
             raise Exception('unknown input da of type: %s' % str(das.__class__))
 
     def da_in(self, in_da):
-        print "in_da", in_da
-
-    def da_out(self):
-        print 'nothing'
-
-    def da_in(self, in_da):
         if isinstance(in_da, DialogueActConfusionNetwork):
             in_da = in_da.get_da_nblist()
 
@@ -624,35 +545,3 @@ class RuleDM(DialogueManager):
     def end_dialogue(self):
         pass
 
-def main():
-    dm = RuleDM("applications/CamInfoRest/ontology.py")
-    ds = dm.create_ds()
-    da = DialogueAct("inform(venue_type='pub')&inform(price_range='cheap')")
-    ds.update_user(da)
-    print da
-    print ds
-    da = DialogueAct("inform(food_type='Chinese')")
-    ds.update_user(da)
-    print da
-    print ds
-    da = DialogueAct("deny(food_type='Chinese')")
-    ds.update_user(da)
-    print da
-    print ds
-    da = DialogueAct("request(food_type)")
-    ds.update_user(da)
-    print da
-    print ds
-    da = DialogueAct("inform(food_type='Chinese')&inform(price_range='cheap')")
-    ds.update_system(da)
-    print da
-    print ds
-    da = DialogueAct("confirm(price_range='cheap')")
-    ds.update_user(da)
-    print da
-    print ds
-
-
-if __name__ == '__main__':
-    #main()
-    main2()
