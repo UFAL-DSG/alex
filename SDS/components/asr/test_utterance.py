@@ -5,6 +5,8 @@ import unittest
 
 import __init__
 
+if __name__ == "__main__":
+    import autopath
 from SDS.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 class TestUtteranceConfusionNetework(unittest.TestCase):

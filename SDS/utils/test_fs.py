@@ -7,6 +7,9 @@ Unit tests for SDS.util.fs.
 
 """
 
+if __name__ == "__main__":
+    import autopath
+
 import os
 import os.path
 import tempfile

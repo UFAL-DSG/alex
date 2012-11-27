@@ -1,6 +1,8 @@
 import unittest
 
-from .ruledm import RuleDM, RuleDMPolicy, UserTransformationRule
+if __name__ == "__main__":
+    import autopath
+from SDS.components.dm.ruledm import RuleDM, RuleDMPolicy, UserTransformationRule
 
 
 class TestInfoDb(object):

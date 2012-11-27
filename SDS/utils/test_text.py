@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+if __name__ == "__main__":
+    import autopath
+
+
 import unittest
 
 import SDS.utils.text
