@@ -69,7 +69,7 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
         if fnmatch.fnmatch(dirname, glob_):
             ret = set((dir_, ))
         # Special case: also maxdepth == 0. Or we prune the whole subtree.
-        if maxdepth == 0 or prune:
+        if maxdepth == 0 or (ret and prune):
             return ret
     # }}}
 
@@ -149,7 +149,7 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
                                  maxdepth - 1 if isinstance(maxdepth, int)
                                     else None,
                                  ignore_globs, ignore_path_filter,
-                                 follow_symlinks, visited)
+                                 follow_symlinks, prune, visited)
             matched.update(more_matched)
             visited.update(more_visited)
     # Return.
