@@ -23,7 +23,7 @@ def normalise_path(path):
 
 
 def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
-         ignore_paths=None, follow_symlinks=True):
+         ignore_paths=None, follow_symlinks=True, prune=False):
     """
     A simplified version of the GNU `find' utility.  Lists files with basename
     matching `glob_' found in `dir_' in depth between `mindepth' and
@@ -38,6 +38,8 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     file name is checked. However, taking symlinks into account can be
     forbidden altogether by specifying `follow_symlinks=False'. Cycles during
     the traversal are avoided.
+
+        - prune: whether to prune the subtree below a matching directory
 
     The returned set of files consists of real absolute pathnames of those
     files.
@@ -66,8 +68,8 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
         # Match the glob.
         if fnmatch.fnmatch(dirname, glob_):
             ret = set((dir_, ))
-        # Special case: also maxdepth == 0.
-        if maxdepth == 0:
+        # Special case: also maxdepth == 0. Or we prune the whole subtree.
+        if maxdepth == 0 or prune:
             return ret
     # }}}
 
@@ -82,13 +84,13 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     # Call the implementation with the filter function.
     ret.update(_find_ignorefunc(dir_, glob_, mindepth, maxdepth,
                                 ignore_globs, ignore_path_filter,
-                                follow_symlinks, set())[0])
+                                follow_symlinks, prune, set())[0])
     return ret
 
 
 def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
                      ignore_path_filter=lambda _: True, follow_symlinks=True,
-                     visited=set()):
+                     prune=False, visited=set()):
     """
     Implements the same functionality as the `find' function in this module.
     The difference is that the ignored paths are specified by a function.
@@ -136,6 +138,8 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
             lambda path_data: path_data[1],
             filter(lambda child: os.path.isdir(child[1]), children)))\
             - visited
+        if prune:
+            subdirs -= matched
         for subdir in subdirs:
             visited.add(dir_)
             more_matched, more_visited = \
