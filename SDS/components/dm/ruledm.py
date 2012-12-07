@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008/.
 """
 .. module:: ruledm
     :synopsis: Rule-based dialogue manager implementation.
@@ -9,9 +13,10 @@ import re
 import pprint
 
 from SDS.components.dm import DialogueManager
-from SDS.components.slu.da import DialogueActItem, DialogueAct, \
+from SDS.components.slu.da import DialogueAct, \
                                   DialogueActConfusionNetwork, \
                                   DialogueActNBList
+
 
 # slot names and values
 RH_USER_REQUESTED = "user-requested"
@@ -163,7 +168,7 @@ class RuleDMPolicy:
     def build_query(self, state):
         query = {}
         for slot in self.slots:
-            if state[slot] != None:
+            if state[slot] is not None:
                 query[slot] = state[slot]
 
         return query
@@ -188,9 +193,9 @@ class RuleDMPolicy:
                     if not dai.name in self.slots:
                         continue
 
-                if type(dai.value) is str and self.ontology_unknown_re.match(dai.value):
+                if type(dai.value) is str and \
+                        self.ontology_unknown_re.match(dai.value):
                     continue
-
 
                 if dai.dat in ["inform", "request", "other",
                                "confirm", "reqalts", "bye"]:
@@ -266,11 +271,12 @@ class RuleDMPolicy:
                 return DialogueAct("affirm()")
             else:
                 return DialogueAct(
-                    "&".join(["confirm(%s=%s)" % (n, v, ) for n, v in selects]))
+                    "&".join(["confirm(%s=%s)" % (n, v, ) \
+                              for n, v in selects]))
         else:
             conf_acts = []
             for conflict in conflicts:
-                conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], ) ]
+                conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], )]
             res = DialogueAct("negate()")
             res.merge(DialogueAct("&".join(conf_acts)))
             return res
@@ -339,11 +345,14 @@ class RuleDMPolicy:
         res = self.query_db(state)
         slots_to_say = self.get_slots_to_say(state)
         slots_to_confirm = self.get_slots_to_confirm(state)
-        was_bad_slot = self.get_bad_slot(state)
+        # was_bad_slot = self.get_bad_slot(state)
+        # XXX Was never used.
         res_da = None
 
         #u_dat = self.get_understood_dat(user_da)
-        user_dat = user_da # user_da[-1].dat if user_da is not None else None
+        # user_dat = user_da  # user_da[-1].dat if user_da is not None else
+        #                     # None
+        # XXX Was never used.
 
         # state updates
         if user_da.has_dat("reqalts"):
@@ -385,9 +394,6 @@ class RuleDMPolicy:
 
         state.update({PLACE_INFORMED_SLOT: True})
         return state, sink_da
-
-
-
 
     def get_da_old(self, state, user_da):
         res = self.query_db(state)
@@ -469,7 +475,6 @@ class RuleDM(DialogueManager):
                 pass
                 #new_ds.update({BADSLOT_SLOT: True})
 
-
         return new_ds
 
     def update(self, curr_ds, nbda, last_da=None):
@@ -517,7 +522,8 @@ class RuleDM(DialogueManager):
         elif isinstance(das, DialogueActConfusionNetwork):
             return das.get_best_nonnull_da()
         else:
-            raise Exception('unknown input da of type: %s' % str(das.__class__))
+            raise Exception('unknown input da of type: {cls!s}'\
+                            .format(cls=das.__class__))
 
     def da_in(self, in_da):
         if isinstance(in_da, DialogueActConfusionNetwork):
@@ -525,7 +531,8 @@ class RuleDM(DialogueManager):
 
         filtered_da = self.policy.filter(in_da)
         #da = self.pick_best_da(in_da)
-        self.cfg['Logging']['system_logger'].debug("RuleDM: Using this DA: %s" % str(filtered_da) )
+        self.cfg['Logging']['system_logger'].debug(
+            "RuleDM: Using this DA: {da}".format(str(filtered_da)))
 
         self.dstate.reset_changes()
         self.dstate = self.update(self.dstate, filtered_da)

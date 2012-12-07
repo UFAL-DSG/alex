@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from SDS.utils.exception import SemHubException
 
 from .dummydialoguemanager import DummyDM
 from .ufalruledm import UfalRuleDM
+
 
 def dm_factory(dm_type, cfg):
     dm = None
@@ -16,6 +20,7 @@ def dm_factory(dm_type, cfg):
             'Unsupported dialogue manager: %s' % dm_type)
 
     return dm
+
 
 def get_dm_type(cfg):
     return cfg['DM']['type']

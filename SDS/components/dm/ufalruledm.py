@@ -1,18 +1,47 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # pylint: disable=E0602
 
 import sys
 import autopath
 from SDS.components.dm.ruledm import RuleDM, RuleDMPolicy
-from SDS.components.dm.ruledm import SystemRule, UserRule
-from SDS.components.dm.ruledm import UserTransformationRule
+# from SDS.components.dm.ruledm import SystemRule, UserRule
+# from SDS.components.dm.ruledm import UserTransformationRule
+# XXX
+# These classes are missing there.
+# When they were present, they had empty body.
+# What are they for, anyway??
+#   (Matěj)
 
-from SDS.components.slu.da import DialogueActItem, DialogueActHyp, DialogueActNBList
+from SDS.components.slu.da import DialogueActItem, DialogueActNBList
 from SDS.utils.caminfodb import CamInfoDb
 from SDS.utils.config import Config
 
+
+class Struct(object):
+    """ Plain C-style struct, but generic. """
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
+class SystemRule(Struct):
+    """ Fix for import of non-existent class. """
+    pass
+
+
+class UserRule(Struct):
+    """ Fix for import of non-existent class. """
+    pass
+
+
+class UserTransformationRule(Struct):
+    """ Fix for import of non-existent class. """
+    pass
+
+
 class UfalRuleDMPolicy(RuleDMPolicy):
     db_cls = CamInfoDb
+
 
 class UfalRuleDM(RuleDM):
     policy_cls = UfalRuleDMPolicy
@@ -29,7 +58,7 @@ class UfalRuleDM(RuleDM):
         ),
         SystemRule(
             da="inform",
-            cond=lambda da, state: state['rh_%s' % da.name] != None,
+            cond=lambda da, state: state['rh_%s' % da.name] is not None,
             action=lambda da: {'rh_%s' % da.name: 'user-req'}
         ),
         UserRule(
@@ -38,7 +67,7 @@ class UfalRuleDM(RuleDM):
         ),
         SystemRule(
             da="inform",
-            cond=lambda da, state: state['ch_%s' % da.name] != None,
+            cond=lambda da, state: state['ch_%s' % da.name] is not None,
             action=lambda da: {'ch_%s' % da.name: 'sys-inf'}
         ),
         UserRule(
@@ -94,9 +123,13 @@ class UfalRuleDM(RuleDM):
 def main():
     import autopath
     cfg = Config('resources/default-lz.cfg', True)
-    #cfg = {'DM': {'UfalRuleDM': {'ontology':"/xdisk/devel/vystadial/SDS/applications/CamInfoRest/ontology.cfg", 'db_cfg': "/xdisk/devel/vystadial/SDS/applications/CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"}}}
+    #cfg = {'DM': {'UfalRuleDM':
+    # {'ontology':"/xdisk/devel/vystadial/SDS/applications/" + \
+    #             "CamInfoRest/ontology.cfg",
+    #  'db_cfg': "/xdisk/devel/vystadial/SDS/applications/" + \
+    #            "CamInfoRest/cued_data/CIRdbase_V7_noloc.txt"}}}
     u = UfalRuleDM(cfg)
-    ufal_ds = u.create_ds()
+    # ufal_ds = u.create_ds()
     while 1:
         curr_acts = DialogueActNBList()
         for ln in sys.stdin:
@@ -113,4 +146,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

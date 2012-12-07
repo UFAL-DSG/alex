@@ -359,29 +359,35 @@ class DialogueActNBList(SLUHypothesis):
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
-    """Dialogue act item confusion network. This is a very simple implementation in which all dialogue act items are assumed
-    to be independent. Therefore, the network stores only posteriors for dialogue act items.
-    
-    This can be efficiently stored as a list of DAIs each associated with its probability. The alternative for each DAI is 
-    that there is no such DAI in the DA. This can be represented as the null() dialogue act and its probability is 1 - p(DAI).
-    
-    If there are more than one null() DA in the output DA, then they are collapsed into one null() DA since it means the same.
-    
-    Please note that in the confusion network, the null() dialogue acts are not explicitly modelled.
-  
+    """Dialogue act item confusion network. This is a very simple
+    implementation in which all dialogue act items are assumed to be
+    independent. Therefore, the network stores only posteriors for dialogue act
+    items.
+
+    This can be efficiently stored as a list of DAIs each associated with its
+    probability. The alternative for each DAI is that there is no such DAI in
+    the DA. This can be represented as the null() dialogue act and its
+    probability is 1 - p(DAI).
+
+    If there are more than one null() DA in the output DA, then they are
+    collapsed into one null() DA since it means the same.
+
+    Please note that in the confusion network, the null() dialogue acts are not
+    explicitly modelled.
+
     """
     def __init__(self):
         self.cn = []
 
     def __str__(self):
+
         s = []
         for prob, dai in self.cn:
-            s.append("%.3f %s" % (prob, dai))
+            s.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
 
         return "\n".join(s)
 
-    def __len__(self):
-        return len(self.cn)
+    def __len__(self): return len(self.cn)
 
     def __getitem__(self, i):
         return self.cn[i]
@@ -475,7 +481,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for i in range(len(hyp_index)):
             wh = list(hyp_index)
             wh[i] += 1
-            if wh[i] >= 2: 
+            if wh[i] >= 2:
                 # this generate inadmissible word hypothesis
                 # because there are only two alternatives - the DAI and the null() dialogue act
                 continue
@@ -488,19 +494,19 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         da = DialogueAct()
         for i, (p, dai) in zip(hyp_index, self.cn):
             if i == 0:
-                da.append(dai) 
-                
+                da.append(dai)
+
         if len(da) == 0:
             da.append(DialogueActItem('null'))
-            
+
         return da
-        
+
     def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates N-best hypotheses.
 
         The result is a list of dialogue act hypotheses each with a with assigned probability.
         The list also include a dialogue act for not having the correct dialogue act in the list - other().
-        
+
         FIXME: I should stop the expansion when expand_upto_total_prob_mass is reached.
         """
 
@@ -550,13 +556,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 #        print
 
         return nblist
-        
+
     def merge(self):
         """Adds up probabilities for the same hypotheses.
 
         TODO: not implemented yet
         """
-        
+
     def prune(self, prune_prob=0.001):
         """Prune all low probability dialogue act items."""
         pruned_cn = []
@@ -570,14 +576,14 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         self.cn = pruned_cn
 
     def normalise(self):
-        """Makes sure that all probabilities adds up to one. They should implicitly sum to one: p + (1-p) == 1.0 
+        """Makes sure that all probabilities adds up to one. They should implicitly sum to one: p + (1-p) == 1.0
         """
-        
+
         for p,  dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException("The probability of the %s dialogue act item is larger then 1.0 that is %0.3f" % \
                                                            (dai, p))
-            
+
     def sort(self):
         self.cn.sort(reverse=True)
 

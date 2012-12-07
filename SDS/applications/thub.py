@@ -1,27 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008/.
+
 import autopath
 
 import argparse
 
 from SDS.components.hub import Hub
 from SDS.components.asr.utterance import Utterance, UtteranceNBList
+from SDS.components.dm.common import dm_factory, get_dm_type
 from SDS.components.slu import CategoryLabelDatabase, SLUPreprocessing
 from SDS.components.slu.da import *
 from SDS.components.slu.dailrclassifier import DAILogRegClassifier
-from SDS.components.dm.common import dm_factory, get_dm_type
 from SDS.components.nlg.common import nlg_factory, get_nlg_type
-from SDS.components.nlg.template import TemplateNLG
+# from SDS.components.nlg.template import TemplateNLG
+# XXX Wasn't used.
 from SDS.utils.config import Config
 from SDS.utils.exception import UtteranceException, TextHubException
+from SDS.utils.ui import getTerminalSize
+
 
 class TextHub(Hub):
     """
-      TextHub builds a text based testing environment for SLU, DM, and NLG components.
-      It reads the text from the standard input and passes it into SLU. Then the dialogue acts
-      are processed by a dialogue manager. The output of the dialogue manager in the form of
-      dialogue acts is then converted by a NLG component into text, which is presented
-      to the user.
+      Provides a natural text interface to the dialogue system.
+
+      TextHub builds a text based testing environment for SLU, DM, and NLG
+      components.  It reads the text from the standard input and passes it on
+      to SLU. Then the dialogue acts are processed by a dialogue manager. The
+      output of the dialogue manager in the form of dialogue acts is then
+      converted by a NLG component into text, which is presented to the user.
+
     """
     hub_type = "THub"
 
@@ -37,9 +46,12 @@ class TextHub(Hub):
 
         if self.cfg['SLU']['type'] == 'DAILogRegClassifier':
             self.slu = DAILogRegClassifier(self.preprocessing)
-            self.slu.load_model(self.cfg['SLU']['DAILogRegClassifier']['model'])
+            self.slu.load_model(
+                self.cfg['SLU']['DAILogRegClassifier']['model'])
         else:
-            raise TextHubEception('Unsupported spoken language understanding: %s' % self.cfg['SLU']['type'])
+            raise TextHubEception(
+                'Unsupported spoken language understanding: {type_}'\
+                .format(type_=self.cfg['SLU']['type']))
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
@@ -48,10 +60,12 @@ class TextHub(Hub):
         self.nlg = nlg_factory(nlg_type, cfg)
 
     def parse_input_utt(self, l):
-        """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
+        """Converts a text including a dialogue act and its probability into
+        a dialogue act instance and float probability.
 
         The input text must have the following form:
             [prob] this is a text input
+
         """
         ri = l.find(" ")
 
@@ -137,20 +151,23 @@ class TextHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        cfg['Logging']['system_logger'].info("""Enter the first user utterance. You can enter multiple utterances to form an N-best list.
-        The probability for each utterance must be provided before the utterance itself. When finished, the entry
-        can be terminated by a period ".".
+        cfg['Logging']['system_logger'].info(
+            """Enter the first user utterance.  You can enter multiple
+            utterances to form an N-best list.  The probability for each
+            utterance must be provided before the utterance itself.  When
+            finished, the entry can be terminated by a period (".").
 
-        For example:
+            For example:
 
-          System DA 1: 0.6 Hello
-          System DA 2: 0.4 Hello, I am looking for a bar
-          System DA 3: .
+            System DA 1: 0.6 Hello
+            System DA 2: 0.4 Hello, I am looking for a bar
+            System DA 3: .
         """)
 
         while True:
             # new turn
-            print "="*120
+            term_width = getTerminalSize()[1] or 120
+            print "=" * term_width
             print
             sys_da = self.dm.da_out()
             self.output_sys_da(sys_da)
@@ -158,7 +175,8 @@ class TextHub(Hub):
             sys_utt = self.nlg.generate(sys_da)
             self.output_sys_utt(sys_utt)
 
-            print '-'*120
+            term_width = getTerminalSize()[1] or 120
+            print '-' * term_width
             print
 
             utt_nblist = self.input_usr_utt_nblist()
@@ -166,7 +184,8 @@ class TextHub(Hub):
             das = self.slu.parse(utt_nblist)
             self.output_usr_da(das)
 
-            print '-'*120
+            term_width = getTerminalSize()[1] or 120
+            print '-' * term_width
             print
             self.dm.da_in(das)
 
@@ -178,15 +197,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        TextHub builds a text based testing environment for SLU, DM, and NLG components.
+        TextHub builds a text based testing environment for SLU, DM, and NLG
+        components.
 
-        It reads the text from the standard input and passes it into SLU. Then the dialogue acts
-        are processed by a dialogue manager. The output of the dialogue manager in the form of
-        dialogue acts is then converted by a NLG component into text, which is presented
-        to the user.
+        It reads the text from the standard input and passes it into SLU. Then
+        the dialogue acts are processed by a dialogue manager. The output of
+        the dialogue manager in the form of dialogue acts is then converted by
+        a NLG component into text, which is presented to the user.
 
-        The program reads the default config in the resources directory ('../resources/default.cfg') config
-        in the current directory.
+        The program reads the default config in the resources directory
+        ('../resources/default.cfg') config in the current directory.
 
         In addition, it reads all config file passed as an argument of a '-c'.
         The additional config files overwrites any default or previous values.
@@ -207,8 +227,10 @@ if __name__ == '__main__':
 
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * 120)
+    term_width = getTerminalSize()[1] or 120
+    cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * (term_width - 4))
 
     shub = TextHub(cfg)
 
     shub.run()
+
