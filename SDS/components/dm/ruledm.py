@@ -532,7 +532,7 @@ class RuleDM(DialogueManager):
         filtered_da = self.policy.filter(in_da)
         #da = self.pick_best_da(in_da)
         self.cfg['Logging']['system_logger'].debug(
-            "RuleDM: Using this DA: {da}".format(str(filtered_da)))
+            "RuleDM: Using this DA: {da!s}".format(da=filtered_da))
 
         self.dstate.reset_changes()
         self.dstate = self.update(self.dstate, filtered_da)
