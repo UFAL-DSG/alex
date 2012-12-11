@@ -233,4 +233,3 @@ if __name__ == '__main__':
     shub = TextHub(cfg)
 
     shub.run()
-

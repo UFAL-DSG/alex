@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # pylint: disable=E0602
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008/.
 
 import sys
 import autopath

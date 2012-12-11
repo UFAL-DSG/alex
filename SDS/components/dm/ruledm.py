@@ -14,8 +14,7 @@ import pprint
 
 from SDS.components.dm import DialogueManager
 from SDS.components.slu.da import DialogueAct, \
-                                  DialogueActConfusionNetwork, \
-                                  DialogueActNBList
+    DialogueActConfusionNetwork, DialogueActNBList
 
 
 # slot names and values
