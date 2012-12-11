@@ -340,7 +340,7 @@ for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(ur'\b{word}\b'.format(word=word))
 
 _excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
-                       '1', '2', '3', '4', '5', '6', '7', '8', '9']
+                        '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
 _nondashusc_punct_rx = re.compile(r'(?![\s_-])\W', flags=re.UNICODE)
@@ -354,8 +354,8 @@ def normalise_trs(text):
     # Do dictionary substitutions.
     for pat, sub in _subst:
         text = pat.sub(sub, text)
-    for pat, sub in _hesitation:
-        text = pat.sub(sub, text)
+    for word in _hesitation:
+        text = word.sub('(HESITATION)', text)
 
     return text.encode('ascii', 'ignore')
 #}}}
@@ -422,7 +422,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, verbose):
         # trs.text = uturn.getElementsByTagName("trs.text")
         # rec = uturn.getElementsByTagName("rec")
         rec = uturn.find("rec")
-        trs = uturn.find("trs.text")
+        trs = uturn.find("transcription")
         if trs is None:
             if rec is not None:
                 n_missing_trs += 1
@@ -431,7 +431,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, verbose):
             trs = trs.text
 
         # Check whether this wav should be ignored.
-        wav_basename = rec[0].getAttribute('fname').strip()
+        wav_basename = rec.attrib['fname'].strip()
         if wav_basename in wav_mapping:
             # Check it is the wav from this directory.
             wav_fname = wav_mapping[wav_basename]
@@ -568,6 +568,8 @@ def convert(args):
                     n_notnorm_trss += 1
                 else:
                     n_missing_trss += 1
+    sess_fnames = dict(item for item in sess_fnames.iteritems()
+                       if item[1] is not None)
     # trn_paths = find(infname, 'user-transcription.norm.xml')
 
     print ""
@@ -675,3 +677,4 @@ if __name__ == '__main__':
             word_list_file.write(
                 "{0}\t{1}\n".format(
                     w.encode('ascii', 'ignore'), wc[w]))
+
