@@ -40,19 +40,12 @@ import sys
 
 from xml.etree import ElementTree
 
-from SDS.utils.fs import find
-from SDS.utils.ui import getTerminalSize
-
 
 def to_wholeword_pats(substs):
     """In a list of tuples (word, substitution), makes each word into a regexp
     matching the original word, but only as a standalone word.
 
     """
-    for idx, tup in enumerate(substs):
-        pat, sub = tup
-        substs[idx] = (re.compile(ur'\b{pat}\b'.format(pat=pat)), sub)
-    return substs
 
 
 # substitutions {{{
@@ -325,6 +318,9 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('WHNAT', 'WHAT'),
           ]
 #}}}
+for idx, tup in enumerate(_subst):
+    pat, sub = tup
+    _subst[idx] = (re.compile(ur'\b{pat}\b'.format(pat=pat)), sub)
 
 # hesitation expressions {{{
 _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
@@ -340,15 +336,14 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
                "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
                "URUH", "MMMM", "MMM", "OHM", "UMMM"]
 # }}}
+for idx, word in enumerate(_hesitation):
+    _hesitation[idx] = re.compile(ur'\b{word}\b'.format(word=word))
 
 _excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
                        '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
 _nondashusc_punct_rx = re.compile(r'(?![\s_-])\W', flags=re.UNICODE)
-
-_subst = to_wholeword_pats(_subst)
-_hesitation = to_wholeword_pats(_hesitation)
 
 
 def normalise_trs(text):
@@ -614,6 +609,9 @@ def convert(args):
 
 if __name__ == '__main__':
     wc = collections.Counter()  # word counter
+    import autopath
+    from SDS.utils.fs import find
+    from SDS.utils.ui import getTerminalSize
 
     # Parse arguments. {{{
     parser = argparse.ArgumentParser(
