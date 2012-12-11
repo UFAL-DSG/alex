@@ -117,6 +117,9 @@ if __name__ == '__main__':
     #   num =~ /\d\d\d/
     #   ms-start =~ /\d{7}/
     #   ms-end =~ /\d{7}/
+    #
+    # ...ms-start and ms-end actually denote hundredths of seconds, not
+    # milliseconds.
 
     # Build the mapping (phone_no -> timestamps_of_calls).
     # Build the mapping (phone_no -> total_size_of_call_logs).
