@@ -12,11 +12,10 @@ class TestFactor(unittest.TestCase):
 
     def setUp(self):
         self.factor1 = DiscreteFactor(
-            ["A", "B", "C"],
             {
-                "A": 2,
-                "B": 3,
-                "C": 2,
+                "A": [0, 1],
+                "B": [0, 1, 2],
+                "C": [0, 1],
             },
             {
             #   (A, B, C): P(A, B, C)
@@ -35,8 +34,10 @@ class TestFactor(unittest.TestCase):
             })
 
         self.f1 = DiscreteFactor(
-            ['A', 'B'],
-            {'A': 2, 'B': 3},
+            {
+                'A': [0, 1],
+                'B': [0, 1, 2]
+            },
             {
                 (0, 0): 0.1,
                 (0, 1): 0.15,
@@ -47,8 +48,10 @@ class TestFactor(unittest.TestCase):
             })
 
         self.f2 = DiscreteFactor(
-            ['B', 'C'],
-            {'B': 3, 'C': 2},
+            {
+                'B': [0, 1, 2],
+                'C': [0, 1]
+            },
             {
                 (0, 0): 0.1,
                 (0, 1): 0.15,
@@ -58,6 +61,17 @@ class TestFactor(unittest.TestCase):
                 (2, 1): 0.05,
             })
 
+        self.f3 = DiscreteFactor(
+            {
+                'C': [0, 1],
+                'D': ['a', 'b']
+            },
+            {
+                (0, 'a'): 0.1,
+                (0, 'b'): 0.1,
+                (1, 'a'): 0.1,
+                (1, 'b'): 0.1,
+            })
 
     def assertClose(self, first, second, epsilon=0.000001):
         delta = abs(first - second)
@@ -105,3 +119,7 @@ class TestFactor(unittest.TestCase):
         for i in range(f4.factor_length):
             assignment = f4._get_assignment_from_index(i)
             self.assertClose(f4[assignment], self.factor1[assignment])
+
+    def test_string_names(self):
+        f4 = self.f2 * self.f3
+        self.assertClose(f4[(1, 1, 'a')], 0.025)

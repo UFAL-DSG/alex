@@ -29,8 +29,9 @@ class DiscreteFactor(object):
     def _get_index_from_assignment(self, assignment):
         """Transform variables assignment to index into factor table."""
         index = 0
-        for i, assignment_i in enumerate(assignment):
-            index += self.strides[self.variables[i]] * assignment_i
+        for var, assignment_i in zip(self.variables, assignment):
+            index += (self.strides[var] *
+                      self.translation_table[var][assignment_i])
         return index
 
     def _get_assignment_from_index(self, index):
@@ -41,19 +42,31 @@ class DiscreteFactor(object):
             index %= self.strides[var]
         return tuple(assignment)
 
-    def __init__(self, variables, cardinalities, prob_table):
-        self.variables = variables
-        self.cardinalities = cardinalities
+    def _create_translation_table(self, variables_values):
+        """Create translation from string values to numbers."""
+        translation_table = {}
+        for var in variables_values:
+            translation_table[var] = {}
+            for i, value in enumerate(variables_values[var]):
+                translation_table[var][value] = i
+        return translation_table
+
+    def __init__(self, variables_dict, prob_table):
+        self.variables = sorted(variables_dict.keys())
+        self.variables_dict = variables_dict
+        self.translation_table = self._create_translation_table(variables_dict)
+        self.cardinalities = {var: len(variables_dict[var])
+                              for var in self.variables}
 
         if isinstance(prob_table, np.ndarray):
             self.factor_table = prob_table
             self.factor_length = self.factor_table.size
         elif isinstance(prob_table, dict):
-            self.factor_length = self._factor_table_length(cardinalities)
+            self.factor_length = self._factor_table_length(self.cardinalities)
             self.factor_table = np.ndarray(self.factor_length, np.float32)
 
-        self.strides = self._compute_strides(variables,
-                                             cardinalities,
+        self.strides = self._compute_strides(self.variables,
+                                             self.cardinalities,
                                              self.factor_length)
 
         if isinstance(prob_table, dict):
@@ -79,6 +92,16 @@ class DiscreteFactor(object):
             ret += format_str.format(self.factor_table[i]) + "\n"
         ret += 79 * "-" + "\n"
         return ret
+
+    def rename_variables(self, new_variables):
+        """Rename variables."""
+        renamed_variables = []
+        for var in self.variables:
+            if var in new_variables:
+                renamed_variables.append(new_variables[var])
+            else:
+                renamed_variables.append(var)
+        self.variables = renamed_variables
 
     def marginalize(self, variables):
         """Marginalize the factor."""
@@ -117,7 +140,8 @@ class DiscreteFactor(object):
                               new_strides[var])
 
         # Return new factor with marginalized variables.
-        return DiscreteFactor(variables, new_cardinalities, new_factor_table)
+        new_variables_dict = {v: self.variables_dict[v] for v in variables}
+        return DiscreteFactor(new_variables_dict, new_factor_table)
 
     def __getitem__(self, assignment):
         index = self._get_index_from_assignment(assignment)
@@ -166,8 +190,10 @@ class DiscreteFactor(object):
                     index_other += other_factor.strides[var]
                     break
 
-        return DiscreteFactor(new_variables,
-                              new_cardinalities,
+        new_variables_dict = dict(self.variables_dict)
+        new_variables_dict.update(other_factor.variables_dict)
+
+        return DiscreteFactor(new_variables_dict,
                               new_factor_table)
 
     def __div__(self, other_factor):
@@ -197,6 +223,5 @@ class DiscreteFactor(object):
                     index_other += other_factor.strides[var]
                     break
 
-        return DiscreteFactor(self.variables,
-                              self.cardinalities,
+        return DiscreteFactor(self.variables_dict,
                               new_factor_table)
