@@ -601,9 +601,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
     def merge(self):
         """Adds up probabilities for the same hypotheses.
 
-        TODO: not implemented yet
+        This method has actually nothing to do. The alternatives for each
+        dialog act item (DAI) are just two: it is there, or it isn't. The data
+        model captures only the presence of DAI-s, and hence no other
+        hypothesis' probabilities need to be added.
+
         """
-        raise SDSException('Not implemented yet.')
+        pass
 
     def prune(self, prune_prob=0.001):
         """Prune all low probability dialogue act items."""
