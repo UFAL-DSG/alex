@@ -1,5 +1,7 @@
 import os
 
+def one():
+    return 1.00001
 
 class DummyLogger(object):
     def __getattr__(self, item):

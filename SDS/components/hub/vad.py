@@ -91,6 +91,9 @@ class VAD(multiprocessing.Process):
 
                     self.deque_audio_recorded_in.clear()
 
+                    # reset other state variables
+                    self.last_vad = False
+
                     return False
 
         return False
@@ -158,6 +161,8 @@ class VAD(multiprocessing.Process):
                         self.wf.setframerate(self.cfg['Audio']['sample_rate'])
 
                     if change == 'non-speech':
+                        if self.cfg['VAD']['debug']:
+                            self.cfg['Logging']['system_logger'].debug('REC END Output file name: %s' % self.output_file_name)
                         self.cfg['Logging']['session_logger'].rec_end(os.path.basename(self.output_file_name))
 
                         # inform both the parent and the consumer

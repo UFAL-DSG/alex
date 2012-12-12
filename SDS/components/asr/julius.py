@@ -355,7 +355,6 @@ class JuliusASR():
     def flush(self):
         """Sends command to the Julius ASR to terminate the recognition and get ready for new recognition.
         """
-
         if self.recognition_on:
             self.audio_finished()
 

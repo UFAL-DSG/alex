@@ -6,6 +6,7 @@ import numpy as np
 from collections import defaultdict, deque
 
 from SDS.utils.exception import UtteranceNBListException, UtteranceConfusionNetworkException
+from SDS import utils
 
 def load_utterances(file_name, limit=None):
     f = open(file_name)
@@ -290,7 +291,7 @@ class UtteranceNBList(ASRHypothesis):
                 other_utt = i
 
         if other_utt == -1:
-            if sum > 1.0:
+            if sum > utils.one():
                 raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.0: %8.6f' % sum)
             prob_other = 1.0 - sum
             self.n_best.append([prob_other, Utterance('__other__')])
