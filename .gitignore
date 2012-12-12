@@ -33,8 +33,9 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+.ropeproject
 
-# SDS_er specific
-localsettings.py
+# transcription specific
+/localsettings.py
 nohup.out
-db.db
+/db.db
