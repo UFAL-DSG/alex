@@ -37,6 +37,9 @@ class SessionLogger:
         self.session_dir_name.value = ''
         self.session_start_time = multiprocessing.Value('d', time.time())
 
+        # filename of the started recording
+        self.rec_started_filename = None
+
     def __repr__(self):
         return "SessionLogger()"
 
@@ -79,10 +82,16 @@ class SessionLogger:
 
         self.session_start_time.value = time.time()
 
+    def _flush(self):
+        if self.rec_started_filename is not None:
+            self.rec_end(self.rec_started_filename)
+            self.rec_started_filename = None
+
     @global_lock(lock)
     def session_end(self):
         """ Disable logging into the session specific directory
         """
+        self._flush()
         self.session_dir_name.value = ''
 
     @global_lock(lock)
@@ -304,6 +313,7 @@ class SessionLogger:
         else:
             raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
 
+        self.rec_started_filename = fname
         self.close_session_xml(doc)
 
     @global_lock(lock)
@@ -321,6 +331,8 @@ class SessionLogger:
             raise SessionLoggerException("Missing rec element for %s fname" % fname)
 
         self.close_session_xml(doc)
+
+        self.rec_started_filename = None
 
 #    @global_lock(lock)
     def asr(self, speaker, nblist, confnet = None):
