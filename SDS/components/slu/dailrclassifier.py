@@ -1,20 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008.
 
 import numpy as np
 import cPickle as pickle
 
-from math import exp
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
-from SDS.components.asr.utterance import UtteranceFeatures, Utterance, UtteranceHyp
+from SDS.components.asr.utterance import UtteranceFeatures, Utterance, \
+    UtteranceHyp
 from SDS.components.slu.__init__ import SLUInterface
-from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActHyp, DialogueActNBList, DialogueActConfusionNetwork, merge_slu_confnets
+from SDS.components.slu.da import DialogueActItem, \
+    DialogueActConfusionNetwork, merge_slu_confnets
 from SDS.utils.exception import DAILRException
 
+
 class DAILogRegClassifierLearning:
-    """ Implements learning of dialogue act item classifiers based on logistic regression.
+    """ Implements learning of dialogue act item classifiers based on logistic
+    regression.
     """
 
     def __init__(self,
@@ -35,18 +40,25 @@ class DAILogRegClassifierLearning:
         # substitute category labels
         self.category_labels = {}
         if self.preprocessing:
-            for k in self.utterances_list:
-                self.utterances[k] = self.preprocessing.text_normalisation(self.utterances[k])
-                self.utterances[k], self.das[k], self.category_labels[k] = self.preprocessing.values2category_labels_in_da(self.utterances[k], self.das[k])
+            for utt_idx in self.utterances_list:
+                self.utterances[utt_idx] = self.preprocessing\
+                    .text_normalisation(self.utterances[utt_idx])
+                self.utterances[utt_idx], self.das[utt_idx], \
+                        self.category_labels[utt_idx] = \
+                    self.preprocessing.values2category_labels_in_da(
+                        self.utterances[utt_idx], self.das[utt_idx])
 
         # generate utterance features
         self.utterance_features = {}
-        for k in self.utterances_list:
-            self.utterance_features[k] = UtteranceFeatures(
-                self.features_type, self.features_size, self.utterances[k])
+        for utt_idx in self.utterances_list:
+            self.utterance_features[utt_idx] = \
+                UtteranceFeatures(self.features_type,
+                                  self.features_size,
+                                  self.utterances[utt_idx])
 
     def prune_features(self, min_feature_count=5, verbose=False):
-        """Prune those features that are unique. They are irrelevant for computing dot kernels.
+        """Prune those features that are unique. They are irrelevant for
+        computing dot kernels.
         """
         # collect all features and prune those occurring only once
         features = defaultdict(int)
@@ -86,33 +98,38 @@ class DAILogRegClassifierLearning:
             print "Number of features after pruning: ", len(self.features)
 
     def extract_classifiers(self, verbose=False):
-        # get the classifiers
+        # Get the classifiers.
+        # XXX !? This does not get any classifiers. It merely counts DAI-s, and
+        # saves these counts to the `self.classifiers' counter.
         self.classifiers = defaultdict(int)
 
-        for k in self.utterances_list:
-            for dai in self.das[k].dais:
+        for utt_idx in self.utterances_list:
+            for dai in self.das[utt_idx].dais:
                 self.classifiers[str(dai)] += 1
 
                 if verbose:
                     if dai.value and '-' not in dai.value:
                         print '#' * 120
-                        print self.das[k]
-                        print self.utterances[k]
-                        print self.category_labels[k]
+                        print self.das[utt_idx]
+                        print self.utterances[utt_idx]
+                        print self.category_labels[utt_idx]
 
     def prune_classifiers(self, min_classifier_count=5):
         new_classifiers = {}
         for k in self.classifiers:
             # prune these classfiers
-            if '=' in k and '0' not in k and self.classifiers[k] < min_classifier_count:
+            if ('=' in k
+                    and '0' not in k
+                    and self.classifiers[k] < min_classifier_count):
                 continue
 
-            if '="dontcare"' in k and '(="dontcare")' not in k:
+            if ('="dontcare"' in k
+                    and '(="dontcare")' not in k):
                 continue
 
             if 'null()' in k:
-                # null() classifier is not necessary since null dialogue act is a complement
-                # to all other dialogue acts
+                # null() classifier is not necessary since null dialogue act is
+                # a complement to all other dialogue acts
                 continue
 
             new_classifiers[k] = self.classifiers[k]
@@ -120,24 +137,24 @@ class DAILogRegClassifierLearning:
         self.classifiers = new_classifiers
 
     def gen_data_for_classifiers(self):
-        # generate training data
+        # Generate training data.
         self.classifiers_training_data = defaultdict(list)
 
-        parsed_classfiers = {}
-        for c in self.classifiers:
-            parsed_classfiers[c] = DialogueActItem()
-            parsed_classfiers[c].parse(c)
+        parsed_clsers = {}
+        for clser in self.classifiers:
+            parsed_clsers[clser] = DialogueActItem()
+            parsed_clsers[clser].parse(clser)
 
-        for u in self.utterances_list:
-            for c in self.classifiers:
-                if parsed_classfiers[c] in self.das[u]:
-                    self.classifiers_training_data[c].append(1.0)
+        for utt in self.utterances_list:
+            for clser in self.classifiers:
+                if parsed_clsers[clser] in self.das[utt]:
+                    self.classifiers_training_data[clser].append(1.0)
                 else:
-                    self.classifiers_training_data[c].append(0.0)
+                    self.classifiers_training_data[clser].append(0.0)
 
-        for c in self.classifiers:
-            self.classifiers_training_data[c] = np.array(
-                self.classifiers_training_data[c])
+        for clser in self.classifiers:
+            self.classifiers_training_data[clser] = np.array(
+                self.classifiers_training_data[clser])
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
@@ -179,8 +196,10 @@ class DAILogRegClassifierLearning:
             if verbose:
                 mean_accuracy = lr.score(
                     self.kernel_matrix, self.classifiers_training_data[c])
-                print "Training data prediction mean accuracy of the training data: %6.2f" % (100.0 * mean_accuracy, )
-                print "Size of the params:", lr.coef_.shape, "Number of non-zero params:", np.count_nonzero(lr.coef_)
+                print ("Training data prediction mean accuracy of the "
+                       "training data: {0:6.2f}").format(100.0 * mean_accuracy)
+                print "Size of the params:", lr.coef_.shape, \
+                      "Number of non-zero params:", np.count_nonzero(lr.coef_)
 
         if verbose:
             print "Total number of non-zero params:", np.count_nonzero(
@@ -200,45 +219,48 @@ class DAILogRegClassifierLearning:
 
 class DAILogRegClassifier(SLUInterface):
     """
-      This parser implements a parser based on set of classifiers for each dialogue act item. When parsing
-      the input utterance, the parse classifies whether a given dialogue act item is present. Then, the output
-      dialogue act is composed of all detected dialogue act items.
+      This parser implements a parser based on set of classifiers for each
+      dialogue act item. When parsing the input utterance, the parse classifies
+      whether a given dialogue act item is present. Then, the output dialogue
+      act is composed of all detected dialogue act items.
 
       Dialogue act is defined as a composition of dialogue act items. E.g.
 
         confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
 
-      where confirm(drinks="wine") and inform(name="kings shilling") are two dialogue act items.
+      where confirm(drinks="wine") and inform(name="kings shilling") are two
+      dialogue act items.
 
-      This parser uses logistic regression as the classifier of the dialogue act items.
+      This parser uses logistic regression as the classifier of the dialogue
+      act items.
 
     """
     def __init__(self, preprocessing=None):
-        # FIXME: maybe the SLU components should use the Config class to initialise themselves.
-        # As a result it would create their category label database and pre-processing classes.
+        # FIXME: maybe the SLU components should use the Config class to
+        # initialise themselves.  As a result it would create their category
+        # label database and pre-processing classes.
 
         self.preprocessing = preprocessing
 
     def load_model(self, file_name):
         f = open(file_name, 'r')
         d = pickle.load(f)
-        self.features_list, self.features_mapping, self.trained_classifiers, self.features_type, self.features_size = d
+        self.features_list, self.features_mapping, self.trained_classifiers, \
+            self.features_type, self.features_size = d
         f.close()
 
     def get_size(self):
         return len(self.features_list)
 
     def parse_1_best(self, utterance, verbose=False):
-        """Parse utterance and generate the best interpretation in the form of an dialogue act (an instance
-        of DialogueAct.
+        """Parse `utterance' and generate the best interpretation in the form
+        of a dialogue act (an instance of DialogueAct).
 
         The result is the dialogue act confusion network.
-        """
 
-        if isinstance(utterance, Utterance):
-            pass
-        elif isinstance(utterance, UtteranceHyp):
-            # parse just the utterance and ignore the confidence score
+        """
+        if isinstance(utterance, UtteranceHyp):
+            # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
         if verbose:
@@ -246,46 +268,54 @@ class DAILogRegClassifier(SLUInterface):
 
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
-            utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
+            utterance, category_labels = \
+                self.preprocessing.values2category_labels_in_utterance(
+                    utterance)
 
         if verbose:
             print utterance
             print category_labels
 
-        # generate utterance features
-        utterance_features = UtteranceFeatures(self.features_type, self.features_size, utterance)
+        # Generate utterance features.
+        utterance_features = UtteranceFeatures(self.features_type,
+                                               self.features_size,
+                                               utterance)
 
         if verbose:
             print utterance_features
 
         kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(self.features_mapping)
+        kernel_vector[0] = utterance_features.get_feature_vector(
+            self.features_mapping)
 
-        da = []
-        prob = 1.0
+        # XXX Never used:
+        # da = []
+        # prob = 1.0
 
         da_confnet = DialogueActConfusionNetwork()
-        for c in self.trained_classifiers:
+        for clser in self.trained_classifiers:
             if verbose:
-                print "Classifying classifier: ", c
+                print "Using classifier: ", clser
 
-            p = self.trained_classifiers[c].predict_proba(kernel_vector)
+            p = self.trained_classifiers[clser].predict_proba(kernel_vector)
 
             if verbose:
                 print p
 
-            da_confnet.add(p[0][1], DialogueActItem(dai=c))
+            da_confnet.add(p[0][1], DialogueActItem(dai=clser))
 
         if verbose:
             print "DA: ", da_confnet
 
-        confnet = self.preprocessing.category_labels2values_in_confnet(da_confnet, category_labels)
+        confnet = self.preprocessing.category_labels2values_in_confnet(
+            da_confnet, category_labels)
         confnet.sort()
 
         return confnet
 
     def parse_nblist(self, utterance_list):
-        """Parse N-best list by parsing each item in the list and then by merging the results."""
+        """Parse N-best list by parsing each item in the list and then by
+        merging the results."""
 
         if len(utterance_list) == 0:
             raise DAILRException("Empty utterance N-best list.")
@@ -300,10 +330,10 @@ class DAILogRegClassifier(SLUInterface):
 
             confnets.append((prob, confnet))
 
-#            print prob, utt
-#            confnet.prune()
-#            confnet.sort()
-#            print confnet
+            # print prob, utt
+            # confnet.prune()
+            # confnet.sort()
+            # print confnet
 
         confnet = merge_slu_confnets(confnets)
         confnet.prune()
@@ -312,25 +342,27 @@ class DAILogRegClassifier(SLUInterface):
         return confnet
 
     def parse_confnet(self, confnet, verbose=False):
-        """Parse the confusion network by generating an N-best list and parsing this N-best list."""
+        """Parse the confusion network by generating an N-best list and parsing
+        this N-best list."""
 
-        #TODO: We should implement a parser which uses features directly from confusion networks.
+        #TODO: We should implement a parser which uses features directly from
+        # confusion networks.
 
-#        print "Confnet"
-#        print confnet
-#        print
+        # print "Confnet"
+        # print confnet
+        # print
 
         nblist = confnet.get_utterance_nblist(n=40)
 
-#        print "NBList"
-#        print nblist
-#        print
+        # print "NBList"
+        # print nblist
+        # print
 
         sem = self.parse_nblist(nblist)
 
-#        print "Semantics"
-#        print sem
-#        print
+        # print "Semantics"
+        # print sem
+        # print
 
         return sem
 

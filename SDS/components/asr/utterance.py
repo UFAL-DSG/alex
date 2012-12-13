@@ -5,8 +5,10 @@ import numpy as np
 
 from collections import defaultdict, deque
 
-from SDS.utils.exception import UtteranceNBListException, UtteranceConfusionNetworkException
+from SDS.utils.exception import UtteranceNBListException, \
+    UtteranceConfusionNetworkException
 from SDS import utils
+
 
 def load_utterances(file_name, limit=None):
     f = open(file_name)
@@ -100,6 +102,15 @@ class Utterance:
         return False
 
     def index(self, s):
+        # FIXME: What should this do?
+        # In this implementation, it apparently looks for the first occurrence
+        # of the first word of `s' and checks whether the following words of
+        # `s' follow.
+        #
+        # What I would rather expect is that it look for the first occurrence
+        # of the sequence of words `s' (give it a more explicit name, by the
+        # way), return the start index of that splice, or raise IndexError if
+        # the sequence were not present.
         f = s[0]
 
         i = self.utterance.index(f)
@@ -127,7 +138,29 @@ class Utterance:
             self.utterance[i] = self.utterance[i].lower()
 
 class UtteranceFeatures(Features):
+    """Represents the vector of features for an utterance.
+
+    The class also provides methods for manipulation of the feature vector,
+    including extracting features from an utterance.
+
+    Currently, only n-gram (including skip n-grams) features are implemented.
+
+    """
     def __init__(self, type='ngram', size=3, utterance=None):
+        """Creates a vector of utterance features.
+
+        Keyword arguments:
+            - type: the type of features as a string; currently only 'ngram' is
+                implemented
+            - size: maximum order of the (n-gram) features; for skip n-grams,
+                this is the distance between the first and last word plus one
+            - utterance: the utterance for which to extract the features;
+                If utterance is None (the default), an all-zeroes vector is
+                created.
+
+                Otherwise, utterance must be an instance of Utterance.
+
+        """
         self.type = type
         self.size = size
         self.features = defaultdict(float)
@@ -159,30 +192,37 @@ class UtteranceFeatures(Features):
 
         return fv
 
-    def parse(self, u):
-        if self.type == 'ngram':
-            for k in range(1, self.size + 1):
-                for i in range(len(u)):
-                    if i + k > len(u):
-                        break
-
-                    self.features[tuple(u[i:i + k])] += 1.0
-
-        if u.isempty():
+    def parse(self, utterance):
+        if utterance.isempty():
             self.features['__empty__'] += 1.0
+        elif self.type == 'ngram':
+            # Compute n-grams.
+            # TODO: Consider the <sentence start> and <sentence end> tokens,
+            # too. For longer n-grams, this can be generalised to <before
+            # sentence> and <after sentence>.
+            for length in xrange(1, self.size + 1):
+                for start in xrange(len(utterance) - length + 1):
+                    self.features[tuple(utterance[start:start + length])] \
+                        += 1.0
 
+        # Compute skip n-grams.
+        # FIXME This should be conditioned on (self.type == 'ngram') or
+        # something of that kind, and an alternative should be provided,
+        # perhaps just raising an exception.
         new_features = defaultdict(float)
-        for f in self.features:
-            if len(f) == 3:
-                new_features[(f[0], '*1', f[2])] += 1.0
-            if len(f) == 4:
-                new_features[(f[0], '*2', f[3])] += 1.0
+        for feat in self.features:
+            if len(feat) == 3:
+                new_features[(feat[0], '*1', feat[2])] += 1.0
+            if len(feat) == 4:
+                new_features[(feat[0], '*2', feat[3])] += 1.0
+        # Save the skip n-grams.
+        for new_feat in new_features:
+            self.features[new_feat] += new_features[new_feat]
 
-        for f in new_features:
-            self.features[f] += new_features[f]
-
+        # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
+        # etc. or raise it as an exception.
         if len(self.features) == 0:
-            print u.utterance
+            print utterance.utterance
 
         self.set = set(self.features.keys())
 
@@ -306,8 +346,10 @@ class UtteranceNBList(ASRHypothesis):
 
 class UtteranceNBListFeatures(Features):
     pass
-#TODO: You can implement UtteranceConfusionNetwork and UtteranceConfusionNetworkFeatures to
-# serve the similar purpose for DAILogRegClassifier as Utterance and UtteranceFeatures
+
+#TODO: You can implement UtteranceConfusionNetwork and
+# UtteranceConfusionNetworkFeatures to serve the similar purpose for
+# DAILogRegClassifier as Utterance and UtteranceFeatures
 #
 # - then the code will be more general
 
@@ -396,9 +438,9 @@ class UtteranceConfusionNetwork(ASRHypothesis):
         The result is a list of utterance hypotheses each with a with assigned probability.
         The list also include the utterance "__other__" for not having the correct utterance in the list.
         """
-#        print "Confnet:"
-#        print self
-#        print
+        # print "Confnet:"
+        # print self
+        # print
 
         open_hyp = []
         closed_hyp = {}
@@ -419,7 +461,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
                 closed_hyp[current_hyp_index] = current_prob
 
-#                print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+                # print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
                 for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)
@@ -431,15 +473,15 @@ class UtteranceConfusionNetwork(ASRHypothesis):
         for idx in closed_hyp:
             nblist.add(closed_hyp[idx], self.get_hyp_index_utterence(idx))
 
-#        print nblist
-#        print
+        # print nblist
+        # print
 
         nblist.merge()
         nblist.normalise()
         nblist.sort()
 
-#        print nblist
-#        print
+        # print nblist
+        # print
 
         return nblist
 
