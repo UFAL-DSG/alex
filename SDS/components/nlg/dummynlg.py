@@ -62,6 +62,8 @@ class DummyNLG(object):
                 res += ["No"]
             elif dai.dat == "noclue":
                 res += ["Sorry, I don't know about the %s of this place." % dai.name]
+            elif dai.dat == "instructions":
+                res += ["I can give you information about places to eat in the town. Just specify what kind of food you want, area of the town or price range."]
             else:
                 res += ["I want to %s that %s is %s." % \
                         (dai.dat, dai.name, dai.value, )]
