@@ -130,7 +130,7 @@ class SLUPreprocessing:
             if slot in utterance:
                 # XXX So the mapping is _from surface forms_ _to category
                 # labels_!? The method docstring would not suggest this.
-                category_label = '{cat}-{idx!slot}'.format(
+                category_label = '{cat}-{idx!s}'.format(
                     cat=surface.upper(),
                     idx=category_label_counter[surface.upper()])
                 category_label_counter[surface.upper()] += 1
