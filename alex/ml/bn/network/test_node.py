@@ -4,56 +4,78 @@
 # pylint: disable=C0111
 
 import unittest
+import pdb
 
 from bn.factor import DiscreteFactor
-from bn.network.node import DiscreteVariableNode
+from bn.network.node import DiscreteVariableNode, DiscreteFactorNode
 
 class TestNode(unittest.TestCase):
 
-    def setUp(self):
-        self.observation_factor = DiscreteFactor(
+    def test_network(self):
+        # Create nodes.
+        hid1 = DiscreteVariableNode("hid1", ["save", "del"])
+        obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
+        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
             {
-                "Command": ["save", "del"],
-                "Observation": ["osave", "odel"]
+                "hid1": ["save", "del"],
+                "obs1": ["osave", "odel"]
             },
             {
-            # P(Command | Observation)
+                ("save", "osave"): 0.8,
+                ("save", "odel"): 0.2,
+                ("del", "osave"): 0.3,
+                ("del", "odel"): 0.7,
+            }))
+
+        hid2 = DiscreteVariableNode("hid2", ["save", "del"])
+        obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
+        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
+            {
+                "hid2": ["save", "del"],
+                "obs2": ["osave", "odel"]
+            },
+            {
                 ("save", "osave"): 0.8,
                 ("save", "odel"): 0.2,
                 ("del", "osave"): 0.2,
                 ("del", "odel"): 0.8,
-            })
+            }))
 
-        self.command_variable_factor = DiscreteFactor(
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
             {
-                "Command": ["save", "del"]
+                "hid1": ["save", "del"],
+                "hid2": ["save", "del"],
             },
             {
-                ("save",): 1,
-                ("del",): 1,
-            })
+                ("save", "save"): 0.9,
+                ("save", "del"): 0.1,
+                ("del", "save"): 0,
+                ("del", "del"): 1
+            }))
 
-        self.observation_variable_factor = DiscreteFactor(
-            {
-                "Observation": ["osave", "odel"]
-            },
-            {
-                ("osave",): 1,
-                ("odel",): 0,
-            })
+        # Connect nodes.
+        fact_h1_o1.add_neighbor(hid1)
+        fact_h1_o1.add_neighbor(obs1)
 
+        fact_h2_o2.add_neighbor(hid2)
+        fact_h2_o2.add_neighbor(obs2)
 
-    def test_factors(self):
-        m_com_var_to_obs_fac = self.command_variable_factor
-        m_obs_var_to_obs_fac = self.observation_variable_factor
-        obs_fac_belief = (self.observation_factor * m_obs_var_to_obs_fac *
-                          m_com_var_to_obs_fac)
-        print obs_fac_belief
+        fact_h1_h2.add_neighbor(hid1)
+        fact_h1_h2.add_neighbor(hid2)
 
-        temp = obs_fac_belief / m_com_var_to_obs_fac
-        m_obs_fac_to_com_var = temp.marginalize(["Command"])
-        print m_obs_fac_to_com_var
+        # Init nodes.
+        fact_h1_o1.init_messages()
+        fact_h2_o2.init_messages()
+        fact_h1_h2.init_messages()
+        hid1.update_belief()
+        hid2.update_belief()
+        obs1.update_belief()
+        obs2.update_belief()
 
-        temp = obs_fac_belief / m_obs_var_to_obs_fac
-        m_obs_fac_to_obs_var = temp.marginalize(["Observation"])
-        print m_obs_fac_to_obs_var
+        #print hid1.belief
+        obs1.observed("osave")
+        fact_h1_o1.message_from['obs1'] = obs1.message_to('fact_h1_o1')
+        fact_h1_o1.update_belief()
+        hid1.message_from['fact_h1_o1'] = fact_h1_o1.message_to('hid1')
+        hid1.update_belief()
+        #print hid1.belief
