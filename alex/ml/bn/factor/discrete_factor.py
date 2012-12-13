@@ -69,6 +69,8 @@ class DiscreteFactor(object):
                                              self.cardinalities,
                                              self.factor_length)
 
+        self.unobserved_factor_table = self.factor_table
+
         if isinstance(prob_table, dict):
             for assignment, value in prob_table.iteritems():
                 self.factor_table[
@@ -142,6 +144,15 @@ class DiscreteFactor(object):
         # Return new factor with marginalized variables.
         new_variables_dict = {v: self.variables_dict[v] for v in variables}
         return DiscreteFactor(new_variables_dict, new_factor_table)
+
+    def observed(self, assignment):
+        """Set observation."""
+        if assignment is not None:
+            self.factor_table = np.zeros(self.factor_length)
+            self.factor_table[
+                self._get_index_from_assignment(assignment)] = 1.0
+        else:
+            self.factor_table = self.unobserved_factor_table
 
     def __getitem__(self, assignment):
         index = self._get_index_from_assignment(assignment)

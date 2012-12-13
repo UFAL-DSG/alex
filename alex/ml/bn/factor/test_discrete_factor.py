@@ -123,3 +123,4 @@ class TestFactor(unittest.TestCase):
     def test_string_names(self):
         f4 = self.f2 * self.f3
         self.assertClose(f4[(1, 1, 'a')], 0.025)
+
