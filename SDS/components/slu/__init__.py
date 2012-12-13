@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# vim: set fdm=marker :
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
 __all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
@@ -26,7 +25,6 @@ class CategoryLabelDatabase:
     """ Provides a convenient interface to a database of slot value pairs aka
         category labels.
     """
-# {{{
     def __init__(self, file_name):
         self.database = {}
         self.synonym_value_category = []
@@ -69,7 +67,6 @@ class CategoryLabelDatabase:
 
         self.synonym_value_category.sort(
             key=lambda svc: len(svc[0]), reverse=True)
-# }}}
 
 
 class SLUPreprocessing:
@@ -82,7 +79,6 @@ class SLUPreprocessing:
     normalisation is hard-coded. However, it can be updated by providing
     normalisation patterns.
     """
-#{{{
     def __init__(self, cldb, text_normalization=None):
         self.cldb = cldb
 
@@ -104,7 +100,6 @@ class SLUPreprocessing:
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
         """
-        #{{{
 
         utterance.lower()
 
@@ -112,10 +107,9 @@ class SLUPreprocessing:
             utterance.replace(mapping[0], mapping[1])
 
         return utterance
-        #}}}
 
     def values2category_labels_in_utterance(self, utterance):
-        """ Replaces all strings matching values in the database by their slot
+        """Replaces all strings matching values in the database by their slot
         names. Since multiple slots can have the same values, the algorithm
         produces multiple outputs.
 
@@ -124,25 +118,31 @@ class SLUPreprocessing:
         original string.
 
         """
-        #{{{
         utterance = copy.deepcopy(utterance)
 
+        # (FIXME: Why not just use collections.Counter?)
         category_label_counter = defaultdict(int)
         category_labels = {}
 
-        for s, value, name in self.cldb:
-            if s in utterance:
-                category_label = name.upper() + '-' +\
-                    str(category_label_counter[name.upper()])
-                category_label_counter[name.upper()] += 1
+        for slot, value, surface in self.cldb:
+            # XXX Utterance consists of words (surface forms), not slots!
+            # Right?
+            if slot in utterance:
+                # XXX So the mapping is _from surface forms_ _to category
+                # labels_!? The method docstring would not suggest this.
+                category_label = '{cat}-{idx!slot}'.format(
+                    cat=surface.upper(),
+                    idx=category_label_counter[surface.upper()])
+                category_label_counter[surface.upper()] += 1
 
-                category_labels[category_label] = (value, s)
-                utterance.replace(s, [category_label, ])
+                category_labels[category_label] = (value, slot)
+                # Assumes the surface strings don't overlap.
+                # FIXME: Perhaps replace all instead of just the first one.
+                utterance.replace(slot, [category_label])
 
                 break
 
         return utterance, category_labels
-        #}}}
 
     def values2category_labels_in_da(self, utterance, da):
         """ Replaces all strings matching values in the database by their slot
@@ -154,7 +154,6 @@ class SLUPreprocessing:
         original string.
 
         """
-        #{{{
         da = copy.deepcopy(da)
         utterance = copy.deepcopy(utterance)
 
@@ -168,7 +167,6 @@ class SLUPreprocessing:
                     break
 
         return utterance, da, category_labels
-        #}}}
 
     def category_labels2values_in_utterance(self, utterance, category_labels):
         """Reverts the result of the values2category_labels_in_utterance(...)
@@ -176,14 +174,12 @@ class SLUPreprocessing:
 
         Returns the original utterance.
         """
-        #{{{
         utterance = copy.deepcopy(utterance)
 
         for cl in category_labels:
             utterance.replace([cl, ], category_labels[cl][1])
 
         return utterance
-        #}}}
 
     def category_labels2values_in_da(self, da, category_labels):
         """Reverts the result of the values2category_labels_in_da(...)
@@ -191,14 +187,12 @@ class SLUPreprocessing:
 
         Returns the original dialogue act.
         """
-        #{{{
         da = copy.deepcopy(da)
         for dai in da.dais:
             if dai.value in category_labels:
                 dai.value = category_labels[dai.value][0]
 
         return da
-        #}}}
 
     def category_labels2values_in_nblist(self, nblist, category_labels):
         """Reverts the result of the values2category_labels_in_da(...)
@@ -227,7 +221,6 @@ class SLUPreprocessing:
                 dai.value = category_labels[dai.value][0]
 
         return confnet
-#}}}
 
 
 class SLUInterface:
