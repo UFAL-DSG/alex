@@ -9,8 +9,7 @@ import cPickle as pickle
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
-from SDS.components.asr.utterance import UtteranceFeatures, Utterance, \
-    UtteranceHyp
+from SDS.components.asr.utterance import UtteranceFeatures, UtteranceHyp
 from SDS.components.slu.__init__ import SLUInterface
 from SDS.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, merge_slu_confnets
@@ -365,4 +364,3 @@ class DAILogRegClassifier(SLUInterface):
         # print
 
         return sem
-

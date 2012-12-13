@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
 import numpy as np
 
-from collections import defaultdict, deque
+from collections import defaultdict
 
-from SDS.utils.exception import UtteranceNBListException, \
-    UtteranceConfusionNetworkException
+from SDS.utils.exception import UtteranceNBListException
 from SDS import utils
 
 
@@ -36,7 +36,8 @@ def load_utterances(file_name, limit=None):
 
 
 class ASRHypothesis:
-    """This is a base class for all forms of probabilistic ASR hypotheses representations."""
+    """This is a base class for all forms of probabilistic ASR hypotheses
+    representations."""
     pass
 
 
@@ -53,7 +54,7 @@ class Utterance:
 
     def __contains__(self, s):
         try:
-            i = self.index(s)
+            self.index(s)
         except ValueError:
             return False
 
@@ -136,6 +137,7 @@ class Utterance:
     def lower(self):
         for i in range(len(self.utterance)):
             self.utterance[i] = self.utterance[i].lower()
+
 
 class UtteranceFeatures(Features):
     """Represents the vector of features for an utterance.
@@ -237,7 +239,7 @@ class UtteranceFeatures(Features):
 
 class UtteranceHyp(ASRHypothesis):
     """Provide an interface for 1-best hypothesis from the ASR component."""
-    def __init__(self, prob = None, utterance = None):
+    def __init__(self, prob=None, utterance=None):
         self.prob = prob
         self.utterance = utterance
 
@@ -249,7 +251,8 @@ class UtteranceHyp(ASRHypothesis):
 
 
 class UtteranceNBList(ASRHypothesis):
-    """Provides a convenient interface for processing N-best lists of recognised utterances.
+    """Provides a convenient interface for processing N-best lists of
+    recognised utterances.
 
     When updating the N-best list, one should do the following.
 
@@ -320,25 +323,30 @@ class UtteranceNBList(ASRHypothesis):
             self.n_best[i][0] /= s
 
     def normalise(self):
-        sum = 0.0
+        suma = 0.0
         other_utt = -1
         for i in range(len(self.n_best)):
-            sum += self.n_best[i][0]
+            suma += self.n_best[i][0]
 
             if self.n_best[i][1] == '__other__':
                 if other_utt != -1:
-                    raise UtteranceNBListException('Utterance list include multiple __other__ utterances: %s' % str(self.n_best))
+                    raise UtteranceNBListException(
+                        ('Utterance list includes multiple __other__ '
+                         'utterances: {utts!s}').format(utts=self.n_best))
                 other_utt = i
 
         if other_utt == -1:
-            if sum > utils.one():
-                raise UtteranceNBListException('Sum of probabilities in the utterance list > 1.0: %8.6f' % sum)
-            prob_other = 1.0 - sum
+            if suma > utils.one():
+                raise UtteranceNBListException(
+                    ('Sum of probabilities in the utterance list > 1.0: '
+                     '{suma:8.6f}').format(suma=suma))
+            prob_other = 1.0 - suma
             self.n_best.append([prob_other, Utterance('__other__')])
         else:
             for i in range(len(self.n_best)):
-                # __other__ utterance is already there, therefore just normalise
-                self.n_best[i][0] /= sum
+                # __other__ utterance is already there, therefore just
+                # normalise
+                self.n_best[i][0] /= suma
 
     def sort(self):
         self.n_best.sort(reverse=True)
@@ -359,7 +367,6 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
     def __init__(self):
         self.cn = []
-
 
     def __str__(self):
         s = []
@@ -413,7 +420,8 @@ class UtteranceConfusionNetwork(ASRHypothesis):
         return prob
 
     def get_next_worse_candidates(self, hyp_index):
-        """Returns such hypotheses that will have lower probability. It assumes that the confusion network is sorted."""
+        """Returns such hypotheses that will have lower probability. It assumes
+        that the confusion network is sorted."""
         worse_hyp = []
 
         for i in range(len(hyp_index)):
@@ -435,8 +443,9 @@ class UtteranceConfusionNetwork(ASRHypothesis):
     def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the confusion network and generates N-best hypotheses.
 
-        The result is a list of utterance hypotheses each with a with assigned probability.
-        The list also include the utterance "__other__" for not having the correct utterance in the list.
+        The result is a list of utterance hypotheses each with a with assigned
+        probability.  The list also include the utterance "__other__" for not
+        having the correct utterance in the list.
         """
         # print "Confnet:"
         # print self
@@ -446,7 +455,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
         closed_hyp = {}
 
         # create index for the best hypothesis
-        best_hyp  = tuple([0]*len(self.cn))
+        best_hyp = tuple([0] * len(self.cn))
         best_prob = self.get_prob(best_hyp)
         open_hyp.append((best_prob, best_hyp))
 
@@ -461,9 +470,11 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 
                 closed_hyp[current_hyp_index] = current_prob
 
-                # print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+                # print "current_prob, current_hyp_index:", current_prob,
+                # current_hyp_index
 
-                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
+                for hyp_index in self.get_next_worse_candidates(
+                        current_hyp_index):
                     prob = self.get_prob(hyp_index)
                     open_hyp.append((prob, hyp_index))
 

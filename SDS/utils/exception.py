@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
 # FIXME: move the definitions of exceptions into their packages or modules
+
 
 class SDSException(Exception):
     pass
@@ -97,6 +99,7 @@ class DialogueManagerException(SDSException):
 
 class DummyDialogueManagerException(DialogueManagerException):
     pass
+
 
 class TemplateNLGException(NLGException):
     pass

@@ -5,17 +5,12 @@
 __all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
 
 import copy
-import sys
-import os.path
 
 from collections import defaultdict
 
 from SDS.components.asr.utterance \
     import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
-from SDS.utils.text import split_by
-from SDS.utils.exception import SDSException, DAILRException
-
-import SDS.components.slu.da
+from SDS.utils.exception import SLUException, DAILRException
 
 
 database = None
@@ -201,7 +196,11 @@ class SLUPreprocessing:
         Returns the converted N-best list.
         """
         nblist = copy.deepcopy(nblist)
-        for prob, dai in nblist.n_best:
+        # XXX The following line went like this:
+        # for prob, dai in nblist.n_best:
+        # but `da' was undefined below. Check that the following correction
+        # works.
+        for prob, da in nblist.n_best:
             for dai in da:
                 if dai.value in category_labels:
                     dai.value = category_labels[dai.value][0]
