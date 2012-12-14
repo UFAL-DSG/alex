@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import os
 
 if __name__ == "__main__":
     import autopath
@@ -19,6 +20,7 @@ class TestSessionLogger(unittest.TestCase):
 
         # test 3 calls at once
         for i in range(3):
+            os.mkdir("./%d" % i)
             sl.session_start('./%d' % i)
             sl.config('config = ' + str(cfg))
             sl.header(cfg['Logging']["system_name"], cfg['Logging']["version"])

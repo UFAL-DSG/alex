@@ -11,6 +11,7 @@
 import imp
 import re
 import pprint
+import random
 
 from SDS.components.dm import DialogueManager
 from SDS.components.slu.da import DialogueAct, \
@@ -447,6 +448,8 @@ class RuleDM(DialogueManager):
 
         ontology = cfg['DM'][cls_name]['ontology']
         db_cfg = cfg['DM'][cls_name]['db_cfg']
+        self.provide_code = cfg['DM'][cls_name]['provide_code']
+        self.code_submit_url = cfg['DM'][cls_name]['code_submit_url']
 
         self.ontology = imp.load_source('ontology', ontology)
 
@@ -541,6 +544,7 @@ class RuleDM(DialogueManager):
         self.dstate, new_da = self.policy.get_da(self.dstate, self.last_usr_da)
         if new_da is not None:
             self.last_sys_da = new_da
+
 
         return self.last_sys_da
 
