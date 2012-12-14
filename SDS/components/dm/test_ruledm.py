@@ -81,6 +81,8 @@ class TestRuleDM(unittest.TestCase):
               {
                   'ontology': ontology_file,
                   'db_cfg': db_file,
+                  'provide_code': False,
+                  'code_submit_url': None
                }
               }
              ,
