@@ -8,6 +8,7 @@ python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/
 python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
 
 
+# NOTE This should be run just once, even in repeated runs.
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.
 echo "<s> [] sil" >> $WORK_DIR/dict_full
@@ -57,7 +58,7 @@ echo "_LAUGH_" >> $WORK_DIR/word_list_test
 echo "_EHM_HMM_" >> $WORK_DIR/word_list_test
 echo "_NOISE_" >> $WORK_DIR/word_list_test
 
-# Build the word network as a word loop of words in the testing data
+# Build the word network as a word loop of words in the testing data.
 HBuild -A -T 1 -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdnet_zerogram > $LOG_DIR/hbuild.log
 
 if [ -f $DATA_SOURCE_DIR/wdnet_bigram ]
@@ -68,7 +69,9 @@ fi
 if [ -f $DATA_SOURCE_DIR/arpa_trigram ]
 then
   cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
-  
-  python $TRAIN_SCRIPTS/WordListFromARPALM.py $WORK_DIR/arpa_trigram > word_list_hdecode
+fi
+if [ -f $WORK_DIR/arpa_trigram ]
+then
+	python $TRAIN_SCRIPTS/WordListFromARPALM.py $WORK_DIR/arpa_trigram > $WORK_DIR/word_list_hdecode
   perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_hdecode $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
 fi

@@ -41,6 +41,51 @@ import sys
 from xml.etree import ElementTree
 
 
+# nonspeech event transcriptions {{{
+_nonspeech_map = {
+    '_SIL_': (
+        '(SIL)',
+        '(QUIET)',
+        '(CLEARING)'),
+    '_INHALE_': (
+        '(BREATH)',
+        '(BREATHING)',
+        '(SNIFFING)'),
+    '_LAUGH_': (
+        '(LAUGH)',
+        '(LAUGHING)'),
+    '_EHM_HMM_': (
+        '(HESITATION)',
+        '(HESITATION)'),
+    '_NOISE_': (
+        '(COUCHING)',
+        '(COUGH)',
+        '(COUGHING)',
+        '(LIPSMACK)',
+        '(POUNDING)',
+        '(RING)',
+        '(RINGING)',
+        '(INTERFERENCE)',
+        '(KNOCKING)',
+        '(BANG)',
+        '(BANGING)',
+        '(BACKGROUNDNOISE)',
+        '(BABY)',
+        '(BARK)',
+        '(BARKING)',
+        '(NOISE)',
+        '(NOISES)',
+        '(SCRAPE)',
+        '(SQUEAK)',
+        '(TVNOISE)')
+    }
+#}}}
+_nonspeech_trl = dict()
+for uscored, forms in _nonspeech_map.iteritems():
+    for form in forms:
+        _nonspeech_trl[form] = uscored
+
+
 def to_wholeword_pats(substs):
     """In a list of tuples (word, substitution), makes each word into a regexp
     matching the original word, but only as a standalone word.
@@ -343,21 +388,32 @@ _excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
                         '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
-_nondashusc_punct_rx = re.compile(r'(?![\s_-])\W', flags=re.UNICODE)
+_sure_punct_rx = re.compile(r'[.?!",_]')
+_parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
 
 
 def normalise_trs(text):
 #{{{
     text = text.strip().upper()
     text = _more_spaces.sub(' ', text.strip())
-    text = _nondashusc_punct_rx.sub('', text)
+    text = _sure_punct_rx.sub('', text)
     # Do dictionary substitutions.
     for pat, sub in _subst:
         text = pat.sub(sub, text)
     for word in _hesitation:
         text = word.sub('(HESITATION)', text)
+    # Handle non-speech events (separate them from words they might be
+    # agglutinated to, remove doubled parentheses, and substitute the known
+    # non-speech events with the forms with underscores).
+    #
+    # This step can incur superfluous spaces at the beginning and at the end of
+    # the text.
+    if '(' in text:
+        text = _parenthesized_rx.sub(r' (\1) ', text)
+        for parenized, uscored in _nonspeech_trl.iteritems():
+            text.replace(parenized, uscored)
 
-    return text.encode('ascii', 'ignore')
+    return text.strip().encode('ascii', 'ignore')
 #}}}
 
 
@@ -379,6 +435,14 @@ def exclude(text):
 #}}}
 
 
+def exclude_by_dict(text, known_words):
+    """Determines whether text is not good enough and should be excluded.
+
+    "Good enough" is defined as having all its words present in the
+    `known_words' collection."""
+    return all(map(lambda word: word in known_words, text.split()))
+
+
 def save_transcription(trs_fname, trs):
     """
     Echoes `trs' into `trs_fname'. Returns True iff the
@@ -392,10 +456,16 @@ def save_transcription(trs_fname, trs):
 #}}}
 
 
-def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, verbose):
+def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
+                      known_words=None, verbose=False):
     """Extracts wavs and their transcriptions from the named in `sess_fname',
     a CUED call log file. Extracting means copying them to `outdir'. Recordings
     themselves are expected to reside in `dirname'.
+
+    If `known_words', a collection of words present in the phonetic dictionary,
+    is provided, transcriptions are excluded which contain other words. If
+    `known_words' is not provided, excluded are transcriptions that contain any
+    of _excluded_characters.
 
     Returns the total size of audio files copied to `outdir', the number of
     overwritten files by the output files, the number of wav files that were
@@ -452,7 +522,11 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, verbose):
             if verbose:
                 print "  after normalisation:", trs
 
-            if exclude(trs):
+            if known_words is not None:
+                excluded = exclude_by_dict(trs, known_words)
+            else:
+                excluded = exclude(trs)
+            if excluded:
                 print "  ...excluded"
                 continue
 
@@ -494,7 +568,9 @@ def convert(args):
     """
     Looks for .wav files and transcription logs under the `args.infname'
     directory.  Copies .wav files and their transcriptions linked from the log
-    to `args.outdir' using the `extract_wavs_trns' function.
+    to `args.outdir' using the `extract_wavs_trns' function. `args.dictionary'
+    may refer to an open file listing the only words to be allowed in
+    transcriptions in the first tab-separated column.
 
     Returns a tuple of:
         number of collisions (files at different paths with same basename)
@@ -512,6 +588,12 @@ def convert(args):
     outdir = args.outdir
     verbose = args.verbose
     ignore_list_file = args.ignore
+    dict_file = args.dictionary
+    # Read in the dictionary.
+    if dict_file:
+        known_words = set(line.split('\t')[0] for line in dict_file)
+    else:
+        known_words = None
     # Read in the ignore list.
     ignore_paths = set()
     ignore_globs = set()
@@ -590,7 +672,7 @@ def convert(args):
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
             extract_wavs_trns(prefix, sess_fnames[prefix], outdir, wav_mapping,
-                              verbose)
+                              known_words, verbose)
             # extract_wavs_trns(trn_path, outdir, wav_mapping, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
@@ -635,19 +717,26 @@ if __name__ == '__main__':
                         help='an input directory with CUED audio files and '
                              'call logs')
     parser.add_argument('outdir', action="store",
-                        help='an output directory for files with audio and '\
+                        help='an output directory for files with audio and '
                              'their transcription')
     parser.add_argument('-v',
                         action="store_true",
                         dest="verbose",
                         help='set verbose output')
+    parser.add_argument('-d', '--dictionary',
+                        type=argparse.FileType('r'),
+                        metavar='FILE',
+                        help='Path towards a phonetic dictionary constraining '
+                             'what words should be allowed in transcriptions. '
+                             'The dictionary is expected to contain the words '
+                             'in the first tab-separated column.')
     parser.add_argument('-i', '--ignore',
                         type=argparse.FileType('r'),
                         metavar='FILE',
-                        help='Path towards a file listing globs of CUED '\
-                             'call log files that should be ignored.\n'\
-                             'The globs are interpreted wrt. the current '\
-                             'working directory. For an example, see the '\
+                        help='Path towards a file listing globs of CUED '
+                             'call log files that should be ignored.\n'
+                             'The globs are interpreted wrt. the current '
+                             'working directory. For an example, see the '
                              'source code.')
     # For an example of the ignore list file, see the top of the script.
     parser.add_argument('-c', '--count-ignored',
@@ -677,4 +766,3 @@ if __name__ == '__main__':
             word_list_file.write(
                 "{0}\t{1}\n".format(
                     w.encode('ascii', 'ignore'), wc[w]))
-
