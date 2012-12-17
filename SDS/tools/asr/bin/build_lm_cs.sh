@@ -10,30 +10,30 @@ cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR
 
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.
-echo "<s> [] sil" > $WORK_DIR/dict_full
-echo "</s> [] sil" >> $WORK_DIR/dict_full
-echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_full
-echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_full
-echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_full
-echo "_NOISE_ _noise_" >> $WORK_DIR/dict_full
+echo "<s>	[] sil" > $WORK_DIR/dict_full
+echo "</s>	[] sil" >> $WORK_DIR/dict_full
+echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_full
+echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_full
+echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_full
+echo "_NOISE_	_noise_" >> $WORK_DIR/dict_full
 
-echo "<s> [] sil" > $WORK_DIR/dict_train
-echo "</s> [] sil" >> $WORK_DIR/dict_train
-echo "silence sil" >> $WORK_DIR/dict_train
-echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_train
-echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_train
-echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_train
-echo "_NOISE_ _noise_" >> $WORK_DIR/dict_train
-echo "_SIL_ sil" >> $WORK_DIR/dict_train
+echo "<s>	[] sil" > $WORK_DIR/dict_train
+echo "</s>	[] sil" >> $WORK_DIR/dict_train
+echo "silence	sil" >> $WORK_DIR/dict_train
+echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_train
+echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_train
+echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_train
+echo "_NOISE_	_noise_" >> $WORK_DIR/dict_train
+echo "_SIL_	sil" >> $WORK_DIR/dict_train
 
-echo "<s> [] sil" > $WORK_DIR/dict_test
-echo "</s> [] sil" >> $WORK_DIR/dict_test
-echo "silence sil" >> $WORK_DIR/dict_test
-echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_test
-echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_test
-echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_test
-echo "_NOISE_ _noise_" >> $WORK_DIR/dict_test
-echo "_SIL_ sil" >> $WORK_DIR/dict_test
+echo "<s>	[] sil" > $WORK_DIR/dict_test
+echo "</s>	[] sil" >> $WORK_DIR/dict_test
+echo "silence	sil" >> $WORK_DIR/dict_test
+echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_test
+echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_test
+echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_test
+echo "_NOISE_	_noise_" >> $WORK_DIR/dict_test
+echo "_SIL_	sil" >> $WORK_DIR/dict_test
 
 # Add pronunciations for each word
 perl $TRAIN_SCRIPTS/PhoneticTranscriptionCS.pl $WORK_DIR/word_list_full $TEMP_DIR/dict_full

@@ -353,7 +353,6 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('CHINES', 'CHINESE'),
           ('AFORDABLE', 'AFFORDABLE'),
           ('ADDRES', 'ADDRESS'),
-          ('ADDENBROOKE', 'ADDENBROOKE\'S'),
           ('ANYTIHNG', 'ANYTHING'),
           ('NUMBERAND', 'NUMBER AND'),
           ('PIRCE', 'PRICE'),
@@ -411,7 +410,7 @@ def normalise_trs(text):
     if '(' in text:
         text = _parenthesized_rx.sub(r' (\1) ', text)
         for parenized, uscored in _nonspeech_trl.iteritems():
-            text.replace(parenized, uscored)
+            text = text.replace(parenized, uscored)
 
     return text.strip().encode('ascii', 'ignore')
 #}}}
@@ -440,7 +439,7 @@ def exclude_by_dict(text, known_words):
 
     "Good enough" is defined as having all its words present in the
     `known_words' collection."""
-    return all(map(lambda word: word in known_words, text.split()))
+    return not all(map(lambda word: word in known_words, text.split()))
 
 
 def save_transcription(trs_fname, trs):
