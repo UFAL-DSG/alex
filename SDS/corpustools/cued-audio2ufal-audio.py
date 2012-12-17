@@ -405,14 +405,14 @@ def normalise_trs(text):
     # agglutinated to, remove doubled parentheses, and substitute the known
     # non-speech events with the forms with underscores).
     #
-    # This step can incur superfluous spaces at the beginning and at the end of
-    # the text.
+    # This step can incur superfluous whitespace.
     if '(' in text:
         text = _parenthesized_rx.sub(r' (\1) ', text)
         for parenized, uscored in _nonspeech_trl.iteritems():
             text = text.replace(parenized, uscored)
+        text = _more_spaces.sub(' ', text.strip())
 
-    return text.strip().encode('ascii', 'ignore')
+    return text.encode('ascii', 'ignore')
 #}}}
 
 
