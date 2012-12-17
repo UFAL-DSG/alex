@@ -393,9 +393,9 @@ _parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
 
 def normalise_trs(text):
 #{{{
+    text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
     text = _more_spaces.sub(' ', text.strip())
-    text = _sure_punct_rx.sub('', text)
     # Do dictionary substitutions.
     for pat, sub in _subst:
         text = pat.sub(sub, text)
@@ -569,7 +569,7 @@ def convert(args):
     directory.  Copies .wav files and their transcriptions linked from the log
     to `args.outdir' using the `extract_wavs_trns' function. `args.dictionary'
     may refer to an open file listing the only words to be allowed in
-    transcriptions in the first tab-separated column.
+    transcriptions in the first whitespace-separated column.
 
     Returns a tuple of:
         number of collisions (files at different paths with same basename)
@@ -590,7 +590,7 @@ def convert(args):
     dict_file = args.dictionary
     # Read in the dictionary.
     if dict_file:
-        known_words = set(line.split('\t')[0] for line in dict_file)
+        known_words = set(line.split()[0] for line in dict_file)
     else:
         known_words = None
     # Read in the ignore list.
@@ -728,7 +728,7 @@ if __name__ == '__main__':
                         help='Path towards a phonetic dictionary constraining '
                              'what words should be allowed in transcriptions. '
                              'The dictionary is expected to contain the words '
-                             'in the first tab-separated column.')
+                             'in the first whitespace-separated column.')
     parser.add_argument('-i', '--ignore',
                         type=argparse.FileType('r'),
                         metavar='FILE',
