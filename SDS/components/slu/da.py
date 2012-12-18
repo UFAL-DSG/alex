@@ -155,7 +155,7 @@ class DialogueAct:
         if isinstance(dai, DialogueActItem):
             return dai in self.dais
         elif isinstance(dai, str):
-            l = [str(dai) for dai in self.dais]
+            l = [str(d) for d in self.dais]
             return dai in l
 
     def __lt__(self, other):

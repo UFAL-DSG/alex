@@ -14,7 +14,7 @@ import pprint
 import random
 
 from SDS.components.dm import DialogueManager
-from SDS.components.slu.da import DialogueAct, \
+from SDS.components.slu.da import DialogueAct, DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActNBList
 
 
@@ -183,7 +183,9 @@ class RuleDMPolicy:
     def filter(self, in_da):
         new_nblist = DialogueActNBList()
         for item in in_da:
+
             da = item[1]
+            print item[0], da
             new_da = DialogueAct()
             for dai in da:
                 if dai.dat in ["inform", "request"]:
@@ -193,9 +195,9 @@ class RuleDMPolicy:
                     if not dai.name in self.slots:
                         continue
 
-                if type(dai.value) is str and \
-                        self.ontology_unknown_re.match(dai.value):
-                    continue
+                #if type(dai.value) is str and \
+                #        self.ontology_unknown_re.match(dai.value):
+                #    continue
 
                 if dai.dat in ["inform", "request", "other",
                                "confirm", "reqalts", "bye"]:
@@ -376,7 +378,7 @@ class RuleDMPolicy:
         if len(slots_to_say) > 0:
             if not 'name' in slots_to_say and \
                state['rh_name'] != "system-informed":
-                slots_to_say += ['name']
+                slots_to_say = ['name'] + slots_to_say
             res_da = self.say_slots(state, res0, slots_to_say)
             return state, res_da
 
@@ -545,6 +547,9 @@ class RuleDM(DialogueManager):
         if new_da is not None:
             self.last_sys_da = new_da
 
+            if self.provide_code and new_da.has_dat("bye"):
+                code = self.get_token()
+                new_da.append(DialogueActItem(dai="code(%s)" % code))
 
         return self.last_sys_da
 

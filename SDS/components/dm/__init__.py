@@ -31,3 +31,15 @@ class DialogueManager(object):
 
     def end_dialogue(self):
         """Ends the dialogue and post-process the data."""
+
+    def get_token(self):
+        import urllib2
+
+        token_url = self.cfg['DM'].get('token_url')
+        curr_session = self.cfg['Logging']['session_logger'].session_dir_name.value
+        if token_url is not None:
+            f_token = urllib2.urlopen(token_url.format(curr_session))
+            return f_token.read()
+        else:
+            raise Exception("Please configure token_url DM parameter in config.")
+
