@@ -19,11 +19,12 @@ class TemplateNLG:
         if self.cfg['NLG']['Template']['model']:
             self.load(self.cfg['NLG']['Template']['model'])
 
-        # if there is no match in the templates, back off to the simple DummyNLG
+        # if there is no match in the templates, back off to DummyNLG
         self.backoff_nlg = DummyNLG(cfg)
 
     def load(self, file_name):
-        """FIXME: Executing external files is not ideal! It should be changed in the future!
+        """FIXME: Executing external files is not ideal!
+           It should be changed in the future!
         """
         global templates
         templates = None
@@ -51,17 +52,20 @@ class TemplateNLG:
             for dai in da:
                 if dai.name == name and dai.value == value:
                     # there is match, make it generic
-                    dai.value  = '{%s}' % name
+                    dai.value = '{%s}' % name
 
         return da
 
     def match_generic_templates(self, da):
-        """Find matching a template using substitutions in case of the slot values."""
+        """\
+        Find a matching template for a dialogue act
+        using substitutions in case of the slot values.
+        """
         text = None
 
         svs = da.get_slots_and_values()
 
-        for r in range(1, len(svs)+1):
+        for r in range(1, len(svs) + 1):
             for cmb in itertools.combinations(svs, r):
                 generic_da = self.get_generic_da(da, cmb)
 
@@ -104,5 +108,4 @@ class TemplateNLG:
                 return self.backoff_nlg.generate(da)
                 #self.cfg['Logging']['system_logger'].warning("TemplateNLG: There is no matching template for %s" % da)
                 #return self.random_select(self.templates[str('notemplate()')])
-
 

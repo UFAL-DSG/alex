@@ -17,6 +17,9 @@
 #  7 - Dictionary
 #  8 - Cross word triphone models
 
+# DEBUG
+set -e
+
 cd $WORK_DIR
 
 # HDecode parameters:

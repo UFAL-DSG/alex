@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 
 class DummyNLG(object):
     def __init__(self, cfg):
@@ -38,7 +40,6 @@ class DummyNLG(object):
 
         return res
 
-
     def generate(self, da):
         res = []
         for dai in da:
@@ -61,16 +62,19 @@ class DummyNLG(object):
             elif dai.dat == "negate":
                 res += ["No"]
             elif dai.dat == "noclue":
-                res += ["Sorry, I don't know about the %s of this place." % dai.name]
+                res += ["Sorry, I don't know about the %s of this place." %
+                        dai.name]
             elif dai.dat == "instructions":
-                res += ["I can give you information about places to eat in the town. Just specify what kind of food you want, area of the town or price range."]
+                res += ["I can give you information about places to eat " +
+                        "in the town. Just specify what kind of food you " +
+                        "want, area of the town or price range."]
             elif dai.dat == "code":
                 res += ["Your token number is %s, please enter it to the website to validate. I repeat, the code is %s." % (dai.name, dai.name, )]
             elif dai.dat == "bye":
                 res += ["Good bye. Thank you for calling our dialogue system."]
             else:
                 res += ["I want to %s that %s is %s." % \
-                        (dai.dat, dai.name, dai.value, )]
+                        (dai.dat, dai.name, dai.value,)]
 
         if res[-1] == "and":
             res = res[:-1]
