@@ -1,4 +1,4 @@
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -14,7 +14,7 @@ function submitFeedback() {
         var tokenValue = $("input[name='token']").val();
 
         // submit to voiphub
-        $.post("submit.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
+        $.post("submit_new.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
             function(data) {
 
                 //alert("Submit voiphub data: " + data);
@@ -22,15 +22,15 @@ function submitFeedback() {
                 // after submiting to voiphub submit to mturk
                 if (assignmentId != "ASSIGNMENT_ID_NOT_AVAILABLE" &&
                     assignmentId != "None") {
-                    
-                    // is it on sandbox? 
+
+                    // is it on sandbox?
                     if (sandbox) {
                       var mt = "https://workersandbox.mturk.com";
-                    } 
+                    }
                     else {
                       var mt = "https://www.mturk.com";
                     }
-                                         
+
                     var mturk = mt +"/mturk/externalSubmit?"+
                         'assignmentId='+urlencode(assignmentId)+'&'+
                         'token='+urlencode(tokenValue)+'&'+
@@ -40,7 +40,7 @@ function submitFeedback() {
                 }
                 else {
                     alert("The feedback was submitted.\n\nPlease click on OK for the next task.");
-                    window.location.reload(true)
+                    // window.location.reload(true)
                 }
             });
 

@@ -164,8 +164,17 @@ else:
     # assignmentId was provided
 
 if not workerId == 'None':
-    vw = verifyWorker(workerId)
-    if vw == ">20in24h":
+    from model import Worker
+    from dbutils import get_local_db_session
+
+    session = get_local_db_session()
+    before24 = datetime.datetime.now() - datetime.timedelta(days=1)
+    before4w = datetime.datetime.now() - datetime.timedelta(days=4 * 7)
+
+    in24 = session.query(Worker).filter_by(worker_id=workerId).one().get_submissions_since(before24).count()
+    in4w = session.query(Worker).filter_by(worker_id=workerId).one().get_submissions_since(before4w).count()
+
+    if in24 >= 20:
         print """<H2 style="color:red;">You have submitted more than 20 HITs in the
         last 24 hours. You are welcome to come after 24 hours and do another 20 HITs.
         Please, bookmark the following
@@ -176,7 +185,7 @@ if not workerId == 'None':
     """
         sys.exit()
 
-    if vw == ">40in4w":
+    if in4w >= 40:
         print """<H2 style="color:red;">You have submitted more than 40 HITs in the
         last four weeks. You are welcome to come after four weeks and do another 40 HITs.
         Please, bookmark the following
