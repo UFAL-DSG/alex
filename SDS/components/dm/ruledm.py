@@ -181,9 +181,9 @@ class RuleDMPolicy:
         return len(self.build_query(state)) > 0
 
     def filter(self, in_da):
+        print in_da
         new_nblist = DialogueActNBList()
         for item in in_da:
-
             da = item[1]
             print item[0], da
             new_da = DialogueAct()
@@ -531,7 +531,7 @@ class RuleDM(DialogueManager):
 
     def da_in(self, in_da):
         if isinstance(in_da, DialogueActConfusionNetwork):
-            in_da = in_da.get_da_nblist()
+            in_da = in_da.get_da_nblist_naive()
 
         filtered_da = self.policy.filter(in_da)
         #da = self.pick_best_da(in_da)

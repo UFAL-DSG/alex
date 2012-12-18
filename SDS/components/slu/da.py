@@ -536,6 +536,23 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return da
 
+    def get_da_nblist_naive(self, n=10, expand_upto_total_prob_mass=0.9):
+        """For each CN item creates a NB list item."""
+
+        res = []
+        for cn_item in self.cn:
+            nda = DialogueAct()
+            print type(cn_item)
+            print cn_item
+            nda.append(cn_item[1])
+
+            res += [(cn_item[0], nda)]
+
+        res.sort(reverse=True)
+        return res
+
+
+
     def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates
         N-best hypotheses.
