@@ -40,7 +40,7 @@ function submitFeedback() {
                 }
                 else {
                     alert("The feedback was submitted.\n\nPlease click on OK for the next task.");
-                    // window.location.reload(true)
+                    window.location.reload(true)
                 }
             });
 

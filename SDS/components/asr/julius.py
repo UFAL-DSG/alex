@@ -34,6 +34,9 @@ class JuliusASR():
         self.serverport = self.cfg['ASR']['Julius']['serverport']
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
         self.reuse_server = self.cfg['ASR']['Julius']['reuse_server']
+        self.pidfile = self.cfg['ASR']['Julius']['pidfile']
+        self.jconffile = self.cfg['ASR']['Julius']['jconffile']
+        self.logfile = self.cfg['ASR']['Julius']['logfile']
 
         try:
             if self.reuse_server:
@@ -46,7 +49,8 @@ class JuliusASR():
                 self.open_adinnet()
                 return
             elif not self.reuse_server and self.is_server_running():
-                self.kill_all_juliuses()
+                #self.kill_all_juliuses()
+                self.kill_my_julius()
                 self.cfg['Logging']['system_logger'].debug("I just commited murder, Julius is dead!")
 
             self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
@@ -81,12 +85,19 @@ class JuliusASR():
             return False
         return True
 
+    def kill_my_julius(self):
+        subprocess.call('kill -9 $(cat %s)' % self.pidfile)
+
     def kill_all_juliuses(self):
         subprocess.call('killall julius', shell=True)
 
+    def save_pid(self, pid):
+        with open(self.pidfile, "w") as f_out:
+            f_out.write(str(pid))
+
     def start_server(self):
-        jconf = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.jconf')
-        log = os.path.join(self.cfg['Logging']['system_logger'].output_dir, 'julius.log')
+        jconf = self.jconffile
+        log = self.logfile
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
@@ -105,6 +116,7 @@ class JuliusASR():
             self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log, ),
                                               shell=True,
                                               bufsize=1)
+            self.save_pid(self.julius_server.pid)
 
     def connect_to_server(self):
         """Connects to the Julius ASR server to start recognition and receive the recognition output."""
