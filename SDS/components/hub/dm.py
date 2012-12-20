@@ -115,11 +115,11 @@ class DM(multiprocessing.Process):
                 self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
                 self.dialogue_act_out.send(DMDA(da))
 
-                if da == "bye()":
+                if da.has_dat("bye"):
                     self.commands.send(Command('hangup()', 'DM', 'HUB'))
 
             elif isinstance(data_slu, Command):
-                cfg['Logging']['system_logger'].info(data_slu)
+                self.cfg['Logging']['system_logger'].info(data_slu)
             else:
                 raise DMException('Unsupported input.')
 
