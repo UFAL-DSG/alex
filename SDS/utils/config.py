@@ -6,6 +6,7 @@ import cStringIO
 import pprint
 import os.path
 import re
+import copy
 
 from SDS.utils.mproc import SystemLogger
 from SDS.utils.sessionlogger import SessionLogger
@@ -30,8 +31,8 @@ class Config:
 
     """
 
-    def __init__(self, file_name, project_root=False):
-        self.config = {}
+    def __init__(self, file_name=None, project_root=False, config={}):
+        self.config = config
 
         if project_root:
             file_name = os.path.join(env.root(), file_name)
@@ -50,6 +51,9 @@ class Config:
 
     def __getitem__(self, i):
         return self.config[i]
+
+    def __setitem__(self, key, val):
+        self.config[key] = val
 
     def __iter__(self):
         for i in self.config:
@@ -87,7 +91,7 @@ class Config:
         self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
-        self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
+        self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
 
     def merge(self, cfg):
         # pylint: disable-msg=E0602
@@ -104,11 +108,32 @@ class Config:
                 d[k] = u[k]
         return d
 
-    def config_replace(self, p, s, d):
+    def config_replace(self, p, s, d=None):
+        """\
+        Replace a pattern p with string s in the whole config
+        (recursively) or in a part of the config given in d.
+        """
+        if d is None:
+            d = self.config
         for k, v in d.iteritems():
             if isinstance(v, collections.Mapping):
                 self.config_replace(p, s, v)
             elif isinstance(v, str):
                 d[k] = d[k].replace(p, s)
-
         return
+
+    def unfold_lists(self, pattern):
+        """\
+        Unfold lists under keys matching the given pattern
+        into several config objects, each containing one item.
+        If pattern is None, all lists are expanded.
+        """
+        for k, v in self.config.iteritems():
+            if type(v) == list and (pattern is None or re.search(pattern, k)):
+                unfolded = []
+                for item in v:
+                    ci = Config(config=copy.deepcopy(self.config))
+                    ci[k] = item
+                    unfolded.extend(ci.unfold_lists(pattern))
+                return unfolded
+        return [self]
