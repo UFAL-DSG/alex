@@ -9,6 +9,8 @@ import __init__
 
 import SDS.utils.audio as audio
 import SDS.utils.various as various
+from SDS.utils.mproc import SystemLogger
+from SDS.utils.sessionlogger import SessionLogger
 
 from SDS.components.hub.vio import VoipIO
 from SDS.components.hub.messages import Command, Frame
@@ -16,27 +18,34 @@ from SDS.components.hub.messages import Command, Frame
 if __name__ == '__main__':
     cfg = {
         'Audio': {
-        'sample_rate': 8000,
-        'samples_per_frame': 128,
+            'sample_rate': 8000,
+            'samples_per_frame': 128,
         },
         'VoipIO': {
-        'pjsip_log_level': 3,
-        'debug': True,
-        'reject_calls': False,
-        'allowed_phone_numbers': r"(^[234567])",
-        'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
+            'pjsip_log_level': 3,
+            'debug': True,
+            'reject_calls': False,
+            'allowed_phone_numbers': r"(^[234567])",
+            'forbidden_match_phone_number': r"(^112$|^150$|^155$|^156$|^158$)",
 
-        'domain': 'your_domain',
-        'user': 'your_user',
-        'password': 'your_password',
+            'domain': 'your_domain',
+            'user': 'your_user',
+            'password': 'your_password',
         },
         'Hub': {
-        'main_loop_sleep_time': 0.005,
+            'main_loop_sleep_time': 0.005,
         },
         'Logging': {
-        'output_dir': './tmp'
+            'system_logger':  SystemLogger(stdout=True, output_dir='./tmp'),
+            'session_logger': SessionLogger()
         }
     }
+    # Not in the configuration but used in components.hub.vio:
+    # ['VoipIO']['allowed_hosts']
+    # ['VoipIO']['allowed_users']
+    # ['VoipIO']['forbidden_hosts']
+    # ['VoipIO']['forbidden_phone_number']
+    # ['VoipIO']['forbidden_users']
 
     print "Test of the VoipIO component:"
     print "=" * 120

@@ -63,9 +63,10 @@ class JuliusASR():
             self.open_adinnet()
         except Exception as e:
             self.cfg['Logging']['system_logger'].debug("There was a problem with starting the Julius ASR server: %s" % e)
-            self.cfg['Logging']['system_logger'].debug("Killing the Julius ASR server!")
             # always kill the Julius ASR server when there is a problem
             if self.julius_server:
+                self.cfg['Logging']['system_logger']\
+                    .debug("Killing the Julius ASR server!")
                 self.julius_server.kill()
 
             self.cfg['Logging']['system_logger'].debug("Exiting!")
