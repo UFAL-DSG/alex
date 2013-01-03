@@ -737,6 +737,12 @@ if __name__ == '__main__':
                              'The globs are interpreted wrt. the current '
                              'working directory. For an example, see the '
                              'source code.')
+    parser.add_argument('-w', '--word-list',
+                        default='word_list',
+                        metavar='FILE',
+                        help='Path towards an output file to contain a list '
+                             'of words that appeared in the transcriptions, '
+                             'one word per line.')
     # For an example of the ignore list file, see the top of the script.
     parser.add_argument('-c', '--count-ignored',
                         action="store_true",
@@ -760,7 +766,7 @@ if __name__ == '__main__':
 
     # Print out the contents of the word counter to 'word_list'.
     # FIXME: Prevent overwrite.
-    with open('word_list', 'w') as word_list_file:
+    with open(args.word_list, 'w') as word_list_file:
         for w in sorted(wc):
             word_list_file.write(
                 "{0}\t{1}\n".format(
