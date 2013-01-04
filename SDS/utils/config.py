@@ -8,26 +8,23 @@ import os.path
 import re
 import copy
 
-from SDS.utils.mproc import SystemLogger
-from SDS.utils.sessionlogger import SessionLogger
-
 import SDS.utils.env as env
 
 config = None
 
 
-class Config:
+class Config(object):
     """\
     Config handles configuration data necessary for all the components
     in the SDS. It implements a dictionary so that any component could
     store arbitrary structured data.
 
-    When the configure file is loaded, several automatic transformations
+    When the configuration file is loaded, several automatic transformations
     are applied.
-        1) '{cfg_abs_path}' at the beginning of strings is replaced by an
-            absolute path of the configure files.
-            This can be used to make the configure file independent of
-            the location of programs using the configure file.
+        1) '{cfg_abs_path}' as a substring of atomic attributes is replaced by
+            an absolute path of the configuration files.  This can be used to
+            make the configuration file independent of the location of programs
+            using the configuration file.
 
     """
 
@@ -93,25 +90,44 @@ class Config:
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
 
-    def merge(self, cfg):
-        # pylint: disable-msg=E0602
-        if type(cfg) is str:
-            cfg = Config(cfg)
-        self.update_dict(self.config, cfg.config)
+    def merge(self, other):
+        """Merges self's config with other's config and saves it as a new
+        self's config.
 
-    def update_dict(self, d, u):
-        for k, v in u.iteritems():
-            if isinstance(v, collections.Mapping):
-                r = self.update_dict(d.get(k, {}), v)
-                d[k] = r
+        Keyword arguments:
+            - other: a Config object whose configuration dictionary to merge
+                     into self's one
+
+        """
+        # pylint: disable-msg=E0602
+        if type(other) is str:
+            other = Config(other)
+        self.update(other.config)
+
+    def update(self, new_config, config_dict=None):
+        """Updates the nested configuration dictionary by another, potentially
+        also nested dictionary.
+
+        Keyword arguments:
+            - new_config: the new dictionary to update with
+            - config_dict: the config dictionary to be updated
+
+        """
+        if config_dict is None:
+            config_dict = self.config
+        for key, val in new_config.iteritems():
+            if isinstance(val, collections.Mapping):
+                subdict = self.update(val, config_dict.get(key, {}))
+                config_dict[key] = subdict
             else:
-                d[k] = u[k]
-        return d
+                config_dict[key] = new_config[key]
+        return config_dict
 
     def config_replace(self, p, s, d=None):
         """\
         Replace a pattern p with string s in the whole config
         (recursively) or in a part of the config given in d.
+
         """
         if d is None:
             d = self.config
@@ -129,7 +145,7 @@ class Config:
         If pattern is None, all lists are expanded.
         """
         for k, v in self.config.iteritems():
-            if type(v) == list and (pattern is None or re.search(pattern, k)):
+            if type(v) is list and (pattern is None or re.search(pattern, k)):
                 unfolded = []
                 for item in v:
                     ci = Config(config=copy.deepcopy(self.config))

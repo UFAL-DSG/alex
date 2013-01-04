@@ -21,30 +21,34 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS components.
+        test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS
+        components.
 
         This application uses the Julisu ASR and Flite TTS.
 
-        The program reads the default config in the resources directory ('../resources/default.cfg') and any
-        additional config files passed as an argument of a '-c'. The additional config file
-        overwrites any default or previous values.
+        The program reads the default config in the resources directory
+        ('../resources/default.cfg') and any additional config files passed as
+        an argument of a '-c'. The additional config file overwrites any
+        default or previous values.
 
       """)
 
     parser.add_argument(
         '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configure file')
+        help='additional configuration file')
     args = parser.parse_args()
 
     cfg = Config('../resources/default.cfg')
     if args.configs:
         for c in args.configs:
             cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
+    session_logger = cfg['Logging']['session_logger']
+    system_logger = cfg['Logging']['system_logger']
+    system_logger.info('config = {cfg!s}'.format(cfg=cfg))
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info(
+    system_logger.info(
         "Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
 
     vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
@@ -79,9 +83,15 @@ if __name__ == '__main__':
     asr.start()
     tts.start()
 
-    vio_commands.send(Command('make_call(destination="sip:4366@SECRET:5066")', 'HUB', 'VoipIO'))
+#     vio_commands.send(Command(
+#         'make_call(destination="sip:{ext}@{dom}")'\
+#             .format(ext=cfg['VoipIO']['extension'],
+#                     dom=cfg['VoipIO']['domain']),
+#         'HUB',
+#         'VoipIO'))
 
-    tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
+    tts_text_in.send(TTSText(
+        'Say something and the recognized text will be played back.'))
 
     count = 0
     max_count = 50000
@@ -94,33 +104,37 @@ if __name__ == '__main__':
             command = vio_commands.recv()
 
             if isinstance(command, Command):
-                if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
-                    cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
-                    cfg['Logging']['system_logger'].info(command)
+                if (command.parsed['__name__'] == "incoming_call"
+                        or command.parsed['__name__'] == "make_call"):
+                    system_logger.session_start(command.parsed['remote_uri'])
+                    system_logger.session_system_log('config = ' + str(cfg))
+                    system_logger.info(command)
 
-                    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
-                    cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
-                    cfg['Logging']['session_logger'].input_source("voip")
+                    session_logger.session_start(
+                        system_logger.get_session_dir_name())
+                    session_logger.config('config = {cfg!s}'.format(cfg=cfg))
+                    session_logger.header(cfg['Logging']["system_name"],
+                                          cfg['Logging']["version"])
+                    session_logger.input_source("voip")
 
                 if command.parsed['__name__'] == "rejected_call":
-                    cfg['Logging']['system_logger'].info(command)
+                    system_logger.info(command)
 
-                if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
-                    cfg['Logging']['system_logger'].info(command)
+                if (command.parsed['__name__'] ==
+                        "rejected_call_from_blacklisted_uri"):
+                    system_logger.info(command)
 
                 if command.parsed['__name__'] == "call_connecting":
-                    cfg['Logging']['system_logger'].info(command)
+                    system_logger.info(command)
 
                 if command.parsed['__name__'] == "call_confirmed":
-                    cfg['Logging']['system_logger'].info(command)
+                    system_logger.info(command)
 
                 if command.parsed['__name__'] == "call_disconnected":
-                    cfg['Logging']['system_logger'].info(command)
+                    system_logger.info(command)
 
-                    cfg['Logging']['system_logger'].session_end()
-                    cfg['Logging']['session_logger'].session_end()
+                    system_logger.session_end()
+                    session_logger.session_end()
 
         if asr_hypotheses_out.poll():
             asr_hyp = asr_hypotheses_out.recv()
@@ -130,7 +144,7 @@ if __name__ == '__main__':
                 m.append("Recognised hypotheses:")
                 m.append("-" * 120)
                 m.append(str(asr_hyp.hyp))
-                cfg['Logging']['system_logger'].info('\n'.join(m))
+                system_logger.info('\n'.join(m))
 
                 # get top hypotheses text
                 top_text = asr_hyp.hyp.get_best_utterance()
@@ -144,7 +158,7 @@ if __name__ == '__main__':
         for c in command_connections:
             if c.poll():
                 command = c.recv()
-                cfg['Logging']['system_logger'].info(command)
+                system_logger.info(command)
 
     # stop processes
     vio_commands.send(Command('stop()'))

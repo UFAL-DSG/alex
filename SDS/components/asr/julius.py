@@ -17,7 +17,7 @@ from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException, A
 from SDS.utils.various import get_text_from_xml_node
 
 
-class JuliusASR():
+class JuliusASR(object):
     """ Uses Julius ASR service to recognize recorded audio.
 
     The main function recognize returns a list of recognized hypotheses.
@@ -38,6 +38,7 @@ class JuliusASR():
         self.jconffile = self.cfg['ASR']['Julius']['jconffile']
         self.logfile = self.cfg['ASR']['Julius']['logfile']
 
+        system_logger = self.cfg['Logging']['system_logger']
         try:
             if self.reuse_server:
                 # reinit hack for julius
@@ -45,31 +46,32 @@ class JuliusASR():
             if self.reuse_server and self.is_server_running():
                 # if we should reuse server and it is running, it's perfect
                 # and do nothing
-                self.cfg['Logging']['system_logger'].debug("Brilliant, Julius is already running.")
+                system_logger.debug("Brilliant, Julius is already running.")
                 self.open_adinnet()
                 return
             elif not self.reuse_server and self.is_server_running():
                 #self.kill_all_juliuses()
                 self.kill_my_julius()
-                self.cfg['Logging']['system_logger'].debug("I just commited murder, Julius is dead!")
+                system_logger.debug("I just commited murder, Julius is dead!")
 
-            self.cfg['Logging']['system_logger'].debug("Starting the Julius ASR server")
+            system_logger.debug("Starting the Julius ASR server...")
             self.start_server()
-            time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug("Connecting to the Julius ASR server")
+            time.sleep(5)
+            system_logger.debug("Connecting to the Julius ASR server...")
             self.connect_to_server()
             time.sleep(3)
-            self.cfg['Logging']['system_logger'].debug("Opening the adinnet connection with the Julius ASR ")
+            system_logger.debug("Opening the adinnet connection with the "
+                                "Julius ASR...")
             self.open_adinnet()
         except Exception as e:
-            self.cfg['Logging']['system_logger'].debug("There was a problem with starting the Julius ASR server: %s" % e)
+            system_logger.debug("There was a problem with starting the "
+                                "Julius ASR server: {msg!s}".format(msg=e))
             # always kill the Julius ASR server when there is a problem
             if self.julius_server:
-                self.cfg['Logging']['system_logger']\
-                    .debug("Killing the Julius ASR server!")
+                system_logger.debug("Killing the Julius ASR server!")
                 self.julius_server.kill()
 
-            self.cfg['Logging']['system_logger'].debug("Exiting!")
+            system_logger.debug("Exiting!")
             exit(0)
 
     def __del__(self):
