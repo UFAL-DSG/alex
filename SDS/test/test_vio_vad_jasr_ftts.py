@@ -46,6 +46,12 @@ if __name__ == '__main__':
     session_logger = cfg['Logging']['session_logger']
     system_logger = cfg['Logging']['system_logger']
     system_logger.info('config = {cfg!s}'.format(cfg=cfg))
+
+    logged_cmds = ("rejected_call",
+                   "rejected_call_from_blacklisted_uri",
+                   "call_connecting",
+                   "call_confirmed",
+                   "call_disconnected")
     #########################################################################
     #########################################################################
     system_logger.info(
@@ -95,6 +101,7 @@ if __name__ == '__main__':
 
     count = 0
     max_count = 50000
+    disconnect = False
     while count < max_count:
         time.sleep(cfg['Hub']['main_loop_sleep_time'])
         count += 1
@@ -104,10 +111,11 @@ if __name__ == '__main__':
             command = vio_commands.recv()
 
             if isinstance(command, Command):
-                if (command.parsed['__name__'] == "incoming_call"
-                        or command.parsed['__name__'] == "make_call"):
+                cmd_name = command.parsed['__name__']
+                if cmd_name == "incoming_call" or cmd_name == "make_call":
                     system_logger.session_start(command.parsed['remote_uri'])
-                    system_logger.session_system_log('config = ' + str(cfg))
+                    system_logger.session_system_log(
+                        'config = {cfg!s}'.format(cfg=cfg))
                     system_logger.info(command)
 
                     session_logger.session_start(
@@ -117,24 +125,13 @@ if __name__ == '__main__':
                                           cfg['Logging']["version"])
                     session_logger.input_source("voip")
 
-                if command.parsed['__name__'] == "rejected_call":
+                if cmd_name in logged_cmds:
                     system_logger.info(command)
 
-                if (command.parsed['__name__'] ==
-                        "rejected_call_from_blacklisted_uri"):
-                    system_logger.info(command)
-
-                if command.parsed['__name__'] == "call_connecting":
-                    system_logger.info(command)
-
-                if command.parsed['__name__'] == "call_confirmed":
-                    system_logger.info(command)
-
-                if command.parsed['__name__'] == "call_disconnected":
-                    system_logger.info(command)
-
-                    system_logger.session_end()
-                    session_logger.session_end()
+                if cmd_name == "call_disconnected":
+                    # Do not disconnect just yet, close the session file only
+                    # after last ASR output is written there.
+                    disconnect = True
 
         if asr_hypotheses_out.poll():
             asr_hyp = asr_hypotheses_out.recv()
@@ -159,6 +156,11 @@ if __name__ == '__main__':
             if c.poll():
                 command = c.recv()
                 system_logger.info(command)
+
+        if disconnect:
+            system_logger.session_end()
+            session_logger.session_end()
+            disconnect = False
 
     # stop processes
     vio_commands.send(Command('stop()'))
