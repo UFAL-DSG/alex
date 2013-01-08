@@ -54,28 +54,26 @@ class TestNode(unittest.TestCase):
             }))
 
         # Connect nodes.
-        fact_h1_o1.add_neighbor(hid1)
-        fact_h1_o1.add_neighbor(obs1)
+        obs1.add_edge_to(fact_h1_o1)
+        fact_h1_o1.add_edge_to(hid1)
 
-        fact_h2_o2.add_neighbor(hid2)
-        fact_h2_o2.add_neighbor(obs2)
+        obs2.add_edge_to(fact_h2_o2)
+        fact_h2_o2.add_edge_to(hid2)
 
-        fact_h1_h2.add_neighbor(hid1)
-        fact_h1_h2.add_neighbor(hid2)
+        hid1.add_edge_to(fact_h1_h2)
+        hid2.add_edge_to(fact_h1_h2)
 
         # Init nodes.
         fact_h1_o1.init_messages()
         fact_h2_o2.init_messages()
         fact_h1_h2.init_messages()
-        hid1.update_belief()
-        hid2.update_belief()
-        obs1.update_belief()
-        obs2.update_belief()
+        hid1.init_messages()
+        hid2.init_messages()
+        obs1.init_messages()
+        obs2.init_messages()
 
-        #print hid1.belief
+        print hid1.belief
         obs1.observed("osave")
-        fact_h1_o1.message_from['obs1'] = obs1.message_to('fact_h1_o1')
-        fact_h1_o1.update_belief()
-        hid1.message_from['fact_h1_o1'] = fact_h1_o1.message_to('hid1')
-        hid1.update_belief()
-        #print hid1.belief
+        obs1.message_to(fact_h1_o1)
+        fact_h1_o1.message_to(hid1)
+        print hid1.belief
