@@ -97,13 +97,16 @@ class DiscreteFactor(object):
 
     def rename_variables(self, new_variables):
         """Rename variables."""
-        renamed_variables = []
-        for var in self.variables:
+        for var in self.variables_dict:
             if var in new_variables:
-                renamed_variables.append(new_variables[var])
-            else:
-                renamed_variables.append(var)
-        self.variables = renamed_variables
+                self.variables_dict[new_variables[var]] = (
+                    self.variables_dict.pop(var))
+                self.strides[new_variables[var]] = self.strides.pop(var)
+                self.cardinalities[new_variables[var]] = (
+                    self.cardinalities.pop(var))
+        self.variables = self.variables_dict.keys()
+        self.translation_table = self._create_translation_table(
+            self.variables_dict)
 
     def marginalize(self, variables):
         """Marginalize the factor."""
@@ -158,7 +161,13 @@ class DiscreteFactor(object):
         index = self._get_index_from_assignment(assignment)
         return self.factor_table[index]
 
-    def __mul__(self, other_factor):
+    def _multiply_same(self, other_factor):
+        """Multiply two factors with same variables."""
+        return DiscreteFactor(self.variables_dict,
+                              self.factor_table * other_factor.factor_table)
+
+    def _multiply_different(self, other_factor):
+        """Multiply two factors with different variables."""
         # The new set of variables will contain variables from both factors.
         new_variables = sorted(
             set(self.variables).union(other_factor.variables))
@@ -207,11 +216,19 @@ class DiscreteFactor(object):
         return DiscreteFactor(new_variables_dict,
                               new_factor_table)
 
-    def __div__(self, other_factor):
-        if not set(self.variables).issuperset(set(other_factor.variables)):
-            raise ValueError(
-                "The denominator is not a subset of the numerator.")
+    def __mul__(self, other_factor):
+        if self.variables == other_factor.variables:
+            return self._multiply_same(other_factor)
+        else:
+            return self._multiply_different(other_factor)
 
+    def _divide_same(self, other_factor):
+        """Divide factor by other factor with same variables."""
+        return DiscreteFactor(self.variables_dict,
+                              self.factor_table / other_factor.factor_table)
+
+    def _divide_different(self, other_factor):
+        """Divide factor by other factor with less variables."""
         new_factor_table = np.empty_like(self.factor_table)
         assignment = defaultdict(int)
         index_other = 0
@@ -236,3 +253,13 @@ class DiscreteFactor(object):
 
         return DiscreteFactor(self.variables_dict,
                               new_factor_table)
+
+    def __div__(self, other_factor):
+        if not set(self.variables).issuperset(set(other_factor.variables)):
+            raise ValueError(
+                "The denominator is not a subset of the numerator.")
+
+        if self.variables == other_factor.variables:
+            return self._divide_same(other_factor)
+        else:
+            return self._divide_different(other_factor)
