@@ -9,7 +9,7 @@ from bn.lbp import LBP
 
 class TestLBP(unittest.TestCase):
 
-    def test_network(self):
+    def _test_network(self):
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
@@ -52,24 +52,24 @@ class TestLBP(unittest.TestCase):
             }))
 
         # Connect nodes.
-        fact_h1_o1.add_neighbor(hid1)
-        fact_h1_o1.add_neighbor(obs1)
+        obs1.add_edge_to(fact_h1_o1)
+        fact_h1_o1.add_edge_to(hid1)
 
-        fact_h2_o2.add_neighbor(hid2)
-        fact_h2_o2.add_neighbor(obs2)
+        obs2.add_edge_to(fact_h2_o2)
+        fact_h2_o2.add_edge_to(hid2)
 
-        fact_h1_h2.add_neighbor(hid1)
-        fact_h1_h2.add_neighbor(hid2)
+        hid1.add_edge_to(fact_h1_h2)
+        hid2.add_edge_to(fact_h1_h2)
 
         # Init nodes.
         fact_h1_o1.init_messages()
         fact_h2_o2.init_messages()
         fact_h1_h2.init_messages()
-        hid1.update_belief()
-        hid2.update_belief()
-        obs1.update_belief()
-        obs2.update_belief()
-
+        hid1.init_messages()
+        hid2.init_messages()
+        obs1.init_messages()
+        obs2.init_messages()
+        
         # Add nodes to lbp.
         lbp = LBP()
         lbp.add_nodes([

@@ -11,69 +11,58 @@ from bn.network.node import DiscreteVariableNode, DiscreteFactorNode
 
 class TestNode(unittest.TestCase):
 
+    def assertClose(self, first, second, epsilon=0.000001):
+        delta = abs(first - second)
+        self.assertLess(delta, epsilon)
+
     def test_network(self):
-        # Create nodes.
-        hid1 = DiscreteVariableNode("hid1", ["save", "del"])
-        obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
+        # Create network.
+        hid = DiscreteVariableNode("hid", ["save", "del"])
+        obs = DiscreteVariableNode("obs", ["osave", "odel"])
         fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
             {
-                "hid1": ["save", "del"],
-                "obs1": ["osave", "odel"]
+                "hid": ["save", "del"],
+                "obs": ["osave", "odel"]
             },
             {
-                ("save", "osave"): 0.8,
-                ("save", "odel"): 0.2,
-                ("del", "osave"): 0.3,
-                ("del", "odel"): 0.7,
+                ("save", "osave"): 0.3,
+                ("save", "odel"): 0.6,
+                ("del", "osave"): 0.7,
+                ("del", "odel"): 0.4
             }))
 
-        hid2 = DiscreteVariableNode("hid2", ["save", "del"])
-        obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
-        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
-            {
-                "hid2": ["save", "del"],
-                "obs2": ["osave", "odel"]
-            },
-            {
-                ("save", "osave"): 0.8,
-                ("save", "odel"): 0.2,
-                ("del", "osave"): 0.2,
-                ("del", "odel"): 0.8,
-            }))
+        # Add edges.
+        obs.add_edge_to(fact_h1_o1)
+        fact_h1_o1.add_edge_to(hid)
 
-        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
-            {
-                "hid1": ["save", "del"],
-                "hid2": ["save", "del"],
-            },
-            {
-                ("save", "save"): 0.9,
-                ("save", "del"): 0.1,
-                ("del", "save"): 0,
-                ("del", "del"): 1
-            }))
-
-        # Connect nodes.
-        obs1.add_edge_to(fact_h1_o1)
-        fact_h1_o1.add_edge_to(hid1)
-
-        obs2.add_edge_to(fact_h2_o2)
-        fact_h2_o2.add_edge_to(hid2)
-
-        hid1.add_edge_to(fact_h1_h2)
-        hid2.add_edge_to(fact_h1_h2)
-
-        # Init nodes.
+        # Init messages.
+        hid.init_messages()
+        obs.init_messages()
         fact_h1_o1.init_messages()
-        fact_h2_o2.init_messages()
-        fact_h1_h2.init_messages()
-        hid1.init_messages()
-        hid2.init_messages()
-        obs1.init_messages()
-        obs2.init_messages()
 
-        print hid1.belief
-        obs1.observed("osave")
-        obs1.message_to(fact_h1_o1)
-        fact_h1_o1.message_to(hid1)
-        print hid1.belief
+        # 1. Without observations, send_messages used.
+        obs.send_messages()
+        fact_h1_o1.send_messages()
+
+        hid.update_belief()
+        hid.normalize()
+        self.assertClose(hid.belief[("save",)], 0.45)
+
+        # 2. Observed value, message_to and update_belief used.
+        obs.observed("osave")
+        obs.message_to(fact_h1_o1)
+        fact_h1_o1.update_belief()
+        fact_h1_o1.message_to(hid)
+        hid.update_belief()
+
+        hid.normalize()
+        self.assertClose(hid.belief[("save",)], 0.3)
+
+        # 3. Without observations, send_messages used.
+        obs.observed(None)
+        obs.send_messages()
+        fact_h1_o1.send_messages()
+
+        hid.update_belief()
+        hid.normalize()
+        self.assertClose(hid.belief[("save",)], 0.45)

@@ -6,9 +6,9 @@
 import abc
 import operator
 
-from collections import defaultdict
+from bn.utils import constant_factor
+from copy import copy
 
-from bn.utils import constant_factory, constant_factor
 
 class Node(object):
     """Abstract class for nodes in factor graph."""
@@ -29,22 +29,33 @@ class Node(object):
 
     @abc.abstractmethod
     def init_messages(self):
-        return
-        
+        """Initialize incoming messages from all neighbors."""
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def message_to(self, node):
         """Compute a message to neighboring node."""
-        return
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def message_from(self, node, message):
         """Save message from neighboring node."""
-        return
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def update_belief(self):
+        """Update belief state."""
+        raise NotImplementedError()
 
     def send_messages(self):
         """Send messages to all neighboring nodes."""
-        for neigbor_name in self.outgoing:
-            self.message_to(neigbor_name)
+        self.update_belief()
+        for neigbor in self.outgoing.values():
+            self.message_to(neigbor)
+
+    def normalize(self):
+        """Normalize belief state."""
+        self.belief.normalize()
 
 
 class DiscreteVariableNode(Node):
@@ -67,24 +78,26 @@ class DiscreteVariableNode(Node):
 
     def message_to(self, node):
         if self.is_observed:
-            node.message_from(self, self.belief)
+            node.message_from(self, copy(self.belief))
         else:
             node.message_from(self, self.belief /
                                     self.incoming_message[node.name])
 
     def message_from(self, node, message):
         if not self.is_observed:
-            self.belief /= self.incoming_message[node.name]
-            self.belief *= message
             self.incoming_message[node.name] = message
 
     def observed(self, value):
         """Set observation."""
         if value is not None:
             self.is_observed = True
+            self.belief.observed((value,))
         else:
             self.is_observed = False
-        self.belief.observed((value,))
+            self.belief.observed(None)
+
+    def update_belief(self):
+        self.belief = reduce(operator.mul, self.incoming_message.values())
 
 
 class DiscreteFactorNode(Node):
@@ -92,7 +105,7 @@ class DiscreteFactorNode(Node):
 
     def __init__(self, name, factor):
         super(DiscreteFactorNode, self).__init__(name)
-        self.belief = factor
+        self.factor = factor
 
     def init_messages(self):
         for name, node in self.incoming.iteritems():
@@ -101,7 +114,7 @@ class DiscreteFactorNode(Node):
         for name, node in self.outgoing.iteritems():
             self.incoming_message[name] = constant_factor({name: node.values},
                                                           len(node.values))
-
+        self.update_belief()
 
     def message_to(self, node):
         belief_without_node = self.belief / self.incoming_message[node.name]
@@ -109,6 +122,8 @@ class DiscreteFactorNode(Node):
         node.message_from(self, message)
 
     def message_from(self, node, message):
-        self.belief /= self.incoming_message[node.name]
-        self.belief *= message
         self.incoming_message[node.name] = message
+
+    def update_belief(self):
+        self.belief = self.factor * reduce(operator.mul,
+                                           self.incoming_message.values())

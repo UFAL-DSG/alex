@@ -263,3 +263,7 @@ class DiscreteFactor(object):
             return self._divide_same(other_factor)
         else:
             return self._divide_different(other_factor)
+
+    def normalize(self):
+        """Normalize factor table."""
+        self.factor_table /= sum(self.factor_table)
