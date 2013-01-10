@@ -7,7 +7,9 @@ import numpy as np
 import operator
 
 from collections import defaultdict
+from scipy.misc import logsumexp
 
+ZERO = 0.00000000000001
 
 class DiscreteFactor(object):
     """Factor representation with basic operations."""
@@ -35,7 +37,7 @@ class DiscreteFactor(object):
         return index
 
     def _get_assignment_from_index(self, index):
-        """Assignment in factor table at given index."""
+        """Get assignment from factor table at given index."""
         assignment = []
         for var in self.variables:
             assignment.append(index / self.strides[var])
@@ -43,7 +45,12 @@ class DiscreteFactor(object):
         return tuple(assignment)
 
     def _create_translation_table(self, variables_values):
-        """Create translation from string values to numbers."""
+        """Create translation from string values to numbers.
+
+        Variable values can be anything, but arrays are indexed by
+        numbers. Translation table is used for getting an index from an
+        assignment.
+        """
         translation_table = {}
         for var in variables_values:
             translation_table[var] = {}
@@ -52,12 +59,15 @@ class DiscreteFactor(object):
         return translation_table
 
     def __init__(self, variables_dict, prob_table):
+        # Save variables.
         self.variables = sorted(variables_dict.keys())
         self.variables_dict = variables_dict
+        # Create translation table from variable values to indexes.
         self.translation_table = self._create_translation_table(variables_dict)
         self.cardinalities = {var: len(variables_dict[var])
                               for var in self.variables}
 
+        # If prob_table is np.ndarray, than we expect it to be in log form.
         if isinstance(prob_table, np.ndarray):
             self.factor_table = prob_table
             self.factor_length = self.factor_table.size
@@ -65,16 +75,23 @@ class DiscreteFactor(object):
             self.factor_length = self._factor_table_length(self.cardinalities)
             self.factor_table = np.ndarray(self.factor_length, np.float32)
 
+        # Compute strides (how many elements in the prob table we have to skip
+        # to get new assignment of a variable).
         self.strides = self._compute_strides(self.variables,
                                              self.cardinalities,
                                              self.factor_length)
 
-        self.unobserved_factor_table = self.factor_table
-
         if isinstance(prob_table, dict):
+            # Save values from dictionary.
             for assignment, value in prob_table.iteritems():
                 self.factor_table[
                     self._get_index_from_assignment(assignment)] = value
+            # Convert values to log form.
+            self.factor_table[self.factor_table == 0] = ZERO
+            np.log(self.factor_table, self.factor_table)
+
+        # Save the factor table in case we'll modify it with observation.
+        self.unobserved_factor_table = self.factor_table
 
     def __str__(self):
         ret = ""
@@ -88,10 +105,12 @@ class DiscreteFactor(object):
             ret += format_str.format(var)
         ret += format_str.format("Value") + "\n"
         ret += 79 * "-" + "\n"
+
         for i in range(len(self.factor_table)):
             for assignment in self._get_assignment_from_index(i):
                 ret += format_str.format(assignment)
-            ret += format_str.format(self.factor_table[i]) + "\n"
+            ret += format_str.format(np.exp(self.factor_table[i])) + "\n"
+
         ret += 79 * "-" + "\n"
         return ret
 
@@ -99,14 +118,19 @@ class DiscreteFactor(object):
         """Rename variables."""
         for var in self.variables_dict:
             if var in new_variables:
+                # Modify variables dict.
                 self.variables_dict[new_variables[var]] = (
                     self.variables_dict.pop(var))
+                # Change the key to strides dict.
                 self.strides[new_variables[var]] = self.strides.pop(var)
+                # Change the key to cardinalities dict.
                 self.cardinalities[new_variables[var]] = (
                     self.cardinalities.pop(var))
+                # Change the key to translation table.
+                self.translation_table[new_variables[var]] = (
+                    self.translation_table.pop(var))
+        # Get new variables list.
         self.variables = self.variables_dict.keys()
-        self.translation_table = self._create_translation_table(
-            self.variables_dict)
 
     def marginalize(self, variables):
         """Marginalize the factor."""
@@ -117,7 +141,8 @@ class DiscreteFactor(object):
         # Length of the new factor table.
         new_factor_length = self._factor_table_length(new_cardinalities)
         # The new factor table.
-        new_factor_table = np.zeros(new_factor_length, np.float32)
+        new_factor_table = np.empty(new_factor_length, np.float32)
+        new_factor_table[:] = np.log(ZERO)
         # Strides for resulting variables in the new factor table.
         new_strides = self._compute_strides(variables,
                                             self.cardinalities,
@@ -128,7 +153,8 @@ class DiscreteFactor(object):
         # Iterate over every element in the old factor table and add them to
         # the correct element in the new factor table.
         for i in range(self.factor_length):
-            new_factor_table[index] += self.factor_table[i]
+            new_factor_table[index] = np.logaddexp(new_factor_table[index],
+                                                   self.factor_table[i])
 
             # Update the assignment and indexes.
             for var in variables:
@@ -151,20 +177,21 @@ class DiscreteFactor(object):
     def observed(self, assignment):
         """Set observation."""
         if assignment is not None:
-            self.factor_table = np.zeros(self.factor_length)
+            self.factor_table = np.empty(self.factor_length)
+            self.factor_table[:] = np.log(ZERO)
             self.factor_table[
-                self._get_index_from_assignment(assignment)] = 1.0
+                self._get_index_from_assignment(assignment)] = 0
         else:
             self.factor_table = self.unobserved_factor_table
 
     def __getitem__(self, assignment):
         index = self._get_index_from_assignment(assignment)
-        return self.factor_table[index]
+        return np.exp(self.factor_table[index])
 
     def _multiply_same(self, other_factor):
         """Multiply two factors with same variables."""
         return DiscreteFactor(self.variables_dict,
-                              self.factor_table * other_factor.factor_table)
+                              self.factor_table + other_factor.factor_table)
 
     def _multiply_different(self, other_factor):
         """Multiply two factors with different variables."""
@@ -178,7 +205,7 @@ class DiscreteFactor(object):
         # variables.
         new_factor_length = self._factor_table_length(new_cardinalities)
         # The new factor table.
-        new_factor_table = np.ndarray(new_factor_length, np.float32)
+        new_factor_table = np.empty(new_factor_length, np.float32)
 
         # Assignment in new factor table.
         assignment = defaultdict(int)
@@ -189,7 +216,7 @@ class DiscreteFactor(object):
 
         for i in range(new_factor_length):
             # Multiply values from input factors to get new factor.
-            new_factor_table[i] = (self.factor_table[index_self] *
+            new_factor_table[i] = (self.factor_table[index_self] +
                                    other_factor.factor_table[index_other])
 
             # Update the assignment and indexes.
@@ -225,7 +252,7 @@ class DiscreteFactor(object):
     def _divide_same(self, other_factor):
         """Divide factor by other factor with same variables."""
         return DiscreteFactor(self.variables_dict,
-                              self.factor_table / other_factor.factor_table)
+                              self.factor_table - other_factor.factor_table)
 
     def _divide_different(self, other_factor):
         """Divide factor by other factor with less variables."""
@@ -238,7 +265,7 @@ class DiscreteFactor(object):
             if self.factor_table[i] == 0:
                 new_factor_table[i] = 0
             else:
-                new_factor_table[i] = (self.factor_table[i] /
+                new_factor_table[i] = (self.factor_table[i] -
                                        other_factor.factor_table[index_other])
 
             for var in reversed_variables:
@@ -266,4 +293,4 @@ class DiscreteFactor(object):
 
     def normalize(self):
         """Normalize factor table."""
-        self.factor_table /= sum(self.factor_table)
+        self.factor_table -= logsumexp(self.factor_table)
