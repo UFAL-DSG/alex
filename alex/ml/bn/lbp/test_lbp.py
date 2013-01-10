@@ -9,7 +9,7 @@ from bn.lbp import LBP
 
 class TestLBP(unittest.TestCase):
 
-    def _test_network(self):
+    def test_network(self):
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
@@ -61,31 +61,22 @@ class TestLBP(unittest.TestCase):
         hid1.add_edge_to(fact_h1_h2)
         hid2.add_edge_to(fact_h1_h2)
 
-        # Init nodes.
-        fact_h1_o1.init_messages()
-        fact_h2_o2.init_messages()
-        fact_h1_h2.init_messages()
-        hid1.init_messages()
-        hid2.init_messages()
-        obs1.init_messages()
-        obs2.init_messages()
-        
         # Add nodes to lbp.
         lbp = LBP()
         lbp.add_nodes([
-            obs1, hid1, fact_h1_o1,
-            obs2, hid2, fact_h2_o2,
+            obs1, fact_h1_o1, hid1,
+            obs2, fact_h2_o2, hid2,
             fact_h1_h2
         ])
 
-        lbp.run(2)
+        lbp.run(1)
 
         print hid1.belief
 
         obs1.observed('osave')
-        lbp.run(2)
+        lbp.run(1)
         print hid1.belief
 
         obs2.observed('odel')
-        lbp.run(2)
+        lbp.run(1)
         print hid1.belief

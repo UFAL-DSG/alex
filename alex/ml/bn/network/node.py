@@ -47,11 +47,15 @@ class Node(object):
         """Update belief state."""
         raise NotImplementedError()
 
-    def send_messages(self):
+    def send_messages(self, forward=True):
         """Send messages to all neighboring nodes."""
         self.update_belief()
-        for neigbor in self.outgoing.values():
-            self.message_to(neigbor)
+        if forward:
+            for neigbor in self.outgoing.values():
+                self.message_to(neigbor)
+        else:
+            for neighbor in self.incoming.values():
+                self.message_to(neighbor)
 
     def normalize(self):
         """Normalize belief state."""
@@ -97,7 +101,8 @@ class DiscreteVariableNode(Node):
             self.belief.observed(None)
 
     def update_belief(self):
-        self.belief = reduce(operator.mul, self.incoming_message.values())
+        if not self.is_observed:
+            self.belief = reduce(operator.mul, self.incoming_message.values())
 
 
 class DiscreteFactorNode(Node):
