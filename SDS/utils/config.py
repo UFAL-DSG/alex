@@ -169,7 +169,7 @@ class Config(object):
                     # store the value of the unfolded items under the given key
                     if unfold_id_key is not None:
                         str_rep = str(item)
-                        ci[unfold_id_key] = ci[unfold_id_key] + '-' + str_rep \
+                        ci[unfold_id_key] = ci[unfold_id_key] + '_' + str_rep \
                                             if unfold_id_key in ci else str_rep
                     # unfold other variables
                     unfolded.extend(ci.unfold_lists(pattern, unfold_id_key))
