@@ -166,11 +166,15 @@ class SystemLogger(object):
         self.current_session_log_dir_name.value = ''
         self._session_started = True
 
-    @property
     @global_lock(lock)
-    def session_started(self):
+    def _get_session_started(self):
         return self._session_started
 
+    session_started = property(_get_session_started)
+
+    # XXX: Returning the enclosing directory in case the session has been
+    # closed may not be ideal. In some cases, it causes session logs to be
+    # written to outside the related session directory, which is no good.
     @global_lock(lock)
     def get_session_dir_name(self):
         """ Return directory where all the call related files should be stored.

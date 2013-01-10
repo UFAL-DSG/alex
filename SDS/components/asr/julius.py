@@ -89,7 +89,7 @@ class JuliusASR(object):
         return True
 
     def kill_my_julius(self):
-        subprocess.call('kill -9 $(cat %s)' % self.pidfile)
+        subprocess.call('kill -9 "`cat "%s"`"' % self.pidfile)
 
     def kill_all_juliuses(self):
         subprocess.call('killall julius', shell=True)
@@ -116,13 +116,14 @@ class JuliusASR(object):
         if self.reuse_server:
             os.system("julius -debug -C %s > %s &" % (jconf, log,))
         else:
-            self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log, ),
-                                              shell=True,
-                                              bufsize=1)
+            self.julius_server = subprocess.Popen(
+                    'julius -C %s > %s' % (jconf, log, ),
+                    shell=True, bufsize=1)
             self.save_pid(self.julius_server.pid)
 
     def connect_to_server(self):
-        """Connects to the Julius ASR server to start recognition and receive the recognition output."""
+        """Connects to the Julius ASR server to start recognition and receive
+        the recognition output."""
 
         self.s_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s_socket.connect((self.hostname, self.serverport))
@@ -142,7 +143,8 @@ class JuliusASR(object):
         self.a_socket.sendall(frame)
 
     def audio_finished(self):
-        """"Informs the Julius ASR about the end of segment and that the hypothesis should be finalized."""
+        """"Informs the Julius ASR about the end of segment and that the
+        hypothesis should be finalized."""
 
         self.a_socket.sendall(struct.pack("i", 0))
         self.recognition_on = False
@@ -368,7 +370,9 @@ class JuliusASR(object):
         return nblist, cn
 
     def flush(self):
-        """Sends command to the Julius ASR to terminate the recognition and get ready for new recognition.
+        """Sends command to the Julius ASR to terminate the recognition and get
+        ready for new recognition.
+
         """
         if self.recognition_on:
             self.audio_finished()
@@ -384,8 +388,8 @@ class JuliusASR(object):
     def rec_in(self, frame):
         """ This defines asynchronous interface for speech recognition.
 
-        Call this input function with audio data belonging into one speech segment that should be
-        recognized.
+        Call this input function with audio data belonging into one speech
+        segment that should be recognized.
 
         Output hypotheses is obtained by calling hyp_out().
         """
@@ -398,11 +402,13 @@ class JuliusASR(object):
     def hyp_out(self):
         """ This defines asynchronous interface for speech recognition.
 
-        Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
+        Returns recognizers hypotheses about the input speech audio and
+        a confusion network for the input.
         """
 
-        # read all messages accidentally left in the socket from the Julius ASR server before
-        # a new ASR hypothesis is decoded
+        # Read all messages accidentally left in the socket from the Julius ASR
+        # server before.
+        # A new ASR hypothesis is decoded.
         while True:
             m = self.read_server_message()
             if m is None:

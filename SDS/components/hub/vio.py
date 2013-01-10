@@ -112,6 +112,8 @@ class CallCallback(pj.CallCallback):
 
         self.cfg = cfg
         self.voipio = voipio
+        self.system_logger = self.cfg['Logging']['system_logger']
+        self.session_logger = self.cfg['Logging']['session_logger']
 
         self.rec_id = None
         self.output_file_name_recorded = ''
@@ -123,12 +125,13 @@ class CallCallback(pj.CallCallback):
     # Notification when call state has changed
     def on_state(self):
         if self.cfg['VoipIO']['debug']:
-            m = []
-            m.append("CallCallback::on_state : Call with %s " % self.call.info().remote_uri)
-            m.append("is %s " % self.call.info().state_text)
-            m.append("last code = %s " % self.call.info().last_code)
-            m.append("(%s)" % self.call.info().last_reason)
-            self.cfg['Logging']['system_logger'].debug(''.join(m))
+            self.system_logger.debug(
+                ("CallCallback::on_state : Call with {uri!s} is {st!s} last "
+                 "code = {code!s} ({reas!s})").format(
+                    uri=self.call.info().remote_uri,
+                    st=self.call.info().state_text,
+                    code=self.call.info().last_code,
+                    reas=self.call.info().last_reason))
 
         if self.call.info().state == pj.CallState.CONNECTING:
             self.voipio.on_call_connecting(self.call.info().remote_uri)
@@ -136,47 +139,63 @@ class CallCallback(pj.CallCallback):
         if self.call.info().state == pj.CallState.CONFIRMED:
             call_slot = self.call.info().conf_slot
 
-            # assign the file names
-            self.output_file_name_recorded = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
-                'all-' + datetime.now().isoformat('-').replace(':', '-') + '.recorded.wav')
-            self.output_file_name_played = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
-                'all-' + datetime.now().isoformat('-').replace(':', '-') + '.played.wav')
+            # Construct the output file names.
+            timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+            self.output_file_name_recorded = os.path.join(
+                self.system_logger.get_session_dir_name(),
+                'all-{stamp}.recorded.wav'.format(stamp=timestamp))
+            self.output_file_name_played = os.path.join(
+                self.system_logger.get_session_dir_name(),
+                'all-{stamp}.played.wav'.format(stamp=timestamp))
 
             while 1:
                 try:
                     # this can fail if the session.xml is not created yet
-                    self.cfg['Logging']['session_logger'].dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
-                    self.cfg['Logging']['session_logger'].dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
+                    self.session_logger.dialogue_rec_start(
+                        "system",
+                        os.path.basename(self.output_file_name_played))
+                    self.session_logger.dialogue_rec_start(
+                        "user",
+                        os.path.basename(self.output_file_name_recorded))
                 except IOError:
-                    # sleep for a while to let others to react to the previous messages
+                    # Sleep for a while to let others react to the previous
+                    # messages.
                     time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-                    # then try again
+                    # Then try again.
                     continue
-                # everything was OK, so exit the loop
+                # Everything was OK, so exit the loop.
                 break
 
-            # Create wave recorders
-            self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
-            recorded_slot = pj.Lib.instance().recorder_get_slot(self.recorded_id)
-            self.played_id = pj.Lib.instance().create_recorder(self.output_file_name_played)
+            # Create wave recorders.
+            self.recorded_id = pj.Lib.instance().create_recorder(
+                self.output_file_name_recorded)
+            recorded_slot = pj.Lib.instance().recorder_get_slot(
+                self.recorded_id)
+            self.played_id = pj.Lib.instance().create_recorder(
+                self.output_file_name_played)
             played_slot = pj.Lib.instance().recorder_get_slot(self.played_id)
 
-            # Connect the call to the wave recorder
+            # Connect the call to the wave recorder.
             pj.Lib.instance().conf_connect(call_slot, recorded_slot)
-            # Connect the memory player to the wave recorder
-            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, played_slot)
+            # Connect the memory player to the wave recorder.
+            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot,
+                                           played_slot)
 
-            # Connect the call to the memory capture
-            pj.Lib.instance().conf_connect(call_slot, self.voipio.mem_capture.port_slot)
-            # Connect the memory player to the call
-            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
+            # Connect the call to the memory capture.
+            pj.Lib.instance().conf_connect(call_slot,
+                                           self.voipio.mem_capture.port_slot)
+            # Connect the memory player to the call.
+            pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot,
+                                           call_slot)
 
-            # send the callback
+            # Send the callback.
             self.voipio.on_call_confirmed(self.call.info().remote_uri)
 
         if self.call.info().state == pj.CallState.DISCONNECTED:
-            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_played))
-            self.cfg['Logging']['session_logger'].dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
+            self.session_logger.dialogue_rec_end(
+                os.path.basename(self.output_file_name_played))
+            self.session_logger.dialogue_rec_end(
+                os.path.basename(self.output_file_name_recorded))
 
             self.voipio.call = None
 
@@ -193,7 +212,7 @@ class CallCallback(pj.CallCallback):
             m.append("is %s " % self.call.info().state_text)
             m.append("last code = %s " % self.call.info().last_code)
             m.append("(%s)" % self.call.info().last_reason)
-            self.cfg['Logging']['system_logger'].debug(''.join(m))
+            self.system_logger.debug(''.join(m))
 
         print code, reason, final, cont
 
@@ -202,7 +221,7 @@ class CallCallback(pj.CallCallback):
     def on_transfer_request(self, dst, code):
         if self.cfg['VoipIO']['debug']:
             m = "CallCallback::on_transfer_request : Remote party transferring the call to %s %s" % (dst, code)
-            self.cfg['Logging']['system_logger'].debug(''.join(m))
+            self.system_logger.debug(''.join(m))
 
         return 202
 
@@ -210,14 +229,14 @@ class CallCallback(pj.CallCallback):
     def on_media_state(self):
         if self.call.info().media_state == pj.MediaState.ACTIVE:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is now active")
+                self.system_logger.debug("CallCallback::on_media_state : Media is now active")
         else:
             if self.cfg['VoipIO']['debug']:
-                self.cfg['Logging']['system_logger'].debug("CallCallback::on_media_state : Media is inactive")
+                self.system_logger.debug("CallCallback::on_media_state : Media is inactive")
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:
-            self.cfg['Logging']['system_logger'].debug("Received digits: %s" % digits)
+            self.system_logger.debug("Received digits: %s" % digits)
 
         self.voipio.on_dtmf_digit(digits)
 
