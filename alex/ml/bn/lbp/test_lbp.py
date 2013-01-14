@@ -20,8 +20,8 @@ class TestLBP(unittest.TestCase):
             },
             {
                 ("save", "osave"): 0.8,
-                ("save", "odel"): 0.2,
-                ("del", "osave"): 0.3,
+                ("save", "odel"): 0.3,
+                ("del", "osave"): 0.2,
                 ("del", "odel"): 0.7,
             }))
 
@@ -75,8 +75,10 @@ class TestLBP(unittest.TestCase):
 
         obs1.observed('osave')
         lbp.run(1)
+        hid1.normalize()
         print hid1.belief
 
         obs2.observed('odel')
         lbp.run(1)
+        hid1.normalize()
         print hid1.belief
