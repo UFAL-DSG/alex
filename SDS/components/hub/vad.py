@@ -244,12 +244,12 @@ class VAD(multiprocessing.Process):
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+            # Process all pending commands.
+            if self.process_pending_commands():
+                return
+
             # Wait until a session has started.
             if self.session_logger.is_open:
-                # Process all pending commands.
-                if self.process_pending_commands():
-                    return
-
                 # Process audio data.
                 try:
                     self.read_write_audio()

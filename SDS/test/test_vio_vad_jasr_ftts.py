@@ -215,6 +215,10 @@ if __name__ == '__main__':
 
     # wait for processes to stop
     vio.join()
+    system_logger.debug('VIO stopped.')
     vad.join()
+    system_logger.debug('VAD stopped.')
     asr.join()
+    system_logger.debug('ASR stopped.')
     tts.join()
+    system_logger.debug('TTS stopped.')
