@@ -40,7 +40,7 @@ class Config(object):
     def get(self, i, default=None):
         return self.config.get(i, default)
 
-    def __delitem(self, i):
+    def __delitem__(self, i):
         del self.config[i]
 
     def __len__(self):
@@ -138,18 +138,43 @@ class Config(object):
                 d[k] = d[k].replace(p, s)
         return
 
-    def unfold_lists(self, pattern):
+    def unfold_lists(self, pattern, unfold_id_key=None, part=[]):
         """\
         Unfold lists under keys matching the given pattern
         into several config objects, each containing one item.
         If pattern is None, all lists are expanded.
+
+        Stores a string representation of the individual unfolded values
+        under the unfold_id_key if this parameter is set.
+
+        Only expands a part of the whole config hash (given by list of
+        keys forming a path to this part) if the path parameter is set.
         """
-        for k, v in self.config.iteritems():
+        # find the part of the config we're dealing with
+        dict_to_unfold = self.config
+        for key in part:
+            dict_to_unfold = dict_to_unfold[key]
+        # go through it and search for lists to unfold
+        for k, v in dict_to_unfold.iteritems():
+            # unfold lists
             if type(v) is list and (pattern is None or re.search(pattern, k)):
                 unfolded = []
                 for item in v:
+                    # create a copy and replace with the unfolded item
                     ci = Config(config=copy.deepcopy(self.config))
-                    ci[k] = item
-                    unfolded.extend(ci.unfold_lists(pattern))
+                    target_dict = ci
+                    for key in part:
+                        target_dict = target_dict[key]
+                    target_dict[k] = item
+                    # store the value of the unfolded items under the given key
+                    if unfold_id_key is not None:
+                        str_rep = str(item)
+                        ci[unfold_id_key] = ci[unfold_id_key] + '_' + str_rep \
+                                            if unfold_id_key in ci else str_rep
+                    # unfold other variables
+                    unfolded.extend(ci.unfold_lists(pattern, unfold_id_key))
                 return unfolded
+            # recurse deeper into dictionaries
+            elif type(v) is dict:
+                return self.unfold_lists(pattern, unfold_id_key, part + [k])
         return [self]
