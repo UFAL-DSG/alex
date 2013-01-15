@@ -14,19 +14,15 @@ import SDS.utils.env as env
 
 config = None
 
-
 class Config:
-    """\
-    Config handles configuration data necessary for all the components
+    """ Config handles configuration data necessary for all the components
     in the SDS. It implements a dictionary so that any component could
     store arbitrary structured data.
 
-    When the configure file is loaded, several automatic transformations
-    are applied.
-        1) '{cfg_abs_path}' at the beginning of strings is replaced by an
-            absolute path of the configure files.
-            This can be used to make the configure file independent of
-            the location of programs using the configure file.
+    When the configure file is loaded several automatic transformations are applied.
+      1) '{cfg_abs_path}' at the beginning of strings is replaced by an absolute path of the configure files.
+                          This can be used to make the configure file independent of the location of programs
+                          using the configure file.
 
     """
 
@@ -38,12 +34,6 @@ class Config:
 
         if file_name:
             self.load(file_name)
-
-    def get(self, i, default=None):
-        return self.config.get(i, default)
-
-    def __delitem(self, i):
-        del self.config[i]
 
     def __len__(self):
         return len(self.config)
@@ -67,15 +57,12 @@ class Config:
         pprint.pprint(self.config, sio, indent=2, width=120)
         cfg = sio.getvalue()
 
-        cfg = re.sub(r".*password.*", "# this line was removed since it" +
-                     "included a password", cfg)
+        cfg = re.sub(r".*password.*", "# this line was removed since it included a password", cfg)
 
         return cfg
 
     def load(self, file_name):
-        """\
-        FIXME: Executing external files is not ideal!
-        It should be changed in the future!
+        """FIXME: Executing external files is not ideal! It should be changed in the future!
         """
         # pylint: disable-msg=E0602
 
@@ -89,10 +76,10 @@ class Config:
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname, self.config)
 
-    def merge(self, cfg):
+    def merge(self, cfg, project_root=False):
         # pylint: disable-msg=E0602
         if type(cfg) is str:
-            cfg = Config(cfg)
+            cfg = Config(cfg, project_root)
         self.update_dict(self.config, cfg.config)
 
     def update_dict(self, d, u):

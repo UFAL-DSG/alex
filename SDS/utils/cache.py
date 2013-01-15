@@ -10,6 +10,7 @@ import os
 import os.path
 import cPickle as pickle
 import fcntl
+import hashlib
 
 from itertools import ifilterfalse
 from heapq import nsmallest
@@ -189,6 +190,7 @@ def persistent_cache(method=False, file_prefix='', file_suffix=''):
     Cache performance statistics stored in f.hits and f.misses.
 
     '''
+    sha = hashlib.sha1()
     def decorator(user_function):
         @functools.wraps(user_function)
         def wrapper(*args, **kwds):
@@ -203,6 +205,8 @@ def persistent_cache(method=False, file_prefix='', file_suffix=''):
                 key += tuple(sorted(kwds.items()))
 
             key += (file_suffix,)
+
+            key = (hashlib.sha224(str(key)).hexdigest(),)
 
             try:
                 result = get_persitent_cache_content(key)

@@ -24,9 +24,9 @@ class PDDiscrete(object):
     def get_items(self):
         return self.distrib.keys()
 
-    def get_max(self):
+    def get_max(self, which_one=0):
         res = sorted(self.distrib.items(), key=lambda x: -x[1])
-        return res[0]
+        return res[which_one]
 
     def __getitem__(self, key):
         if key in self.distrib:
@@ -38,7 +38,7 @@ class PDDiscrete(object):
         self.distrib[key] = value
 
     def __repr__(self):
-        return " | ".join(["%s: %.2f" % (key, value, )
+        return "<%s>" % " | ".join(["%s: %.2f" % (key, value, )
                             for key, value
                             in sorted(self.distrib.items(), key=lambda x: -x[1])])
 
