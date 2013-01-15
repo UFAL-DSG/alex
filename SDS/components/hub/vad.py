@@ -254,5 +254,5 @@ class VAD(multiprocessing.Process):
                 try:
                     self.read_write_audio()
                 except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'\
-                                                .format(ex=ex))
+                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'
+                                                 .format(ex=ex))
