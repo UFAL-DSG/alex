@@ -1,19 +1,19 @@
-HResults -n -A -T 1 -I /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/test_words.mlf /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/tiedlist /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf 
+HResults -n -A -T 1 -I /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/test_words.mlf /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/tiedlist /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf 
 ====================== HTK Results Analysis =======================
-  Date: Tue Jul 31 14:04:19 2012
-  Ref : /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/test_words.mlf
-  Rec : >sr/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf
+  Date: Tue Dec 18 22:25:57 2012
+  Ref : >/korvas/work/htk/htk_training-2012-12-17/model_voip_en/test_words.mlf
+  Rec : >17/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf
 ------------------------ Overall Results --------------------------
-SENT: %Correct=5.66 [H=41, S=684, N=725]
-WORD: %Corr=59.20, Acc=49.82 [H=2277, D=880, S=689, I=361, N=3846]
+SENT: %Correct=7.89 [H=61, S=712, N=773]
+WORD: %Corr=53.13, Acc=46.10 [H=2154, D=931, S=969, I=285, N=4054]
 ===================================================================
-HResults -n -h -A -T 1 -I /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/test_words.mlf /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/tiedlist /mnt/h/jurcicek/vystadial/SDS/tools/asr/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf 
+HResults -n -h -A -T 1 -I /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/test_words.mlf /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/tiedlist /home/korvas/work/htk/htk_training-2012-12-17/model_voip_en/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf 
     ,-------------------------------------------------------------.
-    | HTK Results Analysis at Tue Jul 31 14:04:19 2012            |
-    | Ref: >/vystadial/SDS/tools/asr/model_voip_en/test_words.mlf |
+    | HTK Results Analysis at Tue Dec 18 22:25:58 2012            |
+    | Ref: >/htk_training-2012-12-17/model_voip_en/test_words.mlf |
     | Rec: >/recout_test_wit_ro200_tb350_prune350_zerogram_16.mlf |
     |=============================================================|
     |           # Snt |  Corr    Sub    Del    Ins    Err  S. Err |
     |-------------------------------------------------------------|
-    | Sum/Avg |  725  |  59.20  17.91  22.88   9.39  50.18  94.34 |
+    | Sum/Avg |  773  |  53.13  23.90  22.96   7.03  53.90  92.11 |
     `-------------------------------------------------------------'
