@@ -62,6 +62,11 @@ $TRAIN_SCRIPTS/make_mlf_test.sh prune "$N_TRAIN_FILES"
 
 date
 
+
+##############
+#  TRAINING  #
+##############
+
 # Get the basic monophone models trained.
 echo "Flat starting monophones..."
 $TRAIN_SCRIPTS/flat_start.sh
@@ -91,6 +96,11 @@ echo "Mixing up..."
 $TRAIN_SCRIPTS/train_mixup.sh
 
 date
+
+
+#############
+#  TESTING  #
+#############
 
 # Evaluate how we did on the zerogram language model.
 # Cannot decode zerogram language model with cross word triphone context

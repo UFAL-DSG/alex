@@ -8,7 +8,6 @@
 # when initially coding the speech data.
 #
 # Copyright 2005 by Keith Vertanen
-#
 
 use strict;
 
@@ -18,11 +17,8 @@ if ( @ARGV < 1 )
     exit(1);
 }
 
-my $listFile;
-my $ext;
-my $outExt;
-my $outExt2;
-
+# Process arguments.
+my ($listFile, $ext, $outExt, $outExt2);
 ($listFile, $ext, $outExt, $outExt2) = @ARGV;
 
 if (length($ext) <= 0)
@@ -35,31 +31,21 @@ if (length($outExt) <= 0)
     $outExt = "mfc";
 }
 
+# Transform the file.
+my ($line, $pos, $basename);
+
 open(IN, $listFile);
-
-my $line;
-my $pos;
-my $lowerline;
-
 while ($line = <IN>) 
 {
-  $line =~ s/\n//g;
-  $lowerline = lc($line);
+	# Analyze the line into the basename and extension.
+	$line =~ s/\n//g;  # XXX Why the 'g' flag?
+	$pos = index(lc(line), lc($ext));
+	$basename = substr($line, 0, $pos)
 
-  $pos = index($lowerline, lc($ext));
-  printf $line . " ";
-
-  $line = substr($line, 0, $pos) . $outExt;
-  printf $line;
-
-  if (length($outExt2) > 0)
-  {
-      print " ";
-      $line = substr($line, 0, $pos) . $outExt2;
-      printf $line;
-  }
-  
-  printf "\n";
+	# Print the required fields.
+	print $line . " " . $basename . $outExt;
+	print " " . $basename . $outExt2 if length($outExt2);
+	print "\n";
 }
 
 
