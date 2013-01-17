@@ -4,12 +4,6 @@
 cd $WORK_DIR
 
 # Create the list file we need to send to HCopy to convert .wav files to .mfc.
-# XXX Why say it in two 50-line scripts when it can be done in awk in 
-# two lines...
-# perl $TRAIN_SCRIPTS/CreateMFCList.pl $WORK_DIR/test_wav_files.txt wav mfc > $TEMP_DIR/test_wav_mfc.scp
-# python $TRAIN_SCRIPTS/SubstituteInMFCList.py $TEMP_DIR/test_wav_mfc.scp $TEST_DATA > $WORK_DIR/test_wav_mfc.scp
-
-
 WAVMAP="$WORK_DIR"/test_wavs.txt
 MFCLST="$WORK_DIR"/test_mfcs.txt
 # Find wavs to be coded.
