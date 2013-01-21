@@ -105,14 +105,14 @@ date
 # Evaluate how we did on the zerogram language model.
 # Cannot decode zerogram language model with cross word triphone context
 echo "Decoding zerogram language model"
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_zerogram_06 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 ro"$RO"_tb"$TB"_prune350_zerogram_08 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_zerogram_08 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm43 ro"$RO"_tb"$TB"_prune350_zerogram_10 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
 wait
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 ro"$RO"_tb"$TB"_prune350_zerogram_10 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 ro"$RO"_tb"$TB"_prune350_zerogram_12 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm48 ro"$RO"_tb"$TB"_prune350_zerogram_12 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm53 ro"$RO"_tb"$TB"_prune350_zerogram_14 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
 wait
-$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 ro"$RO"_tb"$TB"_prune350_zerogram_14 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
 $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 ro"$RO"_tb"$TB"_prune350_zerogram_16 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
+$TRAIN_SCRIPTS/eval_test_no_lat.sh hmm63 ro"$RO"_tb"$TB"_prune350_zerogram_18 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
 wait
 
 date
@@ -121,14 +121,14 @@ date
 if [ -f $WORK_DIR/wdnet_bigram ]
 then
   echo "Decoding bigram language model"
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_bigram_06 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm42 ro"$RO"_tb"$TB"_prune350_bigram_08 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
+  # $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_bigram_08 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
+  # $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm43 ro"$RO"_tb"$TB"_prune350_bigram_10 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
+	# wait
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm48 ro"$RO"_tb"$TB"_prune350_bigram_12 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm53 ro"$RO"_tb"$TB"_prune350_bigram_14 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
 	wait
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm46 ro"$RO"_tb"$TB"_prune350_bigram_10 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm50 ro"$RO"_tb"$TB"_prune350_bigram_12 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
-	wait
-  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm54 ro"$RO"_tb"$TB"_prune350_bigram_14 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
   $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm58 ro"$RO"_tb"$TB"_prune350_bigram_16 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
+  $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm63 ro"$RO"_tb"$TB"_prune350_bigram_18 350.0 $IP $SFB $WORK_DIR/wdnet_bigram $WORK_DIR/dict_full_sp_sil $CROSS &
   wait
 fi
 
@@ -138,25 +138,29 @@ date
 if [ -f $WORK_DIR/arpa_trigram ]
 then
   echo "Decoding trigram language model"
-  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune150_trigram_06 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
-  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm42 ro"$RO"_tb"$TB"_prune150_trigram_08 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
+  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune150_trigram_08 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
+  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm43 ro"$RO"_tb"$TB"_prune150_trigram_10 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
 	wait
-  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm46 ro"$RO"_tb"$TB"_prune150_trigram_10 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
-  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm50 ro"$RO"_tb"$TB"_prune150_trigram_12 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
+  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm48 ro"$RO"_tb"$TB"_prune150_trigram_12 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
+  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm53 ro"$RO"_tb"$TB"_prune150_trigram_14 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
 	wait
-  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm54 ro"$RO"_tb"$TB"_prune150_trigram_14 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
   $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm58 ro"$RO"_tb"$TB"_prune150_trigram_16 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
+  $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm63 ro"$RO"_tb"$TB"_prune150_trigram_18 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
   wait
 fi
 
 date
 
+# TODO We might want to take the best model and export it, not necessarily 
+# the last trained one.
+
 # Re-align the training data with the best triphone models.
 echo "Aligning with triphones..."
-$TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
+$TRAIN_SCRIPTS/realign.sh hmm63 tiedlist
 
 echo "End of training"
 
-$TRAIN_SCRIPTS/export_models.sh hmm58
+date
+$TRAIN_SCRIPTS/export_models.sh hmm63 text
 
 date
