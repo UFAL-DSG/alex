@@ -3,6 +3,7 @@
 
 import multiprocessing
 import time
+import traceback
 
 import SDS.components.asr.google as GASR
 import SDS.components.asr.julius as JASR
@@ -121,7 +122,7 @@ class ASR(multiprocessing.Process):
                             s = '\n'.join(s)
                             self.cfg['Logging']['system_logger'].debug(s)
 
-                    except JuliusASRTimeoutException:
+                    except (ASRException, JuliusASRTimeoutException):
                         self.cfg['Logging']['system_logger'].debug("Julius ASR Result Timeout.")
                         if self.cfg['ASR']['debug']:
                             s = []
@@ -146,11 +147,15 @@ class ASR(multiprocessing.Process):
         self.recognition_on = False
 
         while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+            try:
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
 
-            # process audio data
-            self.read_audio_write_asr_hypotheses()
+                # process audio data
+                self.read_audio_write_asr_hypotheses()
+            except Exception, e:
+                traceback.print_exc()
+
