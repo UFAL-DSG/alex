@@ -175,9 +175,9 @@ class SystemLogger(object):
     def get_session_dir_name(self):
         """ Return directory where all the call related files should be stored.
         """
-        # if self.current_session_log_dir_name.value:
+        if self.current_session_log_dir_name.value:
         # This should be equivalent and more accurate. (Matěj)
-        if self._session_started:
+        # if self._session_started:
             return self.current_session_log_dir_name.value
 
         # back off to the default logging directory
