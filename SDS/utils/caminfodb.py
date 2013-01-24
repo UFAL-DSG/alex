@@ -12,6 +12,13 @@ class CamInfoDb(object):
 
         return True
 
+    def get_by_id(self, id):
+        for rec in self.data:
+            if rec.get('id') == id:
+                return rec
+
+        return None
+
     def get_matching(self, query):
         res = []
         for rec in self.data:
@@ -25,5 +32,12 @@ class CamInfoDb(object):
         for item in self.data:
             res += item.values()
         return set(res)
+
+    def get_slots(self):
+        slots = set()
+        for item in self.data:
+            for key in item.keys():
+                slots.add(key)
+        return slots
 
 
