@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# FIXME: After some time of inactivity (perhaps those 300 seconds), the script
+# outputs:
+#
+# Error: module_send:: Connection reset by peer
+#
+# and continues repeatedly printing the following message:
+#
+# Error: module_send:: Broken pipe
 
 import multiprocessing
 import time
@@ -57,27 +66,45 @@ if __name__ == '__main__':
     system_logger.info(
         "Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
 
-    vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
-    vio_record, vio_child_record = multiprocessing.Pipe()     # I read from this connection recorded audio
-    vio_play, vio_child_play = multiprocessing.Pipe()         # I write in audio to be played
+    vio_commands, vio_child_commands = multiprocessing.Pipe()
+    # used to send commands to VoipIO
 
-    vad_commands, vad_child_commands = multiprocessing.Pipe()  # used to send commands to VAD
-    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()  # used to read output audio from VAD
+    vio_record, vio_child_record = multiprocessing.Pipe()
+    # I read from this connection recorded audio
 
-    asr_commands, asr_child_commands = multiprocessing.Pipe()  # used to send commands to ASR
-    asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
+    vio_play, vio_child_play = multiprocessing.Pipe()
+    # I write in audio to be played
 
-    tts_commands, tts_child_commands = multiprocessing.Pipe()  # used to send commands to TTS
-    tts_text_in, tts_child_text_in = multiprocessing.Pipe()   # used to send TTS text
 
-    command_connections = [vio_commands, vad_commands, asr_commands,
-                           tts_commands]
+    vad_commands, vad_child_commands = multiprocessing.Pipe()
+    # used to send commands to VAD
 
-    non_command_connections = [vio_record, vio_child_record,
+    vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()
+    # used to read output audio from VAD
+
+
+    asr_commands, asr_child_commands = multiprocessing.Pipe()
+    # used to send commands to ASR
+
+    asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()
+    # used to read ASR hypotheses
+
+
+    tts_commands, tts_child_commands = multiprocessing.Pipe()
+    # used to send commands to TTS
+
+    tts_text_in, tts_child_text_in = multiprocessing.Pipe()
+    # used to send TTS text
+
+
+    command_connections = (vio_commands, vad_commands, asr_commands,
+                           tts_commands)
+
+    non_command_connections = (vio_record, vio_child_record,
                                vio_play, vio_child_play,
                                vad_audio_out, vad_child_audio_out,
                                asr_hypotheses_out, asr_child_hypotheses,
-                               tts_text_in, tts_child_text_in]
+                               tts_text_in, tts_child_text_in)
 
     vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
     vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
@@ -89,15 +116,13 @@ if __name__ == '__main__':
     asr.start()
     tts.start()
 
-#     vio_commands.send(Command(
-#         'make_call(destination="sip:{ext}@{dom}")'\
-#             .format(ext=cfg['VoipIO']['extension'],
-#                     dom=cfg['VoipIO']['domain']),
-#         'HUB',
-#         'VoipIO'))
-
-    tts_text_in.send(TTSText(
-        'Say something and the recognized text will be played back.'))
+    # # Actively call a number configured.
+    # vio_commands.send(Command(
+    #     'make_call(destination="sip:{ext}@{dom}")'\
+    #         .format(ext=cfg['VoipIO']['extension'],
+    #                 dom=cfg['VoipIO']['domain']),
+    #     'HUB',
+    #     'VoipIO'))
 
     count = 0
     max_count = 50000
@@ -112,6 +137,9 @@ if __name__ == '__main__':
 
             if isinstance(command, Command):
                 cmd_name = command.parsed['__name__']
+                if cmd_name in logged_cmds:
+                    system_logger.info(command)
+
                 if cmd_name == "incoming_call" or cmd_name == "make_call":
                     system_logger.session_start(command.parsed['remote_uri'])
                     system_logger.session_system_log(
@@ -125,12 +153,19 @@ if __name__ == '__main__':
                                           cfg['Logging']["version"])
                     session_logger.input_source("voip")
 
-                if cmd_name in logged_cmds:
-                    system_logger.info(command)
+                    # FIXME: This is not said in reality.
+                    tts_text_in.send(TTSText(
+                        'Say something and the recognized text will be played '
+                        'back.'))
 
-                if cmd_name == "call_disconnected":
+                elif cmd_name == "call_disconnected":
                     # Do not disconnect just yet, close the session file only
                     # after last ASR output is written there.
+                    # XXX: Is this actually needed?
+                    # (I originally thought it was files written after the
+                    # session closed that ended in the parent directory;
+                    # however, it is files open *before* the session is open
+                    # that end up there now.)
                     disconnect = True
 
         if asr_hypotheses_out.poll():
@@ -158,6 +193,7 @@ if __name__ == '__main__':
                 system_logger.info(command)
 
         if disconnect:
+            # Then, close the session.
             system_logger.session_end()
             session_logger.session_end()
             disconnect = False
@@ -179,6 +215,10 @@ if __name__ == '__main__':
 
     # wait for processes to stop
     vio.join()
+    system_logger.debug('VIO stopped.')
     vad.join()
+    system_logger.debug('VAD stopped.')
     asr.join()
+    system_logger.debug('ASR stopped.')
     tts.join()
+    system_logger.debug('TTS stopped.')

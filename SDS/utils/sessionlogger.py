@@ -102,10 +102,11 @@ class SessionLogger:
         self.session_dir_name.value = ''
         self._is_open = False
 
-    @property
     @global_lock(lock)
-    def is_open(self):
+    def _get_is_open(self):
         return self._is_open
+
+    is_open = property(_get_is_open)
 
     @global_lock(lock)
     def get_session_dir_name(self):
