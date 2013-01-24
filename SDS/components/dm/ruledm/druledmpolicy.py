@@ -191,9 +191,8 @@ class DRuleDMPolicy:
         conflicts = []
         selects = []
         noclues = []
-        for ch_slot, slot_value in slots_to_confirm.items():
-            slot = state.chkey_to_key(ch_slot)
-            state.user_state_confirm[ch_slot] = []
+        for slot, slot_value in slots_to_confirm.items():
+            state.user_state_confirm[slot] = []
 
             if not slot in res0:
                 noclues += [slot]
@@ -238,8 +237,8 @@ class DRuleDMPolicy:
         return keys
 
     def get_slots_to_confirm(self, state):
-        keys = [key for key in state.user_state_confirm.keys()
-                if len(state.user_state_confirm[key]) != 0]
+        keys = {key: value for key, value in state.user_state_confirm.items()
+                if len(state.user_state_confirm[key]) != 0}
 
         return keys
 

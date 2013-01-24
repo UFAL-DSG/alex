@@ -63,6 +63,7 @@ def __dirinfo(part):
         sys.path.remove(head)
     except ValueError:
         pass
+    sys.path.insert(0, os.path.join(head, "../external_libs"))  # 3rd party libraries 
     sys.path.insert(0, head)
 
     munged = {}
