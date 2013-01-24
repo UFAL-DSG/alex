@@ -50,13 +50,18 @@ class JuliusASR(object):
                 self.open_adinnet()
                 return
             elif not self.reuse_server and self.is_server_running():
-                #self.kill_all_juliuses()
-                self.kill_my_julius()
-                system_logger.debug("I just commited murder, Julius is dead!")
+                if os.path.isfile(self.pidfile):
+                    self.kill_my_julius()
+                    system_logger.debug("I just commited murder, Julius is dead!")
+                else:
+                    self.kill_all_juliuses()
+                    system_logger.debug("I just killed ALL JULIŌS!")
 
             system_logger.debug("Starting the Julius ASR server...")
             self.start_server()
-            time.sleep(5)
+            if not self.wait_for_start():
+                raise JuliusASRTimeoutException(
+                    'Could not wait for Julius to start up.')
             system_logger.debug("Connecting to the Julius ASR server...")
             self.connect_to_server()
             time.sleep(3)
@@ -66,6 +71,9 @@ class JuliusASR(object):
         except Exception as e:
             system_logger.debug("There was a problem with starting the "
                                 "Julius ASR server: {msg!s}".format(msg=e))
+            # DEBUG
+            import sys
+            sys.excepthook(*sys.exc_info())
             # always kill the Julius ASR server when there is a problem
             if self.julius_server:
                 system_logger.debug("Killing the Julius ASR server!")
@@ -88,8 +96,26 @@ class JuliusASR(object):
             return False
         return True
 
+    def wait_for_start(self):
+        """Waits until the server starts up.
+
+        Returns whether the server is started at the time of returning.
+
+        """
+        time_waited = 0.
+        wait_incr = self.cfg['ASR']['Julius']['start_wait_time']
+        max_wait_time = self.cfg['ASR']['Julius']['start_max_wait_time']
+        while time_waited <= max_wait_time:
+            is_running = self.is_server_running()
+            if is_running:
+                break
+            time.sleep(wait_incr)
+            time_waited += wait_incr
+        return is_running
+
     def kill_my_julius(self):
-        subprocess.call('kill -9 $(cat %s)' % self.pidfile)
+        subprocess.call('kill -9 {pid}'
+                        .format(pid=open(self.pidfile, 'r').read()))
 
     def kill_all_juliuses(self):
         subprocess.call('killall julius', shell=True)
@@ -116,13 +142,14 @@ class JuliusASR(object):
         if self.reuse_server:
             os.system("julius -debug -C %s > %s &" % (jconf, log,))
         else:
-            self.julius_server = subprocess.Popen('julius -C %s > %s' % (jconf, log, ),
-                                              shell=True,
-                                              bufsize=1)
+            self.julius_server = subprocess.Popen(
+                    'julius -C %s > %s' % (jconf, log, ),
+                    shell=True, bufsize=1)
             self.save_pid(self.julius_server.pid)
 
     def connect_to_server(self):
-        """Connects to the Julius ASR server to start recognition and receive the recognition output."""
+        """Connects to the Julius ASR server to start recognition and receive
+        the recognition output."""
 
         self.s_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s_socket.connect((self.hostname, self.serverport))
@@ -142,7 +169,8 @@ class JuliusASR(object):
         self.a_socket.sendall(frame)
 
     def audio_finished(self):
-        """"Informs the Julius ASR about the end of segment and that the hypothesis should be finalized."""
+        """"Informs the Julius ASR about the end of segment and that the
+        hypothesis should be finalized."""
 
         self.a_socket.sendall(struct.pack("i", 0))
         self.recognition_on = False
@@ -368,7 +396,9 @@ class JuliusASR(object):
         return nblist, cn
 
     def flush(self):
-        """Sends command to the Julius ASR to terminate the recognition and get ready for new recognition.
+        """Sends command to the Julius ASR to terminate the recognition and get
+        ready for new recognition.
+
         """
         if self.recognition_on:
             self.audio_finished()
@@ -384,8 +414,8 @@ class JuliusASR(object):
     def rec_in(self, frame):
         """ This defines asynchronous interface for speech recognition.
 
-        Call this input function with audio data belonging into one speech segment that should be
-        recognized.
+        Call this input function with audio data belonging into one speech
+        segment that should be recognized.
 
         Output hypotheses is obtained by calling hyp_out().
         """
@@ -398,11 +428,13 @@ class JuliusASR(object):
     def hyp_out(self):
         """ This defines asynchronous interface for speech recognition.
 
-        Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
+        Returns recognizers hypotheses about the input speech audio and
+        a confusion network for the input.
         """
 
-        # read all messages accidentally left in the socket from the Julius ASR server before
-        # a new ASR hypothesis is decoded
+        # Read all messages accidentally left in the socket from the Julius ASR
+        # server before.
+        # A new ASR hypothesis is decoded.
         while True:
             m = self.read_server_message()
             if m is None:
