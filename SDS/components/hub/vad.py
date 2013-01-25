@@ -248,11 +248,21 @@ class VAD(multiprocessing.Process):
             if self.process_pending_commands():
                 return
 
-            # Wait until a session has started.
-            if self.session_logger.is_open:
-                # Process audio data.
-                try:
-                    self.read_write_audio()
-                except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'
-                                                 .format(ex=ex))
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
+            # Process audio data.
+            try:
+                self.read_write_audio()
+            except SessionClosedException as ex:
+                self.system_logger.exception('VAD:read_write_audio: {ex!s}'
+                                                .format(ex=ex))
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
+            # Process audio data.
+            try:
+                self.read_write_audio()
+            except SessionClosedException as ex:
+                self.system_logger.exception('VAD:read_write_audio: {ex!s}'\
+                                             .format(ex=ex))

@@ -9,11 +9,10 @@ import xml.dom.minidom
 import subprocess
 import os.path
 
-from os import remove
-from tempfile import mkstemp
-
-from SDS.components.asr.utterance import UtteranceNBList, Utterance, UtteranceConfusionNetwork
-from SDS.utils.exception import JuliusASRException, JuliusASRTimeoutException, ASRException
+from SDS.components.asr.utterance import UtteranceNBList, Utterance, \
+    UtteranceConfusionNetwork
+from SDS.utils.exception import JuliusASRException, \
+    JuliusASRTimeoutException, ASRException
 from SDS.utils.various import get_text_from_xml_node
 
 
@@ -52,16 +51,18 @@ class JuliusASR(object):
             elif not self.reuse_server and self.is_server_running():
                 if os.path.isfile(self.pidfile):
                     self.kill_my_julius()
-                    system_logger.debug("I just commited murder, Julius is dead!")
+                    system_logger.debug("I just commited murder, Julius is "
+                                        "dead!")
                 else:
                     self.kill_all_juliuses()
                     system_logger.debug("I just killed ALL JULIŌS!")
 
             system_logger.debug("Starting the Julius ASR server...")
             self.start_server()
-            if not self.wait_for_start():
-                raise JuliusASRTimeoutException(
-                    'Could not wait for Julius to start up.')
+            # if not self.wait_for_start():
+                # raise JuliusASRTimeoutException(
+                    # 'Could not wait for Julius to start up.')
+            time.sleep(5)
             system_logger.debug("Connecting to the Julius ASR server...")
             self.connect_to_server()
             time.sleep(3)
@@ -97,6 +98,8 @@ class JuliusASR(object):
         return True
 
     def wait_for_start(self):
+        # FIXME: This seems to cause errors:
+        # Error: module_send:: Broken pipe
         """Waits until the server starts up.
 
         Returns whether the server is started at the time of returning.
@@ -116,6 +119,7 @@ class JuliusASR(object):
     def kill_my_julius(self):
         subprocess.call('kill -9 {pid}'
                         .format(pid=open(self.pidfile, 'r').read()))
+        self.pidfile.close()
 
     def kill_all_juliuses(self):
         subprocess.call('killall julius', shell=True)
@@ -130,7 +134,8 @@ class JuliusASR(object):
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
-            config.write('%s %s\n' % (k, self.cfg['ASR']['Julius']['jconf'][k]))
+            config.write('%s %s\n' % (k,
+                                      self.cfg['ASR']['Julius']['jconf'][k]))
         config.close()
 
         # kill all running instances of the Julius ASR server
@@ -143,8 +148,8 @@ class JuliusASR(object):
             os.system("julius -debug -C %s > %s &" % (jconf, log,))
         else:
             self.julius_server = subprocess.Popen(
-                    'julius -C %s > %s' % (jconf, log, ),
-                    shell=True, bufsize=1)
+                'julius -C %s > %s' % (jconf, log, ),
+                shell=True, bufsize=1)
             self.save_pid(self.julius_server.pid)
 
     def connect_to_server(self):
@@ -191,7 +196,8 @@ class JuliusASR(object):
     def read_server_message(self, timeout=0.1):
         """Reads a complete message from the Julius ASR server.
 
-        A complete message is denoted by a period on a new line at the end of the string.
+        A complete message is denoted by a period on a new line at the end of
+        the string.
 
         Timeout specifies how long it will wait for the end of message.
         """
@@ -206,17 +212,18 @@ class JuliusASR(object):
             try:
                 results += self.s_socket.recv(1)
             except socket.error:
-                # FIXME: you should check the type of error. If the server dies then there will be a deadlock
+                # FIXME: You should check the type of error. If the server dies
+                # then there will be a deadlock.
 
                 if not results:
-                    # there are no data waiting for us
+                    # There are no data waiting for us.
                     return None
                 else:
-                    # we already read some data but we did not received the final period, so continue reading
+                    # We already read some data but we did not received the
+                    # final period, so continue reading.
                     time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
                     to += self.cfg['Hub']['main_loop_sleep_time']
                     continue
-
 
             if results.endswith("\n.\n"):
                 results = results[:-3].strip()
@@ -235,7 +242,8 @@ class JuliusASR(object):
         to = 0.0
         while True:
             if to >= timeout:
-                raise JuliusASRTimeoutException("Timeout when waiting for the Julius server results.")
+                raise JuliusASRTimeoutException(
+                    "Timeout when waiting for the Julius server results.")
 
             m = self.read_server_message()
             if not m:
@@ -443,8 +451,10 @@ class JuliusASR(object):
         if self.recognition_on:
             self.audio_finished()
 
-            nblist, cn = self.get_results(timeout=self.cfg['ASR']['Julius']['timeout'])
+            nblist, cn = self.get_results(
+                timeout=self.cfg['ASR']['Julius']['timeout'])
 
             return cn
 
-        raise JuliusASRException("No ASR hypothesis is available since the recognition has not started.")
+        raise JuliusASRException("No ASR hypothesis is available since the "
+                                 "recognition has not started.")
