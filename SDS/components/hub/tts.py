@@ -4,6 +4,7 @@
 import multiprocessing
 import time
 import sys
+import traceback
 
 import SDS.components.tts.google as GTTS
 import SDS.components.tts.flite as FTTS
@@ -111,9 +112,12 @@ class TTS(multiprocessing.Process):
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+            try:
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
 
-            # process audio data
-            self.read_text_write_audio()
+                # process audio data
+                self.read_text_write_audio()
+            except Exception:
+                traceback.print_exc()

@@ -66,6 +66,21 @@ class JuliusASR(object):
             system_logger.debug("Connecting to the Julius ASR server...")
             self.connect_to_server()
             time.sleep(3)
+
+            julius_success = False
+            for i in range(self.cfg['ASR']['Julius']['connect_attempts']):
+                system_logger.debug("Connecting to the Julius ASR server "
+                                    "(%d)..." % i)
+                try:
+                    self.connect_to_server()
+                    julius_success = True
+                    break
+                except Exception, _:
+                    time.sleep(0.5)
+
+            if not julius_success:
+                self.connect_to_server()
+
             system_logger.debug("Opening the adinnet connection with the "
                                 "Julius ASR...")
             self.open_adinnet()
