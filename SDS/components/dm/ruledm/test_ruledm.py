@@ -5,7 +5,7 @@ if __name__ == "__main__":
 from SDS.components.dm.ruledm.ruledm import RuleDM, DRuleDS
 from SDS.components.dm.ruledm.druledmpolicy import DRuleDMPolicy
 from SDS.components.slu.da import DialogueAct
-from SDS.components.dm.ruledm.pruledmpolicy import PRuleDMPolicy, PRuleDM
+#from SDS.components.dm.ruledm.pruledm import PRuleDMPolicy, PRuleDM
 from SDS.utils.caminfodb import CamInfoDb
 from SDS.utils import script_path, DummyLogger
 
