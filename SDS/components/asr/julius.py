@@ -132,9 +132,8 @@ class JuliusASR(object):
         return is_running
 
     def kill_my_julius(self):
-        subprocess.call('kill -9 {pid}'
-                        .format(pid=open(self.pidfile, 'r').read()))
-        self.pidfile.close()
+        with open(self.pidfile) as pidfile:
+            subprocess.call('kill -9 {pid}' .format(pid=pidfile.read()))
 
     def kill_all_juliuses(self):
         subprocess.call('killall julius', shell=True)
