@@ -43,8 +43,8 @@ class JuliusASR(object):
                 # reinit hack for julius
                 os.system("killall -USR1 julius")
             if self.reuse_server and self.is_server_running():
-                # if we should reuse server and it is running, it's perfect
-                # and do nothing
+                # If we should reuse server and it is running, it's perfect
+                # and we will do nothing.
                 system_logger.debug("Brilliant, Julius is already running.")
                 self.open_adinnet()
                 return
@@ -59,38 +59,21 @@ class JuliusASR(object):
 
             system_logger.debug("Starting the Julius ASR server...")
             self.start_server()
-            # if not self.wait_for_start():
-                # raise JuliusASRTimeoutException(
-                    # 'Could not wait for Julius to start up.')
-            time.sleep(5)
-            system_logger.debug("Connecting to the Julius ASR server...")
-            self.connect_to_server()
-            time.sleep(3)
+            if not self.wait():
+                raise JuliusASRTimeoutException(
+                    'Could not wait for Julius to start up.')
 
-            julius_success = False
-            for i in range(self.cfg['ASR']['Julius']['connect_attempts']):
-                system_logger.debug("Connecting to the Julius ASR server "
-                                    "(%d)..." % i)
-                try:
-                    self.connect_to_server()
-                    julius_success = True
-                    break
-                except Exception, _:
-                    time.sleep(0.5)
-
-            if not julius_success:
-                self.connect_to_server()
-
-            system_logger.debug("Opening the adinnet connection with the "
-                                "Julius ASR...")
-            self.open_adinnet()
+            system_logger.debug("Connected to Julius.")
+            if not self.wait(test=self.is_adinnet_open):
+                raise JuliusASRTimeoutException(
+                    'Could not wait for adinnet to open.')
         except Exception as e:
             system_logger.debug("There was a problem with starting the "
                                 "Julius ASR server: {msg!s}".format(msg=e))
             # DEBUG
             import sys
             sys.excepthook(*sys.exc_info())
-            # always kill the Julius ASR server when there is a problem
+            # Always kill the Julius ASR server when there is a problem.
             if self.julius_server:
                 system_logger.debug("Killing the Julius ASR server!")
                 self.julius_server.kill()
@@ -105,26 +88,38 @@ class JuliusASR(object):
             self.julius_server.kill()
 
     def is_server_running(self):
-        # try to connect to the server
+        # Try to connect to the server.
         try:
             self.connect_to_server()
         except socket.error:
             return False
         return True
 
-    def wait_for_start(self):
-        # FIXME: This seems to cause errors:
-        # Error: module_send:: Broken pipe
+    def is_adinnet_open(self):
+        try:
+            self.open_adinnet()
+        except socket.error:
+            return False
+        return True
+
+    def wait(self, test=None):
         """Waits until the server starts up.
 
-        Returns whether the server is started at the time of returning.
+        Returns whether the server is started at the time of returning. As
+        a side effect, the test method typically changes the state of the thing
+        it is testing (e.g., connects self to the Julius server).
 
+        Arguments:
+            - test: a method to use as a test whether the event waited for has
+                    already happened
         """
+        if test is None:
+            test = self.is_server_running
         time_waited = 0.
         wait_incr = self.cfg['ASR']['Julius']['start_wait_time']
         max_wait_time = self.cfg['ASR']['Julius']['start_max_wait_time']
         while time_waited <= max_wait_time:
-            is_running = self.is_server_running()
+            is_running = test()
             if is_running:
                 break
             time.sleep(wait_incr)
@@ -152,12 +147,12 @@ class JuliusASR(object):
                                       self.cfg['ASR']['Julius']['jconf'][k]))
         config.close()
 
-        # kill all running instances of the Julius ASR server
+        # Kill all running instances of the Julius ASR server.
         if self.cfg['ASR']['Julius']['killall']:
             self.kill_all_juliuses()
 
-        # start the server with the -debug options
-        # with this option it does not generates seg faults
+        # Start the server with the -debug options.
+        # With this option, it does not generate segfaults.
         if self.reuse_server:
             os.system("julius -debug -C %s > %s &" % (jconf, log,))
         else:
@@ -252,7 +247,7 @@ class JuliusASR(object):
         """
         msg = ""
 
-        # get results from the server
+        # Get results from the server.
         to = 0.0
         while True:
             if to >= timeout:
@@ -261,7 +256,7 @@ class JuliusASR(object):
 
             m = self.read_server_message()
             if not m:
-                # wait and check whether there is a message
+                # Wait and check whether there is a message.
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
                 to += self.cfg['Hub']['main_loop_sleep_time']
                 continue
@@ -276,7 +271,7 @@ class JuliusASR(object):
         if self.cfg['ASR']['Julius']['debug']:
             print msg
 
-        #process the results
+        # Process the results.
         """ Typical result returned by the Julius ASR.
 
           <STARTPROC/>
@@ -400,13 +395,13 @@ class JuliusASR(object):
                     text = get_text_from_xml_node(el)
                     word_list.append([prob, text])
 
-                # filter out empty hypotheses
+                # Filter out empty hypotheses.
                 if len(word_list) == 0:
                     continue
                 if len(word_list) == 1 and len(word_list[0][1]) == 0:
                     continue
 
-                # add the word into the confusion network
+                # Add the word into the confusion network.
                 cn.add(word_list)
 
         cn.merge()
@@ -426,7 +421,7 @@ class JuliusASR(object):
             self.audio_finished()
 
             nblist, cn = self.get_results()
-            # read any leftovers
+            # Read any leftovers.
             while True:
                 if self.read_server_message() is None:
                     break
