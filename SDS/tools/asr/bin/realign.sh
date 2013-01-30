@@ -6,6 +6,9 @@
 #    1 - Directory name of HMM model set to use.
 #    2 - HMM list to use
 
+# DEBUG
+set -e
+
 cd $WORK_DIR
 
 # HVite parameters:

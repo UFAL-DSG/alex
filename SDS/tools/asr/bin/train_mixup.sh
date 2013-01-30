@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mixup the number of Gaussians per state, from 1 up to 8.
+# Mix up the number of Gaussians per state, from 1 up to 8.
 # We do this in 4 steps, with 4 rounds of reestimation 
 # each time.  We mix to 8 to match paper "Large Vocabulary
 # Continuous Speech Recognition Using HTK"
@@ -13,9 +13,11 @@
 
 cd $WORK_DIR
 
-# Prepare new directories for all our model files
-rm -f -r hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42 hmm43 hmm44 hmm45 hmm46 hmm47 hmm48 hmm49 hmm50 hmm51 hmm52 hmm53 hmm54 hmm55 hmm56 hmm57 hmm58
-mkdir hmm18 hmm19 hmm20 hmm21 hmm22 hmm23 hmm24 hmm25 hmm26 hmm27 hmm28 hmm29 hmm30 hmm31 hmm32 hmm33 hmm34 hmm35 hmm36 hmm37 hmm38 hmm39 hmm40 hmm41 hmm42 hmm43 hmm44 hmm45 hmm46 hmm47 hmm48 hmm49 hmm50 hmm51 hmm52 hmm53 hmm54 hmm55 hmm56 hmm57 hmm58
+# Prepare new directories for all our model files.
+for num in `seq 18 63`; do
+	rm -rf hmm$num
+	mkdir hmm$num
+done
 
 # HERest parameters:
 #  -d    Where to look for the monophone defintions in
@@ -79,34 +81,38 @@ $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm41 hmm42 tiedlist wintri.mlf 0
 # Mixup 8->10, sil 16->20
 HHEd -B -H $WORK_DIR/hmm42/macros -H $WORK_DIR/hmm42/hmmdefs -M $WORK_DIR/hmm43 $TRAIN_COMMON/mix10.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix10.log
 
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm42 hmm43 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm43 hmm44 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm44 hmm45 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm45 hmm46 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm46 hmm47 tiedlist wintri.mlf 0
 
 #######################################################
 # Mixup 10->12, sil 20->24
-HHEd -B -H $WORK_DIR/hmm46/macros -H $WORK_DIR/hmm46/hmmdefs -M $WORK_DIR/hmm47 $TRAIN_COMMON/mix12.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix12.log
+HHEd -B -H $WORK_DIR/hmm47/macros -H $WORK_DIR/hmm47/hmmdefs -M $WORK_DIR/hmm48 $TRAIN_COMMON/mix12.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix12.log
 
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm46 hmm47 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm47 hmm48 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm48 hmm49 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm49 hmm50 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm50 hmm51 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm51 hmm52 tiedlist wintri.mlf 0
 
 #######################################################
 # Mixup 12->14, sil 24->28
-HHEd -B -H $WORK_DIR/hmm50/macros -H $WORK_DIR/hmm50/hmmdefs -M $WORK_DIR/hmm51 $TRAIN_COMMON/mix14.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix14.log
+HHEd -B -H $WORK_DIR/hmm52/macros -H $WORK_DIR/hmm52/hmmdefs -M $WORK_DIR/hmm53 $TRAIN_COMMON/mix14.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix14.log
 
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm50 hmm51 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm51 hmm52 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm52 hmm53 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm53 hmm54 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 14->16, sil 28->32
-HHEd -B -H $WORK_DIR/hmm54/macros -H $WORK_DIR/hmm54/hmmdefs -M $WORK_DIR/hmm55 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log
-
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm54 hmm55 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm55 hmm56 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm56 hmm57 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm57 hmm58 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 14->16, sil 28->32
+HHEd -B -H $WORK_DIR/hmm57/macros -H $WORK_DIR/hmm57/hmmdefs -M $WORK_DIR/hmm58 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log
+
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm58 hmm59 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm59 hmm60 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm60 hmm61 tiedlist wintri.mlf 0
+$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm61 hmm62 tiedlist wintri.mlf 0
+
+#######################################################
+# Mixup 16->18, sil 32->34
+HHEd -B -H $WORK_DIR/hmm62/macros -H $WORK_DIR/hmm62/hmmdefs -M $WORK_DIR/hmm63 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log

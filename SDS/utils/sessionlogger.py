@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import functools
 import multiprocessing
 import fcntl
 import time
 import os
 import os.path
-import sys
 import re
 import xml.dom.minidom
 import socket
@@ -17,12 +15,18 @@ from datetime import datetime
 from SDS.utils.mproc import global_lock
 from SDS.utils.exception import SDSException
 
+
 class SessionLoggerException(SDSException):
     pass
 
+
+class SessionClosedException(SDSException):
+    pass
+
+
 class SessionLogger:
-    """ This is a multiprocessing safe logger. It should be used by the SDS to log information
-    according the SDC 2010 XML format.
+    """ This is a multiprocessing safe logger. It should be used by the SDS to
+    log information according the SDC 2010 XML format.
 
     Date and times should also include time zone.
 
@@ -36,6 +40,7 @@ class SessionLogger:
         self.session_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.session_dir_name.value = ''
         self.session_start_time = multiprocessing.Value('d', time.time())
+        self._is_open = False   # whether the session is started
 
         # filename of the started recording
         self.rec_started_filename = None
@@ -66,11 +71,12 @@ class SessionLogger:
 
     @global_lock(lock)
     def session_start(self, output_dir):
-        """ Records the target directory and create the template call log.
+        """ Records the target directory and creates the template call log.
         """
         self.session_dir_name.value = output_dir
 
-        f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
+        f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                 "w", 0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
@@ -81,6 +87,7 @@ class SessionLogger:
         f.close()
 
         self.session_start_time.value = time.time()
+        self._is_open = True
 
     def _flush(self):
         if self.rec_started_filename is not None:
@@ -89,16 +96,30 @@ class SessionLogger:
 
     @global_lock(lock)
     def session_end(self):
-        """ Disable logging into the session specific directory
+        """ Disables logging into the session-specific directory.
         """
         self._flush()
         self.session_dir_name.value = ''
+        self._is_open = False
+
+    @global_lock(lock)
+    def _get_is_open(self):
+        return self._is_open
+
+    is_open = property(_get_is_open)
 
     @global_lock(lock)
     def get_session_dir_name(self):
-        """ Return the directory where all the session related files should be stored.
+        """Returns the directory where all the session-related files should be
+        stored.  If the session is not open, it raises
+        a SessionClosedException.
+
         """
-        return self.session_dir_name.value
+        if self._is_open:
+            return self.session_dir_name.value
+        else:
+            raise SessionClosedException("There is no directory for a session "
+                                         "that has been closed.")
 
     def cfg_formatter(self, message):
         """ Format the message - pretty print
@@ -110,9 +131,12 @@ class SessionLogger:
         return s + '\n'
 
     def open_session_xml(self):
-        """Opens the session xml file and locks it to prevent others to modify it."""
+        """Opens the session xml file and locks it to prevent others from
+        modifying it.
 
-        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
+        """
+        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                      "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
@@ -120,7 +144,10 @@ class SessionLogger:
         return doc
 
     def close_session_xml(self, doc):
-        """Saves the doc document into the session xml file, unlocks and closes the session xml file."""
+        """Saves the doc document into the session xml file, unlocks and closes
+        the session xml file.
+
+        """
 
         self.f.seek(0)
         self.f.truncate(0)
@@ -145,10 +172,11 @@ class SessionLogger:
 
         if els:
             if els[0].firstChild:
-                config = els[0].insertBefore(doc.createElement("config"), els[0].firstChild)
+                config = els[0].insertBefore(
+                    doc.createElement("config"), els[0].firstChild)
             else:
                 config = els[0].appendChild(doc.createElement("config"))
-            comment = config.appendChild(doc.createComment(self.cfg_formatter(cfg)))
+            config.appendChild(doc.createComment(self.cfg_formatter(cfg)))
 
         self.close_session_xml(doc)
 
@@ -188,9 +216,12 @@ class SessionLogger:
 
     @global_lock(lock)
     def dialogue_rec_start(self, speaker, fname):
-        """ Adds the optional recorded input/output element to the last "speaker" turn.
+        """ Adds the optional recorded input/output element to the last
+        "speaker" turn.
 
-        FIXME: It can happen that the session.xml is not created when this function is called.
+        FIXME: It can happen that the session.xml is not created when this
+        function is called.
+
         """
         doc = self.open_session_xml()
 
@@ -203,7 +234,8 @@ class SessionLogger:
             da.setAttribute("fname", fname)
             da.setAttribute("starttime", self.get_time_str())
         else:
-            raise SessionLoggerException("Missing dialogue element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing dialogue element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -214,12 +246,13 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("dialogue_rec")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("fname") == fname:
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException("Missing dialogue_rec element for %s fname" % fname)
+            raise SessionLoggerException("Missing dialogue_rec element for "
+                                         "%s fname" % fname)
 
         self.close_session_xml(doc)
 
@@ -246,6 +279,7 @@ class SessionLogger:
         """ Adds a new turn at the end of the dialogue element.
 
         The turn_number for the speaker is automatically computed
+
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("dialogue")
@@ -254,7 +288,7 @@ class SessionLogger:
         if els:
             turn = els[0].appendChild(doc.createElement("turn"))
             turn.setAttribute("speaker", speaker)
-            turn.setAttribute("turn_number", str(trns+1))
+            turn.setAttribute("turn_number", str(trns + 1))
             turn.setAttribute("time", self.get_time_str())
 
         self.close_session_xml(doc)
@@ -266,25 +300,26 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("dialogue_act"))
                 da.setAttribute("time", self.get_time_str())
                 da.appendChild(doc.createTextNode(str(dialogue_act)))
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
 #    @global_lock(lock)
-    def text(self, speaker, text, cost = None):
+    def text(self, speaker, text, cost=None):
         """ Adds the text (prompt) element to the last "speaker" turn.
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("text"))
                 da.setAttribute("time", self.get_time_str())
@@ -293,25 +328,29 @@ class SessionLogger:
                 da.appendChild(doc.createTextNode(str(text)))
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
     @global_lock(lock)
     def rec_start(self, speaker, fname):
-        """ Adds the optional recorded input/output element to the last "speaker" turn.
+        """Adds the optional recorded input/output element to the last
+        "speaker" turn.
+
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("rec"))
                 da.setAttribute("fname", fname)
                 da.setAttribute("starttime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.rec_started_filename = fname
         self.close_session_xml(doc)
@@ -323,19 +362,20 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("rec")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("fname") == fname:
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException("Missing rec element for %s fname" % fname)
+            raise SessionLoggerException(("Missing rec element for %s "
+                                          "fname") % fname)
 
         self.close_session_xml(doc)
 
         self.rec_started_filename = None
 
 #    @global_lock(lock)
-    def asr(self, speaker, nblist, confnet = None):
+    def asr(self, speaker, nblist, confnet=None):
         """ Adds the ASR nblist to the last speaker turn.
 
         SDS Extension: It can also store the confusion network representation.
@@ -343,7 +383,7 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 asr = els[i].appendChild(doc.createElement("asr"))
 
@@ -356,7 +396,8 @@ class SessionLogger:
                     cn = asr.appendChild(doc.createElement("confnet"))
 
                     for alts in confnet:
-                        was = cn.appendChild(doc.createElement("word_alternatives"))
+                        was = cn.appendChild(
+                            doc.createElement("word_alternatives"))
 
                         for p, w in alts:
                             wa = was.appendChild(doc.createElement("word"))
@@ -365,22 +406,23 @@ class SessionLogger:
 
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
 #    @global_lock(lock)
-    def slu(self, speaker, nblist, confnet = None):
+    def slu(self, speaker, nblist, confnet=None):
         """ Adds the slu nbest list to the last speaker turn.
 
-        SDS Extension: It can also store the confusion network representation. The confnet must be an instance of
-        DialogueActConfusionNetwork.
+        SDS Extension: It can also store the confusion network representation.
+        The confnet must be an instance of DialogueActConfusionNetwork.
 
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 asr = els[i].appendChild(doc.createElement("slu"))
 
@@ -393,29 +435,31 @@ class SessionLogger:
                     cn = asr.appendChild(doc.createElement("confnet"))
 
                     for p, dai in confnet:
-                        sas = cn.appendChild(doc.createElement("dai_alternatives"))
+                        sas = cn.appendChild(
+                            doc.createElement("dai_alternatives"))
 
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % p)
                         daia.appendChild(doc.createTextNode(str(dai)))
 
                         daia = sas.appendChild(doc.createElement("dai"))
-                        daia.setAttribute("p", "%.3f" % (1-p))
+                        daia.setAttribute("p", "%.3f" % (1 - p))
                         daia.appendChild(doc.createTextNode("null()"))
 
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
     @global_lock(lock)
-    def barge_in(self, speaker, tts_time = False, asr_time = False):
+    def barge_in(self, speaker, tts_time=False, asr_time=False):
         """Add the optional barge-in element to the last speaker turn."""
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("barge-in"))
                 if tts_time:
@@ -424,7 +468,8 @@ class SessionLogger:
                     da.setAttribute("asr_time", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -435,19 +480,20 @@ class SessionLogger:
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length-1, -1, -1):
+        for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                da = els[i].appendChild(doc.createElement("hangup"))
+                els[i].appendChild(doc.createElement("hangup"))
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(("Missing turn element for %s "
+                                          "speaker") % speaker)
 
         self.close_session_xml(doc)
 
-    ###########################################################################################
-    ## The following functions define functionality above what was set in SDC 2010 XML
-    ## logging format.
-    ###########################################################################################
+    ########################################################################
+    ## The following functions define functionality above what was set in ##
+    ## SDC 2010 XML logging format.                                       ##
+    ########################################################################
 
     @global_lock(lock)
     def dialogue_state(self, speaker, dstate):

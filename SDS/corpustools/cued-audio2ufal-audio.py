@@ -575,7 +575,7 @@ def convert(args):
         number of collisions (files at different paths with same basename)
         number of overwrites (files with the same basename as previously
                              present in `args.outdir')
-        number of ingored files (file basenames referred in transcription logs
+        number of ignored files (file basenames referred in transcription logs
                                 but missing in the file system, presumably
                                 because specified by one of the ignoring
                                 mechanisms)

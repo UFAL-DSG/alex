@@ -3,11 +3,14 @@
 #
 # Parameters:
 #  1 - Directory name of model to be exported
+#  2 - "text" if models should be converted to text format before running mkbinhmm
+#  	   (This may be needed if mkbinhmm would crash otherwise.)
 
-cd $WORK_DIR
+# DEBUG
+set -e 
 
-rm -f -r export_models
-mkdir export_models
+rm -f -r $WORK_DIR/export_models
+mkdir $WORK_DIR/export_models
 
 # copy the original models
 cp $WORK_DIR/$1/hmmdefs $WORK_DIR/export_models
@@ -17,6 +20,18 @@ cp $WORK_DIR/trees $WORK_DIR/export_models
 cp $TRAIN_COMMON/config $WORK_DIR/export_models
 cp $WORK_DIR/config/monophones1 $WORK_DIR/export_models
 
-# create Julius ASR binary AM models
+# Convert binary models to text models to prevent crashing of mkbinhmm.
+# Recipe taken from 
+# http://nshmyrev.blogspot.cz/2009/09/using-htk-models-in-sphinx4.html.
+if [ "$2" = "text" ]; then
+	mkdir $TEMP_DIR/out
+	touch $TEMP_DIR/empty
+	HHEd -H $WORK_DIR/$1/hmmdefs -H $WORK_DIR/$1/macros -M $TEMP_DIR/out $TEMP_DIR/empty $WORK_DIR/export_models/tiedlist
+	mv $TEMP_DIR/out/* $WORK_DIR/export_models/
+	rmdir $TEMP_DIR/out
+	rm $TEMP_DIR/empty
+fi
+
+# Create Julius ASR binary AM models.
 mkbinhmm -htkconf $WORK_DIR/export_models/config $WORK_DIR/export_models/hmmdefs $WORK_DIR/export_models/julius_hmmdefs
 mkbinhmmlist $WORK_DIR/export_models/hmmdefs $WORK_DIR/export_models/tiedlist $WORK_DIR/export_models/julius_tiedlist

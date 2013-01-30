@@ -14,7 +14,7 @@ config = None
 
 
 class Config(object):
-    """\
+    """
     Config handles configuration data necessary for all the components
     in the SDS. It implements a dictionary so that any component could
     store arbitrary structured data.
@@ -25,7 +25,6 @@ class Config(object):
             an absolute path of the configuration files.  This can be used to
             make the configuration file independent of the location of programs
             using the configuration file.
-
     """
 
     def __init__(self, file_name=None, project_root=False, config={}):
@@ -68,15 +67,12 @@ class Config(object):
         pprint.pprint(self.config, sio, indent=2, width=120)
         cfg = sio.getvalue()
 
-        cfg = re.sub(r".*password.*", "# this line was removed since it" +
-                     "included a password", cfg)
+        cfg = re.sub(r".*password.*", "# this line was removed since it included a password", cfg)
 
         return cfg
 
     def load(self, file_name):
-        """\
-        FIXME: Executing external files is not ideal!
-        It should be changed in the future!
+        """FIXME: Executing external files is not ideal! It should be changed in the future!
         """
         # pylint: disable-msg=E0602
 
@@ -97,7 +93,6 @@ class Config(object):
         Keyword arguments:
             - other: a Config object whose configuration dictionary to merge
                      into self's one
-
         """
         # pylint: disable-msg=E0602
         if type(other) is str:

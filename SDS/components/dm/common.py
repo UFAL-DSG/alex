@@ -6,7 +6,8 @@
 from SDS.utils.exception import SemHubException
 
 from .dummydialoguemanager import DummyDM
-from .ufalruledm import UfalRuleDM
+from ruledm.ufalruledm import UfalRuleDM
+from ruledm.ufalruledm import PUfalRuleDM
 
 
 def dm_factory(dm_type, cfg):
@@ -17,6 +18,8 @@ def dm_factory(dm_type, cfg):
         dm = DummyDM(cfg)
     elif dm_type == 'UfalRuleDM':
         dm = UfalRuleDM(cfg)
+    elif dm_type == 'PUfalRuleDM':
+        dm = PUfalRuleDM(cfg)
     else:
         raise SemHubException(
             'Unsupported dialogue manager: %s' % dm_type)
