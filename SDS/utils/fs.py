@@ -85,6 +85,7 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     ret.update(_find_ignorefunc(dir_, glob_, mindepth, maxdepth,
                                 ignore_globs, ignore_path_filter,
                                 follow_symlinks, prune, set())[0])
+
     return ret
 
 
@@ -105,7 +106,10 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
     """
     #{{{
     # List files/dirs in this directory, and remove symlinks if asked to.
-    children = os.listdir(dir_)
+    if os.path.isdir(dir_):
+        children = os.listdir(dir_)
+    else:
+        children = [dir_]
     if follow_symlinks is False:
         children = filter(lambda path: not os.path.islink(path),
                           children)
