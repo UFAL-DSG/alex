@@ -6,6 +6,7 @@ import urllib2
 
 import SDS.utils.cache as cache
 import SDS.utils.audio as audio
+from SDS.utils.exception import TTSException
 
 
 class VoiceRssTTS():
@@ -39,9 +40,11 @@ class VoiceRssTTS():
         request = urllib2.Request(baseurl, data)
         request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) " +
                            "Gecko/20071127 Firefox/2.0.0.11")
-        wavresponse = urllib2.urlopen(request)
-
-        return wavresponse.read()
+        try:
+            wavresponse = urllib2.urlopen(request)
+            return audio.convert_wav(self.cfg, wavresponse.read())
+        except Exception, e:
+            raise TTSException("TTS error: " + str(e))
 
     def synthesize(self, text):
         """\
@@ -50,6 +53,4 @@ class VoiceRssTTS():
         """
 
         wav = self.get_tts_wav(self.cfg['TTS']['VoiceRSS']['language'], text)
-        wav = audio.convert_wav(self.cfg, wav)
-
         return wav
