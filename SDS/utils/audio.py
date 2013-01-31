@@ -84,16 +84,14 @@ def convert_wav(cfg, wav):
     sox_in = pysox.CSoxStream(tmp1path)
     sox_out = pysox.CSoxStream(tmp2path, 'w',
                                pysox.CSignalInfo(sample_rate, 1, 16),
-                               sox_in.get_encoding(), 'wav')
+                               fileType='wav')
     sox_chain = pysox.CEffectsChain(sox_in, sox_out)
     sox_chain.add_effect(pysox.CEffect("rate", [str(sample_rate)]))
     sox_chain.flow_effects()
     sox_out.close()
 
     # read the transformation results back to the buffer
-    tmp2fh = fdopen(tmp2fh, 'rb')
-    wav = tmp2fh.read()
-    return wav
+    return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
 
 def save_wav(cfg, file_name, wav):
