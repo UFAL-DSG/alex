@@ -395,7 +395,7 @@ def normalise_trs(text):
 #{{{
     text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
-    text = _more_spaces.sub(' ', text.strip())
+    text = _more_spaces.sub(' ', text)
     # Do dictionary substitutions.
     for pat, sub in _subst:
         text = pat.sub(sub, text)
@@ -446,6 +446,7 @@ def save_transcription(trs_fname, trs):
     """
     Echoes `trs' into `trs_fname'. Returns True iff the
     output file already existed.
+
     """
 #{{{
     existed = os.path.exists(trs_fname)
@@ -591,6 +592,7 @@ def convert(args):
     # Read in the dictionary.
     if dict_file:
         known_words = set(line.split()[0] for line in dict_file)
+        dict_file.close()
     else:
         known_words = None
     # Read in the ignore list.
@@ -713,8 +715,9 @@ if __name__ == '__main__':
     # parser.add_argument('infname', action="store",
                         # help='an input directory with CUED call log files')
     parser.add_argument('infname', action="store",
-                        help='an input directory with CUED audio files and '
-                             'call logs')
+                        help="an input directory with CUED audio files and "
+                             "call logs or a file listing these files' "
+                             "immediate parent dirs")
     parser.add_argument('outdir', action="store",
                         help='an output directory for files with audio and '
                              'their transcription')
