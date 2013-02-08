@@ -26,6 +26,8 @@ import SDS.utils.text as string
 from SDS.components.hub.messages import Command, Frame
 from SDS.utils.exception import VoipIOException
 
+from SDS.utils.procname import set_proc_name
+
 # Logging callback
 logger = None
 
@@ -610,6 +612,7 @@ class VoipIO(multiprocessing.Process):
         self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
     def run(self):
+        set_proc_name("SDS_VIO")
         try:
             global logger
             logger = self.cfg['Logging']['system_logger']

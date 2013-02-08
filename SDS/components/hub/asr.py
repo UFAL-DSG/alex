@@ -12,6 +12,8 @@ from SDS.components.asr.utterance import UtteranceConfusionNetwork
 from SDS.components.hub.messages import Command, Frame, ASRHyp
 from SDS.utils.exception import ASRException, JuliusASRTimeoutException
 
+from SDS.utils.procname import set_proc_name
+
 
 class ASR(multiprocessing.Process):
     """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
@@ -145,6 +147,7 @@ class ASR(multiprocessing.Process):
 
     def run(self):
         self.recognition_on = False
+        set_proc_name("SDS_ASR")
 
         while 1:
             try:

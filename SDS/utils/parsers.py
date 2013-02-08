@@ -1,5 +1,6 @@
 import re
 import sys
+from collections import defaultdict
 
 class CamTxtParser(object):
     """Parser of files of the following format:
@@ -39,7 +40,7 @@ class CamTxtParser(object):
         assert type(f_obj) is file
 
         objs = []
-        n_obj = {}
+        n_obj = defaultdict(lambda: [])
         blank = True
 
         for ln in f_obj:
@@ -48,7 +49,7 @@ class CamTxtParser(object):
             ln = ln.strip()
             if len(ln) == 0 and not blank:
                 objs += [n_obj]
-                n_obj = {}
+                n_obj = defaultdict(lambda: [])
                 blank = True
 
             m_obj = self.line_expr.match(ln)
@@ -58,7 +59,7 @@ class CamTxtParser(object):
                 try:
                     key, value = m_obj.groups()
                     value = value.strip('"').strip("'")
-                    n_obj[key] = value
+                    n_obj[key] += [value]
                 except ValueError:
                     print >>sys.stderr, 'ignoring', m_obj.groups()
 

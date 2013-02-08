@@ -18,6 +18,8 @@ import SDS.components.vad.gmm as GVAD
 
 from SDS.components.hub.messages import Command, Frame
 
+from SDS.utils.procname import set_proc_name
+
 
 class VAD(multiprocessing.Process):
     """ VAD detects segments of speech in the audio stream.
@@ -42,6 +44,8 @@ class VAD(multiprocessing.Process):
 
     def __init__(self, cfg, commands, audio_recorded_in, audio_out):
         multiprocessing.Process.__init__(self)
+
+        set_proc_name("SDS_VAD")
 
         self.cfg = cfg
         self.system_logger = cfg['Logging']['system_logger']

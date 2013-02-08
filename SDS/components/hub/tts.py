@@ -14,6 +14,8 @@ import SDS.utils.various as various
 from SDS.components.hub.messages import Command, Frame, TTSText
 from SDS.utils.exception import TTSException
 
+from SDS.utils.procname import set_proc_name
+
 
 class TTS(multiprocessing.Process):
     """ TTS synthesizes input text and returns speech audio signal.
@@ -108,6 +110,7 @@ class TTS(multiprocessing.Process):
 
     def run(self):
         self.command = None
+        set_proc_name("SDS_TTS")
 
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])

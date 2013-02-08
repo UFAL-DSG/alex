@@ -7,14 +7,14 @@ class CamInfoDb(object):
 
     def matches(self, rec, query):
         for key, value in query.items():
-            if not rec.get(key) == value:
+            if not key in rec or not value in rec.get(key):
                 return False
 
         return True
 
-    def get_by_id(self, id):
+    def get_by_id(self, rec_id):
         for rec in self.data:
-            if rec.get('id') == id:
+            if rec_id in rec.get('id'):
                 return rec
 
         return None
@@ -30,7 +30,8 @@ class CamInfoDb(object):
     def get_possible_values(self):
         res = []
         for item in self.data:
-            res += item.values()
+            for val_item in item.values():
+                res += val_item
         return set(res)
 
     def get_slots(self):

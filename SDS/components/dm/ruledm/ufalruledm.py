@@ -33,9 +33,6 @@ class PUfalRuleDM(PRuleDM):
         super(PUfalRuleDM, self).__init__(cfg, db)
 
 
-
-
-
 def main():
     import autopath
     cfg = Config('resources/default-lz.cfg', True)
