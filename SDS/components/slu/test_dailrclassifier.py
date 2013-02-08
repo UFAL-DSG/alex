@@ -13,15 +13,16 @@ from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBLis
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 import SDS.components.slu.dailrclassifier as DAILRSLU
 from SDS.utils.config import Config
+from SDS.utils.config import as_project_path
 
 
 CONFIG_DICT = {
   'SLU': {
     'debug': True,
-    'cldb': "{cfg_abs_path}/../applications/CamInfoRest/data/database.py",
+    'cldb': as_project_path("applications/CamInfoRest/data/database.py"),
     'type': 'DAILogRegClassifier',
     'DAILogRegClassifier': {
-        'model': '{cfg_abs_path}/../applications/CamInfoRest/slu-lr-trn.model',
+        'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
     },
   }
 }
