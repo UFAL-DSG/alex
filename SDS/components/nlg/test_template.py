@@ -19,8 +19,9 @@ CONFIG_DICT = {
             'model': '{cfg_abs_path}/../applications/CamInfoRest/nlgtemplates.cfg'
         },
     }
+}
 
-class TestTemolateNLG(unittest.TestCase):
+class TestTemplateNLG(unittest.TestCase):
     def test_template_nlg(self):
 
         cfg = Config(config=CONFIG_DICT)
