@@ -5,12 +5,13 @@ import struct
 import StringIO
 import mad
 import pyaudio
+import pysox
 import audioop
 import wave
 import subprocess
 import time
 
-from os import remove
+from os import remove, fdopen
 from tempfile import mkstemp
 
 import SDS.utils.various as various
@@ -63,6 +64,34 @@ def load_wav(cfg, file_name):
             wav, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
 
     return wav
+
+
+def convert_wav(cfg, wav):
+    """\
+    Convert the given WAV byte buffer into the desired sample rate
+    using SoX. Assumes mono + 16-bit sample size.
+    """
+    sample_rate = cfg['Audio']['sample_rate']
+
+    # write the buffer to a temporary file
+    tmp1fh, tmp1path = mkstemp()
+    tmp1fh = fdopen(tmp1fh, 'wb')
+    tmp1fh.write(wav)
+    tmp1fh.close()
+
+    # transform the temporary file using SoX (can't do this in memory :-()
+    tmp2fh, tmp2path = mkstemp()
+    sox_in = pysox.CSoxStream(tmp1path)
+    sox_out = pysox.CSoxStream(tmp2path, 'w',
+                               pysox.CSignalInfo(sample_rate, 1, 16),
+                               fileType='wav')
+    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect("rate", [str(sample_rate)]))
+    sox_chain.flow_effects()
+    sox_out.close()
+
+    # read the transformation results back to the buffer
+    return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
 
 def save_wav(cfg, file_name, wav):

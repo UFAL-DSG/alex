@@ -31,6 +31,7 @@ from SDS.utils.fs import find
 
 epoch_start = datetime(year=1970, month=1, day=1)
 infty = float('Inf')
+max_believable_call_len = 5000  # to check for errors in call logs
 
 
 def mean(collection):
@@ -78,8 +79,16 @@ def sd(collection):
     return sqrt(var(collection))
 
 
-def td__total_seconds(td):
+def get_timestamp(date):
     """Total seconds in the timedelta."""
+    td = date - epoch_start
+    total = ((td.days * 86400 + td.seconds) * 10 ** 6 +
+             td.microseconds) / 10 ** 6
+    # Check that datetime.fromtimestamp gets us to the same date as the one
+    # given on input.
+    rec_date = datetime.fromtimestamp(total)
+    td_over = rec_date - date
+    td -= td_over
     return ((td.days * 86400 + td.seconds) * 10 ** 6 +
             td.microseconds) / 10 ** 6
 
@@ -89,24 +98,9 @@ def set_and_ret(indexable, idx, val):
     return indexable
 
 
-if __name__ == '__main__':
-    # Parse arguments.
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-        Creates statistics of who called when, based on call log files.
 
-      """)
-
-    parser.add_argument('indir', action="store",
-                        help='a root directory to search for call logs')
-    parser.add_argument('outfile', action="store",
-                        help='path towards the output file containing the '
-                             'statistics')
-
-    args = parser.parse_args()
-
-    voip_names = find(args.indir, 'voip-*', mindepth=0, prune=True)
+def get_call_data_from_fs(rootdir):
+    voip_names = find(rootdir, 'voip-*', mindepth=0, prune=True)
     # Here we assume the following format for call-log directory basenames:
     #   voip-<phone>-<YYMMDD_HHMMSS>
     voip_parts = [set_and_ret(basename(name).split('-'), 0, name)
@@ -136,7 +130,7 @@ if __name__ == '__main__':
                         hour=int(date_str[7:9]),
                         minute=int(date_str[9:11]),
                         second=int(date_str[11:13]))
-        timestamp = td__total_seconds(date - epoch_start)
+        timestamp = get_timestamp(date)
         # Compute the total size of the wavs.
         wavs = iglob(os.path.join(
                      voip_path,
@@ -147,6 +141,57 @@ if __name__ == '__main__':
         # Save the timestamp and the size.
         call_timestamps.setdefault(phone, []).append(timestamp)
         call_size[phone] = call_size.get(phone, 0) + total
+    return call_size, call_timestamps
+
+
+def get_call_data_from_log(log_fname):
+    call_timestamps = dict()  # (phone_no -> timestamps_of_calls)
+    call_size = dict()  # (phone_no -> total_size_of_call_logs), here in secs
+    with open(log_fname) as logfile:
+        for line in logfile:
+            fields = [fld.strip() for fld in line.split('\t')]
+            # Parse the date string into a timestamp.
+            date_str = fields[0]
+            date = datetime.strptime(date_str[4:], '%Y_%m_%d_%H_%M_%S')
+            timestamp = get_timestamp(date)
+            # Read the phone numbers and length of records.
+            phone_a, phone_b = fields[1].split('->', 2)
+            call_len = fields[2]
+            time_a, time_b = map(lambda time_str: int(time_str),
+                                 call_len[call_len.index('(') + 1 : -1]
+                                    .split('|'))
+            # Save the record.
+            if time_a <= max_believable_call_len:
+                call_timestamps.setdefault(phone_a, []).append(timestamp)
+                call_size[phone_a] = call_size.get(phone_a, 0) + time_a
+            if time_b <= max_believable_call_len:
+                call_timestamps.setdefault(phone_b, []).append(timestamp)
+                call_size[phone_b] = call_size.get(phone_b, 0) + time_b
+    return call_size, call_timestamps
+
+
+if __name__ == '__main__':
+    # Parse arguments.
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""
+        Creates statistics of who called when, based on call log files.
+
+      """)
+
+    parser.add_argument('infile', action="store",
+                        help='a root directory to search for call logs, or '
+                             'a call log file')
+    parser.add_argument('outfile', action="store",
+                        help='path towards the output file containing the '
+                             'statistics')
+
+    args = parser.parse_args()
+
+    if os.path.isdir(args.infile):
+        call_size, call_timestamps = get_call_data_from_fs(args.infile)
+    else:
+        call_size, call_timestamps = get_call_data_from_log(args.infile)
     # Build the mapping (phone_no -> last_expected_call_timestamp)
     # by taking the "last expected" to be the mean plus 3 * sd.
     last_exp_timestamps = dict()

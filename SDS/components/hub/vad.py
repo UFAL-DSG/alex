@@ -162,11 +162,11 @@ class VAD(multiprocessing.Process):
                 if change:
                     if change == 'speech':
                         # Create new wave file.
+                        timestamp = datetime.now().strftime(
+                            '%Y-%m-%d-%H-%M-%S.%f')
                         self.output_file_name = os.path.join(
                             self.system_logger.get_session_dir_name(),
-                            'vad-{dt}.wav'.format(
-                                dt=datetime.now().strftime(
-                                    '%Y-%m-%d-%H-%M-%S.%f')))
+                            'vad-{stamp}.wav'.format(stamp=timestamp))
 
                         self.session_logger.turn("user")
                         self.session_logger.rec_start(
@@ -237,6 +237,9 @@ class VAD(multiprocessing.Process):
                             # time (or try to achieve that).
                             self.last_vad = False
                             # Raise the exception.
+                            # FIXME: It should be a different one. It is not
+                            # the session file that is closed, but the wave
+                            # file.
                             raise SessionClosedException("The output wave "
                                 "file has already been closed.")
                         self.wf.writeframes(bytearray(data_rec))
@@ -249,6 +252,18 @@ class VAD(multiprocessing.Process):
             if self.process_pending_commands():
                 return
 
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
+            # Process audio data.
+            try:
+                self.read_write_audio()
+            except SessionClosedException as ex:
+                self.system_logger.exception('VAD:read_write_audio: {ex!s}'
+                                                .format(ex=ex))
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
             # Process audio data.
             try:
                 self.read_write_audio()

@@ -9,6 +9,7 @@ import traceback
 import SDS.components.tts.google as GTTS
 import SDS.components.tts.flite as FTTS
 import SDS.components.tts.speechtech as STTS
+import SDS.components.tts.voicerss as VTTS
 import SDS.utils.various as various
 
 from SDS.components.hub.messages import Command, Frame, TTSText
@@ -39,6 +40,8 @@ class TTS(multiprocessing.Process):
             self.tts = FTTS.FliteTTS(cfg)
         elif self.cfg['TTS']['type'] == 'SpeechTech':
             self.tts = STTS.SpeechtechTTS(cfg)
+        elif self.cfg['TTS']['type'] == 'VoiceRSS':
+            self.tts = VTTS.VoiceRssTTS(cfg)
         else:
             raise TTSException(
                 'Unsupported TTS engine: %s' % (self.cfg['TTS']['type'], ))
