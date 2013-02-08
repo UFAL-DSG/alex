@@ -9,14 +9,14 @@ import __init__
 
 from SDS.components.slu.da import DialogueAct
 from SDS.components.nlg.template import TemplateNLG
-from SDS.utils.config import Config
+from SDS.utils.config import Config, as_project_path
 
 CONFIG_DICT = {
     'NLG': {
         'debug': True,
         'type': 'Template',
         'Template' : {
-            'model': '{cfg_abs_path}/../applications/CamInfoRest/nlgtemplates.cfg'
+            'model': as_project_path('applications/CamInfoRest/nlgtemplates.cfg')
         },
     }
 }
