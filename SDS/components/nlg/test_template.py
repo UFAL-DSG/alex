@@ -11,9 +11,19 @@ from SDS.components.slu.da import DialogueAct
 from SDS.components.nlg.template import TemplateNLG
 from SDS.utils.config import Config
 
+CONFIG_DICT = {
+    'NLG': {
+        'debug': True,
+        'type': 'Template',
+        'Template' : {
+            'model': '{cfg_abs_path}/../applications/CamInfoRest/nlgtemplates.cfg'
+        },
+    }
+
 class TestTemolateNLG(unittest.TestCase):
     def test_template_nlg(self):
-        cfg = Config('resources/default.cfg', project_root=True)
+
+        cfg = Config(project_root=True, config=CONFIG_DICT)
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(task="find")&inform(pricerange="cheap")')
@@ -36,7 +46,7 @@ class TestTemolateNLG(unittest.TestCase):
         self.assertEqual(str(correct_text), str(generated_text))
 
     def test_template_nlg_r(self):
-        cfg = Config('resources/default.cfg', project_root=True)
+        cfg = Config(project_root=True, config=CONFIG_DICT)
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(pricerange="cheap")&inform(task="find")')

@@ -99,7 +99,6 @@ class Config(object):
         self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
-        print cfg_abs_dirname, self.config
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
 
         self.load_includes()
@@ -151,8 +150,6 @@ class Config(object):
         (recursively) or in a part of the config given in d.
 
         """
-
-        print 'replacing', p, s
         if d is None:
             d = self.config
         for k, v in d.iteritems():

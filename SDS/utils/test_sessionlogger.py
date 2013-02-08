@@ -8,13 +8,24 @@ if __name__ == "__main__":
     import autopath
 
 from SDS.components.asr.utterance import UtteranceConfusionNetwork
-from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
+from SDS.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 from SDS.utils.config import Config
-from SDS.utils.sessionlogger import SessionLogger, SessionLoggerException
+from SDS.utils.sessionlogger import SessionLogger
+from SDS.utils.mproc import SystemLogger
+
+
+CONFIG_DICT = {
+    'Logging': {
+    'system_name':    "Default SDS",
+    'version':        "1.0",
+    'system_logger':  SystemLogger(stdout = True, output_dir = './call_logs'),
+    'session_logger': SessionLogger()
+  }
+}
 
 class TestSessionLogger(unittest.TestCase):
     def test_session_logger(self):
-        cfg = Config('resources/default.cfg', project_root=True)
+        cfg = Config(project_root=True, config=CONFIG_DICT)
 
         sl = SessionLogger()
 

@@ -14,6 +14,19 @@ from SDS.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBLis
 import SDS.components.slu.dailrclassifier as DAILRSLU
 from SDS.utils.config import Config
 
+
+CONFIG_DICT = {
+  'SLU': {
+    'debug': True,
+    'cldb': "{cfg_abs_path}/../applications/CamInfoRest/data/database.py",
+    'type': 'DAILogRegClassifier',
+    'DAILogRegClassifier': {
+        'model': '{cfg_abs_path}/../applications/CamInfoRest/slu-lr-trn.model',
+    },
+  }
+}
+
+
 class TestDAILRClassifier(unittest.TestCase):
     def test_confnet_parsing(self):
 
@@ -31,7 +44,7 @@ class TestDAILRClassifier(unittest.TestCase):
 
         slu_best_da = DialogueAct("inform(food=chinese)&inform(=restaurant)")
 
-        cfg = Config('resources/default.cfg', project_root=True)
+        cfg = Config(project_root=True, config=CONFIG_DICT)
         cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
         preprocessing = SLUPreprocessing(cldb)
         slu = DAILRSLU.DAILogRegClassifier(preprocessing)
