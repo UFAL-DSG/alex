@@ -44,7 +44,7 @@ class TestDAILRClassifier(unittest.TestCase):
 
         slu_best_da = DialogueAct("inform(food=chinese)&inform(=restaurant)")
 
-        cfg = Config(project_root=True, config=CONFIG_DICT)
+        cfg = Config(config=CONFIG_DICT)
         cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
         preprocessing = SLUPreprocessing(cldb)
         slu = DAILRSLU.DAILogRegClassifier(preprocessing)
