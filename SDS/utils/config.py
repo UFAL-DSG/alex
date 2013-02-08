@@ -13,6 +13,10 @@ import SDS.utils.env as env
 config = None
 
 
+def as_project_path(path):
+    return os.path.join(env.root(), path)
+
+
 class Config(object):
     """
     Config handles configuration data necessary for all the components
@@ -71,6 +75,17 @@ class Config(object):
 
         return cfg
 
+    def contains(self, *path):
+        """Check if configuration contains given keys (= path in config tree)."""
+        curr = self.config
+        for path_part in path:
+            if path_part in curr:
+                curr = curr[path_part]
+            else:
+                return False
+
+        return True
+
     def load(self, file_name):
         """FIXME: Executing external files is not ideal! It should be changed in the future!
         """
@@ -84,7 +99,19 @@ class Config(object):
         self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
+        print cfg_abs_dirname, self.config
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
+
+        self.load_includes()
+
+
+
+    def load_includes(self):
+        if not self.contains("General", "include"):
+            return
+        for include in self["General"]["include"]:
+            self.merge(include)
+
 
     def merge(self, other):
         """Merges self's config with other's config and saves it as a new
@@ -124,6 +151,8 @@ class Config(object):
         (recursively) or in a part of the config given in d.
 
         """
+
+        print 'replacing', p, s
         if d is None:
             d = self.config
         for k, v in d.iteritems():

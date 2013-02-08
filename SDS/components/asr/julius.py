@@ -128,10 +128,13 @@ class JuliusASR(object):
 
     def kill_my_julius(self):
         with open(self.pidfile) as pidfile:
-            subprocess.call('kill -9 {pid}' .format(pid=pidfile.read()))
+            pid = pidfile.read()
+
+
+        os.system('kill -9 {pid}' .format(pid=pid))
 
     def kill_all_juliuses(self):
-        subprocess.call('killall julius', shell=True)
+        os.system('killall julius', shell=True)
 
     def save_pid(self, pid):
         with open(self.pidfile, "w") as f_out:
