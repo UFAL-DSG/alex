@@ -99,7 +99,7 @@ class Utterance(object):
             yield word
 
     def isempty(self):
-        return len(self.utterance) != 0
+        return len(self.utterance) == 0
 
     def index(self, phrase):
         """Returns the word index of the start of first occurence of `phrase'
