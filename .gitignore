@@ -7,7 +7,7 @@
 *.o
 *.dll
 *~
-.*.swp
+.*.sw[op]
 build/
 nbproject
 /data/
