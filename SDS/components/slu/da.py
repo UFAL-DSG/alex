@@ -10,29 +10,39 @@ from SDS.utils.exception import SLUException, DialogueActException, \
     DialogueActConfusionNetworkException
 
 
-def load_das(file_name, limit=None):
-    f = open(file_name)
+def load_das(das_fname, limit=None):
+    """Loads a dictionary of DAs from a given file. The file is assumed to
+    contain lines of the following form:
 
-    semantics = defaultdict(list)
-    c = 0
-    for l in f:
-        c += 1
-        if limit and c > limit:
-            break
+    [whitespace..]<key>[whitespace..]=>[whitespace..]<DA>[whitespace..]
 
-        l = l.strip()
-        if not l:
-            continue
+    Arguments:
+        das_fname -- path towards the file to read the DAs from
+        limit -- limit on the number of DAs to read
 
-        l = l.split("=>")
+    Returns a dictionary with DAs (instances of DialogueAct) as values.
 
-        key = l[0].strip()
-        sem = l[1].strip()
+    """
+    with open(das_fname) as das_file:
+        das = defaultdict(list)
+        count = 0
+        for line in das_file:
+            count += 1
+            if limit and count > limit:
+                break
 
-        semantics[key] = DialogueAct(sem)
-    f.close()
+            line = line.strip()
+            if not line:
+                continue
 
-    return semantics
+            parts = line.split("=>")
+
+            key = parts[0].strip()
+            sem = parts[1].strip()
+
+            das[key] = DialogueAct(sem)
+
+    return das
 
 
 def save_das(file_name, das):
@@ -46,7 +56,7 @@ def save_das(file_name, das):
     f.close()
 
 
-class DialogueActItem:
+class DialogueActItem(object):
     """Represents dialogue act item which is a component of a dialogue act.
     Each dialogue act item is composed of
 
@@ -106,37 +116,38 @@ class DialogueActItem:
         dai = dai.strip()
 
         try:
-            i = dai.index('(')
+            first_par_idx = dai.index('(')
         except ValueError:
             raise DialogueActItemException(
                 "Parsing error in: %s. Missing opening parenthesis." % dai)
 
-        self.dat = dai[:i]
+        self.dat = dai[:first_par_idx]
 
-        # remove the parentheses
-        dai_sv = dai[i + 1:len(dai) - 1]
+        # Remove the parentheses.
+        dai_sv = dai[first_par_idx + 1:len(dai) - 1]
         if len(dai_sv) == 0:
-            # there is no slot name or value
+            # There is no slot name or value.
             return self
 
-        r = split_by(dai_sv, '=', '', '', '"')
-        if len(r) == 1:
-            # there is only slot name
-            self.name = r[0]
-        elif len(r) == 2:
-            # there is slot name and value
-            self.name = r[0]
-            self.value = r[1]
+        attr_val = split_by(dai_sv, splitter='=', quotes='"')
+        if len(attr_val) == 1:
+            # There is only a slot name.
+            self.name = attr_val[0]
+        elif len(attr_val) == 2:
+            # There is a slot name and a value.
+            self.name = attr_val[0]
+            self.value = attr_val[1]
             if self.value[0] in ["'", '"']:
                 self.value = self.value[1:-1]
         else:
             raise DialogueActItemException(
-                "Parsing error in: %s: %s" % (dai, str(r)))
+                "Parsing error in: {dai}: {atval}".format(
+                    dai=dai, atval=attr_val))
 
         return self
 
 
-class DialogueAct:
+class DialogueAct(object):
     def __init__(self, da=None):
         self.dais = []
 
@@ -216,14 +227,11 @@ class DialogueAct:
         return True
 
     def parse(self, da):
-        """Parse the dialogue act in text format into the structured form.
-        """
-        dais = sorted(split_by(da, '&', '(', ')', '"'))
+        """Parse the dialogue act in text format into the structured form."""
+        dais = sorted(split_by(da, splitter='&', opening_parentheses='(',
+                               closing_parentheses=')', quotes='"'))
 
-        for dai in dais:
-            dai_parsed = DialogueActItem()
-            dai_parsed.parse(dai)
-            self.dais.append(dai_parsed)
+        self.dais.extend(DialogueActItem(dai=dai) for dai in dais)
 
     def append(self, dai):
         """Append a dialogue act item to the current dialogue act."""
@@ -255,8 +263,8 @@ class DialogueAct:
             self.append(dai)
 
 
-class SLUHypothesis:
-    """This is a base class for all forms of probabilistic SLU hypotheses
+class SLUHypothesis(object):
+    """This is the base class for all forms of probabilistic SLU hypotheses
     representations.
 
     """

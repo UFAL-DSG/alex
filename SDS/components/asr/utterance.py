@@ -11,6 +11,18 @@ from SDS import utils
 
 
 def load_utterances(utt_fname, limit=None):
+    """Loads a dictionary of utterances from a given file. The file is assumed
+    to contain lines of the following form:
+
+    [whitespace..]<key>[whitespace..]=>[whitespace..]<utterance>[whitespace..]
+
+    Arguments:
+        utt_fname -- path towards the file to read the utterances from
+        limit -- limit on the number of utterances to read
+
+    Returns a dictionary with utterances (instances of Utterance) as values.
+
+    """
     with open(utt_fname) as utt_file:
         utterances = {}
         count = 0
@@ -33,13 +45,13 @@ def load_utterances(utt_fname, limit=None):
     return utterances
 
 
-class ASRHypothesis:
+class ASRHypothesis(object):
     """This is a base class for all forms of probabilistic ASR hypotheses
     representations."""
     pass
 
 
-class Features:
+class Features(object):
     pass
 
 
@@ -145,13 +157,13 @@ class Utterance(object):
         raise ValueError('Missing "{phrase}" in "{utt}"'.format(
                             phrase=phrase, utt=self.utterance))
 
-    def replace(self, s, r):
+    def replace(self, orig, replacement):
         try:
-            i = self.index(s)
+            orig_pos = self.index(orig)
         except ValueError:
             return
 
-        self.utterance[i:i + len(s)] = r
+        self.utterance[orig_pos:orig_pos + len(orig)] = replacement
 
     def lower(self):
         """Transforms words of this utterance to lower case.
@@ -174,7 +186,8 @@ class UtteranceFeatures(Features):
 
     """
     def __init__(self, type='ngram', size=3, utterance=None):
-        """Creates a vector of utterance features.
+        """Creates a vector of utterance features if `utterance' is provided.
+        Otherwise, just saves the type and size of features requested.
 
         Keyword arguments:
             - type: the type of features as a string; currently only 'ngram' is
@@ -220,6 +233,7 @@ class UtteranceFeatures(Features):
         return fv
 
     def parse(self, utterance):
+        """Extracts the features from `utterance'."""
         if utterance.isempty():
             self.features['__empty__'] += 1.0
         elif self.type == 'ngram':
@@ -232,19 +246,20 @@ class UtteranceFeatures(Features):
                     self.features[tuple(utterance[start:start + length])] \
                         += 1.0
 
-        # Compute skip n-grams.
-        # FIXME This should be conditioned on (self.type == 'ngram') or
-        # something of that kind, and an alternative should be provided,
-        # perhaps just raising an exception.
-        new_features = defaultdict(float)
-        for feat in self.features:
-            if len(feat) == 3:
-                new_features[(feat[0], '*1', feat[2])] += 1.0
-            if len(feat) == 4:
-                new_features[(feat[0], '*2', feat[3])] += 1.0
-        # Save the skip n-grams.
-        for new_feat in new_features:
-            self.features[new_feat] += new_features[new_feat]
+            # Compute skip n-grams.
+            new_features = defaultdict(float)
+            for feat in self.features:
+                if len(feat) == 3:
+                    new_features[(feat[0], '*1', feat[2])] += 1.0
+                elif len(feat) == 4:
+                    new_features[(feat[0], '*2', feat[3])] += 1.0
+            # Save the skip n-grams.
+            for new_feat in new_features:
+                self.features[new_feat] += new_features[new_feat]
+        else:
+            raise NotImplementedError(
+                "Features can be extracted only from an empty utterance or "
+                "for the `ngrams' feature type.")
 
         # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
         # etc. or raise it as an exception.
@@ -254,12 +269,15 @@ class UtteranceFeatures(Features):
         self.set = set(self.features.keys())
 
     def prune(self, remove_features):
-        for f in list(self.set):
+        for f in self.set:
             if f in remove_features:
-                self.set.discard(f)
+                self.set.remove(f)
 
-                if f in self.features:
-                    del self.features[f]
+                # DEBUG
+                # If the feature is in the set of features, it should be in the
+                # dictionary, too.
+                assert f in self.features
+                del self.features[f]
 
 
 class UtteranceHyp(ASRHypothesis):

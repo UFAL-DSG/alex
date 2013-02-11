@@ -16,9 +16,10 @@ from SDS.components.slu.da import DialogueActItem, \
 from SDS.utils.exception import DAILRException
 
 
-class DAILogRegClassifierLearning:
-    """ Implements learning of dialogue act item classifiers based on logistic
+class DAILogRegClassifierLearning(object):
+    """Implements learning of dialogue act item classifiers based on logistic
     regression.
+
     """
 
     def __init__(self,
@@ -36,7 +37,7 @@ class DAILogRegClassifierLearning:
 
         self.utterances_list = self.utterances.keys()
 
-        # substitute category labels
+        # Substitute category labels.
         self.category_labels = {}
         if self.preprocessing:
             for utt_idx in self.utterances_list:
@@ -47,7 +48,7 @@ class DAILogRegClassifierLearning:
                     self.preprocessing.values2category_labels_in_da(
                         self.utterances[utt_idx], self.das[utt_idx])
 
-        # generate utterance features
+        # Generate utterance features.
         self.utterance_features = {}
         for utt_idx in self.utterances_list:
             self.utterance_features[utt_idx] = \
@@ -182,19 +183,21 @@ class DAILogRegClassifierLearning:
 
         non_zero = np.zeros(shape=(1, len(self.features_list)))
 
-        for c in sorted(self.classifiers):
+        for clser in sorted(self.classifiers):
             if verbose:
-                print "Training classifier: ", c
+                print "Training classifier: ", clser
 
             lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
-            lr.fit(self.kernel_matrix, self.classifiers_training_data[c])
-            self.trained_classifiers[c] = lr
+            lr.fit(self.kernel_matrix, self.classifiers_training_data[clser])
+            self.trained_classifiers[clser] = lr
 
             non_zero += lr.coef_
+            # This is correct with probability close to 1, and that's good
+            # enough.
 
             if verbose:
                 mean_accuracy = lr.score(
-                    self.kernel_matrix, self.classifiers_training_data[c])
+                    self.kernel_matrix, self.classifiers_training_data[clser])
                 print ("Training data prediction mean accuracy of the "
                        "training data: {0:6.2f}").format(100.0 * mean_accuracy)
                 print "Size of the params:", lr.coef_.shape, \
