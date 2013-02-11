@@ -31,9 +31,9 @@ class TemplateNLG:
 
         execfile(file_name, globals())
         if templates is None:
-            raise Exception("No templates has been loaded!")
+            raise Exception("No templates were loaded!")
 
-        # normalise the templates
+        # normalize the templates
         self.templates = {}
         for k, v in templates.iteritems():
             k = DialogueAct(k)
