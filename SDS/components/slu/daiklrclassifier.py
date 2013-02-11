@@ -52,18 +52,18 @@ class DAIRadialKernel:
     def __call__(self, f1, f2):
         """Compute the radial basis kernel function.
         """
-        r = 0.0
+        sq_norm = 0.0
 
         for f in f1:
             if f in f2:
-                r += (f1[f] - f2[f]) ** 2
+                sq_norm += (f1[f] - f2[f]) ** 2
             else:
-                r += (f1[f]) ** 2
+                sq_norm += (f1[f]) ** 2
         for f in f2:
             if f not in f1:
-                r += (f2[f]) ** 2
+                sq_norm += (f2[f]) ** 2
 
-        return exp(-self.gamma * r)
+        return exp(-self.gamma * sq_norm)
 
 
 class DAIAprxRadialKernel:
@@ -213,8 +213,8 @@ class DAIKerLogRegClassifierLearning:
             print "Total number of features: ", len(features)
 
     def compute_kernel_matrix(self, verbose=False):
-        self.kernel_matrix = np.zeros((len(
-            self.utterance_features_list), len(self.utterance_features_list)))
+        self.kernel_matrix = np.zeros((len(self.utterance_features_list),
+                                       len(self.utterance_features_list)))
 
         every_n_feature = int(len(self.utterance_features_list) / 100)
         for i, f1 in enumerate(self.utterance_features_list):

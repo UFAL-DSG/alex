@@ -287,10 +287,6 @@ class DAILogRegClassifier(SLUInterface):
         kernel_vector[0] = utterance_features.get_feature_vector(
             self.features_mapping)
 
-        # XXX Never used:
-        # da = []
-        # prob = 1.0
-
         da_confnet = DialogueActConfusionNetwork()
         for clser in self.trained_classifiers:
             if verbose:

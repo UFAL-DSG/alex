@@ -104,36 +104,37 @@ class SLUPreprocessing:
         return utterance
 
     def values2category_labels_in_utterance(self, utterance):
-        """Replaces all strings matching values in the database by their slot
-        names. Since multiple slots can have the same values, the algorithm
-        produces multiple outputs.
+        """Replaces strings matching surface forms in the label database with
+        their slot names plus index.  Since multiple slots can have the same
+        surface forms, the return value, in general, may comprise of multiple
+        alternatives.
+
+        Arguments:
+            utterance -- a list of (surface, value, slot) tuples comprising the
+                         utterance
 
         Returns a list of utterances with replaced database values, and
-        provides a dictionary with mapping between category labels and the
-        original string.
+        a dictionary with mapping from category labels to the original
+        strings.
 
         """
         utterance = copy.deepcopy(utterance)
 
-        # (FIXME: Why not just use collections.Counter?)
         category_label_counter = defaultdict(int)
         category_labels = {}
 
-        for slot, value, surface in self.cldb:
-            # XXX Utterance consists of words (surface forms), not slots!
-            # Right?
-            if slot in utterance:
-                # XXX So the mapping is _from surface forms_ _to category
-                # labels_!? The method docstring would not suggest this.
-                category_label = '{cat}-{idx!s}'.format(
-                    cat=surface.upper(),
-                    idx=category_label_counter[surface.upper()])
-                category_label_counter[surface.upper()] += 1
+        for surface, value, slot in self.cldb:
+            slot_upper = slot.upper()
+            if surface in utterance:
+                category_label = '{cat}-{idx}'.format(
+                    cat=slot_upper,
+                    idx=category_label_counter[slot_upper])
+                category_label_counter[slot_upper] += 1
 
-                category_labels[category_label] = (value, slot)
+                category_labels[category_label] = (value, surface)
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
-                utterance.replace(slot, [category_label])
+                utterance.replace(surface, [category_label])
 
                 break
 
