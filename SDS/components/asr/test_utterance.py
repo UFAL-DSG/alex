@@ -9,6 +9,23 @@ if __name__ == "__main__":
     import autopath
 from SDS.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
+
+class TestUtterance(unittest.TestCase):
+    """Tests correct working of the Utterance class."""
+
+    def setUp(self):
+        self.barbara = Utterance('b a r b a r a')
+        self.ararat = Utterance('a r a r a t')
+
+    def test_index(self):
+        test_pairs = ((['b', 'a', 'r'], 0),
+                      (['b', 'a', 'r', 'a'], 3),
+                      (['a', 'r', 'a'], 4))
+        for phrase, idx in test_pairs:
+            self.assertEqual(self.barbara.index(phrase), idx)
+        self.assertRaises(ValueError, self.barbara.index, ['r', 'a', 'b'])
+        self.assertEqual(self.ararat.index(['a', 'r', 'a', 't']), 2)
+
 class TestUtteranceConfusionNetework(unittest.TestCase):
     """ Test using
             $ python -m unittest test_utterance

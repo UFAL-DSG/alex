@@ -10,27 +10,25 @@ from SDS.utils.exception import UtteranceNBListException
 from SDS import utils
 
 
-def load_utterances(file_name, limit=None):
-    f = open(file_name)
+def load_utterances(utt_fname, limit=None):
+    with open(utt_fname) as utt_file:
+        utterances = {}
+        count = 0
+        for line in utt_file:
+            count += 1
+            if limit and count > limit:
+                break
 
-    utterances = {}
-    c = 0
-    for l in f:
-        c += 1
-        if limit and c > limit:
-            break
+            line = line.strip()
+            if not line:
+                continue
 
-        l = l.strip()
-        if not l:
-            continue
+            parts = line.split("=>")
 
-        l = l.split("=>")
+            key = parts[0].strip()
+            utt = parts[1].strip()
 
-        key = l[0].strip()
-        utt = l[1].strip()
-
-        utterances[key] = Utterance(utt)
-    f.close()
+            utterances[key] = Utterance(utt)
 
     return utterances
 
@@ -45,9 +43,13 @@ class Features:
     pass
 
 
-class Utterance:
-    def __init__(self, utterance):
-        self.utterance = utterance.split()
+class Utterance(object):
+    # TODO: Since Utterance basically represents a (is-a) list, it should
+    # inherit from the builtin `list', I reckon. This might be a bit tricky,
+    # though, because of the way built-in types are constructed.
+
+    def __init__(self, surface):
+        self.utterance = surface.split()
 
     def __str__(self):
         return ' '.join(self.utterance)
@@ -72,7 +74,7 @@ class Utterance:
 
         if isinstance(other, Utterance):
             return self.utterance == other.utterance
-        elif isinstance(other, str):
+        elif isinstance(other, basestring):
             return self.utterance == other.split()
         else:
             return False
@@ -89,42 +91,59 @@ class Utterance:
     def __len__(self):
         return len(self.utterance)
 
-    def __getitem__(self, i):
-        return self.utterance[i]
+    def __getitem__(self, idx):
+        return self.utterance[idx]
 
     def __iter__(self):
-        for i in self.utterance:
-            yield i
+        for word in self.utterance:
+            yield word
 
     def isempty(self):
-        if len(self.utterance) == 0:
-            return True
+        return len(self.utterance) != 0
 
-        return False
+    def index(self, phrase):
+        """Returns the word index of the start of first occurence of `phrase'
+        within this utterance. If none is found, ValueError is raised.
 
-    def index(self, s):
-        # FIXME: What should this do?
-        # In this implementation, it apparently looks for the first occurrence
-        # of the first word of `s' and checks whether the following words of
-        # `s' follow.
-        #
-        # What I would rather expect is that it look for the first occurrence
-        # of the sequence of words `s' (give it a more explicit name, by the
-        # way), return the start index of that splice, or raise IndexError if
-        # the sequence were not present.
-        f = s[0]
+        Arguments:
+            phrase -- a list of words constituting the phrase sought
 
-        i = self.utterance.index(f)
+        """
+        assert len(phrase) > 0
+        # All through this method, we assume a short length of `phrase', with
+        # little or none repeated word tokens.
 
-        for j in range(1, len(s)):
-            try:
-                if self.utterance[i + j] != s[j]:
-                    raise IndexError
-            except IndexError:
-                raise ValueError(
-                    'Missing %s in %s' % (str(s), str(self.utterance)))
+        # Compute the maximal skip in case of incomplete match.
+        initial = phrase[0]
+        for word_count, word in enumerate(phrase[1:], start=1):
+            if word == initial:
+                max_skip = word_count
+                break
+        else:
+            max_skip = len(phrase)
 
-        return i
+        # last index where the match can start
+        last_idx = len(self.utterance) - len(phrase)
+        # Iterate over the utterance.
+        match_idx = 0
+        while match_idx <= last_idx:
+            # If the initial word matches,
+            if self.utterance[match_idx] == initial:
+                # Check the subsequent words too.
+                for phrase_idx in xrange(1, len(phrase)):
+                    if self.utterance[match_idx + phrase_idx] !=\
+                            phrase[phrase_idx]:
+                        break
+                else:
+                    # Match found.
+                    return match_idx
+                # If subsequent words do not match, skip them.
+                match_idx += min(max_skip, phrase_idx)
+            else:
+                match_idx += 1
+        # No match found.
+        raise ValueError('Missing "{phrase}" in "{utt}"'.format(
+                            phrase=phrase, utt=self.utterance))
 
     def replace(self, s, r):
         try:
@@ -135,8 +154,14 @@ class Utterance:
         self.utterance[i:i + len(s)] = r
 
     def lower(self):
-        for i in range(len(self.utterance)):
-            self.utterance[i] = self.utterance[i].lower()
+        """Transforms words of this utterance to lower case.
+
+        BEWARE, this method is destructive. Instead of returning the lowercased
+        version, it lowercases self (and returns None).
+
+        """
+        for word_idx in range(len(self.utterance)):
+            self.utterance[word_idx] = self.utterance[word_idx].lower()
 
 
 class UtteranceFeatures(Features):
