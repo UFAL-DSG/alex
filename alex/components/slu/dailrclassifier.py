@@ -57,45 +57,48 @@ class DAILogRegClassifierLearning(object):
                                   self.utterances[utt_idx])
 
     def prune_features(self, min_feature_count=5, verbose=False):
-        """Prune those features that are unique. They are irrelevant for
-        computing dot kernels.
+        """Prunes features that occur few times.
+
+        Arguments:
+            min_feature_count: minimum number of a feature occurring for it not
+                               to be pruned (default: 5)
+            verbose: whether to print diagnostic messages to
+                               stdout (default: False)
+
         """
-        # collect all features and prune those occurring only once
-        features = defaultdict(int)
-        for u in self.utterances_list:
-            for f in self.utterance_features[u]:
-                features[f] += 1
+        # Count number of occurrences of features.
+        self.feat_count = defaultdict(int)
+        for utt_key in self.utterances_list:
+            for feature in self.utterance_features[utt_key]:
+                self.feat_count[feature] += 1
 
         if verbose:
-            print "Number of features: ", len(features)
+            print "Number of features: ", len(self.feat_count)
 
-        self.remove_features = []
-        i = 0
-        for k in features:
-            if features[k] < min_feature_count:
-                self.remove_features.append(k)
+        # Collect those with too few occurrences.
+        low_count_features = set(filter(
+            lambda feature: self.feat_count[feature] < min_feature_count,
+            self.feat_count.keys()))
+
+        # Discard the low-count features.
+        for utt_key in self.utterances_list:
+            self.utterance_features[utt_key].prune(low_count_features)
+        for feature in low_count_features:
+            del self.feat_count[feature]
 
         if verbose:
             print "Number of features occurring less then %d times: %d" % (
-                min_feature_count, len(self.remove_features))
+                min_feature_count, len(low_count_features))
 
-        self.remove_features = set(self.remove_features)
-        for u in self.utterances_list:
-            self.utterance_features[u].prune(self.remove_features)
-
-        self.features = defaultdict(int)
-        for u in self.utterances_list:
-            for f in self.utterance_features[u]:
-                self.features[f] += 1
-
-        self.features_list = self.features.keys()
-
-        self.features_mapping = {}
-        for i, f in enumerate(self.features_list):
-            self.features_mapping[f] = i
+        # Build auxiliary data structures listing the features, and mapping
+        # them to their indices, respectively.
+        self.features_list = self.feat_count.keys()
+        self.feature_idxs = {}
+        for idx, feature in enumerate(self.features_list):
+            self.feature_idxs[feature] = idx
 
         if verbose:
-            print "Number of features after pruning: ", len(self.features)
+            print "Number of features after pruning: ", len(self.feat_count)
 
     def extract_classifiers(self, verbose=False):
         # Get the classifiers.
@@ -176,7 +179,7 @@ class DAILogRegClassifierLearning(object):
                     u, 100.0 * i / len(self.utterances_list))
 
             self.kernel_matrix[i] = self.utterance_features[
-                u].get_feature_vector(self.features_mapping)
+                u].get_feature_vector(self.feature_idxs)
 
     def train(self, sparsification=1.0, verbose=True):
         self.trained_classifiers = {}
@@ -210,7 +213,7 @@ class DAILogRegClassifierLearning(object):
     def save_model(self, file_name):
         f = open(file_name, 'w+')
         d = [self.features_list,
-             self.features_mapping,
+             self.feature_idxs,
              self.trained_classifiers,
              self.features_type,
              self.features_size]
@@ -247,7 +250,7 @@ class DAILogRegClassifier(SLUInterface):
     def load_model(self, file_name):
         f = open(file_name, 'r')
         d = pickle.load(f)
-        self.features_list, self.features_mapping, self.trained_classifiers, \
+        self.features_list, self.feature_idxs, self.trained_classifiers, \
             self.features_type, self.features_size = d
         f.close()
 
@@ -286,9 +289,9 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             print utterance_features
 
-        kernel_vector = np.zeros((1, len(self.features_mapping)))
+        kernel_vector = np.zeros((1, len(self.feature_idxs)))
         kernel_vector[0] = utterance_features.get_feature_vector(
-            self.features_mapping)
+            self.feature_idxs)
 
         da_confnet = DialogueActConfusionNetwork()
         for clser in self.trained_classifiers:

@@ -28,7 +28,7 @@ def load_utterances(utt_fname, limit=None):
         count = 0
         for line in utt_file:
             count += 1
-            if limit and count > limit:
+            if limit is not None and count > limit:
                 break
 
             line = line.strip()
@@ -184,6 +184,11 @@ class UtteranceFeatures(Features):
 
     Currently, only n-gram (including skip n-grams) features are implemented.
 
+    Attributes:
+        type: type of features ('ngram')
+        size: size of features (an integer)
+        features: mapping { feature : value of feature (# occs) }
+
     """
     def __init__(self, type='ngram', size=3, utterance=None):
         """Creates a vector of utterance features if `utterance' is provided.
@@ -224,13 +229,20 @@ class UtteranceFeatures(Features):
         for i in self.features:
             yield i
 
-    def get_feature_vector(self, features_mapping):
-        fv = np.zeros(len(features_mapping))
-        for f in self.features:
-            if f in features_mapping:
-                fv[features_mapping[f]] = self.features[f]
+    def get_feature_vector(self, feature_idxs):
+        """Builds the feature vector based on the provided mapping of features
+        onto their indices.
 
-        return fv
+        Arguments:
+            feature_idxs: a mapping { feature : feature index }
+
+        """
+        feat_vec = np.zeros(len(feature_idxs))
+        for feature in self.features:
+            if feature in feature_idxs:
+                feat_vec[feature_idxs[feature]] = self.features[feature]
+
+        return feat_vec
 
     def parse(self, utterance):
         """Extracts the features from `utterance'."""
@@ -268,16 +280,17 @@ class UtteranceFeatures(Features):
 
         self.set = set(self.features.keys())
 
-    def prune(self, remove_features):
-        for f in self.set:
-            if f in remove_features:
-                self.set.remove(f)
+    def prune(self, to_remove):
+        """Discards all features from `to_remove' from self."""
+        for feature in self.set:
+            if feature in to_remove:
+                self.set.remove(feature)
 
                 # DEBUG
                 # If the feature is in the set of features, it should be in the
                 # dictionary, too.
-                assert f in self.features
-                del self.features[f]
+                assert feature in self.features
+                del self.features[feature]
 
 
 class UtteranceHyp(ASRHypothesis):

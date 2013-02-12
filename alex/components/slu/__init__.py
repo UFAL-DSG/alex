@@ -30,30 +30,29 @@ class CategoryLabelDatabase(object):
             self.load(file_name)
 
     def __iter__(self):
-        for i in self.synonym_value_category:
-            yield i
+        """Yields tuples (form, value, name) from the database."""
+        for tup in self.synonym_value_category:
+            yield tup
 
     def load(self, file_name):
         global database
 
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
-            raise Exception("No database loaded!")
+            raise SLUException("The category label database does not define "
+                               "the `database' object!")
         self.database = db_mod.database
 
         self.normalise_database()
         self.gen_synonym_value_category()
 
     def normalise_database(self):
-        """Normalise database. E.g. split utterances into sequences of words.
+        """Normalise database. E.g., split utterances into sequences of words.
         """
         for name in self.database:
             for value in self.database[name]:
-                for i, synonym in enumerate(self.database[name][value]):
-                    new_synonym = synonym
-
-                    new_synonym = new_synonym.split()
-                    self.database[name][value][i] = new_synonym
+                self.database[name][value] = map(str.split,
+                                                 self.database[name][value])
 
     def gen_synonym_value_category(self):
         for name in self.database:
@@ -104,10 +103,11 @@ class SLUPreprocessing(object):
                                                ]
 
     def text_normalisation(self, utterance):
-        """ It normalises the input utterances (the output of an ASR engine).
+        """Normalises the input utterances (the output of an ASR engine).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
+
         """
 
         utterance.lower()
