@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import collections
-import cStringIO
-import pprint
-import os.path
-import re
 import copy
+import cStringIO
+from importlib import import_module
+import os
+import os.path
+import pprint
+import re
+import sys
+import tempfile
 
 import alex.utils.env as env
 
@@ -15,6 +19,49 @@ config = None
 
 def as_project_path(path):
     return os.path.join(env.root(), path)
+
+
+def load_as_module(path, force=False):
+    """Loads a file pointed to by `path' as a Python module with minimal impact
+    on the global program environment.  The file name should end in '.py'.
+
+    Arguments:
+        path -- path towards the file
+        force -- whether to load the file even if its name does not end in
+                 '.py'
+
+    Returns the loaded module object.
+
+    """
+    do_delete_temp = False
+    if not path.endswith('.py'):
+        if force:
+            happy = False
+            while not happy:
+                temp_fd, temp_path = tempfile.mkstemp(suffix='.py')
+                dirname, basename = os.path.split(temp_path)
+                modname = basename[:-3]
+                if modname not in sys.modules:
+                    happy = True
+            temp_file = os.fdopen(temp_fd, 'wb')
+            temp_file.write(open(path, 'rb').read())
+            temp_file.close()
+            path = temp_path
+            do_delete_temp = True
+        else:
+            raise ValueError(("Path `{path}' should be loaded as module but "
+                              "does not end in '.py' and `force' wasn't set.")
+                             .format(path=path))
+    else:
+        dirname, basename = os.path.split(path)
+        modname = basename[:-3]
+    sys.path.insert(0, dirname)
+    mod = import_module(modname)
+    sys.path.pop(0)
+    if do_delete_temp:
+        os.unlink(temp_path)
+        del sys.modules[modname]
+    return mod
 
 
 class Config(object):
@@ -87,22 +134,19 @@ class Config(object):
         return True
 
     def load(self, file_name):
-        """FIXME: Executing external files is not ideal! It should be changed in the future!
-        """
         # pylint: disable-msg=E0602
 
         global config
-        config = None
-
-        execfile(file_name, globals())
-        assert config is not None
-        self.config = config
+        # config = None
+        self.config = config = load_as_module(file_name, force=True).config
+        # execfile(file_name, globals())
+        # assert config is not None
+        # self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
         self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
 
         self.load_includes()
-
 
 
     def load_includes(self):

@@ -10,15 +10,17 @@ from collections import defaultdict
 
 from alex.components.asr.utterance \
     import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
+from alex.utils.config import load_as_module
 from alex.utils.exception import SLUException, DAILRException
 
 
 database = None
 
 
-class CategoryLabelDatabase:
-    """ Provides a convenient interface to a database of slot value pairs aka
-        category labels.
+class CategoryLabelDatabase(object):
+    """Provides a convenient interface to a database of slot value pairs aka
+    category labels.
+
     """
     def __init__(self, file_name):
         self.database = {}
@@ -34,11 +36,10 @@ class CategoryLabelDatabase:
     def load(self, file_name):
         global database
 
-        database = None
-        execfile(file_name, globals())
-        if database is None:
+        db_mod = load_as_module(file_name, force=True)
+        if not hasattr(db_mod, 'database'):
             raise Exception("No database loaded!")
-        self.database = database
+        self.database = db_mod.database
 
         self.normalise_database()
         self.gen_synonym_value_category()
@@ -64,17 +65,30 @@ class CategoryLabelDatabase:
             key=lambda svc: len(svc[0]), reverse=True)
 
 
-class SLUPreprocessing:
-    """ Implements processing of utterances or utterances and dialogue acts.
-    The main purpose is to replace all values in the database by its category
+class SLUPreprocessing(object):
+    """Implements preprocessing of utterances or utterances and dialogue acts.
+    The main purpose is to replace all values in the database by their category
     labels (slot names) to reduce the complexity of the input utterances.
 
     In addition, it implements text normalisation for SLU input, e.g. removing
-    filler words such as UHM, UM, etc. converting "I'm" into "I am", etc. Some
+    filler words such as UHM, UM etc., converting "I'm" into "I am" etc.  Some
     normalisation is hard-coded. However, it can be updated by providing
     normalisation patterns.
+
     """
     def __init__(self, cldb, text_normalization=None):
+        """Initialises a SLUPreprocessing object with particular preprocessing
+        parameters.
+
+        Arguments:
+            cldb -- an iterable of (surface, value, slot) tuples describing the
+                    relation between surface forms and (slot, value) pairs
+            text_normalization -- an iterable of tuples (source, target) where
+                    `source' occurrences in the text should be substituted by
+                    `target', both `source' and `target' being specified as
+                    a sequence of words
+
+        """
         self.cldb = cldb
 
         if text_normalization:
@@ -105,23 +119,24 @@ class SLUPreprocessing:
 
     def values2category_labels_in_utterance(self, utterance):
         """Replaces strings matching surface forms in the label database with
-        their slot names plus index.  Since multiple slots can have the same
-        surface forms, the return value, in general, may comprise of multiple
-        alternatives.
+        their slot names plus index.
+
+        NOT IMPLEMENTED YET:
+        Since multiple slots can have the same surface forms, the return value,
+        in general, may comprise of multiple alternatives.
 
         Arguments:
-            utterance -- a list of (surface, value, slot) tuples comprising the
-                         utterance
+            utterance -- an instance of the Utterance class where the
+                         substitutions should be done
 
-        Returns a list of utterances with replaced database values, and
-        a dictionary with mapping from category labels to the original
-        strings.
+        Returns an utterance with replaced database values, and a dictionary
+        with mapping from category labels to the original strings.
 
         """
         utterance = copy.deepcopy(utterance)
 
         category_label_counter = defaultdict(int)
-        category_labels = {}
+        slotval_for_cl = {}
 
         for surface, value, slot in self.cldb:
             slot_upper = slot.upper()
@@ -131,38 +146,52 @@ class SLUPreprocessing:
                     idx=category_label_counter[slot_upper])
                 category_label_counter[slot_upper] += 1
 
-                category_labels[category_label] = (value, surface)
+                slotval_for_cl[category_label] = (value, surface)
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
                 utterance.replace(surface, [category_label])
 
                 break
 
-        return utterance, category_labels
+        return utterance, slotval_for_cl
 
     def values2category_labels_in_da(self, utterance, da):
-        """ Replaces all strings matching values in the database by their slot
-        names. Since multiple slots can have the same values, the algorithm can
-        produce multiple outputs.
+        """Replaces strings matching surface forms in the label database with
+        their slot names plus index both in `utterance' and `da' in
+        a consistent fashion.
 
-        Returns a list of utterances with replaced database values, and
-        provides a dictionary with mapping between category labels and the
-        original string.
+        NOT IMPLEMENTED YET:
+        Since multiple slots can have the same surface forms, the return value,
+        in general, may comprise of multiple alternatives.
+
+        Arguments:
+            utterance -- an instance of Utterance where the substitutions
+                         should be done
+            da -- an instance of DialogueAct where the substitutions should be
+                  done
+
+        Returns an utterance with replaced database values, the DA with
+        replaced database values, and a dictionary with mapping from category
+        labels to the original strings.
 
         """
         da = copy.deepcopy(da)
         utterance = copy.deepcopy(utterance)
 
-        utterance, category_labels = self.values2category_labels_in_utterance(
+        utterance, slotval_for_cl = self.values2category_labels_in_utterance(
             utterance)
 
-        for cl in category_labels:
+        for cl in slotval_for_cl:
             for dai in da:
-                if dai.value == category_labels[cl][0]:
+                # FIXME? Shouldn't other category labels with the same (slot,
+                # value) be taken sometimes (i.e., should we sometimes use
+                # also something like 'FOOD-1' if both 'FOOD-0' and 'FOOD-1'
+                # are present)?
+                if dai.value == slotval_for_cl[cl][0]:
                     dai.value = cl
                     break
 
-        return utterance, da, category_labels
+        return utterance, da, slotval_for_cl
 
     def category_labels2values_in_utterance(self, utterance, category_labels):
         """Reverts the result of the values2category_labels_in_utterance(...)
@@ -223,19 +252,19 @@ class SLUPreprocessing:
         return confnet
 
 
-class SLUInterface:
-    """ Defines a prototypical interface each parser should provide for
-        parsing.
+class SLUInterface(object):
+    """Defines a prototypical interface each parser should provide for parsing.
 
     It should be able to parse:
-      1) a utterance hypothesis (an instance of UtteranceHyp)
+      1) an utterance hypothesis (an instance of UtteranceHyp)
           - output: SLUHypothesis sub-class
 
-      2) a N-best list of utterances (an instance of UtteranceNBList)
+      2) an N-best list of utterances (an instance of UtteranceNBList)
           - output: SLUHypothesis sub-class
 
       3) a confusion network (an instance of UtteranceConfusionNetwork)
           - output: SLUHypothesis sub-class
+
     """
 
     def parse_1_best(self, utterance):
