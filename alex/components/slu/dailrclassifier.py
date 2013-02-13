@@ -6,7 +6,6 @@
 import numpy as np
 import cPickle as pickle
 
-from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
@@ -20,41 +19,71 @@ class DAILogRegClassifierLearning(object):
     """Implements learning of dialogue act item classifiers based on logistic
     regression.
 
+    Attributes:
+        category_labels: mapping { utterance ID:
+                                    { category label: original string } }
+        dai_counts: mapping { str(DAI): number of occurrences in data }
+        das: mapping { utterance ID: DA } for DAs corresponding to training
+             utterances
+        feat_counts: mapping { feature: number of occurrences }
+        feature_idxs: mapping { feature: feature index }; feature indices span
+                      range(0, number_of_features)
+        features_size: size (order) of features, i.e., length of the n-grams
+        features_type: type of features (only 'ngram' is supported now)
+        input_matrix: observation matrix, a numpy array with rows corresponding
+                      to utterances and columns corresponding to features
+        output_matrix: mapping { str(DAI): [ utterance index: ?DAI
+                                             present in utterance ] }
+                       where the list is a numpy array, and the values are
+                       either 0.0 or 1.0
+        preprocessing: an SLUPreprocessing object to be used for preprocessing
+                       of utterances and DAs
+        trained_classifiers: mapping { DAI: classifier for this DAI }
+        utterance_features: mapping { utterance ID: utterance features } where
+                            the features is an UtteranceFeatures object
+        utterances: mapping { utterance ID: utterance } for utterances to learn
+                    from
+
     """
 
     def __init__(self,
                  preprocessing=None,
                  features_type='ngram',
                  features_size=4):
+        # Save the arguments.
         self.features_type = features_type
         self.features_size = features_size
-
         self.preprocessing = preprocessing
+
+        # Additional bookkeeping.
+        # Setting protected fields to None is interpreted as that they have to
+        # be computed yet.
+        self._dai_counts = None
+        self._input_matrix = None
+        self._output_matrix = None
 
     def extract_features(self, utterances, das, verbose=False):
         self.utterances = utterances
         self.das = das
 
-        self.utterances_list = self.utterances.keys()
-
-        # Substitute category labels.
+        # Normalise the text and substitute category labels.
         self.category_labels = {}
         if self.preprocessing:
-            for utt_idx in self.utterances_list:
-                self.utterances[utt_idx] = self.preprocessing\
-                    .text_normalisation(self.utterances[utt_idx])
-                self.utterances[utt_idx], self.das[utt_idx], \
-                        self.category_labels[utt_idx] = \
+            for utt_id in self.utterances.keys():
+                self.utterances[utt_id] = self.preprocessing\
+                    .text_normalisation(self.utterances[utt_id])
+                self.utterances[utt_id], self.das[utt_id], \
+                        self.category_labels[utt_id] = \
                     self.preprocessing.values2category_labels_in_da(
-                        self.utterances[utt_idx], self.das[utt_idx])
+                        self.utterances[utt_id], self.das[utt_id])
 
         # Generate utterance features.
-        self.utterance_features = {}
-        for utt_idx in self.utterances_list:
-            self.utterance_features[utt_idx] = \
-                UtteranceFeatures(self.features_type,
-                                  self.features_size,
-                                  self.utterances[utt_idx])
+        ft = self.features_type
+        fs = self.features_size
+        uts = self.utterances
+        self.utterance_features = \
+            {utt_id: UtteranceFeatures(ft, fs, uts[utt_id])
+             for utt_id in self.utterances}
 
     def prune_features(self, min_feature_count=5, verbose=False):
         """Prunes features that occur few times.
@@ -67,177 +96,204 @@ class DAILogRegClassifierLearning(object):
 
         """
         # Count number of occurrences of features.
-        self.feat_count = defaultdict(int)
-        for utt_key in self.utterances_list:
-            for feature in self.utterance_features[utt_key]:
-                self.feat_count[feature] += 1
+        self.feat_counts = dict()
+        for utt_id in self.utterances.keys():
+            for feature in self.utterance_features[utt_id]:
+                self.feat_counts[feature] = \
+                    self.feat_counts.get(feature, 0) + 1
 
         if verbose:
-            print "Number of features: ", len(self.feat_count)
+            print "Number of features: ", len(self.feat_counts)
 
         # Collect those with too few occurrences.
         low_count_features = set(filter(
-            lambda feature: self.feat_count[feature] < min_feature_count,
-            self.feat_count.keys()))
+            lambda feature: self.feat_counts[feature] < min_feature_count,
+            self.feat_counts.keys()))
 
         # Discard the low-count features.
-        for utt_key in self.utterances_list:
-            self.utterance_features[utt_key].prune(low_count_features)
-        for feature in low_count_features:
-            del self.feat_count[feature]
+        for utt_id in self.utterances.keys():
+            self.utterance_features[utt_id].prune(low_count_features)
+        old_feat_counts = self.feat_counts
+        self.feat_counts = {key: old_feat_counts[key]
+                            for key in old_feat_counts
+                            if key not in low_count_features}
 
         if verbose:
-            print "Number of features occurring less then %d times: %d" % (
-                min_feature_count, len(low_count_features))
+            print ("Number of features occurring less then {occs} times: {cnt}"
+                   .format(occs=min_feature_count,
+                           cnt=len(low_count_features)))
 
-        # Build auxiliary data structures listing the features, and mapping
-        # them to their indices, respectively.
-        self.features_list = self.feat_count.keys()
+        # Build the mapping from features to their indices.
         self.feature_idxs = {}
-        for idx, feature in enumerate(self.features_list):
+        for idx, feature in enumerate(self.feat_counts.keys()):
             self.feature_idxs[feature] = idx
 
         if verbose:
-            print "Number of features after pruning: ", len(self.feat_count)
+            print "Number of features after pruning: ", len(self.feat_counts)
 
-    def extract_classifiers(self, verbose=False):
-        # Get the classifiers.
-        # XXX !? This does not get any classifiers. It merely counts DAI-s, and
-        # saves these counts to the `self.classifiers' counter.
-        self.classifiers = defaultdict(int)
+    @property
+    def dai_counts(self):
+        """a mapping { DAI : number of occurrences in training DAs }"""
+        # If `_dai_counts' have not been evaluated yet,
+        if self._dai_counts is None:
+            # Count occurrences of all DAIs in the DAs bound to this learner.
+            _dai_counts = self._dai_counts = dict()
+            for utt_id in self.utterances.keys():
+                for dai in self.das[utt_id].dais:
+                    dai_str = str(dai)
+                    _dai_counts[dai_str] = _dai_counts.get(dai_str, 0) + 1
+        return self._dai_counts
 
-        for utt_idx in self.utterances_list:
-            for dai in self.das[utt_idx].dais:
-                self.classifiers[str(dai)] += 1
+    def print_dai_counts(self):
+        """Prints what `extract_classifiers(verbose=True)' would output in
+        earlier versions.
 
-                if verbose:
-                    if dai.value and '-' not in dai.value:
-                        print '#' * 120
-                        print self.das[utt_idx]
-                        print self.utterances[utt_idx]
-                        print self.category_labels[utt_idx]
+        """
+        for utt_id in self.utterances.keys():
+            for dai in self.das[utt_id].dais:
+                if dai.value and '-' not in dai.value:
+                    print '#' * 120
+                    print self.das[utt_id]
+                    print self.utterances[utt_id]
+                    print self.category_labels[utt_id]
 
     def prune_classifiers(self, min_classifier_count=5):
-        new_classifiers = {}
-        for k in self.classifiers:
-            # prune these classfiers
-            if ('=' in k
-                    and '0' not in k
-                    and self.classifiers[k] < min_classifier_count):
-                continue
+        # Define pruning criteria.
+        def accept_dai(dai):
+            # Discard a DAI that has too few occurrences.
+            # FIXME? What is the zero for? Is that a way to check whether that
+            # DAI has any category labels in it?!
+            cond1 = ('=' in dai
+                     and '0' not in dai
+                     and self._dai_counts[dai] < min_classifier_count)
+            # Discard a DAI in the form '(slotname="dontcare")'.
+            cond2 = ('="dontcare"' in dai and '(="dontcare")' not in dai)
+            # Discard a 'null()'. This classifier can be ignored since the null
+            # dialogue act is a complement to all other dialogue acts.
+            cond3 = 'null()' in dai
 
-            if ('="dontcare"' in k
-                    and '(="dontcare")' not in k):
-                continue
+            # None of the conditions must hold.
+            return not (cond1 | cond2 | cond3)
 
-            if 'null()' in k:
-                # null() classifier is not necessary since null dialogue act is
-                # a complement to all other dialogue acts
-                continue
-
-            new_classifiers[k] = self.classifiers[k]
-
-        self.classifiers = new_classifiers
-
-    def gen_data_for_classifiers(self):
-        # Generate training data.
-        self.classifiers_training_data = defaultdict(list)
-
-        parsed_clsers = {}
-        for clser in self.classifiers:
-            parsed_clsers[clser] = DialogueActItem()
-            parsed_clsers[clser].parse(clser)
-
-        for utt in self.utterances_list:
-            for clser in self.classifiers:
-                if parsed_clsers[clser] in self.das[utt]:
-                    self.classifiers_training_data[clser].append(1.0)
-                else:
-                    self.classifiers_training_data[clser].append(0.0)
-
-        for clser in self.classifiers:
-            self.classifiers_training_data[clser] = np.array(
-                self.classifiers_training_data[clser])
+        # Do the pruning.
+        old_dai_counts = self.dai_counts  # NOTE side effect from the getter
+        self._dai_counts = {dai: old_dai_counts[dai] for dai in old_dai_counts
+                            if accept_dai(dai)}
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
         print "-" * 120
-        print "Number of classifiers: ", len(self.classifiers)
+        print "Number of classifiers: ", len(self._dai_counts)
         print "-" * 120
 
-        for k in sorted(self.classifiers):
-            print('%40s = %d' % (k, self.classifiers[k]))
+        for dai in sorted(self._dai_counts.keys()):
+            print('%40s = %d' % (dai, self._dai_counts[dai]))
 
-    def compute_kernel_matrix(self, verbose=False):
-        self.kernel_matrix = np.zeros(
-            (len(self.utterances_list), len(self.features_list)))
+    @property
+    def output_matrix(self):
+        """the output matrix of DAIs for training utterances
 
-        every_n_feature = int(len(self.utterances_list) / 10)
-        for i, u in enumerate(self.utterances_list):
-            if verbose and (i % every_n_feature == 0):
-                print "Computing features for %s, processed %6.1f%%" % (
-                    u, 100.0 * i / len(self.utterances_list))
+        Note that the output matrix has unusual indexing: first associative
+        index to columns, then integral index to rows.
 
-            self.kernel_matrix[i] = self.utterance_features[
-                u].get_feature_vector(self.feature_idxs)
+        """
+        if self._output_matrix is None:
+            self.gen_output_matrix()
+        return self._output_matrix
+
+    def gen_output_matrix(self):
+        """Generates the output matrix from training data."""
+        parsed_dais = {dai: DialogueActItem(dai=dai) for dai in
+                       self._dai_counts}
+        das = self.das
+        uts = self.utterances.keys()
+        # NOTE that the output matrix has unusual indexing: first associative
+        # index to columns, then integral index to rows.
+        self._output_matrix = \
+            {dai: np.array([float(parsed_dais[dai] in das[utt_id])
+                            for utt_id in uts])
+             for dai in self._dai_counts}
+
+    @property
+    def input_matrix(self):
+        """the input matrix of features for training utterances"""
+        if self._input_matrix is None:
+            self.gen_input_matrix()
+        return self._input_matrix
+
+    def gen_input_matrix(self):
+        """Generates the observation matrix from training data."""
+        self._input_matrix = np.zeros((len(self.utterances),
+                                       len(self.feat_counts)))
+        for utt_idx, utt_id in enumerate(self.utterances.keys()):
+            self._input_matrix[utt_idx] = (
+                self.utterance_features[utt_id]
+                .get_feature_vector(self.feature_idxs))
 
     def train(self, sparsification=1.0, verbose=True):
+        # Make sure the input and output matrices has been generated.
+        if self._output_matrix is None:
+            self.gen_output_matrix()
+        if self._input_matrix is None:
+            self.gen_input_matrix()
+
         self.trained_classifiers = {}
-
-        non_zero = np.zeros(shape=(1, len(self.features_list)))
-
-        for clser in sorted(self.classifiers):
+        if verbose:
+            coefs_sum = np.zeros(shape=(1, len(self.feat_counts)))
+        for dai in sorted(self._dai_counts):
+            # before message
             if verbose:
-                print "Training classifier: ", clser
+                print "Training classifier: ", dai
 
+            # Train and store the classifier for `dai'.
             lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
-            lr.fit(self.kernel_matrix, self.classifiers_training_data[clser])
-            self.trained_classifiers[clser] = lr
+            lr.fit(self._input_matrix, self._output_matrix[dai])
+            self.trained_classifiers[dai] = lr
 
-            non_zero += lr.coef_
-            # This is correct with probability close to 1, and that's good
-            # enough.
-
+            # after message
             if verbose:
-                mean_accuracy = lr.score(
-                    self.kernel_matrix, self.classifiers_training_data[clser])
-                print ("Training data prediction mean accuracy of the "
-                       "training data: {0:6.2f}").format(100.0 * mean_accuracy)
-                print "Size of the params:", lr.coef_.shape, \
-                      "Number of non-zero params:", np.count_nonzero(lr.coef_)
+                coefs_sum += lr.coef_
+                mean_accuracy = lr.score(self._input_matrix,
+                                         self._output_matrix[dai])
+                msg = ("Mean accuracy for training data: {acc:6.2f} %\n"
+                       "Size of the params: {parsize}\n"
+                       "Number of non-zero params: {nonzero}\n").format(
+                       acc=(100.0 * mean_accuracy),
+                       parsize=lr.coef_.shape,
+                       nonzero=np.count_nonzero(lr.coef_))
+                # The claim about number of non-zero coefficients is correct
+                # with probability close to 1, and that's good enough.  I mean,
+                # a set of non-zero coefficients may sum up to zero.
 
         if verbose:
-            print "Total number of non-zero params:", np.count_nonzero(
-                non_zero)
+            print "Total number of non-zero params:", \
+                  np.count_nonzero(coefs_sum)
 
     def save_model(self, file_name):
-        f = open(file_name, 'w+')
-        d = [self.features_list,
-             self.feature_idxs,
-             self.trained_classifiers,
-             self.features_type,
-             self.features_size]
-
-        pickle.dump(d, f)
-        f.close()
+        data = (self.feat_counts.keys(),
+                self.feature_idxs,
+                self.trained_classifiers,
+                self.features_type,
+                self.features_size)
+        with open(file_name, 'w+') as outfile:
+            pickle.dump(data, outfile)
 
 
 class DAILogRegClassifier(SLUInterface):
-    """
-      This parser implements a parser based on set of classifiers for each
-      dialogue act item. When parsing the input utterance, the parse classifies
-      whether a given dialogue act item is present. Then, the output dialogue
-      act is composed of all detected dialogue act items.
+    """This class implements a parser based on set of classifiers for each
+    dialogue act item. When parsing the input utterance, the parse classifies
+    whether a given dialogue act item is present. Then, the output dialogue
+    act is composed of all detected dialogue act items.
 
-      Dialogue act is defined as a composition of dialogue act items. E.g.
+    Dialogue act is defined as a composition of dialogue act items. E.g.
 
-        confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
+    confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
 
-      where confirm(drinks="wine") and inform(name="kings shilling") are two
-      dialogue act items.
+    where confirm(drinks="wine") and inform(name="kings shilling") are two
+    dialogue act items.
 
-      This parser uses logistic regression as the classifier of the dialogue
-      act items.
+    This parser uses logistic regression as the classifier of the dialogue
+    act items.
 
     """
     def __init__(self, preprocessing=None):
@@ -248,11 +304,10 @@ class DAILogRegClassifier(SLUInterface):
         self.preprocessing = preprocessing
 
     def load_model(self, file_name):
-        f = open(file_name, 'r')
-        d = pickle.load(f)
+        with open(file_name, 'r') as infile:
+            data = pickle.load(infile)
         self.features_list, self.feature_idxs, self.trained_classifiers, \
-            self.features_type, self.features_size = d
-        f.close()
+            self.features_type, self.features_size = data
 
     def get_size(self):
         return len(self.features_list)
@@ -294,16 +349,16 @@ class DAILogRegClassifier(SLUInterface):
             self.feature_idxs)
 
         da_confnet = DialogueActConfusionNetwork()
-        for clser in self.trained_classifiers:
+        for dai in self.trained_classifiers:
             if verbose:
-                print "Using classifier: ", clser
+                print "Using classifier: ", dai
 
-            p = self.trained_classifiers[clser].predict_proba(kernel_vector)
+            p = self.trained_classifiers[dai].predict_proba(kernel_vector)
 
             if verbose:
                 print p
 
-            da_confnet.add(p[0][1], DialogueActItem(dai=clser))
+            da_confnet.add(p[0][1], DialogueActItem(dai=dai))
 
         if verbose:
             print "DA: ", da_confnet

@@ -282,15 +282,15 @@ class UtteranceFeatures(Features):
 
     def prune(self, to_remove):
         """Discards all features from `to_remove' from self."""
-        for feature in self.set:
-            if feature in to_remove:
-                self.set.remove(feature)
-
-                # DEBUG
-                # If the feature is in the set of features, it should be in the
-                # dictionary, too.
-                assert feature in self.features
-                del self.features[feature]
+        # Remove the features from `self.set'.
+        to_remove_set = (to_remove if isinstance(to_remove, set)
+                         else set(to_remove))
+        self.set -= to_remove_set
+        # Remove the features from `self.features'.
+        old_features = self.features
+        self.features = defaultdict(float)
+        self.features.update(item for item in old_features.iteritems() if
+                             item[0] not in to_remove_set)
 
 
 class UtteranceHyp(ASRHypothesis):

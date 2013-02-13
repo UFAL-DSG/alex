@@ -129,8 +129,10 @@ class SLUPreprocessing(object):
             utterance -- an instance of the Utterance class where the
                          substitutions should be done
 
-        Returns an utterance with replaced database values, and a dictionary
-        with mapping from category labels to the original strings.
+        Returns a tuple of:
+            [0] an utterance with replaced database values, and
+            [2] a dictionary mapping from category labels to the original
+                strings.
 
         """
         utterance = copy.deepcopy(utterance)
@@ -170,9 +172,11 @@ class SLUPreprocessing(object):
             da -- an instance of DialogueAct where the substitutions should be
                   done
 
-        Returns an utterance with replaced database values, the DA with
-        replaced database values, and a dictionary with mapping from category
-        labels to the original strings.
+        Returns a tuple of:
+            [0] an utterance with replaced database values,
+            [1] the DA with replaced database values, and
+            [2] a dictionary mapping from category labels to the original
+                strings.
 
         """
         da = copy.deepcopy(da)
