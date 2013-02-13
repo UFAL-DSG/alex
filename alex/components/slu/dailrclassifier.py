@@ -63,6 +63,19 @@ class DAILogRegClassifierLearning(object):
         self._output_matrix = None
 
     def extract_features(self, utterances, das, verbose=False):
+        """Extracts features from given utterances, making use of their
+        corresponding DAs.  This is a pre-requisite to pruning features,
+        classifiers, and running training with this learner.
+
+        Arguments:
+            utterances: mapping { utterance ID: utterance }, the utterance
+                        being an instance of the Utterance class
+            das: mapping { utterance ID: DA }, the DA being an instance of the
+                 DialogueAct class
+
+        The arguments are expected to have both the same set of keys.
+
+        """
         self.utterances = utterances
         self.das = das
 
@@ -133,7 +146,7 @@ class DAILogRegClassifierLearning(object):
 
     @property
     def dai_counts(self):
-        """a mapping { DAI : number of occurrences in training DAs }"""
+        """a mapping { str(DAI) : number of occurrences in training DAs }"""
         # If `_dai_counts' have not been evaluated yet,
         if self._dai_counts is None:
             # Count occurrences of all DAIs in the DAs bound to this learner.
@@ -157,28 +170,49 @@ class DAILogRegClassifierLearning(object):
                     print self.utterances[utt_id]
                     print self.category_labels[utt_id]
 
-    def prune_classifiers(self, min_classifier_count=5):
-        # Define pruning criteria.
-        def accept_dai(dai):
-            # Discard a DAI that has too few occurrences.
-            # FIXME? What is the zero for? Is that a way to check whether that
-            # DAI has any category labels in it?!
-            cond1 = ('=' in dai
-                     and '0' not in dai
-                     and self._dai_counts[dai] < min_classifier_count)
-            # Discard a DAI in the form '(slotname="dontcare")'.
-            cond2 = ('="dontcare"' in dai and '(="dontcare")' not in dai)
-            # Discard a 'null()'. This classifier can be ignored since the null
-            # dialogue act is a complement to all other dialogue acts.
-            cond3 = 'null()' in dai
+    def prune_classifiers(self, min_dai_count=5, accept_dai=None):
+        """Prunes classifiers for DAIs that cannot be reliably classified with
+        these training data.
 
-            # None of the conditions must hold.
-            return not (cond1 | cond2 | cond3)
+        Arguments:
+            min_dai_count: minimum number of occurrences of a DAI for it
+                to have its own classifier (this affects only non-atomic DAIs
+                without abstracted category labels)
+            accept_dai: custom fuction that takes a string representation of
+                a DAI and returns True if that DAI should have its classifier,
+                else False;
+
+                The function gets called with the following tuple
+                of arguments: (self, dai_str), where `self' is this
+                DAILogRegClassifierLearning object, and `dai_str' the string
+                representation of the DAI in question
+
+        """
+        # Define pruning criteria.
+        if accept_dai is not None:
+            _accept_dai = lambda dai_str: accept_dai(self, dai_str)
+        else:
+            def _accept_dai(dai_str):
+                # Discard a DAI that has too few occurrences.
+                # FIXME? What is the zero for? Is that a way to check whether that
+                # DAI has any category labels in it?!
+                cond1 = ('=' in dai_str
+                        and '0' not in dai_str
+                        and self._dai_counts[dai_str] < min_dai_count)
+                # Discard a DAI in the form '(slotname="dontcare")'.
+                cond2 = ('="dontcare"' in dai_str and '(="dontcare")' not in dai_str)
+                # Discard a 'null()'. This classifier can be ignored since the null
+                # dialogue act is a complement to all other dialogue acts.
+                cond3 = 'null()' in dai_str
+
+                # None of the conditions must hold.
+                return not (cond1 | cond2 | cond3)
 
         # Do the pruning.
         old_dai_counts = self.dai_counts  # NOTE side effect from the getter
-        self._dai_counts = {dai: old_dai_counts[dai] for dai in old_dai_counts
-                            if accept_dai(dai)}
+        self._dai_counts = {dai_str: old_dai_counts[dai_str]
+                            for dai_str in old_dai_counts
+                            if _accept_dai(dai_str)}
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
@@ -196,13 +230,21 @@ class DAILogRegClassifierLearning(object):
         Note that the output matrix has unusual indexing: first associative
         index to columns, then integral index to rows.
 
+        Beware, this getter will fail if `extract_features' was not called
+        before.
+
         """
         if self._output_matrix is None:
             self.gen_output_matrix()
         return self._output_matrix
 
     def gen_output_matrix(self):
-        """Generates the output matrix from training data."""
+        """Generates the output matrix from training data.
+
+        Beware, this method will fail if `extract_features' was not called
+        before.
+
+        """
         parsed_dais = {dai: DialogueActItem(dai=dai) for dai in
                        self._dai_counts}
         das = self.das
@@ -216,13 +258,23 @@ class DAILogRegClassifierLearning(object):
 
     @property
     def input_matrix(self):
-        """the input matrix of features for training utterances"""
+        """the input matrix of features for training utterances
+
+        Beware, this getter will fail if `extract_features' was not called
+        before.
+
+        """
         if self._input_matrix is None:
             self.gen_input_matrix()
         return self._input_matrix
 
     def gen_input_matrix(self):
-        """Generates the observation matrix from training data."""
+        """Generates the observation matrix from training data.
+
+        Beware, this method will fail if `extract_features' was not called
+        before.
+
+        """
         self._input_matrix = np.zeros((len(self.utterances),
                                        len(self.feat_counts)))
         for utt_idx, utt_id in enumerate(self.utterances.keys()):
@@ -264,6 +316,7 @@ class DAILogRegClassifierLearning(object):
                 # The claim about number of non-zero coefficients is correct
                 # with probability close to 1, and that's good enough.  I mean,
                 # a set of non-zero coefficients may sum up to zero.
+                print msg
 
         if verbose:
             print "Total number of non-zero params:", \

@@ -81,16 +81,10 @@ class DialogueActItem(object):
             self.parse(dai)
 
     def __str__(self):
-        r = self.dat + '('
-
-        if self.name:
-            r += self.name
-
-        if self.value:
-            r += '="' + self.value + '"'
-
-        r += ')'
-        return r
+        eq_value = '="{val}"'.format(val=self.value) if self.value else ''
+        return "{type_}({name}{eq_value})".format(type_=self.dat,
+                                                  name=self.name or '',
+                                                  eq_value=eq_value)
 
     def __eq__(self, other):
         if other.dat:
