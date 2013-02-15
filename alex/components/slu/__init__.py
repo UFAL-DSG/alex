@@ -179,26 +179,24 @@ class SLUPreprocessing(object):
                 strings.
 
         """
-        da = copy.deepcopy(da)
-        utterance = copy.deepcopy(utterance)
-
+        # Do the substitution in the utterance, and obtain the resulting
+        # mapping.
         utterance, slotval_for_cl = self.values2category_labels_in_utterance(
             utterance)
+        cl_for_value = {item[1][0]: item[0]
+                        for item in slotval_for_cl.iteritems()}
 
-        for cl in slotval_for_cl:
-            for dai in da:
-                # FIXME? Shouldn't other category labels with the same (slot,
-                # value) be taken sometimes (i.e., should we sometimes use
-                # also something like 'FOOD-1' if both 'FOOD-0' and 'FOOD-1'
-                # are present)?
-                if dai.value == slotval_for_cl[cl][0]:
-                    dai.value = cl
-                    break
+        # Using the mapping, perform the same substitution also in all the
+        # DAIs.
+        da = copy.deepcopy(da)
+        for dai in da:
+            if dai.value in cl_for_value:
+                dai.value2category_label(cl_for_value[dai.value])
 
         return utterance, da, slotval_for_cl
 
     def category_labels2values_in_utterance(self, utterance, category_labels):
-        """Reverts the result of the values2category_labels_in_utterance(...)
+        """Reverts the effect of the values2category_labels_in_utterance(...)
         function.
 
         Returns the original utterance.
@@ -210,49 +208,41 @@ class SLUPreprocessing(object):
 
         return utterance
 
-    def category_labels2values_in_da(self, da, category_labels):
-        """Reverts the result of the values2category_labels_in_da(...)
+    # TODO Deprecate the third argument.
+    def category_labels2values_in_da(self, da, category_labels=None):
+        """Reverts the effect of the values2category_labels_in_da(...)
         function.
 
         Returns the original dialogue act.
         """
         da = copy.deepcopy(da)
         for dai in da.dais:
-            if dai.value in category_labels:
-                dai.value = category_labels[dai.value][0]
-
+            dai.category_label2value()
         return da
 
-    def category_labels2values_in_nblist(self, nblist, category_labels):
-        """Reverts the result of the values2category_labels_in_da(...)
+    # TODO Deprecate the third argument.
+    def category_labels2values_in_nblist(self, nblist, category_labels=None):
+        """Reverts the effect of the values2category_labels_in_da(...)
         function.
 
         Returns the converted N-best list.
         """
         nblist = copy.deepcopy(nblist)
-        # XXX The following line went like this:
-        # for prob, dai in nblist.n_best:
-        # but `da' was undefined below. Check that the following correction
-        # works.
-        for prob, da in nblist.n_best:
+        for _, da in nblist.n_best:
             for dai in da:
-                if dai.value in category_labels:
-                    dai.value = category_labels[dai.value][0]
-
+                dai.category_label2value()
         return nblist
 
-    def category_labels2values_in_confnet(self, confnet, category_labels):
-        """Reverts the result of the values2category_labels_in_da(...)
+    # TODO Deprecate the third argument.
+    def category_labels2values_in_confnet(self, confnet, category_labels=None):
+        """Reverts the effect of the values2category_labels_in_da(...)
         function.
 
         Returns the converted confusion network.
         """
         confnet = copy.deepcopy(confnet)
-
-        for prob, dai in confnet.cn:
-            if dai.value in category_labels:
-                dai.value = category_labels[dai.value][0]
-
+        for _, dai in confnet.cn:
+            dai.category_label2value()
         return confnet
 
 

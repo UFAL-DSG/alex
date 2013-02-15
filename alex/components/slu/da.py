@@ -8,6 +8,7 @@ from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
     DialogueActConfusionNetworkException
+from alex.utils.various import ComparisonByClassFields
 
 
 def load_das(das_fname, limit=None):
@@ -56,14 +57,19 @@ def save_das(file_name, das):
     f.close()
 
 
-class DialogueActItem(object):
+class DialogueActItem(ComparisonByClassFields):
     """Represents dialogue act item which is a component of a dialogue act.
     Each dialogue act item is composed of
 
-        1) dialogue act type - e.g. inform, confirm, request, select, hello,
-           ...
-        2) slot and value pair - e.g. area, pricerange, food and
-           respectively centre, cheap, Italian
+        1) dialogue act type - e.g. inform, confirm, request, select, hello
+
+        2) slot name and value pair - e.g. area, pricerange, food for name and
+                                      centre, cheap, or Italian for value
+
+    Attributes:
+        dat: dialogue act type (a string)
+        name: slot name (a string)
+        value: slot value (a string)
 
     """
     def __init__(self, dialogue_act_type=None, name=None, value=None,
@@ -72,71 +78,113 @@ class DialogueActItem(object):
         dialogue act type (dat), slot name (name), and slot value (value).
 
         """
-
+        # Store the arguments.
         self.dat = dialogue_act_type
         self.name = name
         self.value = value
 
+        # Bookkeeping.
+        self._orig_value = None
+        self._str = None
+
         if dai:
             self.parse(dai)
 
+    def __hash__(self):
+        return hash(str(self))
+
     def __str__(self):
-        eq_value = '="{val}"'.format(val=self.value) if self.value else ''
-        return "{type_}({name}{eq_value})".format(type_=self.dat,
-                                                  name=self.name or '',
-                                                  eq_value=eq_value)
+        # Cache the value for repeated calls of this method are expected.
+        if self._str is None:
+            eq_value = '="{val}"'.format(val=self.value) if self.value else ''
+            self._str = ("{type_}({name}{eq_value})"
+                         .format(type_=self.dat,
+                                 name=self.name or '',
+                                 eq_value=eq_value))
+        return self._str
 
-    def __eq__(self, other):
-        if other.dat:
-            if other.dat != self.dat:
-                return False
+    def __cmp__(self, other):
+        self_str, other_str = str(self), str(other)
+        if self_str < other_str:
+            return -1
+        return int(self_str > other_str)
 
-        if other.name:
-            if other.name != self.name:
-                return False
+    def has_category_label(self):
+        """whether the current DAI value is the category label"""
+        return self._orig_value is not None
 
-        if other.value:
-            if other.value != self.value:
-                return False
+    def is_null(self):
+        """whether this object represents the 'null()' DAI"""
+        return self.dat == 'null' and self.name is None and self.value is None
 
-        return True
+    # The original value is always in self.value or self._orig_value.  In the
+    # latter case, self.value contains the category label.
+    #
+    # In contrast to self._orig_value, self._orig_label is defined only after
+    # a call to category_label2value, and it may be the value of
+    # `self._orig_label' and `self.value' simultaneously.
 
-    def __lt__(self, other):
-        return str(self) < str(other)
+    def value2category_label(self, label=None):
+        """Use this method to substitute a category label for value of this
+        DAI.
 
-    def parse(self, dai):
-        """Parse the dialogue act item in text format into a structured form.
         """
-        dai = dai.strip()
+        self._orig_value = self.value
+        if label is None:
+            try:
+                self.value = self._orig_label
+            except AttributeError:
+                raise DialogueActItemException(
+                    'No label has ever been assigned to this DAI, and none '
+                    '(or None) was supplied as an argument.')
+        else:
+            self.value = label
+
+    def category_label2value(self):
+        """Use this method to substitute back the original value for the
+        category label as the value of this DAI.
+
+        """
+        if self._orig_value is not None:
+            self._orig_label = self.value
+            self.value = self._orig_value
+            self._orig_value = None
+
+    # TODO This should perhaps be a class method.
+    def parse(self, dai_str):
+        """Parses the dialogue act item in text format into a structured form.
+        """
+        dai_str = dai_str.strip()
 
         try:
-            first_par_idx = dai.index('(')
+            first_par_idx = dai_str.index('(')
         except ValueError:
             raise DialogueActItemException(
-                "Parsing error in: %s. Missing opening parenthesis." % dai)
+                'Parsing error in: "{dai}". Missing opening parenthesis.'
+                .format(dai=dai_str))
 
-        self.dat = dai[:first_par_idx]
+        self.dat = dai_str[:first_par_idx]
 
         # Remove the parentheses.
-        dai_sv = dai[first_par_idx + 1:len(dai) - 1]
-        if len(dai_sv) == 0:
+        dai_nv = dai_str[first_par_idx + 1:-1]
+        if len(dai_nv) == 0:
             # There is no slot name or value.
             return self
 
-        attr_val = split_by(dai_sv, splitter='=', quotes='"')
-        if len(attr_val) == 1:
+        name_val = split_by(dai_nv, splitter='=', quotes='"')
+        if len(name_val) == 1:
             # There is only a slot name.
-            self.name = attr_val[0]
-        elif len(attr_val) == 2:
+            self.name = name_val[0]
+        elif len(name_val) == 2:
             # There is a slot name and a value.
-            self.name = attr_val[0]
-            self.value = attr_val[1]
+            self.name = name_val[0]
+            self.value = name_val[1]
             if self.value[0] in ["'", '"']:
                 self.value = self.value[1:-1]
         else:
             raise DialogueActItemException(
-                "Parsing error in: {dai}: {atval}".format(
-                    dai=dai, atval=attr_val))
+                "Parsing error in: {dai_str}: {atval}".format(
+                    dai_str=dai_str, atval=name_val))
 
         return self
 

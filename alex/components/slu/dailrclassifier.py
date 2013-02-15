@@ -32,17 +32,18 @@ class DAILogRegClassifierLearning(object):
         features_type: type of features (only 'ngram' is supported now)
         input_matrix: observation matrix, a numpy array with rows corresponding
                       to utterances and columns corresponding to features
+                      This is a read-only attribute.
         output_matrix: mapping { str(DAI): [ utterance index: ?DAI
                                              present in utterance ] }
                        where the list is a numpy array, and the values are
                        either 0.0 or 1.0
+                       This is a read-only attribute.
         preprocessing: an SLUPreprocessing object to be used for preprocessing
                        of utterances and DAs
         trained_classifiers: mapping { DAI: classifier for this DAI }
         utterance_features: mapping { utterance ID: utterance features } where
                             the features is an UtteranceFeatures object
-        utterances: mapping { utterance ID: utterance } for utterances to learn
-                    from
+        utterances: mapping { utterance ID: utterance } for training utterances
 
     """
 
@@ -58,6 +59,7 @@ class DAILogRegClassifierLearning(object):
         # Additional bookkeeping.
         # Setting protected fields to None is interpreted as that they have to
         # be computed yet.
+        # self._dai_str_counts = None
         self._dai_counts = None
         self._input_matrix = None
         self._output_matrix = None
@@ -82,7 +84,7 @@ class DAILogRegClassifierLearning(object):
         # Normalise the text and substitute category labels.
         self.category_labels = {}
         if self.preprocessing:
-            for utt_id in self.utterances.keys():
+            for utt_id in self.utterances.iterkeys():
                 self.utterances[utt_id] = self.preprocessing\
                     .text_normalisation(self.utterances[utt_id])
                 self.utterances[utt_id], self.das[utt_id], \
@@ -110,7 +112,7 @@ class DAILogRegClassifierLearning(object):
         """
         # Count number of occurrences of features.
         self.feat_counts = dict()
-        for utt_id in self.utterances.keys():
+        for utt_id in self.utterances.iterkeys():
             for feature in self.utterance_features[utt_id]:
                 self.feat_counts[feature] = \
                     self.feat_counts.get(feature, 0) + 1
@@ -121,10 +123,10 @@ class DAILogRegClassifierLearning(object):
         # Collect those with too few occurrences.
         low_count_features = set(filter(
             lambda feature: self.feat_counts[feature] < min_feature_count,
-            self.feat_counts.keys()))
+            self.feat_counts.iterkeys()))
 
         # Discard the low-count features.
-        for utt_id in self.utterances.keys():
+        for utt_id in self.utterances.iterkeys():
             self.utterance_features[utt_id].prune(low_count_features)
         old_feat_counts = self.feat_counts
         self.feat_counts = {key: old_feat_counts[key]
@@ -138,7 +140,7 @@ class DAILogRegClassifierLearning(object):
 
         # Build the mapping from features to their indices.
         self.feature_idxs = {}
-        for idx, feature in enumerate(self.feat_counts.keys()):
+        for idx, feature in enumerate(self.feat_counts.iterkeys()):
             self.feature_idxs[feature] = idx
 
         if verbose:
@@ -151,19 +153,30 @@ class DAILogRegClassifierLearning(object):
         if self._dai_counts is None:
             # Count occurrences of all DAIs in the DAs bound to this learner.
             _dai_counts = self._dai_counts = dict()
-            for utt_id in self.utterances.keys():
+            for utt_id in self.utterances.iterkeys():
                 for dai in self.das[utt_id].dais:
-                    dai_str = str(dai)
-                    _dai_counts[dai_str] = _dai_counts.get(dai_str, 0) + 1
+                    _dai_counts[dai] = _dai_counts.get(dai, 0) + 1
         return self._dai_counts
+        # # If `_dai_str_counts' have not been evaluated yet,
+        # if self._dai_str_counts is None:
+            # # Count occurrences of all DAIs in the DAs bound to this learner.
+            # _dai_str_counts = self._dai_str_counts = dict()
+            # for utt_id in self.utterances.iterkeys():
+                # for dai in self.das[utt_id].dais:
+                    # dai_str = str(dai)
+                    # _dai_str_counts[dai_str] = _dai_str_counts.get(dai_str, 0) + 1
+        # return self._dai_str_counts
 
-    def print_dai_counts(self):
+    def print_dais(self):
         """Prints what `extract_classifiers(verbose=True)' would output in
         earlier versions.
 
         """
-        for utt_id in self.utterances.keys():
+        for utt_id in self.utterances.iterkeys():
             for dai in self.das[utt_id].dais:
+                # XXX What again does ('-' not in dai.value) check? Presence of
+                # a category label? This seems to be the case yet it is very
+                # cryptic.
                 if dai.value and '-' not in dai.value:
                     print '#' * 120
                     print self.das[utt_id]
@@ -190,29 +203,54 @@ class DAILogRegClassifierLearning(object):
         """
         # Define pruning criteria.
         if accept_dai is not None:
-            _accept_dai = lambda dai_str: accept_dai(self, dai_str)
+            _accept_dai = lambda dai: accept_dai(self, dai)
         else:
-            def _accept_dai(dai_str):
-                # Discard a DAI that has too few occurrences.
-                # FIXME? What is the zero for? Is that a way to check whether that
-                # DAI has any category labels in it?!
-                cond1 = ('=' in dai_str
-                        and '0' not in dai_str
-                        and self._dai_counts[dai_str] < min_dai_count)
+            def _accept_dai(dai):
+                # Discard a DAI that is reasonably complex and yet has too few
+                # occurrences.
+                if (dai.name is not None
+                        and dai.value is not None
+                        and not dai.has_category_label()
+                        and self._dai_counts[dai] < min_dai_count):
+                    return False
                 # Discard a DAI in the form '(slotname="dontcare")'.
-                cond2 = ('="dontcare"' in dai_str and '(="dontcare")' not in dai_str)
+                if dai.name is not None and dai.value == "dontcare":
+                    return False
                 # Discard a 'null()'. This classifier can be ignored since the null
                 # dialogue act is a complement to all other dialogue acts.
-                cond3 = 'null()' in dai_str
+                return not dai.is_null()
 
-                # None of the conditions must hold.
-                return not (cond1 | cond2 | cond3)
+        # # Define pruning criteria.
+        # if accept_dai is not None:
+            # _accept_dai = lambda dai_str: accept_dai(self, dai_str)
+        # else:
+            # def _accept_dai(dai_str):
+                # # Discard a DAI that has too few occurrences.
+                # # FIXME? What is the zero for? Is that a way to check whether that
+                # # DAI has any category labels in it?!
+                # cond1 = ('=' in dai_str
+                        # and '0' not in dai_str
+                        # and self._dai_str_counts[dai_str] < min_dai_count)
+                # # Discard a DAI in the form '(slotname="dontcare")'.
+                # cond2 = ('="dontcare"' in dai_str and '(="dontcare")' not in dai_str)
+                # # Discard a 'null()'. This classifier can be ignored since the null
+                # # dialogue act is a complement to all other dialogue acts.
+                # cond3 = 'null()' in dai_str
+#
+                # # None of the conditions must hold.
+                # return not (cond1 | cond2 | cond3)
 
         # Do the pruning.
-        old_dai_counts = self.dai_counts  # NOTE side effect from the getter
-        self._dai_counts = {dai_str: old_dai_counts[dai_str]
-                            for dai_str in old_dai_counts
-                            if _accept_dai(dai_str)}
+        old_dai_counts = self.dai_counts  # NOTE the side effect from the getter
+        self._dai_counts = {dai: old_dai_counts[dai]
+                            for dai in old_dai_counts
+                            if _accept_dai(dai)}
+
+        # # Do the pruning.
+        # old_dai_str_counts = self.dai_str_counts  # NOTE side effect from the getter
+        # self._dai_str_counts = {dai_str: old_dai_str_counts[dai_str]
+                            # for dai_str in old_dai_str_counts
+                            # if _accept_dai(dai_str)}
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
@@ -220,8 +258,9 @@ class DAILogRegClassifierLearning(object):
         print "Number of classifiers: ", len(self._dai_counts)
         print "-" * 120
 
-        for dai in sorted(self._dai_counts.keys()):
-            print('%40s = %d' % (dai, self._dai_counts[dai]))
+        for dai in sorted(self._dai_counts.iterkeys()):
+            print '{dai:>40} = {cnt}'.format(dai=dai,
+                                             cnt=self._dai_counts[dai])
 
     @property
     def output_matrix(self):
@@ -245,16 +284,25 @@ class DAILogRegClassifierLearning(object):
         before.
 
         """
-        parsed_dais = {dai: DialogueActItem(dai=dai) for dai in
-                       self._dai_counts}
         das = self.das
-        uts = self.utterances.keys()
+        uts = self.utterances.iterkeys()
         # NOTE that the output matrix has unusual indexing: first associative
         # index to columns, then integral index to rows.
         self._output_matrix = \
-            {dai: np.array([float(parsed_dais[dai] in das[utt_id])
+            {dai: np.array([float(dai in das[utt_id])
                             for utt_id in uts])
              for dai in self._dai_counts}
+
+        # parsed_dais = {dai: DialogueActItem(dai=dai) for dai in
+                       # self._dai_str_counts}
+        # das = self.das
+        # uts = self.utterances.iterkeys()
+        # # NOTE that the output matrix has unusual indexing: first associative
+        # # index to columns, then integral index to rows.
+        # self._output_matrix = \
+            # {dai: np.array([float(parsed_dais[dai] in das[utt_id])
+                            # for utt_id in uts])
+             # for dai in self._dai_str_counts}
 
     @property
     def input_matrix(self):
@@ -277,7 +325,7 @@ class DAILogRegClassifierLearning(object):
         """
         self._input_matrix = np.zeros((len(self.utterances),
                                        len(self.feat_counts)))
-        for utt_idx, utt_id in enumerate(self.utterances.keys()):
+        for utt_idx, utt_id in enumerate(self.utterances.iterkeys()):
             self._input_matrix[utt_idx] = (
                 self.utterance_features[utt_id]
                 .get_feature_vector(self.feature_idxs))
@@ -292,6 +340,7 @@ class DAILogRegClassifierLearning(object):
         self.trained_classifiers = {}
         if verbose:
             coefs_sum = np.zeros(shape=(1, len(self.feat_counts)))
+        # for dai in sorted(self._dai_str_counts):
         for dai in sorted(self._dai_counts):
             # before message
             if verbose:
