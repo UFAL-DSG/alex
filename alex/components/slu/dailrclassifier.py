@@ -22,7 +22,7 @@ class DAILogRegClassifierLearning(object):
     Attributes:
         category_labels: mapping { utterance ID:
                                     { category label: original string } }
-        dai_counts: mapping { str(DAI): number of occurrences in data }
+        dai_counts: mapping { DAI: number of occurrences in data }
         das: mapping { utterance ID: DA } for DAs corresponding to training
              utterances
         feat_counts: mapping { feature: number of occurrences }
@@ -33,8 +33,8 @@ class DAILogRegClassifierLearning(object):
         input_matrix: observation matrix, a numpy array with rows corresponding
                       to utterances and columns corresponding to features
                       This is a read-only attribute.
-        output_matrix: mapping { str(DAI): [ utterance index: ?DAI
-                                             present in utterance ] }
+        output_matrix: mapping { DAI: [ utterance index: ?DAI
+                                            present in utterance ] }
                        where the list is a numpy array, and the values are
                        either 0.0 or 1.0
                        This is a read-only attribute.
@@ -285,7 +285,7 @@ class DAILogRegClassifierLearning(object):
 
         """
         das = self.das
-        uts = self.utterances.iterkeys()
+        uts = self.utterances.viewkeys()
         # NOTE that the output matrix has unusual indexing: first associative
         # index to columns, then integral index to rows.
         self._output_matrix = \
@@ -371,10 +371,24 @@ class DAILogRegClassifierLearning(object):
             print "Total number of non-zero params:", \
                   np.count_nonzero(coefs_sum)
 
+    def resave_model(self, infname, outfname):
+        """This helper method serves to convert from the original format of SLU
+        models to the current one.
+
+        """
+        with open(infname, 'rb') as infile:
+            data = pickle.load(infile)
+        new_clsers = {item[0].extension(): item[1] for item in
+                      data[2].iteritems()}
+        with open(outfname, 'wb+') as outfile:
+            pickle.dump((data[0], data[1], new_clsers, data[3], data[4]),
+                        outfile)
+
     def save_model(self, file_name):
-        data = (self.feat_counts.keys(),
+        data = (self.feat_counts.viewkeys(),
                 self.feature_idxs,
-                self.trained_classifiers,
+                {item[0].extension(): item[1] for item in
+                 self.trained_classifiers.iteritems()},
                 self.features_type,
                 self.features_size)
         with open(file_name, 'w+') as outfile:
@@ -460,7 +474,7 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 print p
 
-            da_confnet.add(p[0][1], DialogueActItem(dai=dai))
+            da_confnet.add(p[0][1], dai)
 
         if verbose:
             print "DA: ", da_confnet

@@ -131,8 +131,8 @@ class SLUPreprocessing(object):
 
         Returns a tuple of:
             [0] an utterance with replaced database values, and
-            [2] a dictionary mapping from category labels to the original
-                strings.
+            [1] a dictionary mapping from category labels to the tuple (slot
+                value, surface form).
 
         """
         utterance = copy.deepcopy(utterance)
@@ -175,8 +175,8 @@ class SLUPreprocessing(object):
         Returns a tuple of:
             [0] an utterance with replaced database values,
             [1] the DA with replaced database values, and
-            [2] a dictionary mapping from category labels to the original
-                strings.
+            [2] a dictionary mapping from category labels to the tuple (slot
+                value, surface form).
 
         """
         # Do the substitution in the utterance, and obtain the resulting
@@ -208,7 +208,6 @@ class SLUPreprocessing(object):
 
         return utterance
 
-    # TODO Deprecate the third argument.
     def category_labels2values_in_da(self, da, category_labels=None):
         """Reverts the effect of the values2category_labels_in_da(...)
         function.
@@ -217,10 +216,9 @@ class SLUPreprocessing(object):
         """
         da = copy.deepcopy(da)
         for dai in da.dais:
-            dai.category_label2value()
+            dai.category_label2value(category_labels)
         return da
 
-    # TODO Deprecate the third argument.
     def category_labels2values_in_nblist(self, nblist, category_labels=None):
         """Reverts the effect of the values2category_labels_in_da(...)
         function.
@@ -230,10 +228,9 @@ class SLUPreprocessing(object):
         nblist = copy.deepcopy(nblist)
         for _, da in nblist.n_best:
             for dai in da:
-                dai.category_label2value()
+                dai.category_label2value(category_labels)
         return nblist
 
-    # TODO Deprecate the third argument.
     def category_labels2values_in_confnet(self, confnet, category_labels=None):
         """Reverts the effect of the values2category_labels_in_da(...)
         function.
@@ -242,7 +239,7 @@ class SLUPreprocessing(object):
         """
         confnet = copy.deepcopy(confnet)
         for _, dai in confnet.cn:
-            dai.category_label2value()
+            dai.category_label2value(category_labels)
         return confnet
 
 

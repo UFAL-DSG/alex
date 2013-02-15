@@ -62,14 +62,3 @@ class nesteddict(defaultdict):
                     yield (key,) + tup
                 else:
                     yield key, value
-
-
-class ComparisonByClassFields(object):
-    """A mixin class that causes its instantiations to be compared equal iff
-    their member fields compare equal. (Precisely, if their .__dict__ compare
-    equal.)
-
-    """
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__

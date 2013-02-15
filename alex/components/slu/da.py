@@ -8,7 +8,6 @@ from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
     DialogueActConfusionNetworkException
-from alex.utils.various import ComparisonByClassFields
 
 
 def load_das(das_fname, limit=None):
@@ -57,7 +56,7 @@ def save_das(file_name, das):
     f.close()
 
 
-class DialogueActItem(ComparisonByClassFields):
+class DialogueActItem(object):
     """Represents dialogue act item which is a component of a dialogue act.
     Each dialogue act item is composed of
 
@@ -91,7 +90,14 @@ class DialogueActItem(ComparisonByClassFields):
             self.parse(dai)
 
     def __hash__(self):
+        # Identity of a DAI is determined by its textual representation.
+        # That means, if two DAIs have the same DA type, slot name, and slot
+        # value, they hash to the same spot.
         return hash(str(self))
+
+    def __cmp__(self, other):
+        self_str, other_str = str(self), str(other)
+        return int(self_str >= other_str) - int(self_str <= other_str)
 
     def __str__(self):
         # Cache the value for repeated calls of this method are expected.
@@ -102,12 +108,6 @@ class DialogueActItem(ComparisonByClassFields):
                                  name=self._name or '',
                                  eq_value=eq_value))
         return self._str
-
-    def __cmp__(self, other):
-        self_str, other_str = str(self), str(other)
-        if self_str < other_str:
-            return -1
-        return int(self_str > other_str)
 
     @property
     def dat(self):
@@ -141,6 +141,15 @@ class DialogueActItem(ComparisonByClassFields):
         """whether this object represents the 'null()' DAI"""
         return self._dat == 'null' and self._name is None and self._value is None
 
+    def extension(self):
+        """Returns an extension of self, i.e., a new DialogueActItem without
+        hidden fields, such as the original value/category label.
+
+        """
+        return DialogueActItem(dialogue_act_type=self._dat,
+                               name=self._name,
+                               value=self._value)
+
     # The original value is always in self._value or self._orig_value.  In the
     # latter case, self._value contains the category label.
     #
@@ -164,15 +173,33 @@ class DialogueActItem(ComparisonByClassFields):
         else:
             self.value = label
 
-    def category_label2value(self):
+    def category_label2value(self, catlabs=None):
         """Use this method to substitute back the original value for the
         category label as the value of this DAI.
 
+        Arguments:
+            catlabs: an optional mapping of category labels to tuples (slot
+                     value, surface form), as obtained from
+                     alex.components.slu:SLUPreprocessing
+
+                     If this object does not remember its original value, it
+                     takes it from the provided mapping.
+
         """
+        # Try to use the remembered value.
         if self._orig_value is not None:
-            self._orig_label = self._value
-            self.value = self._orig_value
-            self._orig_value = None
+            newval = self._orig_value
+        # Try to use the argument.
+        elif catlabs is not None and self._value in catlabs:
+            newval = catlabs[self._value][0]
+        # Else, do nothing.
+        else:
+            return
+
+        # Do the swap.
+        self._orig_label = self._value
+        self.value = newval
+        self._orig_value = None
 
     # TODO This should perhaps be a class method.
     def parse(self, dai_str):
@@ -517,7 +544,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         self.add(probability, dai)
 
     def get_best_da(self):
-        """Return the best dialogue act (with the highest probability)."""
+        """Return the best dialogue act (one with the highest probability)."""
         da = DialogueAct()
         for prob, dai in self.cn:
             if prob > 0.5:
