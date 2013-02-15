@@ -79,9 +79,9 @@ class DialogueActItem(ComparisonByClassFields):
 
         """
         # Store the arguments.
-        self.dat = dialogue_act_type
-        self.name = name
-        self.value = value
+        self._dat = dialogue_act_type
+        self._name = name
+        self._value = value
 
         # Bookkeeping.
         self._orig_value = None
@@ -96,10 +96,10 @@ class DialogueActItem(ComparisonByClassFields):
     def __str__(self):
         # Cache the value for repeated calls of this method are expected.
         if self._str is None:
-            eq_value = '="{val}"'.format(val=self.value) if self.value else ''
+            eq_value = '="{val}"'.format(val=self._value) if self._value else ''
             self._str = ("{type_}({name}{eq_value})"
-                         .format(type_=self.dat,
-                                 name=self.name or '',
+                         .format(type_=self._dat,
+                                 name=self._name or '',
                                  eq_value=eq_value))
         return self._str
 
@@ -109,27 +109,51 @@ class DialogueActItem(ComparisonByClassFields):
             return -1
         return int(self_str > other_str)
 
+    @property
+    def dat(self):
+        return self._dat
+    @dat.setter
+    def dat(self, newval):
+        self._dat = newval
+        self._str = None
+
+    @property
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self, newval):
+        self._name = newval
+        self._str = None
+
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, newval):
+        self._value = newval
+        self._str = None
+
     def has_category_label(self):
         """whether the current DAI value is the category label"""
         return self._orig_value is not None
 
     def is_null(self):
         """whether this object represents the 'null()' DAI"""
-        return self.dat == 'null' and self.name is None and self.value is None
+        return self._dat == 'null' and self._name is None and self._value is None
 
-    # The original value is always in self.value or self._orig_value.  In the
-    # latter case, self.value contains the category label.
+    # The original value is always in self._value or self._orig_value.  In the
+    # latter case, self._value contains the category label.
     #
     # In contrast to self._orig_value, self._orig_label is defined only after
     # a call to category_label2value, and it may be the value of
-    # `self._orig_label' and `self.value' simultaneously.
+    # `self._orig_label' and `self._value' simultaneously.
 
     def value2category_label(self, label=None):
         """Use this method to substitute a category label for value of this
         DAI.
 
         """
-        self._orig_value = self.value
+        self._orig_value = self._value
         if label is None:
             try:
                 self.value = self._orig_label
@@ -146,7 +170,7 @@ class DialogueActItem(ComparisonByClassFields):
 
         """
         if self._orig_value is not None:
-            self._orig_label = self.value
+            self._orig_label = self._value
             self.value = self._orig_value
             self._orig_value = None
 
@@ -163,29 +187,27 @@ class DialogueActItem(ComparisonByClassFields):
                 'Parsing error in: "{dai}". Missing opening parenthesis.'
                 .format(dai=dai_str))
 
-        self.dat = dai_str[:first_par_idx]
+        self._dat = dai_str[:first_par_idx]
 
-        # Remove the parentheses.
+        # Remove the parentheses, parse slot name and value.
         dai_nv = dai_str[first_par_idx + 1:-1]
-        if len(dai_nv) == 0:
-            # There is no slot name or value.
-            return self
+        if dai_nv:
+            name_val = split_by(dai_nv, splitter='=', quotes='"')
+            if len(name_val) == 1:
+                # There is only a slot name.
+                self._name = name_val[0]
+            elif len(name_val) == 2:
+                # There is a slot name and a value.
+                self._name = name_val[0]
+                self._value = name_val[1]
+                if self._value[0] in ["'", '"']:
+                    self._value = self._value[1:-1]
+            else:
+                raise DialogueActItemException(
+                    "Parsing error in: {dai_str}: {atval}".format(
+                        dai_str=dai_str, atval=name_val))
 
-        name_val = split_by(dai_nv, splitter='=', quotes='"')
-        if len(name_val) == 1:
-            # There is only a slot name.
-            self.name = name_val[0]
-        elif len(name_val) == 2:
-            # There is a slot name and a value.
-            self.name = name_val[0]
-            self.value = name_val[1]
-            if self.value[0] in ["'", '"']:
-                self.value = self.value[1:-1]
-        else:
-            raise DialogueActItemException(
-                "Parsing error in: {dai_str}: {atval}".format(
-                    dai_str=dai_str, atval=name_val))
-
+        self._str = None
         return self
 
 
