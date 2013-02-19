@@ -3,6 +3,7 @@
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
 from collections import defaultdict
+from operator import xor
 
 from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
@@ -83,7 +84,9 @@ class DialogueActItem(object):
         self._value = value
 
         # Bookkeeping.
-        self._orig_value = None
+        self._orig_values = set()
+        # self._orig_value = None
+        self._unnorm_values = set()
         self._str = None
 
         if dai:
@@ -97,21 +100,22 @@ class DialogueActItem(object):
 
     def __cmp__(self, other):
         self_str, other_str = str(self), str(other)
-        return int(self_str >= other_str) - int(self_str <= other_str)
+        return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
         # Cache the value for repeated calls of this method are expected.
         if self._str is None:
-            eq_value = '="{val}"'.format(val=self._value) if self._value else ''
-            self._str = ("{type_}({name}{eq_value})"
+            eq_val = '="{val}"'.format(val=self._value) if self._value else ''
+            self._str = ("{type_}({name}{eq_val})"
                          .format(type_=self._dat,
                                  name=self._name or '',
-                                 eq_value=eq_value))
+                                 eq_val=eq_val))
         return self._str
 
     @property
     def dat(self):
         return self._dat
+
     @dat.setter
     def dat(self, newval):
         self._dat = newval
@@ -120,6 +124,7 @@ class DialogueActItem(object):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, newval):
         self._name = newval
@@ -128,6 +133,7 @@ class DialogueActItem(object):
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, newval):
         self._value = newval
@@ -135,11 +141,16 @@ class DialogueActItem(object):
 
     def has_category_label(self):
         """whether the current DAI value is the category label"""
-        return self._orig_value is not None
+        return bool(self._orig_values)  # whether there was an original value
+                                        # that got substituted (assumably by
+                                        # a category label)
+        # return self._orig_value is not None
 
     def is_null(self):
         """whether this object represents the 'null()' DAI"""
-        return self._dat == 'null' and self._name is None and self._value is None
+        return (self._dat == 'null'
+                and self._name is None
+                and self._value is None)
 
     def extension(self):
         """Returns an extension of self, i.e., a new DialogueActItem without
@@ -150,10 +161,10 @@ class DialogueActItem(object):
                                name=self._name,
                                value=self._value)
 
-    # The original value is always in self._value or self._orig_value.  In the
-    # latter case, self._value contains the category label.
+    # The original value is always in self._value or in self._orig_values.  In
+    # the latter case, self._value contains the category label.
     #
-    # In contrast to self._orig_value, self._orig_label is defined only after
+    # In contrast to self._orig_values, self._orig_label is defined only after
     # a call to category_label2value, and it may be the value of
     # `self._orig_label' and `self._value' simultaneously.
 
@@ -162,7 +173,8 @@ class DialogueActItem(object):
         DAI.
 
         """
-        self._orig_value = self._value
+        # self._orig_value = self._value
+        self._orig_values.add(self._value)
         if label is None:
             try:
                 self.value = self._orig_label
@@ -186,9 +198,18 @@ class DialogueActItem(object):
                      takes it from the provided mapping.
 
         """
-        # Try to use the remembered value.
-        if self._orig_value is not None:
-            newval = self._orig_value
+        newval = None
+        try:
+            # Try to use the remembered value.
+            if bool(self._orig_values):
+                newval = self._orig_values.pop()
+            # if self._orig_value is not None:
+                # newval = self._orig_value
+        except AttributeError:
+            # Be tolerant to older models, which break the current contract.
+            pass
+        if newval is not None:
+            pass
         # Try to use the argument.
         elif catlabs is not None and self._value in catlabs:
             newval = catlabs[self._value][0]
@@ -199,7 +220,31 @@ class DialogueActItem(object):
         # Do the swap.
         self._orig_label = self._value
         self.value = newval
-        self._orig_value = None
+        # self._orig_value = None
+
+    def value2normalised(self, normalised):
+        """Use this method to substitute a normalised value for value of this
+        DAI.
+
+        """
+        self._unnorm_values.add(self._value)
+        self.value = normalised
+
+    def normalised2value(self):
+        """Use this method to substitute back an unnormalised value for the
+        normalised one as the value of this DAI.
+
+        Returns True iff substitution took place.  Returns False if no more
+        unnormalised values are remembered as a source for the normalised
+        value.
+
+        """
+        # Try to use the remembered value.
+        if bool(self._unnorm_values):
+            self.value = self._unnorm_values.pop()
+            return True
+        else:
+            return False
 
     # TODO This should perhaps be a class method.
     def parse(self, dai_str):
@@ -239,119 +284,119 @@ class DialogueActItem(object):
 
 
 class DialogueAct(object):
+    """Represents a dialogue act (DA), i.e., a set of dialogue act items
+    (DAIs).  The DAIs are stored in the `dais' attribute, sorted w.r.t. their
+    string representation.  This class is not responsible for discarding a DAI
+    which is repeated several times, so that you can obtain a DA that looks
+    like this:
+
+        inform(food="chinese")&inform(food="chinese")
+
+    """
+
     def __init__(self, da=None):
+        """Initialises this DA.
+
+        Arguments:
+            da: a string representation of a DA to parse and initialise this
+                object from
+
+        """
         self.dais = []
 
         if da is not None:
             self.parse(da)
 
     def __str__(self):
-        dais = []
-
-        for dai in self.dais:
-            dais.append(str(dai))
-
-        return '&'.join(dais)
+        return '&'.join(str(dai) for dai in self.dais)
 
     def __contains__(self, dai):
-        if isinstance(dai, DialogueActItem):
-            return dai in self.dais
-        elif isinstance(dai, str):
-            l = [str(d) for d in self.dais]
-            return dai in l
+        return ((isinstance(dai, DialogueActItem) and dai in self.dais) or
+                (isinstance(dai, str)
+                 and any(map(lambda my_dai: dai == str(my_dai), self.dais))))
 
-    def __lt__(self, other):
-        return self.dais < other.dais
-
-    def __le__(self, other):
-        return self.dais <= other.dais
-
-    def __eq__(self, other):
+    def __cmp__(self, other):
         if isinstance(other, DialogueAct):
-            return self.dais == other.dais
+            if self.dais == other.dais:
+                return 0
+            self_str = str(self)
+            return (self.dais >= other.dais) - (other.dais >= self.dais)
         elif isinstance(other, str):
-            return str(self) == other
+            self_str = str(self)
+            return (self_str >= other) - (other >= self_str)
         else:
             DialogueActException("Unsupported comparison type.")
 
-    def __ne__(self, other):
-        return self.dais != other.dais
-
-    def __gt__(self, other):
-        return self.dais > other.dais
-
-    def __ge__(self, other):
-        return self.dais >= other.dais
+    def __hash__(self):
+        return reduce(xor, map(hash, enumerate(self.dais)), 0)
 
     def __len__(self):
         return len(self.dais)
 
-    def __getitem__(self, i):
-        return self.dais[i]
+    def __getitem__(self, idx):
+        return self.dais[idx]
 
     def __iter__(self):
-        for i in self.dais:
-            yield i
+        for dai in self.dais:
+            yield dai
 
     def has_dat(self, dat):
         """Checks whether any of the dialogue act items has a specific dialogue
         act type.
 
         """
-
-        for dai in self.dais:
-            if dat == dai.dat:
-                return True
-
-        return False
+        return any(map(lambda dai: dai.dat == dat, self.dais))
 
     def has_only_dat(self, dat):
         """Checks whether all the dialogue act items has a specific dialogue
         act type.
 
         """
-
-        for dai in self.dais:
-            if dat != dai.dat:
-                return False
-
-        return True
+        return all(map(lambda dai: dai.dat == dat, self.dais))
 
     def parse(self, da):
-        """Parse the dialogue act in text format into the structured form."""
+        """Parse the dialogue act in text format into the structured form.  If
+        any DAIs have been already defined for this DA, they will be
+        overwritten.
+
+        """
+        if self.dais:
+            del self.dais[:]
         dais = sorted(split_by(da, splitter='&', opening_parentheses='(',
                                closing_parentheses=')', quotes='"'))
-
         self.dais.extend(DialogueActItem(dai=dai) for dai in dais)
 
     def append(self, dai):
         """Append a dialogue act item to the current dialogue act."""
         if isinstance(dai, DialogueActItem):
             self.dais.append(dai)
+            self.dais.sort()
         else:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
 
+    def extend(self, dais):
+        if not all(map(lambda obj: isinstance(obj, DialogueActItem), dais)):
+            raise DialogueActException("Only DialogueActItems can be added.")
+        self.dais.extend(dais)
+        self.dais.sort()
+
     def get_slots_and_values(self):
-        """Returns all values and corresponding slot names in the dialogue
-        act.
-
-        """
-        sv = []
-        for dai in self.dais:
-            if dai.value:
-                sv.append([dai.name, dai.value])
-
-        return sv
+        """Returns all slot names and values in the dialogue act."""
+        return [[dai.name, dai.value] for dai in self.dais if dai.value]
 
     def sort(self):
-       # print "S1", self
         self.dais.sort()
-       # print "S2", self
 
     def merge(self, da):
-        for dai in da:
-            self.append(dai)
+        if not isinstance(da, DialogueAct):
+            raise DialogueActException("DialogueAct can only be merged with "
+                                       "another DialogueAct")
+        # TODO: Merge the individual DAIs, too. I.e., if they are equal on
+        # extension but differ in original values, put the original values
+        # together, and keep the single DAI.
+        self.dais.extend(da.dais)
+        self.dais.sort()
 
 
 class SLUHypothesis(object):
@@ -382,9 +427,10 @@ class DialogueActNBList(SLUHypothesis):
     When updating the N-best list, one should do the following.
 
     1. add utterances or parse a confusion network
-    2. merge
-    3. normalise
-    4. sort
+    2. merge and normalise, in either order
+
+    Do NOT add the 'other()' DA more than once, else the `normalise' method
+    will raise an exception.
 
     """
 
@@ -392,11 +438,8 @@ class DialogueActNBList(SLUHypothesis):
         self.n_best = []
 
     def __str__(self):
-        s = []
-        for h in self.n_best:
-            s.append("%.3f %s" % (h[0], h[1]))
-
-        return '\n'.join(s)
+        return '\n'.join('{p:.3f} {da}'.format(p=p, da=da)
+                         for p, da in self.n_best)
 
     def __len__(self):
         return len(self.n_best)
@@ -405,85 +448,100 @@ class DialogueActNBList(SLUHypothesis):
         return self.n_best[i]
 
     def __iter__(self):
-        for i in self.n_best:
-            yield i
+        for hyp in self.n_best:
+            yield hyp
+
+    def __cmp__(self, other):
+        return (self.n_best >= other.n_best) - (other.n_best >= self.n_best)
 
     def get_best_da(self):
         """Returns the most probable dialogue act."""
         return self.n_best[0][1]
 
     def add(self, probability, da):
-        self.n_best.append([probability, da])
+        """Finds the last hypothesis with a lower probability and inserts the
+        new item before that one.
+
+        """
+        insert_idx = len(self.n_best)
+        while insert_idx > 0:
+            insert_idx -= 1
+            if probability <= self.n_best[insert_idx]:
+                insert_idx += 1
+                break
+        self.n_best.insert(insert_idx, [probability, da])
 
     def merge(self):
-        """Adds up probabilities for the same hypotheses.
-        """
-        new_n_best = []
-
+        """Adds up probabilities for the same hypotheses."""
         if len(self.n_best) <= 1:
             return
         else:
-            new_n_best.append(self.n_best[0])
+            new_n_best = [self.n_best[0]]
 
-            for i in range(1, len(self.n_best)):
-                for j in range(len(new_n_best)):
-                    if new_n_best[j][1] == self.n_best[i][1]:
-                        # merge, add the probabilities
-                        new_n_best[j][0] += self.n_best[i][0]
+            for cur_idx in xrange(1, len(self.n_best)):
+                for new_idx in xrange(len(new_n_best)):
+                    if new_n_best[new_idx][1] == self.n_best[cur_idx][1]:
+                        # Merge, add the probabilities.
+                        new_n_best[new_idx][0] += self.n_best[cur_idx][0]
                         break
                 else:
-                    new_n_best.append(self.n_best[i])
+                    new_n_best.append(self.n_best[cur_idx])
 
-        self.n_best = new_n_best
+        self.n_best = sorted(new_n_best, reverse=True)
+        return self
 
     def scale(self):
         """The N-best list will be scaled to sum to one."""
+        tot = float(sum(p for p, da in self.n_best))
+        for hyp_idx in xrange(len(self.n_best)):
+            # Null act is already there (we assume), therefore just normalise.
+            self.n_best[hyp_idx][0] /= tot
+        return self
 
-        s = sum([p for p, da in self.n_best])
-
-        for i in range(len(self.n_best)):
-            # null act is already there, therefore just normalise
-            self.n_best[i][0] /= s
-
+    # FIXME: This method name, especially next to the `scale' method, is quite
+    # confusing.  Rename them.
     def normalise(self):
-        """The N-best list is extended to include a "other()" dialogue act to
-        represent that semantic hypotheses which are not included in the N-best
-        list.
+        """The N-best list is extended to include the "other()" dialogue act to
+        represent those semantic hypotheses which are not included in the
+        N-best list.
 
         """
-        sum = 0.0
-        other_da = -1
-        for i in range(len(self.n_best)):
-            sum += self.n_best[i][0]
+        tot = 0.0
+        other_da_idx = -1
+        for hyp_idx in range(len(self.n_best)):
+            tot += self.n_best[hyp_idx][0]
 
-            if self.n_best[i][1] == 'other()':
-                if other_da != -1:
+            if self.n_best[hyp_idx][1] == 'other()':
+                if other_da_idx != -1:
                     raise DialogueActNBListException(
-                        'Dialogue act list include multiple null() ' + \
+                        'Dialogue act list includes multiple null() ' + \
                         'dialogue acts: {nb!s}'.format(nb=self.n_best))
-                other_da = i
+                other_da_idx = hyp_idx
 
-        if other_da == -1:
-            if sum > 1.0:
+        # If the 'other()' dialogue act is absent,
+        if other_da_idx == -1:
+            if tot > 1.0:
                 raise DialogueActNBListException(
                     'Sum of probabilities in dialogue act list > 1.0: ' + \
-                    '{s:8.6f}'.format(s=sum))
-            prob_other = 1.0 - sum
+                    '{s:8.6f}'.format(s=tot))
+            # Append the 'other()' DA.
+            prob_other = 1.0 - tot
             self.n_best.append([prob_other, DialogueAct('other()')])
-
+        # If the 'other()' dialogue act was present,
         else:
-            for i in range(len(self.n_best)):
-                # null act is already there, therefore just normalise
-                self.n_best[i][0] /= sum
+            # Just normalise the probs.
+            for hyp_idx in range(len(self.n_best)):
+                self.n_best[hyp_idx][0] /= tot
 
+        return self
+
+    # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
-        self.n_best.sort(reverse=True)
+        return self
+        # self.n_best.sort(reverse=True)
 
     def has_dat(self, dat):
-        for prob, da in self:
-            if da.has_dat(dat):
-                return True
-        return False
+        return any(map(lambda hyp: hyp[1].has_dat(dat), self.n_best))
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
@@ -649,8 +707,6 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         res.sort(reverse=True)
         return res
-
-
 
     def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
         """Parses the input dialogue act item confusion network and generates

@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008.
+#
+# TODO:
+#   Document the DAILogRegClassifier class.
+#   Merge the two classes?
+
 
 import numpy as np
 import cPickle as pickle
@@ -33,8 +38,8 @@ class DAILogRegClassifierLearning(object):
         input_matrix: observation matrix, a numpy array with rows corresponding
                       to utterances and columns corresponding to features
                       This is a read-only attribute.
-        output_matrix: mapping { DAI: [ utterance index: ?DAI
-                                            present in utterance ] }
+        output_matrix: mapping { DAI: [ utterance index:
+                                        ?DAI present in utterance ] }
                        where the list is a numpy array, and the values are
                        either 0.0 or 1.0
                        This is a read-only attribute.
@@ -59,7 +64,6 @@ class DAILogRegClassifierLearning(object):
         # Additional bookkeeping.
         # Setting protected fields to None is interpreted as that they have to
         # be computed yet.
-        # self._dai_str_counts = None
         self._dai_counts = None
         self._input_matrix = None
         self._output_matrix = None
@@ -85,8 +89,10 @@ class DAILogRegClassifierLearning(object):
         self.category_labels = {}
         if self.preprocessing:
             for utt_id in self.utterances.iterkeys():
+                # Normalise the text.
                 self.utterances[utt_id] = self.preprocessing\
                     .text_normalisation(self.utterances[utt_id])
+                # Substitute category labes.
                 self.utterances[utt_id], self.das[utt_id], \
                         self.category_labels[utt_id] = \
                     self.preprocessing.values2category_labels_in_da(
@@ -148,7 +154,7 @@ class DAILogRegClassifierLearning(object):
 
     @property
     def dai_counts(self):
-        """a mapping { str(DAI) : number of occurrences in training DAs }"""
+        """a mapping { DAI : number of occurrences in training DAs }"""
         # If `_dai_counts' have not been evaluated yet,
         if self._dai_counts is None:
             # Count occurrences of all DAIs in the DAs bound to this learner.
@@ -157,15 +163,6 @@ class DAILogRegClassifierLearning(object):
                 for dai in self.das[utt_id].dais:
                     _dai_counts[dai] = _dai_counts.get(dai, 0) + 1
         return self._dai_counts
-        # # If `_dai_str_counts' have not been evaluated yet,
-        # if self._dai_str_counts is None:
-            # # Count occurrences of all DAIs in the DAs bound to this learner.
-            # _dai_str_counts = self._dai_str_counts = dict()
-            # for utt_id in self.utterances.iterkeys():
-                # for dai in self.das[utt_id].dais:
-                    # dai_str = str(dai)
-                    # _dai_str_counts[dai_str] = _dai_str_counts.get(dai_str, 0) + 1
-        # return self._dai_str_counts
 
     def print_dais(self):
         """Prints what `extract_classifiers(verbose=True)' would output in
@@ -196,9 +193,9 @@ class DAILogRegClassifierLearning(object):
                 else False;
 
                 The function gets called with the following tuple
-                of arguments: (self, dai_str), where `self' is this
-                DAILogRegClassifierLearning object, and `dai_str' the string
-                representation of the DAI in question
+                of arguments: (self, dai), where `self' is this
+                DAILogRegClassifierLearning object, and `dai' the DAI in
+                question
 
         """
         # Define pruning criteria.
@@ -220,37 +217,11 @@ class DAILogRegClassifierLearning(object):
                 # dialogue act is a complement to all other dialogue acts.
                 return not dai.is_null()
 
-        # # Define pruning criteria.
-        # if accept_dai is not None:
-            # _accept_dai = lambda dai_str: accept_dai(self, dai_str)
-        # else:
-            # def _accept_dai(dai_str):
-                # # Discard a DAI that has too few occurrences.
-                # # FIXME? What is the zero for? Is that a way to check whether that
-                # # DAI has any category labels in it?!
-                # cond1 = ('=' in dai_str
-                        # and '0' not in dai_str
-                        # and self._dai_str_counts[dai_str] < min_dai_count)
-                # # Discard a DAI in the form '(slotname="dontcare")'.
-                # cond2 = ('="dontcare"' in dai_str and '(="dontcare")' not in dai_str)
-                # # Discard a 'null()'. This classifier can be ignored since the null
-                # # dialogue act is a complement to all other dialogue acts.
-                # cond3 = 'null()' in dai_str
-#
-                # # None of the conditions must hold.
-                # return not (cond1 | cond2 | cond3)
-
         # Do the pruning.
         old_dai_counts = self.dai_counts  # NOTE the side effect from the getter
         self._dai_counts = {dai: old_dai_counts[dai]
                             for dai in old_dai_counts
                             if _accept_dai(dai)}
-
-        # # Do the pruning.
-        # old_dai_str_counts = self.dai_str_counts  # NOTE side effect from the getter
-        # self._dai_str_counts = {dai_str: old_dai_str_counts[dai_str]
-                            # for dai_str in old_dai_str_counts
-                            # if _accept_dai(dai_str)}
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
@@ -289,20 +260,9 @@ class DAILogRegClassifierLearning(object):
         # NOTE that the output matrix has unusual indexing: first associative
         # index to columns, then integral index to rows.
         self._output_matrix = \
-            {dai: np.array([float(dai in das[utt_id])
-                            for utt_id in uts])
+            {dai.extension(): np.array([float(dai in das[utt_id])
+                                        for utt_id in uts])
              for dai in self._dai_counts}
-
-        # parsed_dais = {dai: DialogueActItem(dai=dai) for dai in
-                       # self._dai_str_counts}
-        # das = self.das
-        # uts = self.utterances.iterkeys()
-        # # NOTE that the output matrix has unusual indexing: first associative
-        # # index to columns, then integral index to rows.
-        # self._output_matrix = \
-            # {dai: np.array([float(parsed_dais[dai] in das[utt_id])
-                            # for utt_id in uts])
-             # for dai in self._dai_str_counts}
 
     @property
     def input_matrix(self):
@@ -340,7 +300,6 @@ class DAILogRegClassifierLearning(object):
         self.trained_classifiers = {}
         if verbose:
             coefs_sum = np.zeros(shape=(1, len(self.feat_counts)))
-        # for dai in sorted(self._dai_str_counts):
         for dai in sorted(self._dai_counts):
             # before message
             if verbose:

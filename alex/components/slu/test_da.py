@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from copy import deepcopy
 import unittest
 
 if __name__ == "__main__":
@@ -11,22 +12,43 @@ from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBLi
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 
 class TestDA(unittest.TestCase):
+
+    def test_swapping_merge_normalise(self):
+        nblist1 = DialogueActNBList()
+        nblist1.add(0.7, DialogueAct("hello()"))
+        nblist1.add(0.2, DialogueAct("bye()"))
+        nblist2 = deepcopy(nblist1)
+
+        nblist1.merge().normalise()
+        nblist2.normalise().merge()
+
+        s = []
+        s.append("")
+        s.append("Using merge().normalise():")
+        s.append(str(nblist1))
+        s.append("")
+        s.append("Using normalise().merge():")
+        s.append(str(nblist2))
+        s.append("")
+        print '\n'.join(s)
+
+        self.assertEqual(nblist1, nblist2)
+
+
     def test_merge_slu_nblists_full_nbest_lists(self):
         # make sure the alex.components.slu.da.merge_slu_nblists merges nblists correctly
 
         nblist1 = DialogueActNBList()
         nblist1.add(0.7, DialogueAct("hello()"))
         nblist1.add(0.2, DialogueAct("bye()"))
-        nblist1.merge()
-        nblist1.normalise()
-        nblist1.sort()
+        nblist1.merge().normalise()
+        # nblist1.normalise()
 
         nblist2 = DialogueActNBList()
         nblist2.add(0.6, DialogueAct("hello()"))
         nblist2.add(0.3, DialogueAct("restart()"))
-        nblist2.merge()
-        nblist2.normalise()
-        nblist2.sort()
+        nblist2.merge().normalise()
+        # nblist2.normalise()
 
         nblists = [[0.7, nblist1], [0.3, nblist2]]
 
@@ -39,9 +61,8 @@ class TestDA(unittest.TestCase):
         correct_merged_nblists.add(0.3*0.6, DialogueAct("hello()"))
         correct_merged_nblists.add(0.3*0.3, DialogueAct("restart()"))
         correct_merged_nblists.add(0.3*0.1, DialogueAct("other()"))
-        correct_merged_nblists.merge()
-        correct_merged_nblists.normalise()
-        correct_merged_nblists.sort()
+        correct_merged_nblists.merge().normalise()
+        # correct_merged_nblists.normalise()
 
         s = []
         s.append("")
