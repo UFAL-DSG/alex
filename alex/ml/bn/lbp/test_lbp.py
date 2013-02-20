@@ -14,6 +14,7 @@ class TestLBP(unittest.TestCase):
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
         fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+            ['hid1', 'obs1'],
             {
                 "hid1": ["save", "del"],
                 "obs1": ["osave", "odel"]
@@ -28,6 +29,7 @@ class TestLBP(unittest.TestCase):
         hid2 = DiscreteVariableNode("hid2", ["save", "del"])
         obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
         fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
+            ['hid2', 'obs2'],
             {
                 "hid2": ["save", "del"],
                 "obs2": ["osave", "odel"]
@@ -40,6 +42,7 @@ class TestLBP(unittest.TestCase):
             }))
 
         fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+            ['hid1', 'hid2'],
             {
                 "hid1": ["save", "del"],
                 "hid2": ["save", "del"],

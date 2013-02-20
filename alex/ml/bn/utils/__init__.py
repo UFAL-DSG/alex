@@ -10,6 +10,6 @@ def constant_factory(value):
     """Create function returning constant value."""
     return repeat(value).next
 
-def constant_factor(variables_dict, length):
-    factor = DiscreteFactor(variables_dict, np.ones(length))
+def constant_factor(variables, variables_dict, length):
+    factor = DiscreteFactor(variables, variables_dict, np.ones(length))
     return factor

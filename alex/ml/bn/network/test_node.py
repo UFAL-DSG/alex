@@ -23,6 +23,7 @@ class TestNode(unittest.TestCase):
         hid = DiscreteVariableNode("hid", ["save", "del"])
         obs = DiscreteVariableNode("obs", ["osave", "odel"])
         fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+            ['hid', 'obs'],
             {
                 "hid": ["save", "del"],
                 "obs": ["osave", "odel"]
@@ -74,6 +75,7 @@ class TestNode(unittest.TestCase):
         s1 = DiscreteVariableNode('s1', ['a', 'b'])
         s2 = DiscreteVariableNode('s2', ['a', 'b'])
         same = DiscreteConvertedFactorNode('f', DiscreteFactor(
+            ['same'],
             {
                 'same': [True, False]
             },

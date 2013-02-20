@@ -68,11 +68,13 @@ class DiscreteVariableNode(Node):
     def __init__(self, name, values):
         super(DiscreteVariableNode, self).__init__(name)
         self.values = values
-        self.belief = constant_factor({name: values}, len(values))
+        self.belief = constant_factor([name], {name: values}, len(values))
         self.is_observed = False
 
     def init_messages(self):
-        const_msg = constant_factor({self.name: self.values}, len(self.values))
+        const_msg = constant_factor([self.name],
+                                    {self.name: self.values},
+                                    len(self.values))
 
         for neighbor in self.incoming:
             self.incoming_message[neighbor] = const_msg
@@ -115,10 +117,12 @@ class DiscreteFactorNode(Node):
 
     def init_messages(self):
         for name, node in self.incoming.iteritems():
-            self.incoming_message[name] = constant_factor({name: node.values},
+            self.incoming_message[name] = constant_factor([name],
+                                                          {name: node.values},
                                                           len(node.values))
         for name, node in self.outgoing.iteritems():
-            self.incoming_message[name] = constant_factor({name: node.values},
+            self.incoming_message[name] = constant_factor([name],
+                                                          {name: node.values},
                                                           len(node.values))
         self.update()
 

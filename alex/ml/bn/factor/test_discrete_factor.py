@@ -15,7 +15,7 @@ class TestFactor(unittest.TestCase):
         self.assertLess(delta, epsilon)
 
     def test_strides(self):
-        factor = DiscreteFactor(
+        factor = DiscreteFactor(['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -39,7 +39,7 @@ class TestFactor(unittest.TestCase):
         self.assertEquals(factor.strides, {"A": 6, "B": 2, "C": 1})
 
     def test_get_index_from_assignment(self):
-        factor = DiscreteFactor(
+        factor = DiscreteFactor(['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -64,7 +64,7 @@ class TestFactor(unittest.TestCase):
         self.assertEquals(factor._get_index_from_assignment((1, 0, 1)), 7)
 
     def test_get_assignment_from_index(self):
-        factor = DiscreteFactor(
+        factor = DiscreteFactor(['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -93,7 +93,7 @@ class TestFactor(unittest.TestCase):
             (1, 2, 0))
 
     def test_marginalize(self):
-        factor = DiscreteFactor(
+        factor = DiscreteFactor(['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -122,7 +122,7 @@ class TestFactor(unittest.TestCase):
         self.assertClose(factor_ac[(0, 0)], 0.09)
 
     def test_multiplication(self):
-        f1 = DiscreteFactor(
+        f1 = DiscreteFactor(['A', 'B'],
             {
                 'A': ['a', 'b'],
                 'B': [0, 1, 2]
@@ -136,7 +136,7 @@ class TestFactor(unittest.TestCase):
                 ('b', 2): 0.05,
             })
 
-        f2 = DiscreteFactor(
+        f2 = DiscreteFactor(['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]
@@ -156,7 +156,7 @@ class TestFactor(unittest.TestCase):
         self.assertClose(f3[('b', 2, 1)], f1[('b', 2)] * f2[(2, 1)])
 
     def test_fast_mul(self):
-        f1 = DiscreteFactor(
+        f1 = DiscreteFactor(['A', 'B'],
             {
                 'A': ['a', 'b'],
                 'B': [0, 1, 2]
@@ -176,6 +176,7 @@ class TestFactor(unittest.TestCase):
 
     def test_division(self):
         factor = DiscreteFactor(
+            ['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -198,6 +199,7 @@ class TestFactor(unittest.TestCase):
             })
 
         f2 = DiscreteFactor(
+            ['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]
@@ -217,7 +219,7 @@ class TestFactor(unittest.TestCase):
         self.assertClose(f3[(1, 2, 0)], 0.4)
 
     def test_fast_div(self):
-        f2 = DiscreteFactor(
+        f2 = DiscreteFactor(['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]
@@ -236,7 +238,7 @@ class TestFactor(unittest.TestCase):
         self.assertClose(f3[1, 1], 1)
 
     def test_mul_div(self):
-        factor = DiscreteFactor(
+        factor = DiscreteFactor(['A', 'B', 'C'],
             {
                 "A": [0, 1],
                 "B": [0, 1, 2],
@@ -258,7 +260,7 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
 
-        f2 = DiscreteFactor(
+        f2 = DiscreteFactor(['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]
@@ -279,7 +281,7 @@ class TestFactor(unittest.TestCase):
             self.assertClose(f4[assignment], factor[assignment])
 
     def test_rename(self):
-        f1 = DiscreteFactor(
+        f1 = DiscreteFactor(['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]
@@ -293,7 +295,7 @@ class TestFactor(unittest.TestCase):
                 (2, 1): 0.05,
             })
 
-        f2 = DiscreteFactor(
+        f2 = DiscreteFactor(['B', 'C'],
             {
                 'B': [0, 1, 2],
                 'C': [0, 1]

@@ -29,7 +29,7 @@ class Factor(object):
 
     def __init__(self, variables, variable_values, prob_table):
         self.variables = variables
-        self.variable_values = variables_values
+        self.variable_values = variable_values
         self.prob_table = prob_table
 
 
@@ -66,27 +66,25 @@ class DiscreteFactor(Factor):
             index %= self.strides[var]
         return tuple(assignment)
 
-    def _create_translation_table(self, variables_values):
+    def _create_translation_table(self):
         """Create translation from string values to numbers.
 
         Variable values can be anything, but arrays are indexed by
         numbers. Translation table is used for getting an index from an
         assignment.
         """
-        translation_table = {}
-        for var in variables_values:
-            translation_table[var] = {}
-            for i, value in enumerate(variables_values[var]):
-                translation_table[var][value] = i
-        return translation_table
+        self.translation_table = {}
+        for var in self.variables:
+            self.translation_table[var] = {}
+            for i, value in enumerate(self.variable_values[var]):
+                self.translation_table[var][value] = i
 
-    def __init__(self, variables_dict, prob_table):
-        # Save variables.
-        self.variables = sorted(variables_dict.keys())
-        self.variables_dict = variables_dict
+    def __init__(self, variables, variable_values, prob_table):
+        super(DiscreteFactor, self).__init__(variables, variable_values,
+                                             prob_table)
         # Create translation table from variable values to indexes.
-        self.translation_table = self._create_translation_table(variables_dict)
-        self.cardinalities = {var: len(variables_dict[var])
+        self._create_translation_table()
+        self.cardinalities = {var: len(variable_values[var])
                               for var in self.variables}
 
         # If prob_table is np.ndarray, than we expect it to be in log form.
@@ -142,11 +140,12 @@ class DiscreteFactor(Factor):
 
     def rename_variables(self, new_variables):
         """Rename variables."""
-        for var in self.variables_dict:
+        for i, var in enumerate(self.variables):
             if var in new_variables:
+                self.variables[i] = new_variables[var]
                 # Modify variables dict.
-                self.variables_dict[new_variables[var]] = (
-                    self.variables_dict.pop(var))
+                self.variable_values[new_variables[var]] = (
+                    self.variable_values.pop(var))
                 # Change the key to strides dict.
                 self.strides[new_variables[var]] = self.strides.pop(var)
                 # Change the key to cardinalities dict.
@@ -155,8 +154,6 @@ class DiscreteFactor(Factor):
                 # Change the key to translation table.
                 self.translation_table[new_variables[var]] = (
                     self.translation_table.pop(var))
-        # Get new variables list.
-        self.variables = self.variables_dict.keys()
 
     def marginalize(self, variables):
         """Marginalize the factor."""
@@ -197,8 +194,8 @@ class DiscreteFactor(Factor):
                               new_strides[var])
 
         # Return new factor with marginalized variables.
-        new_variables_dict = {v: self.variables_dict[v] for v in variables}
-        return DiscreteFactor(new_variables_dict, new_factor_table)
+        new_variable_values = {v: self.variable_values[v] for v in variables}
+        return DiscreteFactor(variables, new_variable_values, new_factor_table)
 
     def observed(self, assignment):
         """Set observation."""
@@ -226,7 +223,8 @@ class DiscreteFactor(Factor):
 
     def _multiply_same(self, other_factor):
         """Multiply two factors with same variables."""
-        return DiscreteFactor(self.variables_dict,
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
                               self.factor_table + other_factor.factor_table)
 
     def _multiply_different(self, other_factor):
@@ -273,10 +271,11 @@ class DiscreteFactor(Factor):
                     index_other += other_factor.strides[var]
                     break
 
-        new_variables_dict = dict(self.variables_dict)
-        new_variables_dict.update(other_factor.variables_dict)
+        new_variable_values = dict(self.variable_values)
+        new_variable_values.update(other_factor.variable_values)
 
-        return DiscreteFactor(new_variables_dict,
+        return DiscreteFactor(new_variables,
+                              new_variable_values,
                               new_factor_table)
 
     def __mul__(self, other_factor):
@@ -287,7 +286,8 @@ class DiscreteFactor(Factor):
 
     def _divide_same(self, other_factor):
         """Divide factor by other factor with same variables."""
-        return DiscreteFactor(self.variables_dict,
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
                               self.factor_table - other_factor.factor_table)
 
     def _divide_different(self, other_factor):
@@ -314,7 +314,8 @@ class DiscreteFactor(Factor):
                     index_other += other_factor.strides[var]
                     break
 
-        return DiscreteFactor(self.variables_dict,
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
                               new_factor_table)
 
     def __div__(self, other_factor):
