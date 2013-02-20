@@ -8,6 +8,7 @@
 #   Merge the two classes?
 
 
+from math import isnan
 import numpy as np
 import cPickle as pickle
 
@@ -305,16 +306,35 @@ class DAILogRegClassifierLearning(object):
             if verbose:
                 print "Training classifier: ", dai
 
+            # Select from the training data only those with non-NaN values.
+            outputs = self._output_matrix[dai]
+            valid_row_idxs = set(
+                [row_idx for row_idx in xrange(len(self._input_matrix))
+                 if not isnan(outputs[row_idx])])
+            if len(valid_row_idxs) == len(outputs):
+                inputs = self._input_matrix
+            else:
+                inputs = np.array(
+                    [row for row_idx, row in enumerate(self._input_matrix)
+                     if row_idx in valid_row_idxs])
+                outputs = np.array(
+                    [output for row_idx, output in enumerate(outputs)
+                     if row_idx in valid_row_idxs])
+            if verbose:
+                print "Support for training: {sup} (pos: {pos}, neg: {neg})"\
+                    .format(sup=len(valid_row_idxs),
+                            pos=len(filter(lambda out: out == 1., outputs)),
+                            neg=len(filter(lambda out: out == 0., outputs)))
+
             # Train and store the classifier for `dai'.
             lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
-            lr.fit(self._input_matrix, self._output_matrix[dai])
+            lr.fit(inputs, outputs)
             self.trained_classifiers[dai] = lr
 
             # after message
             if verbose:
                 coefs_sum += lr.coef_
-                mean_accuracy = lr.score(self._input_matrix,
-                                         self._output_matrix[dai])
+                mean_accuracy = lr.score(inputs, outputs)
                 msg = ("Mean accuracy for training data: {acc:6.2f} %\n"
                        "Size of the params: {parsize}\n"
                        "Number of non-zero params: {nonzero}\n").format(
@@ -337,16 +357,16 @@ class DAILogRegClassifierLearning(object):
         """
         with open(infname, 'rb') as infile:
             data = pickle.load(infile)
-        new_clsers = {item[0].extension(): item[1] for item in
+        new_clsers = {dai.extension(): clser for dai, clser in
                       data[2].iteritems()}
         with open(outfname, 'wb+') as outfile:
             pickle.dump((data[0], data[1], new_clsers, data[3], data[4]),
                         outfile)
 
     def save_model(self, file_name):
-        data = (self.feat_counts.viewkeys(),
+        data = (self.feat_counts.keys(),
                 self.feature_idxs,
-                {item[0].extension(): item[1] for item in
+                {dai.extension(): clser for dai, clser in
                  self.trained_classifiers.iteritems()},
                 self.features_type,
                 self.features_size)

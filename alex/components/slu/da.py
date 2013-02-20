@@ -85,7 +85,6 @@ class DialogueActItem(object):
 
         # Bookkeeping.
         self._orig_values = set()
-        # self._orig_value = None
         self._unnorm_values = set()
         self._str = None
 
@@ -139,12 +138,15 @@ class DialogueActItem(object):
         self._value = newval
         self._str = None
 
+    @property
+    def unnorm_values(self):
+        return self._unnorm_values or self._orig_values or set((self._value, ))
+
     def has_category_label(self):
         """whether the current DAI value is the category label"""
         return bool(self._orig_values)  # whether there was an original value
                                         # that got substituted (assumably by
                                         # a category label)
-        # return self._orig_value is not None
 
     def is_null(self):
         """whether this object represents the 'null()' DAI"""
@@ -161,6 +163,39 @@ class DialogueActItem(object):
                                name=self._name,
                                value=self._value)
 
+    def _update_unnorm_values(self):
+        """Makes sure all original values have been stored in
+        self._unnorm_values.
+
+        """
+        if not self._unnorm_values:
+            if self._orig_values:
+                self._unnorm_values.update(self._orig_values)
+            else:
+                self._unnorm_values.add(self._value)
+
+    def get_unnorm_values(self):
+        """Retrieves the original unnormalised vaues of this DAI."""
+        self._update_unnorm_values()
+        return self._unnorm_values
+
+    def add_unnorm_value(self, newval):
+        """Registers `newval' as another alternative unnormalised value for the
+        value of this DAI's slot.
+
+        """
+        self._update_unnorm_values()
+        self._unnorm_values.add(newval)
+
+    def merge_unnorm_values(self, other):
+        """Merges unnormalised values of `other' to unnormalised values of
+        `self'.
+
+        """
+        self._update_unnorm_values()
+        # Add the requested new unnormalised value.
+        self._unnorm_values.update(other.unnorm_values)
+
     # The original value is always in self._value or in self._orig_values.  In
     # the latter case, self._value contains the category label.
     #
@@ -173,7 +208,6 @@ class DialogueActItem(object):
         DAI.
 
         """
-        # self._orig_value = self._value
         self._orig_values.add(self._value)
         if label is None:
             try:
@@ -203,8 +237,6 @@ class DialogueActItem(object):
             # Try to use the remembered value.
             if bool(self._orig_values):
                 newval = self._orig_values.pop()
-            # if self._orig_value is not None:
-                # newval = self._orig_value
         except AttributeError:
             # Be tolerant to older models, which break the current contract.
             pass
@@ -220,7 +252,6 @@ class DialogueActItem(object):
         # Do the swap.
         self._orig_label = self._value
         self.value = newval
-        # self._orig_value = None
 
     def value2normalised(self, normalised):
         """Use this method to substitute a normalised value for value of this
@@ -354,6 +385,7 @@ class DialogueAct(object):
         """
         return all(map(lambda dai: dai.dat == dat, self.dais))
 
+    # TODO Make into a class method.
     def parse(self, da):
         """Parse the dialogue act in text format into the structured form.  If
         any DAIs have been already defined for this DA, they will be
@@ -369,8 +401,17 @@ class DialogueAct(object):
     def append(self, dai):
         """Append a dialogue act item to the current dialogue act."""
         if isinstance(dai, DialogueActItem):
-            self.dais.append(dai)
-            self.dais.sort()
+            insert_idx = len(self.dais)
+            while insert_idx > 0:
+                insert_idx -= 1
+                if dai >= self.dais[insert_idx]:
+                    if dai == self.dais[insert_idx]:
+                        self.dais[insert_idx].merge_unnorm_values(dai)
+                        return self
+                    insert_idx += 1
+                    break
+            self.dais.insert(insert_idx, dai)
+            return self
         else:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
@@ -379,7 +420,8 @@ class DialogueAct(object):
         if not all(map(lambda obj: isinstance(obj, DialogueActItem), dais)):
             raise DialogueActException("Only DialogueActItems can be added.")
         self.dais.extend(dais)
-        self.dais.sort()
+        self.sort()
+        return self
 
     def get_slots_and_values(self):
         """Returns all slot names and values in the dialogue act."""
@@ -387,16 +429,39 @@ class DialogueAct(object):
 
     def sort(self):
         self.dais.sort()
+        self.merge_same_dais()
+        return self
 
     def merge(self, da):
+        """Merges another DialogueAct into self."""
         if not isinstance(da, DialogueAct):
             raise DialogueActException("DialogueAct can only be merged with "
                                        "another DialogueAct")
-        # TODO: Merge the individual DAIs, too. I.e., if they are equal on
-        # extension but differ in original values, put the original values
-        # together, and keep the single DAI.
         self.dais.extend(da.dais)
-        self.dais.sort()
+        self.sort()
+        return self
+
+    def merge_same_dais(self):
+        """Merges same DAIs.  I.e., if they are equal on extension but differ
+        in original values, merges the original values together, and keeps the
+        single DAI.
+
+        """
+        if len(self.dais) < 2:
+            return
+
+        new_dais = list()
+        prev_dai = self.dais[0]
+        for dai in self.dais[1:]:
+            if prev_dai == dai:
+                dai.merge_unnorm_values(prev_dai)
+            else:
+                new_dais.append(prev_dai)
+            prev_dai = dai
+        else:
+            new_dais.append(dai)
+        self.dais = new_dais
+        return self
 
 
 class SLUHypothesis(object):
