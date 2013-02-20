@@ -43,13 +43,13 @@ class Node(object):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def update_belief(self):
+    def update(self):
         """Update belief state."""
         raise NotImplementedError()
 
     def send_messages(self, forward=True):
         """Send messages to all neighboring nodes."""
-        self.update_belief()
+        self.update()
         if forward:
             for neigbor in self.outgoing.values():
                 self.message_to(neigbor)
@@ -100,7 +100,7 @@ class DiscreteVariableNode(Node):
             self.is_observed = False
             self.belief.observed(None)
 
-    def update_belief(self):
+    def update(self):
         if not self.is_observed:
             self.belief = reduce(operator.mul, self.incoming_message.values())
 
@@ -111,6 +111,7 @@ class DiscreteFactorNode(Node):
     def __init__(self, name, factor):
         super(DiscreteFactorNode, self).__init__(name)
         self.factor = factor
+        self.parameters = {}
 
     def init_messages(self):
         for name, node in self.incoming.iteritems():
@@ -119,7 +120,7 @@ class DiscreteFactorNode(Node):
         for name, node in self.outgoing.iteritems():
             self.incoming_message[name] = constant_factor({name: node.values},
                                                           len(node.values))
-        self.update_belief()
+        self.update()
 
     def message_to(self, node):
         belief_without_node = self.belief / self.incoming_message[node.name]
@@ -129,6 +130,43 @@ class DiscreteFactorNode(Node):
     def message_from(self, node, message):
         self.incoming_message[node.name] = message
 
-    def update_belief(self):
+    def message_from_parameter(self, node, parameter):
+        self.parameters[node.name] = parameter
+
+    def update(self):
         self.belief = self.factor * reduce(operator.mul,
                                            self.incoming_message.values())
+
+
+class DiscreteConvertedFactorNode(DiscreteFactorNode):
+    """Node containing factor and a function, which preprocess values."""
+
+    def __init__(self, name, factor, function):
+        super(DiscreteConvertedFactorNode, self).__init__(name, factor)
+        self.function = function
+
+    def update(self):
+        product_of_messages = reduce(operator.mul,
+                                     self.incoming_message.values())
+        self.belief = product_of_messages.multiply_by_converted(self.factor,
+                                                                self.function)
+
+class ParameterNode(Node):
+    """Node containing parameter."""
+
+    def __init__(self, name, parameter):
+        super(ParameterNode, self).__init__(name)
+        self.parameter = parameter
+        self.beta = sum(log(gamma(self.parameter))) - gamma() # TODO
+
+    def init_messages(self):
+        pass
+
+    def message_to(self, node):
+        node.message_from_parameter(self, self.parameter)
+
+    def message_from(self, node, message):
+        pass
+
+    def update(self):
+        pass

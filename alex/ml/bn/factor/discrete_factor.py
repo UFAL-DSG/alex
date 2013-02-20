@@ -5,13 +5,35 @@
 
 import numpy as np
 import operator
+import abc
 
 from collections import defaultdict
 from scipy.misc import logsumexp
 
 ZERO = 0.00000000000001
 
-class DiscreteFactor(object):
+def to_log(n, out=None):
+    if np.isscalar(n):
+        return np.log(ZERO) if n == 0 else np.log(n)
+    else:
+        n[n == 0] = ZERO
+        return np.log(n, out)
+
+def from_log(n):
+    return np.exp(n)
+
+
+class Factor(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, variables, variable_values, prob_table):
+        self.variables = variables
+        self.variable_values = variables_values
+        self.prob_table = prob_table
+
+
+class DiscreteFactor(Factor):
     """Factor representation with basic operations."""
 
     def _factor_table_length(self, cardinalities):
@@ -87,8 +109,7 @@ class DiscreteFactor(object):
                 self.factor_table[
                     self._get_index_from_assignment(assignment)] = value
             # Convert values to log form.
-            self.factor_table[self.factor_table == 0] = ZERO
-            np.log(self.factor_table, self.factor_table)
+            to_log(self.factor_table, self.factor_table)
 
         # Save the factor table in case we'll modify it with observation.
         self.unobserved_factor_table = self.factor_table
@@ -109,10 +130,15 @@ class DiscreteFactor(object):
         for i in range(len(self.factor_table)):
             for assignment in self._get_assignment_from_index(i):
                 ret += format_str.format(assignment)
-            ret += format_str.format(np.exp(self.factor_table[i])) + "\n"
+            ret += format_str.format(from_log(self.factor_table[i])) + "\n"
 
         ret += 79 * "-" + "\n"
         return ret
+
+    def __iter__(self):
+        for i, v in enumerate(self.factor_table):
+            yield (self._get_assignment_from_index(i),
+                   from_log(v))
 
     def rename_variables(self, new_variables):
         """Rename variables."""
@@ -186,7 +212,17 @@ class DiscreteFactor(object):
 
     def __getitem__(self, assignment):
         index = self._get_index_from_assignment(assignment)
-        return np.exp(self.factor_table[index])
+        return from_log(self.factor_table[index])
+
+    def multiply_by_converted(self, other_factor, convert):
+        new_factor_table = self.factor_table.copy()
+        for index, value in enumerate(self.factor_table):
+            assignment = self._get_assignment_from_index(index)
+            converted_assignment = convert(assignment)
+            other_index = other_factor._get_index_from_assignment(converted_assignment)
+            new_factor_table[index] += other_factor.factor_table[other_index]
+        return DiscreteFactor(self.variables, self.variable_values,
+                              new_factor_table)
 
     def _multiply_same(self, other_factor):
         """Multiply two factors with same variables."""
@@ -294,3 +330,12 @@ class DiscreteFactor(object):
     def normalize(self):
         """Normalize factor table."""
         self.factor_table -= logsumexp(self.factor_table)
+
+
+class DiscreteSparseFactor(Factor):
+
+    def __init__(self, variables, variable_values, prob_table):
+        super(DiscreteSparseFactor, self).__init__(variables, variable_values,
+                                                   prob_table)
+        self.factor = { None: to_log(1) }
+

@@ -7,7 +7,10 @@ import unittest
 import pdb
 
 from bn.factor import DiscreteFactor
-from bn.network.node import DiscreteVariableNode, DiscreteFactorNode
+from bn.network.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
+
+def same_or_different(assignment):
+    return (all(assignment[0] == x for x in assignment),)
 
 class TestNode(unittest.TestCase):
 
@@ -44,16 +47,16 @@ class TestNode(unittest.TestCase):
         obs.send_messages()
         fact_h1_o1.send_messages()
 
-        hid.update_belief()
+        hid.update()
         hid.normalize()
         self.assertClose(hid.belief[("save",)], 0.45)
 
         # 2. Observed value, message_to and update_belief used.
         obs.observed("osave")
         obs.message_to(fact_h1_o1)
-        fact_h1_o1.update_belief()
+        fact_h1_o1.update()
         fact_h1_o1.message_to(hid)
-        hid.update_belief()
+        hid.update()
 
         hid.normalize()
         self.assertClose(hid.belief[("save",)], 0.3)
@@ -63,6 +66,43 @@ class TestNode(unittest.TestCase):
         obs.send_messages()
         fact_h1_o1.send_messages()
 
-        hid.update_belief()
+        hid.update()
         hid.normalize()
         self.assertClose(hid.belief[("save",)], 0.45)
+
+    def test_function_node(self):
+        s1 = DiscreteVariableNode('s1', ['a', 'b'])
+        s2 = DiscreteVariableNode('s2', ['a', 'b'])
+        same = DiscreteConvertedFactorNode('f', DiscreteFactor(
+            {
+                'same': [True, False]
+            },
+            {
+                (True,): 0.8,
+                (False,): 0.2
+            }),
+            same_or_different)
+
+        s1.add_edge_to(same)
+        s2.add_edge_to(same)
+
+        s1.init_messages()
+        s2.init_messages()
+        same.init_messages()
+
+        s2.observed('a')
+
+        s1.send_messages()
+        s2.send_messages()
+
+        same.update()
+        same.normalize()
+
+        same.send_messages(False)
+
+        s1.update()
+        s1.normalize()
+
+        self.assertClose(s1.belief[('a',)], 0.8)
+        self.assertClose(s1.belief[('b',)], 0.2)
+        self.assertClose(s2.belief[('a',)], 1)
