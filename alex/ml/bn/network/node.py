@@ -17,15 +17,15 @@ class Node(object):
 
     def __init__(self, name):
         self.name = name
-        self.outgoing = {}
+        self.neighbors = {}
         self.incoming = {}
         self.incoming_message = {}
         self.belief = None
 
     def add_edge_to(self, node):
         """Add a neighboring node"""
-        self.outgoing[node.name] = node
-        node.incoming[self.name] = self
+        self.neighbors[node.name] = node
+        node.neighbors[self.name] = self
 
     @abc.abstractmethod
     def init_messages(self):
@@ -50,12 +50,8 @@ class Node(object):
     def send_messages(self, forward=True):
         """Send messages to all neighboring nodes."""
         self.update()
-        if forward:
-            for neigbor in self.outgoing.values():
-                self.message_to(neigbor)
-        else:
-            for neighbor in self.incoming.values():
-                self.message_to(neighbor)
+        for neighbor in self.neighbors.values():
+            self.message_to(neighbor)
 
     def normalize(self):
         """Normalize belief state."""
@@ -76,10 +72,7 @@ class DiscreteVariableNode(Node):
                                     {self.name: self.values},
                                     len(self.values))
 
-        for neighbor in self.incoming:
-            self.incoming_message[neighbor] = const_msg
-
-        for neighbor in self.outgoing:
+        for neighbor in self.neighbors:
             self.incoming_message[neighbor] = const_msg
 
     def message_to(self, node):
@@ -93,11 +86,11 @@ class DiscreteVariableNode(Node):
         if not self.is_observed:
             self.incoming_message[node.name] = message
 
-    def observed(self, value):
+    def observed(self, assignment_dict):
         """Set observation."""
-        if value is not None:
+        if assignment_dict is not None:
             self.is_observed = True
-            self.belief.observed((value,))
+            self.belief.observed(assignment_dict)
         else:
             self.is_observed = False
             self.belief.observed(None)
@@ -116,11 +109,7 @@ class DiscreteFactorNode(Node):
         self.parameters = {}
 
     def init_messages(self):
-        for name, node in self.incoming.iteritems():
-            self.incoming_message[name] = constant_factor([name],
-                                                          {name: node.values},
-                                                          len(node.values))
-        for name, node in self.outgoing.iteritems():
+        for name, node in self.neighbors.iteritems():
             self.incoming_message[name] = constant_factor([name],
                                                           {name: node.values},
                                                           len(node.values))

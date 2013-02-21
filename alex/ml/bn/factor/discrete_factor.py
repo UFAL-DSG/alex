@@ -62,7 +62,7 @@ class DiscreteFactor(Factor):
         """Get assignment from factor table at given index."""
         assignment = []
         for var in self.variables:
-            assignment.append(index / self.strides[var])
+            assignment.append(self.variable_values[var][index / self.strides[var]])
             index %= self.strides[var]
         return tuple(assignment)
 
@@ -197,13 +197,14 @@ class DiscreteFactor(Factor):
         new_variable_values = {v: self.variable_values[v] for v in variables}
         return DiscreteFactor(variables, new_variable_values, new_factor_table)
 
-    def observed(self, assignment):
+    def observed(self, assignment_dict):
         """Set observation."""
-        if assignment is not None:
+        if assignment_dict is not None:
             self.factor_table = np.empty(self.factor_length)
             self.factor_table[:] = np.log(ZERO)
-            self.factor_table[
-                self._get_index_from_assignment(assignment)] = 0
+            for assignment, value in assignment_dict.iteritems():
+                self.factor_table[
+                    self._get_index_from_assignment(assignment)] = to_log(value)
         else:
             self.factor_table = self.unobserved_factor_table
 
@@ -331,12 +332,4 @@ class DiscreteFactor(Factor):
     def normalize(self):
         """Normalize factor table."""
         self.factor_table -= logsumexp(self.factor_table)
-
-
-class DiscreteSparseFactor(Factor):
-
-    def __init__(self, variables, variable_values, prob_table):
-        super(DiscreteSparseFactor, self).__init__(variables, variable_values,
-                                                   prob_table)
-        self.factor = { None: to_log(1) }
 

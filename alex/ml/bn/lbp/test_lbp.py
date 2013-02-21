@@ -76,12 +76,12 @@ class TestLBP(unittest.TestCase):
 
         print hid1.belief
 
-        obs1.observed('osave')
+        obs1.observed({('osave',):1})
         lbp.run(1)
         hid1.normalize()
         print hid1.belief
 
-        obs2.observed('odel')
+        obs2.observed({('odel',):1})
         lbp.run(1)
         hid1.normalize()
         print hid1.belief
