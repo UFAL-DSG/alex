@@ -7,7 +7,8 @@ import __init__
 
 if __name__ == "__main__":
     import autopath
-from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
+from alex.components.asr.utterance import SENTENCE_START, SENTENCE_END, \
+    Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 
 class TestUtterance(unittest.TestCase):
@@ -25,6 +26,48 @@ class TestUtterance(unittest.TestCase):
             self.assertEqual(self.barbara.index(phrase), idx)
         self.assertRaises(ValueError, self.barbara.index, ['r', 'a', 'b'])
         self.assertEqual(self.ararat.index(['a', 'r', 'a', 't']), 2)
+
+    def test_ngram_iterator(self):
+        # Normal use case.
+        trigrams = [['b', 'a', 'r'],
+                    ['a', 'r', 'b'],
+                    ['r', 'b', 'a'],
+                    ['b', 'a', 'r'],
+                    ['a', 'r', 'a'],
+                   ]
+        trigrams_with_boundaries = [
+                    [SENTENCE_START, 'b', 'a'],
+                    ['b', 'a', 'r'],
+                    ['a', 'r', 'b'],
+                    ['r', 'b', 'a'],
+                    ['b', 'a', 'r'],
+                    ['a', 'r', 'a'],
+                    ['r', 'a', SENTENCE_END],
+                   ]
+        act_trigrams = [trigram for trigram in self.barbara.iter_ngrams(3)]
+        act_trigrams_with_boundaries = [
+            trigram for trigram in
+            self.barbara.iter_ngrams(3, with_boundaries=True)]
+        self.assertEqual(trigrams, act_trigrams)
+        self.assertEqual(trigrams_with_boundaries,
+                         act_trigrams_with_boundaries)
+        # Corner cases.
+        self.assertEqual([ngram for ngram in self.barbara.iter_ngrams(7)],
+                         [['b', 'a', 'r', 'b', 'a', 'r', 'a']])
+        self.assertEqual([ngram for ngram in self.barbara.iter_ngrams(8)],
+                         [])
+        self.assertEqual([ngram for ngram in
+                          self.barbara.iter_ngrams(8, with_boundaries=True)],
+                         [[SENTENCE_START, 'b', 'a', 'r', 'b', 'a', 'r', 'a'],
+                          ['b', 'a', 'r', 'b', 'a', 'r', 'a', SENTENCE_END]])
+        self.assertEqual([ngram for ngram in
+                          self.barbara.iter_ngrams(9, with_boundaries=True)],
+                         [[SENTENCE_START, 'b', 'a', 'r', 'b', 'a', 'r', 'a',
+                           SENTENCE_END]])
+        self.assertEqual([ngram for ngram in
+                          self.barbara.iter_ngrams(10, with_boundaries=True)],
+                         [])
+
 
 class TestUtteranceConfusionNetework(unittest.TestCase):
     """ Test using

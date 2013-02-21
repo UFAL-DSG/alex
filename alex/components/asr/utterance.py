@@ -10,6 +10,9 @@ from alex.utils.exception import UtteranceNBListException
 from alex import utils
 
 
+SENTENCE_START = '<s>'
+SENTENCE_END = '</s>'
+
 def load_utterances(utt_fname, limit=None):
     """Loads a dictionary of utterances from a given file. The file is assumed
     to contain lines of the following form:
@@ -81,15 +84,11 @@ class Utterance(object):
         return self.utterance <= other.utterance
 
     def __eq__(self, other):
-        if other is None:
-            return False
-
         if isinstance(other, Utterance):
             return self.utterance == other.utterance
         elif isinstance(other, basestring):
             return self.utterance == other.split()
-        else:
-            return False
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other.utterance)
@@ -168,12 +167,40 @@ class Utterance(object):
     def lower(self):
         """Transforms words of this utterance to lower case.
 
-        BEWARE, this method is destructive. Instead of returning the lowercased
-        version, it lowercases self (and returns None).
+        BEWARE, this method is destructive, it lowercases self.
 
         """
         for word_idx in range(len(self.utterance)):
             self.utterance[word_idx] = self.utterance[word_idx].lower()
+        return self
+
+    def iter_with_boundaries(self):
+        """Iterates the sequence [SENTENCE_START, word1, ..., wordlast,
+        SENTENCE_END].
+
+        """
+        yield SENTENCE_START
+        for word in self.utterance:
+            yield word
+        yield SENTENCE_END
+
+    def iter_ngrams(self, n, with_boundaries=False):
+        min_len = n - with_boundaries * 2
+        # If the n-gram so-so fits into the utterance.
+        if len(self.utterance) <= min_len:
+            if len(self.utterance) == min_len:
+                if with_boundaries:
+                    yield [SENTENCE_START] + self.utterance + [SENTENCE_END]
+                else:
+                    yield self.utterance[:]
+            return
+        # Usual cases.
+        if with_boundaries and len(self.utterance) > min_len:
+            yield [SENTENCE_START] + self.utterance[:n - 1]
+        for start_idx in xrange(len(self.utterance) - n + 1):
+            yield self.utterance[start_idx:start_idx + n]
+        if with_boundaries:
+            yield self.utterance[-(n - 1):] + [SENTENCE_END]
 
 
 class UtteranceFeatures(Features):
@@ -249,25 +276,24 @@ class UtteranceFeatures(Features):
         if utterance.isempty():
             self.features['__empty__'] += 1.0
         elif self.type == 'ngram':
-            # Compute n-grams.
-            # TODO: Consider the <sentence start> and <sentence end> tokens,
-            # too. For longer n-grams, this can be generalised to <before
-            # sentence> and <after sentence>.
-            for length in xrange(1, self.size + 1):
-                for start in xrange(len(utterance) - length + 1):
-                    self.features[tuple(utterance[start:start + length])] \
-                        += 1.0
-
-            # Compute skip n-grams.
-            new_features = defaultdict(float)
-            for feat in self.features:
-                if len(feat) == 3:
-                    new_features[(feat[0], '*1', feat[2])] += 1.0
-                elif len(feat) == 4:
-                    new_features[(feat[0], '*2', feat[3])] += 1.0
-            # Save the skip n-grams.
-            for new_feat in new_features:
-                self.features[new_feat] += new_features[new_feat]
+            # Compute shorter n-grams.
+            for word in utterance:
+                self.features[(word, )] += 1.
+            for ngram in utterance.iter_ngrams(2, with_boundaries=True):
+                self.features[tuple(ngram)] += 1.
+            # Compute skip n-grams for size 3.
+            for ngram in utterance.iter_ngrams(3, with_boundaries=True):
+                self.features[tuple(ngram)] += 1.
+                self.features[(ngram[0], '*1', ngram[2])] += 1.
+            # Compute skip n-grams for size 4.
+            for ngram in utterance.iter_ngrams(4, with_boundaries=True):
+                self.features[tuple(ngram)] += 1.
+                self.features[(ngram[0], '*2', ngram[3])] += 1.
+            # Compute longer n-grams.
+            for length in xrange(5, self.size + 1):
+                for ngram in utterance.iter_ngrams(length,
+                                                   with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
         else:
             raise NotImplementedError(
                 "Features can be extracted only from an empty utterance or "
