@@ -122,7 +122,7 @@ class SLUPreprocessing(object):
         their slot names plus index.
 
         NOT IMPLEMENTED YET:
-        Since multiple slots can have the same surface forms, the return value,
+        Since multiple slots can have the same surface form, the return value,
         in general, may comprise of multiple alternatives.
 
         Arguments:
@@ -140,8 +140,12 @@ class SLUPreprocessing(object):
         category_label_counter = defaultdict(int)
         slotval_for_cl = {}
 
+        # FIXME This iterative matching will get slow with larger surface ->
+        # slot_value mappings.
         for surface, value, slot in self.cldb:
             slot_upper = slot.upper()
+            # FIXME Don't be greedy, take the longest match. Or, take all
+            # alternative matches.
             if surface in utterance:
                 category_label = '{cat}-{idx}'.format(
                     cat=slot_upper,
@@ -163,7 +167,7 @@ class SLUPreprocessing(object):
         a consistent fashion.
 
         NOT IMPLEMENTED YET:
-        Since multiple slots can have the same surface forms, the return value,
+        Since multiple slots can have the same surface form, the return value,
         in general, may comprise of multiple alternatives.
 
         Arguments:
