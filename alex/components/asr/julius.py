@@ -36,6 +36,7 @@ class JuliusASR(object):
         self.pidfile = self.cfg['ASR']['Julius']['pidfile']
         self.jconffile = self.cfg['ASR']['Julius']['jconffile']
         self.logfile = self.cfg['ASR']['Julius']['logfile']
+        self.jbin = self.cfg['ASR']['Julius']['binary']
 
         system_logger = self.cfg['Logging']['system_logger']
         try:
@@ -143,6 +144,7 @@ class JuliusASR(object):
     def start_server(self):
         jconf = self.jconffile
         log = self.logfile
+	jbin = self.jbin
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
@@ -157,10 +159,10 @@ class JuliusASR(object):
         # Start the server with the -debug options.
         # With this option, it does not generate segfaults.
         if self.reuse_server:
-            os.system("julius -debug -C %s > %s &" % (jconf, log,))
+            os.system("%s -debug -C %s > %s &" % (jbin, jconf, log,))
         else:
             self.julius_server = subprocess.Popen(
-                'julius -C %s > %s' % (jconf, log, ),
+                '%s -C %s > %s' % (jbin, jconf, log, ),
                 shell=True, bufsize=1)
             self.save_pid(self.julius_server.pid)
 
