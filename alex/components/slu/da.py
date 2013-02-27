@@ -531,7 +531,7 @@ class DialogueActNBList(SLUHypothesis):
         insert_idx = len(self.n_best)
         while insert_idx > 0:
             insert_idx -= 1
-            if probability <= self.n_best[insert_idx]:
+            if probability <= self.n_best[insert_idx][0]:
                 insert_idx += 1
                 break
         self.n_best.insert(insert_idx, [probability, da])
