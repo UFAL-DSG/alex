@@ -1,0 +1,13 @@
+parameters:
+<ul>
+    <li>dir -- path to directory with wav recordings</li>
+</ul>
+
+{% if recs %}
+<h1>Recordings</h1>
+<ul>
+{% for rec in recs %}
+<li><a href="?dir={{ dir }}&play={{ rec }}">{{ rec }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
