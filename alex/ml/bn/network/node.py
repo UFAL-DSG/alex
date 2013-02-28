@@ -47,7 +47,7 @@ class Node(object):
         """Update belief state."""
         raise NotImplementedError()
 
-    def send_messages(self, forward=True):
+    def send_messages(self):
         """Send messages to all neighboring nodes."""
         self.update()
         for neighbor in self.neighbors.values():

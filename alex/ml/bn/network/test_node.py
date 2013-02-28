@@ -100,7 +100,7 @@ class TestNode(unittest.TestCase):
         same.update()
         same.normalize()
 
-        same.send_messages(False)
+        same.send_messages()
 
         s1.update()
         s1.normalize()
@@ -143,7 +143,7 @@ class TestNode(unittest.TestCase):
         f.update()
         f.normalize()
 
-        f.send_messages(False)
+        f.send_messages()
 
         s1.update()
         s1.normalize()
