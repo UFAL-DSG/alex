@@ -4,7 +4,7 @@
 import unittest
 
 from bn.factor import DiscreteFactor
-from bn.network.node import DiscreteVariableNode, DiscreteFactorNode
+from bn.node import DiscreteVariableNode, DiscreteFactorNode
 from bn.lbp import LBP, SingleLinkedLBP
 
 class TestLBP(unittest.TestCase):

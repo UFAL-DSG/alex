@@ -7,7 +7,7 @@ import unittest
 import pdb
 
 from bn.factor import DiscreteFactor
-from bn.network.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
+from bn.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
 
 def same_or_different(assignment):
     return (all(assignment[0] == x for x in assignment),)
