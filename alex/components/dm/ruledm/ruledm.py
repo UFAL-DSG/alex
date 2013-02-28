@@ -150,7 +150,8 @@ class RuleDM(DialogueManager):
         # we cannot process confusion networks so if we got one, transform it
         # to an nbest list
         if isinstance(in_da, DialogueActConfusionNetwork):
-            in_da = in_da.get_da_nblist()
+            in_da = in_da.get_da_nblist_naive()
+
 
         # preprocess the input and leave only relevant things that we understand
         # HACK ALERT: it should not be needed if SLU is built specifically for this DM

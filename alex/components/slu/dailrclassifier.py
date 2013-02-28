@@ -350,6 +350,7 @@ class DAILogRegClassifierLearning(object):
             print "Total number of non-zero params:", \
                   np.count_nonzero(coefs_sum)
 
+    @classmethod
     def resave_model(self, infname, outfname):
         """This helper method serves to convert from the original format of SLU
         models to the current one.
@@ -357,8 +358,10 @@ class DAILogRegClassifierLearning(object):
         """
         with open(infname, 'rb') as infile:
             data = pickle.load(infile)
-        new_clsers = {dai.extension(): clser for dai, clser in
+        new_clsers = {DialogueActItem(dai): clser for dai, clser in
                       data[2].iteritems()}
+
+        #import ipdb; ipdb.set_trace()
         with open(outfname, 'wb+') as outfile:
             pickle.dump((data[0], data[1], new_clsers, data[3], data[4]),
                         outfile)
@@ -444,11 +447,16 @@ class DAILogRegClassifier(SLUInterface):
             self.feature_idxs)
 
         da_confnet = DialogueActConfusionNetwork()
+
         for dai in self.trained_classifiers:
             if verbose:
                 print "Using classifier: ", dai
 
-            p = self.trained_classifiers[dai].predict_proba(kernel_vector)
+            try:
+                p = self.trained_classifiers[dai].predict_proba(kernel_vector)
+            except Exception, e:
+                print 'except', e
+                continue
 
             if verbose:
                 print p

@@ -243,7 +243,6 @@ class PConfirmTransition(object):
                 update_pd = cls.dai_to_pd(prob, dai)
                 state.confirm = SimpleSlotUpdater.update_slot(state.confirm, update_pd)
 
-
     @classmethod
     def sysaction_reaction(cls, state, last_action):
         for sysaction in last_action:
