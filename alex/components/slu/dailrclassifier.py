@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008.
-#
-# TODO:
-#   Document the DAILogRegClassifier class.
-#   Merge the two classes?
 
 
 from math import isnan
@@ -21,9 +17,24 @@ from alex.components.slu.da import DialogueActItem, \
 from alex.utils.exception import DAILRException
 
 
-class DAILogRegClassifierLearning(object):
-    """Implements learning of dialogue act item classifiers based on logistic
-    regression.
+class DAILogRegClassifier(SLUInterface):
+    """Implements learning of and decoding with dialogue act item classifiers
+    based on logistic regression.
+
+    When used for parsing an utterance, each classifier decides whether its
+    respective dialogue act item is present.  Then, the output dialogue act is
+    constructed by joining all detected dialogue act items.
+
+    Dialogue act is defined as a composition of dialogue act items. E.g.
+
+    confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
+
+    where confirm(drinks="wine") and inform(name="kings shilling") are two
+    dialogue act items.
+
+    This parser uses logistic regression as the classifier of the dialogue
+    act items.
+
 
     Attributes:
         category_labels: mapping { utterance ID:
@@ -52,11 +63,16 @@ class DAILogRegClassifierLearning(object):
         utterances: mapping { utterance ID: utterance } for training utterances
 
     """
+    # TODO Document attributes from the original DAILogRegClassifier class.
 
     def __init__(self,
                  preprocessing=None,
                  features_type='ngram',
                  features_size=4):
+        # FIXME: maybe the SLU components should use the Config class to
+        # initialise themselves.  As a result it would create their category
+        # label database and pre-processing classes.
+
         # Save the arguments.
         self.features_type = features_type
         self.features_size = features_size
@@ -68,6 +84,7 @@ class DAILogRegClassifierLearning(object):
         self._dai_counts = None
         self._input_matrix = None
         self._output_matrix = None
+        self._default_min_feat_count = 1
 
     def extract_features(self, utterances, das, verbose=False):
         """Extracts features from given utterances, making use of their
@@ -94,8 +111,9 @@ class DAILogRegClassifierLearning(object):
                 self.utterances[utt_id] = self.preprocessing\
                     .text_normalisation(self.utterances[utt_id])
                 # Substitute category labes.
-                self.utterances[utt_id], self.das[utt_id], \
-                        self.category_labels[utt_id] = \
+                (self.utterances[utt_id],
+                 self.das[utt_id],
+                 self.category_labels[utt_id]) = \
                     self.preprocessing.values2category_labels_in_da(
                         self.utterances[utt_id], self.das[utt_id])
 
@@ -107,7 +125,7 @@ class DAILogRegClassifierLearning(object):
             {utt_id: UtteranceFeatures(ft, fs, uts[utt_id])
              for utt_id in self.utterances}
 
-    def prune_features(self, min_feature_count=5, verbose=False):
+    def prune_features(self, min_feature_count=None, verbose=False):
         """Prunes features that occur few times.
 
         Arguments:
@@ -117,6 +135,11 @@ class DAILogRegClassifierLearning(object):
                                stdout (default: False)
 
         """
+        # Remember the threshold used, and use it as a default later.
+        if min_feature_count is None:
+            min_feature_count = 5
+        else:
+            self._default_min_feat_count = min_feature_count
         # Count number of occurrences of features.
         self.feat_counts = dict()
         for utt_id in self.utterances.iterkeys():
@@ -214,12 +237,13 @@ class DAILogRegClassifierLearning(object):
                 # Discard a DAI in the form '(slotname="dontcare")'.
                 if dai.name is not None and dai.value == "dontcare":
                     return False
-                # Discard a 'null()'. This classifier can be ignored since the null
-                # dialogue act is a complement to all other dialogue acts.
+                # Discard a 'null()'. This classifier can be ignored since the
+                # null dialogue act is a complement to all other dialogue acts.
                 return not dai.is_null()
 
         # Do the pruning.
-        old_dai_counts = self.dai_counts  # NOTE the side effect from the getter
+        old_dai_counts = self.dai_counts  # NOTE the side effect from the
+                                          # getter
         self._dai_counts = {dai: old_dai_counts[dai]
                             for dai in old_dai_counts
                             if _accept_dai(dai)}
@@ -291,7 +315,10 @@ class DAILogRegClassifierLearning(object):
                 self.utterance_features[utt_id]
                 .get_feature_vector(self.feature_idxs))
 
-    def train(self, sparsification=1.0, verbose=True):
+    def train(self, sparsification=1.0, min_feature_count=None, verbose=True):
+        if min_feature_count is None:
+            min_feature_count = self._default_min_feat_count
+
         # Make sure the input and output matrices has been generated.
         if self._output_matrix is None:
             self.gen_output_matrix()
@@ -300,11 +327,15 @@ class DAILogRegClassifierLearning(object):
 
         self.trained_classifiers = {}
         if verbose:
-            coefs_sum = np.zeros(shape=(1, len(self.feat_counts)))
+            coefs_abs_sum = np.zeros(shape=(1, len(self.feat_counts)))
         for dai in sorted(self._dai_counts):
             # before message
             if verbose:
                 print "Training classifier: ", dai
+
+            # (TODO) We might want to skip this based on whether NaNs were
+            # considered in the beginning.  That might be specified in an
+            # argument to the initialiser.
 
             # Select from the training data only those with non-NaN values.
             outputs = self._output_matrix[dai]
@@ -326,6 +357,21 @@ class DAILogRegClassifierLearning(object):
                             pos=len(filter(lambda out: out == 1., outputs)),
                             neg=len(filter(lambda out: out == 0., outputs)))
 
+            # Prune features based on the selection of DAIs.
+            if len(valid_row_idxs) != len(self._input_matrix):
+                inputs = inputs.transpose()
+                for feat_idx, feat_vec in enumerate(inputs):
+                    n_occs = len(
+                        filter(lambda feat_val: not (isnan(feat_val)
+                                                     or feat_val == 0),
+                               feat_vec))
+                    if n_occs < min_feature_count:
+                        inputs[feat_idx] *= 0
+                inputs = inputs.transpose()
+                if verbose:
+                    print ("Adaptively pruned features to {cnt}."
+                           .format(cnt=n_occs))
+
             # Train and store the classifier for `dai'.
             lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
             lr.fit(inputs, outputs)
@@ -333,22 +379,33 @@ class DAILogRegClassifierLearning(object):
 
             # after message
             if verbose:
-                coefs_sum += lr.coef_
-                mean_accuracy = lr.score(inputs, outputs)
-                msg = ("Mean accuracy for training data: {acc:6.2f} %\n"
-                       "Size of the params: {parsize}\n"
+                coefs_abs_sum += map(abs, lr.coef_)
+                accuracy = lr.score(inputs, outputs)
+                predictions = [lr.predict(obs) for obs in inputs]
+                true_pos = sum(predictions[idx] == outputs[idx] == 1
+                               for idx in xrange(len(outputs)))
+                false_pos = sum(predictions[idx] == 1 and outputs[idx] == 0
+                                for idx in xrange(len(outputs)))
+                false_neg = sum(predictions[idx] == 0 and outputs[idx] == 1
+                                for idx in xrange(len(outputs)))
+                precision = true_pos / float(true_pos + false_pos)
+                recall = true_pos / float(true_pos + false_neg)
+                f_score = 2 * precision * recall / (precision + recall)
+                msg = ("Accuracy for training data: {acc:6.2f} %\n"
+                       "P/R/F: {p}/{r}/{f}\n"
+                       # "Size of the params: {parsize}\n"
                        "Number of non-zero params: {nonzero}\n").format(
-                       acc=(100.0 * mean_accuracy),
-                       parsize=lr.coef_.shape,
-                       nonzero=np.count_nonzero(lr.coef_))
-                # The claim about number of non-zero coefficients is correct
-                # with probability close to 1, and that's good enough.  I mean,
-                # a set of non-zero coefficients may sum up to zero.
+                           acc=(100 * accuracy),
+                           p=precision,
+                           r=recall,
+                           f=f_score,
+                           # parsize=lr.coef_.shape,
+                           nonzero=np.count_nonzero(lr.coef_))
                 print msg
 
         if verbose:
             print "Total number of non-zero params:", \
-                  np.count_nonzero(coefs_sum)
+                  np.count_nonzero(coefs_abs_sum)
 
     @classmethod
     def resave_model(self, infname, outfname):
@@ -376,30 +433,10 @@ class DAILogRegClassifierLearning(object):
         with open(file_name, 'w+') as outfile:
             pickle.dump(data, outfile)
 
-
-class DAILogRegClassifier(SLUInterface):
-    """This class implements a parser based on set of classifiers for each
-    dialogue act item. When parsing the input utterance, the parse classifies
-    whether a given dialogue act item is present. Then, the output dialogue
-    act is composed of all detected dialogue act items.
-
-    Dialogue act is defined as a composition of dialogue act items. E.g.
-
-    confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
-
-    where confirm(drinks="wine") and inform(name="kings shilling") are two
-    dialogue act items.
-
-    This parser uses logistic regression as the classifier of the dialogue
-    act items.
-
-    """
-    def __init__(self, preprocessing=None):
-        # FIXME: maybe the SLU components should use the Config class to
-        # initialise themselves.  As a result it would create their category
-        # label database and pre-processing classes.
-
-        self.preprocessing = preprocessing
+    ###############################################################
+    ### From here on, the methods come from what used to be the ###
+    ### DAILogRegClassifier class.                              ###
+    ###############################################################
 
     def load_model(self, file_name):
         with open(file_name, 'r') as infile:
@@ -408,13 +445,14 @@ class DAILogRegClassifier(SLUInterface):
             self.features_type, self.features_size = data
 
     def get_size(self):
+        """Returns the number of features in use."""
         return len(self.features_list)
 
     def parse_1_best(self, utterance, verbose=False):
-        """Parse `utterance' and generate the best interpretation in the form
+        """Parses `utterance' and generates the best interpretation in the form
         of a dialogue act (an instance of DialogueAct).
 
-        The result is the dialogue act confusion network.
+        The result is a dialogue act confusion network.
 
         """
         if isinstance(utterance, UtteranceHyp):
@@ -422,7 +460,7 @@ class DAILogRegClassifier(SLUInterface):
             utterance = utterance.utterance
 
         if verbose:
-            print utterance
+            print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
@@ -431,7 +469,7 @@ class DAILogRegClassifier(SLUInterface):
                     utterance)
 
         if verbose:
-            print utterance
+            print 'After preprocessing: "{utt}".'.format(utt=utterance)
             print category_labels
 
         # Generate utterance features.
@@ -440,11 +478,10 @@ class DAILogRegClassifier(SLUInterface):
                                                utterance)
 
         if verbose:
-            print utterance_features
+            print 'Features: ', utterance_features
 
-        kernel_vector = np.zeros((1, len(self.feature_idxs)))
-        kernel_vector[0] = utterance_features.get_feature_vector(
-            self.feature_idxs)
+        kernel_vector = np.array(
+            [utterance_features.get_feature_vector(self.feature_idxs)])
 
         da_confnet = DialogueActConfusionNetwork()
 
@@ -453,15 +490,16 @@ class DAILogRegClassifier(SLUInterface):
                 print "Using classifier: ", dai
 
             try:
-                p = self.trained_classifiers[dai].predict_proba(kernel_vector)
-            except Exception, e:
-                print 'except', e
+                dai_prob = (self.trained_classifiers[dai]
+                            .predict_proba(kernel_vector))
+            except Exception as ex:
+                print '(EE) Training exception: ', ex
                 continue
 
             if verbose:
-                print p
+                print "Classification result: ", dai_prob
 
-            da_confnet.add(p[0][1], dai)
+            da_confnet.add(dai_prob[0][1], dai)
 
         if verbose:
             print "DA: ", da_confnet
@@ -473,8 +511,8 @@ class DAILogRegClassifier(SLUInterface):
         return confnet
 
     def parse_nblist(self, utterance_list):
-        """Parse N-best list by parsing each item in the list and then by
-        merging the results."""
+        """Parse N-best list by parsing each item in the list and then merging
+        the results."""
 
         if len(utterance_list) == 0:
             raise DAILRException("Empty utterance N-best list.")
@@ -524,3 +562,9 @@ class DAILogRegClassifier(SLUInterface):
         # print
 
         return sem
+
+
+# TODO Delete this class.
+class DAILogRegClassifierLearning(DAILogRegClassifier):
+    """Merged into DAILogRegClassifier, retained for compatibility."""
+    pass

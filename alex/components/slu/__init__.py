@@ -7,6 +7,7 @@ __all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
 import copy
 
 from collections import defaultdict
+from itertools import product
 
 from alex.components.asr.utterance \
     import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
@@ -25,18 +26,46 @@ class CategoryLabelDatabase(object):
     def __init__(self, file_name):
         self.database = {}
         self.synonym_value_category = []
-
         if file_name:
             self.load(file_name)
+        # Bookkeeping.
+        self._form_val_upname = None
+        self._form_upnames_vals = None
 
     def __iter__(self):
         """Yields tuples (form, value, name) from the database."""
         for tup in self.synonym_value_category:
             yield tup
 
-    def load(self, file_name):
-        global database
+    @property
+    def form_val_upname(self):
+        """list of tuples (form, value, name.upper()) from the database"""
+        if self._form_val_upname is None:
+            self._form_val_upname = [(form, val, name.upper())
+                                     for (form, val, name) in self]
+        return self._form_val_upname
 
+    @property
+    def form_upnames_vals(self):
+        """list of tuples (form, upnames_vals) from the database
+        where upnames_vals is a dictionary
+            {name.upper(): all values for this (surface, name)}.
+
+        """
+        if self._form_upnames_vals is None:
+            # Construct the mapping surface -> category -> [values],
+            # capturing homonyms within their category.
+            upnames_vals4form = defaultdict(lambda: defaultdict(list))
+            for form, val, upname in self.form_val_upname:
+                upnames_vals4form[form][upname].append(val)
+            self._form_upnames_vals = \
+                [(form, dict(upnames_vals))
+                 for (form, upnames_vals) in
+                 sorted(upnames_vals4form.viewitems(),
+                        key=lambda item: -len(item[0]))]
+        return self._form_upnames_vals
+
+    def load(self, file_name):
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
             raise SLUException("The category label database does not define "
@@ -44,22 +73,27 @@ class CategoryLabelDatabase(object):
         self.database = db_mod.database
 
         self.normalise_database()
+        # Update derived data structures.
         self.gen_synonym_value_category()
+        self._form_val_upname = None
+        self._form_upnames_vals = None
 
     def normalise_database(self):
         """Normalise database. E.g., split utterances into sequences of words.
         """
         for name in self.database:
             for value in self.database[name]:
-                self.database[name][value] = map(str.split,
-                                                 self.database[name][value])
+                self.database[name][value] = map(
+                    lambda phrase: tuple(phrase.split()),
+                    self.database[name][value])
 
     def gen_synonym_value_category(self):
         for name in self.database:
             for value in self.database[name]:
-                for synonym in self.database[name][value]:
-                    self.synonym_value_category.append((synonym, value, name))
-
+                for form in self.database[name][value]:
+                    self.synonym_value_category.append((form, value, name))
+        # Sort the triples from those with most words to those with fewer
+        # words.
         self.synonym_value_category.sort(
             key=lambda svc: len(svc[0]), reverse=True)
 
@@ -117,7 +151,8 @@ class SLUPreprocessing(object):
 
         return utterance
 
-    def values2category_labels_in_utterance(self, utterance):
+    # TODO Update the docstring for the `all_options' argument.
+    def values2category_labels_in_utterance(self, utterance, all_options=False):
         """Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
@@ -135,31 +170,89 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
-        utterance = copy.deepcopy(utterance)
+        utterance_cp = copy.deepcopy(utterance)
 
         category_label_counter = defaultdict(int)
-        slotval_for_cl = {}
+        valform_for_cl = {}
+        if all_options:
+            matched_phrases = {}
+            match_options = {}
 
         # FIXME This iterative matching will get slow with larger surface ->
         # slot_value mappings.
-        for surface, value, slot in self.cldb:
-            slot_upper = slot.upper()
-            # FIXME Don't be greedy, take the longest match. Or, take all
-            # alternative matches.
-            if surface in utterance:
-                category_label = '{cat}-{idx}'.format(
-                    cat=slot_upper,
-                    idx=category_label_counter[slot_upper])
-                category_label_counter[slot_upper] += 1
+        utt_len = len(utterance)  # number of words in the utterance
+        substituted_len = 0       # number of words substituted
+        # for surface, value, slot_upper in self.cldb.form_val_upname:
+        for surface, upnames_vals in self.cldb.form_upnames_vals:
+            # In case there is another value for a surface already matched,
+            # if all_options:
+            #     if surface in matched_phrases:
+            #         slots_upper, catlabs_upper = matched_phrases[surface]
+            #         # Check whether the slot matched now has already been matched
+            #         # before, or if this is a new one.
+            #         if slot_upper in slots_upper:
+            #             catlab = catlabs_upper[slots_upper.index(slot_upper)]
+            #         else:
+            #             catlab = '{cat}-{idx}'.format(
+            #                 cat=slot_upper,
+            #                 idx=category_label_counter[slot_upper])
+            #             matched_phrases[surface].append((slot_upper, catlab))
+            #         continue
+            # NOTE it is ensured the longest matches will always be used in
+            # preference to shorter matches, due to the iterated values being
+            # sorted by `surface' length from the longest to the shortest.
+            if surface in utterance_cp:
+                substituted_len += len(surface)
+                if all_options:
+                    match_idx = len(matched_phrases)
+                    matched_phrases.append(surface)
+                    match_options.append(upnames_vals.viewitems())
+                    utterance_cp.replace(surface,
+                                         ['__MATCH-{i}__'.format(i=match_idx)])
+                else:
+                    # Choose a random category from the known ones.
+                    slot_upper, vals = upnames_vals.iteritems().next()
+                    # Choose a random value from the known ones.
+                    value = vals[0]
+                    # Generate the category label.
+                    category_label = '{cat}-{idx}'.format(
+                        cat=slot_upper,
+                        idx=category_label_counter[slot_upper])
+                    category_label_counter[slot_upper] += 1
+                    # Do the substitution.
+                    valform_for_cl[category_label] = (value, surface)
+                    # Assumes the surface strings don't overlap.
+                    # FIXME: Perhaps replace all instead of just the first one.
+                    utterance_cp.replace(surface, [category_label])
 
-                slotval_for_cl[category_label] = (value, surface)
-                # Assumes the surface strings don't overlap.
-                # FIXME: Perhaps replace all instead of just the first one.
-                utterance.replace(surface, [category_label])
+                # If nothing is left to replace, stop iterating the database.
+                if substituted_len >= utt_len:
+                    assert substituted_len == utt_len
+                    break
 
-                break
+        if all_options:
+            # TODO Construct all the possible resulting utterances.
+            utterances = list()
+            catlab_sub_idxs = defaultdict(lambda: [-1] * len(match_options))
+            for subs in product(*match_options):
+                utterance_cpcp = copy.deepcopy(utterance_cp)
+                for sub_idx, upname_vals in enumerate(subs):
+                    upname, vals = upname_vals
+                    # Find the correct index for this catlab.
+                    cl_idxs = catlab_sub_idxs[upname]
+                    cl_idx = cl_idxs[sub_idx]
+                    if cl_idx == -1:
+                        last_cl_idx = max(cl_idxs)
+                        cl_idx = cl_idxs[sub_idx] = last_cl_idx + 1
+                    catlab = '{cat}-{idx}'.format(cat=upname, idx=cl_idx)
+                    # Replace this match.
+                    utterance_cpcp.replace(['__MATCH-{i}__'.format(i=sub_idx)],
+                                           [catlab])
+                    # TODO Remember the mapping from the catlab.
+                utterances.append(utterance_cpcp)
+            raise NotImplementedError()
 
-        return utterance, slotval_for_cl
+        return utterance_cp, valform_for_cl
 
     def values2category_labels_in_da(self, utterance, da):
         """Replaces strings matching surface forms in the label database with
@@ -185,10 +278,10 @@ class SLUPreprocessing(object):
         """
         # Do the substitution in the utterance, and obtain the resulting
         # mapping.
-        utterance, slotval_for_cl = self.values2category_labels_in_utterance(
+        utterance, valform_for_cl = self.values2category_labels_in_utterance(
             utterance)
         cl_for_value = {item[1][0]: item[0]
-                        for item in slotval_for_cl.iteritems()}
+                        for item in valform_for_cl.iteritems()}
 
         # Using the mapping, perform the same substitution also in all the
         # DAIs.
@@ -197,7 +290,7 @@ class SLUPreprocessing(object):
             if dai.value in cl_for_value:
                 dai.value2category_label(cl_for_value[dai.value])
 
-        return utterance, da, slotval_for_cl
+        return utterance, da, valform_for_cl
 
     def category_labels2values_in_utterance(self, utterance, category_labels):
         """Reverts the effect of the values2category_labels_in_utterance(...)

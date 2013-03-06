@@ -13,6 +13,7 @@ from alex import utils
 SENTENCE_START = '<s>'
 SENTENCE_END = '</s>'
 
+
 def load_utterances(utt_fname, limit=None):
     """Loads a dictionary of utterances from a given file. The file is assumed
     to contain lines of the following form:
@@ -112,6 +113,7 @@ class Utterance(object):
     def isempty(self):
         return len(self.utterance) == 0
 
+    # TODO cache(1)
     def index(self, phrase):
         """Returns the word index of the start of first occurence of `phrase'
         within this utterance. If none is found, ValueError is raised.
@@ -153,8 +155,8 @@ class Utterance(object):
             else:
                 match_idx += 1
         # No match found.
-        raise ValueError('Missing "{phrase}" in "{utt}"'.format(
-                            phrase=phrase, utt=self.utterance))
+        raise ValueError('Missing "{phrase}" in "{utt}"'
+                         .format(phrase=phrase, utt=self.utterance))
 
     def replace(self, orig, replacement):
         try:

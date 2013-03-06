@@ -697,23 +697,41 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return res
 
-    def get_best_da_hyp(self):
-        """Return the best dialogue act hypothesis."""
+    def get_best_da_hyp(self, use_log=False):
+        """Return the best dialogue act hypothesis.
+
+        Arguments:
+            use_log: whether to express probabilities on the log-scale
+            (otherwise, they vanish easily in a moderately long confnet)
+
+        """
         da = DialogueAct()
-        prob = 1.0
-        for p, dai in self.cn:
-            if p > 0.5:
+        if use_log:
+            from math import log
+            logprob = 0.
+        else:
+            prob = 1.0
+        for edge_p, dai in self.cn:
+            if edge_p > 0.5:
                 da.append(dai)
                 # multiply with probability of presence of a dialogue act
-                prob *= p
+                if use_log:
+                    logprob += log(edge_p)
+                else:
+                    prob *= edge_p
             else:
                 # multiply with probability of exclusion of the dialogue act
-                prob *= (1 - p)
+                if use_log:
+                    logprob += log(1. - edge_p)
+                else:
+                    prob *= (1. - edge_p)
 
         if len(da) == 0:
             da.append(DialogueActItem('null'))
 
-        return DialogueActHyp(prob, da)
+        # (FIXME) DialogueActHyp still thinks it uses linear-scale
+        # probabilities.
+        return DialogueActHyp(logprob if use_log else prob, da)
 
     def get_prob(self, hyp_index):
         """Return a probability of the given hypothesis."""
