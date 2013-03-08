@@ -697,12 +697,16 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return res
 
-    def get_best_da_hyp(self, use_log=False):
+    def get_best_da_hyp(self, use_log=False, threshold=.5):
         """Return the best dialogue act hypothesis.
 
         Arguments:
             use_log: whether to express probabilities on the log-scale
-            (otherwise, they vanish easily in a moderately long confnet)
+                     (otherwise, they vanish easily in a moderately long
+                     confnet)
+            threshold: threshold on probabilities -- items with probability
+                       exceeding the threshold will be present in the output
+                       (default: 0.5)
 
         """
         da = DialogueAct()
@@ -712,7 +716,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         else:
             prob = 1.0
         for edge_p, dai in self.cn:
-            if edge_p > 0.5:
+            if edge_p > threshold:
                 da.append(dai)
                 # multiply with probability of presence of a dialogue act
                 if use_log:

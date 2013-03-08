@@ -39,6 +39,7 @@ class DAILogRegClassifier(SLUInterface):
     Attributes:
         category_labels: mapping { utterance ID:
                                     { category label: original string } }
+        cls_threshold: threshold for classifying as positive
         dai_counts: mapping { DAI: number of occurrences in data }
         das: mapping { utterance ID: DA } for DAs corresponding to training
              utterances
@@ -81,6 +82,7 @@ class DAILogRegClassifier(SLUInterface):
         # Additional bookkeeping.
         # Setting protected fields to None is interpreted as that they have to
         # be computed yet.
+        self.cls_threshold = 0.5
         self._dai_counts = None
         self._input_matrix = None
         self._output_matrix = None
@@ -199,7 +201,7 @@ class DAILogRegClassifier(SLUInterface):
                 # a category label? This seems to be the case yet it is very
                 # cryptic.
                 if dai.value and '-' not in dai.value:
-                    print '#' * 120
+                    print '#' * 60
                     print self.das[utt_id]
                     print self.utterances[utt_id]
                     print self.category_labels[utt_id]
@@ -250,13 +252,15 @@ class DAILogRegClassifier(SLUInterface):
 
     def print_classifiers(self):
         print "Classifiers detected in the training data"
-        print "-" * 120
+        print "-" * 60
         print "Number of classifiers: ", len(self._dai_counts)
-        print "-" * 120
+        print "-" * 60
 
         for dai in sorted(self._dai_counts.iterkeys()):
             print '{dai:>40} = {cnt}'.format(dai=dai,
                                              cnt=self._dai_counts[dai])
+        print "-" * 60
+        print
 
     @property
     def output_matrix(self):
@@ -319,12 +323,13 @@ class DAILogRegClassifier(SLUInterface):
         if min_feature_count is None:
             min_feature_count = self._default_min_feat_count
 
-        # Make sure the input and output matrices has been generated.
+        # Make sure the input and output matrices have been generated.
         if self._output_matrix is None:
             self.gen_output_matrix()
         if self._input_matrix is None:
             self.gen_input_matrix()
 
+        # Train classifiers for every DAI less those that have been pruned.
         self.trained_classifiers = {}
         if verbose:
             coefs_abs_sum = np.zeros(shape=(1, len(self.feat_counts)))
@@ -360,6 +365,7 @@ class DAILogRegClassifier(SLUInterface):
             # Prune features based on the selection of DAIs.
             if len(valid_row_idxs) != len(self._input_matrix):
                 inputs = inputs.transpose()
+                n_feats_used = len(inputs)
                 for feat_idx, feat_vec in enumerate(inputs):
                     n_occs = len(
                         filter(lambda feat_val: not (isnan(feat_val)
@@ -367,10 +373,11 @@ class DAILogRegClassifier(SLUInterface):
                                feat_vec))
                     if n_occs < min_feature_count:
                         inputs[feat_idx] *= 0
+                        n_feats_used -= 1
                 inputs = inputs.transpose()
                 if verbose:
                     print ("Adaptively pruned features to {cnt}."
-                           .format(cnt=n_occs))
+                           .format(cnt=n_feats_used))
 
             # Train and store the classifier for `dai'.
             lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
@@ -381,7 +388,7 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 coefs_abs_sum += map(abs, lr.coef_)
                 accuracy = lr.score(inputs, outputs)
-                predictions = [lr.predict(obs) for obs in inputs]
+                predictions = [lr.predict(obs)[0] for obs in inputs]
                 true_pos = sum(predictions[idx] == outputs[idx] == 1
                                for idx in xrange(len(outputs)))
                 false_pos = sum(predictions[idx] == 1 and outputs[idx] == 0
@@ -407,6 +414,116 @@ class DAILogRegClassifier(SLUInterface):
             print "Total number of non-zero params:", \
                   np.count_nonzero(coefs_abs_sum)
 
+        # Calibrate the prior.
+        if verbose:
+            print
+            print "Calibrating the prior..."
+        self.calibrate_prior(verbose=verbose)
+
+    def calibrate_prior(self, exp_unknown=0.05, verbose=False):
+        """Calibrates the prior on classification (its bias).  Requires that
+        the model has already been trained.
+
+        Arguments:
+            exp_unknown: expected answer for DAIs that are not labeled in
+                         training data.  This needs to be a float between 0.
+                         and 1., expressing how likely it is for such DAIs to
+                         be actually correct.
+            verbose: Be verbose.  For debugging purposes.
+
+        """
+        def fscore():
+            precision = true_pos / (true_pos + false_pos)
+            recall = true_pos / (true_pos + false_neg)
+            if precision + recall > 0.:
+                return 2 * precision * recall / (precision + recall)
+            return 0.
+        # Collect a new type of training data: predicted value -> true value.
+        # In cases where we don't know the true label of a classification
+        # problem (of a DAI in its utterance), we use `exp_unknown' instead of
+        # the label.
+        # FIXME: Exclude DAIs that are never labeled.
+        calib_data = np.empty(
+            (len(self.utterances) * len(self.trained_classifiers), 2))
+        # sanity check
+        if not len(calib_data):
+            return
+        dais_labeled = set()
+        datum_idx = 0
+        for utt_idx, utt_id in enumerate(self.utterances.iterkeys()):
+            dais_labeled.update(self.das[utt_id].dais)
+            dais_corr = [dai for dai in dais_labeled if dai.correct]
+            for dai, clser in self.trained_classifiers.iteritems():
+                predicted = clser.predict_proba(
+                    self._input_matrix[utt_idx])[0][1]
+                if dai in dais_labeled:
+                    # Note we cannot use just `dai.correct', as `dai' is
+                    # actually a different object than "`dais_corr[dai]'".
+                    true = float(dai in dais_corr)
+                else:
+                    true = exp_unknown
+                calib_data[datum_idx] = (predicted, true)
+                datum_idx += 1
+            dais_labeled.clear()
+
+        # Find the optimal decision boundary.
+        # Here we use the absolute error, not squared error.  This should be
+        # more efficient and have little impact on the result.
+        true_pos = np.sum(calib_data, axis=0)[1]
+        false_pos = np.sum(1. - calib_data, axis=0)[1]
+        false_neg = 0.
+        error = 1. - fscore()
+        calib_data = np.array(sorted(calib_data, key=lambda row: row[0]))
+        split_idx = 0
+        best_error = error
+        if verbose:
+            print "Total error: {err}".format(err=error)
+        datum_idx = 0
+        while True:
+            if verbose:
+                start_idx = datum_idx
+            try:
+                predicted, true = calib_data[datum_idx]
+            except IndexError:
+                break
+            # Collect all the classifications for the same predicted value.
+            point_cnt = 1
+            point_cls_sum = true
+            while True:
+                try:
+                    next_is_same = (calib_data[datum_idx + 1][0] == predicted)
+                except IndexError:
+                    break
+                if next_is_same:
+                    datum_idx += 1
+                    point_cnt += 1
+                    point_cls_sum += calib_data[datum_idx][1]
+                else:
+                    break
+            # Compute the difference in total error.
+            true_pos -= point_cls_sum
+            false_pos -= point_cnt - point_cls_sum
+            false_neg += point_cls_sum
+            error = 1. - fscore()
+            if error < best_error:
+                best_error = error
+                split_idx = datum_idx
+            datum_idx += 1
+            if verbose:
+                print "Split [{start}, {end}): pred={pred}, err={err}".format(
+                    start=start_idx, end=datum_idx, pred=predicted, err=error)
+
+        try:
+            self.cls_threshold = .5 * (calib_data[split_idx][0]
+                                        + calib_data[split_idx + 1][0])
+        except IndexError:
+            self.cls_threshold = calib_data[split_idx][0]
+
+        if verbose:
+            print
+            print "Best error: {err}".format(err=best_error)
+            print "Threshold: {thresh}".format(thresh=self.cls_threshold)
+
     @classmethod
     def resave_model(self, infname, outfname):
         """This helper method serves to convert from the original format of SLU
@@ -424,14 +541,16 @@ class DAILogRegClassifier(SLUInterface):
                         outfile)
 
     def save_model(self, file_name):
+        version = '1'
         data = (self.feat_counts.keys(),
                 self.feature_idxs,
                 {dai.extension(): clser for dai, clser in
                  self.trained_classifiers.iteritems()},
                 self.features_type,
-                self.features_size)
+                self.features_size,
+                self.cls_threshold)
         with open(file_name, 'w+') as outfile:
-            pickle.dump(data, outfile)
+            pickle.dump((version, data), outfile)
 
     ###############################################################
     ### From here on, the methods come from what used to be the ###
@@ -441,8 +560,22 @@ class DAILogRegClassifier(SLUInterface):
     def load_model(self, file_name):
         with open(file_name, 'r') as infile:
             data = pickle.load(infile)
-        self.features_list, self.feature_idxs, self.trained_classifiers, \
-            self.features_type, self.features_size = data
+            if isinstance(data[0], basestring):
+                version = data[0]
+                data = data[1]
+            else:
+                version = '0'
+
+        if version == '0':
+            (self.features_list, self.feature_idxs, self.trained_classifiers,
+                self.features_type, self.features_size) = data
+        elif version == '1':
+            (self.features_list, self.feature_idxs,
+             self.trained_classifiers, self.features_type,
+             self.features_size, self.cls_threshold) = data
+        else:
+            raise SLUException('Unknown version of the SLU model file: '
+                               '{v}.'.format(v=version))
 
     def get_size(self):
         """Returns the number of features in use."""
@@ -480,7 +613,7 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             print 'Features: ', utterance_features
 
-        kernel_vector = np.array(
+        feat_vec = np.array(
             [utterance_features.get_feature_vector(self.feature_idxs)])
 
         da_confnet = DialogueActConfusionNetwork()
@@ -491,7 +624,7 @@ class DAILogRegClassifier(SLUInterface):
 
             try:
                 dai_prob = (self.trained_classifiers[dai]
-                            .predict_proba(kernel_vector))
+                            .predict_proba(feat_vec))
             except Exception as ex:
                 print '(EE) Training exception: ', ex
                 continue
