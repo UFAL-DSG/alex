@@ -319,7 +319,8 @@ class DAILogRegClassifier(SLUInterface):
                 self.utterance_features[utt_id]
                 .get_feature_vector(self.feature_idxs))
 
-    def train(self, sparsification=1.0, min_feature_count=None, verbose=True):
+    def train(self, sparsification=1.0, min_feature_count=None,
+              calibrate=False, verbose=True):
         if min_feature_count is None:
             min_feature_count = self._default_min_feat_count
 
@@ -395,11 +396,20 @@ class DAILogRegClassifier(SLUInterface):
                                 for idx in xrange(len(outputs)))
                 false_neg = sum(predictions[idx] == 0 and outputs[idx] == 1
                                 for idx in xrange(len(outputs)))
-                precision = true_pos / float(true_pos + false_pos)
-                recall = true_pos / float(true_pos + false_neg)
-                f_score = 2 * precision * recall / (precision + recall)
+                if true_pos + false_pos > 0.:
+                    precision = true_pos / float(true_pos + false_pos)
+                else:
+                    precision = 0.
+                if true_pos + false_neg > 0.:
+                    recall = true_pos / float(true_pos + false_neg)
+                else:
+                    recall = 0.
+                if precision * recall == 0.:
+                    f_score = 0.
+                else:
+                    f_score = 2 * precision * recall / (precision + recall)
                 msg = ("Accuracy for training data: {acc:6.2f} %\n"
-                       "P/R/F: {p}/{r}/{f}\n"
+                       "P/R/F: {p:.3f}/{r:.3f}/{f:.3f}\n"
                        # "Size of the params: {parsize}\n"
                        "Number of non-zero params: {nonzero}\n").format(
                            acc=(100 * accuracy),
@@ -415,14 +425,15 @@ class DAILogRegClassifier(SLUInterface):
                   np.count_nonzero(coefs_abs_sum)
 
         # Calibrate the prior.
-        if verbose:
-            print
-            print "Calibrating the prior..."
-        self.calibrate_prior(verbose=verbose)
+        if calibrate:
+            if verbose:
+                print
+                print "Calibrating the prior..."
+            self.calibrate_prior(verbose=verbose)
 
     def calibrate_prior(self, exp_unknown=0.05, verbose=False):
         """Calibrates the prior on classification (its bias).  Requires that
-        the model has already been trained.
+        the model be already trained.
 
         Arguments:
             exp_unknown: expected answer for DAIs that are not labeled in
@@ -452,7 +463,10 @@ class DAILogRegClassifier(SLUInterface):
         datum_idx = 0
         for utt_idx, utt_id in enumerate(self.utterances.iterkeys()):
             dais_labeled.update(self.das[utt_id].dais)
-            dais_corr = [dai for dai in dais_labeled if dai.correct]
+            # FIXME: The check for the 'correct' attribute is not very
+            # thought-out.
+            dais_corr = [dai for dai in dais_labeled
+                         if not (hasattr(dai, 'correct') and not dai.correct)]
             for dai, clser in self.trained_classifiers.iteritems():
                 predicted = clser.predict_proba(
                     self._input_matrix[utt_idx])[0][1]
