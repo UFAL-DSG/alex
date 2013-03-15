@@ -5,6 +5,7 @@
 from collections import defaultdict
 from operator import xor
 
+from alex.ml.features import Features
 from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
@@ -462,6 +463,23 @@ class DialogueAct(object):
             new_dais.append(dai)
         self.dais = new_dais
         return self
+
+
+class DialogueActFeatures(Features):
+    def __init__(self, da, include_slotvals=False):
+        super(DialogueActFeatures, self).__init__()
+        # Features representing the complete DA.
+        for dai in da:
+            self.features[(dai.dat, )] += 1.
+            if dai.name is not None:
+                self.features[(dai.dat, dai.name)] += 1.
+                if include_slotvals and dai.value is not None:
+                    self.features[(dai.dat, dai.name, dai.value)] += 1.
+        # Summary features.
+        self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
+        self.features['n_dais'] = len(da)
+
+        self.set = set(self.features)
 
 
 class SLUHypothesis(object):

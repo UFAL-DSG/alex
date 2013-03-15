@@ -355,7 +355,7 @@ class SLUInterface(object):
 
     """
 
-    def parse_1_best(self, utterance):
+    def parse_1_best(self, utterance, *args, **kwargs):
         raise SLUException("Not implemented")
 
     def parse_nblist(self, utterance_list):

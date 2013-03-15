@@ -6,8 +6,12 @@ import numpy as np
 
 from collections import defaultdict
 
-from alex.utils.exception import UtteranceNBListException
 from alex import utils
+# TODO: The following import is a temporary workaround for moving classes
+# originally defined here to that module.  Instead, refer to the new module's
+# definitions everywhere where this module would have been used.
+from alex.ml.features import *
+from alex.utils.exception import UtteranceNBListException
 
 
 SENTENCE_START = '<s>'
@@ -52,10 +56,6 @@ def load_utterances(utt_fname, limit=None):
 class ASRHypothesis(object):
     """This is a base class for all forms of probabilistic ASR hypotheses
     representations."""
-    pass
-
-
-class Features(object):
     pass
 
 
@@ -235,43 +235,14 @@ class UtteranceFeatures(Features):
                 Otherwise, utterance must be an instance of Utterance.
 
         """
+        # This initialises the self.features and self.set fields.
+        super(UtteranceFeatures, self).__init__()
+
         self.type = type
         self.size = size
-        self.features = defaultdict(float)
 
         if utterance is not None:
             self.parse(utterance)
-
-    def __str__(self):
-        return str(self.features)
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, k):
-        return self.features[k]
-
-    def __contains__(self, k):
-        return k in self.features
-
-    def __iter__(self):
-        for i in self.features:
-            yield i
-
-    def get_feature_vector(self, feature_idxs):
-        """Builds the feature vector based on the provided mapping of features
-        onto their indices.
-
-        Arguments:
-            feature_idxs: a mapping { feature : feature index }
-
-        """
-        feat_vec = np.zeros(len(feature_idxs))
-        for feature in self.features:
-            if feature in feature_idxs:
-                feat_vec[feature_idxs[feature]] = self.features[feature]
-
-        return feat_vec
 
     def parse(self, utterance):
         """Extracts the features from `utterance'."""
@@ -304,21 +275,10 @@ class UtteranceFeatures(Features):
         # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
         # etc. or raise it as an exception.
         if len(self.features) == 0:
-            print utterance.utterance
+            print '(EE) Utterance with no features: "{utt}"'.format(
+                utt=utterance.utterance)
 
         self.set = set(self.features.keys())
-
-    def prune(self, to_remove):
-        """Discards all features from `to_remove' from self."""
-        # Remove the features from `self.set'.
-        to_remove_set = (to_remove if isinstance(to_remove, set)
-                         else set(to_remove))
-        self.set -= to_remove_set
-        # Remove the features from `self.features'.
-        old_features = self.features
-        self.features = defaultdict(float)
-        self.features.update(item for item in old_features.iteritems() if
-                             item[0] not in to_remove_set)
 
 
 class UtteranceHyp(ASRHypothesis):

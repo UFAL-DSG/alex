@@ -11,10 +11,11 @@ import cPickle as pickle
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
-from alex.components.slu.__init__ import SLUInterface
+from alex.components.slu import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
-    DialogueActConfusionNetwork, merge_slu_confnets
-from alex.utils.exception import DAILRException
+    DialogueActConfusionNetwork, DialogueActFeatures, merge_slu_confnets
+from alex.ml.features import Features
+from alex.utils.exception import DAILRException, SLUException
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -27,7 +28,8 @@ class DAILogRegClassifier(SLUInterface):
 
     Dialogue act is defined as a composition of dialogue act items. E.g.
 
-    confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
+    confirm(drinks="wine")&inform(name="kings shilling")
+        <=> 'does kings serve wine'
 
     where confirm(drinks="wine") and inform(name="kings shilling") are two
     dialogue act items.
@@ -47,7 +49,7 @@ class DAILogRegClassifier(SLUInterface):
         feature_idxs: mapping { feature: feature index }; feature indices span
                       range(0, number_of_features)
         features_size: size (order) of features, i.e., length of the n-grams
-        features_type: type of features (only 'ngram' is supported now)
+        features_type: type of features
         input_matrix: observation matrix, a numpy array with rows corresponding
                       to utterances and columns corresponding to features
                       This is a read-only attribute.
@@ -62,6 +64,18 @@ class DAILogRegClassifier(SLUInterface):
         utterance_features: mapping { utterance ID: utterance features } where
                             the features is an UtteranceFeatures object
         utterances: mapping { utterance ID: utterance } for training utterances
+
+    Type of features:
+        By default, 'ngram' is used, meaning n-grams up to order 4 plus all
+        skip n-grams of maximally that order are extracted.
+
+        Value of the argument specifying the type of features is tested for
+        inclusion of specific feature types.  If it contains (may it be as
+        a substring, or a member of a tuple, for example) any of the following
+        keywords, the corresponding type of features is extracted.
+
+            'ngram': n-grams (as described above)
+            'prev_da': features of the DA preceding to the one to be classified
 
     """
     # TODO Document attributes from the original DAILogRegClassifier class.
@@ -88,7 +102,43 @@ class DAILogRegClassifier(SLUInterface):
         self._output_matrix = None
         self._default_min_feat_count = 1
 
-    def extract_features(self, utterances, das, verbose=False):
+    def _get_feature_extractor(self, prev_das=None, by_utt_id=False):
+        ft = self.features_type
+        fs = self.features_size
+
+        def extract_feats(utterance=None, prev_da=None):
+            # Collect all types of features.
+            feat_sets = list()
+            if 'prev_da' in ft and prev_da is not None:
+                feat_sets.append(DialogueActFeatures(prev_da))
+            if 'ngram' in ft:
+                feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
+
+            # Based on the number of distinct feature types, either join them
+            # or take the single feature type.
+            if len(feat_sets) > 1:
+                feats = Features.join(*feat_sets)
+            elif len(feat_sets) == 1:
+                feats = feat_sets[0]
+            else:
+                # XXX This exception can actually be raised even if we know how
+                # to handle that type of features ('prev_da') but don't have
+                # the argument specifying the necessary input (prev_das).
+                raise DAILRException(
+                    'Cannot handle this type of features: "{ft}".'
+                    .format(ft=ft))
+            return feats
+
+        if by_utt_id:
+            return (lambda utt_id:
+                    extract_feats(utterance=self.utterances[utt_id],
+                                  prev_da=(prev_das[utt_id]
+                                           if prev_das is not None
+                                           else None)))
+        else:
+            return extract_feats
+
+    def extract_features(self, utterances, das, prev_das=None, verbose=False):
         """Extracts features from given utterances, making use of their
         corresponding DAs.  This is a pre-requisite to pruning features,
         classifiers, and running training with this learner.
@@ -98,8 +148,12 @@ class DAILogRegClassifier(SLUInterface):
                         being an instance of the Utterance class
             das: mapping { utterance ID: DA }, the DA being an instance of the
                  DialogueAct class
+            prev_das: mapping { utterance ID: DA }, the DA, an instance of
+                 the DialogueAct class, describing the DA immediately preceding
+                 to the one in question (default: None)
+            verbose: print debugging output?
 
-        The arguments are expected to have both the same set of keys.
+        The dictionary arguments are expected to all have the same set of keys.
 
         """
         self.utterances = utterances
@@ -120,12 +174,10 @@ class DAILogRegClassifier(SLUInterface):
                         self.utterances[utt_id], self.das[utt_id])
 
         # Generate utterance features.
-        ft = self.features_type
-        fs = self.features_size
-        uts = self.utterances
-        self.utterance_features = \
-            {utt_id: UtteranceFeatures(ft, fs, uts[utt_id])
-             for utt_id in self.utterances}
+        extract_feats = self._get_feature_extractor(by_utt_id=True,
+                                                    prev_das=prev_das)
+        self.utterance_features = {utt_id: extract_feats(utt_id)
+                                   for utt_id in self.utterances}
 
     def prune_features(self, min_feature_count=None, verbose=False):
         """Prunes features that occur few times.
@@ -133,8 +185,10 @@ class DAILogRegClassifier(SLUInterface):
         Arguments:
             min_feature_count: minimum number of a feature occurring for it not
                                to be pruned (default: 5)
-            verbose: whether to print diagnostic messages to
-                               stdout (default: False)
+            verbose:           whether to print diagnostic messages to stdout;
+                               when set to a larger value (i.e., 2), causes
+                               even higher verbosity
+                               (default: False)
 
         """
         # Remember the threshold used, and use it as a default later.
@@ -177,6 +231,12 @@ class DAILogRegClassifier(SLUInterface):
 
         if verbose:
             print "Number of features after pruning: ", len(self.feat_counts)
+            if verbose > 1:
+                print "The features:"
+                print "---features---"
+                import pprint
+                pprint.pprint([str(feat) for feat in self.feature_idxs])
+                print "---features---"
 
     @property
     def dai_counts(self):
@@ -529,7 +589,7 @@ class DAILogRegClassifier(SLUInterface):
 
         try:
             self.cls_threshold = .5 * (calib_data[split_idx][0]
-                                        + calib_data[split_idx + 1][0])
+                                       + calib_data[split_idx + 1][0])
         except IndexError:
             self.cls_threshold = calib_data[split_idx][0]
 
@@ -595,11 +655,22 @@ class DAILogRegClassifier(SLUInterface):
         """Returns the number of features in use."""
         return len(self.features_list)
 
-    def parse_1_best(self, utterance, verbose=False):
+    def parse_1_best(self, utterance, prev_da=None, ret_cl_map=False,
+                     verbose=False):
         """Parses `utterance' and generates the best interpretation in the form
-        of a dialogue act (an instance of DialogueAct).
+        of a confusion network of dialogue acts.
 
-        The result is a dialogue act confusion network.
+        Arguments:
+            utterance: an instance of Utterance or UtteranceHyp to be parsed
+            prev_da: the immediately preceding DA if applicable; this is used
+                     only if the model was trained using this information
+                     (default: None)
+            ret_cl_map: whether the tuple (da_confnet, cl2vals_forms) should be
+                        returned instead of just da_confnet.  The second member
+                        of the tuple will be a mapping from category labels
+                        identified in the utterance to the pair (slot value,
+                        surface form).  (The slot name can be parsed from the
+                        category label itself.)
 
         """
         if isinstance(utterance, UtteranceHyp):
@@ -620,9 +691,11 @@ class DAILogRegClassifier(SLUInterface):
             print category_labels
 
         # Generate utterance features.
-        utterance_features = UtteranceFeatures(self.features_type,
-                                               self.features_size,
-                                               utterance)
+        extract_feats = self._get_feature_extractor()
+        utterance_features = extract_feats(utterance, prev_da)
+        # utterance_features = UtteranceFeatures(self.features_type,
+                                               # self.features_size,
+                                               # utterance)
 
         if verbose:
             print 'Features: ', utterance_features
@@ -640,7 +713,7 @@ class DAILogRegClassifier(SLUInterface):
                 dai_prob = (self.trained_classifiers[dai]
                             .predict_proba(feat_vec))
             except Exception as ex:
-                print '(EE) Training exception: ', ex
+                print '(EE) Parsing exception: ', ex
                 continue
 
             if verbose:
@@ -655,6 +728,8 @@ class DAILogRegClassifier(SLUInterface):
             da_confnet, category_labels)
         confnet.sort()
 
+        if ret_cl_map:
+            return confnet, category_labels
         return confnet
 
     def parse_nblist(self, utterance_list):
