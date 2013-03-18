@@ -1,7 +1,7 @@
-This directory contains only tests, which can't be automated and the results must verified by humans!
+This directory contains only tests, which can't be automated and the results must be verified by humans!
 
 
-Note that the unit tests should be placed in the same diractory as the tested module and the name shoud be test_*.py e.g. test_module_name.py
+Note that the unit tests should be placed in the same directory as the tested module and the name should be test_*.py e.g. test_module_name.py
 
 1. Using unittest module:
 
