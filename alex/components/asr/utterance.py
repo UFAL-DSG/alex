@@ -7,6 +7,7 @@ import numpy as np
 from collections import defaultdict
 
 from alex import utils
+from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
@@ -53,7 +54,7 @@ def load_utterances(utt_fname, limit=None):
     return utterances
 
 
-class ASRHypothesis(object):
+class ASRHypothesis(Hypothesis):
     """This is a base class for all forms of probabilistic ASR hypotheses
     representations."""
     pass
@@ -252,16 +253,19 @@ class UtteranceFeatures(Features):
             # Compute shorter n-grams.
             for word in utterance:
                 self.features[(word, )] += 1.
-            for ngram in utterance.iter_ngrams(2, with_boundaries=True):
-                self.features[tuple(ngram)] += 1.
-            # Compute skip n-grams for size 3.
-            for ngram in utterance.iter_ngrams(3, with_boundaries=True):
-                self.features[tuple(ngram)] += 1.
-                self.features[(ngram[0], '*1', ngram[2])] += 1.
-            # Compute skip n-grams for size 4.
-            for ngram in utterance.iter_ngrams(4, with_boundaries=True):
-                self.features[tuple(ngram)] += 1.
-                self.features[(ngram[0], '*2', ngram[3])] += 1.
+            if self.size >= 2:
+                for ngram in utterance.iter_ngrams(2, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+            # Compute n-grams and skip n-grams for size 3.
+            if self.size >= 3:
+                for ngram in utterance.iter_ngrams(3, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+                    self.features[(ngram[0], '*1', ngram[2])] += 1.
+            # Compute n-grams and skip n-grams for size 4.
+            if self.size >= 4:
+                for ngram in utterance.iter_ngrams(4, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+                    self.features[(ngram[0], '*2', ngram[3])] += 1.
             # Compute longer n-grams.
             for length in xrange(5, self.size + 1):
                 for ngram in utterance.iter_ngrams(length,
@@ -294,110 +298,105 @@ class UtteranceHyp(ASRHypothesis):
         return self.utterance
 
 
-class UtteranceNBList(ASRHypothesis):
-    """Provides a convenient interface for processing N-best lists of
-    recognised utterances.
+class UtteranceNBList(ASRHypothesis, NBList):
+    """Provides functionality of n-best lists for utterances.
 
-    When updating the N-best list, one should do the following.
+    When updating the n-best list, one should do the following.
 
     1. add utterances or parse a confusion network
-    2. merge
-    3. normalise
-    4. sort
+    2. merge and normalise, in either order
+
+    Attributes:
+        n_best: the list containing pairs [prob, utterance] sorted from the
+                most probable to the least probable ones
 
     """
     def __init__(self):
-        self.n_best = []
-
-    def __str__(self):
-        s = []
-        for h in self.n_best:
-            s.append("%.3f %s" % (h[0], h[1]))
-
-        return '\n'.join(s)
-
-    def __len__(self):
-        return len(self.n_best)
-
-    def __getitem__(self, i):
-        return self.n_best[i]
-
-    def __iter__(self):
-        for i in self.n_best:
-            yield i
+        NBList.__init__(self)
 
     def get_best_utterance(self):
-        """Returns the most probable utterance."""
+        """Returns the most probable utterance.
+
+        DEPRECATED. Use get_best instead.
+
+        """
+        return self.get_best()
+
+    def get_best(self):
         if self.n_best[0][1] == '__other__':
             return self.n_best[1][1]
-
         return self.n_best[0][1]
 
-    def add(self, probability, utterance):
-        self.n_best.append([probability, utterance])
-
-    def merge(self):
-        """Adds up probabilities for the same hypotheses.
-        """
-        new_n_best = []
-
-        if len(self.n_best) <= 1:
-            return
-        else:
-            new_n_best.append(self.n_best[0])
-
-            for i in range(1, len(self.n_best)):
-                for j in range(len(new_n_best)):
-                    if new_n_best[j][1] == self.n_best[i][1]:
-                        # merge, add the probabilities
-                        new_n_best[j][0] += self.n_best[i][0]
-                        break
-                else:
-                    new_n_best.append(self.n_best[i])
-
-        self.n_best = new_n_best
-
+    # TODO Replace with NBList.normalise.
     def scale(self):
-        """The N-best list will be scaled to sum to one."""
-
-        s = sum([p for p, da in self.n_best])
-
-        for i in range(len(self.n_best)):
-            # null act is already there, therefore just normalise
-            self.n_best[i][0] /= s
+        """Scales the n-best list to sum to one."""
+        return NBList.normalise(self)
 
     def normalise(self):
-        suma = 0.0
-        other_utt = -1
-        for i in range(len(self.n_best)):
-            suma += self.n_best[i][0]
+        """The N-best list is extended to include the "__other__" utterance to
+        represent those utterance hypotheses which are not included in the
+        N-best list.
 
-            if self.n_best[i][1] == '__other__':
-                if other_utt != -1:
-                    raise UtteranceNBListException(
-                        ('Utterance list includes multiple __other__ '
-                         'utterances: {utts!s}').format(utts=self.n_best))
-                other_utt = i
+        DEPRECATED. Use add_other instead.
 
-        if other_utt == -1:
-            if suma > utils.one():
-                raise UtteranceNBListException(
-                    ('Sum of probabilities in the utterance list > 1.0: '
-                     '{suma:8.6f}').format(suma=suma))
-            prob_other = 1.0 - suma
-            self.n_best.append([prob_other, Utterance('__other__')])
-        else:
-            for i in range(len(self.n_best)):
-                # __other__ utterance is already there, therefore just
-                # normalise
-                self.n_best[i][0] /= suma
+        """
+        return self.add_other()
 
+    def add_other(self):
+        try:
+            return NBList.add_other(self, Utterance('__other__'))
+        except NBListException as ex:
+            # DEBUG
+            import ipdb; ipdb.set_trace()
+            raise UtteranceNBListException(ex)
+
+    # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
-        self.n_best.sort(reverse=True)
+        """DEPRECATED, going to be removed."""
+        return self
+        # self.n_best.sort(reverse=True)
 
 
 class UtteranceNBListFeatures(Features):
-    pass
+    # TODO Document.
+    def __init__(self, type='ngram', size=3, utt_nblist=None):
+        # This initialises the self.features and self.set fields.
+        super(UtteranceNBListFeatures, self).__init__()
+
+        self.type = type
+        self.size = size
+
+        if utt_nblist is not None:
+            self.parse(utt_nblist)
+
+    def parse(self, utt_nblist):
+        """This should be called only once during the object's lifetime,
+        preferrably from within the initialiser.
+        """
+        first_utt_feats = None
+        for hyp_idx, hyp in enumerate(utt_nblist):
+            prob, utt = hyp
+            utt_feats = UtteranceFeatures(type=self.type,
+                                          size=self.size,
+                                          utterance=utt)
+            if first_utt_feats is None:
+                first_utt_feats = utt_feats
+            for feat, feat_val in utt_feats.iteritems():
+                # Include the first rank of features occurring in the n-best list.
+                if (0, feat) not in self.features:
+                    self.features[(0, feat)] = float(hyp_idx)
+                # Include the weighted features of individual hypotheses.
+                self.features[(1, feat)] += prob * feat_val
+        # Add features of the top utterance
+        if first_utt_feats is None:
+            self.features[(2, None)] = 1.
+        else:
+            self.features[(2, 'prob')] = utt_nblist[0][0]
+            for feat, feat_val in first_utt_feats.iteritems():
+                self.features[(2, feat)] = feat_val
+
+        # Keep self.set up to date. (Why is it needed, anyway?)
+        self.set = set(self.features)
 
 #TODO: You can implement UtteranceConfusionNetwork and
 # UtteranceConfusionNetworkFeatures to serve the similar purpose for

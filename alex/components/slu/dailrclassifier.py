@@ -3,14 +3,17 @@
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008.
 
-
+from collections import defaultdict
+import cPickle as pickle
 from math import isnan
 import numpy as np
-import cPickle as pickle
+import random
 
+from sklearn import tree
 from sklearn.linear_model import LogisticRegression
 
-from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
+from alex.components.asr.utterance import UtteranceFeatures, \
+    UtteranceNBListFeatures, UtteranceHyp
 from alex.components.slu import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, merge_slu_confnets
@@ -42,6 +45,8 @@ class DAILogRegClassifier(SLUInterface):
         category_labels: mapping { utterance ID:
                                     { category label: original string } }
         cls_threshold: threshold for classifying as positive
+        clser_type: a string indicating type of the classifier used
+                    currently supported choices: 'logistic', 'tree'
         dai_counts: mapping { DAI: number of occurrences in data }
         das: mapping { utterance ID: DA } for DAs corresponding to training
              utterances
@@ -61,6 +66,8 @@ class DAILogRegClassifier(SLUInterface):
         preprocessing: an SLUPreprocessing object to be used for preprocessing
                        of utterances and DAs
         trained_classifiers: mapping { DAI: classifier for this DAI }
+        utt_ids: IDs of training utterances / utterance hypotheses (n-best
+                 lists)
         utterance_features: mapping { utterance ID: utterance features } where
                             the features is an UtteranceFeatures object
         utterances: mapping { utterance ID: utterance } for training utterances
@@ -78,20 +85,25 @@ class DAILogRegClassifier(SLUInterface):
             'prev_da': features of the DA preceding to the one to be classified
 
     """
-    # TODO Document attributes from the original DAILogRegClassifier class.
+    # TODO Document attributes from the original DAILogRegClassifier class
+    # (from the load_model method on).
 
+    # TODO Document.
     def __init__(self,
                  preprocessing=None,
+                 clser_type='logistic',
                  features_type='ngram',
                  features_size=4):
         # FIXME: maybe the SLU components should use the Config class to
         # initialise themselves.  As a result it would create their category
         # label database and pre-processing classes.
+        random.seed()
 
         # Save the arguments.
+        self.preprocessing = preprocessing
+        self.clser_type = clser_type
         self.features_type = features_type
         self.features_size = features_size
-        self.preprocessing = preprocessing
 
         # Additional bookkeeping.
         # Setting protected fields to None is interpreted as that they have to
@@ -102,17 +114,23 @@ class DAILogRegClassifier(SLUInterface):
         self._output_matrix = None
         self._default_min_feat_count = 1
 
-    def _get_feature_extractor(self, prev_das=None, by_utt_id=False):
+    def _get_feature_extractor(self,
+                               prev_das=None,
+                               utt_nblists=None,
+                               by_utt_id=False):
         ft = self.features_type
         fs = self.features_size
 
-        def extract_feats(utterance=None, prev_da=None):
+        def extract_feats(utterance=None, prev_da=None, utt_nblist=None):
             # Collect all types of features.
             feat_sets = list()
-            if 'prev_da' in ft and prev_da is not None:
-                feat_sets.append(DialogueActFeatures(prev_da))
             if 'ngram' in ft:
                 feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
+            if 'prev_da' in ft and prev_da is not None:
+                feat_sets.append(DialogueActFeatures(prev_da))
+            if 'utt_nbl' in ft and utt_nblist is not None:
+                feat_sets.append(
+                    UtteranceNBListFeatures(size=fs, utt_nblist=utt_nblist))
 
             # Based on the number of distinct feature types, either join them
             # or take the single feature type.
@@ -131,53 +149,102 @@ class DAILogRegClassifier(SLUInterface):
 
         if by_utt_id:
             return (lambda utt_id:
-                    extract_feats(utterance=self.utterances[utt_id],
+                    extract_feats(utterance=(self.utterances[utt_id]
+                                             if self.utterances is not None
+                                             else None),
                                   prev_da=(prev_das[utt_id]
                                            if prev_das is not None
-                                           else None)))
+                                           else None),
+                                  utt_nblist=(utt_nblists[utt_id]
+                                              if utt_nblists is not None
+                                              else None)))
         else:
             return extract_feats
 
-    def extract_features(self, utterances, das, prev_das=None, verbose=False):
+    # FIXME: Move the `das' argument to the first place (after self) and make
+    # it obligatory also formally.  This will require refactoring code that
+    # uses this class, calling this method with positional arguments.
+    def extract_features(self, utterances=None, das=None, prev_das=None,
+                         utt_nblists=None, verbose=False):
         """Extracts features from given utterances, making use of their
         corresponding DAs.  This is a pre-requisite to pruning features,
         classifiers, and running training with this learner.
 
         Arguments:
             utterances: mapping { utterance ID: utterance }, the utterance
-                        being an instance of the Utterance class
+                 being an instance of the Utterance class (default: None)
             das: mapping { utterance ID: DA }, the DA being an instance of the
                  DialogueAct class
+                 NOTE this argument has a default value, yet it is obligatory.
             prev_das: mapping { utterance ID: DA }, the DA, an instance of
                  the DialogueAct class, describing the DA immediately preceding
                  to the one in question (default: None)
-            verbose: print debugging output?
+            utt_nblists: mapping { utterance ID: utterance n-best list }, with
+                 the utterance n-best list reflecting the ASR output
+                 (default: None)
+            verbose: print debugging output?  More output is printed if
+                 verbose > 1.
 
         The dictionary arguments are expected to all have the same set of keys.
 
         """
         self.utterances = utterances
+        self.utt_nblists = utt_nblists
         self.das = das
+        if utterances:
+            self.utt_ids = utterances.keys()
+        elif utt_nblists:
+            self.utt_ids = utt_nblists.keys()
+        else:
+            raise DAILRException('Cannot learn a classifier without '
+                                 'utterances and without ASR hypotheses.')
 
         # Normalise the text and substitute category labels.
         self.category_labels = {}
         if self.preprocessing:
-            for utt_id in self.utterances.iterkeys():
-                # Normalise the text.
-                self.utterances[utt_id] = self.preprocessing\
-                    .text_normalisation(self.utterances[utt_id])
-                # Substitute category labes.
-                (self.utterances[utt_id],
-                 self.das[utt_id],
-                 self.category_labels[utt_id]) = \
-                    self.preprocessing.values2category_labels_in_da(
-                        self.utterances[utt_id], self.das[utt_id])
+            # Learning from transcriptions...
+            if utterances:
+                for utt_id in self.utt_ids:
+                    # Normalise the text.
+                    self.utterances[utt_id] = self.preprocessing\
+                        .text_normalisation(self.utterances[utt_id])
+                    # Substitute category labes.
+                    (self.utterances[utt_id],
+                     self.das[utt_id],
+                     self.category_labels[utt_id]) = \
+                        self.preprocessing.values2category_labels_in_da(
+                            self.utterances[utt_id], self.das[utt_id])
+            # ...or, learning from utterance hypotheses.
+            else:
+                assert bool(utt_nblists)
+                for utt_id in self.utt_nblists.iterkeys():
+                    nblist = self.utt_nblists[utt_id]
+                    if nblist is None:
+                        # FIXME This should rather be discarded right away.
+                        continue
+                    # Normalise the text.
+                    for utt_idx, hyp in enumerate(nblist):
+                        utt = hyp[1]
+                        nblist[utt_idx][1] = (self.preprocessing
+                                              .text_normalisation(utt))
+                    # Substitute category labes.
+                    (self.utt_nblists[utt_id],
+                     self.das[utt_id],
+                     self.category_labels[utt_id]) = \
+                        self.preprocessing.values2category_labels_in_da(
+                            nblist, self.das[utt_id])
 
         # Generate utterance features.
         extract_feats = self._get_feature_extractor(by_utt_id=True,
-                                                    prev_das=prev_das)
+                                                    prev_das=prev_das,
+                                                    utt_nblists=utt_nblists)
         self.utterance_features = {utt_id: extract_feats(utt_id)
-                                   for utt_id in self.utterances}
+                                   for utt_id in self.utt_ids}
+        if verbose >= 2:
+            print "Random few extracted features:"
+            for utt_id in self.utt_ids[:41]:
+                print str(self.utterance_features[utt_id])
+            print
 
     def prune_features(self, min_feature_count=None, verbose=False):
         """Prunes features that occur few times.
@@ -198,7 +265,7 @@ class DAILogRegClassifier(SLUInterface):
             self._default_min_feat_count = min_feature_count
         # Count number of occurrences of features.
         self.feat_counts = dict()
-        for utt_id in self.utterances.iterkeys():
+        for utt_id in self.utt_ids:
             for feature in self.utterance_features[utt_id]:
                 self.feat_counts[feature] = \
                     self.feat_counts.get(feature, 0) + 1
@@ -212,7 +279,7 @@ class DAILogRegClassifier(SLUInterface):
             self.feat_counts.iterkeys()))
 
         # Discard the low-count features.
-        for utt_id in self.utterances.iterkeys():
+        for utt_id in self.utt_ids:
             self.utterance_features[utt_id].prune(low_count_features)
         old_feat_counts = self.feat_counts
         self.feat_counts = {key: old_feat_counts[key]
@@ -220,7 +287,7 @@ class DAILogRegClassifier(SLUInterface):
                             if key not in low_count_features}
 
         if verbose:
-            print ("Number of features occurring less then {occs} times: {cnt}"
+            print ("Number of features occurring less than {occs} times: {cnt}"
                    .format(occs=min_feature_count,
                            cnt=len(low_count_features)))
 
@@ -245,7 +312,7 @@ class DAILogRegClassifier(SLUInterface):
         if self._dai_counts is None:
             # Count occurrences of all DAIs in the DAs bound to this learner.
             _dai_counts = self._dai_counts = dict()
-            for utt_id in self.utterances.iterkeys():
+            for utt_id in self.utt_ids:
                 for dai in self.das[utt_id].dais:
                     _dai_counts[dai] = _dai_counts.get(dai, 0) + 1
         return self._dai_counts
@@ -255,7 +322,7 @@ class DAILogRegClassifier(SLUInterface):
         earlier versions.
 
         """
-        for utt_id in self.utterances.iterkeys():
+        for utt_id in self.utt_ids:
             for dai in self.das[utt_id].dais:
                 # XXX What again does ('-' not in dai.value) check? Presence of
                 # a category label? This seems to be the case yet it is very
@@ -313,10 +380,10 @@ class DAILogRegClassifier(SLUInterface):
     def print_classifiers(self):
         print "Classifiers detected in the training data"
         print "-" * 60
-        print "Number of classifiers: ", len(self._dai_counts)
+        print "Number of classifiers: ", len(self.dai_counts)
         print "-" * 60
 
-        for dai in sorted(self._dai_counts.iterkeys()):
+        for dai in sorted(self.dai_counts.iterkeys()):
             print '{dai:>40} = {cnt}'.format(dai=dai,
                                              cnt=self._dai_counts[dai])
         print "-" * 60
@@ -345,11 +412,11 @@ class DAILogRegClassifier(SLUInterface):
 
         """
         das = self.das
-        uts = self.utterances.viewkeys()
+        uts = self.utt_ids
         # NOTE that the output matrix has unusual indexing: first associative
         # index to columns, then integral index to rows.
         self._output_matrix = \
-            {dai.extension(): np.array([float(dai in das[utt_id])
+            {dai.extension(): np.array([2 * (dai in das[utt_id]) - 1.
                                         for utt_id in uts])
              for dai in self._dai_counts}
 
@@ -372,12 +439,36 @@ class DAILogRegClassifier(SLUInterface):
         before.
 
         """
-        self._input_matrix = np.zeros((len(self.utterances),
+        self._input_matrix = np.zeros((len(self.utt_ids),
                                        len(self.feat_counts)))
-        for utt_idx, utt_id in enumerate(self.utterances.iterkeys()):
+        for utt_idx, utt_id in enumerate(self.utt_ids):
             self._input_matrix[utt_idx] = (
                 self.utterance_features[utt_id]
                 .get_feature_vector(self.feature_idxs))
+
+    @classmethod
+    def balance_data(cls, inputs, outputs):
+        outputs_idxs = defaultdict(list)
+        for output_idx, output in enumerate(outputs):
+            outputs_idxs[output].append(output_idx)
+        max_count = max(map(len, outputs_idxs.values()))
+        new_inputs = list()
+        new_outputs = list()
+        for output, output_idxs in outputs_idxs.iteritems():
+            n_remains = max_count - len(output_idxs)
+            new_inputs.extend(inputs[random.choice(output_idxs)]
+                              for _ in xrange(n_remains))
+            new_outputs.extend([output] * n_remains)
+        # (The following check is to avoid ValueError from numpy.concatenate of
+        # an empty list.)
+        # If any balancing was done,
+        if new_outputs:
+            # Return a new, balanced set.
+            return (np.concatenate((inputs, new_inputs)),
+                    np.concatenate((outputs, new_outputs)))
+        else:
+            # Return the original inputs and outputs.
+            return inputs, outputs
 
     def train(self, sparsification=1.0, min_feature_count=None,
               calibrate=False, verbose=True):
@@ -441,15 +532,29 @@ class DAILogRegClassifier(SLUInterface):
                            .format(cnt=n_feats_used))
 
             # Train and store the classifier for `dai'.
-            lr = LogisticRegression('l1', C=sparsification, tol=1e-6)
-            lr.fit(inputs, outputs)
-            self.trained_classifiers[dai] = lr
+            if self.clser_type == 'logistic':
+                clser = LogisticRegression('l1', C=sparsification, tol=1e-6,
+                                           class_weight='auto')
+                # clser.fit(inputs, outputs)
+                # XXX Balancing the data cannot be canceled by passing an
+                # argument now.
+                clser.fit(*self.balance_data(inputs, outputs))
+            else:
+                assert self.clser_type == 'tree'
+                # TODO Make the parameters tunable.
+                clser = tree.DecisionTreeClassifier(min_samples_split=5,
+                                                    max_depth=4)
+                clser.fit(*self.balance_data(inputs, outputs))
+            self.trained_classifiers[dai] = clser
 
             # after message
             if verbose:
-                coefs_abs_sum += map(abs, lr.coef_)
-                accuracy = lr.score(inputs, outputs)
-                predictions = [lr.predict(obs)[0] for obs in inputs]
+                if self.clser_type == 'logistic':
+                    coefs_abs_sum += map(abs, clser.coef_)
+                else:
+                    coefs_abs_sum += clser.tree_.node_count
+                accuracy = clser.score(inputs, outputs)
+                predictions = [clser.predict(obs)[0] for obs in inputs]
                 true_pos = sum(predictions[idx] == outputs[idx] == 1
                                for idx in xrange(len(outputs)))
                 false_pos = sum(predictions[idx] == 1 and outputs[idx] == 0
@@ -468,17 +573,31 @@ class DAILogRegClassifier(SLUInterface):
                     f_score = 0.
                 else:
                     f_score = 2 * precision * recall / (precision + recall)
+                if self.clser_type == 'logistic':
+                    n_nonzero = np.count_nonzero(clser.coef_)
+                else:
+                    n_nonzero = clser.tree_.node_count
                 msg = ("Accuracy for training data: {acc:6.2f} %\n"
                        "P/R/F: {p:.3f}/{r:.3f}/{f:.3f}\n"
                        # "Size of the params: {parsize}\n"
-                       "Number of non-zero params: {nonzero}\n").format(
+                       "Number of non-zero params: {nonzero}").format(
                            acc=(100 * accuracy),
                            p=precision,
                            r=recall,
                            f=f_score,
-                           # parsize=lr.coef_.shape,
-                           nonzero=np.count_nonzero(lr.coef_))
+                           # parsize=clser.coef_.shape,
+                           nonzero=n_nonzero)
                 print msg
+                # TODO Print the non-zero features learned.
+                if self.clser_type == 'logistic':
+                    nonzero_idxs = clser.coef_.nonzero()[1]
+                    # [0] is intercept, perhaps
+                    if len(nonzero_idxs):
+                        print "Non-zero features:"
+                        for feat_idx in nonzero_idxs:
+                            print "  {}".format(
+                                self.feat_counts.keys()[feat_idx])
+                print
 
         if verbose:
             print "Total number of non-zero params:", \
@@ -500,7 +619,8 @@ class DAILogRegClassifier(SLUInterface):
                          training data.  This needs to be a float between 0.
                          and 1., expressing how likely it is for such DAIs to
                          be actually correct.
-            verbose: Be verbose.  For debugging purposes.
+            verbose: Be verbose; if `verbose' > 1, produces a lot of output.
+                     For debugging purposes.
 
         """
         def fscore():
@@ -515,13 +635,13 @@ class DAILogRegClassifier(SLUInterface):
         # the label.
         # FIXME: Exclude DAIs that are never labeled.
         calib_data = np.empty(
-            (len(self.utterances) * len(self.trained_classifiers), 2))
+            (len(self.utt_ids) * len(self.trained_classifiers), 2))
         # sanity check
         if not len(calib_data):
             return
         dais_labeled = set()
         datum_idx = 0
-        for utt_idx, utt_id in enumerate(self.utterances.iterkeys()):
+        for utt_idx, utt_id in enumerate(self.utt_ids):
             dais_labeled.update(self.das[utt_id].dais)
             # FIXME: The check for the 'correct' attribute is not very
             # thought-out.
@@ -554,7 +674,7 @@ class DAILogRegClassifier(SLUInterface):
             print "Total error: {err}".format(err=error)
         datum_idx = 0
         while True:
-            if verbose:
+            if verbose > 1:
                 start_idx = datum_idx
             try:
                 predicted, true = calib_data[datum_idx]
@@ -583,7 +703,7 @@ class DAILogRegClassifier(SLUInterface):
                 best_error = error
                 split_idx = datum_idx
             datum_idx += 1
-            if verbose:
+            if verbose > 1:
                 print "Split [{start}, {end}): pred={pred}, err={err}".format(
                     start=start_idx, end=datum_idx, pred=predicted, err=error)
 
@@ -615,9 +735,10 @@ class DAILogRegClassifier(SLUInterface):
                         outfile)
 
     def save_model(self, file_name):
-        version = '1'
+        version = '2'
         data = (self.feat_counts.keys(),
                 self.feature_idxs,
+                self.clser_type,
                 {dai.extension(): clser for dai, clser in
                  self.trained_classifiers.iteritems()},
                 self.features_type,
@@ -647,6 +768,10 @@ class DAILogRegClassifier(SLUInterface):
             (self.features_list, self.feature_idxs,
              self.trained_classifiers, self.features_type,
              self.features_size, self.cls_threshold) = data
+        elif version == '2':
+            (self.features_list, self.feature_idxs,
+             self.clser_type, self.trained_classifiers, self.features_type,
+             self.features_size, self.cls_threshold) = data
         else:
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
@@ -655,7 +780,11 @@ class DAILogRegClassifier(SLUInterface):
         """Returns the number of features in use."""
         return len(self.features_list)
 
-    def parse_1_best(self, utterance, prev_da=None, ret_cl_map=False,
+    def parse_1_best(self,
+                     utterance,
+                     prev_da=None,
+                     utt_nblist=None,
+                     ret_cl_map=False,
                      verbose=False):
         """Parses `utterance' and generates the best interpretation in the form
         of a confusion network of dialogue acts.
@@ -665,12 +794,18 @@ class DAILogRegClassifier(SLUInterface):
             prev_da: the immediately preceding DA if applicable; this is used
                      only if the model was trained using this information
                      (default: None)
+            utt_nblist: mapping { utterance ID: utterance n-best list }, with
+                 the utterance n-best list reflecting the ASR output
+                 (default: None)
             ret_cl_map: whether the tuple (da_confnet, cl2vals_forms) should be
                         returned instead of just da_confnet.  The second member
                         of the tuple will be a mapping from category labels
                         identified in the utterance to the pair (slot value,
                         surface form).  (The slot name can be parsed from the
                         category label itself.)
+            verbose: print debugging output?  More output is printed if
+                     verbose > 1.
+
 
         """
         if isinstance(utterance, UtteranceHyp):
@@ -685,19 +820,19 @@ class DAILogRegClassifier(SLUInterface):
             utterance, category_labels = \
                 self.preprocessing.values2category_labels_in_utterance(
                     utterance)
-
-        if verbose:
-            print 'After preprocessing: "{utt}".'.format(utt=utterance)
-            print category_labels
+            if verbose:
+                print 'After preprocessing: "{utt}".'.format(utt=utterance)
+                print category_labels
+        else:
+            category_labels = dict()
 
         # Generate utterance features.
         extract_feats = self._get_feature_extractor()
-        utterance_features = extract_feats(utterance, prev_da)
-        # utterance_features = UtteranceFeatures(self.features_type,
-                                               # self.features_size,
-                                               # utterance)
+        utterance_features = extract_feats(utterance=utterance,
+                                           prev_da=prev_da,
+                                           utt_nblist=utt_nblist)
 
-        if verbose:
+        if verbose >= 2:
             print 'Features: ', utterance_features
 
         feat_vec = np.array(
@@ -724,9 +859,12 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             print "DA: ", da_confnet
 
-        confnet = self.preprocessing.category_labels2values_in_confnet(
-            da_confnet, category_labels)
-        confnet.sort()
+        if self.preprocessing is not None:
+            confnet = self.preprocessing.category_labels2values_in_confnet(
+                da_confnet, category_labels)
+            confnet.sort()
+        else:
+            confnet = da_confnet
 
         if ret_cl_map:
             return confnet, category_labels

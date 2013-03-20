@@ -6,6 +6,7 @@ from collections import defaultdict
 from operator import xor
 
 from alex.ml.features import Features
+from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
@@ -482,7 +483,7 @@ class DialogueActFeatures(Features):
         self.set = set(self.features)
 
 
-class SLUHypothesis(object):
+class SLUHypothesis(Hypothesis):
     """This is the base class for all forms of probabilistic SLU hypotheses
     representations.
 
@@ -504,122 +505,55 @@ class DialogueActHyp(SLUHypothesis):
         return self.da
 
 
-class DialogueActNBList(SLUHypothesis):
+class DialogueActNBList(SLUHypothesis, NBList):
     """Provides functionality of N-best lists for dialogue acts.
 
     When updating the N-best list, one should do the following.
 
-    1. add utterances or parse a confusion network
+    1. add DAs or parse a confusion network
     2. merge and normalise, in either order
 
-    Do NOT add the 'other()' DA more than once, else the `normalise' method
-    will raise an exception.
+    Attributes:
+        n_best: the list containing pairs [prob, DA] sorted from the most
+                probable to the least probable ones
 
     """
 
     def __init__(self):
-        self.n_best = []
-
-    def __str__(self):
-        return '\n'.join('{p:.3f} {da}'.format(p=p, da=da)
-                         for p, da in self.n_best)
-
-    def __len__(self):
-        return len(self.n_best)
-
-    def __getitem__(self, i):
-        return self.n_best[i]
-
-    def __iter__(self):
-        for hyp in self.n_best:
-            yield hyp
-
-    def __cmp__(self, other):
-        return (self.n_best >= other.n_best) - (other.n_best >= self.n_best)
+        NBList.__init__(self)
 
     def get_best_da(self):
-        """Returns the most probable dialogue act."""
-        return self.n_best[0][1]
+        """Returns the most probable dialogue act.
 
-    def add(self, probability, da):
-        """Finds the last hypothesis with a lower probability and inserts the
-        new item before that one.
+        DEPRECATED. Use get_best instead.
 
         """
-        insert_idx = len(self.n_best)
-        while insert_idx > 0:
-            insert_idx -= 1
-            if probability <= self.n_best[insert_idx][0]:
-                insert_idx += 1
-                break
-        self.n_best.insert(insert_idx, [probability, da])
+        return self.n_best[0][1]
 
-    def merge(self):
-        """Adds up probabilities for the same hypotheses."""
-        if len(self.n_best) <= 1:
-            return
-        else:
-            new_n_best = [self.n_best[0]]
-
-            for cur_idx in xrange(1, len(self.n_best)):
-                for new_idx in xrange(len(new_n_best)):
-                    if new_n_best[new_idx][1] == self.n_best[cur_idx][1]:
-                        # Merge, add the probabilities.
-                        new_n_best[new_idx][0] += self.n_best[cur_idx][0]
-                        break
-                else:
-                    new_n_best.append(self.n_best[cur_idx])
-
-        self.n_best = sorted(new_n_best, reverse=True)
-        return self
-
+    # TODO Replace with NBList.normalise.
     def scale(self):
-        """The N-best list will be scaled to sum to one."""
-        tot = float(sum(p for p, da in self.n_best))
-        for hyp_idx in xrange(len(self.n_best)):
-            # Null act is already there (we assume), therefore just normalise.
-            self.n_best[hyp_idx][0] /= tot
-        return self
+        """Scales the n-best list to sum to one."""
+        return NBList.normalise(self)
 
-    # FIXME: This method name, especially next to the `scale' method, is quite
-    # confusing.  Rename them.
     def normalise(self):
         """The N-best list is extended to include the "other()" dialogue act to
         represent those semantic hypotheses which are not included in the
         N-best list.
 
+        DEPRECATED. Use add_other instead.
+
         """
-        tot = 0.0
-        other_da_idx = -1
-        for hyp_idx in range(len(self.n_best)):
-            tot += self.n_best[hyp_idx][0]
+        return self.add_other()
 
-            if self.n_best[hyp_idx][1] == 'other()':
-                if other_da_idx != -1:
-                    raise DialogueActNBListException(
-                        'Dialogue act list includes multiple null() ' + \
-                        'dialogue acts: {nb!s}'.format(nb=self.n_best))
-                other_da_idx = hyp_idx
-
-        # If the 'other()' dialogue act is absent,
-        if other_da_idx == -1:
-            if tot > 1.0:
-                raise DialogueActNBListException(
-                    'Sum of probabilities in dialogue act list > 1.0: ' + \
-                    '{s:8.6f}'.format(s=tot))
-            # Append the 'other()' DA.
-            prob_other = 1.0 - tot
-            self.n_best.append([prob_other, DialogueAct('other()')])
-        # If the 'other()' dialogue act was present,
-        else:
-            # Just normalise the probs.
-            for hyp_idx in range(len(self.n_best)):
-                self.n_best[hyp_idx][0] /= tot
-
-        return self
+    def add_other(self):
+        try:
+            return NBList.add_other(self, DialogueAct('other()'))
+        except NBListException as ex:
+            raise DialogueActNBListException(ex)
 
     # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
+        """DEPRECATED, going to be removed."""
         return self
         # self.n_best.sort(reverse=True)
 
