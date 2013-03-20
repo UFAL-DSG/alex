@@ -37,6 +37,7 @@ import os.path
 import re
 import shutil
 import sys
+import glob
 
 from xml.etree import ElementTree
 
@@ -78,7 +79,7 @@ _nonspeech_map = {
         '(SCRAPE)',
         '(SQUEAK)',
         '(TVNOISE)')
-    }
+}
 #}}}
 _nonspeech_trl = dict()
 for uscored, forms in _nonspeech_map.iteritems():
@@ -504,7 +505,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
         wav_basename = rec.attrib['fname'].strip()
         if wav_basename in wav_mapping:
             # Check it is the wav from this directory.
-            wav_fname = wav_mapping[wav_basename]
+            wav_fname = os.path.join(wav_mapping[wav_basename], wav_basename)
             if os.path.dirname(wav_fname) != dirname:
                 missing_wav = True
             else:
@@ -609,7 +610,15 @@ def convert(args):
             else:
                 ignore_globs.add(path_or_glob)
         ignore_list_file.close()
-    # Get all but the ignored .wav files.
+    # Find the files in ignore paths, to be sure that symlinks
+    # through other paths did not add the files
+    ignore_wav_paths = list()
+    for ip in ignore_paths:
+        ignore_wav_paths.extend(find(ip, '*.wav', mindepth=1, maxdepth=1))
+    for ig in ignore_globs:
+        ignore_wav_paths.extend([os.path.abspath(f) for f in glob.glob(ig)])
+
+    # Get all *.wav and try to ignored in ignore globs and ignore paths.
     if os.path.isdir(infname):
         wav_paths = find(infname, '*.wav',
                          ignore_globs=ignore_globs, ignore_paths=ignore_paths)
@@ -617,24 +626,47 @@ def convert(args):
         wav_paths = list()
         with open(infname, 'r') as inlist:
             for line in inlist:
-                wav_paths.extend(find(line.strip(), '*.wav',
-                                      mindepth=1, maxdepth=1,
-                                      ignore_globs=ignore_globs,
-                                      ignore_paths=ignore_paths))
-    wav_mapping = dict()  # wav basename -> full path
-    sess_fnames = dict()  # path to call log dir -> session file name
+                line = line.rstrip('\n')
+                # Line contains directories
+                if os.path.isdir(line):
+                    wav_paths.extend(find(line, '*.wav',
+                                          mindepth=1, maxdepth=1,
+                                          ignore_globs=ignore_globs,
+                                          ignore_paths=ignore_paths))
+                # Treat the line as wav_file glob
+                else:
+                    new_paths = [os.path.abspath(f) for f in glob.glob(line)]
+                    wav_paths.extend(new_paths)
     # Map file basenames to their relative paths -- NOTE this can be
     # destructive if multiple files have the same basename.
-    for fpath in wav_paths:
-        prefix, wav_basename = os.path.split(fpath)
-        wav_mapping[wav_basename] = fpath
-        sess_fnames[prefix] = None
+    # Wav_mapping: wav basename -> path to call log dir
+    swaped = [os.path.split(fpath) for fpath in wav_paths]
+    wav_mapping = dict([(name, prefix) for (prefix, name) in swaped])
     n_collisions = len(wav_paths) - len(wav_mapping)
+
+    # Get basename for ignore files and we do NOT care about collisions
+    # Ignore_wav_mapping: wav basename -> path to call log dir
+    swaped = [os.path.split(fpath) for fpath in ignore_wav_paths]
+    ignore_wav_mapping = dict([(name, prefix) for (prefix, name) in swaped])
+
+    # Delete ignore basenames from wav_mapping (if any pass through
+    # ignore_paths and globs)
+    for ignore_basename, ignore_path in ignore_wav_mapping.iteritems():
+        if ignore_basename in wav_mapping:
+            if verbose:
+                ip = os.path.join(ignore_path, ignore_basename)
+                p = os.path.join(wav_mapping[ignore_basename], ignore_basename)
+                print 'Wav file SKIPPED: %s\n because in ignored: %s' % (p, ip)
+            # Removing the ignore_basename from wav_mapping
+            del wav_mapping[ignore_basename]
 
     # Get all transcription logs.
     n_notnorm_trss = 0
     n_missing_trss = 0
-    for prefix in sess_fnames:
+    # path session file name created from call log dir
+    sess_fnames = dict()
+    # Call dir == prefix
+    for prefix in wav_mapping.itervalues():
         norm_fname = os.path.join(prefix, 'user-transcription.norm.xml')
         if os.path.isfile(norm_fname):
             sess_fnames[prefix] = norm_fname
@@ -651,8 +683,6 @@ def convert(args):
                     n_notnorm_trss += 1
                 else:
                     n_missing_trss += 1
-    sess_fnames = dict(item for item in sess_fnames.iteritems()
-                       if item[1] is not None)
     # trn_paths = find(infname, 'user-transcription.norm.xml')
 
     print ""
@@ -667,14 +697,13 @@ def convert(args):
     n_missing_wav = 0
     n_missing_trs = 0
     # for trn_path in trn_paths:
-    for prefix in sess_fnames:
+    for prefix, call_log in sess_fnames.iteritems():
         if verbose:
             print "Processing call log dir: ", prefix
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(prefix, sess_fnames[prefix], outdir, wav_mapping,
-                              known_words, verbose)
-            # extract_wavs_trns(trn_path, outdir, wav_mapping, verbose)
+            extract_wavs_trns(
+                prefix, call_log, outdir, wav_mapping, known_words, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav
@@ -750,7 +779,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--count-ignored',
                         action="store_true",
                         default=False,
-                        help='output number of files ignored due to the -i '\
+                        help='output number of files ignored due to the -i '
                              'option')
 
     args = parser.parse_args()
