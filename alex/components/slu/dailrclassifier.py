@@ -422,6 +422,10 @@ class DAILogRegClassifier(SLUInterface):
                 self.feature_idxs[feature] = feat_idx
                 feat_idx += 1
 
+        i2f = self.idx2feature = [None] * len(self.feature_idxs)
+        for feat, idx in self.feature_idxs.iteritems():
+            i2f[idx] = feat
+
         if verbose:
             print "Number of features after pruning: ", len(self.feat_counts)
             print "Number of instantiated features:  ", len(self.feature_idxs)
@@ -830,7 +834,7 @@ class DAILogRegClassifier(SLUInterface):
                         for feat_idx in nonzero_idxs:
                             feat_weight = clser.coef_[0][feat_idx]
                             feat_str = Features.do_with_abstract(
-                                self.feature_idxs.keys()[feat_idx], str)
+                                self.idx2feature[feat_idx], str)
                             feat_tups.append((feat_weight, feat_str))
                         for feat_weight, feat_str in sorted(
                                 feat_tups, key=lambda item: -abs(item[0])):
@@ -1160,6 +1164,14 @@ class DAILogRegClassifier(SLUInterface):
             confnet.sort()
         else:
             confnet = da_confnet
+
+        # Add DAs for which we have no classifiers, to the confnet with their
+        # DAs' original probs.
+        if da_nblist:
+            for prob, da in da_nblist:
+                for dai in da:
+                    if dai not in confnet:
+                        confnet.add(prob, dai)
 
         if ret_cl_map:
             return confnet, category_labels

@@ -731,18 +731,21 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     def __str__(self):
 
-        s = []
-        for prob, dai in self.cn:
+        ret = []
+        for prob, dai in sorted(self.cn, reverse=True):
             # FIXME Works only for DSTC.
-            s.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
+            ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
 
-        return "\n".join(s)
+        return "\n".join(ret)
 
     def __len__(self):
         return len(self.cn)
 
     def __getitem__(self, i):
         return self.cn[i]
+
+    def __contains__(self, dai):
+        return self.get_marginal(dai) is not None
 
     def __iter__(self):
         for i in self.cn:
@@ -848,6 +851,12 @@ class DialogueActConfusionNetwork(SLUHypothesis):
                 prob *= (1 - p)
 
         return prob
+
+    def get_marginal(self, dai):
+        for prob, my_dai in self.cn:
+            if my_dai == dai:
+                return prob
+        return None
 
     def get_next_worse_candidates(self, hyp_index):
         """Returns such hypotheses that will have lower probability. It assumes
