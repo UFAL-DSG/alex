@@ -142,7 +142,7 @@ class SLUPreprocessing(object):
         utterance.lower()
 
         for mapping in self.text_normalization_mapping:
-            utterance.replace(mapping[0], mapping[1])
+            utterance = utterance.replace(mapping[0], mapping[1])
 
         return utterance
 
@@ -203,8 +203,8 @@ class SLUPreprocessing(object):
                     match_idx = len(matched_phrases)
                     matched_phrases.append(surface)
                     match_options.append(upnames_vals.viewitems())
-                    utterance_cp.replace(surface,
-                                         ['__MATCH-{i}__'.format(i=match_idx)])
+                    utterance_cp = utterance_cp.replace(
+                        surface, ['__MATCH-{i}__'.format(i=match_idx)])
                 else:
                     # Choose a random category from the known ones.
                     slot_upper, vals = upnames_vals.iteritems().next()
@@ -219,7 +219,8 @@ class SLUPreprocessing(object):
                     valform_for_cl[category_label] = (value, surface)
                     # Assumes the surface strings don't overlap.
                     # FIXME: Perhaps replace all instead of just the first one.
-                    utterance_cp.replace(surface, [category_label])
+                    utterance_cp = utterance_cp.replace(surface,
+                                                        [category_label])
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -242,8 +243,8 @@ class SLUPreprocessing(object):
                         cl_idx = cl_idxs[sub_idx] = last_cl_idx + 1
                     catlab = '{cat}-{idx}'.format(cat=upname, idx=cl_idx)
                     # Replace this match.
-                    utterance_cpcp.replace(['__MATCH-{i}__'.format(i=sub_idx)],
-                                           [catlab])
+                    utterance_cpcp = utterance_cpcp.replace(
+                        ['__MATCH-{i}__'.format(i=sub_idx)], [catlab])
                     # TODO Remember the mapping from the catlab.
                 utterances.append(utterance_cpcp)
             raise NotImplementedError()
@@ -296,7 +297,8 @@ class SLUPreprocessing(object):
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
                 for hyp_idx in hyps_with_surface:
-                    nblist_cp[hyp_idx][1].replace(surface, [category_label])
+                    nblist_cp[hyp_idx][1] = nblist_cp[hyp_idx][1].replace(
+                        surface, [category_label])
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= tot_len:
@@ -357,7 +359,7 @@ class SLUPreprocessing(object):
         """
         utterance = copy.deepcopy(utterance)
         for cl in category_labels:
-            utterance.replace([cl, ], category_labels[cl][1])
+            utterance = utterance.replace([cl, ], category_labels[cl][1])
         return utterance
 
     def category_labels2values_in_uttnblist(self, utt_nblist, category_labels):
@@ -369,7 +371,7 @@ class SLUPreprocessing(object):
         nblist_cp = copy.deepcopy(utt_nblist)
         for utterance in nblist_cp:
             for cl in category_labels:
-                utterance.replace([cl, ], category_labels[cl][1])
+                utterance = utterance.replace([cl, ], category_labels[cl][1])
         return nblist_cp
 
     def category_labels2values_in_da(self, da, category_labels=None):

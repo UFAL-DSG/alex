@@ -160,12 +160,20 @@ class Utterance(object):
                          .format(phrase=phrase, utt=self.utterance))
 
     def replace(self, orig, replacement):
+        # If `orig' does not occur in self, do nothing, return self.
         try:
             orig_pos = self.index(orig)
         except ValueError:
-            return
+            return self
 
-        self.utterance[orig_pos:orig_pos + len(orig)] = replacement
+        # If `orig' does occur in self, construct a new utterance with `orig'
+        # replaced by `replacement' and return that.
+        ret = Utterance('')
+        if not isinstance(replacement, list):
+            replacement = list(replacement)
+        ret.utterance = (self.utterance[:orig_pos] + replacement +
+                         self.utterance[orig_pos + len(orig):])
+        return ret
 
     def lower(self):
         """Transforms words of this utterance to lower case.
