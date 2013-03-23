@@ -6,11 +6,13 @@
 from collections import defaultdict
 import copy
 import cPickle as pickle
+from itertools import izip
 from math import isnan
 import numpy as np
+from operator import itemgetter
 import random
 
-from sklearn import tree
+from sklearn import metrics, tree
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, \
@@ -143,6 +145,8 @@ class DAILogRegClassifier(SLUInterface):
         self._output_matrix = None
         self._default_min_feat_count = 1
         self._default_min_concrete_feat_count = 1
+        self._default_min_correct_dai_count = 1
+        self._default_min_incorrect_dai_count = 1
 
     def _get_feature_extractor(self,
                                prev_das=None,
@@ -322,8 +326,7 @@ class DAILogRegClassifier(SLUInterface):
         self.bound_feats = dict()  # :: bound_feat -> unbound_feat
                                    # for all features to be present in feature
                                    # vectors, including non-abstracted ones
-        # self.instble_feats = dict()# :: unbound_feat -> instantiable
-                                   # # for all instantiable features
+        self.concrete_feats = set()
 
         # Handle generic features.
         if hasattr(self.utterance_features.values()[0], 'generic'):
@@ -332,13 +335,12 @@ class DAILogRegClassifier(SLUInterface):
                 for feature in utt_feats:
                     if feature in utt_feats.generic:
                         gen_feat = utt_feats.generic[feature]
-                        # self.instble_feats[gen_feat] = \
-                            # utt_feats.instantiable[feature]
                         if 'concrete' in self.abstractions:
                             self.feat_counts[feature] = \
                                 self.feat_counts.get(feature, 0) + 1
                     else:
                         gen_feat = feature
+                        self.concrete_feats.add(feature)
                     self.bound_feats[feature] = gen_feat
                     self.feat_counts[gen_feat] = \
                         self.feat_counts.get(gen_feat, 0) + 1
@@ -348,6 +350,7 @@ class DAILogRegClassifier(SLUInterface):
                     self.feat_counts[feature] = \
                         self.feat_counts.get(feature, 0) + 1
                     self.bound_feats[feature] = feature
+                    self.concrete_feats.add(feature)
 
         if verbose:
             if 'concrete' not in self.abstractions:
@@ -372,6 +375,7 @@ class DAILogRegClassifier(SLUInterface):
         self.bound_feats = {key: self.bound_feats[key]
                             for key in self.bound_feats
                             if key not in low_count_features}
+        self.concrete_feats -= low_count_features
 
         if verbose:
             print ("Number of unbound features occurring less than {occs} "
@@ -416,6 +420,8 @@ class DAILogRegClassifier(SLUInterface):
                             feat_idx += 1
         # Index concrete features.
         if 'concrete' in self.abstractions:
+            # Iterating over self.concrete_feats should theoretically be
+            # equivalent and more transparent...
             for feature in self.feat_counts:
                 if feature in self.feature_idxs:
                     continue
@@ -477,7 +483,8 @@ class DAILogRegClassifier(SLUInterface):
                     print self.utterances[utt_id]
                     print self.category_labels[utt_id]
 
-    def prune_classifiers(self, min_dai_count=5, accept_dai=None):
+    def prune_classifiers(self, min_dai_count=5, min_correct_count=None,
+                          min_incorrect_count=None, accept_dai=None):
         """Prunes classifiers for DAIs that cannot be reliably classified with
         these training data.
 
@@ -485,6 +492,9 @@ class DAILogRegClassifier(SLUInterface):
             min_dai_count: minimum number of occurrences of a DAI for it
                 to have its own classifier (this affects only non-atomic DAIs
                 without abstracted category labels)
+            min_correct_count: ditto, but only DAIs labeled correct are counted
+            min_incorrect_count: ditto, but only DAIs labeled incorrect are
+                counted
             accept_dai: custom fuction that takes a string representation of
                 a DAI and returns True if that DAI should have its classifier,
                 else False;
@@ -495,6 +505,11 @@ class DAILogRegClassifier(SLUInterface):
                 question
 
         """
+        # Store arguments for later use.
+        if min_correct_count is not None:
+            self._default_min_correct_dai_count = min_correct_count
+        if min_incorrect_count is not None:
+            self._default_min_incorrect_dai_count = min_incorrect_count
         # Define pruning criteria.
         if accept_dai is not None:
             _accept_dai = lambda dai: accept_dai(self, dai)
@@ -623,11 +638,16 @@ class DAILogRegClassifier(SLUInterface):
 
     def train(self, sparsification=1.0, min_feature_count=None,
               min_concrete_feature_count=None,
-              calibrate=False, only_positive=True, verbose=True):
+              min_correct_dai_count=None, min_incorrect_dai_count=None,
+              balance=True, calibrate=True, only_positive=True, verbose=True):
         if min_feature_count is None:
             min_feature_count = self._default_min_feat_count
         if min_concrete_feature_count is None:
             min_concrete_feature_count = self._default_min_concrete_feat_count
+        if min_correct_dai_count is None:
+            min_correct_dai_count = self._default_min_correct_dai_count
+        if min_incorrect_dai_count is None:
+            min_incorrect_dai_count = self._default_min_incorrect_dai_count
 
         # FIXME Temporarily disabled for DSTC.
         # # Make sure the input and output matrices have been generated.
@@ -638,6 +658,8 @@ class DAILogRegClassifier(SLUInterface):
 
         # Train classifiers for every DAI less those that have been pruned.
         self.trained_classifiers = {}
+        if calibrate:
+            calib_data = list()
         if verbose:
             coefs_abs_sum = np.zeros(shape=(1, len(self.feature_idxs)))
         for dai in sorted(self._dai_counts):
@@ -648,32 +670,6 @@ class DAILogRegClassifier(SLUInterface):
             # (TODO) We might want to skip this based on whether NaNs were
             # considered in the beginning.  That might be specified in an
             # argument to the initialiser.
-
-            # FIXME Temporarily disabled for DSTC.
-            # # Select from the training data only those with non-NaN values.
-            # outputs = self._output_matrix[dai]
-            # valid_row_idxs = set(
-            #     [row_idx for row_idx in xrange(len(self._input_matrix))
-            #      if not isnan(outputs[row_idx])])
-            # if len(valid_row_idxs) == len(outputs):
-            #     inputs = self._input_matrix
-            # else:
-            #     inputs = np.array(
-            #         [row for row_idx, row in enumerate(self._input_matrix)
-            #          if row_idx in valid_row_idxs])
-            #     outputs = np.array(
-            #         [output for row_idx, output in enumerate(outputs)
-            #          if row_idx in valid_row_idxs])
-            # if verbose:
-            #     print "Support for training: {sup} (pos: {pos}, neg: {neg})"\
-            #         .format(sup=len(valid_row_idxs),
-            #                 pos=len(filter(lambda out: out == 1., outputs)),
-            #                 neg=len(filter(lambda out: out == 0., outputs)))
-
-            # XXX Temporarily disabled for DSTC.
-            # # Prune features based on the selection of DAIs.
-            # if len(valid_row_idxs) != len(self._input_matrix):
-            #     _adaptively_prune()  # Moved a few lines below.
 
             # Instantiate inputs and outputs for the current classifier.
             dai_is_abstr = hasattr(dai, '_combined')
@@ -699,25 +695,19 @@ class DAILogRegClassifier(SLUInterface):
                              for inst in Features.iter_abstract(feat)
                              if inst_is_compatible(*inst)]
                      for (ut_id, feats) in self.utterance_features.iteritems()}
-            # insts = dict()
-            # for utt_id, feats in self.utterance_features.iteritems():
-                # feat_insts = list()
-                # for feat in feats:
-                    # for inst in Features.iter_abstract(feat):
-                        # if inst[0] == dai_slot:
-                            # feat_insts.append(inst)
-                # insts[utt_id] = feat_insts
-
             all_insts = set(flatten(insts.values()))
             inputs = list()
             outputs = list()
             for utt_id, utt_insts in insts.iteritems():
                 if not utt_insts:
+                    dai_output = self.get_output_for_dai_tuple(
+                        (dai_dat, dai_slot, dai_value),
+                        self.das[utt_id])
+                    if isnan(dai_output):
+                        continue
+                    outputs.append(dai_output)
                     inputs.append(self.utterance_features[utt_id]
                                   .get_feature_vector(self.feature_idxs))
-                    outputs.append(self.get_output_for_dai_tuple(
-                        (dai_dat, dai_slot, dai_value),
-                        self.das[utt_id]))
                 else:
                     for type_, value in utt_insts:
                         # Extract the outputs.
@@ -725,7 +715,8 @@ class DAILogRegClassifier(SLUInterface):
                         dai_output = self.get_output_for_dai_tuple(
                             inst_dai, self.das[utt_id])
                         # Use only positive examples if asked to.
-                        if only_positive and not dai_output:
+                        if (isnan(dai_output) or
+                                (only_positive and not dai_output)):
                             continue
                         outputs.append(dai_output)
                         # Instantiate features for this type_=value assignment.
@@ -741,6 +732,23 @@ class DAILogRegClassifier(SLUInterface):
                         inputs.append(
                             inst_feats.get_feature_vector(self.feature_idxs))
 
+            outputs = np.array(outputs, dtype=np.int8)
+            # Check whether this DAI has sufficient count of in-/correct
+            # occurrences.
+            n_pos = np.sum(outputs)
+            n_neg = len(outputs) - n_pos
+            if verbose:
+                print ("Support for training: {sup} (pos: {pos}, neg: {neg})"
+                       .format(sup=len(outputs), pos=n_pos, neg=n_neg))
+            if n_pos < min_correct_dai_count:
+                if verbose:
+                    print "...not enough positive examples"
+                    continue
+            if n_neg < min_incorrect_dai_count:
+                if verbose:
+                    print "...not enough negative examples"
+                    continue
+
             # Prune features based on the selection of DAIs.
             inputs = np.array(inputs).transpose()
             n_feats_used = len(inputs)
@@ -748,68 +756,66 @@ class DAILogRegClassifier(SLUInterface):
                 n_occs = len(filter(
                     lambda feat_val: not (isnan(feat_val) or feat_val == 0),
                     feat_vec))
-                # FIXME Test for min_concrete_feature_count, too.
-                if n_occs < min_feature_count:
+                # Test for minimal number of occurrences.
+                if (n_occs < min_feature_count or
+                        (self.idx2feature[feat_idx] in self.concrete_feats
+                         and n_occs < min_concrete_feature_count)):
                     inputs[feat_idx] *= 0
                     n_feats_used -= 1
             inputs = inputs.transpose()
             if verbose:
                 print ("Adaptively pruned features to {cnt}."
                         .format(cnt=n_feats_used))
+            if n_feats_used == 0:
+                if verbose:
+                    print "...no features, no training!"
+                continue
+
+            # Balance the data.
+            if balance:
+                inputs, outputs = self.balance_data(inputs, outputs)
 
             # Train and store the classifier for `dai'.
             try:
                 if self.clser_type == 'logistic':
-                    clser = LogisticRegression('l1', C=sparsification, tol=1e-6,
-                                            class_weight='auto')
-                    # clser.fit(inputs, outputs)
-                    # XXX Balancing the data cannot be canceled by passing an
-                    # argument now.
-                    clser.fit(*self.balance_data(inputs, outputs))
+                    clser = LogisticRegression('l1', C=sparsification,
+                                               tol=1e-6, class_weight='auto')
+                    clser.fit(inputs, outputs)
                 else:
                     assert self.clser_type == 'tree'
                     # TODO Make the parameters tunable.
                     clser = tree.DecisionTreeClassifier(min_samples_split=5,
                                                         max_depth=4)
-                    clser.fit(*self.balance_data(inputs, outputs))
+                    clser.fit(inputs, outputs)
             except:
-                # if dai_is_abstr:
-                    # import ipdb; ipdb.set_trace()
                 if verbose:
                     print "...not enough training data."
                 continue
             self.trained_classifiers[dai] = clser
 
+            if calibrate:
+                calib_data.extend((clser.predict_proba(feats)[0][1], output)
+                                  for (feats, output) in izip(inputs, outputs))
+
             # after message
             if verbose:
+                # Count non-zero features.
                 if self.clser_type == 'logistic':
+                    n_nonzero = np.count_nonzero(clser.coef_)
                     coefs_abs_sum += map(abs, clser.coef_)
                 else:
+                    n_nonzero = clser.tree_.node_count
                     coefs_abs_sum += clser.tree_.node_count
+                # Count basic metrics.
                 accuracy = clser.score(inputs, outputs)
                 predictions = [clser.predict(obs)[0] for obs in inputs]
-                true_pos = sum(predictions[idx] == outputs[idx] == 1
-                               for idx in xrange(len(outputs)))
-                false_pos = sum(predictions[idx] == 1 and outputs[idx] == 0
-                                for idx in xrange(len(outputs)))
-                false_neg = sum(predictions[idx] == 0 and outputs[idx] == 1
-                                for idx in xrange(len(outputs)))
-                if true_pos + false_pos > 0.:
-                    precision = true_pos / float(true_pos + false_pos)
-                else:
-                    precision = 0.
-                if true_pos + false_neg > 0.:
-                    recall = true_pos / float(true_pos + false_neg)
-                else:
-                    recall = 0.
+                precision = metrics.precision_score(predictions, outputs)
+                recall = metrics.recall_score(predictions, outputs)
                 if precision * recall == 0.:
                     f_score = 0.
                 else:
                     f_score = 2 * precision * recall / (precision + recall)
-                if self.clser_type == 'logistic':
-                    n_nonzero = np.count_nonzero(clser.coef_)
-                else:
-                    n_nonzero = clser.tree_.node_count
+                # Print the message.
                 msg = ("Accuracy for training data: {acc:6.2f} %\n"
                        "P/R/F: {p:.3f}/{r:.3f}/{f:.3f}\n"
                        # "Size of the params: {parsize}\n"
@@ -832,14 +838,18 @@ class DAILogRegClassifier(SLUInterface):
                         print "Non-zero features:"
                         feat_tups = list()
                         for feat_idx in nonzero_idxs:
-                            feat_weight = clser.coef_[0][feat_idx]
+                            feat_weights = [coefs[feat_idx]
+                                            for coefs in clser.coef_]
                             feat_str = Features.do_with_abstract(
                                 self.idx2feature[feat_idx], str)
-                            feat_tups.append((feat_weight, feat_str))
-                        for feat_weight, feat_str in sorted(
-                                feat_tups, key=lambda item: -abs(item[0])):
-                            print "{w: >8.2f}  {f}".format(
-                                w=feat_weight, f=feat_str)
+                            feat_tups.append((feat_weights, feat_str))
+                        for feat_weights, feat_str in sorted(
+                                feat_tups,
+                                key=lambda item: -sum(map(abs, item[0]))):
+                            weight_str = ' '.join('{w: >8.2f}'.format(w=weight)
+                                                  for weight in feat_weights)
+                            print "{w}  {f}".format(w=weight_str, f=feat_str)
+                # (TODO: This could be done for the tree, too.)
                 print
 
         if verbose:
@@ -847,71 +857,49 @@ class DAILogRegClassifier(SLUInterface):
                   np.count_nonzero(coefs_abs_sum)
 
         # Calibrate the prior.
-        # XXX Doesn't work in the DSTC scenario as yet.
-        if calibrate:
+        if calibrate and calib_data:
             if verbose:
                 print
                 print "Calibrating the prior..."
-            self.calibrate_prior(verbose=verbose)
+            self._calibrate_prior(calib_data, verbose=verbose)
 
-    def calibrate_prior(self, exp_unknown=0.05, verbose=False):
+    def _calibrate_prior(self, calib_data, exp_unknown=0.05, verbose=False):
         """Calibrates the prior on classification (its bias).  Requires that
         the model be already trained.
 
         Arguments:
+            calib_data: list of tuples (predicted probability, true label) for
+                all classification examples
             exp_unknown: expected answer for DAIs that are not labeled in
-                         training data.  This needs to be a float between 0.
-                         and 1., expressing how likely it is for such DAIs to
-                         be actually correct.
+                training data.  This needs to be a float between 0.  and 1.,
+                expressing how likely it is for such DAIs to be actually
+                correct.
             verbose: Be verbose; if `verbose' > 1, produces a lot of output.
-                     For debugging purposes.
+                For debugging purposes.
 
         """
         def fscore():
-            precision = true_pos / (true_pos + false_pos)
-            recall = true_pos / (true_pos + false_neg)
+            if true_pos + false_pos:
+                precision = true_pos / (true_pos + false_pos)
+            else:
+                precision = 0.
+            if true_pos + false_neg:
+                recall = true_pos / (true_pos + false_neg)
+            else:
+                recall = 0.
             if precision + recall > 0.:
                 return 2 * precision * recall / (precision + recall)
             return 0.
-        # Collect a new type of training data: predicted value -> true value.
-        # In cases where we don't know the true label of a classification
-        # problem (of a DAI in its utterance), we use `exp_unknown' instead of
-        # the label.
-        # FIXME: Exclude DAIs that are never labeled.
-        calib_data = np.empty(
-            (len(self.utt_ids) * len(self.trained_classifiers), 2))
-        # sanity check
-        if not len(calib_data):
-            return
-        dais_labeled = set()
-        datum_idx = 0
-        for utt_idx, utt_id in enumerate(self.utt_ids):
-            dais_labeled.update(self.das[utt_id].dais)
-            # FIXME: The check for the 'correct' attribute is not very
-            # thought-out.
-            dais_corr = [dai for dai in dais_labeled
-                         if not (hasattr(dai, 'correct') and not dai.correct)]
-            for dai, clser in self.trained_classifiers.iteritems():
-                predicted = clser.predict_proba(
-                    self._input_matrix[utt_idx])[0][1]
-                if dai in dais_labeled:
-                    # Note we cannot use just `dai.correct', as `dai' is
-                    # actually a different object than "`dais_corr[dai]'".
-                    true = float(dai in dais_corr)
-                else:
-                    true = exp_unknown
-                calib_data[datum_idx] = (predicted, true)
-                datum_idx += 1
-            dais_labeled.clear()
 
         # Find the optimal decision boundary.
         # Here we use the absolute error, not squared error.  This should be
         # more efficient and have little impact on the result.
+        calib_data = sorted(calib_data, key=itemgetter(0))
+        calib_data = np.array(calib_data)
         true_pos = np.sum(calib_data, axis=0)[1]
         false_pos = np.sum(1. - calib_data, axis=0)[1]
         false_neg = 0.
         error = 1. - fscore()
-        calib_data = np.array(sorted(calib_data, key=lambda row: row[0]))
         split_idx = 0
         best_error = error
         if verbose:
