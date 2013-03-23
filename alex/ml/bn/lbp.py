@@ -41,7 +41,8 @@ class SingleLinkedLBP(LBP):
     def add_nodes(self, nodes):
         super(SingleLinkedLBP, self).add_nodes(nodes)
         for node in self.nodes:
-            node.wait_for_n = set(node.neighbors.values())
+            node.wait_for_n = set(
+                x for x in node.neighbors.values() if x in nodes)
             node.backward_send_to = []
 
     def run(self):
@@ -54,14 +55,10 @@ class SingleLinkedLBP(LBP):
         changed = True
         while changed:
             changed = False
-            print not_updated_nodes
             remove = []
             for x in not_updated_nodes:
                 if len(x.wait_for_n) == 1:
                     changed = True
-
-                    x.belief.normalize()
-                    #print x.belief
 
                     remove.append(x)
                     x.update()
@@ -76,9 +73,9 @@ class SingleLinkedLBP(LBP):
             for x in remove:
                 not_updated_nodes.remove(x)
 
+        for node in not_updated_nodes:
+            node.send_messages()
 
-        root = not_updated_nodes.pop()
-        root.send_messages()
         while len(ordering) > 0:
             next = ordering.pop()
             next.update()
@@ -88,3 +85,10 @@ class SingleLinkedLBP(LBP):
                 next.message_to(x)
 
 
+class ComplexLBP(LBP):
+
+    def __init__(self):
+        self.layers = []
+
+    def add_layer(self, nodes):
+        self.layers.append(nodes)

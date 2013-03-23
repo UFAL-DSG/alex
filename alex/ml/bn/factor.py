@@ -10,13 +10,13 @@ import abc
 from collections import defaultdict
 from scipy.misc import logsumexp
 
-ZERO = 0.00000000000001
+ZERO = 0.000000001
 
 def to_log(n, out=None):
     if np.isscalar(n):
-        return np.log(ZERO) if n == 0 else np.log(n)
+        return np.log(ZERO) if n < ZERO else np.log(n)
     else:
-        n[n == 0] = ZERO
+        n[n < ZERO] = ZERO
         return np.log(n, out)
 
 def from_log(n):
@@ -332,4 +332,9 @@ class DiscreteFactor(Factor):
     def normalize(self):
         """Normalize factor table."""
         self.factor_table -= logsumexp(self.factor_table)
+
+    def most_probable(self, n=None):
+        indxs = list(reversed(np.argsort(self.factor_table)))[:n]
+        return [(self._get_assignment_from_index(i)[0],
+                 from_log(self.factor_table[i])) for i in indxs]
 

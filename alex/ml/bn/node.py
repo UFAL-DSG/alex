@@ -99,6 +99,9 @@ class DiscreteVariableNode(Node):
         if not self.is_observed:
             self.belief = reduce(operator.mul, self.incoming_message.values())
 
+    def most_probable(self, n=None):
+        return self.belief.most_probable()
+
 
 class DiscreteFactorNode(Node):
     """Node containing factor."""
