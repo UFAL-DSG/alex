@@ -22,7 +22,7 @@ class Features(object):
         set: set of the features
 
     """
-    # __slots__ = ['features', 'set']
+    __slots__ = ['features', 'set']
 
     def __init__(self, *args, **kwargs):
         self.features = defaultdict(float)

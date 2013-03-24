@@ -5,6 +5,8 @@
 # pylint: disable-msg=E1101
 
 from collections import defaultdict
+import math
+import sys
 
 
 def split_to_bins(A, S=4):
@@ -59,3 +61,13 @@ class nesteddict(defaultdict):
                     yield (key,) + tup
                 else:
                     yield key, value
+
+
+def crop_to_finite(val):
+    if math.isinf(val):
+        if isinstance(val, int):
+            ret = sys.maxint
+        else:
+            ret = sys.float_info.max
+        return (-1 + 2 * (val > 0)) * ret
+    return val

@@ -23,7 +23,7 @@ from alex.components.slu.da import DialogueActItem, \
     DialogueActNBListFeatures, merge_slu_confnets
 from alex.ml.features import Features, make_abstracted_tuple
 from alex.utils.exception import DAILRException, SLUException
-from alex.utils.various import flatten
+from alex.utils.various import crop_to_finite, flatten
 
 
 # A tuple-like class with abstraction on the second item.
@@ -96,6 +96,8 @@ class DAILogRegClassifier(SLUInterface):
                        presumably)
             'da_nbl': features of a DA n-best list (output from SLU,
                       presumably)
+            'da_nbl_orig': features of a DA n-best list (output from SLU,
+                      presumably) with original scores
 
     """
     # TODO Document attributes from the original DAILogRegClassifier class
@@ -152,12 +154,13 @@ class DAILogRegClassifier(SLUInterface):
                                prev_das=None,
                                utt_nblists=None,
                                da_nblists=None,
+                               da_nblists_orig=None,
                                by_utt_id=False):
         ft = self.features_type
         fs = self.features_size
 
         def extract_feats(utterance=None, prev_da=None, utt_nblist=None,
-                          da_nblist=None):
+                          da_nblist=None, da_nblist_orig=None):
             # Collect all types of features.
             feat_sets = list()
             if 'ngram' in ft:
@@ -170,6 +173,9 @@ class DAILogRegClassifier(SLUInterface):
             if 'da_nbl' in ft and da_nblist is not None:
                 feat_sets.append(
                     DialogueActNBListFeatures(da_nblist=da_nblist))
+            if 'da_nbl_orig' in ft and da_nblist_orig is not None:
+                feat_sets.append(
+                    DialogueActNBListFeatures(da_nblist=da_nblist_orig))
 
             # Based on the number of distinct feature types, either join them
             # or take the single feature type.
@@ -199,6 +205,9 @@ class DAILogRegClassifier(SLUInterface):
                                               else None),
                                   da_nblist=(da_nblists[utt_id]
                                              if da_nblists is not None
+                                             else None),
+                                  da_nblist_orig=(da_nblists_orig[utt_id]
+                                             if da_nblists_orig is not None
                                              else None)))
         else:
             return extract_feats
@@ -207,7 +216,8 @@ class DAILogRegClassifier(SLUInterface):
     # it obligatory also formally.  This will require refactoring code that
     # uses this class, calling this method with positional arguments.
     def extract_features(self, utterances=None, das=None, prev_das=None,
-                         utt_nblists=None, da_nblists=None, verbose=False):
+                         utt_nblists=None, da_nblists=None,
+                         da_nblists_orig=None, verbose=False):
         """Extracts features from given utterances or system DAs or utterance
         n-best lists or DA n-best lists, making use of their corresponding DAs.
         This is a pre-requisite to pruning features, classifiers, and running
@@ -226,6 +236,8 @@ class DAILogRegClassifier(SLUInterface):
                 utterance n-best list reflecting the ASR output (default: None)
             da_nblists: mapping { ID: DA n-best list }, with the DA n-best list
                 reflecting an SLU output (default: None)
+            da_nblists_orig: mapping { ID: DA n-best list }, with the DA n-best list
+                reflecting an SLU output with original SDS's scores (default: None)
             verbose: print debugging output?  More output is printed if
                 verbose > 1.
 
@@ -241,6 +253,8 @@ class DAILogRegClassifier(SLUInterface):
             self.utt_ids = utt_nblists.keys()
         elif da_nblists:
             self.utt_ids = da_nblists.keys()
+        elif da_nblists_orig:
+            self.utt_ids = da_nblists_orig.keys()
         else:
             raise DAILRException(
                 'Cannot learn a classifier without utterances and without '
@@ -288,7 +302,8 @@ class DAILogRegClassifier(SLUInterface):
         extract_feats = self._get_feature_extractor(by_utt_id=True,
                                                     prev_das=prev_das,
                                                     utt_nblists=utt_nblists,
-                                                    da_nblists=da_nblists)
+                                                    da_nblists=da_nblists,
+                                                    da_nblists_orig=da_nblists_orig)
         self.utterance_features = {utt_id: extract_feats(utt_id)
                                    for utt_id in self.utt_ids}
         if verbose >= 2:
@@ -750,7 +765,7 @@ class DAILogRegClassifier(SLUInterface):
                     continue
 
             # Prune features based on the selection of DAIs.
-            inputs = np.array(inputs).transpose()
+            inputs = np.array(inputs, dtype=np.dtype(float)).transpose()
             n_feats_used = len(inputs)
             for feat_idx, feat_vec in enumerate(inputs):
                 n_occs = len(filter(
@@ -760,8 +775,10 @@ class DAILogRegClassifier(SLUInterface):
                 if (n_occs < min_feature_count or
                         (self.idx2feature[feat_idx] in self.concrete_feats
                          and n_occs < min_concrete_feature_count)):
-                    inputs[feat_idx] *= 0
+                    inputs[feat_idx] = 0
                     n_feats_used -= 1
+                else:
+                    inputs[feat_idx] = map(crop_to_finite, feat_vec)
             inputs = inputs.transpose()
             if verbose:
                 print ("Adaptively pruned features to {cnt}."
@@ -1026,6 +1043,7 @@ class DAILogRegClassifier(SLUInterface):
                      prev_da=None,
                      utt_nblist=None,
                      da_nblist=None,
+                     da_nblist_orig=None,
                      ret_cl_map=False,
                      verbose=False):
         """Parses `utterance' and generates the best interpretation in the form
@@ -1041,6 +1059,10 @@ class DAILogRegClassifier(SLUInterface):
                  (default: None)
             da_nblist: mapping { utterance ID: DA n-best list }, with the DA
                  n-best list reflecting an SLU output
+                 (default: None)
+            da_nblist_orig: mapping { utterance ID: DA n-best list }, with the DA
+                 n-best list reflecting an SLU output with original SDS's
+                 scores
                  (default: None)
             ret_cl_map: whether the tuple (da_confnet, cl2vals_forms) should be
                         returned instead of just da_confnet.  The second member
@@ -1076,7 +1098,8 @@ class DAILogRegClassifier(SLUInterface):
         utterance_features = extract_feats(utterance=utterance,
                                            prev_da=prev_da,
                                            utt_nblist=utt_nblist,
-                                           da_nblist=da_nblist)
+                                           da_nblist=da_nblist,
+                                           da_nblist_orig=da_nblist_orig)
 
         if verbose >= 2:
             print 'Features: ', utterance_features
@@ -1155,8 +1178,9 @@ class DAILogRegClassifier(SLUInterface):
 
         # Add DAs for which we have no classifiers, to the confnet with their
         # DAs' original probs.
-        if da_nblist:
-            for prob, da in da_nblist:
+        if da_nblist or da_nblist_orig:
+            the_nblist = da_nblist or da_nblist_orig
+            for prob, da in the_nblist:
                 for dai in da:
                     if dai not in confnet:
                         confnet.add(prob, dai)

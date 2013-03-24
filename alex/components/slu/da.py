@@ -7,10 +7,10 @@ from operator import xor
 
 from alex.ml.features import Features, make_abstracted_tuple
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
-from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
     DialogueActConfusionNetworkException
+from alex.utils.text import split_by
 
 
 def load_das(das_fname, limit=None):
@@ -531,7 +531,7 @@ class DialogueActFeatures(Features):
             features from self.set that are abstracted
 
     """
-    # __slots__ = ['features', 'set', 'generic', 'instantiable']
+    __slots__ = ['features', 'set', 'generic', 'instantiable']
 
     def __init__(self, da, include_slotvals=True):
         super(DialogueActFeatures, self).__init__()
@@ -556,12 +556,6 @@ class DialogueActFeatures(Features):
         self.features['n_dais'] = len(da)
 
         self.set = set(self.features)
-
-    # @classmethod
-    # def do_with_abstract(cls, meth, feature):
-        # if type(feature) == AbstractedTuple2:
-            # return meth(feature)
-        # return feature
 
 
 class SLUHypothesis(Hypothesis):
@@ -656,8 +650,8 @@ class DialogueActNBListFeatures(Features):
                           ignored)
 
     """
-    # __slots__ = ['features', 'set', 'generic', 'include_slotvals',
-                 # 'instantiable']
+    __slots__ = ['features', 'set', 'generic', 'include_slotvals',
+                 'instantiable']
     def __init__(self, da_nblist=None, include_slotvals=True):
         # This initialises the self.features and self.set fields.
         super(DialogueActNBListFeatures, self).__init__()
@@ -701,11 +695,6 @@ class DialogueActNBListFeatures(Features):
 
         # Keep self.set up to date. (Why is it needed, anyway?)
         self.set = set(self.features)
-
-    # @classmethod
-    # def do_with_abstract(cls, meth, feature):
-        # idx, subfeat = feature
-        # return (idx, DialogueAct.do_with_abstract(meth, subfeat))
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
