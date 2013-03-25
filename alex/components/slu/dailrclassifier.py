@@ -474,7 +474,6 @@ class DAILogRegClassifier(SLUInterface):
                         if (dai.name and dai.value) else (dai.name or '')))
                     gen_dai = bound_dai.get_generic()
                     bound_dais[bound_dai] = gen_dai
-                    # _dai_counts[dai] = _dai_counts.get(dai, 0) + 1
                     _dai_counts[gen_dai] = _dai_counts.get(gen_dai, 0) + 1
                     if 'concrete' in self.abstractions:
                         _dai_counts[dai] = _dai_counts.get(dai, 0) + 1
@@ -1038,6 +1037,30 @@ class DAILogRegClassifier(SLUInterface):
         """Returns the number of features in use."""
         return len(self.features_list)
 
+
+    @classmethod
+    def _get_dais_for_normvalue(cls, da_nblist, dat, slot, value):
+        # Substitute the original, unnormalised values back in
+        # the input DA n-best list.
+        act_dais = set(dai
+                       for da in map(itemgetter(1), da_nblist)
+                       for dai in da if dai.value == value)
+        unnorm_values = list(reduce(
+            set.union,
+            (dai.unnorm_values for dai in act_dais),
+            set()))
+        # assert unnorm_values
+        # Be robust.
+        if not unnorm_values:
+            return DialogueActItem(dat, slot, value)
+
+        inst_dai = DialogueActItem(dat, slot, unnorm_values[0])
+        for unnorm in unnorm_values[1:]:
+            inst_dai.value2normalised(unnorm)
+        # Let the true normalised value be the face value
+        inst_dai.value2normalised(value)
+        return inst_dai
+
     def parse_1_best(self,
                      utterance,
                      prev_da=None,
@@ -1106,6 +1129,8 @@ class DAILogRegClassifier(SLUInterface):
 
         da_confnet = DialogueActConfusionNetwork()
 
+        # Try all classifiers we have trained, not only those represented in
+        # the input da_nblist (when classifying by DA n-best lists).
         for dai in self.trained_classifiers:
             if verbose:
                 print "Using classifier: ", dai
@@ -1148,7 +1173,9 @@ class DAILogRegClassifier(SLUInterface):
                     if verbose:
                         print "Classification result: ", dai_prob
 
-                    inst_dai = DialogueActItem(dai._combined[0], type_, value)
+                    # Restore the unnormalised values of the DAI.
+                    inst_dai = self._get_dais_for_normvalue(
+                        da_nblist, dai._combined[0], type_, value)
                     da_confnet.add(dai_prob[0][1], inst_dai)
             else:
                 feat_vec = utterance_features.get_feature_vector(
@@ -1164,7 +1191,6 @@ class DAILogRegClassifier(SLUInterface):
                     print "Classification result: ", dai_prob
 
                 da_confnet.add(dai_prob[0][1], dai)
-
 
         if verbose:
             print "DA: ", da_confnet

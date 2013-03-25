@@ -626,6 +626,28 @@ class DialogueActNBList(SLUHypothesis, NBList):
         except NBListException as ex:
             raise DialogueActNBListException(ex)
 
+    def merge(self):
+        """Adds up probabilities for the same hypotheses.  Takes care to keep
+        track of original, unnormalised DAI values.  Returns self."""
+        if len(self.n_best) <= 1:
+            return
+        else:
+            new_n_best = self.n_best[:1]
+
+            for cur_idx in xrange(1, len(self.n_best)):
+                cur_hyp = self.n_best[cur_idx]
+                for new_idx, new_hyp in enumerate(new_n_best):
+                    if new_hyp[1] == cur_hyp[1]:
+                        # Merge, add the probabilities.
+                        new_hyp[1].unnorm_values += cur_hyp[1].unnorm_values
+                        new_hyp[0] += cur_hyp[0]
+                        break
+                else:
+                    new_n_best.append(cur_hyp)
+
+        self.n_best = sorted(new_n_best, reverse=True)
+        return self
+
     # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
         """DEPRECATED, going to be removed."""

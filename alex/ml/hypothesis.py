@@ -77,16 +77,17 @@ class NBList(Hypothesis):
         if len(self.n_best) <= 1:
             return
         else:
-            new_n_best = [self.n_best[0]]
+            new_n_best = self.n_best[:1]
 
             for cur_idx in xrange(1, len(self.n_best)):
-                for new_idx in xrange(len(new_n_best)):
-                    if new_n_best[new_idx][1] == self.n_best[cur_idx][1]:
+                cur_hyp = self.n_best[cur_idx]
+                for new_idx, new_hyp in enumerate(new_n_best):
+                    if new_hyp[1] == cur_hyp[1]:
                         # Merge, add the probabilities.
-                        new_n_best[new_idx][0] += self.n_best[cur_idx][0]
+                        new_hyp[0] += cur_hyp[0]
                         break
                 else:
-                    new_n_best.append(self.n_best[cur_idx])
+                    new_n_best.append(cur_hyp)
 
         self.n_best = sorted(new_n_best, reverse=True)
         return self
