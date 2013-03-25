@@ -690,7 +690,7 @@ class DAILogRegClassifier(SLUInterface):
             if dai_is_abstr:
                 dai_dat = dai._combined[0]
                 try:
-                    dai_triple = dai.__iter__().next()
+                    dai_triple = next(iter(dai))
                     dai_comb = dai_triple[0]
                     dai_value = dai_triple[1]  # of course, this is just the
                                                # abstracted value, a str(index)
@@ -1136,7 +1136,7 @@ class DAILogRegClassifier(SLUInterface):
                 print "Using classifier: ", dai
 
             try:
-                dai_triple = dai.__iter__().next()
+                dai_triple = next(iter(dai))
                 dai_comb = dai_triple[0]
                 dai_slot = dai_triple[2]
             except:
