@@ -5,7 +5,7 @@
 from collections import defaultdict
 from operator import xor
 
-from alex.ml.features import Features, make_abstracted_tuple
+from alex.ml.features import Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
@@ -515,10 +515,6 @@ class DialogueAct(object):
         return self
 
 
-# A tuple-like class with abstraction on the second item.
-AbstractedTuple2 = make_abstracted_tuple((1,))
-
-
 class DialogueActFeatures(Features):
     """Represents features of a dialogue act.
 
@@ -539,7 +535,11 @@ class DialogueActFeatures(Features):
         self.instantiable = dict()
         # Features representing the complete DA.
         for dai in da:
-            self.features[(dai.dat, )] += 1.
+            # DEBUG
+            try:
+                self.features[(dai.dat, )] += 1.
+            except AttributeError:
+                import ipdb; ipdb.set_trace()
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
                 if dai.value is not None:

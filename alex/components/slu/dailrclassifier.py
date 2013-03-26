@@ -21,13 +21,12 @@ from alex.components.slu import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
     DialogueActNBListFeatures, merge_slu_confnets
-from alex.ml.features import Features, make_abstracted_tuple
+from alex.ml.features import Features, AbstractedTuple2
 from alex.utils.exception import DAILRException, SLUException
 from alex.utils.various import crop_to_finite, flatten
 
 
 # A tuple-like class with abstraction on the second item.
-AbstractedTuple2 = make_abstracted_tuple((1,))
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -982,27 +981,21 @@ class DAILogRegClassifier(SLUInterface):
                         outfile)
 
     def save_model(self, file_name):
-        # FIXME:
-        # cPickle.PicklingError: Can't pickle <class
-        # 'alex.ml.features.AbstractedTuple'>: attribute lookup
-        # alex.ml.features.AbstractedTuple failed
-
         # version = '2'
         version = 'DSTC13'
-        junk1 = (self.feat_counts.keys(),
+        data = (self.feat_counts.keys(),
                 self.feature_idxs,
-                 )
-        data = (
                 self.clser_type,
-                # # {dai.extension(): clser for dai, clser in
-                # {dai: clser for dai, clser in
-                 # self.trained_classifiers.iteritems()},
+                # {dai.extension(): clser for dai, clser in
+                {dai: clser for dai, clser in
+                 self.trained_classifiers.iteritems()},
                 self.features_type,
                 self.features_size,
-                self.cls_threshold
+                self.cls_threshold,
+                self._do_abstract_values
         )
         with open(file_name, 'w+') as outfile:
-            pickle.dump((version, data), outfile)
+            pickle.dump((version, data), outfile, 2)
 
     ###############################################################
     ### From here on, the methods come from what used to be the ###
@@ -1029,6 +1022,15 @@ class DAILogRegClassifier(SLUInterface):
             (self.features_list, self.feature_idxs,
              self.clser_type, self.trained_classifiers, self.features_type,
              self.features_size, self.cls_threshold) = data
+        elif version == 'DSTC13':
+            (self.features_list, self.feature_idxs,
+             self.clser_type, self.trained_classifiers, self.features_type,
+             self.features_size, self.cls_threshold,
+             self.abstractions) = data
+            if 'partial' in self.abstractions:
+                self._do_abstract_values.add(False)
+            if 'abstract' in self.abstractions:
+                self._do_abstract_values.add(True)
         else:
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
@@ -1062,7 +1064,7 @@ class DAILogRegClassifier(SLUInterface):
         return inst_dai
 
     def parse_1_best(self,
-                     utterance,
+                     utterance=None,
                      prev_da=None,
                      utt_nblist=None,
                      da_nblist=None,

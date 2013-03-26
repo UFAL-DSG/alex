@@ -284,14 +284,17 @@ def make_abstract(replaceable, iter_meth=None, replace_meth=None, splitter="=",
                     else:
                         if do_abstract:
                             ret = replace_meth(
-                                ret, combined, make_other(type_))
+                                ret, combined,
+                                splitter.join((type_, make_other(type_))))
                         else:
-                            ret = replace_meth(ret, combined, map_value)
+                            ret = replace_meth(ret, combined,
+                                splitter.join((type_, map_value)))
                 else:
                     if do_abstract:
                         ret = replace_meth(ret, combined, map_type)
                     else:
-                        ret = replace_meth(ret, combined, map_value)
+                        ret = replace_meth(ret, combined,
+                                splitter.join((type_, map_value)))
             return ret
 
         def to_other(self):
@@ -370,6 +373,42 @@ def make_abstracted_tuple(abstr_idxs):
             self._combined = ReplaceableTuple(iterable)
 
     return AbstractedTuple
+
+
+### Something like this might form the basis for a new implementation of DAIs.
+### In contrast to the above class template, this is picklable.
+class ReplaceableTuple2(tuple):
+    # __slots__ = []
+
+    def __new__(cls, iterable):
+        self = tuple.__new__(cls, iterable)
+        return self
+
+    def iter_combined(self):
+        yield self[1]
+
+    def replace(self, old, new):
+        if self[1] == old:
+            return ReplaceableTuple2(
+                new if mbr == old else mbr for mbr in self)
+        else:
+            return self
+
+    # FIXME!!!
+    def to_other(self):
+        ret = list(self)
+        ret[1] += "-OTHER"
+        for combined, value_, type_ in self:
+            ret = replace_meth(ret, combined, make_other(type_))
+        return ret
+
+class AbstractedTuple2(
+    make_abstract(ReplaceableTuple2,
+                    iter_meth=ReplaceableTuple2.iter_combined)):
+    # __slots__ = ['_combined', 'instantiable']
+
+    def __init__(self, iterable):
+        self._combined = ReplaceableTuple2(iterable)
 
 
 # class AbstractedFeatures(Features):
