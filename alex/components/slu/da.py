@@ -640,7 +640,13 @@ class DialogueActNBList(SLUHypothesis, NBList):
                 for new_idx, new_hyp in enumerate(new_n_best):
                     if new_hyp[1] == cur_hyp[1]:
                         # Merge, add the probabilities.
-                        new_hyp[1].unnorm_values += cur_hyp[1].unnorm_values
+                        new_da = new_hyp[1]
+                        for dai in cur_hyp[1]:
+                            new_dais = (new_dai for new_dai in new_da if
+                                        new_dai == dai)
+                            for new_dai in new_dais:
+                                new_dai._unnorm_values.update(
+                                    dai._unnorm_values)
                         new_hyp[0] += cur_hyp[0]
                         break
                 else:
