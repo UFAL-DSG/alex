@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# vim: set fdm=marker :
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 #
 # pylint: disable-msg=E1101
 
 from collections import defaultdict
+import math
+import sys
 
 
 def split_to_bins(A, S=4):
@@ -16,7 +17,6 @@ def split_to_bins(A, S=4):
 
 def flatten(list_, ltypes=(list, tuple)):
     """Flatten nested list into a simple list."""
-#{{{
     # Coerce the input sequence into a list for this function.
     ltype = type(list_)
     list_ = list(list_)
@@ -38,7 +38,6 @@ def flatten(list_, ltypes=(list, tuple)):
         i += 1
     # Coerce the main list into the original type and return.
     return ltype(list_)
-#}}}
 
 
 def get_text_from_xml_node(node):
@@ -62,3 +61,13 @@ class nesteddict(defaultdict):
                     yield (key,) + tup
                 else:
                     yield key, value
+
+
+def crop_to_finite(val):
+    if math.isinf(val):
+        if isinstance(val, int):
+            ret = sys.maxint
+        else:
+            ret = sys.float_info.max
+        return (-1 + 2 * (val > 0)) * ret
+    return val

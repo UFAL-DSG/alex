@@ -5,12 +5,12 @@
 from collections import defaultdict
 from operator import xor
 
-from alex.ml.features import Features
+from alex.ml.features import Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
-from alex.utils.text import split_by
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
     DialogueActConfusionNetworkException
+from alex.utils.text import split_by
 
 
 def load_das(das_fname, limit=None):
@@ -70,10 +70,11 @@ class DialogueActItem(object):
 
     Attributes:
         dat: dialogue act type (a string)
-        name: slot name (a string)
-        value: slot value (a string)
+        name: slot name (a string or None)
+        value: slot value (a string or None)
 
     """
+    # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
                  dai=None):
         """Initialise the dialogue act item. Assigns the default values to
@@ -326,7 +327,9 @@ class DialogueAct(object):
         inform(food="chinese")&inform(food="chinese")
 
     """
+    # TODO Document invariants related to the order of DAIs within self.dais.
 
+    # TODO Rename da to da_str for sake of clarity.
     def __init__(self, da=None):
         """Initialises this DA.
 
@@ -414,6 +417,11 @@ class DialogueAct(object):
                     break
             self.dais.insert(insert_idx, dai)
             return self
+        # XXX Hack for DSTC.
+        elif hasattr(dai, '_combined'):
+            # import ipdb; ipdb.set_trace()
+            self.append(DialogueActItem(dialogue_act_type=dai._combined[0],
+                                        name=dai.__iter__().next()[2]))
         else:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
@@ -428,6 +436,47 @@ class DialogueAct(object):
     def get_slots_and_values(self):
         """Returns all slot names and values in the dialogue act."""
         return [[dai.name, dai.value] for dai in self.dais if dai.value]
+
+
+    def iter_dai_values(self):
+        for dai in sorted(self.dais):
+            yield dai.value
+
+    def iter_dai_namevalues(self):
+        for dai in sorted(self.dais):
+            if dai.name:
+                if dai.value is not None:
+                    yield '='.join(dai.name, dai.value)
+                else:
+                    yield '{0}='.format(dai.name)
+            else:
+                yield ''
+
+    def replace_dai_values(self, orig_val, new_val):
+        new_da = DialogueAct()
+        for dai in sorted(self.dais, reverse=True):
+            if dai.value == orig_val:
+                new_da.append(DialogueActItem(dai.dat, dai.name, new_val))
+            else:
+                new_da.append(dai)
+        return new_da
+
+    def replace_dai_namevalues(self, orig_val, new_val):
+        new_da = DialogueAct()
+        for dai in sorted(self.dais, reverse=True):
+            if dai.name:
+                if dai.value is not None:
+                    match = ('='.join(dai.name, dai.value) == orig_val)
+                else:
+                    match = ('{0}='.format(dai.name) == orig_val)
+            else:
+                match = ('' == orig_val)
+
+            if match:
+                new_da.append(DialogueActItem(dai.dat, dai.name, new_val))
+            else:
+                new_da.append(dai)
+        return new_da
 
     def sort(self):
         self.dais.sort()
@@ -467,15 +516,42 @@ class DialogueAct(object):
 
 
 class DialogueActFeatures(Features):
-    def __init__(self, da, include_slotvals=False):
+    """Represents features of a dialogue act.
+
+    Attributes:
+        features: defaultdict(float) of features
+        set: set of features
+        generic: mapping { feature : generic feature } for features from
+                 self.set that are abstracted
+        instantiable: mapping { feature : generic part of feature } for
+            features from self.set that are abstracted
+
+    """
+    # __slots__ = ['features', 'set', 'generic', 'instantiable']
+
+    def __init__(self, da, include_slotvals=True):
         super(DialogueActFeatures, self).__init__()
+        self.generic = dict()
+        self.instantiable = dict()
         # Features representing the complete DA.
         for dai in da:
-            self.features[(dai.dat, )] += 1.
+            # DEBUG
+            try:
+                self.features[(dai.dat, )] += 1.
+            except AttributeError:
+                import ipdb; ipdb.set_trace()
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
-                if include_slotvals and dai.value is not None:
-                    self.features[(dai.dat, dai.name, dai.value)] += 1.
+                if dai.value is not None:
+                    full_feat = AbstractedTuple2(
+                        (dai.dat,
+                         '{n}={v}'.format(n=dai.name, v=dai.value)))
+                    self.features[full_feat] += 1.
+                    self.generic[full_feat] = full_feat.get_generic()
+                    self.instantiable[full_feat] = full_feat
+                    if include_slotvals:
+                        self.features[(dai.dat, dai.name, dai.value)] += 1.
+                        self.features[('.v', dai.value)] += 1.
         # Summary features.
         self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
         self.features['n_dais'] = len(da)
@@ -551,6 +627,34 @@ class DialogueActNBList(SLUHypothesis, NBList):
         except NBListException as ex:
             raise DialogueActNBListException(ex)
 
+    def merge(self):
+        """Adds up probabilities for the same hypotheses.  Takes care to keep
+        track of original, unnormalised DAI values.  Returns self."""
+        if len(self.n_best) <= 1:
+            return
+        else:
+            new_n_best = self.n_best[:1]
+
+            for cur_idx in xrange(1, len(self.n_best)):
+                cur_hyp = self.n_best[cur_idx]
+                for new_idx, new_hyp in enumerate(new_n_best):
+                    if new_hyp[1] == cur_hyp[1]:
+                        # Merge, add the probabilities.
+                        new_da = new_hyp[1]
+                        for dai in cur_hyp[1]:
+                            new_dais = (new_dai for new_dai in new_da if
+                                        new_dai == dai)
+                            for new_dai in new_dais:
+                                new_dai._unnorm_values.update(
+                                    dai._unnorm_values)
+                        new_hyp[0] += cur_hyp[0]
+                        break
+                else:
+                    new_n_best.append(cur_hyp)
+
+        self.n_best = sorted(new_n_best, reverse=True)
+        return self
+
     # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
         """DEPRECATED, going to be removed."""
@@ -559,6 +663,67 @@ class DialogueActNBList(SLUHypothesis, NBList):
 
     def has_dat(self, dat):
         return any(map(lambda hyp: hyp[1].has_dat(dat), self.n_best))
+
+
+class DialogueActNBListFeatures(Features):
+    """Represents features of a DA n-best list.
+
+    Attributes:
+        features: defaultdict(float) of features
+        set: set of features
+        generic: mapping { feature : generic feature } for features from
+            self.set that are abstracted
+        instantiable: mapping { feature : generic part of feature } for
+            features from self.set that are abstracted
+        include_slotvals: whether slot values should be also included (or
+                          ignored)
+
+    """
+    # __slots__ = ['features', 'set', 'generic', 'include_slotvals',
+                 # 'instantiable']
+    def __init__(self, da_nblist=None, include_slotvals=True):
+        # This initialises the self.features and self.set fields.
+        super(DialogueActNBListFeatures, self).__init__()
+        self.generic = dict()
+        self.instantiable = dict()
+
+        self.include_slotvals = include_slotvals
+
+        if da_nblist is not None:
+            self.parse(da_nblist)
+
+    def parse(self, da_nblist):
+        first_da_feats = None
+        for hyp_idx, hyp in enumerate(da_nblist):
+            prob, da = hyp
+            da_feats = DialogueActFeatures(
+                da=da, include_slotvals=self.include_slotvals)
+            if first_da_feats is None:
+                first_da_feats = da_feats
+            for feat, feat_val in da_feats.iteritems():
+                # Include the first rank of features occurring in the n-best list.
+                if (0, feat) not in self.features:
+                    self.features[(0, feat)] = float(hyp_idx)
+                    if feat in da_feats.generic:
+                        self.generic[(0, feat)] = (0, da_feats.generic[feat])
+                        self.instantiable[(0, feat)] = \
+                            da_feats.instantiable[feat]
+                # Include the weighted features of individual hypotheses.
+                self.features[(1, feat)] += prob * feat_val
+                if feat in da_feats.generic:
+                    self.generic[(1, feat)] = (1, da_feats.generic[feat])
+                    self.instantiable[(1, feat)] = \
+                        da_feats.instantiable[feat]
+        # Add features of the top DA.
+        if first_da_feats is None:
+            self.features[(2, None)] = 1.
+        else:
+            self.features[(2, 'prob')] = da_nblist[0][0]
+            for feat, feat_val in first_da_feats.iteritems():
+                self.features[(2, feat)] = feat_val
+
+        # Keep self.set up to date. (Why is it needed, anyway?)
+        self.set = set(self.features)
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
@@ -584,17 +749,21 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     def __str__(self):
 
-        s = []
-        for prob, dai in self.cn:
-            s.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
+        ret = []
+        for prob, dai in sorted(self.cn, reverse=True):
+            # FIXME Works only for DSTC.
+            ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
 
-        return "\n".join(s)
+        return "\n".join(ret)
 
     def __len__(self):
         return len(self.cn)
 
     def __getitem__(self, i):
         return self.cn[i]
+
+    def __contains__(self, dai):
+        return self.get_marginal(dai) is not None
 
     def __iter__(self):
         for i in self.cn:
@@ -700,6 +869,12 @@ class DialogueActConfusionNetwork(SLUHypothesis):
                 prob *= (1 - p)
 
         return prob
+
+    def get_marginal(self, dai):
+        for prob, my_dai in self.cn:
+            if my_dai == dai:
+                return prob
+        return None
 
     def get_next_worse_candidates(self, hyp_index):
         """Returns such hypotheses that will have lower probability. It assumes
@@ -816,6 +991,11 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         dialog act item (DAI) are just two: it is there, or it isn't. The data
         model captures only the presence of DAI-s, and hence no other
         hypothesis' probabilities need to be added.
+
+        XXX As yet, though, we know that different values for the same slot are
+        contradictory (and in general, the set of contradicting attr-value
+        pairs could be larger).  We should therefore consider them alternatives
+        to each other.
 
         """
         pass
