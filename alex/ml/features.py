@@ -277,9 +277,9 @@ def make_abstract(replaceable, iter_meth=None, replace_meth=None, splitter="=",
 
             """
             ret = self._combined
-            for combined, map_value, map_type in self:
-                if type_ == map_type:
-                    if value == map_value:
+            for combined, fld_value, fld_type in self:
+                if type_ == fld_type:
+                    if value == fld_value:
                         ret = replace_meth(ret, combined, type_)
                     else:
                         if do_abstract:
@@ -288,13 +288,9 @@ def make_abstract(replaceable, iter_meth=None, replace_meth=None, splitter="=",
                                 splitter.join((type_, make_other(type_))))
                         else:
                             ret = replace_meth(ret, combined,
-                                splitter.join((type_, map_value)))
-                else:
-                    if do_abstract:
-                        ret = replace_meth(ret, combined, map_type)
-                    else:
-                        ret = replace_meth(ret, combined,
-                                splitter.join((type_, map_value)))
+                                splitter.join((type_, fld_value)))
+                elif do_abstract:
+                    ret = replace_meth(ret, combined, fld_type)
             return ret
 
         def to_other(self):
@@ -404,7 +400,7 @@ class ReplaceableTuple2(tuple):
 
 class AbstractedTuple2(
     make_abstract(ReplaceableTuple2,
-                    iter_meth=ReplaceableTuple2.iter_combined)):
+                  iter_meth=ReplaceableTuple2.iter_combined)):
     # __slots__ = ['_combined', 'instantiable']
 
     def __init__(self, iterable):

@@ -1140,7 +1140,6 @@ class DAILogRegClassifier(SLUInterface):
 
             try:
                 dai_triple = next(iter(dai))
-                dai_comb = dai_triple[0]
                 dai_slot = dai_triple[2]
             except:
                 dai_slot = None
@@ -1182,6 +1181,10 @@ class DAILogRegClassifier(SLUInterface):
                     da_confnet.add_merge(dai_prob[0][1], inst_dai,
                                          is_normalised=False)
             else:
+                if not isinstance(dai, DialogueActItem):
+                    # Cannot evaluate an abstract classifier with no
+                    # instantiations for its slot on the input.
+                    continue
                 feat_vec = utterance_features.get_feature_vector(
                     self.feature_idxs)
                 try:
