@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
-from alex.components.nlg.tectotpl.tool.lexicon.cs import has_expletive
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 from alex.components.nlg.tectotpl.block.t2a.addauxwords import AddAuxWords
 
 
@@ -30,6 +30,7 @@ class AddClausalExpletives(AddAuxWords):
         super(AddClausalExpletives, self).__init__(scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def get_aux_forms(self, tnode):
         "Return the clausal expletive to be added, if supposed to."
@@ -39,7 +40,7 @@ class AddClausalExpletives(AddAuxWords):
             return None
         # no expletives if the parent verb is not appropriate
         # TODO coordinations are not handled
-        expletive = has_expletive(tnode.parent.t_lemma)
+        expletive = self.lexicon.has_expletive(tnode.parent.t_lemma)
         if not expletive:
             return None
         # there should be an expletive -> return it

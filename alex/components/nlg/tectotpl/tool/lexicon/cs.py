@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import re
 import codecs
-from alex.components.nlg.tectotpl.core.resource import get_data
+import os.path
 
 NUMBER_FOR_NUMERAL = {
         'nula': 0, 'jedna': 1, 'jeden': 1, 'dva': 2, 'tři': 3, 'čtyři': 4,
@@ -252,96 +252,102 @@ PERSONAL_ROLES = set([
         ])
 
 
-def number_for(numeral):
-    "Given a Czech numeral, returns the corresponding number."
-    if re.match(r'^\d+$', numeral):
-        return int(numeral)
-    return NUMBER_FOR_NUMERAL.get(numeral)
+class Lexicon(object):
 
+    def __init__(self):
+        self.POSSESSIVE_FOR_NOUN = {}
+        pass
 
-def is_incongruent_numeral(numeral):
-    """Return True if the given lemma belongs to a Czech numeral
-    that takes a genitive attribute instead of being an attribute itself"""
-    re.sub('[_\s]', '', numeral)
-    # check whole numbers and numbers written as words
-    number = number_for(numeral)
-    if number is not None and (number < 1 or number > 4):
-        return True
-    # check decimal point numbers and indefinite numerals
-    if re.match('^\d+[,.]\d+$', numeral) or \
-            re.match(INDEFINITE_NUMERALS, numeral):
-        return True
-    return False
+    def number_for(self, numeral):
+        "Given a Czech numeral, returns the corresponding number."
+        if re.match(r'^\d+$', numeral):
+            return int(numeral)
+        return NUMBER_FOR_NUMERAL.get(numeral)
 
-# read the possessive-adjective-to-noun conversion file
-# and save it to the database
-POSSESSIVE_FOR_NOUN = {}
-with codecs.open(get_data('lexicon/cs/possessive_adjectives.tsv'),
-                 'r', 'UTF-8') as handle:
-    for line in handle:
-        line = line.rstrip('\r\n')
-        # skip comments
-        if '##' in line:
-            continue
-        try:
-            adj_lemma, count = line.split('\t')
-            if int(count) < 2:
-                continue
-            # match long Czech possessive adjective lemma
-            match = re.search('^([^_]+)_.*\/(\(.+\)\_)?\((\^UV)?\*(\d+)(.*)\)',
-                              adj_lemma)
-            # divide it into parts
-            adj, chars_to_del, new_suffix = \
-                    match.group(1), match.group(4), match.group(5)
-            # create the corresponding noun lemma
-            noun = adj[:-int(chars_to_del)] + new_suffix
-            adj = re.sub(r'-.+', r'', adj)
-            noun = re.sub(r'-.+', r'', noun)
-            # store it into dictionary
-            POSSESSIVE_FOR_NOUN[noun] = adj
-        except:
-            continue
+    def is_incongruent_numeral(self, numeral):
+        """Return True if the given lemma belongs to a Czech numeral
+        that takes a genitive attribute instead of being an attribute itself"""
+        re.sub('[_\s]', '', numeral)
+        # check whole numbers and numbers written as words
+        number = self.number_for(numeral)
+        if number is not None and (number < 1 or number > 4):
+            return True
+        # check decimal point numbers and indefinite numerals
+        if re.match('^\d+[,.]\d+$', numeral) or \
+                re.match(INDEFINITE_NUMERALS, numeral):
+            return True
+        return False
 
+    def load_possessive_adj_dict(self, data_dir):
+        """\
+        Read the possessive-adjective-to-noun conversion file
+        and save it to the database.
+        """
+        with codecs.open(os.path.join(data_dir,
+                                      'lexicon/cs/possessive_adjectives.tsv'),
+                         'r', 'UTF-8') as handle:
+            for line in handle:
+                line = line.rstrip('\r\n')
+                # skip comments
+                if '##' in line:
+                    continue
+                try:
+                    adj_lemma, count = line.split('\t')
+                    if int(count) < 2:
+                        continue
+                    # match long Czech possessive adjective lemma
+                    match = re.search(r'^([^_]+)_.*\/(\(.+\)\_)?' +
+                                      r'\((\^UV)?\*(\d+)(.*)\)', adj_lemma)
+                    # divide it into parts
+                    adj, chars_to_del, new_suffix = \
+                            match.group(1), match.group(4), match.group(5)
+                    # create the corresponding noun lemma
+                    noun = adj[:-int(chars_to_del)] + new_suffix
+                    adj = re.sub(r'-.+', r'', adj)
+                    noun = re.sub(r'-.+', r'', noun)
+                    # store it into dictionary
+                    self.POSSESSIVE_FOR_NOUN[noun] = adj
+                except:
+                    continue
 
-def get_possessive_adj_for(noun_lemma):
-    """Given a noun lemma, this returns a possessive adjective if it's in the
-    database"""
-    return POSSESSIVE_FOR_NOUN.get(noun_lemma)
+    def get_possessive_adj_for(self, noun_lemma):
+        """\
+        Given a noun lemma, this returns a possessive adjective
+        if it's in the database.
+        """
+        return self.POSSESSIVE_FOR_NOUN.get(noun_lemma)
 
+    def has_synthetic_future(self, verb_lemma):
+        """Returns True if the verb builds a synthetic future tense form
+        with the prefix 'po-'/'pů-'."""
+        verb_lemma = re.sub(r'_s[ei]$', '', verb_lemma)
+        if re.match(SYNTH_FUTURE, verb_lemma):
+            return True
+        return False
 
-def has_synthetic_future(verb_lemma):
-    """Returns True if the verb builds a synthetic future tense form
-    with the prefix 'po-'/'pů-'."""
-    verb_lemma = re.sub(r'_s[ei]$', '', verb_lemma)
-    if re.match(SYNTH_FUTURE, verb_lemma):
-        return True
-    return False
+    def inflect_conditional(self, lemma, number, person):
+        "Return inflected form of a conditional particle/conjunction"
+        ending = CONDITIONAL_INFLECT.get((number, person), '')
+        return lemma + ending
 
+    def has_expletive(self, lemma):
+        """\
+        Return an expletive for a 'že'-clause that this verb governs,
+        or False. Lemmas must include reflexive particles for reflexiva
+        tantum.
+        """
+        return EXPLETIVE_VERBS.get(lemma, False)
 
-def inflect_conditional(lemma, number, person):
-    "Return inflected form of a conditional particle/conjunction"
-    ending = CONDITIONAL_INFLECT.get((number, person), '')
-    return lemma + ending
+    def is_coord_conj(self, lemma):
+        """Return 'Y'/'N' if the given lemma is a coordinating conjunction
+        (depending on whether one should write a comma directly in front)."""
+        return COORD_CONJS.get(lemma, False)
 
+    def is_personal_role(self, lemma):
+        "Return true if the given lemma is a personal role."
+        return lemma in PERSONAL_ROLES
 
-def has_expletive(lemma):
-    """Return an expletive for a 'že'-clause that this verb governs, or False.
-    Lemmas must include reflexive particles for reflexiva tantum."""
-    return EXPLETIVE_VERBS.get(lemma, False)
-
-
-def is_coord_conj(lemma):
-    """Return 'Y'/'N' if the given lemma is a coordinating conjunction
-    (depending on whether one should write a comma directly in front)."""
-    return COORD_CONJS.get(lemma, False)
-
-
-def is_personal_role(lemma):
-    "Return true if the given lemma is a personal role."
-    return lemma in PERSONAL_ROLES
-
-
-def is_named_entity_label(lemma):
-    """Return 'I'/'C' if the given lemma is a named entity label
-    (used as congruent/incongruent attribute)."""
-    return NAMED_ENTITY_LABELS.get(lemma, False)
+    def is_named_entity_label(self, lemma):
+        """Return 'I'/'C' if the given lemma is a named entity label
+        (used as congruent/incongruent attribute)."""
+        return NAMED_ENTITY_LABELS.get(lemma, False)

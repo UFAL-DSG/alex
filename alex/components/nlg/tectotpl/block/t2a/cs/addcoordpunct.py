@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
-from alex.components.nlg.tectotpl.tool.lexicon.cs import is_coord_conj
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -28,6 +28,7 @@ class AddCoordPunct(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def process_anode(self, anode):
         "Add coordination punctuation to the given anode, if applicable."
@@ -37,7 +38,7 @@ class AddCoordPunct(Block):
         if not achildren:
             return
         # add comma before certain conjunctions
-        if is_coord_conj(anode.lemma) == 'Y' and \
+        if self.lexicon.is_coord_conj(anode.lemma) == 'Y' and \
                 self.is_at_clause_boundary(anode):
             acomma = self.add_comma_node(anode)
             acomma.shift_before_node(anode)

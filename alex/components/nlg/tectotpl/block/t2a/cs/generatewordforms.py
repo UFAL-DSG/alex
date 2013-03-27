@@ -7,10 +7,11 @@ from __future__ import unicode_literals
 
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
-from alex.components.nlg.tectotpl.core.resource import get_data
 from alex.components.nlg.tectotpl.tool.ml.model import Model
 from alex.components.nlg.tectotpl.core.util import first
 import re
+import os.path
+
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -34,8 +35,15 @@ class GenerateWordForms(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
-        # load the model from a pickle
-        self.model = Model.load_from_file(get_data(args['model']))
+        self.model = None
+        self.model_file = args['model']
+
+    def load(self):
+        """\
+        Load the model from a pickle.
+        """
+        self.model = Model.load_from_file(os.path.join(self.scenario.data_dir,
+                                                       self.model_file))
 
     def process_atree(self, aroot):
         """\

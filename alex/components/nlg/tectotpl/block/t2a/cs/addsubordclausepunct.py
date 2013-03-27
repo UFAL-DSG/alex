@@ -9,7 +9,7 @@ from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
 from alex.components.nlg.tectotpl.block.t2a.cs.addclausalpunct import AddClausalPunct
-from alex.components.nlg.tectotpl.tool.lexicon.cs import is_coord_conj
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -29,6 +29,7 @@ class AddSubordClausePunct(AddClausalPunct):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def process_atree(self, aroot):
         "Add subordinate clause punctuation to the given sentence."
@@ -48,7 +49,8 @@ class AddSubordClausePunct(AddClausalPunct):
                 continue
             # coordinating conjunctions or nodes in clauses belonging
             # to the same coordination
-            if [an for an in (aleft, aright) if is_coord_conj(an.lemma)]:
+            if [an for an in (aleft, aright)
+                if self.lexicon.is_coord_conj(an.lemma)]:
                 continue
             if self.are_in_coord_clauses(aleft, aright):
                 continue

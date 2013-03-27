@@ -9,7 +9,7 @@ from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
 from alex.components.nlg.tectotpl.block.t2a.addauxwords import AddAuxWords
-from alex.components.nlg.tectotpl.tool.lexicon.cs import inflect_conditional
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -29,6 +29,7 @@ class AddSubconjs(AddAuxWords):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def get_aux_forms(self, tnode):
         "Find prepositional nodes to be created."
@@ -46,8 +47,8 @@ class AddSubconjs(AddAuxWords):
         new_node = anode.create_child()
         # inflect 'aby' and 'kdyby'
         if form in ['aby', 'kdyby']:
-            new_node.form = inflect_conditional(form, anode.morphcat_number,
-                                                anode.morphcat_person)
+            new_node.form = self.lexicon.inflect_conditional(form,
+                    anode.morphcat_number, anode.morphcat_person)
         else:
             new_node.form = form
         new_node.afun = 'AuxC'

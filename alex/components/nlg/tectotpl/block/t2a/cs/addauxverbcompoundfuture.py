@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
-from alex.components.nlg.tectotpl.tool.lexicon.cs import has_synthetic_future
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -27,6 +27,7 @@ class AddAuxVerbCompoundFuture(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def process_tnode(self, tnode):
         "Add compound future auxiliary to a node, where appropriate."
@@ -36,7 +37,7 @@ class AddAuxVerbCompoundFuture(Block):
             return
         # skip synthetic future verbs (this also rules out passives)
         aconj = tnode.get_deref_attr('wild/conjugated')
-        if has_synthetic_future(aconj.lemma):
+        if self.lexicon.has_synthetic_future(aconj.lemma):
             return
         # create the new auxiliary node
         anew_aux = aconj.create_child()

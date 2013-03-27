@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
-from alex.components.nlg.tectotpl.tool.lexicon.cs import get_possessive_adj_for
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -33,6 +33,10 @@ class GeneratePossessiveAdjectives(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
+
+    def load(self):
+        self.lexicon.load_possessive_adj_dict(self.scenario.data_dir)
 
     def process_tnode(self, tnode):
         """\
@@ -44,7 +48,7 @@ class GeneratePossessiveAdjectives(Block):
                 tnode.mlayer_pos == 'P' or tnode.t_lemma == '#PersPron':
             return
         anode = tnode.lex_anode
-        poss_adj_lemma = get_possessive_adj_for(anode.lemma)
+        poss_adj_lemma = self.lexicon.get_possessive_adj_for(anode.lemma)
         # the corresponding possessive adjective exists, we can use it
         if poss_adj_lemma:
             anode.lemma = poss_adj_lemma

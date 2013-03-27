@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
-from alex.components.nlg.tectotpl.tool.lexicon.cs import inflect_conditional
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -28,6 +28,7 @@ class AddAuxVerbConditional(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def process_tnode(self, tnode):
         "Add conditional auxiliary to a node, where appropriate."
@@ -46,8 +47,9 @@ class AddAuxVerbConditional(Block):
         acdn.afun = 'AuxV'
         acdn.morphcat_pos = 'V'
         acdn.morphcat_subpos = 'c'
-        acdn.form = inflect_conditional('by', aconj.morphcat_number,
-                                        aconj.morphcat_person)
+        acdn.form = self.lexicon.inflect_conditional('by',
+                                                     aconj.morphcat_number,
+                                                     aconj.morphcat_person)
         # set tense of the original to past
         aconj.morphcat_subpos = 'p'
         # fix links

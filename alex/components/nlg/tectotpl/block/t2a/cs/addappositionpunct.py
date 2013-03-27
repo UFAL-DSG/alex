@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 from alex.components.nlg.tectotpl.core.block import Block
 from alex.components.nlg.tectotpl.core.exception import LoadingException
-from alex.components.nlg.tectotpl.tool.lexicon.cs import is_personal_role, is_named_entity_label
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 import re
 
 __author__ = "Ondřej Dušek"
@@ -29,6 +29,7 @@ class AddAppositionPunct(Block):
         Block.__init__(self, scenario, args)
         if self.language is None:
             raise LoadingException('Language must be defined!')
+        self.lexicon = Lexicon()
 
     def process_tnode(self, tnode):
         "Adds punctuation a-nodes if the given node is an apposition node."
@@ -43,8 +44,8 @@ class AddAppositionPunct(Block):
         # and follows its parent, which is also a noun.
         elif tnode.formeme == 'n:attr' and tnode.gram_sempos == 'n.denot' and \
                 tparent < tnode and tparent.formeme.startswith('n:') and \
-                (is_personal_role(tnode.t_lemma) or
-                 is_named_entity_label(tnode.t_lemma)):
+                (self.lexicon.is_personal_role(tnode.t_lemma) or
+                 self.lexicon.is_named_entity_label(tnode.t_lemma)):
             # create the apposition on the t-layer
             tgrandpa = tparent.parent
             tapp = tgrandpa.create_child(data={'functor': 'APPS',

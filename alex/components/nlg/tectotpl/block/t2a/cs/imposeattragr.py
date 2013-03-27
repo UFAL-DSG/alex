@@ -6,8 +6,9 @@
 from __future__ import unicode_literals
 
 import re
-from alex.components.nlg.tectotpl.block.t2a.imposeagreement import ImposeAgreement
-from alex.components.nlg.tectotpl.tool.lexicon.cs import number_for
+from alex.components.nlg.tectotpl.block.t2a.imposeagreement import \
+        ImposeAgreement
+from alex.components.nlg.tectotpl.tool.lexicon.cs import Lexicon
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -26,6 +27,7 @@ class ImposeAttrAgr(ImposeAgreement):
     def __init__(self, scenario, args):
         "Constructor, checking the argument values"
         super(ImposeAttrAgr, self).__init__(scenario, args)
+        self.lexicon = Lexicon()
 
     def should_agree(self, tnode):
         """\
@@ -58,7 +60,7 @@ class ImposeAttrAgr(ImposeAgreement):
             anode.morphcat_number = 'S'
             anode.morphcat_gender = 'N'
             return True
-        numeral = number_for(anoun.lemma)
+        numeral = self.lexicon.number_for(anoun.lemma)
         if numeral is not None and numeral > 1:
             # Force plural in numerals
             anode.morphcat_case = anoun.morphcat_case
