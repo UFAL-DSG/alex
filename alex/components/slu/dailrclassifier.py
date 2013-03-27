@@ -1175,7 +1175,8 @@ class DAILogRegClassifier(SLUInterface):
                     # Restore the unnormalised values of the DAI.
                     inst_dai = self._get_dais_for_normvalue(
                         da_nblist, dai._combined[0], type_, value)
-                    da_confnet.add(dai_prob[0][1], inst_dai)
+                    da_confnet.add_merge(dai_prob[0][1], inst_dai,
+                                         is_normalised=False)
             else:
                 feat_vec = utterance_features.get_feature_vector(
                     self.feature_idxs)
@@ -1189,7 +1190,7 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print "Classification result: ", dai_prob
 
-                da_confnet.add(dai_prob[0][1], dai)
+                da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
 
         if verbose:
             print "DA: ", da_confnet

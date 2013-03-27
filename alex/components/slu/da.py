@@ -773,7 +773,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Append additional dialogue act item into the confusion network."""
         self.cn.append([probability, dai])
 
-    def add_merge(self, probability, dai):
+    def add_merge(self, probability, dai, is_normalised=True):
         """Add the probability mass of the passed dialogue act item to an
         existing dialogue act item or adds a new dialogue act item.
 
@@ -782,7 +782,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for i in range(len(self.cn)):
             if dai == self.cn[i][1]:
                 # I found a matching DAI
-                self.cn[i][0] += probability
+                # self.cn[i][0] += probability
+                # DSTC
+                prob_orig = self.cn[i][0]
+                if is_normalised:
+                    self.cn[i][0] += probability
+                else:
+                    self.cn[i][0] = .5 * (prob_orig + probability)
                 return
         # if not found you should add it
         self.add(probability, dai)
@@ -1065,7 +1071,8 @@ def merge_slu_confnets(multiple_confnets):
             # if dai.dat == "other":
             #     continue
 
-            merged_confnets.add_merge(prob_confnet * prob, dai)
+            merged_confnets.add_merge(prob_confnet * prob, dai,
+                                      is_normalised=True)
 
     merged_confnets.sort()
 
