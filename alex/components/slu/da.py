@@ -527,7 +527,7 @@ class DialogueActFeatures(Features):
             features from self.set that are abstracted
 
     """
-    __slots__ = ['features', 'set', 'generic', 'instantiable']
+    # __slots__ = ['features', 'set', 'generic', 'instantiable']
 
     def __init__(self, da, include_slotvals=True):
         super(DialogueActFeatures, self).__init__()
@@ -672,8 +672,8 @@ class DialogueActNBListFeatures(Features):
                           ignored)
 
     """
-    __slots__ = ['features', 'set', 'generic', 'include_slotvals',
-                 'instantiable']
+    # __slots__ = ['features', 'set', 'generic', 'include_slotvals',
+                 # 'instantiable']
     def __init__(self, da_nblist=None, include_slotvals=True):
         # This initialises the self.features and self.set fields.
         super(DialogueActNBListFeatures, self).__init__()

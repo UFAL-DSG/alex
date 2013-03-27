@@ -26,9 +26,6 @@ from alex.utils.exception import DAILRException, SLUException
 from alex.utils.various import crop_to_finite, flatten
 
 
-# A tuple-like class with abstraction on the second item.
-
-
 class DAILogRegClassifier(SLUInterface):
     """Implements learning of and decoding with dialogue act item classifiers
     based on logistic regression.
@@ -992,7 +989,7 @@ class DAILogRegClassifier(SLUInterface):
                 self.features_type,
                 self.features_size,
                 self.cls_threshold,
-                self._do_abstract_values
+                self.abstractions
         )
         with open(file_name, 'w+') as outfile:
             pickle.dump((version, data), outfile, 2)
