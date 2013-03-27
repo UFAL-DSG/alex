@@ -782,7 +782,10 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for i in range(len(self.cn)):
             if dai == self.cn[i][1]:
                 # I found a matching DAI
-                self.cn[i][0] += probability
+                # self.cn[i][0] += probability
+                # DSTC
+                prob_orig = self.cn[i][0]
+                self.cn[i][0] = .5 * (prob_orig + probability)
                 return
         # if not found you should add it
         self.add(probability, dai)
