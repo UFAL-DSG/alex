@@ -551,6 +551,7 @@ class DialogueActFeatures(Features):
                     self.instantiable[full_feat] = full_feat
                     if include_slotvals:
                         self.features[(dai.dat, dai.name, dai.value)] += 1.
+                        self.features[('.v', dai.value)] += 1.
         # Summary features.
         self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
         self.features['n_dais'] = len(da)
