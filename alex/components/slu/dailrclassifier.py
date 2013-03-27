@@ -979,9 +979,8 @@ class DAILogRegClassifier(SLUInterface):
 
     def save_model(self, file_name):
         # version = '2'
-        version = 'DSTC13'
-        data = (self.feat_counts.keys(),
-                self.feature_idxs,
+        version = 'DSTC13.2'
+        data = (self.feature_idxs,
                 self.clser_type,
                 # {dai.extension(): clser for dai, clser in
                 {dai: clser for dai, clser in
@@ -992,7 +991,7 @@ class DAILogRegClassifier(SLUInterface):
                 self.abstractions
         )
         with open(file_name, 'w+') as outfile:
-            pickle.dump((version, data), outfile, 2)
+            pickle.dump((version, data), outfile)
 
     ###############################################################
     ### From here on, the methods come from what used to be the ###
@@ -1019,11 +1018,17 @@ class DAILogRegClassifier(SLUInterface):
             (self.features_list, self.feature_idxs,
              self.clser_type, self.trained_classifiers, self.features_type,
              self.features_size, self.cls_threshold) = data
-        elif version == 'DSTC13':
-            (self.features_list, self.feature_idxs,
-             self.clser_type, self.trained_classifiers, self.features_type,
-             self.features_size, self.cls_threshold,
-             self.abstractions) = data
+        elif version.startswith('DSTC13'):
+            if version == 'DSTC13':
+                (self.features_list, self.feature_idxs,
+                self.clser_type, self.trained_classifiers, self.features_type,
+                self.features_size, self.cls_threshold,
+                self.abstractions) = data
+            elif version == 'DSTC13.2':
+                (self.feature_idxs,
+                 self.clser_type, self.trained_classifiers, self.features_type,
+                 self.features_size, self.cls_threshold,
+                 self.abstractions) = data
             if 'partial' in self.abstractions:
                 self._do_abstract_values.add(False)
             if 'abstract' in self.abstractions:
@@ -1034,8 +1039,7 @@ class DAILogRegClassifier(SLUInterface):
 
     def get_size(self):
         """Returns the number of features in use."""
-        return len(self.features_list)
-
+        return len(self.features_idxs)
 
     @classmethod
     def _get_dais_for_normvalue(cls, da_nblist, dat, slot, value):
