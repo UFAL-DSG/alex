@@ -6,7 +6,7 @@
 from __future__ import unicode_literals
 
 import re
-from treex.block.t2a.imposeagreement import ImposeAgreement
+from alex.components.nlg.tectotpl.block.t2a.imposeagreement import ImposeAgreement
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

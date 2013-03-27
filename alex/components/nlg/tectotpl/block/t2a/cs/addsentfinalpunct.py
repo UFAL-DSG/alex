@@ -6,7 +6,7 @@
 from __future__ import unicode_literals
 
 import re
-from treex.block.t2a.cs.addclausalpunct import AddClausalPunct
+from alex.components.nlg.tectotpl.block.t2a.cs.addclausalpunct import AddClausalPunct
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

@@ -6,9 +6,9 @@
 from __future__ import unicode_literals
 
 import re
-from treex.block.t2a.imposeagreement import ImposeAgreement
-from treex.tool.lexicon.cs import is_incongruent_numeral
-from treex.core.util import first
+from alex.components.nlg.tectotpl.block.t2a.imposeagreement import ImposeAgreement
+from alex.components.nlg.tectotpl.tool.lexicon.cs import is_incongruent_numeral
+from alex.components.nlg.tectotpl.core.util import first
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

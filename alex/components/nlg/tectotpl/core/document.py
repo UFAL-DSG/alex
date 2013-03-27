@@ -4,8 +4,9 @@
 # Classes related to Treex documents, bundles and zones
 #
 from __future__ import unicode_literals
-from treex.core.exception import RuntimeException
-import treex.core.node
+from alex.components.nlg.tectotpl.core.exception import RuntimeException
+import alex.components.nlg.tectotpl.core.node
+
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -242,8 +243,8 @@ class Zone(object):
                     ('-s' + str(self.bundle.ord) if  self.bundle else '') +
                     '-root'}
         # call the appropriate constructor of the corresponding
-        # class from treex.core.node (A, T, N, P)
-        node_type = getattr(treex.core.node, layer.upper())
+        # class from alex.components.nlg.tectotpl.core.node (A, T, N, P)
+        node_type = getattr(alex.components.nlg.tectotpl.core.node, layer.upper())
         # create the root
         root = node_type(data=data, zone=self)
         setattr(self, layer + 'tree', root)

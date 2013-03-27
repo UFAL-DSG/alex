@@ -8,9 +8,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import yaml
-from treex.block.write.basewriter import BaseWriter
+from alex.components.nlg.tectotpl.block.write.basewriter import BaseWriter
 import types
-from treex.core.util import file_stream
+from alex.components.nlg.tectotpl.core.util import file_stream
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

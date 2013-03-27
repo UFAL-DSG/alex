@@ -5,9 +5,9 @@
 #
 from __future__ import unicode_literals
 
-from treex.core.block import Block
-from treex.core.exception import LoadingException
-from treex.tool.lexicon.cs import is_coord_conj
+from alex.components.nlg.tectotpl.core.block import Block
+from alex.components.nlg.tectotpl.core.exception import LoadingException
+from alex.components.nlg.tectotpl.tool.lexicon.cs import is_coord_conj
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

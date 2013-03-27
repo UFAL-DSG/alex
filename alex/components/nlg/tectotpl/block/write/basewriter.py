@@ -4,10 +4,10 @@
 # Base block for writing
 #
 from __future__ import unicode_literals
-from treex.core.block import Block
+from alex.components.nlg.tectotpl.core.block import Block
 
 import os
-from treex.core.exception import RuntimeException
+from alex.components.nlg.tectotpl.core.exception import RuntimeException
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

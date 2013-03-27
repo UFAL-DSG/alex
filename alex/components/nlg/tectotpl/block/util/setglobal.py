@@ -5,7 +5,7 @@
 #
 from __future__ import unicode_literals
 
-from treex.core.block import Block
+from alex.components.nlg.tectotpl.core.block import Block
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

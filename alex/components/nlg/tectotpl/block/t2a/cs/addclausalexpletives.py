@@ -5,10 +5,10 @@
 #
 from __future__ import unicode_literals
 
-from treex.core.exception import LoadingException
+from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
-from treex.tool.lexicon.cs import has_expletive
-from treex.block.t2a.addauxwords import AddAuxWords
+from alex.components.nlg.tectotpl.tool.lexicon.cs import has_expletive
+from alex.components.nlg.tectotpl.block.t2a.addauxwords import AddAuxWords
 
 
 __author__ = "Ondřej Dušek"

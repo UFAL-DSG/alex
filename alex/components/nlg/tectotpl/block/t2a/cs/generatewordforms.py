@@ -5,11 +5,11 @@
 #
 from __future__ import unicode_literals
 
-from treex.core.block import Block
-from treex.core.exception import LoadingException
-from treex.core.resource import get_data
-from treex.tool.ml.model import Model
-from treex.core.util import first
+from alex.components.nlg.tectotpl.core.block import Block
+from alex.components.nlg.tectotpl.core.exception import LoadingException
+from alex.components.nlg.tectotpl.core.resource import get_data
+from alex.components.nlg.tectotpl.tool.ml.model import Model
+from alex.components.nlg.tectotpl.core.util import first
 import re
 
 __author__ = "Ondřej Dušek"

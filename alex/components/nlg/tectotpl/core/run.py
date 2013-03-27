@@ -7,9 +7,9 @@ from __future__ import unicode_literals
 import getopt
 import yaml
 import sys
-from treex.core import ScenarioException
-from treex.core.log import log_info
-from treex.tool.cluster import Job
+from alex.components.nlg.tectotpl.core import ScenarioException
+from alex.components.nlg.tectotpl.core.log import log_info
+from alex.components.nlg.tectotpl.tool.cluster import Job
 import os.path
 
 __author__ = "Ondřej Dušek"
@@ -65,7 +65,7 @@ class Run(object):
                             '-' + str(jobnum).zfill(2), work_dir=work_dir))
         log_info('Creating jobs ...')
         for job, files in zip(jobs, job_files):
-            job.header += "from treex.core.run import Run\n"
+            job.header += "from alex.components.nlg.tectotpl.core.run import Run\n"
             args = [self.scenario.file_path] + \
                     [os.path.abspath(file_path) for file_path in files]
             job.code = "run = Run(" + str(args) + ")\nrun.run()\n"
@@ -79,7 +79,7 @@ class Run(object):
 
     def print_usage(self):
         print """\
-        Usage: ./treex.py [-h] [-j jobs] [scenario file1 [file2...]]
+        Usage: ./alex.components.nlg.tectotpl.py [-h] [-j jobs] [scenario file1 [file2...]]
         """
 
 
@@ -111,7 +111,7 @@ class Scenario(object):
                 class_subpath += '.'
             else:
                 class_subpath, class_name = '', block_data["block"]
-            class_package = 'treex.block.' + class_subpath + class_name.lower()
+            class_package = 'alex.components.nlg.tectotpl.block.' + class_subpath + class_name.lower()
             log_info('Loading block ' + str(block_no) + '/' +
                      str(len(self.scenario_data)) + ': ' + class_name)
             exec('import ' + class_package)

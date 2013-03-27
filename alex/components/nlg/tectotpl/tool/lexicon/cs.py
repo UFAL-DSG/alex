@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import re
 import codecs
-from treex.core.resource import get_data
+from alex.components.nlg.tectotpl.core.resource import get_data
 
 NUMBER_FOR_NUMERAL = {
         'nula': 0, 'jedna': 1, 'jeden': 1, 'dva': 2, 'tři': 3, 'čtyři': 4,

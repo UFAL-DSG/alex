@@ -11,13 +11,13 @@ Classification models using scikit-learn. The main objects here are Model
 and SplitModel.
 """
 
-from treex.core.util import file_stream
-from treex.core.log import log_info
+from alex.components.nlg.tectotpl.core.util import file_stream
+from alex.components.nlg.tectotpl.core.log import log_info
 from sklearn.metrics import zero_one_score
-from treex.tool.ml.dataset import DataSet
+from alex.components.nlg.tectotpl.tool.ml.dataset import DataSet
 from sklearn.dummy import DummyClassifier
-from treex.core.exception import RuntimeException
-from treex.tool.cluster import Job
+from alex.components.nlg.tectotpl.core.exception import RuntimeException
+from alex.components.nlg.tectotpl.tool.cluster import Job
 import numpy as np
 import pickle
 import marshal
@@ -208,9 +208,9 @@ class Model(AbstractModel):
                 "model.train('" + train_file + "', encoding='" + \
                 encoding + "')\n" \
                 "model.save_to_file('" + model_file + "')\n"
-        job.header += "from treex.tool.ml.model import Model\n" + \
+        job.header += "from alex.components.nlg.tectotpl.tool.ml.model import Model\n" + \
                 "import pickle\n" + \
-                "from treex.core.util import file_stream\n"
+                "from alex.components.nlg.tectotpl.core.util import file_stream\n"
         return job, model_file
 
     def train_on_data(self, train):

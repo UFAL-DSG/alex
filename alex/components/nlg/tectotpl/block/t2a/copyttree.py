@@ -5,9 +5,9 @@
 #
 from __future__ import unicode_literals
 
-from treex.core.block import Block
-from treex.core.log import log_warn
-from treex.core.exception import LoadingException
+from alex.components.nlg.tectotpl.core.block import Block
+from alex.components.nlg.tectotpl.core.log import log_warn
+from alex.components.nlg.tectotpl.core.exception import LoadingException
 import re
 
 __author__ = "Ondřej Dušek"

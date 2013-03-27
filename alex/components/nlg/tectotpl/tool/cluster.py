@@ -12,7 +12,7 @@ import codecs
 import sys
 import re
 import time
-from treex.core.util import first
+from alex.components.nlg.tectotpl.core.util import first
 import collections
 
 """\

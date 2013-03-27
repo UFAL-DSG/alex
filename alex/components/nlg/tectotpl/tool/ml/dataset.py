@@ -12,7 +12,7 @@ import scipy.sparse as sp
 import copy
 from sklearn.datasets.base import Bunch
 import math
-from treex.core.util import file_stream
+from alex.components.nlg.tectotpl.core.util import file_stream
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"

@@ -5,14 +5,14 @@
 #
 
 from __future__ import unicode_literals
-from treex.core.exception import RuntimeException
-from treex.core.log import log_warn
+from alex.components.nlg.tectotpl.core.exception import RuntimeException
+from alex.components.nlg.tectotpl.core.log import log_warn
 from collections import deque
 import types
 import re
 import sys
 import inspect
-from treex.core.util import as_list
+from alex.components.nlg.tectotpl.core.util import as_list
 
 
 __author__ = "Ondřej Dušek"
