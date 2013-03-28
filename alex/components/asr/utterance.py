@@ -45,8 +45,12 @@ def load_utterances(utt_fname, limit=None):
 
             parts = line.split("=>")
 
-            key = parts[0].strip()
-            utt = parts[1].strip()
+            if len(parts) == 2:
+                key = parts[0].strip()
+                utt = parts[1].strip()
+            else:
+                key = "%d" % count
+                utt = line
 
             utterances[key] = Utterance(utt)
 

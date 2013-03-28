@@ -39,8 +39,12 @@ def load_das(das_fname, limit=None):
 
             parts = line.split("=>")
 
-            key = parts[0].strip()
-            sem = parts[1].strip()
+            if len(parts) == 2:
+                key = parts[0].strip()
+                sem = parts[1].strip()
+            else:
+                key = "%d" % count
+                sem = line
 
             das[key] = DialogueAct(sem)
 
