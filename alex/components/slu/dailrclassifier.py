@@ -159,19 +159,33 @@ class DAILogRegClassifier(SLUInterface):
                           da_nblist=None, da_nblist_orig=None):
             # Collect all types of features.
             feat_sets = list()
+            # TODO Generalise (compress the code).
             if 'ngram' in ft:
                 feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
-            if 'prev_da' in ft and prev_da is not None:
-                feat_sets.append(DialogueActFeatures(prev_da))
-            if 'utt_nbl' in ft and utt_nblist is not None:
-                feat_sets.append(
-                    UtteranceNBListFeatures(size=fs, utt_nblist=utt_nblist))
-            if 'da_nbl' in ft and da_nblist is not None:
-                feat_sets.append(
-                    DialogueActNBListFeatures(da_nblist=da_nblist))
-            if 'da_nbl_orig' in ft and da_nblist_orig is not None:
-                feat_sets.append(
-                    DialogueActNBListFeatures(da_nblist=da_nblist_orig))
+            if 'prev_da' in ft:
+                if prev_da is not None:
+                    feat_sets.append(DialogueActFeatures(prev_da))
+                else:
+                    feat_sets.append(Features())
+            if 'utt_nbl' in ft:
+                if utt_nblist is not None:
+                    feat_sets.append(
+                        UtteranceNBListFeatures(size=fs,
+                                                utt_nblist=utt_nblist))
+                else:
+                    feat_sets.append(Features())
+            if 'da_nbl' in ft:
+                if da_nblist is not None:
+                    feat_sets.append(
+                        DialogueActNBListFeatures(da_nblist=da_nblist))
+                else:
+                    feat_sets.append(Features())
+            if 'da_nbl_orig' in ft:
+                if da_nblist_orig is not None:
+                    feat_sets.append(
+                        DialogueActNBListFeatures(da_nblist=da_nblist_orig))
+                else:
+                    feat_sets.append(Features())
 
             # Based on the number of distinct feature types, either join them
             # or take the single feature type.

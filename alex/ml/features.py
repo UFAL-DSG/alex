@@ -15,7 +15,7 @@ from alex.utils.cache import lru_cache
 # XXX Is Features.set needed anywhere?  I would suggest removing it as a class
 # field.
 class Features(object):
-    """An abstract class representing features of an object.
+    """A mostly abstract class representing features of an object.
 
     Attributes:
         features: mapping of the features to their values
