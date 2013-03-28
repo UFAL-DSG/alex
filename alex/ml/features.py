@@ -9,17 +9,21 @@ general, collections of features).
 from collections import defaultdict
 import numpy as np
 
+from alex.utils.cache import lru_cache
+
 
 # XXX Is Features.set needed anywhere?  I would suggest removing it as a class
 # field.
 class Features(object):
-    """An abstract class representing features of an object.
+    """A mostly abstract class representing features of an object.
 
     Attributes:
         features: mapping of the features to their values
         set: set of the features
 
     """
+    __slots__ = ['features', 'set']
+
     def __init__(self, *args, **kwargs):
         self.features = defaultdict(float)
         self.set = set()
@@ -62,22 +66,46 @@ class Features(object):
 
         """
         feat_vec = np.zeros(len(feature_idxs))
+        if hasattr(self, 'generic'):
+            generics = self.generic
+        else:
+            generics = dict()
         for feature in self.features:
-            if feature in feature_idxs:
-                feat_vec[feature_idxs[feature]] = self.features[feature]
+            key = generics.get(feature, feature)
+            if key in feature_idxs:
+                feat_vec[feature_idxs[key]] = self.features[feature]
         return feat_vec
 
-    def prune(self, to_remove):
-        """Discards all features from `to_remove' from self."""
+    def prune(self, to_remove=None, min_val=None):
+        """Discards specified features.
+
+        Arguments:
+            to_remove -- collection of features to be removed
+            min_val -- threshold for feature values in order for them to be
+                       retained (those not meeting the threshold are pruned)
+
+        """
+        # Determine which features to prune.
+        to_remove_set = set()
+        if min_val is not None:
+            to_remove_set.update(set(feat for (feat, val) in self.features
+                                     if val < min_val))
+        if to_remove is not None:
+            to_remove_set.update(to_remove if isinstance(to_remove, set)
+                                 else set(to_remove))
         # Remove the features from `self.set'.
-        to_remove_set = (to_remove if isinstance(to_remove, set)
-                         else set(to_remove))
         self.set -= to_remove_set
         # Remove the features from `self.features'.
         old_features = self.features
         self.features = defaultdict(float)
-        self.features.update(item for item in old_features.iteritems() if
-                             item[0] not in to_remove_set)
+        self.features.update(item for item in old_features.iteritems()
+                             if item[0] not in to_remove_set)
+        # Remove the features from `self.generic'.
+        # FIXME This should go into a more specific class, perhaps
+        # AbstractedFeatures.
+        if hasattr(self, 'generic'):
+            self.generic = dict(item for item in self.generic.iteritems()
+                                if item[0] not in to_remove_set)
 
     @classmethod
     def join(cls, *feature_sets):
@@ -87,7 +115,55 @@ class Features(object):
         """
         return JoinedFeatures(*feature_sets)
 
+    def iter_instantiations(self):
+        if hasattr(self, 'instantiable'):
+            for abstr in self.instantiable:
+                for inst in abstr.iter_instantiations():
+                    yield inst
 
+    @classmethod
+    def iter_abstract(cls, feature):
+        last_mbr = feature
+        while True:
+            # FIXME Devise another way to check this is a subclass of the
+            # AbstractedFeature template.
+            if hasattr(last_mbr, '_combined'):
+                for tup in last_mbr.iter_instantiations():
+                    yield tup
+                return
+            else:
+                if not isinstance(last_mbr, tuple):
+                    return
+                try:
+                    last_mbr = last_mbr[-1]
+                except:
+                    return
+
+    @classmethod
+    def do_with_abstract(cls, feature, meth, *args, **kwargs):
+        parts = list()
+        last_mbr = feature
+        while last_mbr:
+            # FIXME Devise another way to check this is a subclass of the
+            # AbstractedFeature template.
+            if hasattr(last_mbr, '_combined'):
+                ret = meth(last_mbr, *args, **kwargs)
+                for prev_mbrs in reversed(parts):
+                    ret = (prev_mbrs + (ret,))
+                return ret
+            else:
+                if not isinstance(last_mbr, tuple):
+                    return feature
+                try:
+                    parts.append(last_mbr[:-1])
+                    last_mbr = last_mbr[-1]
+                except Exception:
+                    return feature
+
+
+# XXX JoinedFeatures are ignorant of features they are composed of.  It would
+# be helpful if this class had an `instantiate' method that would call its
+# member features' `instantiate' methods provided they are AbstractedFeatures.
 class JoinedFeatures(Features):
     """JoinedFeatures are indexed by tuples (feature_sets_index, feature)
     where feature_sets_index selects the required set of features.  Sets of
@@ -97,49 +173,278 @@ class JoinedFeatures(Features):
     Attributes:
         features: mapping { (feature_set_index, feature) : value of feature }
         set: set of the (feature_set_index, feature) tuples
+        generic: mapping { (feature_set_index, abstracted_feature) :
+                            generic_feature }
+        instantiable: mapping { feature : generic part of feature } for
+            features from self.set that are abstracted
 
     """
+    # __slots__ = ['features', 'set', 'generic', 'instantiable']
 
     def __init__(self, *feature_sets):
         self.features = defaultdict(float)
+        self.generic = dict()
+        self.instantiable = dict()
         for feat_set_idx, feat_set in enumerate(feature_sets):
-            self.features.update(((feat_set_idx, item[0]), item[1])
-                                 for item in feat_set.iteritems())
+            if hasattr(feat_set, 'generic'):
+                assert hasattr(feat_set, 'instantiable')
+                generics = feat_set.generic
+                insts = feat_set.instantiable
+                for feat, val in feat_set.iteritems():
+                    my_feat_key = (feat_set_idx, feat)
+                    if feat in generics:
+                        self.generic[my_feat_key] = (feat_set_idx,
+                                                     generics[feat])
+                        self.instantiable[my_feat_key] = insts[feat]
+                    self.features[my_feat_key] = val
+            else:
+                self.features.update(((feat_set_idx, item[0]), item[1])
+                                      for item in feat_set.iteritems())
         self.set = set(self.features)
-        # self.set = set((set_idx, feat) for set_idx in xrange(len(feature_sets))
-                       # for feat in feature_sets[set_idx])
 
-    # def __len__(self):
-        # return sum(map(len, self.features))
+    def iter_instantiations(self):
+        for feat in self.instantiable:
+            for inst in feat.iter_instantiations():
+                yield inst
 
-    # def __getitem__(self, feat_tup):
-        # if not len(feat_tup) == 2:
-            # raise TypeError(
-                # "JoinedFeatures are indexed by a tuple of length 2.")
-        # try:
-            # return self.features[feat_tup[0]][feat_tup[1]]
-        # except IndexError:
-            # return 0.
 
-    # def __contains__(self, feat_tup):
-        # if not len(feat_tup) == 2:
-            # raise TypeError(
-                # "JoinedFeatures are indexed by a tuple of length 2.")
-        # try:
-            # return feat_tup[1] in self.features[feat_tup[0]]
-        # except IndexError:
-            # return False
+def make_abstract(replaceable, iter_meth=None, replace_meth=None, splitter="=",
+                  make_other=None):
+    class AbstractedFeature(object):
+        # __slots__ = ['_combined', 'instantiable']
 
-    # def __iter__(self):
-        # for feat_set in self.features:
-            # for feat in feat_set:
-                # yield feat
+        # TODO Document.
+        def __init__(self, combined):
+            self._combined = combined
+            self.instantiable = {self: self}
 
-    # def get_feature_vector(self, feature_idxs):
-        # feat_vec = np.zeros(len(feature_idxs))
-        # for feat_set_idx, feat_set in enumerate(self.features):
-            # for feat in feat_set:
-                # if (feat_set_idx, feat) in feature_idxs:
-                    # feat_idx = feature_idxs[(feat_set_idx, feat)]
-                    # feat_vec[feat_idx] = self.features[feat_set_idx][feat]
-        # return feat_vec
+        def __cmp__(self, other):
+            if hasattr(other, '_combined'):
+                return ((self._combined >= other._combined) -
+                        (other._combined >= self._combined))
+            else:
+                return 1
+
+        def __hash__(self):
+            return hash(self._combined)
+
+        def __iter__(self):
+            for combined in iter_meth(self._combined):
+                split = combined.split(splitter, 2)
+                try:
+                    type_, value = split
+                except ValueError:
+                    value = ''
+                    type_ = split[0] if combined else ''
+                yield combined, value, type_
+
+        def __str__(self):
+            return str(self._combined)
+
+        def iter_instantiations(self):
+            for comb, value, type_ in self:
+                yield type_, value
+
+        def get_generic(self):
+            new_combined = self._combined
+            type_counts = defaultdict(int)
+            for combined, value, type_ in set(self.__iter__()):
+                if type_:
+                    new_combined = replace_meth(
+                        new_combined, combined,
+                        splitter.join((type_, str(type_counts[type_]))))
+                    type_counts[type_] += 1
+            return type(self)(new_combined)
+
+        def instantiate(self, type_, value, do_abstract=False):
+            """Example: Let self represent
+                da1(a1=T1:v1)&da2(a2=T2:v2)&da3(a3=T1:v3).
+
+            Calling      self.instantiate("T1", "v1")
+            results in
+
+                da1(a1=T1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
+
+                da1(a1=T1)&da2(a2=v2)&da3(a3=T1_other) ..if do_abstract == True
+
+            Calling      self.instantiate("T1", "x1")
+            results in
+
+                da1(a1=x1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
+
+                da1(a1=T1_other)&da2(a2=v2)&da3(a3=T1_other)
+                    ..if do_abstract == True.
+
+            """
+            ret = self._combined
+            for combined, fld_value, fld_type in self:
+                if type_ == fld_type:
+                    if value == fld_value:
+                        ret = replace_meth(ret, combined, type_)
+                    else:
+                        if do_abstract:
+                            ret = replace_meth(
+                                ret, combined,
+                                splitter.join((type_, make_other(type_))))
+                        else:
+                            ret = replace_meth(ret, combined,
+                                splitter.join((type_, fld_value)))
+                elif do_abstract:
+                    ret = replace_meth(ret, combined, fld_type)
+            return ret
+
+        def to_other(self):
+            ret = self._combined
+            for combined, value, type_ in self:
+                ret = replace_meth(ret, combined, make_other(type_))
+            return ret
+
+    if iter_meth is None:
+        iter_meth = replaceable.__iter__
+
+    if replace_meth is None:
+        try:
+            if hasattr(replaceable, 'replaceall'):
+                replace_meth = replaceable.replaceall
+            else:
+                replace_meth = replaceable.replace
+        except AttributeError:
+            raise TypeError("AbstractFeature can be only made out of a type "
+                            "object that defines the `replaceall' or "
+                            "`replace' method unless `replace_meth' was "
+                            "specified.")
+
+    if make_other is None:
+        make_other = lambda abstr: '{ab}-OTHER'.format(ab=abstr)
+
+    return AbstractedFeature
+
+
+def make_abstracted_tuple(abstr_idxs):
+    """Example usage:
+
+        AbTuple2 = make_abstract_tuple((2,))
+        ab_feat = AbTuple2((dai.dat, dai.name,
+                            '='.join(dai.name.upper(), dai.value)))
+        # ...
+        ab_feat.instantiate('food', 'chinese')
+        ab_feat.instantiate('food', 'indian')
+
+    """
+
+    class ReplaceableTuple(tuple):
+        # __slots__ = []
+
+        def __new__(cls, iterable):
+            self = tuple.__new__(cls, iterable)
+            return self
+
+        def iter_combined(self):
+            for idx in abstr_idxs:
+                yield self[idx]
+
+        def replace(self, old, new):
+            for idx in abstr_idxs:
+                if self[idx] == old:
+                    break
+            else:
+                return self
+            return ReplaceableTuple(new if mbr == old else mbr for mbr in self)
+
+        # FIXME!!!
+        def to_other(self):
+            ret = list(self)
+            for idx in abstr_idxs:
+                ret[idx] += "-OTHER"
+            for combined, value_, type_ in self:
+                ret = replace_meth(ret, combined, make_other(type_))
+            return ret
+
+    class AbstractedTuple(
+        make_abstract(ReplaceableTuple,
+                      iter_meth=ReplaceableTuple.iter_combined)):
+        # __slots__ = ['_combined']
+
+        def __init__(self, iterable):
+            self._combined = ReplaceableTuple(iterable)
+
+    return AbstractedTuple
+
+
+### Something like this might form the basis for a new implementation of DAIs.
+### In contrast to the above class template, this is picklable.
+class ReplaceableTuple2(tuple):
+    # __slots__ = []
+
+    def __new__(cls, iterable):
+        self = tuple.__new__(cls, iterable)
+        return self
+
+    def iter_combined(self):
+        yield self[1]
+
+    def replace(self, old, new):
+        if self[1] == old:
+            return ReplaceableTuple2(
+                new if mbr == old else mbr for mbr in self)
+        else:
+            return self
+
+    # FIXME!!!
+    def to_other(self):
+        ret = list(self)
+        ret[1] += "-OTHER"
+        for combined, value_, type_ in self:
+            ret = replace_meth(ret, combined, make_other(type_))
+        return ret
+
+class AbstractedTuple2(
+    make_abstract(ReplaceableTuple2,
+                  iter_meth=ReplaceableTuple2.iter_combined)):
+    # __slots__ = ['_combined', 'instantiable']
+
+    def __init__(self, iterable):
+        self._combined = ReplaceableTuple2(iterable)
+
+
+# class AbstractedFeatures(Features):
+#     __slots__ = ['features', 'set', '_concrete_names', '_concrete_types']
+#
+#     # TODO Document.
+#     def __init__(self):
+#         super(AbstractedFeatures, self).__init__()
+#         self._concrete_names = set()
+#
+#     @property
+#     def concrete_names(self):
+#         """set of instatiations of names from which it was abstracted"""
+#         return self._concrete_names
+#
+#     def add(self, feature):
+#         """Use this method to add a new AbstractedFeature."""
+#         # Register new concrete names, if any are brought in with the new
+#         # feature.
+#         # XXX Not tested.
+#         map_ = feature._comb_name_type
+#         if map_ is not None:
+#             self._concrete_names.update(name for (comb, name, type_) in map_)
+#             self._concrete_types.update(type_ for (comb, name, type_) in map_)
+#         else:
+#             self._concrete_names.update(
+#                 combined.split(feature._splitter, 2)[1] for combined in
+#                 feature._iter_meth(feature._combined))
+#             self._concrete_types.update(
+#                 combined.split(feature._splitter, 2)[0] for combined in
+#                 feature._iter_meth(feature._combined))
+#
+#     def instantiate(self, name):
+#         if name in self._concrete_names:
+#             return self._instantiate_existing(name)
+#         else:
+#             return self.features
+#
+#     @lru_cache(10)
+#     def _instantiate_existing(self, name):
+#         insted = defaultdict(float)
+#         insted.update([feat.instantiate(name) for feat in self.features])
+#         return insted
