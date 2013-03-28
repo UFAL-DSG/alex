@@ -20,6 +20,7 @@ config = None
 def as_project_path(path):
     return os.path.join(env.root(), path)
 
+
 def load_as_module(path, force=False):
     """Loads a file pointed to by `path' as a Python module with minimal impact
     on the global program environment.  The file name should end in '.py'.
@@ -147,13 +148,11 @@ class Config(object):
 
         self.load_includes()
 
-
     def load_includes(self):
         if not self.contains("General", "include"):
             return
         for include in self["General"]["include"]:
             self.merge(include)
-
 
     def merge(self, other):
         """Merges self's config with other's config and saves it as a new

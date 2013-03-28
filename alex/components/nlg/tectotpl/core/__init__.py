@@ -14,4 +14,3 @@ from exception import RuntimeException
 from exception import ScenarioException
 
 from run import Scenario
-from run import Run
