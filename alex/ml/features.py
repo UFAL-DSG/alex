@@ -76,6 +76,28 @@ class Features(object):
                 feat_vec[feature_idxs[key]] = self.features[feature]
         return feat_vec
 
+    def get_feature_coords_vals(self, feature_idxs):
+        """Builds the feature vector based on the provided mapping of features
+        onto their indices.  Returns the vector as a two lists, one of
+        feature coordinates, one of feature values.
+
+        Arguments:
+            feature_idxs: a mapping { feature : feature index }
+
+        """
+        coords = list()
+        vals = list()
+        if hasattr(self, 'generic'):
+            generics = self.generic
+        else:
+            generics = dict()
+        for feature in self.features:
+            key = generics.get(feature, feature)
+            if key in feature_idxs:
+                coords.append(feature_idxs[key])
+                vals.append(self.features[feature])
+        return coords, vals
+
     def prune(self, to_remove=None, min_val=None):
         """Discards specified features.
 
