@@ -12,6 +12,7 @@ from alex.components.nlg.tectotpl.core import Document
 from alex.components.nlg.tectotpl.core.exception import LoadingException
 from alex.components.nlg.tectotpl.core.util import file_stream
 import re
+from alex.components.nlg.tectotpl.core.log import log_info
 
 __author__ = "Ondřej Dušek"
 __date__ = "2013"
@@ -52,6 +53,8 @@ class TectoTemplates(Block):
             zone = bundle.create_zone(self.language, self.selector)
             ttree = zone.create_ttree()
             self.parse_line(line, ttree)
+            log_info('Parsed a tree with %d nodes.' %
+                     len(ttree.get_descendants()))
         fh.close()
         return doc
 
@@ -126,5 +129,6 @@ class TectoTemplates(Block):
                     for gram in values[2].split(','):
                         gram_name, gram_val = gram.split(':')
                         gram_dict[gram_name.strip()] = gram_val.strip()
+                    tnode.gram = gram_dict
                 right = True
         return len(text)

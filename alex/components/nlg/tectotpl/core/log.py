@@ -18,9 +18,9 @@ basicConfig(format=LOGFORMAT, stream=codecs.getwriter('utf-8')(sys.stderr),
 
 def log_info(message):
     "Print an information message"
-    info('TREEX-INFO: ' + message)
+    info('TECTOTPL-INFO: ' + message)
 
 
 def log_warn(message):
     "Print a warning message"
-    warn('TREEX-WARN: ' + message)
+    warn('TECTOTPL-WARN: ' + message)

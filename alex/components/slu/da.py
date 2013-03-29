@@ -105,12 +105,16 @@ class DialogueActItem(object):
         return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
         if self._str is None:
-            eq_val = '="{val}"'.format(val=self._value) if self._value else ''
-            self._str = ("{type_}({name}{eq_val})"
+            eq_val = u'="{val}"'.format(val=self._value) \
+                    if self._value else u''
+            self._str = (u"{type_}({name}{eq_val})"
                          .format(type_=self._dat,
-                                 name=self._name or '',
+                                 name=self._name or u'',
                                  eq_val=eq_val))
         return self._str
 
@@ -343,8 +347,11 @@ class DialogueAct(object):
         if da is not None:
             self.parse(da)
 
+    def __unicode__(self):
+        return '&'.join(unicode(dai) for dai in self.dais)
+
     def __str__(self):
-        return '&'.join(str(dai) for dai in self.dais)
+        return unicode(self).encode('utf-8')
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self.dais) or

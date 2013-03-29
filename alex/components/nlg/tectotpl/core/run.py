@@ -5,9 +5,10 @@
 #
 from __future__ import unicode_literals
 import sys
+import codecs
 from alex.components.nlg.tectotpl.core import ScenarioException
 from alex.components.nlg.tectotpl.core.log import log_info
-from StringIO import StringIO
+from io import StringIO
 
 __author__ = "Ondřej Dušek"
 __date__ = "2012"
@@ -62,7 +63,8 @@ class Scenario(object):
         language = language or self.global_args['language']
         selector = selector or self.global_args.get('selector', '')
         # the first block is supposed to be a reader which creates the document
-        doc = self.blocks[0].process_document(StringIO(string))
+        fh = StringIO(string)
+        doc = self.blocks[0].process_document(fh)
         # apply all other blocks
         for block_no, block in enumerate(self.blocks[1:], start=2):
             log_info('Applying block ' + str(block_no) + '/' +

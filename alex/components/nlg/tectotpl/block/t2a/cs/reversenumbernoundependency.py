@@ -139,6 +139,7 @@ class ReverseNumberNounDependency(Block):
         the English words "most" and 'more'. Normally, the method
         is_incongruent_numeral should be used directly.
         """
-        if is_incongruent_numeral(lemma) or lemma in ['většina', 'menšina']:
+        if self.lexicon.is_incongruent_numeral(lemma) or \
+                lemma in ['většina', 'menšina']:
             return True
         return False

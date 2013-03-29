@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import random
 import itertools
 import copy
@@ -85,10 +87,10 @@ class AbstractTemplateNLG(object):
         """
         if isinstance(tmp, list):
             return random.choice(tmp)
-        elif isinstance(tmp, str):
+        elif isinstance(tmp, basestring):
             return tmp
         else:
-            TemplateNLGException("Unsupported generation type.")
+            raise TemplateNLGException("Unsupported generation type.")
 
     def generate(self, da):
         """\
@@ -164,14 +166,15 @@ class TectoTemplateNLG(AbstractTemplateNLG):
         # check that the configuration contains everything we need
         if not 'NLG' in self.cfg or not 'TectoTemplate' in self.cfg['NLG']:
             raise TemplateNLGException('No configuration found!')
-        if not 'model' in self.cfg or not 'scenario' in self.cfg or \
-                not 'data_dir' in self.cfg:
+        mycfg = self.cfg['NLG']['TectoTemplate']
+        if not 'model' in mycfg or not 'scenario' in mycfg or \
+                not 'data_dir' in mycfg:
             raise TemplateNLGException('NLG scenario, data directory ' +
                                             'and templates must be defined!')
         # load templates
-        self.load_templates(cfg['NLG']['TectoTemplate']['model'])
+        self.load_templates(mycfg['model'])
         # load NLG system
-        self.nlg_rules = Scenario(cfg['NLG']['TectoTemplate'])
+        self.nlg_rules = Scenario(mycfg)
         self.nlg_rules.load_blocks()
 
     def fill_in_template(self, tpl, svs):
@@ -179,5 +182,6 @@ class TectoTemplateNLG(AbstractTemplateNLG):
         Filling in tecto-templates, i.e. filling-in strings to templates
         and using rules to generate the result.
         """
+        tpl = unicode(tpl)
         filled_tpl = tpl.format(**dict(svs))
         return self.nlg_rules.apply_to(filled_tpl)
