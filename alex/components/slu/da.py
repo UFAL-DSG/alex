@@ -778,7 +778,9 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         existing dialogue act item or adds a new dialogue act item.
 
         """
-
+        # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
+        # 'evidence_weight' instead (=1.) and count evidence collected so far
+        # for each fact.
         for i in range(len(self.cn)):
             if dai == self.cn[i][1]:
                 # I found a matching DAI

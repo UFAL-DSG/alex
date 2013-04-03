@@ -6,11 +6,12 @@
 from collections import defaultdict
 import copy
 import cPickle as pickle
-from itertools import izip
+from itertools import izip, repeat
 from math import isnan
 import numpy as np
 from operator import itemgetter
 import random
+from scipy.sparse import csr_matrix, vstack
 
 from sklearn import metrics, tree
 from sklearn.linear_model import LogisticRegression
@@ -24,6 +25,8 @@ from alex.components.slu.da import DialogueActItem, \
 from alex.ml.features import Features, AbstractedTuple2
 from alex.utils.exception import DAILRException, SLUException
 from alex.utils.various import crop_to_finite, flatten
+
+from alex.utils import pdbonerror
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -646,7 +649,7 @@ class DAILogRegClassifier(SLUInterface):
         new_outputs = list()
         for output, output_idxs in outputs_idxs.iteritems():
             n_remains = max_count - len(output_idxs)
-            new_inputs.extend(inputs[random.choice(output_idxs)]
+            new_inputs.extend(inputs[random.choice(output_idxs),:]
                               for _ in xrange(n_remains))
             new_outputs.extend([output] * n_remains)
         # (The following check is to avoid ValueError from numpy.concatenate of
@@ -654,7 +657,8 @@ class DAILogRegClassifier(SLUInterface):
         # If any balancing was done,
         if new_outputs:
             # Return a new, balanced set.
-            return (np.concatenate((inputs, new_inputs)),
+            new_inputs = vstack(new_inputs)
+            return (vstack((inputs, new_inputs)),
                     np.concatenate((outputs, new_outputs)))
         else:
             # Return the original inputs and outputs.
@@ -686,6 +690,7 @@ class DAILogRegClassifier(SLUInterface):
             calib_data = list()
         if verbose:
             coefs_abs_sum = np.zeros(shape=(1, len(self.feature_idxs)))
+        # import ipdb; ipdb.set_trace()
         for dai in sorted(self._dai_counts):
             # before message
             if verbose:
@@ -720,8 +725,11 @@ class DAILogRegClassifier(SLUInterface):
                              if inst_is_compatible(*inst)]
                      for (ut_id, feats) in self.utterance_features.iteritems()}
             all_insts = set(flatten(insts.values()))
-            inputs = list()
+            feat_coords = (list(), list())
+            feat_vals = list()
+            # inputs = list()
             outputs = list()
+            n_rows = 0
             for utt_id, utt_insts in insts.iteritems():
                 if not utt_insts:
                     dai_output = self.get_output_for_dai_tuple(
@@ -730,8 +738,13 @@ class DAILogRegClassifier(SLUInterface):
                     if isnan(dai_output):
                         continue
                     outputs.append(dai_output)
-                    inputs.append(self.utterance_features[utt_id]
-                                  .get_feature_vector(self.feature_idxs))
+                    new_feat_coords, new_feat_vals = (self
+                        .utterance_features[utt_id]
+                        .get_feature_coords_vals(self.feature_idxs))
+                    feat_coords[0].extend(repeat(n_rows, len(new_feat_coords)))
+                    feat_coords[1].extend(new_feat_coords)
+                    feat_vals.extend(new_feat_vals)
+                    n_rows += 1
                 else:
                     for type_, value in utt_insts:
                         # Extract the outputs.
@@ -753,8 +766,13 @@ class DAILogRegClassifier(SLUInterface):
                                         type_, value, do_abstract=do_abstract))
                                 inst_feats.features[feat_inst] += val
                         # Extract the inputs.
-                        inputs.append(
-                            inst_feats.get_feature_vector(self.feature_idxs))
+                        new_feat_coords, new_feat_vals = (inst_feats
+                            .get_feature_coords_vals(self.feature_idxs))
+                        feat_coords[0].extend(repeat(n_rows,
+                                                     len(new_feat_coords)))
+                        feat_coords[1].extend(new_feat_coords)
+                        feat_vals.extend(new_feat_vals)
+                        n_rows += 1
 
             outputs = np.array(outputs, dtype=np.int8)
             # Check whether this DAI has sufficient count of in-/correct
@@ -774,20 +792,35 @@ class DAILogRegClassifier(SLUInterface):
                     continue
 
             # Prune features based on the selection of DAIs.
-            inputs = np.array(inputs, dtype=np.dtype(float)).transpose()
-            n_feats_used = len(inputs)
+            # inputs = np.array(inputs, dtype=np.dtype(float)).transpose()
+            # Create the transposed matrix first (rows indexed by features).
+            # Enforce the right shape.
+            feat_coords[0].append(0)
+            feat_coords[1].append(len(self.feature_idxs) - 1)
+            feat_vals.append(0)
+
+            inputs = csr_matrix((feat_vals, (feat_coords[1], feat_coords[0])))
+            n_feats_used = inputs.shape[0]
             for feat_idx, feat_vec in enumerate(inputs):
                 n_occs = len(filter(
                     lambda feat_val: not (isnan(feat_val) or feat_val == 0),
-                    feat_vec))
+                    (feat_vec[0,obs_idx]
+                     for obs_idx in feat_vec.nonzero()[1])))
                 # Test for minimal number of occurrences.
                 if (n_occs < min_feature_count or
                         (self.idx2feature[feat_idx] in self.concrete_feats
                          and n_occs < min_concrete_feature_count)):
-                    inputs[feat_idx] = 0
+                    for obs_idx in feat_vec.nonzero()[1]:
+                        inputs[feat_idx, obs_idx] = 0
+                    # inputs[feat_idx] = 0
                     n_feats_used -= 1
                 else:
-                    inputs[feat_idx] = map(crop_to_finite, feat_vec)
+                    for obs_idx in feat_vec.nonzero()[1]:
+                        orig_val = inputs[feat_idx, obs_idx]
+                        inputs[feat_idx, obs_idx] = crop_to_finite(orig_val)
+            inputs.eliminate_zeros()
+            # Transpose inputs back to the form with columns indexed by
+            # features, rows by observations.
             inputs = inputs.transpose()
             if verbose:
                 print ("Adaptively pruned features to {cnt}."
@@ -834,7 +867,8 @@ class DAILogRegClassifier(SLUInterface):
                     coefs_abs_sum += clser.tree_.node_count
                 # Count basic metrics.
                 accuracy = clser.score(inputs, outputs)
-                predictions = [clser.predict(obs)[0] for obs in inputs]
+                predictions = [clser.predict(obs)[0]
+                               for obs in csr_matrix(inputs)]
                 precision = metrics.precision_score(predictions, outputs)
                 recall = metrics.recall_score(predictions, outputs)
                 if precision * recall == 0.:
