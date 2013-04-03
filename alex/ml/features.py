@@ -39,6 +39,9 @@ class Features(object):
         # extending self's length by one.
         return self.features[feat] if feat in self.features else 0.
 
+    def __setitem__(self, feat, val):
+        self.features[feat] = val
+
     def __contains__(self, feature):
         """Whether `feature' is among this object's features."""
         return feature in self.features
@@ -130,12 +133,24 @@ class Features(object):
                                 if item[0] not in to_remove_set)
 
     @classmethod
-    def join(cls, *feature_sets):
+    def join(cls, feature_sets, distinguish=True):
         """Joins a number of sets of features, keeping them distinct.
+
+        Arguments:
+            distinguish -- whether to treat the feature sets as of different
+                types (distinguish=True) or just merge features from them by
+                adding their values (distinguish=False).  Default is True.
 
         Returns a new instance of JoinedFeatures.
         """
-        return JoinedFeatures(*feature_sets)
+        if distinguish:
+            return JoinedFeatures(feature_sets)
+        else:
+            feats = Features()
+            for feat_set in feature_sets:
+                for feat, val in feat_set.features.iteritems():
+                    feats.features[feat] += val
+            return feats
 
     def iter_instantiations(self):
         if hasattr(self, 'instantiable'):
@@ -149,7 +164,7 @@ class Features(object):
         while True:
             # FIXME Devise another way to check this is a subclass of the
             # AbstractedFeature template.
-            if hasattr(last_mbr, '_combined'):
+            if isinstance(last_mbr, Abstracted):
                 for tup in last_mbr.iter_instantiations():
                     yield tup
                 return
@@ -168,7 +183,7 @@ class Features(object):
         while last_mbr:
             # FIXME Devise another way to check this is a subclass of the
             # AbstractedFeature template.
-            if hasattr(last_mbr, '_combined'):
+            if isinstance(last_mbr, Abstracted):
                 ret = meth(last_mbr, *args, **kwargs)
                 for prev_mbrs in reversed(parts):
                     ret = (prev_mbrs + (ret,))
@@ -201,9 +216,7 @@ class JoinedFeatures(Features):
             features from self.set that are abstracted
 
     """
-    # __slots__ = ['features', 'set', 'generic', 'instantiable']
-
-    def __init__(self, *feature_sets):
+    def __init__(self, feature_sets):
         self.features = defaultdict(float)
         self.generic = dict()
         self.instantiable = dict()
@@ -230,118 +243,137 @@ class JoinedFeatures(Features):
                 yield inst
 
 
+# TODO Extract the InstantiableI.
+class Abstracted(object):
+    other_val = "[OTHER]"
+    splitter = "="
+
+    # TODO Document.
+    def __init__(self):
+        self.instantiable = {self: self}
+        self.is_generic = False
+
+    def join_typeval(self, type_, val):
+        return self.splitter.join((type_, val))
+
+    def replace_typeval(self, combined, replacement):
+        raise NotImplementedError("This is an abstract method.")
+
+    @classmethod
+    def make_other(cls, type_):
+        return '{t}-OTHER'.format(t=type_)
+
+    def iter_triples(self):
+        for combined_el in self.iter_typeval():
+            split = combined_el.split(self.splitter, 2)
+            try:
+                type_, value = split
+            except ValueError:
+                value = ''
+                type_ = split[0] if combined_el else ''
+            # XXX Change the order of return values to combined_el, type_,
+            # value.
+            yield combined_el, value, type_
+
+    # TODO Rename to something like iter_type_value.
+    def iter_instantiations(self):
+        types = set()
+        for comb, value, type_ in self.iter_triples():
+            types.add(type_)
+            yield type_, value
+        # Construct the other-instantiations for each type yet.
+        for type_ in types:
+            yield type_, self.other_val
+
+    def get_generic(self):
+        new_combined = self
+        type_counts = defaultdict(int)
+        for combined, value, type_ in set(self.iter_triples()):
+            if type_:
+                new_combined = new_combined.replace_typeval(
+                    combined,
+                    self.join_typeval(type_, str(type_counts[type_])))
+                type_counts[type_] += 1
+                new_combined.is_generic = True
+        return new_combined
+
+    def get_concrete(self):
+        ret = self
+        for comb, value, type_ in self.iter_triples():
+            ret = ret.replace_typeval(comb, value)
+        return ret
+
+    def instantiate(self, type_, value, do_abstract=False):
+        """Example: Let self represent
+            da1(a1=T1:v1)&da2(a2=T2:v2)&da3(a3=T1:v3).
+
+        Calling      self.instantiate("T1", "v1")
+        results in
+
+            da1(a1=T1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
+
+            da1(a1=T1)&da2(a2=v2)&da3(a3=T1_other) ..if do_abstract == True
+
+        Calling      self.instantiate("T1", "x1")
+        results in
+
+            da1(a1=x1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
+
+            da1(a1=T1_other)&da2(a2=v2)&da3(a3=T1_other)
+                ..if do_abstract == True.
+
+        """
+        ret = self
+        for combined, fld_value, fld_type in self.iter_triples():
+            if type_ == fld_type:
+                if value == fld_value:
+                    ret = ret.replace_typeval(combined, type_)
+                else:
+                    if do_abstract:
+                        ret = ret.replace_typeval(combined,
+                            self.join_typeval(type_, self.make_other(type_)))
+                    else:
+                        ret = ret.replace_typeval(combined,
+                            self.join_typeval(type_, fld_value))
+            elif do_abstract:
+                ret = ret.replace_typeval(combined, fld_type)
+        return ret
+
+    def all_instantiations(self, do_abstract=False):
+        insts = set()
+        for type_, value in self.iter_instantiations():
+            inst = self.instantiate(type_, value, do_abstract)
+            if inst not in insts:
+                yield inst
+                insts.add(inst)
+        if not insts:
+            yield self
+
+    # XXX Is this used anywhere?
+    def to_other(self):
+        ret = self
+        for combined, value, type_ in self.iter_triples():
+            ret = ret.replace_typeval(combined, self.make_other(type_))
+        return ret
+
+Abstracted.__iter__ = Abstracted.iter_triples
+
+
 def make_abstract(replaceable, iter_meth=None, replace_meth=None, splitter="=",
                   make_other=None):
-    class AbstractedFeature(object):
-        # __slots__ = ['_combined', 'instantiable']
-
-        # TODO Document.
-        def __init__(self, combined):
-            self._combined = combined
-            self.instantiable = {self: self}
-
-        def __cmp__(self, other):
-            if hasattr(other, '_combined'):
-                return ((self._combined >= other._combined) -
-                        (other._combined >= self._combined))
-            else:
-                return 1
-
-        def __hash__(self):
-            return hash(self._combined)
-
-        def __iter__(self):
-            for combined in iter_meth(self._combined):
-                split = combined.split(splitter, 2)
-                try:
-                    type_, value = split
-                except ValueError:
-                    value = ''
-                    type_ = split[0] if combined else ''
-                yield combined, value, type_
-
-        def __str__(self):
-            return str(self._combined)
-
-        def iter_instantiations(self):
-            for comb, value, type_ in self:
-                yield type_, value
-
-        def get_generic(self):
-            new_combined = self._combined
-            type_counts = defaultdict(int)
-            for combined, value, type_ in set(self.__iter__()):
-                if type_:
-                    new_combined = replace_meth(
-                        new_combined, combined,
-                        splitter.join((type_, str(type_counts[type_]))))
-                    type_counts[type_] += 1
-            return type(self)(new_combined)
-
-        def instantiate(self, type_, value, do_abstract=False):
-            """Example: Let self represent
-                da1(a1=T1:v1)&da2(a2=T2:v2)&da3(a3=T1:v3).
-
-            Calling      self.instantiate("T1", "v1")
-            results in
-
-                da1(a1=T1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
-
-                da1(a1=T1)&da2(a2=v2)&da3(a3=T1_other) ..if do_abstract == True
-
-            Calling      self.instantiate("T1", "x1")
-            results in
-
-                da1(a1=x1)&da2(a2=v2)&da3(a3=v3) ..if do_abstract == False
-
-                da1(a1=T1_other)&da2(a2=v2)&da3(a3=T1_other)
-                    ..if do_abstract == True.
-
-            """
-            ret = self._combined
-            for combined, fld_value, fld_type in self:
-                if type_ == fld_type:
-                    if value == fld_value:
-                        ret = replace_meth(ret, combined, type_)
-                    else:
-                        if do_abstract:
-                            ret = replace_meth(
-                                ret, combined,
-                                splitter.join((type_, make_other(type_))))
-                        else:
-                            ret = replace_meth(ret, combined,
-                                splitter.join((type_, fld_value)))
-                elif do_abstract:
-                    ret = replace_meth(ret, combined, fld_type)
-            return ret
-
-        def to_other(self):
-            ret = self._combined
-            for combined, value, type_ in self:
-                ret = replace_meth(ret, combined, make_other(type_))
-            return ret
-
     if iter_meth is None:
         iter_meth = replaceable.__iter__
 
-    if replace_meth is None:
-        try:
-            if hasattr(replaceable, 'replaceall'):
-                replace_meth = replaceable.replaceall
-            else:
-                replace_meth = replaceable.replace
-        except AttributeError:
-            raise TypeError("AbstractFeature can be only made out of a type "
-                            "object that defines the `replaceall' or "
-                            "`replace' method unless `replace_meth' was "
-                            "specified.")
-
-    if make_other is None:
-        make_other = lambda abstr: '{ab}-OTHER'.format(ab=abstr)
+    class AbstractedFeature(Abstracted):
+        def __init__(self):
+            super(AbstractedFeature, self).__init__(
+                iter_meth=iter_meth, replace_meth=replace_meth,
+                splitter=splitter, make_other=make_other)
 
     return AbstractedFeature
 
 
+# DEPRECATED
 def make_abstracted_tuple(abstr_idxs):
     """Example usage:
 
@@ -355,8 +387,6 @@ def make_abstracted_tuple(abstr_idxs):
     """
 
     class ReplaceableTuple(tuple):
-        # __slots__ = []
-
         def __new__(cls, iterable):
             self = tuple.__new__(cls, iterable)
             return self
@@ -385,7 +415,6 @@ def make_abstracted_tuple(abstr_idxs):
     class AbstractedTuple(
         make_abstract(ReplaceableTuple,
                       iter_meth=ReplaceableTuple.iter_combined)):
-        # __slots__ = ['_combined']
 
         def __init__(self, iterable):
             self._combined = ReplaceableTuple(iterable)
@@ -396,7 +425,6 @@ def make_abstracted_tuple(abstr_idxs):
 ### Something like this might form the basis for a new implementation of DAIs.
 ### In contrast to the above class template, this is picklable.
 class ReplaceableTuple2(tuple):
-    # __slots__ = []
 
     def __new__(cls, iterable):
         self = tuple.__new__(cls, iterable)
@@ -423,10 +451,10 @@ class ReplaceableTuple2(tuple):
 class AbstractedTuple2(
     make_abstract(ReplaceableTuple2,
                   iter_meth=ReplaceableTuple2.iter_combined)):
-    # __slots__ = ['_combined', 'instantiable']
 
-    def __init__(self, iterable):
-        self._combined = ReplaceableTuple2(iterable)
+    def __new__(cls, iterable):
+        self = ReplaceableTuple2.__new__(cls, iterable)
+        return self
 
 
 # class AbstractedFeatures(Features):
@@ -453,11 +481,11 @@ class AbstractedTuple2(
 #             self._concrete_types.update(type_ for (comb, name, type_) in map_)
 #         else:
 #             self._concrete_names.update(
-#                 combined.split(feature._splitter, 2)[1] for combined in
-#                 feature._iter_meth(feature._combined))
+#                 combined.split(feature.splitter, 2)[1] for combined in
+#                 feature.iter_typeval(feature._combined))
 #             self._concrete_types.update(
-#                 combined.split(feature._splitter, 2)[0] for combined in
-#                 feature._iter_meth(feature._combined))
+#                 combined.split(feature.splitter, 2)[0] for combined in
+#                 feature.iter_typeval(feature._combined))
 #
 #     def instantiate(self, name):
 #         if name in self._concrete_names:

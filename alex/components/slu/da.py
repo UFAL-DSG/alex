@@ -3,9 +3,10 @@
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
 from collections import defaultdict
+import copy
 from operator import xor
 
-from alex.ml.features import Features, AbstractedTuple2
+from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
@@ -59,7 +60,7 @@ def save_das(file_name, das):
     f.close()
 
 
-class DialogueActItem(object):
+class DialogueActItem(Abstracted):
     """Represents dialogue act item which is a component of a dialogue act.
     Each dialogue act item is composed of
 
@@ -74,6 +75,8 @@ class DialogueActItem(object):
         value: slot value (a string or None)
 
     """
+    splitter = ':'
+
     # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
                  dai=None):
@@ -94,6 +97,8 @@ class DialogueActItem(object):
         if dai:
             self.parse(dai)
 
+        Abstracted.__init__(self)
+
     def __hash__(self):
         # Identity of a DAI is determined by its textual representation.
         # That means, if two DAIs have the same DA type, slot name, and slot
@@ -106,13 +111,52 @@ class DialogueActItem(object):
 
     def __str__(self):
         # Cache the value for repeated calls of this method are expected.
-        if self._str is None:
-            eq_val = '="{val}"'.format(val=self._value) if self._value else ''
-            self._str = ("{type_}({name}{eq_val})"
-                         .format(type_=self._dat,
-                                 name=self._name or '',
-                                 eq_val=eq_val))
+
+        # This check is needed for the DAI gets into a partially constructed
+        # state during copy.deepcopying.
+        try:
+            str_self = self._str
+        except AttributeError:
+            return ''
+        if str_self is None:
+            try:
+                orig_val = next(iter(self._orig_values))
+                self._str = ('{type_}({name}="{val}{spl}{orig}")'
+                            .format(type_=self._dat,
+                                    name=self._name or '',
+                                    val=self._value,
+                                    spl=DialogueActItem.splitter,
+                                    orig=orig_val))
+            except StopIteration:
+                eq_val = ('="{val}"'.format(val=self._value)
+                          if self._value else '')
+                self._str = ("{type_}({name}{eq_val})"
+                            .format(type_=self._dat,
+                                    name=self._name or '',
+                                    eq_val=eq_val))
         return self._str
+
+    def iter_typeval(self):
+        if self.has_category_label():
+            for orig_val in self._orig_values:
+                yield DialogueActItem.splitter.join((self.value, orig_val))
+
+    def replace_typeval(self, orig, replacement):
+        new_dai = copy.deepcopy(self)
+        new_dai._str = None
+        if self.value:
+            insts = (DialogueActItem.splitter.join((self.value, orig))
+                     for orig in self._orig_values)
+            if orig in insts:
+                if DialogueActItem.splitter in replacement:
+                    _type, _value = replacement.split(
+                        DialogueActItem.splitter, 2)
+                    new_dai._value = _type
+                    new_dai._orig_values = set([_value])
+                else:
+                    new_dai._value = replacement
+                    new_dai._orig_values = set([_value])
+        return new_dai
 
     @property
     def dat(self):
@@ -140,6 +184,10 @@ class DialogueActItem(object):
     def value(self, newval):
         self._value = newval
         self._str = None
+
+    @property
+    def orig_values(self):
+        return self._orig_values
 
     @property
     def unnorm_values(self):
@@ -371,6 +419,10 @@ class DialogueAct(object):
 
     def __getitem__(self, idx):
         return self.dais[idx]
+
+    def __setitem__(self, idx, val):
+        assert isinstance(val, DialogueActItem)
+        self.dais[idx] = val
 
     def __iter__(self):
         for dai in self.dais:
@@ -1021,12 +1073,46 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         implicitly sum to one: p + (1-p) == 1.0
 
         """
-
-        for p,  dai in self.cn:
+        for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
                     ("The probability of the {dai!s} dialogue act item is " + \
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+
+    def normalise_by_slot(self):
+        """Ensures that probabilities for alternative values for the same slot
+        sum up to one (taking account for the `other' value).
+        """
+        slot_sums = {dai.name: 0. for (p, dai) in self.cn if dai.name}
+        dai_weights = list()
+        has_prob1 = list()
+        slot_1probs = {dai_name: 0 for dai_name in slot_sums}
+        for p, dai in self.cn:
+            this_has_prob1 = True  # whatever, these values will be overwritten
+            dai_weight = 1.        # or never used
+            if dai.name:
+                # Resolve the special case of p == 1.
+                if p == 1.:
+                    slot_1probs[dai.name] += 1
+                else:
+                    this_has_prob1 = False
+                    dai_weight = p / (1. - p)
+                    slot_sums[dai.name] += dai_weight
+            dai_weights.append(dai_weight)
+            has_prob1.append(this_has_prob1)
+        # Add the probability for any other alternative.
+        for slot in slot_sums:
+            slot_sums[slot] += 1
+        for idx, (p, dai) in enumerate(self.cn):
+            if dai.name:
+                n_ones = slot_1probs[dai.name]
+                # Handle slots where a value had p == 1.
+                if n_ones:
+                    self.cn[idx][0] = (1. / n_ones) if has_prob1[idx] else 0.
+                # The standard case.
+                else:
+                    self.cn[idx][0] = dai_weights[idx] / slot_sums[dai.name]
+        return self
 
     def sort(self):
         self.cn.sort(reverse=True)
