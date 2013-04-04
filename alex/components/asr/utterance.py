@@ -163,21 +163,22 @@ class Utterance(object):
         raise ValueError('Missing "{phrase}" in "{utt}"'
                          .format(phrase=phrase, utt=self.utterance))
 
-    def replace(self, orig, replacement):
+    def replace(self, orig, replacement, return_startidx=False):
         # If `orig' does not occur in self, do nothing, return self.
         try:
             orig_pos = self.index(orig)
         except ValueError:
-            return self
-
-        # If `orig' does occur in self, construct a new utterance with `orig'
-        # replaced by `replacement' and return that.
-        ret = Utterance('')
-        if not isinstance(replacement, list):
-            replacement = list(replacement)
-        ret.utterance = (self.utterance[:orig_pos] + replacement +
-                         self.utterance[orig_pos + len(orig):])
-        return ret
+            ret_utt = self
+            orig_pos = -1
+        else:
+            # If `orig' does occur in self, construct a new utterance with `orig'
+            # replaced by `replacement' and return that.
+            ret_utt = Utterance('')
+            if not isinstance(replacement, list):
+                replacement = list(replacement)
+            ret_utt.utterance = (self.utterance[:orig_pos] + replacement +
+                            self.utterance[orig_pos + len(orig):])
+        return (ret_utt, orig_pos) if return_startidx else ret_utt
 
     def lower(self):
         """Transforms words of this utterance to lower case.
@@ -216,6 +217,110 @@ class Utterance(object):
             yield self.utterance[start_idx:start_idx + n]
         if with_boundaries:
             yield self.utterance[-(n - 1):] + [SENTENCE_END]
+
+
+# TODO Document.
+# TODO Extend to AbstractedLattice.
+# TODO Write tests.
+class AbstractedUtterance(Utterance, Abstracted):
+    other_val = ('[OTHER]', )
+
+    def __init__(self, surface):
+        self._abstr_idxs = list()  # sorted in an increasing order
+        Utterance.__init__(self, surface)
+        Abstracted.__init__(self)
+
+    def __cmp__(self, other):
+        if isinstance(other, AbstractedUtterance):
+            my_key = (self.utterance, self._abstr_idxs)
+            their_key = (other.utterance, other._abstr_idxs)
+            return ((my_key >= their_key) - (their_key >= my_key))
+        else:
+            return 1
+
+    def __hash__(self):
+        return hash((tuple(self.utterance), tuple(self._abstr_idxs)))
+
+    @classmethod
+    def from_utterance(cls, utterance):
+        """Constructs a new AbstractedUtterance from an existing Utterance."""
+        abutt = AbstractedUtterance('')
+        abutt.utterance = utterance.utterance
+        return abutt
+
+    @classmethod
+    def make_other(cls, type_):
+        return ('{t}-OTHER'.format(t=type_[0]), )
+
+    def join_typeval(self, type_, val):
+        return (self.splitter.join((type_[0], ' '.join(val))), )
+
+    def iter_typeval(self):
+        for idx in self._abstr_idxs:
+            yield (self.utterance[idx], )
+
+    def iter_triples(self):
+        for combined_el, in self.iter_typeval():
+            split = combined_el.split(self.splitter, 2)
+            try:
+                type_, value = split
+            except ValueError:
+                value = ''
+                type_ = split[0] if combined_el else ''
+            # XXX Change the order of return values to combined_el, type_,
+            # value.
+            yield (combined_el, ), tuple(value.split(' ')), (type_, )
+
+    def phrase2category_label(self, phrase, catlab):
+        """Replaces the phrase given by `phrase' by a new phrase, given by
+        `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
+
+        """
+        combined_el = self.splitter.join((' '.join(catlab),
+                                          ' '.join(phrase)))
+        return self.replace(phrase, (combined_el, ))
+
+    def replace(self, orig, replacement):
+        """Replaces the phrase given by `orig' by a new phrase, given by
+        `replacement'.
+
+        """
+        replaced, startidx = Utterance.replace(self, orig, replacement,
+                                               return_startidx=True)
+        # XXX This won't work nicely with concrete features, where the
+        # utterance will have multiple words as one -- the whole phrase
+        # abstracted from.
+        if startidx == -1:
+            return self
+        else:
+            # If any replacement took place, reflect it in self.utterance and
+            # self._abstr_idxs.
+            ab_replaced = AbstractedUtterance.from_utterance(replaced)
+            shift = 1 - len(orig)  # the replaced element is now one word
+            inserted_new = False
+            for idx in self._abstr_idxs:
+                # If that word was affected by the replacement,
+                if idx >= startidx:
+                    # Make sure the index of the newly replaced phrase is
+                    # inserted into its place.
+                    if not inserted_new:
+                        ab_replaced._abstr_idxs.append(startidx)
+                        inserted_new = True
+                    # Unless that word was replaced away itself,
+                    if idx > startidx + len(orig):
+                        # Note its new index.
+                        ab_replaced._abstr_idxs.append(idx + shift)
+                else:
+                    ab_replaced._abstr_idxs.append(idx)
+            # Make sure the index of the newly replaced phrase has been
+            # inserted into its place.
+            if not inserted_new:
+                ab_replaced._abstr_idxs.append(startidx)
+            self._abstr_idxs = ab_replaced._abstr_idxs
+        return ab_replaced
+
+# Helper methods for the Abstracted class.
+AbstractedUtterance.replace_typeval = AbstractedUtterance.replace
 
 
 class UtteranceFeatures(Features):

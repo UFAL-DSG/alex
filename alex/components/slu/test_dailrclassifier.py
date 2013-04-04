@@ -22,7 +22,9 @@ CONFIG_DICT = {
     'cldb': as_project_path("applications/CamInfoRest/data/database.py"),
     'type': 'DAILogRegClassifier',
     'DAILogRegClassifier': {
-        'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
+        # 'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
+        'model':
+        as_project_path('applications/CamInfoRest/models/130403_top1000-minf15-mind15-nocal.slu_model')
     },
   }
 }
