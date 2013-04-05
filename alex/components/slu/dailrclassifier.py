@@ -990,7 +990,9 @@ class DAILogRegClassifier(SLUInterface):
             print "Threshold: {thresh}".format(thresh=self.cls_threshold)
             print >>sys.stderr, "Done calibrating the prior."
 
-    def save_model(self, file_name):
+    def save_model(self, file_name, gzip=None):
+        if gzip is None:
+            gzip = file_name.endswith('gz')
         version = '3.0'
         data = (self.feature_idxs,
                 self.clser_type,
@@ -1001,16 +1003,23 @@ class DAILogRegClassifier(SLUInterface):
                 self.cls_threshold,
                 self.abstractions
         )
-        with open(file_name, 'w+') as outfile:
+        if gzip:
+            import gzip
+            open_meth = gzip.open
+        else:
+            open_meth = open
+        with open_meth(file_name, 'wb') as outfile:
             pickle.dump((version, data), outfile)
 
-    ###############################################################
-    ### From here on, the methods come from what used to be the ###
-    ### DAILogRegClassifier class.                              ###
-    ###############################################################
-
     def load_model(self, file_name):
-        with open(file_name, 'r') as infile:
+        # Handle gzipped files.
+        if file_name.endswith('gz'):
+            import gzip
+            open_meth = gzip.open
+        else:
+            open_meth = open
+
+        with open_meth(file_name, 'rb') as infile:
             data = pickle.load(infile)
             if isinstance(data[0], basestring):
                 version = data[0]
