@@ -30,6 +30,15 @@ from alex.utils.various import crop_to_finite, flatten
 from alex.utils import pdbonerror
 
 
+def get_features_from_tree(tree):
+    n_nodes = tree.tree_.node_count
+    left = tree.tree_.children_left
+    right = tree.tree_.children_right
+    feats = tree.tree_.feature
+    return [feat for (feat, left, right) in izip(feats, left, right)
+            if 0 <= left < n_nodes and 0 <= right < n_nodes]
+
+
 class DAILogRegClassifier(SLUInterface):
     """Implements learning of and decoding with dialogue act item classifiers
     based on logistic regression.
@@ -680,11 +689,11 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             coefs_abs_sum = np.zeros(shape=(1, len(self.feature_idxs)))
         # Precompute utterance instantiations.
-        utts_insts = {utt_id: list(utt.iter_instantiations())
-                      for (utt_id, utt) in self.abutterances.iteritems()}
-        inst2str = lambda type_val: (type_val[0][0], ' '.join(type_val[1]))
-        utts_insts_str = {utt_id: map(inst2str, insts)
-                          for (utt_id, insts) in utts_insts.iteritems()}
+        # utts_insts = {utt_id: list(utt.iter_instantiations())
+                      # for (utt_id, utt) in self.abutterances.iteritems()}
+        # inst2str = lambda type_val: (type_val[0][0], ' '.join(type_val[1]))
+        # utts_insts_str = {utt_id: map(inst2str, insts)
+                          # for (utt_id, insts) in utts_insts.iteritems()}
 
         for dai in sorted(self._dai_counts):
             # before message
@@ -701,20 +710,31 @@ class DAILogRegClassifier(SLUInterface):
             dai_dat = dai.dat
             dai_slot = dai.name
             dai_catlab = dai.value
+            dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
+                                else tuple())
             if dai.is_generic:
-                inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
+                # inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
+                compatible_insts = (lambda utt:
+                    utt.insts_for_type(dai_catlab_words))
             else:
                 try:
                     dai_val_proper = next(iter(dai.orig_values))
                 except StopIteration:
                     dai_val_proper = dai.value
-                inst_is_compatible = (lambda type_val:
-                    type_val == (dai_catlab, dai_val_proper))
+                dai_val_proper_words = (tuple(dai_val_proper.split())
+                                        if dai_val_proper else tuple())
+                # inst_is_compatible = (lambda type_val:
+                    # type_val == (dai_catlab, dai_val_proper))
+                compatible_insts = (lambda utt:
+                    utt.insts_for_typeval(dai_catlab_words,
+                                          dai_val_proper_words))
             # insts :: utt_id -> list of instatiations for dai_slot
-            insts = {utt_id: [inst for (inst, inst_str)
-                              in zip(utt_insts, utts_insts_str[utt_id])
-                              if inst_is_compatible(inst_str)]
-                     for (utt_id, utt_insts) in utts_insts.iteritems()}
+            # insts = {utt_id: [inst for (inst, inst_str)
+                              # in zip(utt_insts, utts_insts_str[utt_id])
+                              # if inst_is_compatible(inst_str)]
+                     # for (utt_id, utt_insts) in utts_insts.iteritems()}
+            insts = {utt_id: compatible_insts(utt)
+                     for (utt_id, utt) in self.abutterances.iteritems()}
             all_insts = reduce(set.union, insts.itervalues(), set())
             feat_coords = (list(), list())
             feat_vals = list()
@@ -821,6 +841,8 @@ class DAILogRegClassifier(SLUInterface):
                     clser.fit(inputs, outputs)
                 else:
                     assert self.clser_type == 'tree'
+                    inputs = inputs.toarray()  # dense format required by the
+                                               # decision tree classifier
                     # TODO Make the parameters tunable.
                     clser = tree.DecisionTreeClassifier(min_samples_split=5,
                                                         max_depth=4)
@@ -846,8 +868,12 @@ class DAILogRegClassifier(SLUInterface):
                     coefs_abs_sum += clser.tree_.node_count
                 # Count basic metrics.
                 accuracy = clser.score(inputs, outputs)
-                predictions = [clser.predict(obs)[0]
-                               for obs in csr_matrix(inputs)]
+                if self.clser_type == 'tree':
+                    # Tree requires dense format.
+                    predictions = [clser.predict(obs)[0] for obs in inputs]
+                else:
+                    predictions = [clser.predict(obs)[0]
+                                   for obs in csr_matrix(inputs)]
                 precision = metrics.precision_score(predictions, outputs)
                 recall = metrics.recall_score(predictions, outputs)
                 if precision * recall == 0.:
@@ -888,7 +914,16 @@ class DAILogRegClassifier(SLUInterface):
                             weight_str = ' '.join('{w: >8.2f}'.format(w=weight)
                                                   for weight in feat_weights)
                             print "{w}  {f}".format(w=weight_str, f=feat_str)
-                # (TODO: This could be done for the tree, too.)
+                elif self.clser_type == 'tree':
+                    nonzero_idxs = get_features_from_tree(clser)
+                    if len(nonzero_idxs):
+                        print "Non-zero features:"
+                        # XXX The call to do_with_abstract should probably be
+                        # removed.
+                        for feat_idx in nonzero_idxs:
+                            feat_str = Features.do_with_abstract(
+                                self.idx2feature[feat_idx], str)
+                            print feat_str
                 print
 
         if verbose:
@@ -1057,6 +1092,8 @@ class DAILogRegClassifier(SLUInterface):
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
 
+        import ipdb; ipdb.set_trace()
+
     def get_size(self):
         """Returns the number of features in use."""
         return len(self.features_idxs)
@@ -1170,29 +1207,31 @@ class DAILogRegClassifier(SLUInterface):
             dai_dat = dai.dat
             dai_slot = dai.name
             dai_catlab = dai.value
+            dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
+                                else tuple())
             if dai.is_generic:
-                inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
+                # inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
+                compatible_insts = (lambda utt:
+                    utt.insts_for_type(dai_catlab_words))
             else:
                 try:
                     dai_val_proper = next(iter(dai.orig_values))
                 except StopIteration:
                     dai_val_proper = None
-                inst_is_compatible = (lambda type_val:
-                    type_val == (dai_catlab, dai_val_proper))
+                dai_val_proper_words = (tuple(dai_val_proper.split())
+                                        if dai_val_proper else tuple())
+                # inst_is_compatible = (lambda type_val:
+                    # type_val == (dai_catlab, dai_val_proper))
+                compatible_insts = (lambda utt:
+                    utt.insts_for_typeval(dai_catlab_words,
+                                          dai_val_proper_words))
 
-            # Relic from DSTC.
-            # if da_nblist and any(
-                    # any(dai.name for dai in hyp[1]) for hyp in da_nblist):
-                # insts = set((dai.name, dai.value) for hyp in da_nblist
-                            # for dai in hyp[1]
-                            # if dai.name == dai_slot and dai.value)
-            # else:
-                # insts = None
             if abutterance:
-                insts = list(abutterance.iter_instantiations())
-                insts = [inst for (inst, inst_str)
-                         in zip(insts, map(inst2str, insts))
-                         if inst_is_compatible(inst_str)]
+                # insts = list(abutterance.iter_instantiations())
+                # insts = [inst for (inst, inst_str)
+                         # in zip(insts, map(inst2str, insts))
+                         # if inst_is_compatible(inst_str)]
+                insts = compatible_insts(abutterance)
             else:
                 insts = None
 
