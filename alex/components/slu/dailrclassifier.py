@@ -553,8 +553,8 @@ class DAILogRegClassifier(SLUInterface):
                         and self._dai_counts[dai] < min_dai_count):
                     return False
                 # XXX!!! Hack to pass the test without training a larger model.
-                if dai.dat == 'reqalts':
-                    return False
+                # if dai.dat == 'reqalts':
+                    # return False
                 # # Discard a DAI in the form '(slotname="dontcare")'.
                 # if dai.name is not None and dai.value == "dontcare":
                     # return False
