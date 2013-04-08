@@ -114,10 +114,6 @@ class DialogueActItem(Abstracted):
 
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
-<<<<<<< HEAD
-=======
-
->>>>>>> d933129985ec45d38b882459b8ece36df87f4dd3
         # This check is needed for the DAI gets into a partially constructed
         # state during copy.deepcopying.
         try:
