@@ -3,9 +3,10 @@
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
 from collections import defaultdict
+import copy
 from operator import xor
 
-from alex.ml.features import Features, AbstractedTuple2
+from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.exception import SLUException, DialogueActException, \
     DialogueActItemException, DialogueActNBListException, \
@@ -59,7 +60,7 @@ def save_das(file_name, das):
     f.close()
 
 
-class DialogueActItem(object):
+class DialogueActItem(Abstracted):
     """Represents dialogue act item which is a component of a dialogue act.
     Each dialogue act item is composed of
 
@@ -74,6 +75,8 @@ class DialogueActItem(object):
         value: slot value (a string or None)
 
     """
+    splitter = ':'
+
     # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
                  dai=None):
@@ -94,6 +97,8 @@ class DialogueActItem(object):
         if dai:
             self.parse(dai)
 
+        Abstracted.__init__(self)
+
     def __hash__(self):
         # Identity of a DAI is determined by its textual representation.
         # That means, if two DAIs have the same DA type, slot name, and slot
@@ -109,14 +114,51 @@ class DialogueActItem(object):
 
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
-        if self._str is None:
-            eq_val = u'="{val}"'.format(val=self._value) \
-                    if self._value else u''
-            self._str = (u"{type_}({name}{eq_val})"
-                         .format(type_=self._dat,
-                                 name=self._name or u'',
-                                 eq_val=eq_val))
+        # This check is needed for the DAI gets into a partially constructed
+        # state during copy.deepcopying.
+        try:
+            str_self = self._str
+        except AttributeError:
+            return ''
+        if str_self is None:
+            try:
+                orig_val = next(iter(self._orig_values))
+                self._str = (u'{type_}({name}="{val}{spl}{orig}")'
+                            .format(type_=self._dat,
+                                    name=self._name or '',
+                                    val=self._value,
+                                    spl=DialogueActItem.splitter,
+                                    orig=orig_val))
+            except StopIteration:
+                eq_val = (u'="{val}"'.format(val=self._value)
+                          if self._value else '')
+                self._str = (u"{type_}({name}{eq_val})"
+                            .format(type_=self._dat,
+                                    name=self._name or '',
+                                    eq_val=eq_val))
         return self._str
+
+    def iter_typeval(self):
+        if self.has_category_label():
+            for orig_val in self._orig_values:
+                yield DialogueActItem.splitter.join((self.value, orig_val))
+
+    def replace_typeval(self, orig, replacement):
+        new_dai = copy.deepcopy(self)
+        new_dai._str = None
+        if self.value:
+            insts = (DialogueActItem.splitter.join((self.value, orig))
+                     for orig in self._orig_values)
+            if orig in insts:
+                if DialogueActItem.splitter in replacement:
+                    _type, _value = replacement.split(
+                        DialogueActItem.splitter, 2)
+                    new_dai._value = _type
+                    new_dai._orig_values = set([_value])
+                else:
+                    new_dai._value = replacement
+                    new_dai._orig_values = set([_value])
+        return new_dai
 
     @property
     def dat(self):
@@ -144,6 +186,10 @@ class DialogueActItem(object):
     def value(self, newval):
         self._value = newval
         self._str = None
+
+    @property
+    def orig_values(self):
+        return self._orig_values
 
     @property
     def unnorm_values(self):
@@ -330,11 +376,15 @@ class DialogueAct(object):
 
         inform(food="chinese")&inform(food="chinese")
 
-    """
-    # TODO Document invariants related to the order of DAIs within self.dais.
+    Attributes:
+        dais: a list of DAIs that constitute this dialogue act
 
-    # TODO Rename da to da_str for sake of clarity.
-    def __init__(self, da=None):
+    """
+    # XXX For developers:
+    # When altering self._dais, just make sure self._dais_sorted is updated
+    # too.
+
+    def __init__(self, da_str=None):
         """Initialises this DA.
 
         Arguments:
@@ -342,175 +392,149 @@ class DialogueAct(object):
                 object from
 
         """
-        self.dais = []
+        self._dais = []
 
-        if da is not None:
-            self.parse(da)
+        if da_str is not None:
+            if not isinstance(da_str, basestring):
+                raise DialogueActException("DialogueAct can only be "
+                                           "constructed from a basestring.")
+            self.parse(da_str)
 
     def __unicode__(self):
-        return '&'.join(unicode(dai) for dai in self.dais)
+        return '&'.join(unicode(dai) for dai in self._dais)
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __contains__(self, dai):
-        return ((isinstance(dai, DialogueActItem) and dai in self.dais) or
+        return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
                 (isinstance(dai, str)
-                 and any(map(lambda my_dai: dai == str(my_dai), self.dais))))
+                 and any(dai == str(my_dai) for my_dai in self._dais)))
 
     def __cmp__(self, other):
         if isinstance(other, DialogueAct):
-            if self.dais == other.dais:
+            if self._dais == other.dais:
                 return 0
             self_str = str(self)
-            return (self.dais >= other.dais) - (other.dais >= self.dais)
-        elif isinstance(other, str):
-            self_str = str(self)
+            mydais_sorted = (self._dais if self._dais_sorted else
+                             sorted(self._dais))
+            theirdais_sorted = (other._dais if other._dais_sorted else
+                                sorted(other._dais))
+            return (mydais_sorted >= theirdais_sorted) - (
+                    theirdais_sorted >= mydais_sorted)
+        elif isinstance(other, basestring):
+            mydais_sorted = sorted(self._dais)
+            self_sorted = DialogueAct()
+            self_sorted.dais = mydais_sorted
+            self_str = str(self_sorted)
             return (self_str >= other) - (other >= self_str)
         else:
             DialogueActException("Unsupported comparison type.")
 
     def __hash__(self):
-        return reduce(xor, map(hash, enumerate(self.dais)), 0)
+        return reduce(xor, map(hash, enumerate(self._dais)), 0)
 
     def __len__(self):
-        return len(self.dais)
+        return len(self._dais)
 
     def __getitem__(self, idx):
-        return self.dais[idx]
+        return self._dais[idx]
+
+    def __setitem__(self, idx, val):
+        assert isinstance(val, DialogueActItem)
+        self._dais[idx] = val
+        self._dais_sorted = False
 
     def __iter__(self):
-        for dai in self.dais:
+        for dai in self._dais:
             yield dai
+
+    @property
+    def dais(self):
+        return self._dais
 
     def has_dat(self, dat):
         """Checks whether any of the dialogue act items has a specific dialogue
         act type.
 
         """
-        return any(map(lambda dai: dai.dat == dat, self.dais))
+        return any(dai.dat == dat for dai in self._dais)
 
     def has_only_dat(self, dat):
         """Checks whether all the dialogue act items has a specific dialogue
         act type.
 
         """
-        return all(map(lambda dai: dai.dat == dat, self.dais))
+        return all(dai.dat == dat for dai in self._dais)
 
-    # TODO Make into a class method.
     def parse(self, da):
         """Parse the dialogue act in text format into the structured form.  If
         any DAIs have been already defined for this DA, they will be
         overwritten.
 
         """
-        if self.dais:
-            del self.dais[:]
+        if self._dais:
+            del self._dais[:]
         dais = sorted(split_by(da, splitter='&', opening_parentheses='(',
                                closing_parentheses=')', quotes='"'))
-        self.dais.extend(DialogueActItem(dai=dai) for dai in dais)
+        self._dais.extend(DialogueActItem(dai=dai) for dai in dais)
+        self._dais_sorted = False
 
     def append(self, dai):
         """Append a dialogue act item to the current dialogue act."""
         if isinstance(dai, DialogueActItem):
-            insert_idx = len(self.dais)
-            while insert_idx > 0:
-                insert_idx -= 1
-                if dai >= self.dais[insert_idx]:
-                    if dai == self.dais[insert_idx]:
-                        self.dais[insert_idx].merge_unnorm_values(dai)
-                        return self
-                    insert_idx += 1
-                    break
-            self.dais.insert(insert_idx, dai)
-            return self
-        # XXX Hack for DSTC.
-        elif hasattr(dai, '_combined'):
-            # import ipdb; ipdb.set_trace()
-            self.append(DialogueActItem(dialogue_act_type=dai._combined[0],
-                                        name=dai.__iter__().next()[2]))
+            self._dais.append(dai)
+            self._dais_sorted = False
         else:
             raise DialogueActException(
                 "Only DialogueActItems can be appended.")
 
     def extend(self, dais):
-        if not all(map(lambda obj: isinstance(obj, DialogueActItem), dais)):
+        if not all(isinstance(obj, DialogueActItem) for obj in dais):
             raise DialogueActException("Only DialogueActItems can be added.")
-        self.dais.extend(dais)
-        self.sort()
+        self._dais.extend(dais)
+        self._dais_sorted = False
         return self
 
     def get_slots_and_values(self):
         """Returns all slot names and values in the dialogue act."""
-        return [[dai.name, dai.value] for dai in self.dais if dai.value]
-
-
-    def iter_dai_values(self):
-        for dai in sorted(self.dais):
-            yield dai.value
-
-    def iter_dai_namevalues(self):
-        for dai in sorted(self.dais):
-            if dai.name:
-                if dai.value is not None:
-                    yield '='.join(dai.name, dai.value)
-                else:
-                    yield '{0}='.format(dai.name)
-            else:
-                yield ''
-
-    def replace_dai_values(self, orig_val, new_val):
-        new_da = DialogueAct()
-        for dai in sorted(self.dais, reverse=True):
-            if dai.value == orig_val:
-                new_da.append(DialogueActItem(dai.dat, dai.name, new_val))
-            else:
-                new_da.append(dai)
-        return new_da
-
-    def replace_dai_namevalues(self, orig_val, new_val):
-        new_da = DialogueAct()
-        for dai in sorted(self.dais, reverse=True):
-            if dai.name:
-                if dai.value is not None:
-                    match = ('='.join(dai.name, dai.value) == orig_val)
-                else:
-                    match = ('{0}='.format(dai.name) == orig_val)
-            else:
-                match = ('' == orig_val)
-
-            if match:
-                new_da.append(DialogueActItem(dai.dat, dai.name, new_val))
-            else:
-                new_da.append(dai)
-        return new_da
+        return [[dai.name, dai.value] for dai in self._dais if dai.value]
 
     def sort(self):
-        self.dais.sort()
+        """Sorts own DAIs and merges the same ones."""
+        self._dais.sort()
+        self._dais_sorted = True
         self.merge_same_dais()
         return self
 
     def merge(self, da):
-        """Merges another DialogueAct into self."""
+        """Merges another DialogueAct into self.  This is done by concatenating
+        lists of the DAIs, and sorting and merging own DAIs afterwards.
+
+        """
         if not isinstance(da, DialogueAct):
-            raise DialogueActException("DialogueAct can only be merged with "
-                                       "another DialogueAct")
-        self.dais.extend(da.dais)
+            raise DialogueActException(
+                "DialogueAct can only be merged with another DialogueAct")
+        self._dais.extend(da.dais)
         self.sort()
         return self
 
     def merge_same_dais(self):
         """Merges same DAIs.  I.e., if they are equal on extension but differ
         in original values, merges the original values together, and keeps the
-        single DAI.
+        single DAI.  This method causes the list of DAIs to be sorted.
 
         """
-        if len(self.dais) < 2:
+        if len(self._dais) < 2:
             return
 
+        if not self._dais_sorted:
+            self._dais.sort()
+            self._dais_sorted = True
+
         new_dais = list()
-        prev_dai = self.dais[0]
-        for dai in self.dais[1:]:
+        prev_dai = self._dais[0]
+        for dai in self._dais[1:]:
             if prev_dai == dai:
                 dai.merge_unnorm_values(prev_dai)
             else:
@@ -518,7 +542,7 @@ class DialogueAct(object):
             prev_dai = dai
         else:
             new_dais.append(dai)
-        self.dais = new_dais
+        self._dais = new_dais
         return self
 
 
@@ -534,8 +558,6 @@ class DialogueActFeatures(Features):
             features from self.set that are abstracted
 
     """
-    # __slots__ = ['features', 'set', 'generic', 'instantiable']
-
     def __init__(self, da, include_slotvals=True):
         super(DialogueActFeatures, self).__init__()
         self.generic = dict()
@@ -686,8 +708,6 @@ class DialogueActNBListFeatures(Features):
                           ignored)
 
     """
-    # __slots__ = ['features', 'set', 'generic', 'include_slotvals',
-                 # 'instantiable']
     def __init__(self, da_nblist=None, include_slotvals=True):
         # This initialises the self.features and self.set fields.
         super(DialogueActNBListFeatures, self).__init__()
@@ -785,7 +805,9 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         existing dialogue act item or adds a new dialogue act item.
 
         """
-
+        # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
+        # 'evidence_weight' instead (=1.) and count evidence collected so far
+        # for each fact.
         for i in range(len(self.cn)):
             if dai == self.cn[i][1]:
                 # I found a matching DAI
@@ -1030,12 +1052,46 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         implicitly sum to one: p + (1-p) == 1.0
 
         """
-
-        for p,  dai in self.cn:
+        for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
                     ("The probability of the {dai!s} dialogue act item is " + \
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+
+    def normalise_by_slot(self):
+        """Ensures that probabilities for alternative values for the same slot
+        sum up to one (taking account for the `other' value).
+        """
+        slot_sums = {dai.name: 0. for (p, dai) in self.cn if dai.name}
+        dai_weights = list()
+        has_prob1 = list()
+        slot_1probs = {dai_name: 0 for dai_name in slot_sums}
+        for p, dai in self.cn:
+            this_has_prob1 = True  # whatever, these values will be overwritten
+            dai_weight = 1.        # or never used
+            if dai.name:
+                # Resolve the special case of p == 1.
+                if p == 1.:
+                    slot_1probs[dai.name] += 1
+                else:
+                    this_has_prob1 = False
+                    dai_weight = p / (1. - p)
+                    slot_sums[dai.name] += dai_weight
+            dai_weights.append(dai_weight)
+            has_prob1.append(this_has_prob1)
+        # Add the probability for any other alternative.
+        for slot in slot_sums:
+            slot_sums[slot] += 1
+        for idx, (p, dai) in enumerate(self.cn):
+            if dai.name:
+                n_ones = slot_1probs[dai.name]
+                # Handle slots where a value had p == 1.
+                if n_ones:
+                    self.cn[idx][0] = (1. / n_ones) if has_prob1[idx] else 0.
+                # The standard case.
+                else:
+                    self.cn[idx][0] = dai_weights[idx] / slot_sums[dai.name]
+        return self
 
     def sort(self):
         self.cn.sort(reverse=True)

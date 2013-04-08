@@ -21,6 +21,12 @@ def as_project_path(path):
     return os.path.join(env.root(), path)
 
 
+def _expand_file_var(text, path):
+    # This method has clear limitations, since it ignores the whole Python
+    # syntax.
+    return text.replace('__file__', "'{p}'".format(p=path))
+
+
 def load_as_module(path, force=False):
     """Loads a file pointed to by `path' as a Python module with minimal impact
     on the global program environment.  The file name should end in '.py'.
@@ -44,7 +50,7 @@ def load_as_module(path, force=False):
                 if modname not in sys.modules:
                     happy = True
             temp_file = os.fdopen(temp_fd, 'wb')
-            temp_file.write(open(path, 'rb').read())
+            temp_file.write(_expand_file_var(open(path, 'rb').read(), path))
             temp_file.close()
             path = temp_path
             do_delete_temp = True

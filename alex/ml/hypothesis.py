@@ -5,10 +5,13 @@
 value of a base type instance.
 """
 
+from collections import namedtuple
 from operator import mul
 
 from alex.utils.exception import AlexException
 
+
+_HypWithEv = namedtuple('HypothesisWithEvidence', ['prob', 'fact', 'evidence'])
 
 class NBListException(AlexException):
     pass
@@ -428,14 +431,20 @@ class NBList(Hypothesis):
 #
 # class TypedConfusionNetwork(Hypothesis):
 #     """Typed confusion network."""
+#     # Implemented using this structure for self.net:
+#     # [(type_1, [hyp1, hyp2, ...]),
+#     #  (type_2, [hyp1, hyp2, ...]),
+#     #  ...]
+#     #  where hypn is a _HypWithEv.
+#     # TODO Define a corresponding namedtuple for HypWithEvidence.
 #     def __init__(self):
 #         self.net = list()
 #
 #     def __str__(self):
 #         ret = ('  {t}=({alts})'.format(
 #                t=type_,
-#                alts=(' | '.join('{p:.3f}:{f}'.format(p=prob, f=fact))
-#                      for (prob, fact) in alts))
+#                alts=(' | '.join('{h.p:.3f}:{h.f} ({h.e})'.format(h=hwe)
+#                      for hwe in alts))
 #                for (type_, alts) in self.net)
 #         return '\n'.join(ret)
 #
@@ -453,14 +462,18 @@ class NBList(Hypothesis):
 #         """A method to be overriden in inheriting classes."""
 #         return items
 #
-#     def add(self, probability, type_, fact):
-#         new_item = (probability, fact)
+#     def add(self, probability, type_, fact, evidence=1.):
+#         new_item = (probability, fact, evidence)
 #         for my_type, alts in self.net:
 #             if my_type == type_:
 #                 ins_idx = len(alts)
 #                 for idx, alt in enumerate(alts):
-#                     if alt[1] == fact:
-#                         alts[idx][0] += probability
+#                     cur_prob, cur_fact, cur_ev = alts[idx]
+#                     if cur_fact == fact:
+#                         new_prob = ((cur_ev * cur_prob + evidence * prob)
+#                                     / float(cur_ev + evidence))
+#                         alts[idx][0] = new_prob
+#                         alts[idx][2] += evidence
 #                         return self
 #                     if alt[0] <= probability:
 #                         ins_idx = idx
@@ -486,12 +499,13 @@ class NBList(Hypothesis):
 #             return self._join_items((max_hyps[0], ))
 #
 #     def get_best_hyp(self, use_log=True):
-#         probs = [alts[0][0] for (type_, alts) in self.net if alts[0][0] > .5)]
+#         probs = [alts[0][0] for (type_, alts) in self.net if alts[0][0] > .5]
 #         items = [(type_, alts[0][1]) for (type_, alts) in self.net
-#                  if alts[0][0] > .5)]
+#                  if alts[0][0] > .5]
 #         if use_log:
 #             from math import log
 #             prob = sum(map(log, probs))
 #         else:
 #             prob = reduce(mul, probs, 1.)
 #         return (prob, self._join_items(items))
+#
