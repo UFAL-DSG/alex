@@ -71,3 +71,17 @@ def crop_to_finite(val):
             ret = sys.float_info.max
         return (-1 + 2 * (val > 0)) * ret
     return val
+
+
+def group_by(objects, attrs):
+    """Groups `objects' by the values of their attributes `attrs'.
+
+    Returns a dictionary mapping from a tuple of attribute values to a list of
+    objects with those attribute values.
+
+    """
+    groups = dict()
+    for obj in objects:
+        key = tuple(getattr(obj, attr) for attr in attrs)
+        groups.setdefault(key, []).append(obj)
+    return groups
