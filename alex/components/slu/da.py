@@ -114,27 +114,31 @@ class DialogueActItem(Abstracted):
 
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
+<<<<<<< HEAD
+=======
+
+>>>>>>> d933129985ec45d38b882459b8ece36df87f4dd3
         # This check is needed for the DAI gets into a partially constructed
         # state during copy.deepcopying.
         try:
             str_self = self._str
         except AttributeError:
-            return ''
+            return u''
         if str_self is None:
             try:
                 orig_val = next(iter(self._orig_values))
                 self._str = (u'{type_}({name}="{val}{spl}{orig}")'
                             .format(type_=self._dat,
-                                    name=self._name or '',
+                                    name=self._name or u'',
                                     val=self._value,
                                     spl=DialogueActItem.splitter,
                                     orig=orig_val))
             except StopIteration:
                 eq_val = (u'="{val}"'.format(val=self._value)
-                          if self._value else '')
+                          if self._value else u'')
                 self._str = (u"{type_}({name}{eq_val})"
                             .format(type_=self._dat,
-                                    name=self._name or '',
+                                    name=self._name or u'',
                                     eq_val=eq_val))
         return self._str
 
