@@ -1092,8 +1092,6 @@ class DAILogRegClassifier(SLUInterface):
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
 
-        import ipdb; ipdb.set_trace()
-
     def get_size(self):
         """Returns the number of features in use."""
         return len(self.features_idxs)
