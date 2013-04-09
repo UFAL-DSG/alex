@@ -795,24 +795,37 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Append additional dialogue act item into the confusion network."""
         self.cn.append([probability, dai])
 
-    def add_merge(self, probability, dai, is_normalised=True):
+    def add_merge(self, probability, dai, is_normalised=True,
+                  overwriting=None):
         """Add the probability mass of the passed dialogue act item to an
         existing dialogue act item or adds a new dialogue act item.
+
+        Arguments:
+            probability -- probability of the DAI being added
+            dai -- the DAI being added
+            is_normalised -- whether the probability is already normalised
+                (with respect to all probabilities already present in this
+                confnet and those about to be added)
+            overwriting --
 
         """
         # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
         # 'evidence_weight' instead (=1.) and count evidence collected so far
         # for each fact.
-        for i in range(len(self.cn)):
-            if dai == self.cn[i][1]:
+        for i in xrange(len(self.cn)):
+            existing_dai = self.cn[i][1]
+            if dai == existing_dai:
                 # I found a matching DAI
                 # self.cn[i][0] += probability
                 # DSTC
                 prob_orig = self.cn[i][0]
-                if is_normalised:
-                    self.cn[i][0] += probability
+                if overwriting is not None:
+                    self.cn[i][0] = probability if overwriting else prob_orig
                 else:
-                    self.cn[i][0] = .5 * (prob_orig + probability)
+                    if is_normalised:
+                        self.cn[i][0] += probability
+                    else:
+                        self.cn[i][0] = .5 * (prob_orig + probability)
                 return
         # if not found you should add it
         self.add(probability, dai)

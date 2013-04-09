@@ -549,24 +549,27 @@ class DAILogRegClassifier(SLUInterface):
             _accept_dai = lambda dai: accept_dai(self, dai)
         else:
             def _accept_dai(dai):
-                # TODO Check that generic and bound DAIs are handled correctly
-                # here.
-                #
-                # Discard a DAI that is reasonably complex and yet has too few
-                # occurrences.
+                # Keep all generic classifiers.
                 if dai.is_generic:
                     return True
+                # Discard a DAI that is reasonably complex and yet has too few
+                # occurrences.
                 if (dai.name is not None
                         and dai.value is not None
                         # and not dai.has_category_label()
                         and self._dai_counts[dai] < min_dai_count):
                     return False
-                # XXX!!! Hack to pass the test without training a larger model.
+                # Discard classifiers in the form `inform(name="[OTHER]")'.
+                if dai.val == dai.other_val:
+                    return False
+                # Hack to pass the unit test without training a larger model.
                 # if dai.dat == 'reqalts':
                     # return False
-                # # Discard a DAI in the form '(slotname="dontcare")'.
-                # if dai.name is not None and dai.value == "dontcare":
-                    # return False
+                # Discard a DAI in the form '(slotname="dontcare")'.
+                # (Was 'dai.name is not None and ...' but sometimes, dai.name
+                # was '' when it was expected to actually be None.)
+                if dai.name and dai.value == "dontcare":
+                    return False
                 # Discard a 'null()'. This classifier can be ignored since the
                 # null dialogue act is a complement to all other dialogue acts.
                 return not dai.is_null()
@@ -688,12 +691,6 @@ class DAILogRegClassifier(SLUInterface):
             calib_data = list()
         if verbose:
             coefs_abs_sum = np.zeros(shape=(1, len(self.feature_idxs)))
-        # Precompute utterance instantiations.
-        # utts_insts = {utt_id: list(utt.iter_instantiations())
-                      # for (utt_id, utt) in self.abutterances.iteritems()}
-        # inst2str = lambda type_val: (type_val[0][0], ' '.join(type_val[1]))
-        # utts_insts_str = {utt_id: map(inst2str, insts)
-                          # for (utt_id, insts) in utts_insts.iteritems()}
 
         for dai in sorted(self._dai_counts):
             # before message
@@ -713,7 +710,6 @@ class DAILogRegClassifier(SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
-                # inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
                 compatible_insts = (lambda utt:
                     utt.insts_for_type(dai_catlab_words))
             else:
@@ -723,16 +719,10 @@ class DAILogRegClassifier(SLUInterface):
                     dai_val_proper = dai.value
                 dai_val_proper_words = (tuple(dai_val_proper.split())
                                         if dai_val_proper else tuple())
-                # inst_is_compatible = (lambda type_val:
-                    # type_val == (dai_catlab, dai_val_proper))
                 compatible_insts = (lambda utt:
                     utt.insts_for_typeval(dai_catlab_words,
                                           dai_val_proper_words))
             # insts :: utt_id -> list of instatiations for dai_slot
-            # insts = {utt_id: [inst for (inst, inst_str)
-                              # in zip(utt_insts, utts_insts_str[utt_id])
-                              # if inst_is_compatible(inst_str)]
-                     # for (utt_id, utt_insts) in utts_insts.iteritems()}
             insts = {utt_id: compatible_insts(utt)
                      for (utt_id, utt) in self.abutterances.iteritems()}
             all_insts = reduce(set.union, insts.itervalues(), set())
@@ -1193,9 +1183,6 @@ class DAILogRegClassifier(SLUInterface):
 
         da_confnet = DialogueActConfusionNetwork()
 
-        # TODO Pull out.
-        inst2str = lambda type_val: (type_val[0][0], ' '.join(type_val[1]))
-
         # Try all classifiers we have trained, not only those represented in
         # the input da_nblist (when classifying by DA n-best lists).
         for dai in self.trained_classifiers:
@@ -1208,7 +1195,6 @@ class DAILogRegClassifier(SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
-                # inst_is_compatible = lambda type_val: type_val[0] == dai_catlab
                 compatible_insts = (lambda utt:
                     utt.insts_for_type(dai_catlab_words))
             else:
@@ -1218,17 +1204,11 @@ class DAILogRegClassifier(SLUInterface):
                     dai_val_proper = None
                 dai_val_proper_words = (tuple(dai_val_proper.split())
                                         if dai_val_proper else tuple())
-                # inst_is_compatible = (lambda type_val:
-                    # type_val == (dai_catlab, dai_val_proper))
                 compatible_insts = (lambda utt:
                     utt.insts_for_typeval(dai_catlab_words,
                                           dai_val_proper_words))
 
             if abutterance:
-                # insts = list(abutterance.iter_instantiations())
-                # insts = [inst for (inst, inst_str)
-                         # in zip(insts, map(inst2str, insts))
-                         # if inst_is_compatible(inst_str)]
                 insts = compatible_insts(abutterance)
             else:
                 insts = None
@@ -1252,23 +1232,16 @@ class DAILogRegClassifier(SLUInterface):
                     if verbose:
                         print "Classification result: ", dai_prob
 
-                    # Restore the unnormalised values of the DAI.
-                    # DSTC relic.
-                    # inst_dai = self._get_dais_for_normvalue(
-                        # da_nblist, dai._combined[0], type_, value)
-                    # if dai_prob[0][1] > 0.4:
-                        # import sys
-                        # if not 'ipdb' in sys.modules:
-                            # import ipdb; ipdb.set_trace()
                     inst_dai = DialogueActItem(dai_dat, dai_slot,
                                                ' '.join(value))
                     # Not strictly needed, but this information is easy to
                     # obtain now.
                     inst_dai.value2category_label(dai_catlab)
                     da_confnet.add_merge(dai_prob[0][1], inst_dai,
-                                         is_normalised=False)
+                                         is_normalised=False,
+                                         overwriting=not dai.is_generic)
             else:
-                if not isinstance(dai, DialogueActItem):
+                if dai.is_generic:
                     # Cannot evaluate an abstract classifier with no
                     # instantiations for its slot on the input.
                     continue
