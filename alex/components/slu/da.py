@@ -110,29 +110,31 @@ class DialogueActItem(Abstracted):
         return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
-        # Cache the value for repeated calls of this method are expected.
+        return unicode(self).encode('utf-8')
 
+    def __unicode__(self):
+        # Cache the value for repeated calls of this method are expected.
         # This check is needed for the DAI gets into a partially constructed
         # state during copy.deepcopying.
         try:
             str_self = self._str
         except AttributeError:
-            return ''
+            return u''
         if str_self is None:
             try:
                 orig_val = next(iter(self._orig_values))
-                self._str = ('{type_}({name}="{val}{spl}{orig}")'
+                self._str = (u'{type_}({name}="{val}{spl}{orig}")'
                             .format(type_=self._dat,
-                                    name=self._name or '',
+                                    name=self._name or u'',
                                     val=self._value,
                                     spl=DialogueActItem.splitter,
                                     orig=orig_val))
             except StopIteration:
-                eq_val = ('="{val}"'.format(val=self._value)
-                          if self._value else '')
-                self._str = ("{type_}({name}{eq_val})"
+                eq_val = (u'="{val}"'.format(val=self._value)
+                          if self._value else u'')
+                self._str = (u"{type_}({name}{eq_val})"
                             .format(type_=self._dat,
-                                    name=self._name or '',
+                                    name=self._name or u'',
                                     eq_val=eq_val))
         return self._str
 
@@ -398,8 +400,11 @@ class DialogueAct(object):
                                            "constructed from a basestring.")
             self.parse(da_str)
 
+    def __unicode__(self):
+        return '&'.join(unicode(dai) for dai in self._dais)
+
     def __str__(self):
-        return '&'.join(str(dai) for dai in self._dais)
+        return unicode(self).encode('utf-8')
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
