@@ -285,6 +285,22 @@ class Abstracted(object):
         for type_ in types:
             yield type_, self.other_val
 
+    def insts_for_type(self, type_):
+        return [inst for inst in self.iter_instantiations()
+                if inst[0] == type_]
+
+    def insts_for_typeval(self, type_, value):
+        same_type = [inst for inst in self.iter_instantiations()
+                     if inst[0] == type_]
+        # If self is not instantiable for type_,
+        if not same_type:
+            return same_type  # an empty list
+        # If self knows the instantiation asked for,
+        if (type_, value) in same_type:
+            return ((type_, value), )
+        # Else, instantiate with <other> as the value for `type_'.
+        return ((type_, self.other_val), )
+
     def get_generic(self):
         new_combined = self
         type_counts = defaultdict(int)

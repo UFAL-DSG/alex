@@ -18,6 +18,9 @@ class CategoryLabelDatabase(object):
     """Provides a convenient interface to a database of slot value pairs aka
     category labels.
 
+    Attributes:
+        synonym_value_category: a list of (form, value, category) tuples
+
     """
     def __init__(self, file_name):
         self.database = {}
@@ -29,7 +32,7 @@ class CategoryLabelDatabase(object):
         self._form_upnames_vals = None
 
     def __iter__(self):
-        """Yields tuples (form, value, name) from the database."""
+        """Yields tuples (form, value, category) from the database."""
         for tup in self.synonym_value_category:
             yield tup
 
@@ -45,7 +48,7 @@ class CategoryLabelDatabase(object):
     def form_upnames_vals(self):
         """list of tuples (form, upnames_vals) from the database
         where upnames_vals is a dictionary
-            {name.upper(): all values for this (surface, name)}.
+            {name.upper(): all values for this (form, name)}.
 
         """
         if self._form_upnames_vals is None:
@@ -208,6 +211,7 @@ class SLUPreprocessing(object):
                     match_idx = len(matched_phrases)
                     matched_phrases.append(surface)
                     match_options.append(upnames_vals.viewitems())
+                    # FIXME Rework the `all_options' behaviour in general.
                     utterance_cp = utterance_cp.phrase2category_label(
                         surface, ['__MATCH-{i}__'.format(i=match_idx)])
                 else:
@@ -226,8 +230,14 @@ class SLUPreprocessing(object):
                     valform_for_cl[category_label] = (value, surface)
                     # Assumes the surface strings don't overlap.
                     # FIXME: Perhaps replace all instead of just the first one.
+                    # XXX Temporary solution: we want the new utterance to
+                    # contain the <category>=<value> token instead of the
+                    # original <surface> sequence of tokens.  This is done
+                    # crudely using two subsequent substitutions, so the
+                    # original <surface> gets forgotten.
+                    utterance_cp = utterance_cp.replace(surface, (value, ))
                     utterance_cp = utterance_cp.phrase2category_label(
-                        surface, [category_label])
+                        (value, ), (category_label, ))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -250,6 +260,7 @@ class SLUPreprocessing(object):
                         cl_idx = cl_idxs[sub_idx] = last_cl_idx + 1
                     catlab = '{cat}-{idx}'.format(cat=upname, idx=cl_idx)
                     # Replace this match.
+                    # FIXME Rework the `all_options' behaviour in general.
                     utterance_cpcp = utterance_cpcp.phrase2category_label(
                         ['__MATCH-{i}__'.format(i=sub_idx)], [catlab])
                     # TODO Remember the mapping from the catlab.
@@ -304,9 +315,11 @@ class SLUPreprocessing(object):
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
                 for hyp_idx in hyps_with_surface:
-                    nblist_cp[hyp_idx][1] = (
-                        nblist_cp[hyp_idx][1].phrase2category_label(
-                            surface, [category_label]))
+                    # XXX Temporary solution.  See above for comments on the
+                    # use of replace and phrase2category_label.
+                    new_utt = nblist_cp[hyp_idx][1].replace(surface, (value, ))
+                    nblist_cp[hyp_idx][1] = (new_utt.phrase2category_label(
+                            (value, ), (category_label, )))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= tot_len:
@@ -360,6 +373,15 @@ class SLUPreprocessing(object):
                 # combined = '='.join((cl_for_value[dai.value], dai.value))
                 # da[idx] = DialogueActItem(dai.dat, dai.name, combined)
                 dai.value2category_label(cl_for_value[dai.value])
+            # Insist on substituting values with their types, even if not
+            # justified by the utterance.
+            else:
+                matching_triples = [tup for tup in self.cldb.form_val_upname
+                                    if tup[1] == dai.value and
+                                       tup[2] == dai.name.upper()]
+                # Restrict the choice only to the same category.
+                if matching_triples:
+                    dai.value2category_label(matching_triples[0][2])
 
         return utt_hyp, da, valform_for_cl
 
@@ -371,6 +393,8 @@ class SLUPreprocessing(object):
         """
         utterance = copy.deepcopy(utterance)
         for cl in category_labels:
+            # FIXME: Use a new method, category_label2phrase, which will know
+            # that the new value is not an abstraction for the original one.
             utterance = utterance.phrase2category_label(
                 [cl, ], category_labels[cl][1])
         return utterance
@@ -384,6 +408,8 @@ class SLUPreprocessing(object):
         nblist_cp = copy.deepcopy(utt_nblist)
         for utterance in nblist_cp:
             for cl in category_labels:
+                # FIXME: Use a new method, category_label2phrase, which will know
+                # that the new value is not an abstraction for the original one.
                 utterance = utterance.phrase2category_label(
                     [cl, ], category_labels[cl][1])
         return nblist_cp

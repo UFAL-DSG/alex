@@ -154,13 +154,11 @@ class Config(object):
 
         self.load_includes()
 
-
     def load_includes(self):
         if not self.contains("General", "include"):
             return
         for include in self["General"]["include"]:
             self.merge(include)
-
 
     def merge(self, other):
         """Merges self's config with other's config and saves it as a new

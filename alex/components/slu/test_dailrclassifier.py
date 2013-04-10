@@ -24,7 +24,7 @@ CONFIG_DICT = {
     'DAILogRegClassifier': {
         # 'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
         'model':
-        as_project_path('applications/CamInfoRest/models/130403_top1000-minf15-mind15-nocal.slu_model')
+        as_project_path('applications/CamInfoRest/models/130404_top1000-minf15-minfc10-mind15-nocal-s0.1.slu_model')
     },
   }
 }
