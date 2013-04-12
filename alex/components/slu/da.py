@@ -124,18 +124,18 @@ class DialogueActItem(Abstracted):
             try:
                 orig_val = next(iter(self._orig_values))
                 self._str = (u'{type_}({name}="{val}{spl}{orig}")'
-                            .format(type_=self._dat,
-                                    name=self._name or u'',
-                                    val=self._value,
-                                    spl=DialogueActItem.splitter,
-                                    orig=orig_val))
+                             .format(type_=self._dat,
+                                     name=self._name or u'',
+                                     val=self._value,
+                                     spl=DialogueActItem.splitter,
+                                     orig=orig_val))
             except StopIteration:
                 eq_val = (u'="{val}"'.format(val=self._value)
                           if self._value else u'')
                 self._str = (u"{type_}({name}{eq_val})"
-                            .format(type_=self._dat,
-                                    name=self._name or u'',
-                                    eq_val=eq_val))
+                             .format(type_=self._dat,
+                                     name=self._name or u'',
+                                     eq_val=eq_val))
         return self._str
 
     def iter_typeval(self):
@@ -420,12 +420,12 @@ class DialogueAct(object):
                              sorted(self._dais))
             theirdais_sorted = (other._dais if other._dais_sorted else
                                 sorted(other._dais))
-            return (mydais_sorted >= theirdais_sorted) - (
-                    theirdais_sorted >= mydais_sorted)
+            return ((mydais_sorted >= theirdais_sorted) -
+                    (theirdais_sorted >= mydais_sorted))
         elif isinstance(other, basestring):
             mydais_sorted = sorted(self._dais)
             self_sorted = DialogueAct()
-            self_sorted.dais = mydais_sorted
+            self_sorted._dais = mydais_sorted
             self_str = str(self_sorted)
             return (self_str >= other) - (other >= self_str)
         else:
@@ -475,8 +475,8 @@ class DialogueAct(object):
         """
         if self._dais:
             del self._dais[:]
-        dais = sorted(split_by(da, splitter='&', opening_parentheses='(',
-                               closing_parentheses=')', quotes='"'))
+        dais = split_by(da, splitter='&', opening_parentheses='(',
+                        closing_parentheses=')', quotes='"')
         self._dais.extend(DialogueActItem(dai=dai) for dai in dais)
         self._dais_sorted = False
 
@@ -568,7 +568,8 @@ class DialogueActFeatures(Features):
             try:
                 self.features[(dai.dat, )] += 1.
             except AttributeError:
-                import ipdb; ipdb.set_trace()
+                import ipdb
+                ipdb.set_trace()
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
                 if dai.value is not None:
@@ -728,7 +729,8 @@ class DialogueActNBListFeatures(Features):
             if first_da_feats is None:
                 first_da_feats = da_feats
             for feat, feat_val in da_feats.iteritems():
-                # Include the first rank of features occurring in the n-best list.
+                # Include the first rank of features occurring in the n-best
+                # list.
                 if (0, feat) not in self.features:
                     self.features[(0, feat)] = float(hyp_idx)
                     if feat in da_feats.generic:
