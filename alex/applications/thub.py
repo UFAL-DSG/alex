@@ -7,15 +7,14 @@ import autopath
 
 import argparse
 
-from alex.components.hub import Hub
-from alex.components.asr.utterance import Utterance, UtteranceNBList
+from alex.components.asr.utterance import Utterance, UtteranceNBList, \
+    UtteranceException
 from alex.components.dm.common import dm_factory, get_dm_type
-from alex.components.slu import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.hub import Hub
+from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import *
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.components.nlg.common import nlg_factory, get_nlg_type
-# from alex.components.nlg.template import TemplateNLG
-# XXX Wasn't used.
 from alex.utils.config import Config
 from alex.utils.exception import UtteranceException, TextHubException
 from alex.utils.ui import getTerminalSize

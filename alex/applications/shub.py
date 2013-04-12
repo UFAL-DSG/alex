@@ -5,10 +5,11 @@ import autopath
 import argparse
 
 from alex.components.hub import Hub
-from alex.components.slu.da import DialogueAct, DialogueActNBList
+from alex.components.slu.da import DialogueAct, DialogueActNBList, \
+    DialogueActException, DialogueActItemException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.utils.config import Config
-from alex.utils.exception import SemHubException, DialogueActException, DialogueActItemException
+from alex.utils.exception import SemHubException
 
 class SemHub(Hub):
     """

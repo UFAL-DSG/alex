@@ -19,12 +19,12 @@ from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, \
     UtteranceNBListFeatures, UtteranceHyp
-from alex.components.slu import SLUInterface
+from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
     DialogueActNBListFeatures, merge_slu_confnets
+from alex.components.slu.exception import SLUException
 from alex.ml.features import Abstracted, Features
-from alex.utils.exception import DAILRException, SLUException
 from alex.utils.various import crop_to_finite, flatten
 
 from alex.utils import pdbonerror
@@ -115,6 +115,7 @@ class DAILogRegClassifier(SLUInterface):
     # TODO Document attributes from the original DAILogRegClassifier class
     # (from the load_model method on).
     # TODO Document changes made in slot value abstraction for DSTC.
+    from exception import DAILRException
 
     # TODO Document.
     def __init__(self,

@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import cPickle as pickle
-
-from math import exp
 from collections import defaultdict
+import cPickle as pickle
+from math import exp
+import numpy as np
 
 from sklearn.linear_model import LogisticRegression
 
+from exception import SLUException
 from da import DialogueActItem, DialogueAct
 from dailrclassifier import *
 
 
-class DAIDotKernel:
+class DAIKernelException(SLUException):
+    pass
+
+
+class DAIDotKernel(object):
     """Compute dot kernel function for specific feature vectors.
     """
     def __init__(self):
@@ -31,7 +35,7 @@ class DAIDotKernel:
         return r
 
 
-class DAIAprxDotKernel:
+class DAIAprxDotKernel(object):
     """Compute approximate dot kernel function for specific feature vectors.
     """
     def __init__(self):
@@ -40,10 +44,11 @@ class DAIAprxDotKernel:
     def __call__(self, f1, f2):
         """Compute dot product kernel function.
         """
-        return len(f1.set & f2.set)
+        # return len(f1.set & f2.set)
+        return len(set(f1.features) & set(f2.features))
 
 
-class DAIRadialKernel:
+class DAIRadialKernel(object):
     """Compute radial kernel function for specific feature vectors.
     """
     def __init__(self, gamma=1.0):
@@ -66,7 +71,7 @@ class DAIRadialKernel:
         return exp(-self.gamma * sq_norm)
 
 
-class DAIAprxRadialKernel:
+class DAIAprxRadialKernel(object):
     """Compute approximate radial kernel function for specific feature vectors.
     """
     def __init__(self, gamma=1.0):
@@ -75,13 +80,14 @@ class DAIAprxRadialKernel:
     def __call__(self, f1, f2):
         """Compute the radial basis kernel function.
         """
-        r = len(f1.set ^ f2.set)
+        r = len(set(f1.features) ^ set(f2.features))
 
         return exp(-self.gamma * r)
 
 
-class DAIKerLogRegClassifierLearning:
-    """ Implements learning of dialogue act item classifiers based on kernelized logistic regression.
+class DAIKerLogRegClassifierLearning(object):
+    """Implements learning of dialogue act item classifiers based on kernelized
+    logistic regression.
     """
 
     def __init__(self,
@@ -114,8 +120,11 @@ class DAIKerLogRegClassifierLearning:
         self.category_labels = {}
         if self.preprocessing:
             for k in self.utterances:
-                self.utterances[k] = self.preprocessing.text_normalisation(self.utterances[k])
-                self.utterances[k], self.das[k], self.category_labels[k] = self.preprocessing.values2category_labels_in_da(self.utterances[k], self.das[k])
+                self.utterances[k] = self.preprocessing.text_normalisation(
+                    self.utterances[k])
+                (self.utterances[k], self.das[k], self.category_labels[k]) = (
+                    self.preprocessing.values2category_labels_in_da(
+                        self.utterances[k], self.das[k]))
 
         # generate utterance features
         self.utterance_features = {}
@@ -180,9 +189,10 @@ class DAIKerLogRegClassifierLearning:
             print('%40s = %d' % (k, self.classifiers[k]))
 
     def prune_features(self, verbose=False):
-        """Prune those features that are unique. They are irrelevant for computing dot kernels.
+        """Prune those features that are unique. They are irrelevant for
+        computing dot kernels.
         """
-        # collect all features and prune those occurring only once
+        # Collect all features and prune those occurring only once.
         features = defaultdict(int)
         for k in self.utterance_features:
             for f in self.utterance_features[k]:
@@ -192,7 +202,6 @@ class DAIKerLogRegClassifierLearning:
             print "Total number of features: ", len(features)
 
         self.remove_features = []
-        i = 0
         for k in features:
             if features[k] <= 2:
                 self.remove_features.append(k)
@@ -244,8 +253,10 @@ class DAIKerLogRegClassifierLearning:
             if verbose:
                 mean_accuracy = lr.score(
                     self.kernel_matrix, self.classifiers_training_data[c])
-                print "Training data prediction mean accuracy of the training data: %6.2f" % (100.0 * mean_accuracy, )
-                print "Size of the params:", lr.coef_.shape, "Number of non-zero params:", np.count_nonzero(lr.coef_)
+                print ("Training data prediction mean accuracy of the "
+                       "training data: {0:6.2f}").format(100.0 * mean_accuracy)
+                print "Size of the params:", lr.coef_.shape, ("Number of "
+                      "non-zero params:"), np.count_nonzero(lr.coef_)
 
         if verbose:
             print "Total number of non-zero params:", np.count_nonzero(
@@ -267,19 +278,24 @@ class DAIKerLogRegClassifierLearning:
         f.close()
 
 
-class DAIKerLogRegClassifier:
+class DAIKerLogRegClassifier(object):
     """
-      This parser implements a parser based on set of classifiers for each dialogue act item. When parsing
-      the input utterance, the parse classifies whether a given dialogue act item is present. Then, the output
-      dialogue act is composed of all detected dialogue act items.
+      This parser implements a parser based on set of classifiers for each
+      dialogue act item. When parsing the input utterance, the parse classifies
+      whether a given dialogue act item is present. Then, the output dialogue
+      act is composed of all detected dialogue act items.
 
       Dialogue act is defined as a composition of dialogue act items. E.g.
 
-        confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
+        confirm(drinks="wine")&inform(name="kings shilling")
+            <=>
+        'does kings serve wine'
 
-      where confirm(drinks="wine") and inform(name="kings shilling") are two dialogue act items.
+      where confirm(drinks="wine") and inform(name="kings shilling") are two
+      dialogue act items.
 
-      This parser uses kernelized logistic regression as the classifier of the dialogue act items.
+      This parser uses kernelized logistic regression as the classifier of the
+      dialogue act items.
 
     """
     def __init__(self,
@@ -292,24 +308,26 @@ class DAIKerLogRegClassifier:
         self.preprocessing = preprocessing
 
     def load_model(self, file_name):
-        f = open(file_name, 'r')
-        d = pickle.load(f)
-        self.kernel, self.trained_classifiers, self.utterance_features_list, self.utterance_features = d
-        f.close()
+        with open(file_name, 'rb') as infile:
+            data = pickle.load(infile)
+        (self.kernel, self.trained_classifiers, self.utterance_features_list,
+         self.utterance_features) = data
 
     def get_size(self):
         return len(self.utterance_features_list)
 
     def parse(self, utterance, verbose=False):
-        """Parse utterance and generate the best interpretation in the form of an dialogue act (an instance
-        of DialogueAct.
+        """Parse utterance and generate the best interpretation in the form of
+        an dialogue act (an instance of DialogueAct.
         """
         if verbose:
             print utterance
 
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
-            utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
+            utterance, category_labels = (
+                self.preprocessing.values2category_labels_in_utterance(
+                    utterance))
 
         if verbose:
             print utterance
@@ -328,7 +346,6 @@ class DAIKerLogRegClassifier:
                 utterance_features, self.utterance_features[f])
 
         da = []
-        dacn = {}
         prob = 1.0
         for c in self.trained_classifiers:
             if verbose:
@@ -344,7 +361,8 @@ class DAIKerLogRegClassifier:
                 prob *= p[0][1]
                     # multiply with probability of presence of a dialogue act
             else:
-                prob *= p[0][0]  # multiply with probability of exclusion  of a dialogue act
+                prob *= p[0][0]  # multiply with probability of absence of
+                                 # a dialogue act
 
         if not da:
             da.append('null()')

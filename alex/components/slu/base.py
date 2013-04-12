@@ -7,11 +7,10 @@ import copy
 from collections import defaultdict
 from itertools import product
 
-from alex.components.asr.utterance \
-    import AbstractedUtterance, Utterance, UtteranceHyp, UtteranceNBList, \
-           UtteranceConfusionNetwork
+from exception import DAILRException
+from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
+    UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
 from alex.utils.config import load_as_module
-from alex.utils.exception import SLUException, DAILRException
 
 
 class CategoryLabelDatabase(object):
@@ -67,6 +66,7 @@ class CategoryLabelDatabase(object):
     def load(self, file_name):
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
+            from exception import SLUException
             raise SLUException("The category label database does not define "
                                "the `database' object!")
         self.database = db_mod.database
@@ -463,14 +463,16 @@ class SLUInterface(object):
           - output: SLUHypothesis sub-class
 
     """
-
     def parse_1_best(self, utterance, *args, **kwargs):
+        from exception import SLUException
         raise SLUException("Not implemented")
 
     def parse_nblist(self, utterance_list):
+        from exception import SLUException
         raise SLUException("Not implemented")
 
     def parse_confnet(self, confnet):
+        from exception import SLUException
         raise SLUException("Not implemented")
 
     def parse(self, utterance, *args, **kw):

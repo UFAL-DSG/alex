@@ -6,11 +6,9 @@ from collections import defaultdict
 import copy
 from operator import xor
 
+from alex.components.slu.exception import SLUException
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
-from alex.utils.exception import SLUException, DialogueActException, \
-    DialogueActItemException, DialogueActNBListException, \
-    DialogueActConfusionNetworkException
 from alex.utils.text import split_by
 
 
@@ -58,6 +56,22 @@ def save_das(file_name, das):
         f.write(str(das[u]) + '\n')
 
     f.close()
+
+
+class DialogueActItemException(SLUException):
+    pass
+
+
+class DialogueActException(SLUException):
+    pass
+
+
+class DialogueActNBListException(SLUException):
+    pass
+
+
+class DialogueActConfusionNetworkException(SLUException):
+    pass
 
 
 class DialogueActItem(Abstracted):
@@ -553,9 +567,9 @@ class DialogueActFeatures(Features):
         features: defaultdict(float) of features
         set: set of features
         generic: mapping { feature : generic feature } for features from
-                 self.set that are abstracted
+                 self.features.keys() that are abstracted
         instantiable: mapping { feature : generic part of feature } for
-            features from self.set that are abstracted
+            features from self.features.keys() that are abstracted
 
     """
     def __init__(self, da, include_slotvals=True):
@@ -585,8 +599,6 @@ class DialogueActFeatures(Features):
         # Summary features.
         self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
         self.features['n_dais'] = len(da)
-
-        self.set = set(self.features)
 
 
 class SLUHypothesis(Hypothesis):
@@ -702,15 +714,15 @@ class DialogueActNBListFeatures(Features):
         features: defaultdict(float) of features
         set: set of features
         generic: mapping { feature : generic feature } for features from
-            self.set that are abstracted
+            self.features.keys() that are abstracted
         instantiable: mapping { feature : generic part of feature } for
-            features from self.set that are abstracted
+            features from self.features.keys() that are abstracted
         include_slotvals: whether slot values should be also included (or
                           ignored)
 
     """
     def __init__(self, da_nblist=None, include_slotvals=True):
-        # This initialises the self.features and self.set fields.
+        # This initialises the self.features field.
         super(DialogueActNBListFeatures, self).__init__()
         self.generic = dict()
         self.instantiable = dict()
@@ -751,8 +763,6 @@ class DialogueActNBListFeatures(Features):
             for feat, feat_val in first_da_feats.iteritems():
                 self.features[(2, feat)] = feat_val
 
-        # Keep self.set up to date. (Why is it needed, anyway?)
-        self.set = set(self.features)
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):

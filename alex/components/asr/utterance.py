@@ -5,14 +5,16 @@
 import numpy as np
 
 from collections import defaultdict
+from itertools import izip, product
+from operator import itemgetter, mul
 
 from alex import utils
+from alex.components.slu.exception import SLUException
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
 from alex.ml.features import *
-from alex.utils.exception import UtteranceNBListException
 
 
 SENTENCE_START = '<s>'
@@ -52,6 +54,18 @@ def load_utterances(utt_fname, limit=None):
             utterances[key] = Utterance(utt)
 
     return utterances
+
+
+class UtteranceException(SLUException):
+    pass
+
+
+class UtteranceNBListException(SLUException):
+    pass
+
+
+class UtteranceConfusionNetworkException(SLUException):
+    pass
 
 
 class ASRHypothesis(Hypothesis):
@@ -349,7 +363,7 @@ class UtteranceFeatures(Features):
                 Otherwise, utterance must be an instance of Utterance.
 
         """
-        # This initialises the self.features and self.set fields.
+        # This initialises the self.features field.
         super(UtteranceFeatures, self).__init__()
 
         self.type = type
@@ -394,8 +408,6 @@ class UtteranceFeatures(Features):
         if len(self.features) == 0:
             print '(EE) Utterance with no features: "{utt}"'.format(
                 utt=utterance.utterance)
-
-        self.set = set(self.features.keys())
 
 
 class UtteranceHyp(ASRHypothesis):
@@ -473,7 +485,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
 class UtteranceNBListFeatures(Features):
     # TODO Document.
     def __init__(self, type='ngram', size=3, utt_nblist=None):
-        # This initialises the self.features and self.set fields.
+        # This initialises the self.features field.
         super(UtteranceNBListFeatures, self).__init__()
 
         self.type = type
@@ -508,18 +520,24 @@ class UtteranceNBListFeatures(Features):
             for feat, feat_val in first_utt_feats.iteritems():
                 self.features[(2, feat)] = feat_val
 
-        # Keep self.set up to date. (Why is it needed, anyway?)
-        self.set = set(self.features)
-
 #TODO: You can implement UtteranceConfusionNetwork and
 # UtteranceConfusionNetworkFeatures to serve the similar purpose for
 # DAILogRegClassifier as Utterance and UtteranceFeatures
 #
 # - then the code will be more general
 
-
+# TODO Abstract to ml.features.ConfusionNetwork (not a typed one).
 class UtteranceConfusionNetwork(ASRHypothesis):
-    """Word confusion network"""
+    """Word confusion network
+
+    Attributes:
+        cn: a list of alternatives of the following signature
+            [word_index-> [ alternative ]]
+
+    XXX Are the alternatives always sorted wrt their probability in
+    a decreasing order?
+
+    """
 
     def __init__(self):
         self.cn = []
@@ -545,8 +563,7 @@ class UtteranceConfusionNetwork(ASRHypothesis):
             yield i
 
     def add(self, words):
-        """Adds the next word with its alternatives"""
-
+        """Adds the next word with its alternatives."""
         self.cn.append(words)
 
     def get_best_utterance(self):
@@ -563,6 +580,9 @@ class UtteranceConfusionNetwork(ASRHypothesis):
             utterance.append(alts[0][1])
             prob *= alts[0][0]
 
+        # FIXME Make an utterance constructor that accepts the sentence already
+        # tokenized. Doing it this way may not preserve segmentation into
+        # phrases (if they contain whitespace).
         utterance = ' '.join(utterance).strip()
         return (prob, Utterance(utterance))
 
@@ -699,5 +719,107 @@ class UtteranceConfusionNetwork(ASRHypothesis):
             alts.sort(reverse=True)
 
 
+    def iter_ngrams_fromto(self, from_=None, to=None):
+        """Iterates n-gram hypotheses between the indices `from_' and `to_'."""
+        cn_splice = self.cn[from_:to]
+        partition = reduce(mul,
+                           (sum(prob for (prob, word) in alts)
+                            for alts in cn_splice),
+                           1.)
+        options = [xrange(len(alts)) for alts in cn_splice]
+        for option_seq in product(*options):
+            hyp_seq = [alts[option]
+                       for (alts, option) in izip(cn_splice, option_seq)]
+            measure = reduce(mul, map(itemgetter(0), hyp_seq), 1.)
+            ngram = map(itemgetter(1), hyp_seq)
+            yield (measure / partition, ngram)
+
+    def iter_ngrams(self, n, with_boundaries=False):
+        min_len = n - with_boundaries * 2
+        # If the n-gram so-so fits into the cn.
+        if len(self.cn) <= min_len:
+            if len(self.cn) == min_len:
+                if with_boundaries:
+                    for prob, ngram in self.iter_ngrams_fromto():
+                        yield (prob, [SENTENCE_START] + ngram + [SENTENCE_END])
+                else:
+                    for ngram_hyp in self.iter_ngrams_fromto():
+                        yield ngram_hyp
+            return
+        # Usual cases.
+        if with_boundaries and len(self.cn) > min_len:
+            for prob, ngram in self.iter_ngrams_fromto(0, n - 1):
+                yield (prob, [SENTENCE_START] + ngram)
+        for start_idx in xrange(len(self.cn) - n + 1):
+            for ngram_hyp in self.iter_ngrams_fromto(start_idx, start_idx + n):
+                yield ngram_hyp
+        if with_boundaries:
+            for prob, ngram in self.iter_ngrams_fromto(-(n - 1), None):
+                yield (prob, ngram + [SENTENCE_END])
+
+
+# TODO Document.
+# TODO Extend to AbstractedLattice.
+# TODO Write tests.class UtteranceConfusionNetworkFeatures(Features):
 class UtteranceConfusionNetworkFeatures(Features):
-    pass
+    def __init__(self, type='ngram', size=3, confnet=None):
+        """Creates a vector of confnet features if `confnet' is provided.
+        Otherwise, just saves the type and size of features requested.
+
+        Keyword arguments:
+            - type: the type of features as a string; currently only 'ngram' is
+                implemented
+            - size: maximum order of the (n-gram) features; for skip n-grams,
+                this is the distance between the first and last word plus one
+            - confnet: the confnet for which to extract the features;
+                If confnet is None (the default), an all-zeroes vector is
+                created.
+
+                Otherwise, confnet must be an instance of
+                UtteranceConfusionNetwork.
+
+        """
+        # This initialises the self.features field.
+        super(UtteranceConfusionNetworkFeatures, self).__init__()
+
+        self.type = type
+        self.size = size
+
+        if confnet is not None:
+            self.parse(confnet)
+
+    def parse(self, confnet):
+        """Extracts the features from `confnet'."""
+        if confnet.isempty():
+            self.features['__empty__'] += 1.0
+        elif self.type == 'ngram':
+            # Compute shorter n-grams.
+            for word in confnet:
+                self.features[(word, )] += 1.
+            if self.size >= 2:
+                for ngram in confnet.iter_ngrams(2, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+            # Compute n-grams and skip n-grams for size 3.
+            if self.size >= 3:
+                for ngram in confnet.iter_ngrams(3, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+                    self.features[(ngram[0], '*1', ngram[2])] += 1.
+            # Compute n-grams and skip n-grams for size 4.
+            if self.size >= 4:
+                for ngram in confnet.iter_ngrams(4, with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+                    self.features[(ngram[0], '*2', ngram[3])] += 1.
+            # Compute longer n-grams.
+            for length in xrange(5, self.size + 1):
+                for ngram in confnet.iter_ngrams(length,
+                                                   with_boundaries=True):
+                    self.features[tuple(ngram)] += 1.
+        else:
+            raise NotImplementedError(
+                "Features can be extracted only from an empty confnet or "
+                "for the `ngrams' feature type.")
+
+        if len(self.features) == 0:
+            raise UtteranceConfusionNetworkException(
+                    'No features extracted from the confnet:\n{}'.format(
+                        confnet))

@@ -8,7 +8,7 @@ if __name__ == "__main__":
 import __init__
 
 from alex.components.asr.utterance import UtteranceConfusionNetwork
-from alex.components.slu import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 import alex.components.slu.dailrclassifier as DAILRSLU
