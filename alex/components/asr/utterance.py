@@ -69,7 +69,7 @@ class UtteranceConfusionNetworkException(SLUException):
 
 
 class ASRHypothesis(Hypothesis):
-    """This is a base class for all forms of probabilistic ASR hypotheses
+    """This is the base class for all forms of probabilistic ASR hypotheses
     representations."""
     pass
 
@@ -354,8 +354,9 @@ class UtteranceFeatures(Features):
         Keyword arguments:
             - type: the type of features as a string; currently only 'ngram' is
                 implemented
-            - size: maximum order of the (n-gram) features; for skip n-grams,
-                this is the distance between the first and last word plus one
+            - size: maximum order of the (n-gram) features.  For skip n-grams,
+                this is the distance between the first and last word plus one.
+                Moreover, skip n-grams are considered only up to the length 4.
             - utterance: the utterance for which to extract the features;
                 If utterance is None (the default), an all-zeroes vector is
                 created.
@@ -520,14 +521,14 @@ class UtteranceNBListFeatures(Features):
             for feat, feat_val in first_utt_feats.iteritems():
                 self.features[(2, feat)] = feat_val
 
-#TODO: You can implement UtteranceConfusionNetwork and
-# UtteranceConfusionNetworkFeatures to serve the similar purpose for
-# DAILogRegClassifier as Utterance and UtteranceFeatures
-#
-# - then the code will be more general
 
 # TODO Abstract to ml.features.ConfusionNetwork (not a typed one).
-class UtteranceConfusionNetwork(ASRHypothesis):
+# TODO Make UtteranceConfusionNetwork inherit from Abstracted. It is already
+# handled in dailrclassifier._extract_feats_from_one.  Once the class is
+# defined, try providing input from ASR in the form of the
+# AbstractedConfusionNetwork, extracting features from its instantiations and
+# subsequently processing these as usual.
+class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     """Word confusion network
 
     Attributes:
@@ -562,6 +563,23 @@ class UtteranceConfusionNetwork(ASRHypothesis):
         for i in self.cn:
             yield i
 
+    # Abstracted implementations.
+    # TODO
+    def iter_instantiations(self):
+        return
+
+    def iter_typeval(self, type_, val):
+        return
+
+    def iter_triples(self, type_, val):
+        return
+
+    def instantiate(self, type_, val, do_abstract=False):
+        return self
+
+    # Other methods.
+    def isempty(self):
+        return not self.cn
     def add(self, words):
         """Adds the next word with its alternatives."""
         self.cn.append(words)
@@ -762,6 +780,13 @@ class UtteranceConfusionNetwork(ASRHypothesis):
 # TODO Extend to AbstractedLattice.
 # TODO Write tests.class UtteranceConfusionNetworkFeatures(Features):
 class UtteranceConfusionNetworkFeatures(Features):
+    """Represents features extracted from an utterance hypothesis in the form
+    of a confusion network.  These are simply a probabilistic generalisation of
+    simple utterance features.  Only n-gram (incl. skip n-gram) features are
+    currently implemented.
+
+    """
+
     def __init__(self, type='ngram', size=3, confnet=None):
         """Creates a vector of confnet features if `confnet' is provided.
         Otherwise, just saves the type and size of features requested.
@@ -769,8 +794,9 @@ class UtteranceConfusionNetworkFeatures(Features):
         Keyword arguments:
             - type: the type of features as a string; currently only 'ngram' is
                 implemented
-            - size: maximum order of the (n-gram) features; for skip n-grams,
-                this is the distance between the first and last word plus one
+            - size: maximum order of the (n-gram) features.  For skip n-grams,
+                this is the distance between the first and last word plus one.
+                Moreover, skip n-grams are considered only up to the length 4.
             - confnet: the confnet for which to extract the features;
                 If confnet is None (the default), an all-zeroes vector is
                 created.
@@ -794,26 +820,30 @@ class UtteranceConfusionNetworkFeatures(Features):
             self.features['__empty__'] += 1.0
         elif self.type == 'ngram':
             # Compute shorter n-grams.
-            for word in confnet:
-                self.features[(word, )] += 1.
+            for alts in confnet:
+                for prob, word in alts:
+                    self.features[(word, )] += prob
             if self.size >= 2:
-                for ngram in confnet.iter_ngrams(2, with_boundaries=True):
-                    self.features[tuple(ngram)] += 1.
+                for prob, ngram in confnet.iter_ngrams(
+                        2, with_boundaries=True):
+                    self.features[tuple(ngram)] += prob
             # Compute n-grams and skip n-grams for size 3.
             if self.size >= 3:
-                for ngram in confnet.iter_ngrams(3, with_boundaries=True):
-                    self.features[tuple(ngram)] += 1.
-                    self.features[(ngram[0], '*1', ngram[2])] += 1.
+                for prob, ngram in confnet.iter_ngrams(
+                        3, with_boundaries=True):
+                    self.features[tuple(ngram)] += prob
+                    self.features[(ngram[0], '*1', ngram[2])] += prob
             # Compute n-grams and skip n-grams for size 4.
             if self.size >= 4:
-                for ngram in confnet.iter_ngrams(4, with_boundaries=True):
-                    self.features[tuple(ngram)] += 1.
-                    self.features[(ngram[0], '*2', ngram[3])] += 1.
+                for prob, ngram in confnet.iter_ngrams(
+                        4, with_boundaries=True):
+                    self.features[tuple(ngram)] += prob
+                    self.features[(ngram[0], '*2', ngram[3])] += prob
             # Compute longer n-grams.
             for length in xrange(5, self.size + 1):
-                for ngram in confnet.iter_ngrams(length,
-                                                   with_boundaries=True):
-                    self.features[tuple(ngram)] += 1.
+                for prob, ngram in confnet.iter_ngrams(
+                        length, with_boundaries=True):
+                    self.features[tuple(ngram)] += prob
         else:
             raise NotImplementedError(
                 "Features can be extracted only from an empty confnet or "

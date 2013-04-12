@@ -17,8 +17,9 @@ import sys
 from sklearn import metrics, tree
 from sklearn.linear_model import LogisticRegression
 
-from alex.components.asr.utterance import UtteranceFeatures, \
-    UtteranceNBListFeatures, UtteranceHyp
+from alex.components.asr.utterance import Utterance, \
+    UtteranceConfusionNetwork, UtteranceFeatures, UtteranceNBListFeatures, \
+    UtteranceConfusionNetworkFeatures, UtteranceHyp
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
@@ -184,7 +185,7 @@ class DAILogRegClassifier(SLUInterface):
         # concrete.
         return conc_idxs
 
-    def _extract_feats_from_one(self, utterance=None, abutterance=None,
+    def _extract_feats_from_one(self, utt_hyp=None, abutt_hyp=None,
                                 prev_da=None, utt_nblist=None,
                                 abutt_nblist=None, da_nblist=None,
                                 da_nblist_orig=None, inst=None):
@@ -195,35 +196,52 @@ class DAILogRegClassifier(SLUInterface):
         """
         ft = self.features_type
         fs = self.features_size
+        # Determine the actual class of `utterance'.
+        utt_features_cls = UtteranceFeatures
+        if utt_hyp is not None:
+            if isinstance(utt_hyp, Utterance):
+                utt_features_cls = UtteranceFeatures
+            else:
+                assert isinstance(utt_hyp, UtteranceConfusionNetwork)
+                utt_features_cls = UtteranceConfusionNetworkFeatures
+        # Determine the actual class of `abutt_hyp'.
+        abutt_features_cls = UtteranceFeatures
+        if abutt_hyp is not None:
+            if isinstance(abutt_hyp, Utterance):
+                abutt_features_cls = UtteranceFeatures
+            else:
+                assert isinstance(abutt_hyp, UtteranceConfusionNetwork)
+                abutt_features_cls = UtteranceConfusionNetworkFeatures
+
         # Collect all types of features.
         feat_sets = list()
-        # TODO Generalise (compress the code).
+        # TODO!! Generalise (compress the code).
         if 'ngram' in ft:
             if inst == 'all':
                 for do_abstract in self._do_abstract_values:
                     feats = Features.join(
-                        (UtteranceFeatures('ngram', fs, inst)
+                        (abutt_features_cls('ngram', fs, inst)
                          for inst in
-                         abutterance.all_instantiations(do_abstract)),
+                         abutt_hyp.all_instantiations(do_abstract)),
                         distinguish=False)
                     # Features values can hereby get quite high, but that's
                     # alright, as there will also be correspondingly many
-                    # training examples generated from this utterance.
+                    # training examples generated from this utt_hyp.
                     feat_sets.append(feats)
                 if 'concrete' in self.abstractions:
-                    feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
+                    feat_sets.append(utt_features_cls('ngram', fs, utt_hyp))
             elif inst is None:
                 for do_abstract in self._do_abstract_values:
                     feat_sets.append(Features())
-                feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
+                feat_sets.append(utt_features_cls('ngram', fs, utt_hyp))
             else:
                 # `inst' is an instantiation: (type_, value)
                 for do_abstract in self._do_abstract_values:
-                    utt_inst = abutterance.instantiate(
+                    utt_inst = abutt_hyp.instantiate(
                         inst[0], inst[1], do_abstract=do_abstract)
-                    feat_sets.append(UtteranceFeatures('ngram', fs, utt_inst))
+                    feat_sets.append(abutt_features_cls('ngram', fs, utt_inst))
                 if 'concrete' in self.abstractions:
-                    feat_sets.append(UtteranceFeatures('ngram', fs, utterance))
+                    feat_sets.append(utt_features_cls('ngram', fs, utt_hyp))
 
         if 'prev_da' in ft:
             if prev_da is not None:
@@ -278,10 +296,10 @@ class DAILogRegClassifier(SLUInterface):
         # passed in as an argument)?
         return {utt_id:
                 self._extract_feats_from_one(
-                    utterance=(self.utterances[utt_id]
-                               if self.utterances is not None else None),
-                    abutterance=(self.abutterances[utt_id]
-                                 if self.abutterances is not None else None),
+                    utt_hyp=(self.utterances[utt_id]
+                             if self.utterances is not None else None),
+                    abutt_hyp=(self.abutterances[utt_id]
+                               if self.abutterances is not None else None),
                     prev_da=(prev_das[utt_id]
                              if prev_das is not None else None),
                     utt_nblist=(utt_nblists[utt_id]
@@ -742,8 +760,8 @@ class DAILogRegClassifier(SLUInterface):
                     outputs_orig.append(int(dai in self.das[utt_id]))
                     # Get the input (regressor).
                     utt_feats = self._extract_feats_from_one(
-                        utterance=self.utterances[utt_id],
-                        abutterance=self.abutterances[utt_id])
+                        utt_hyp=self.utterances[utt_id],
+                        abutt_hyp=self.abutterances[utt_id])
                     new_feat_coords, new_feat_vals = (utt_feats
                         .get_feature_coords_vals(self.feature_idxs))
                     feat_coords[0].extend(repeat(n_rows, len(new_feat_coords)))
@@ -759,8 +777,8 @@ class DAILogRegClassifier(SLUInterface):
                         outputs_orig.append(int(inst_dai in self.das[utt_id]))
                         # Instantiate features for this type_=value assignment.
                         utt_feats = self._extract_feats_from_one(
-                            utterance=self.utterances[utt_id],
-                            abutterance=self.abutterances[utt_id],
+                            utt_hyp=self.utterances[utt_id],
+                            abutt_hyp=self.abutterances[utt_id],
                             inst=(type_, value))
                         # Extract the inputs.
                         new_feat_coords, new_feat_vals = (utt_feats
@@ -1202,8 +1220,8 @@ class DAILogRegClassifier(SLUInterface):
 
         # Generate utterance features.
         utterance_features = self._extract_feats_from_one(
-            utterance=utterance,
-            abutterance=abutterance,
+            utt_hyp=utterance,
+            abutt_hyp=abutterance,
             prev_da=prev_da,
             utt_nblist=utt_nblist,
             da_nblist=da_nblist,
@@ -1251,7 +1269,7 @@ class DAILogRegClassifier(SLUInterface):
                     # Extract the inputs, instatiated for this type_=value
                     # assignment.
                     inst_feats = self._extract_feats_from_one(
-                        utterance=utterance, abutterance=abutterance,
+                        utt_hyp=utterance, abutt_hyp=abutterance,
                         inst=(type_, value))
                     feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
 
@@ -1345,27 +1363,77 @@ class DAILogRegClassifier(SLUInterface):
     def parse_confnet(self, confnet, verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
         this N-best list."""
-
-        #TODO: We should implement a parser which uses features directly from
-        # confusion networks.
-
-        # print "Confnet"
-        # print confnet
-        # print
-
         nblist = confnet.get_utterance_nblist(n=40)
+        return self.parse_nblist(nblist)
 
-        # print "NBList"
-        # print nblist
-        # print
+        # XXX Start of the new implementation. It cannot handle preprocessing
+        # and instantiation yet, though, so it is not used as yet.
+        if verbose:
+            print 'Parsing confnet "{cn}".'.format(cn=confnet)
 
-        sem = self.parse_nblist(nblist)
+        if self.preprocessing:
+            # Preprocessing is not implemented for confusion networks.
+            # TODO Implement it.
+            pass
 
-        # print "Semantics"
-        # print sem
-        # print
+        # Generate utterance features.
+        cn_feats = self._extract_feats_from_one(utt_hyp=confnet)
+        conc_feat_vec = (cn_feats.get_feature_vector(self.feature_idxs))
 
-        return sem
+        if verbose >= 2:
+            print 'Features: ', cn_feats
+
+        da_confnet = DialogueActConfusionNetwork()
+
+        # Try all classifiers we have trained, not only those represented in
+        # the input da_nblist (when classifying by DA n-best lists).
+        for dai in self.trained_classifiers:
+            if verbose:
+                print "Using classifier: ", dai
+
+            # TODO Pull out.
+            dai_dat = dai.dat
+            dai_slot = dai.name
+            dai_catlab = dai.value
+            dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
+                                else tuple())
+            if dai.is_generic:
+                compatible_insts = (lambda utt:
+                    utt.insts_for_type(dai_catlab_words))
+            else:
+                try:
+                    dai_val_proper = next(iter(dai.orig_values))
+                except StopIteration:
+                    dai_val_proper = None
+                dai_val_proper_words = (tuple(dai_val_proper.split())
+                                        if dai_val_proper else tuple())
+                compatible_insts = (lambda utt:
+                    utt.insts_for_typeval(dai_catlab_words,
+                                          dai_val_proper_words))
+
+            insts = None
+            # TODO Handle instantiations, once supported by the
+            # UtteranceConfusionNetwork.
+            if dai.is_generic:
+                # Cannot evaluate an abstract classifier with no
+                # instantiations for its slot on the input.
+                continue
+            try:
+                dai_prob = (self.trained_classifiers[dai]
+                            .predict_proba(conc_feat_vec))
+            except Exception as ex:
+                print '(EE) Parsing exception: ', ex
+                continue
+
+            if verbose:
+                print "Classification result: ", dai_prob
+
+            da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
+
+        if verbose:
+            print "DA: ", da_confnet
+
+        return da_confnet
 
 
 # TODO Delete this class.
