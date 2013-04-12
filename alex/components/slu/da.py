@@ -868,7 +868,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return res
 
-    def get_best_da_hyp(self, use_log=False, threshold=.5):
+    def get_best_da_hyp(self, use_log=False, threshold=None, thresholds=None):
         """Return the best dialogue act hypothesis.
 
         Arguments:
@@ -878,8 +878,16 @@ class DialogueActConfusionNetwork(SLUHypothesis):
             threshold: threshold on probabilities -- items with probability
                        exceeding the threshold will be present in the output
                        (default: 0.5)
+            thresholds: threshold on probabilities -- items with probability
+                       exceeding the threshold will be present in the output.
+                       This is a mapping {dai -> threshold}, and if supplied,
+                       overwrites settings of `threshold'.  If not supplied, it
+                       is ignored.
 
         """
+        if thresholds is None:
+            threshold = threshold if threshold is not None else .5
+            thresholds = defaultdict(lambda: threshold)
         da = DialogueAct()
         if use_log:
             from math import log
@@ -887,7 +895,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         else:
             prob = 1.0
         for edge_p, dai in self.cn:
-            if edge_p > threshold:
+            if edge_p > thresholds[dai]:
                 da.append(dai)
                 # multiply with probability of presence of a dialogue act
                 if use_log:

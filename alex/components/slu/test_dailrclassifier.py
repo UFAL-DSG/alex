@@ -45,7 +45,7 @@ class TestDAILRClassifier(unittest.TestCase):
         asr_confnet.normalise()
         asr_confnet.sort()
 
-        slu_best_da = DialogueAct("inform(food=chinese)&inform(=restaurant)")
+        slu_best_da = DialogueAct("inform(=restaurant)&inform(food=chinese)")
 
         cfg = Config(config=CONFIG_DICT)
         cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
@@ -53,7 +53,7 @@ class TestDAILRClassifier(unittest.TestCase):
         slu = DAILRSLU.DAILogRegClassifier(preprocessing)
         slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
         slu_hyp = slu.parse(asr_confnet)
-        slu_hyp_best_da = slu_hyp.get_best_da()
+        slu_hyp_best_da = slu_hyp.get_best_da().sort()
 
         s = []
         s.append("")
