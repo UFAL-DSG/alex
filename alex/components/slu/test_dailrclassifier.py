@@ -15,7 +15,6 @@ import alex.components.slu.dailrclassifier as DAILRSLU
 from alex.utils.config import Config
 from alex.utils.config import as_project_path
 
-
 CONFIG_DICT = {
   'SLU': {
     'debug': True,
@@ -24,7 +23,7 @@ CONFIG_DICT = {
     'DAILogRegClassifier': {
         # 'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
         'model':
-        as_project_path('applications/CamInfoRest/models/130404_top1000-minf15-minfc10-mind15-nocal-s0.1.slu_model')
+        as_project_path('applications/CamInfoRest/models/130412_minf60-minfc35-mind60-s1.0.slu_model.gz')
     },
   }
 }

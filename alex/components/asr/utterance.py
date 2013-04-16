@@ -5,6 +5,7 @@
 import numpy as np
 
 from collections import defaultdict
+import copy
 from itertools import izip, product
 from operator import itemgetter, mul
 
@@ -80,53 +81,58 @@ class Utterance(object):
     # though, because of the way built-in types are constructed.
 
     def __init__(self, surface):
-        self.utterance = surface.split()
+        self._utterance = surface.split()
+        self._wordset = set(self._utterance)
 
     def __str__(self):
-        return ' '.join(self.utterance)
+        return ' '.join(self._utterance)
 
-    def __contains__(self, s):
+    def __contains__(self, phrase):
         try:
-            self.index(s)
+            self.index(phrase)
         except ValueError:
             return False
 
         return True
 
     def __lt__(self, other):
-        return self.utterance < other.utterance
+        return self._utterance < other.utterance
 
     def __le__(self, other):
-        return self.utterance <= other.utterance
+        return self._utterance <= other.utterance
 
     def __eq__(self, other):
         if isinstance(other, Utterance):
-            return self.utterance == other.utterance
+            return self._utterance == other.utterance
         elif isinstance(other, basestring):
-            return self.utterance == other.split()
+            return self._utterance == other.split()
         return False
 
     def __ne__(self, other):
         return not self.__eq__(other.utterance)
 
     def __gt__(self, other):
-        return self.utterance > other.utterance
+        return self._utterance > other.utterance
 
     def __ge__(self, other):
-        return self.utterance >= other.utterance
+        return self._utterance >= other.utterance
 
     def __len__(self):
-        return len(self.utterance)
+        return len(self._utterance)
 
     def __getitem__(self, idx):
-        return self.utterance[idx]
+        return self._utterance[idx]
 
     def __iter__(self):
-        for word in self.utterance:
+        for word in self._utterance:
             yield word
 
+    @property
+    def utterance(self):
+        return self._utterance
+
     def isempty(self):
-        return len(self.utterance) == 0
+        return len(self._utterance) == 0
 
     # TODO cache(1)
     def index(self, phrase):
@@ -141,6 +147,15 @@ class Utterance(object):
         # All through this method, we assume a short length of `phrase', with
         # little or none repeated word tokens.
 
+        # For phrases whose all words are not present anywhere, return quickly.
+        if not all(word in self._wordset for word in phrase):
+            # No match found.
+            raise ValueError('Missing "{phrase}" in "{utt}"'
+                             .format(phrase=phrase, utt=self._utterance))
+
+        # XXX Boyer-Moore could be a faster matching algorithm if the initial
+        # overhead is not too big (which I am afraid it is).
+
         # Compute the maximal skip in case of incomplete match.
         initial = phrase[0]
         for word_count, word in enumerate(phrase[1:], start=1):
@@ -151,15 +166,15 @@ class Utterance(object):
             max_skip = len(phrase)
 
         # last index where the match can start
-        last_idx = len(self.utterance) - len(phrase)
+        last_idx = len(self._utterance) - len(phrase)
         # Iterate over the utterance.
         match_idx = 0
         while match_idx <= last_idx:
             # If the initial word matches,
-            if self.utterance[match_idx] == initial:
+            if self._utterance[match_idx] == initial:
                 # Check the subsequent words too.
                 for phrase_idx in xrange(1, len(phrase)):
-                    if self.utterance[match_idx + phrase_idx] !=\
+                    if self._utterance[match_idx + phrase_idx] !=\
                             phrase[phrase_idx]:
                         break
                 else:
@@ -171,7 +186,7 @@ class Utterance(object):
                 match_idx += 1
         # No match found.
         raise ValueError('Missing "{phrase}" in "{utt}"'
-                         .format(phrase=phrase, utt=self.utterance))
+                         .format(phrase=phrase, utt=self._utterance))
 
     def replace(self, orig, replacement, return_startidx=False):
         # If `orig' does not occur in self, do nothing, return self.
@@ -186,18 +201,20 @@ class Utterance(object):
             ret_utt = Utterance('')
             if not isinstance(replacement, list):
                 replacement = list(replacement)
-            ret_utt.utterance = (self.utterance[:orig_pos] + replacement +
-                            self.utterance[orig_pos + len(orig):])
+            ret_utt.utterance = (self._utterance[:orig_pos] + replacement +
+                            self._utterance[orig_pos + len(orig):])
         return (ret_utt, orig_pos) if return_startidx else ret_utt
 
     def lower(self):
-        """Transforms words of this utterance to lower case.
+        """Lowercases words of this utterance.
 
         BEWARE, this method is destructive, it lowercases self.
 
         """
-        for word_idx in range(len(self.utterance)):
-            self.utterance[word_idx] = self.utterance[word_idx].lower()
+        for widx, word in enumerate(self._utterance):
+            self._utterance[widx] = word.lower()
+            self._utterance[word_idx] = self._utterance[word_idx].lower()
+        self._wordset = set(self._utterance)
         return self
 
     def iter_with_boundaries(self):
@@ -206,27 +223,27 @@ class Utterance(object):
 
         """
         yield SENTENCE_START
-        for word in self.utterance:
+        for word in self._utterance:
             yield word
         yield SENTENCE_END
 
     def iter_ngrams(self, n, with_boundaries=False):
         min_len = n - with_boundaries * 2
         # If the n-gram so-so fits into the utterance.
-        if len(self.utterance) <= min_len:
-            if len(self.utterance) == min_len:
+        if len(self._utterance) <= min_len:
+            if len(self._utterance) == min_len:
                 if with_boundaries:
-                    yield [SENTENCE_START] + self.utterance + [SENTENCE_END]
+                    yield [SENTENCE_START] + self._utterance + [SENTENCE_END]
                 else:
-                    yield self.utterance[:]
+                    yield self._utterance[:]
             return
         # Usual cases.
-        if with_boundaries and len(self.utterance) > min_len:
-            yield [SENTENCE_START] + self.utterance[:n - 1]
-        for start_idx in xrange(len(self.utterance) - n + 1):
-            yield self.utterance[start_idx:start_idx + n]
+        if with_boundaries and len(self._utterance) > min_len:
+            yield [SENTENCE_START] + self._utterance[:n - 1]
+        for start_idx in xrange(len(self._utterance) - n + 1):
+            yield self._utterance[start_idx:start_idx + n]
         if with_boundaries:
-            yield self.utterance[-(n - 1):] + [SENTENCE_END]
+            yield self._utterance[-(n - 1):] + [SENTENCE_END]
 
 
 # TODO Document.
@@ -242,14 +259,14 @@ class AbstractedUtterance(Utterance, Abstracted):
 
     def __cmp__(self, other):
         if isinstance(other, AbstractedUtterance):
-            my_key = (self.utterance, self._abstr_idxs)
+            my_key = (self._utterance, self._abstr_idxs)
             their_key = (other.utterance, other._abstr_idxs)
             return ((my_key >= their_key) - (their_key >= my_key))
         else:
             return 1
 
     def __hash__(self):
-        return hash((tuple(self.utterance), tuple(self._abstr_idxs)))
+        return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
 
     @classmethod
     def from_utterance(cls, utterance):
@@ -267,7 +284,7 @@ class AbstractedUtterance(Utterance, Abstracted):
 
     def iter_typeval(self):
         for idx in self._abstr_idxs:
-            yield (self.utterance[idx], )
+            yield (self._utterance[idx], )
 
     def iter_triples(self):
         for combined_el, in self.iter_typeval():
@@ -303,7 +320,7 @@ class AbstractedUtterance(Utterance, Abstracted):
         if startidx == -1:
             return self
         else:
-            # If any replacement took place, reflect it in self.utterance and
+            # If any replacement took place, reflect it in self._utterance and
             # self._abstr_idxs.
             ab_replaced = AbstractedUtterance.from_utterance(replaced)
             shift = 1 - len(orig)  # the replaced element is now one word
@@ -538,14 +555,23 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     XXX Are the alternatives always sorted wrt their probability in
     a decreasing order?
 
+    TODO Define a lightweight class SimpleHypothesis as a tuple (probability,
+    fact) with easy-to-read indexing. namedtuple might be the best choice.
+
     """
+    other_val = ('[OTHER]', )
 
     def __init__(self):
-        self.cn = []
+        self._abstr_idxs = list()  # :: [ (word idx, alt idx) ]
+                                   # sorted in an increasing order
+        self._cn = []
+        self._wordset = set()
+        ASRHypothesis.__init__(self)
+        Abstracted.__init__(self)
 
     def __str__(self):
         s = []
-        for alts in self.cn:
+        for alts in self._cn:
             ss = []
             for p, w in alts:
                 ss.append("(%.3f : %s) " % (p, w if w else '-'))
@@ -553,40 +579,155 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         return '\n'.join(s)
 
+    def __contains__(self, phrase):
+        try:
+            self.index(phrase)
+        except ValueError:
+            return False
+        return True
+
     def __len__(self):
-        return len(self.cn)
+        return len(self._cn)
 
     def __getitem__(self, i):
-        return self.cn[i]
+        return self._cn[i]
 
     def __iter__(self):
-        for i in self.cn:
-            yield i
+        for alts in self._cn:
+            yield alts
+
+    @property
+    def cn(self):
+        return self._cn
 
     # Abstracted implementations.
-    # TODO
-    def iter_instantiations(self):
-        return
+    @classmethod
+    def make_other(cls, type_):
+        return ('{t}-OTHER'.format(t=type_[0]), )
 
-    def iter_typeval(self, type_, val):
-        return
+    def iter_typeval(self):
+        for widx, altidx in self._abstr_idxs:
+            yield (self._cn[widx][altidx][1], )
 
-    def iter_triples(self, type_, val):
-        return
+    def join_typeval(self, type_, val):
+        return (self.splitter.join((type_[0], ' '.join(val))), )
 
-    def instantiate(self, type_, val, do_abstract=False):
+    def replace_typeval(self, combined, replacement):
+        replaced, repl_idxs = self._replace(combined, replacement)
+        replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
+                                if idx != repl_idxs]
+        return replaced
+
+    def iter_triples(self):
+        for combined_el, in self.iter_typeval():
+            split = combined_el.split(self.splitter, 2)
+            try:
+                type_, value = split
+            except ValueError:
+                value = ''
+                type_ = split[0] if combined_el else ''
+            # XXX Change the order of return values to combined_el, type_,
+            # value.
+            yield (combined_el, ), tuple(value.split(' ')), (type_, )
+
+    # Methods to support preprocessing.
+    def lower(self):
+        """Lowercases words of this confnet.
+
+        BEWARE, this method is destructive, it lowercases self.
+
+        """
+        for widx, alts in enumerate(self._cn):
+            for altidx, alt in enumerate(alts):
+                alts[altidx][1] = alt[1].lower()
+        self._wordset = set(word.lower() for word in self._wordset)
         return self
+
+    def replace(self, phrase, replacement):
+        replaced, repl_idxs = self._replace(phrase, replacement)
+        return replaced
+
+    def phrase2category_label(self, phrase, catlab):
+        """Replaces the phrase given by `phrase' by a new phrase, given by
+        `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
+
+        """
+        combined_el = self.splitter.join((' '.join(catlab),
+                                          ' '.join(phrase)))
+        replaced, repl_idxs = self._replace(phrase, (combined_el, ))
+        if repl_idxs:
+            replaced._abstr_idxs.append(repl_idxs)
+        return replaced
 
     # Other methods.
     def isempty(self):
-        return not self.cn
-    def add(self, words):
-        """Adds the next word with its alternatives."""
-        self.cn.append(words)
+        return not self._cn
+
+    # TODO Test.
+    def index(self, phrase):
+        # Boil out early if any of phrase's words are not present.
+        if not all(word in self._wordset for word in phrase):
+            # No match found.
+            raise ValueError('Missing "{phrase}" in "{cn}"'
+                             .format(phrase=" ".join(phrase), cn=self._cn))
+
+        states = [True] + [False] * len(phrase)  # :: [n_words-> does a prefix
+            #     of `phrase' of length n end in `self' at the current
+            #     position?]
+        for widx, alts in enumerate(self._cn):
+            new_states = [True] + [False] * len(phrase)
+            alt_words = map(itemgetter(1), alts)
+            for phr_widx, state in enumerate(states):
+                if state and phrase[phr_widx] in alt_words:
+                    new_states[phr_widx + 1] = True
+            if new_states[-1]:
+                return widx - len(phrase) + 1
+            states = new_states
+        if states[-1]:
+            return (len(self._cn) - len(phrase))
+        else:
+            # No match found.
+            raise ValueError('Missing "{phrase}" in "{cn}"'
+                             .format(phrase=" ".join(phrase), cn=self._cn))
+
+    # TODO Test.
+    def _replace(self, phrase, replacement):
+        try:
+            start_idx = self.index(phrase)
+        except ValueError:
+            return self, None
+        if len(phrase) != 1 or len(replacement) != 1:
+            raise NotImplementedError(
+                'Replacing in confusion network is currently implemented only '
+                'for phrases consisting of a single word.')
+        alts = self._cn[start_idx]
+        for altidx, (prob, word) in enumerate(alts):
+            if word == phrase[0]:
+                replaced = copy.deepcopy(self)
+                replaced._cn[start_idx][altidx] = (prob, replacement[0])
+                replaced._wordset = set(hyp[1] for alts in replaced._cn
+                                        for hyp in alts)
+                repl_idxs = (start_idx, altidx)
+                break
+        else:
+            replaced = self
+            repl_idxs = None
+        return replaced, repl_idxs
+
+    def add(self, hyps):
+        """Adds a new arc to the confnet with alternatives as specified.
+
+        Arguments:
+            - hyps: an iterable of simple hypotheses -- (probability, word)
+            tuples
+
+        """
+        self._cn.append(hyps)
+        self._wordset.update(hyp[1] for hyp in hyps)
 
     def get_best_utterance(self):
         utterance = []
-        for alts in self.cn:
+        for alts in self._cn:
             utterance.append(alts[0][1])
 
         return ' '.join(utterance).strip()
@@ -594,7 +735,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def get_best_hyp(self):
         utterance = []
         prob = 1.0
-        for alts in self.cn:
+        for alts in self._cn:
             utterance.append(alts[0][1])
             prob *= alts[0][0]
 
@@ -608,7 +749,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         """Return a probability of the given hypothesis."""
 
         prob = 1.0
-        for i, alts in zip(hyp_index, self.cn):
+        for i, alts in zip(hyp_index, self._cn):
             prob *= alts[i][0]
 
         return prob
@@ -621,7 +762,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         for i in range(len(hyp_index)):
             wh = list(hyp_index)
             wh[i] += 1
-            if wh[i] >= len(self.cn[i]):
+            if wh[i] >= len(self._cn[i]):
                 # this generate inadmissible word hypothesis
                 continue
 
@@ -630,7 +771,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return worse_hyp
 
     def get_hyp_index_utterence(self, hyp_index):
-        s = [alts[i][1] for i, alts in zip(hyp_index, self.cn)]
+        s = [alts[i][1] for i, alts in zip(hyp_index, self._cn)]
 
         return Utterance(' '.join(s))
 
@@ -649,7 +790,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         closed_hyp = {}
 
         # create index for the best hypothesis
-        best_hyp = tuple([0] * len(self.cn))
+        best_hyp = tuple([0] * len(self._cn))
         best_prob = self.get_prob(best_hyp)
         open_hyp.append((best_prob, best_hyp))
 
@@ -699,7 +840,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
     def prune(self, prune_prob=0.001):
         pruned_cn = []
-        for alts in self.cn:
+        for alts in self._cn:
             if not alts[0][1] and alts[0][0] > 1.0 - prune_prob:
                 # prune out silences
                 continue
@@ -718,11 +859,12 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
             pruned_cn.append(alts)
 
-        self.cn = pruned_cn
+        self._cn = pruned_cn
+        self._wordset = set(hyp[1] for alts in self._cn for hyp in alts)
 
     def normalise(self):
         """Makes sure that all probabilities adds up to one."""
-        for alts in self.cn:
+        for alts in self._cn:
             sum = 0.0
             for p, w in alts:
                 sum += p
@@ -733,13 +875,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def sort(self):
         """Sort the alternatives for each word according their probability."""
 
-        for alts in self.cn:
+        for alts in self._cn:
             alts.sort(reverse=True)
 
 
     def iter_ngrams_fromto(self, from_=None, to=None):
         """Iterates n-gram hypotheses between the indices `from_' and `to_'."""
-        cn_splice = self.cn[from_:to]
+        cn_splice = self._cn[from_:to]
         partition = reduce(mul,
                            (sum(prob for (prob, word) in alts)
                             for alts in cn_splice),
@@ -755,8 +897,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def iter_ngrams(self, n, with_boundaries=False):
         min_len = n - with_boundaries * 2
         # If the n-gram so-so fits into the cn.
-        if len(self.cn) <= min_len:
-            if len(self.cn) == min_len:
+        if len(self._cn) <= min_len:
+            if len(self._cn) == min_len:
                 if with_boundaries:
                     for prob, ngram in self.iter_ngrams_fromto():
                         yield (prob, [SENTENCE_START] + ngram + [SENTENCE_END])
@@ -765,10 +907,10 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                         yield ngram_hyp
             return
         # Usual cases.
-        if with_boundaries and len(self.cn) > min_len:
+        if with_boundaries and len(self._cn) > min_len:
             for prob, ngram in self.iter_ngrams_fromto(0, n - 1):
                 yield (prob, [SENTENCE_START] + ngram)
-        for start_idx in xrange(len(self.cn) - n + 1):
+        for start_idx in xrange(len(self._cn) - n + 1):
             for ngram_hyp in self.iter_ngrams_fromto(start_idx, start_idx + n):
                 yield ngram_hyp
         if with_boundaries:

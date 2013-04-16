@@ -1363,8 +1363,8 @@ class DAILogRegClassifier(SLUInterface):
     def parse_confnet(self, confnet, verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
         this N-best list."""
-        nblist = confnet.get_utterance_nblist(n=40)
-        return self.parse_nblist(nblist)
+        # nblist = confnet.get_utterance_nblist(n=40)
+        # return self.parse_nblist(nblist)
 
         # XXX Start of the new implementation. It cannot handle preprocessing
         # and instantiation yet, though, so it is not used as yet.
@@ -1372,12 +1372,15 @@ class DAILogRegClassifier(SLUInterface):
             print 'Parsing confnet "{cn}".'.format(cn=confnet)
 
         if self.preprocessing:
-            # Preprocessing is not implemented for confusion networks.
-            # TODO Implement it.
-            pass
+            confnet = self.preprocessing.normalise_confnet(confnet)
+            ab_confnet, catlabs = (
+                self.preprocessing.values2category_labels_in_confnet(confnet))
+        else:
+            catlabs = dict()
 
         # Generate utterance features.
-        cn_feats = self._extract_feats_from_one(utt_hyp=confnet)
+        cn_feats = self._extract_feats_from_one(utt_hyp=confnet,
+                                                abutt_hyp=ab_confnet)
         conc_feat_vec = (cn_feats.get_feature_vector(self.feature_idxs))
 
         if verbose >= 2:
@@ -1398,8 +1401,8 @@ class DAILogRegClassifier(SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
-                compatible_insts = (lambda utt:
-                    utt.insts_for_type(dai_catlab_words))
+                compatible_insts = (lambda confnet:
+                    confnet.insts_for_type(dai_catlab_words))
             else:
                 try:
                     dai_val_proper = next(iter(dai.orig_values))
@@ -1407,36 +1410,57 @@ class DAILogRegClassifier(SLUInterface):
                     dai_val_proper = None
                 dai_val_proper_words = (tuple(dai_val_proper.split())
                                         if dai_val_proper else tuple())
-                compatible_insts = (lambda utt:
-                    utt.insts_for_typeval(dai_catlab_words,
-                                          dai_val_proper_words))
+                compatible_insts = (lambda confnet:
+                    confnet.insts_for_typeval(dai_catlab_words,
+                                              dai_val_proper_words))
 
-            insts = None
-            # TODO Handle instantiations, once supported by the
-            # UtteranceConfusionNetwork.
-            if dai.is_generic:
-                # Cannot evaluate an abstract classifier with no
-                # instantiations for its slot on the input.
-                continue
-            try:
-                dai_prob = (self.trained_classifiers[dai]
-                            .predict_proba(conc_feat_vec))
-            except Exception as ex:
-                print '(EE) Parsing exception: ', ex
-                continue
+            insts = compatible_insts(ab_confnet)
 
-            if verbose:
-                print "Classification result: ", dai_prob
+            if insts:
+                for type_, value in insts:
+                    # Extract the inputs, instatiated for this type_=value
+                    # assignment.
+                    inst_feats = self._extract_feats_from_one(
+                        utt_hyp=confnet, abutt_hyp=ab_confnet,
+                        inst=(type_, value))
+                    feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
 
-            da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
+                    try:
+                        dai_prob = (self.trained_classifiers[dai]
+                                    .predict_proba(feat_vec))
+                    except Exception as ex:
+                        print '(EE) Parsing exception: ', ex
+                        continue
+
+                    if verbose:
+                        print "Classification result: ", dai_prob
+
+                    inst_dai = DialogueActItem(dai_dat, dai_slot,
+                                               ' '.join(value))
+                    # Not strictly needed, but this information is easy to
+                    # obtain now.
+                    inst_dai.value2category_label(dai_catlab)
+                    da_confnet.add_merge(dai_prob[0][1], inst_dai,
+                                         is_normalised=False,
+                                         overwriting=not dai.is_generic)
+            else:
+                if dai.is_generic:
+                    # Cannot evaluate an abstract classifier with no
+                    # instantiations for its slot on the input.
+                    continue
+                try:
+                    dai_prob = (self.trained_classifiers[dai]
+                                .predict_proba(conc_feat_vec))
+                except Exception as ex:
+                    print '(EE) Parsing exception: ', ex
+                    continue
+
+                if verbose:
+                    print "Classification result: ", dai_prob
+
+                da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
 
         if verbose:
             print "DA: ", da_confnet
 
         return da_confnet
-
-
-# TODO Delete this class.
-class DAILogRegClassifierLearning(DAILogRegClassifier):
-    """Merged into DAILogRegClassifier, retained for compatibility."""
-    pass

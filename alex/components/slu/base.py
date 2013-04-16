@@ -135,20 +135,30 @@ class SLUPreprocessing(object):
                                                (['(hesitation)', ], [])
                                                ]
 
+    # TODO Rename to normalise_utterance.
     def text_normalisation(self, utterance):
-        """Normalises the input utterances (the output of an ASR engine).
+        """Normalises the utterance (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
 
         """
-
         utterance.lower()
-
         for mapping in self.text_normalization_mapping:
             utterance = utterance.replace(mapping[0], mapping[1])
-
         return utterance
+
+    def normalise_confnet(self, confnet):
+        """Normalises the confnet (the output of an ASR).
+
+        E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
+        into "I am", etc.
+
+        """
+        confnet.lower()
+        for mapping in self.text_normalization_mapping:
+            confnet = confnet.replace(mapping[0], mapping[1])
+        return confnet
 
     # TODO Update the docstring for the `all_options' argument.
     def values2category_labels_in_utterance(self, utterance,
@@ -327,6 +337,53 @@ class SLUPreprocessing(object):
                     break
 
         return nblist_cp, valform_for_cl
+
+    # TODO Test.
+    def values2category_labels_in_confnet(self, confnet):
+        """Replaces strings matching surface forms in the label database with
+        their slot names plus index.
+
+        Arguments:
+            confnet -- an instance of the UtteranceConfusionNetwork class where
+                       the substitutions should be done
+
+        Returns a tuple of:
+            [0] a confnet with replaced database values, and
+            [1] a dictionary mapping from category labels to the tuple (slot
+                value, surface form).
+
+        """
+        confnet_cp = copy.deepcopy(confnet)
+        valform_for_cl = {}
+
+        # FIXME This iterative matching will get slow with larger surface ->
+        # slot_value mappings.
+        for surface, upnames_vals in self.cldb.form_upnames_vals:
+            # NOTE it is ensured the longest matches will always be used in
+            # preference to shorter matches, due to the iterated values being
+            # sorted by `surface' length from the longest to the shortest.
+            if surface in confnet_cp:
+                # Choose a random category from the known ones.
+                slot_upper, vals = next(upnames_vals.iteritems())
+                # Choose a random value from the known ones.
+                value = vals[0]
+                # Do the substitution.
+                valform_for_cl[slot_upper] = (value, surface)
+                # Assumes the surface strings don't overlap.
+                # FIXME: Perhaps replace all instead of just the first one.
+                # XXX Temporary solution: we want the new confnet to
+                # contain the <category>=<value> token instead of the
+                # original <surface> sequence of tokens.  This is done
+                # crudely using two subsequent substitutions, so the
+                # original <surface> gets forgotten.
+                try:
+                    confnet_cp = confnet_cp.replace(surface, (value, ))
+                    confnet_cp = confnet_cp.phrase2category_label(
+                        (value, ), (slot_upper, ))
+                except Exception as ex:
+                    print "(EE) " + ex
+
+        return confnet_cp, valform_for_cl
 
     def values2category_labels_in_da(self, utt_hyp, da):
         """Replaces strings matching surface forms in the label database with

@@ -244,6 +244,7 @@ class Abstracted(object):
 
     # TODO Document.
     def __init__(self):
+        """It is important for extending classes to call this initialiser."""
         self.instantiable = {self: self}
         self.is_generic = False
 
@@ -256,6 +257,15 @@ class Abstracted(object):
     @classmethod
     def make_other(cls, type_):
         return '{t}-OTHER'.format(t=type_)
+
+
+    def iter_typeval(self):
+        """Iterates the abstracted items in self, yielding combined
+        representations of the type and value of each such token.  An abstract
+        method of this class.
+
+        """
+        raise NotImplementedError('This is an abstract method.')
 
     def iter_triples(self):
         for combined_el in self.iter_typeval():
