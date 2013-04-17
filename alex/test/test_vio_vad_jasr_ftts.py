@@ -63,8 +63,7 @@ if __name__ == '__main__':
                    "call_disconnected")
     #########################################################################
     #########################################################################
-    system_logger.info(
-        "Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
+    system_logger.info("Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
 
     vio_commands, vio_child_commands = multiprocessing.Pipe()
     # used to send commands to VoipIO
@@ -142,21 +141,17 @@ if __name__ == '__main__':
 
                 if cmd_name == "incoming_call" or cmd_name == "make_call":
                     system_logger.session_start(command.parsed['remote_uri'])
-                    system_logger.session_system_log(
-                        'config = {cfg!s}'.format(cfg=cfg))
+                    system_logger.session_system_log('config = {cfg!s}'.format(cfg=cfg))
                     system_logger.info(command)
 
-                    session_logger.session_start(
-                        system_logger.get_session_dir_name())
+                    session_logger.session_start(system_logger.get_session_dir_name())
                     session_logger.config('config = {cfg!s}'.format(cfg=cfg))
                     session_logger.header(cfg['Logging']["system_name"],
                                           cfg['Logging']["version"])
                     session_logger.input_source("voip")
 
                     # FIXME: This is not said in reality.
-                    tts_text_in.send(TTSText(
-                        'Say something and the recognized text will be played '
-                        'back.'))
+                    tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
 
                 elif cmd_name == "call_disconnected":
                     # Do not disconnect just yet, close the session file only
@@ -199,10 +194,10 @@ if __name__ == '__main__':
             disconnect = False
 
     # stop processes
-    vio_commands.send(Command('stop()'))
-    vad_commands.send(Command('stop()'))
-    asr_commands.send(Command('stop()'))
-    tts_commands.send(Command('stop()'))
+    vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
+    vad_commands.send(Command('stop()', 'HUB', 'VAD'))
+    asr_commands.send(Command('stop()', 'HUB', 'ASR'))
+    tts_commands.send(Command('stop()', 'HUB', 'TTS'))
 
     # clean connections
     for c in command_connections:
