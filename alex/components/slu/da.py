@@ -812,6 +812,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Append additional dialogue act item into the confusion network."""
         self.cn.append([probability, dai])
 
+    # TODO Document.
     def add_merge(self, probability, dai, is_normalised=True,
                   overwriting=None):
         """Add the probability mass of the passed dialogue act item to an

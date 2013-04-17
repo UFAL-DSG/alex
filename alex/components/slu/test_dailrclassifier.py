@@ -41,7 +41,7 @@ class TestDAILRClassifier(unittest.TestCase):
         asr_confnet.add([[B1, "Chinese"],  [B2, "English"], [B3, 'cheap']])
         asr_confnet.add([[C1, "restaurant"],  [C2, "pub"],   [C3, 'hotel']])
         asr_confnet.merge()
-        asr_confnet.normalise()
+        # asr_confnet.normalise()
         asr_confnet.sort()
 
         slu_best_da = DialogueAct("inform(=restaurant)&inform(food=chinese)")

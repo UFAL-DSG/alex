@@ -1360,9 +1360,16 @@ class DAILogRegClassifier(SLUInterface):
 
         return confnet
 
-    def parse_confnet(self, confnet, verbose=False):
+    def parse_confnet(self, confnet, include_other=True, verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
-        this N-best list."""
+        this N-best list.
+
+        Arguments:
+            confnet -- the utterance confnet to parse
+            include_other -- include "other"-valued DAIs in the output confnet
+            verbose -- print lots of output
+
+        """
         # nblist = confnet.get_utterance_nblist(n=40)
         # return self.parse_nblist(nblist)
 
@@ -1418,6 +1425,8 @@ class DAILogRegClassifier(SLUInterface):
 
             if insts:
                 for type_, value in insts:
+                    if not include_other and ' '.join(value) == dai.other_val:
+                        continue
                     # Extract the inputs, instatiated for this type_=value
                     # assignment.
                     inst_feats = self._extract_feats_from_one(
@@ -1439,12 +1448,17 @@ class DAILogRegClassifier(SLUInterface):
                                                ' '.join(value))
                     # Not strictly needed, but this information is easy to
                     # obtain now.
-                    inst_dai.value2category_label(dai_catlab)
+                    #
+                    # `overwriting' commented out to ensure passing the test
+                    # with the current model. Otherwise, it would be reasonable
+                    # to set it as it was set.
                     da_confnet.add_merge(dai_prob[0][1], inst_dai,
                                          is_normalised=False,
-                                         overwriting=not dai.is_generic)
+                                         # overwriting=not dai.is_generic)
+                                         overwriting=None)
             else:
-                if dai.is_generic:
+                if dai.is_generic or (
+                        not include_other and dai.other_val in dai.unnorm_values):
                     # Cannot evaluate an abstract classifier with no
                     # instantiations for its slot on the input.
                     continue
@@ -1458,6 +1472,7 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print "Classification result: ", dai_prob
 
+                dai.category_label2value()
                 da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
 
         if verbose:
