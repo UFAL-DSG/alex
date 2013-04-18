@@ -2,14 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import multiprocessing
-import time
 import sys
+import time
 import argparse
 
 import __init__
-
-import alex.utils.audio as audio
-import alex.utils.various as various
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -43,8 +40,7 @@ if __name__ == '__main__':
 
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info(
-        "Test of the VoipIO and VAD components\n" + "=" * 120)
+    cfg['Logging']['system_logger'].info("Test of the VoipIO and VAD components\n" + "=" * 120)
 
     vio_commands, vio_child_commands = multiprocessing.Pipe()
     # used to send commands to VoipIO
@@ -144,12 +140,7 @@ if __name__ == '__main__':
         for c in command_connections:
             if c.poll():
                 command = c.recv()
-                print
-                print command
-                print
-
-        sys.stdout.flush()
-
+                system_logger.info(command)
 
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
@@ -167,6 +158,5 @@ if __name__ == '__main__':
     # wait for processes to stop
     vio.join()
     system_logger.debug('VIO stopped.')
-    
     vad.join()
     system_logger.debug('VAD stopped.')

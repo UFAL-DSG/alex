@@ -8,7 +8,7 @@ import traceback
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
 
-from alex.components.asr.utterance import UtteranceConfusionNetwork
+from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.hub.messages import Command, Frame, ASRHyp
 from alex.utils.exception import ASRException, JuliusASRTimeoutException
 
@@ -138,7 +138,11 @@ class ASR(multiprocessing.Process):
                         asr_hyp = UtteranceConfusionNetwork()
                         asr_hyp.add([[1.0, "sil"], ])
 
-                    self.cfg['Logging']['session_logger'].asr("user", asr_hyp.get_utterance_nblist(), asr_hyp)
+                    # the ASR component can return either NBList or a confusion network
+                    if isinstance(asr_hyp, UtteranceNBList):
+                        self.cfg['Logging']['session_logger'].asr("user", asr_hyp, None)
+                    else:
+                        self.cfg['Logging']['session_logger'].asr("user", asr_hyp.get_utterance_nblist(), asr_hyp)
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
