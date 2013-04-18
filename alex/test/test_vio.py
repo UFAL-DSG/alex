@@ -8,11 +8,6 @@ import argparse
 
 import __init__
 
-import alex.utils.audio as audio
-import alex.utils.various as various
-from alex.utils.mproc import SystemLogger
-from alex.utils.sessionlogger import SessionLogger
-
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.messages import Command, Frame
 from alex.utils.config import Config
@@ -114,6 +109,12 @@ if __name__ == '__main__':
                     cfg['Logging']['system_logger'].session_end()
                     cfg['Logging']['session_logger'].session_end()                    
                     
+        # read all messages
+        for c in command_connections:
+            if c.poll():
+                command = c.recv()
+                system_logger.info(command)
+                
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
     

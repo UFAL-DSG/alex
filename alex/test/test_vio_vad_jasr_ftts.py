@@ -1,18 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# FIXME: After some time of inactivity (perhaps those 300 seconds), the script
-# outputs:
-#
-# Error: module_send:: Connection reset by peer
-#
-# and continues repeatedly printing the following message:
-#
-# Error: module_send:: Broken pipe
 
 import multiprocessing
-import time
 import sys
+import time
 import argparse
 
 import __init__
@@ -30,15 +21,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS
-        components.
+        test_vio_vad_jasr_ftts.py tests the VoipIO, VAD, ASR, and TTS components.
 
-        This application uses the Julisu ASR and Flite TTS.
+        This application uses the Julis ASR and Flite TTS.
 
-        The program reads the default config in the resources directory
-        ('../resources/default.cfg') and any additional config files passed as
-        an argument of a '-c'. The additional config file overwrites any
-        default or previous values.
+        The program reads the default config in the resources directory ('../resources/default.cfg') and any
+        additional config files passed as an argument of a '-c'. The additional config file
+        overwrites any default or previous values.
 
       """)
 
@@ -52,18 +41,15 @@ if __name__ == '__main__':
         for c in args.configs:
             cfg.merge(c)
 
-    session_logger = cfg['Logging']['session_logger']
-    system_logger = cfg['Logging']['system_logger']
-    system_logger.info('config = {cfg!s}'.format(cfg=cfg))
+    # set using Google ASR and Google TTS
+    cfg['ASR']['type'] = 'Julius'
+    cfg['TTS']['type'] = 'Flite'
 
-    logged_cmds = ("rejected_call",
-                   "rejected_call_from_blacklisted_uri",
-                   "call_connecting",
-                   "call_confirmed",
-                   "call_disconnected")
+    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
+
     #########################################################################
     #########################################################################
-    system_logger.info("Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
+    cfg['Logging']['system_logger'].info("Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
 
     vio_commands, vio_child_commands = multiprocessing.Pipe()
     # used to send commands to VoipIO
@@ -96,8 +82,7 @@ if __name__ == '__main__':
     # used to send TTS text
 
 
-    command_connections = (vio_commands, vad_commands, asr_commands,
-                           tts_commands)
+    command_connections = (vio_commands, vad_commands, asr_commands, tts_commands)
 
     non_command_connections = (vio_record, vio_child_record,
                                vio_play, vio_child_play,
@@ -115,53 +100,17 @@ if __name__ == '__main__':
     asr.start()
     tts.start()
 
-    # # Actively call a number configured.
-    # vio_commands.send(Command(
-    #     'make_call(destination="sip:{ext}@{dom}")'\
-    #         .format(ext=cfg['VoipIO']['extension'],
-    #                 dom=cfg['VoipIO']['domain']),
-    #     'HUB',
-    #     'VoipIO'))
+    # Actively call a number configured.
+    #vio_commands.send(Command('make_call(destination="\'Bejcek Eduard\' <sip:4366@SECRET:5066>")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="sip:4366@SECRET:5066")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="4366")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="155")', 'HUB', 'VoipIO'))
 
     count = 0
     max_count = 50000
-    disconnect = False
     while count < max_count:
         time.sleep(cfg['Hub']['main_loop_sleep_time'])
         count += 1
-
-        # read all messages
-        if vio_commands.poll():
-            command = vio_commands.recv()
-
-            if isinstance(command, Command):
-                cmd_name = command.parsed['__name__']
-                if cmd_name in logged_cmds:
-                    system_logger.info(command)
-
-                if cmd_name == "incoming_call" or cmd_name == "make_call":
-                    system_logger.session_start(command.parsed['remote_uri'])
-                    system_logger.session_system_log('config = {cfg!s}'.format(cfg=cfg))
-                    system_logger.info(command)
-
-                    session_logger.session_start(system_logger.get_session_dir_name())
-                    session_logger.config('config = {cfg!s}'.format(cfg=cfg))
-                    session_logger.header(cfg['Logging']["system_name"],
-                                          cfg['Logging']["version"])
-                    session_logger.input_source("voip")
-
-                    # FIXME: This is not said in reality.
-                    tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
-
-                elif cmd_name == "call_disconnected":
-                    # Do not disconnect just yet, close the session file only
-                    # after last ASR output is written there.
-                    # XXX: Is this actually needed?
-                    # (I originally thought it was files written after the
-                    # session closed that ended in the parent directory;
-                    # however, it is files open *before* the session is open
-                    # that end up there now.)
-                    disconnect = True
 
         if asr_hypotheses_out.poll():
             asr_hyp = asr_hypotheses_out.recv()
@@ -171,7 +120,7 @@ if __name__ == '__main__':
                 m.append("Recognised hypotheses:")
                 m.append("-" * 120)
                 m.append(str(asr_hyp.hyp))
-                system_logger.info('\n'.join(m))
+                cfg['Logging']['system_logger'].info('\n'.join(m))
 
                 # get top hypotheses text
                 top_text = asr_hyp.hyp.get_best_utterance()
@@ -182,16 +131,35 @@ if __name__ == '__main__':
                     tts_text_in.send(TTSText('Nothing was recognised'))
 
         # read all messages
+        if vio_commands.poll():
+            command = vio_commands.recv()
+
+            if isinstance(command, Command):
+                if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
+                    cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].info(command)
+
+                    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
+                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
+                    cfg['Logging']['session_logger'].input_source("voip")
+
+                    tts_text_in.send(TTSText('Say something and the recognized text will be played back.'))
+
+                elif command.parsed['__name__'] == "call_disconnected":
+                    cfg['Logging']['system_logger'].info(command)
+
+                    vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+
+                    cfg['Logging']['system_logger'].session_end()
+                    cfg['Logging']['session_logger'].session_end()
+
+        # read all messages
         for c in command_connections:
             if c.poll():
                 command = c.recv()
-                system_logger.info(command)
-
-        if disconnect:
-            # Then, close the session.
-            system_logger.session_end()
-            session_logger.session_end()
-            disconnect = False
+                cfg['Logging']['system_logger'].info(command)
 
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
@@ -210,10 +178,10 @@ if __name__ == '__main__':
 
     # wait for processes to stop
     vio.join()
-    system_logger.debug('VIO stopped.')
+    cfg['Logging']['system_logger'].debug('VIO stopped.')
     vad.join()
-    system_logger.debug('VAD stopped.')
+    cfg['Logging']['system_logger'].debug('VAD stopped.')
     asr.join()
-    system_logger.debug('ASR stopped.')
+    cfg['Logging']['system_logger'].debug('ASR stopped.')
     tts.join()
-    system_logger.debug('TTS stopped.')
+    cfg['Logging']['system_logger'].debug('TTS stopped.')
