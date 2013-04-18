@@ -12,7 +12,6 @@ from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBLi
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 
 class TestDA(unittest.TestCase):
-
     def test_swapping_merge_normalise(self):
         nblist1 = DialogueActNBList()
         nblist1.add(0.7, DialogueAct("hello()"))
@@ -33,7 +32,6 @@ class TestDA(unittest.TestCase):
         print '\n'.join(s)
 
         self.assertEqual(nblist1, nblist2)
-
 
     def test_merge_slu_nblists_full_nbest_lists(self):
         # make sure the alex.components.slu.da.merge_slu_nblists merges nblists correctly

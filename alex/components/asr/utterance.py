@@ -10,6 +10,7 @@ from itertools import izip, product
 from operator import itemgetter, mul
 
 from alex import utils
+from alex.utils.various import flatten
 from alex.components.slu.exception import SLUException
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 # TODO: The following import is a temporary workaround for moving classes
@@ -585,14 +586,15 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         Abstracted.__init__(self)
 
     def __str__(self):
-        s = []
-        for alts in self._cn:
-            ss = []
-            for p, w in alts:
-                ss.append("(%.3f : %s) " % (p, w if w else '-'))
-            s.append(' '.join(ss))
-
-        return '\n'.join(s)
+        return '\n'.join(' '.join('({p:.3f}: {w})'.format(p=hyp[0], w=hyp[1])
+                                  for hyp in alts)
+                         + ' ' +
+                         ' '.join('[{len_} ({p:.3f}: {phr})]'.format(
+                               len_=link.end - start,
+                               p=link.hyp[0],
+                               phr=' '.join(link.hyp[1]))
+                           for link in self._long_links[start])
+                         for (start, alts) in enumerate(self._cn))
 
     def __contains__(self, phrase):
         return self.find(phrase) != -1
@@ -629,7 +631,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def replace_typeval(self, combined, replacement):
         replaced, repl_idxs = self._replace(combined, replacement)
         replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
-                                if idx not in repl_idxs]
+                                if idx + (0, ) not in repl_idxs]
         return replaced
 
     def iter_triples(self):
@@ -669,13 +671,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                           ' '.join(phrase)))
         replaced, repl_idxs = self._replace(phrase, (combined_el, ))
         if repl_idxs:
-            replaced._abstr_idxs.extend(repl_idxs)
+            replaced._abstr_idxs.extend((idx[0], idx[1]) for idx in repl_idxs)
             replaced._abstr_idxs.sort()
         return replaced
 
     # Other methods.
     def isempty(self):
-        return not self._cn
+        return not self._cn and not any(self._long_links)
 
     def index(self, phrase, start=0, end=None):
         index = self.find(phrase)
@@ -723,7 +725,16 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # TODO Test.
     # TODO Implement the option to keep the original value, just adding the
     # replacement by its side.
-    def _replace(self, phrase, replacement):
+    def _replace(self, phrase, replacement, keep=False):
+        """A private method implementing replacement of phrases.
+
+        Arguments:
+            phrase -- what to replace (a list of words)
+            replacement -- what to replace with (a list of words, may be empty)
+            keep -- if set to True, the original phrase will be kept in the
+                confnet
+
+        """
         # Initialise.
         replaced = self
         repl_idxs = None
@@ -737,41 +748,61 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # Iterate over occurrences.
         while idxs:
             start_widx = abs(idxs[0][0])
+            end_widx, end_aidx, end_lsidx = idxs[-1]
             repl_idxs.extend(idxs)
 
             # Deletion:
             if len(replacement) == 0:
-                for widx, aidx in idxs:
-                    if widx >= 0:
-                        del replaced._cn[widx][aidx]
-                    else:
-                        del replaced._long_links[-widx][aidx]
-                do_normalise = update_wordset = True
+                if not keep:
+                    for widx, aidx, lsidx in idxs:
+                        if widx >= 0:
+                            del replaced._cn[widx][aidx]
+                        elif lsidx == 0:
+                            del replaced._long_links[-widx][aidx]
+                        else:
+                            del replaced._long_links[-widx][aidx][lsidx:]
+                    do_normalise = update_wordset = True
             # Substituting in-place:
-            elif len(idxs) == len(replacement) == 1 and idxs[0] >= 0:
-                widx, aidx = idxs[0]
-                orig_prob = replaced._cn[widx][aidx][0]
-                replaced._cn[widx][aidx] = (orig_prob, replacement[0])
+            elif len(idxs) == len(replacement) == 1 and idxs[0][0] >= 0:
+                widx, aidx, lsidx = idxs[0]
+                repl_hyp = (replaced._cn[widx][aidx][0], replacement[0])
+                if keep:
+                    replaced._cn[widx].append(repl_hyp)
+                else:
+                    replaced._cn[widx][aidx] = repl_hyp
+                update_wordset = True
+            # Substituting just a part of a long link:
+            elif end_lsidx:
+                assert len(idxs) == 1  # Anything else would mean skipping
+                                       # some words.
+                replaced._long_links[-end_widx][end_aidx][end_lsidx:] = (
+                    replacement)
                 update_wordset = True
             # General case:
             else:
                 # Compute the phrase probability.
                 orig_probs = [(replaced._cn[widx][aidx][0] if widx >= 0 else
                                replaced._long_links[-widx][aidx].hyp[0])
-                              for (widx, aidx) in idxs]
+                              for (widx, aidx, lsidx) in idxs]
                 prob = reduce(mul, orig_probs, 1.)
                 # Construct the new hypothesis.
                 new_hyp = (prob, replacement)
-                end = idxs[-1][0]
-                if end >= 0:  # really a word index
+                if end_widx >= 0:  # really a word index
                     # Point to after that word.
-                    end += 1
+                    end = end_widx + 1
                 else:  # index to a long link
-                    end = replaced._long_links[-end][idxs[-1][1]].end
+                    end = replaced._long_links[-end_widx][idxs[-1][1]].end
                 new_link = UtteranceConfusionNetwork.LongLink(
                     end, orig_probs, new_hyp)
                 replaced._long_links[start_widx].append(new_link)
-                update_wordset = True
+                # Remove the old hypothesis.
+                if not keep:
+                    for widx, aidx, lsidx in idxs:
+                        if widx >= 0:
+                            del replaced._cn[widx][aidx]
+                        else:
+                            del replaced._long_links[-widx][aidx]
+                do_normalise = update_wordset = True
 
             # Try to find another occurrence.
             idxs = replaced.get_phrase_idxs(phrase, start=start_widx + 1)
@@ -802,6 +833,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         self._long_links.append(list())
         self._wordset.update(hyp[1] for hyp in hyps)
 
+    # FIXME Make this method aware of _long_links.
     def get_best_utterance(self):
         utterance = []
         for alts in self._cn:
@@ -809,6 +841,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         return ' '.join(utterance).strip()
 
+    # FIXME Make this method aware of _long_links.
     def get_best_hyp(self):
         utterance = []
         prob = 1.0
@@ -859,7 +892,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                        # 1.)
         # return prob
 
-    def get_phrase_idxs(self, phrase, start=0, end=None):
+    def get_phrase_idxs(self, phrase, start=0, end=None, start_in_midlinks=True):
         """Returns indexes to words constituting the given phrase within this
         confnet.  It looks only for the first occurrence of the phrase in the
         interval specified.
@@ -868,6 +901,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             phrase: the phrase to look for, specified as a list of words
             start: the index where to start searching
             end: the index after which to stop searching
+            start_in_midlinks: whether a phrase starting in the middle of
+                a long link should be considered too
 
         Returns:
             - an empty list in case that phrase was not found
@@ -879,10 +914,14 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
               marks the start of the phrase, and the alternative index points
               to the list of long links starting in this word index.
 
+              In case the method was called with `start_in_midlinks=True'
+              the indices returned are triples, the last element indexing the
+              start of the phrase within the long link (or 0 if not applicable).
+
         """
         # Special case -- searching for an empty phrase.
         if not phrase:
-            return [(start, 0)]
+            return [(start, 0, 0)]
 
         # Special case -- end <= start.
         if end is None:
@@ -896,26 +935,54 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         word = phrase[0]
         for start_idx in xrange(start, end):
+            # Find matching hypotheses among the regular one-word arcs
+            # starting here.
             matching_hyps = [aidx_hyp for aidx_hyp
                              in enumerate(self._cn[start_idx])
                              if aidx_hyp[1][1] == word]
             if matching_hyps:
                 if len(phrase) == 1:
-                    return [(start_idx, matching_hyps[0][0])]
-                sub_find = self.get_phrase_idxs(phrase[1:], start_idx + 1, end)
+                    return [(start_idx, matching_hyps[0][0], 0)]
+                sub_find = self.get_phrase_idxs(phrase[1:], start_idx + 1, end,
+                                                start_in_midlinks=False)
                 if sub_find:
-                    return [(start_idx, matching_hyps[0][0])] + sub_find
+                    return [(start_idx, matching_hyps[0][0], 0)] + sub_find
+            # Find matching hypotheses among long links starting here.
             for l_idx, link in enumerate(self._long_links[start_idx]):
                 l_len = len(link.hyp[1])
                 if l_len == len(phrase):
                     if link.hyp[1] == phrase:
-                        return [(-start_idx, l_idx)]
+                        return [(-start_idx, l_idx, 0)]
                 elif l_len < len(phrase):
-                    rest = phrase[l_len:]
-                    if link.end <= end and link.hyp[1] == rest:
-                        sub_find = self.get_phrase_idxs(rest, link.end, end)
+                    if link.end <= end and link.hyp[1] == phrase[:l_len]:
+                        sub_find = self.get_phrase_idxs(
+                            phrase[l_len:], link.end, end,
+                            start_in_midlinks=False)
                         if sub_find:
-                            return [(-start_idx, l_idx)] + sub_find
+                            return [(-start_idx, l_idx, 0)] + sub_find
+
+        # Check whether the phrase could start in the middle of a long link.
+        if start_in_midlinks:
+            # Select all long links that belong to the range specified.
+            phrase_links = list()
+            for start_idx, links in enumerate(self._long_links[start:end],
+                                              start=start):
+                phrase_links.extend((start_idx, link) for link in links
+                                    if link.end > start)
+            # Check all possible phrase starts within those links.
+            for start_idx, link in phrase_links:
+                link_phr = link.hyp[1]
+                for link_start_idx in xrange(1, len(link_phr)):
+                    l_suffix = link_phr[link_start_idx:]
+                    l_len = len(l_suffix)
+                    if l_suffix == phrase[:l_len]:
+                        sub_find = self.get_phrase_idxs(
+                            phrase[l_len:], link.end, end,
+                            start_in_midlinks=False)
+                        if sub_find:
+                            return ([(-start_idx, l_idx, link_start_idx)]
+                                    + sub_find)
+
         return []
 
     # TODO Test.
@@ -937,6 +1004,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         return worse_hyp
 
+    # FIXME Fix the typo.
     def get_hyp_index_utterence(self, hyp_index):
         s = [alts[i][1] for i, alts in zip(hyp_index, self._cn)]
 
@@ -1004,7 +1072,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         TODO: not implemented yet
         """
-        pass
+        return self
 
     def prune(self, prune_prob=0.001):
         pruned_cn = []
@@ -1031,7 +1099,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         self._wordset = set(hyp[1] for alts in self._cn for hyp in alts)
 
     def normalise(self, end=None):
-        """Makes sure that all probabilities adds up to one.  There should be
+        """Makes sure that all probabilities add up to one.  There should be
         no need of calling this from outside, since this invariant is ensured
         all the time.
 
@@ -1055,7 +1123,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 link_idxs.append((start_idx, aidx, 0))
             tot = sum(hyp[0] for hyp in self._cn[start_idx])
             tot += sum(self._long_links[widx][aidx].orig_probs[lidx]
-                       for ((widx, aidx), lidx) in link_idxs)
+                       for (widx, aidx, lidx) in link_idxs)
             normaliser = 1. / tot
             self._cn[start_idx] = [(hyp[0] * normaliser, hyp[1])
                                    for hyp in self._cn[start_idx]]
@@ -1074,6 +1142,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         """Sort the alternatives for each word according their probability."""
         for alts in self._cn:
             alts.sort(reverse=True)
+        return self
 
     def iter_ngrams_fromto(self, from_=None, to=None):
         """Iterates n-gram hypotheses between the indices `from_' and `to_'.
@@ -1128,12 +1197,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # recursively with the same arguments several times.
     def iter_ngrams(self, n, with_boundaries=False, start=None):
         """Iterates n-gram hypotheses of the length specified.  This is the
-        interface method, and uses `iter_ngrams_fromto' internally.  It is
-        aware of multi-word phrases that were substituted into the confnet.
+        interface method.  It is aware of multi-word phrases ("long links")
+        that were substituted into the confnet.
 
         Arguments:
             n: size of the n-grams
             with_boundaries: whether to include special sentence boundary marks
+            start: at which word index the n-grams have to start (exactly)
 
         """
         # Find n-gram start indices that shall be iterated over.
@@ -1156,8 +1226,14 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 for link in self._long_links[start_idx]:
                     if len(link.hyp[1]) == 1:
                         yield link.hyp
+                    elif start is not None:
+                        yield (link.hyp[0], [link.hyp[1][0]])
+                    else:
+                        # avg_prob = link.hyp[0] ** (1. / len(link.hyp[1]))
+                        for word in link.hyp[1]:
+                            yield (link.hyp[0], [word])
             if with_boundaries and start is None or start == len(self._cn):
-                yield (1., [SENTENCE_START])
+                yield (1., [SENTENCE_END])
         elif n > 1:
             # Handle n-grams starting at the sentence-start symbol.
             if with_boundaries and start is None:
@@ -1174,15 +1250,38 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     yield (sub_prob * prob, [word] + sub_ngram)
                 # Handle long links.
                 for link in self._long_links[start_idx]:
-                    len_rest = n - len(link.hyp[1])
-                    if len_rest < 0:
-                        continue
-                    elif len_rest == 0:
-                        yield link.hyp
+                    l_phrase = link.hyp[1]
+                    l_len = len(l_phrase)
+                    # avg_prob = link.hyp[0] ** (1. / l_len)
+                    prob = link.hyp[0]
+                    # Output n-grams that fit completely into this long link.
+                    # ngram_prob = avg_prob ** n
+                    for lsidx in xrange(l_len - n + 1):
+                        yield (prob, list(l_phrase[lsidx:lsidx + n]))
+                    # Output n-grams that start later in this long link.
+                    #
+                    # min_start_idx shall denote the minimum start index within
+                    # the long link for n-grams that reach at least to the end
+                    # of the long link.  The special case of an n-gram that
+                    # exactly fits (and has therefore already been output) is
+                    # handled specially.
+                    if l_len == n:
+                        min_startidx = 1
                     else:
+                        min_startidx = max(0, l_len - n)
+
+                    end_startidx = l_len if start is None else 1
+                    for lsidx in xrange(min_startidx, end_startidx):
+                        len_prefix = l_len - lsidx
+                        phr_prefix = l_phrase[lsidx:]
+                        # prob = avg_prob ** len_prefix
+                        # ...This would lead to overly optimistic probabilities
+                        # for phrases substituted in the network that consist
+                        # of several words.
                         for sub_prob, sub_ngram in self.iter_ngrams(
-                                len_rest, with_boundaries, link.end):
-                            yield (link.hyp[0] * sub_prob, link.hyp[1] + sub_ngram)
+                                n - len_prefix, with_boundaries, link.end):
+                            yield (prob * sub_prob,
+                                   list(phr_prefix) + sub_ngram)
 
 
 # TODO Document.
