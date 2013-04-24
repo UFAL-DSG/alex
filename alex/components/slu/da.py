@@ -31,6 +31,7 @@ def load_das(das_fname, limit=None):
         das = defaultdict(list)
         count = 0
         for line in das_file:
+            line = line.decode('utf8')
             count += 1
             if limit and count > limit:
                 break

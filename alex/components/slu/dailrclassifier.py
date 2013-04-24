@@ -560,7 +560,7 @@ class DAILogRegClassifier(SLUInterface):
                         and self._dai_counts[dai] < min_dai_count):
                     return False
                 # Discard classifiers in the form `inform(name="[OTHER]")'.
-                if dai.val == dai.other_val:
+                if dai.value == dai.other_val:
                     return False
                 # Hack to pass the unit test without training a larger model.
                 # if dai.dat == 'reqalts':
