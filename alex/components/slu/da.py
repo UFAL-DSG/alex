@@ -6,11 +6,9 @@ from collections import defaultdict
 import copy
 from operator import xor
 
+from alex.components.slu.exception import SLUException
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
-from alex.utils.exception import SLUException, DialogueActException, \
-    DialogueActItemException, DialogueActNBListException, \
-    DialogueActConfusionNetworkException
 from alex.utils.text import split_by
 
 
@@ -63,6 +61,22 @@ def save_das(file_name, das):
         f.write(str(das[u]) + '\n')
 
     f.close()
+
+
+class DialogueActItemException(SLUException):
+    pass
+
+
+class DialogueActException(SLUException):
+    pass
+
+
+class DialogueActNBListException(SLUException):
+    pass
+
+
+class DialogueActConfusionNetworkException(SLUException):
+    pass
 
 
 class DialogueActItem(Abstracted):
@@ -129,18 +143,18 @@ class DialogueActItem(Abstracted):
             try:
                 orig_val = next(iter(self._orig_values))
                 self._str = (u'{type_}({name}="{val}{spl}{orig}")'
-                            .format(type_=self._dat,
-                                    name=self._name or u'',
-                                    val=self._value,
-                                    spl=DialogueActItem.splitter,
-                                    orig=orig_val))
+                             .format(type_=self._dat,
+                                     name=self._name or u'',
+                                     val=self._value,
+                                     spl=DialogueActItem.splitter,
+                                     orig=orig_val))
             except StopIteration:
                 eq_val = (u'="{val}"'.format(val=self._value)
                           if self._value else u'')
                 self._str = (u"{type_}({name}{eq_val})"
-                            .format(type_=self._dat,
-                                    name=self._name or u'',
-                                    eq_val=eq_val))
+                             .format(type_=self._dat,
+                                     name=self._name or u'',
+                                     eq_val=eq_val))
         return self._str
 
     def iter_typeval(self):
@@ -425,12 +439,12 @@ class DialogueAct(object):
                              sorted(self._dais))
             theirdais_sorted = (other._dais if other._dais_sorted else
                                 sorted(other._dais))
-            return (mydais_sorted >= theirdais_sorted) - (
-                    theirdais_sorted >= mydais_sorted)
+            return ((mydais_sorted >= theirdais_sorted) -
+                    (theirdais_sorted >= mydais_sorted))
         elif isinstance(other, basestring):
             mydais_sorted = sorted(self._dais)
             self_sorted = DialogueAct()
-            self_sorted.dais = mydais_sorted
+            self_sorted._dais = mydais_sorted
             self_str = str(self_sorted)
             return (self_str >= other) - (other >= self_str)
         else:
@@ -480,8 +494,8 @@ class DialogueAct(object):
         """
         if self._dais:
             del self._dais[:]
-        dais = sorted(split_by(da, splitter='&', opening_parentheses='(',
-                               closing_parentheses=')', quotes='"'))
+        dais = split_by(da, splitter='&', opening_parentheses='(',
+                        closing_parentheses=')', quotes='"')
         self._dais.extend(DialogueActItem(dai=dai) for dai in dais)
         self._dais_sorted = False
 
@@ -558,9 +572,9 @@ class DialogueActFeatures(Features):
         features: defaultdict(float) of features
         set: set of features
         generic: mapping { feature : generic feature } for features from
-                 self.set that are abstracted
+                 self.features.keys() that are abstracted
         instantiable: mapping { feature : generic part of feature } for
-            features from self.set that are abstracted
+            features from self.features.keys() that are abstracted
 
     """
     def __init__(self, da, include_slotvals=True):
@@ -573,7 +587,8 @@ class DialogueActFeatures(Features):
             try:
                 self.features[(dai.dat, )] += 1.
             except AttributeError:
-                import ipdb; ipdb.set_trace()
+                import ipdb
+                ipdb.set_trace()
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
                 if dai.value is not None:
@@ -589,8 +604,6 @@ class DialogueActFeatures(Features):
         # Summary features.
         self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
         self.features['n_dais'] = len(da)
-
-        self.set = set(self.features)
 
 
 class SLUHypothesis(Hypothesis):
@@ -706,15 +719,15 @@ class DialogueActNBListFeatures(Features):
         features: defaultdict(float) of features
         set: set of features
         generic: mapping { feature : generic feature } for features from
-            self.set that are abstracted
+            self.features.keys() that are abstracted
         instantiable: mapping { feature : generic part of feature } for
-            features from self.set that are abstracted
+            features from self.features.keys() that are abstracted
         include_slotvals: whether slot values should be also included (or
                           ignored)
 
     """
     def __init__(self, da_nblist=None, include_slotvals=True):
-        # This initialises the self.features and self.set fields.
+        # This initialises the self.features field.
         super(DialogueActNBListFeatures, self).__init__()
         self.generic = dict()
         self.instantiable = dict()
@@ -733,7 +746,8 @@ class DialogueActNBListFeatures(Features):
             if first_da_feats is None:
                 first_da_feats = da_feats
             for feat, feat_val in da_feats.iteritems():
-                # Include the first rank of features occurring in the n-best list.
+                # Include the first rank of features occurring in the n-best
+                # list.
                 if (0, feat) not in self.features:
                     self.features[(0, feat)] = float(hyp_idx)
                     if feat in da_feats.generic:
@@ -754,8 +768,6 @@ class DialogueActNBListFeatures(Features):
             for feat, feat_val in first_da_feats.iteritems():
                 self.features[(2, feat)] = feat_val
 
-        # Keep self.set up to date. (Why is it needed, anyway?)
-        self.set = set(self.features)
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
@@ -805,6 +817,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Append additional dialogue act item into the confusion network."""
         self.cn.append([probability, dai])
 
+    # TODO Document.
     def add_merge(self, probability, dai, is_normalised=True,
                   overwriting=None):
         """Add the probability mass of the passed dialogue act item to an
@@ -871,7 +884,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return res
 
-    def get_best_da_hyp(self, use_log=False, threshold=.5):
+    def get_best_da_hyp(self, use_log=False, threshold=None, thresholds=None):
         """Return the best dialogue act hypothesis.
 
         Arguments:
@@ -881,8 +894,16 @@ class DialogueActConfusionNetwork(SLUHypothesis):
             threshold: threshold on probabilities -- items with probability
                        exceeding the threshold will be present in the output
                        (default: 0.5)
+            thresholds: threshold on probabilities -- items with probability
+                       exceeding the threshold will be present in the output.
+                       This is a mapping {dai -> threshold}, and if supplied,
+                       overwrites settings of `threshold'.  If not supplied, it
+                       is ignored.
 
         """
+        if thresholds is None:
+            threshold = threshold if threshold is not None else .5
+            thresholds = defaultdict(lambda: threshold)
         da = DialogueAct()
         if use_log:
             from math import log
@@ -890,7 +911,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         else:
             prob = 1.0
         for edge_p, dai in self.cn:
-            if edge_p > threshold:
+            if edge_p > thresholds[dai]:
                 da.append(dai)
                 # multiply with probability of presence of a dialogue act
                 if use_log:

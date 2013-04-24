@@ -8,7 +8,7 @@ import alex.components.slu.dailrclassifier as DAILRSLU
 import alex.components.slu.daiklrclassifier as DAIKLRSLU
 import alex.components.slu.templateclassifier as TSLU
 
-from alex.components.slu import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.utils.exception import DMException
 

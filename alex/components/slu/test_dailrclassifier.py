@@ -8,13 +8,12 @@ if __name__ == "__main__":
 import __init__
 
 from alex.components.asr.utterance import UtteranceConfusionNetwork
-from alex.components.slu import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 import alex.components.slu.dailrclassifier as DAILRSLU
 from alex.utils.config import Config
 from alex.utils.config import as_project_path
-
 
 CONFIG_DICT = {
   'SLU': {
@@ -24,7 +23,7 @@ CONFIG_DICT = {
     'DAILogRegClassifier': {
         # 'model': as_project_path('applications/CamInfoRest/slu-lr-trn.model'),
         'model':
-        as_project_path('applications/CamInfoRest/models/130404_top1000-minf15-minfc10-mind15-nocal-s0.1.slu_model')
+        as_project_path('applications/CamInfoRest/models/130412_minf60-minfc35-mind60-s1.0.slu_model.gz')
     },
   }
 }
@@ -42,10 +41,10 @@ class TestDAILRClassifier(unittest.TestCase):
         asr_confnet.add([[B1, "Chinese"],  [B2, "English"], [B3, 'cheap']])
         asr_confnet.add([[C1, "restaurant"],  [C2, "pub"],   [C3, 'hotel']])
         asr_confnet.merge()
-        asr_confnet.normalise()
+        # asr_confnet.normalise()
         asr_confnet.sort()
 
-        slu_best_da = DialogueAct("inform(food=chinese)&inform(=restaurant)")
+        slu_best_da = DialogueAct("inform(=restaurant)&inform(food=chinese)")
 
         cfg = Config(config=CONFIG_DICT)
         cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
@@ -53,7 +52,7 @@ class TestDAILRClassifier(unittest.TestCase):
         slu = DAILRSLU.DAILogRegClassifier(preprocessing)
         slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
         slu_hyp = slu.parse(asr_confnet)
-        slu_hyp_best_da = slu_hyp.get_best_da()
+        slu_hyp_best_da = slu_hyp.get_best_da().sort()
 
         s = []
         s.append("")

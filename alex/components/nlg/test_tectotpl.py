@@ -33,7 +33,7 @@ CONFIG_DICT = {
                 {'block': 't2a.cs.DropSubjPersProns'},
                 {'block': 't2a.cs.AddPrepositions'},
                 {'block': 't2a.cs.AddSubconjs'},
-                {'block': 't2a.cs.GenerateWordForms', 'args': {'model': 'flect/model-t253-l1_10_00001.pickle.gz'}},
+                {'block': 't2a.cs.GenerateWordForms', 'args': {'model': 'flect/model-t253-l1_10_00001-alex.pickle.gz'}},
                 {'block': 't2a.cs.VocalizePrepos'},
                 {'block': 't2a.cs.CapitalizeSentStart'},
                 {'block': 'a2w.cs.ConcatenateTokens'},

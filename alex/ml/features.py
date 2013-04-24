@@ -12,8 +12,6 @@ import numpy as np
 from alex.utils.cache import lru_cache
 
 
-# XXX Is Features.set needed anywhere?  I would suggest removing it as a class
-# field.
 class Features(object):
     """A mostly abstract class representing features of an object.
 
@@ -26,7 +24,6 @@ class Features(object):
 
     def __init__(self, *args, **kwargs):
         self.features = defaultdict(float)
-        self.set = set()
 
     def __str__(self):
         return str(self.features)
@@ -118,8 +115,6 @@ class Features(object):
         if to_remove is not None:
             to_remove_set.update(to_remove if isinstance(to_remove, set)
                                  else set(to_remove))
-        # Remove the features from `self.set'.
-        self.set -= to_remove_set
         # Remove the features from `self.features'.
         old_features = self.features
         self.features = defaultdict(float)
@@ -213,7 +208,7 @@ class JoinedFeatures(Features):
         generic: mapping { (feature_set_index, abstracted_feature) :
                             generic_feature }
         instantiable: mapping { feature : generic part of feature } for
-            features from self.set that are abstracted
+            features from self.features.keys() that are abstracted
 
     """
     def __init__(self, feature_sets):
@@ -235,7 +230,6 @@ class JoinedFeatures(Features):
             else:
                 self.features.update(((feat_set_idx, item[0]), item[1])
                                       for item in feat_set.iteritems())
-        self.set = set(self.features)
 
     def iter_instantiations(self):
         for feat in self.instantiable:
@@ -250,6 +244,7 @@ class Abstracted(object):
 
     # TODO Document.
     def __init__(self):
+        """It is important for extending classes to call this initialiser."""
         self.instantiable = {self: self}
         self.is_generic = False
 
@@ -262,6 +257,15 @@ class Abstracted(object):
     @classmethod
     def make_other(cls, type_):
         return '{t}-OTHER'.format(t=type_)
+
+
+    def iter_typeval(self):
+        """Iterates the abstracted items in self, yielding combined
+        representations of the type and value of each such token.  An abstract
+        method of this class.
+
+        """
+        raise NotImplementedError('This is an abstract method.')
 
     def iter_triples(self):
         for combined_el in self.iter_typeval():

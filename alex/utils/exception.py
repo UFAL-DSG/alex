@@ -13,10 +13,6 @@ class ASRException(AlexException):
     pass
 
 
-class SLUException(AlexException):
-    pass
-
-
 class DMException(AlexException):
     pass
 
@@ -54,42 +50,6 @@ class JuliusASRException(ASRException):
 
 
 class JuliusASRTimeoutException(ASRException):
-    pass
-
-
-class UtteranceException(SLUException):
-    pass
-
-
-class UtteranceNBListException(SLUException):
-    pass
-
-
-class UtteranceConfusionNetworkException(SLUException):
-    pass
-
-
-class DialogueActException(SLUException):
-    pass
-
-
-class DialogueActItemException(SLUException):
-    pass
-
-
-class DialogueActNBListException(SLUException):
-    pass
-
-
-class DialogueActConfusionNetworkException(SLUException):
-    pass
-
-
-class DAIKernelException(SLUException):
-    pass
-
-
-class DAILRException(SLUException):
     pass
 
 
