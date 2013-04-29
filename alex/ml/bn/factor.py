@@ -280,10 +280,10 @@ class DiscreteFactor(Factor):
                               new_factor_table)
 
     def __mul__(self, other_factor):
-        if self.variables == other_factor.variables:
-            return self._multiply_same(other_factor)
-        else:
-            return self._multiply_different(other_factor)
+        #if self.variables == other_factor.variables:
+        #    return self._multiply_same(other_factor)
+        #else:
+        return self._multiply_different(other_factor)
 
     def _divide_same(self, other_factor):
         """Divide factor by other factor with same variables."""
@@ -324,10 +324,10 @@ class DiscreteFactor(Factor):
             raise ValueError(
                 "The denominator is not a subset of the numerator.")
 
-        if self.variables == other_factor.variables:
-            return self._divide_same(other_factor)
-        else:
-            return self._divide_different(other_factor)
+        #if self.variables == other_factor.variables:
+        #    return self._divide_same(other_factor)
+        #else:
+        return self._divide_different(other_factor)
 
     def normalize(self):
         """Normalize factor table."""

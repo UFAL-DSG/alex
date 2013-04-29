@@ -100,6 +100,7 @@ class DiscreteVariableNode(Node):
             self.belief = reduce(operator.mul, self.incoming_message.values())
 
     def most_probable(self, n=None):
+        self.normalize()
         return self.belief.most_probable()
 
 
