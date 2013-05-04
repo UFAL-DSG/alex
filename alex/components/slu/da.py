@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
+import codecs
 from collections import defaultdict
 import copy
+from itertools import islice
 from operator import xor
 
 from alex.components.slu.exception import SLUException
@@ -12,7 +14,7 @@ from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.text import split_by
 
 
-def load_das(das_fname, limit=None):
+def load_das(das_fname, limit=None, encoding='UTF-8'):
     """Loads a dictionary of DAs from a given file. The file is assumed to
     contain lines of the following form:
 
@@ -21,41 +23,29 @@ def load_das(das_fname, limit=None):
     Arguments:
         das_fname -- path towards the file to read the DAs from
         limit -- limit on the number of DAs to read
+        encoding -- the file encoding
 
     Returns a dictionary with DAs (instances of DialogueAct) as values.
 
     """
-    with open(das_fname) as das_file:
+    with codecs.open(das_fname, encoding=encoding) as das_file:
         das = defaultdict(list)
-        count = 0
-        for line in das_file:
-            count += 1
-            if limit and count > limit:
-                break
-
+        for line in islice(das_file, 0, limit):
             line = line.strip()
             if not line:
                 continue
-
-            parts = line.split("=>")
-
+            parts = line.split("=>", 2)
             key = parts[0].strip()
-            sem = parts[1].strip()
-
-            das[key] = DialogueAct(sem)
-
+            da_str = parts[1].strip()
+            das[key] = DialogueAct(da_str)
     return das
 
 
 def save_das(file_name, das):
-    f = open(file_name, 'w+')
-
-    for u in sorted(das):
-        f.write(u)
-        f.write(" => ")
-        f.write(str(das[u]) + '\n')
-
-    f.close()
+    with open(file_name, 'w+') as outfile:
+        for turn_key in sorted(das):
+            outfile.write('{key} => {da}\n'.format(key=turn_key,
+                                                   da=das[turn_key]))
 
 
 class DialogueActItemException(SLUException):

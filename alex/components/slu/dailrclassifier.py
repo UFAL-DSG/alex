@@ -1299,6 +1299,11 @@ class DAILogRegClassifier(SLUInterface):
                 try:
                     dai_prob = (self.trained_classifiers[dai]
                                 .predict_proba(conc_feat_vec))
+                    # Formula to use if doing logistic regression.
+                    # Tested to equal the sklearn's predict_proba prediction.
+                    # exponent = (-self.intercepts[dai]
+                                # - np.dot(self.coefs[dai], conc_feat_vec))
+                    # dai_prob = 1. / (1. + np.exp(exponent))
                 except Exception as ex:
                     print '(EE) Parsing exception: ', ex
                     continue

@@ -80,11 +80,15 @@ class CategoryLabelDatabase(object):
     def normalise_database(self):
         """Normalise database. E.g., split utterances into sequences of words.
         """
+        new_db = dict()
         for name in self.database:
+            new_db[name] = dict()
             for value in self.database[name]:
-                self.database[name][value] = map(
+                # self.database[name][value] = map(
+                new_db[name][value] = map(
                     lambda phrase: tuple(phrase.split()),
                     self.database[name][value])
+        self.database = new_db
 
     def gen_synonym_value_category(self):
         for name in self.database:

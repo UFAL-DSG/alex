@@ -5,7 +5,7 @@ import os.path
 import numpy as np
 from datetime import datetime
 
-class MulticlassLogisticRegression:
+class MulticlassLogisticRegression(object):
     """Implementation of multiclass logistic regression. It provides two ways
     of training:
       1) normal gradient descent
@@ -226,10 +226,10 @@ def test():
 
     num_clases = 2
     phi_size = 2
-    examples =  [ [1, [ 0.0, 0.0, 1.0 ],
-                  [0, [ 0.5, 0.1, 1.0 ],
-                  [0, [ 0.5, 0.2, 1.0 ],
-                  [1, [-0.5, 0.2, 1.0 ],
+    examples =  [ [1, [ 0.0, 0.0, 1.0 ], ],
+                  [0, [ 0.5, 0.1, 1.0 ], ],
+                  [0, [ 0.5, 0.2, 1.0 ], ],
+                  [1, [-0.5, 0.2, 1.0 ], ]
                 ]
 
     LR = MulticlassLogisticRegression(num_clases, phi_size)
