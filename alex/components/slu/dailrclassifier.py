@@ -1165,6 +1165,16 @@ class DAILogRegClassifier(SLUInterface):
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
 
+        # Recast model parameters from an sklearn object as plain lists of
+        # coefficients and intercept.
+        if version != '4' and self.clser_type == 'logistic':
+            self.intercepts = {
+                dai: self.trained_classifiers[dai].intercept_[0]
+                for dai in self.trained_classifiers}
+            self.coefs = {dai: self.trained_classifiers[dai].coef_[0, :]
+                          for dai in self.trained_classifiers}
+            self.trained_classifiers = {dai: None for dai in self.coefs}
+
     def get_size(self):
         """Returns the number of features in use."""
         return len(self.features_idxs)
@@ -1479,7 +1489,7 @@ class DAILogRegClassifier(SLUInterface):
                         # dai_prob = (self.trained_classifiers[dai]
                                     # .predict_proba(feat_vec))
                     except Exception as ex:
-                        print '(EE) Parsing exception: ', ex
+                        print '(EE) Parsing exception: ', str(ex)
                         continue
 
                     if verbose:
@@ -1508,7 +1518,7 @@ class DAILogRegClassifier(SLUInterface):
                     # dai_prob = (self.trained_classifiers[dai]
                                 # .predict_proba(conc_feat_vec))
                 except Exception as ex:
-                    print '(EE) Parsing exception: ', ex
+                    print '(EE) Parsing exception: ', str(ex)
                     continue
 
                 if verbose:

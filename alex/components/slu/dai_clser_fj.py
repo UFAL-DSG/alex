@@ -233,16 +233,29 @@ class DAILogRegClassifier(SLUInterface):
             print "Total number of non-zero params:", np.count_nonzero(
                 non_zero)
 
-    def save_model(self, file_name):
-        with open(file_name, 'w+') as model_file:
-            pickle.dump([self.features_list,
-                         self.features_mapping,
-                         self.trained_classifiers,
-                         self.features_size],
-                        model_file)
+    def save_model(self, file_name, gzip=None):
+        data = [self.features_list, self.features_mapping,
+                self.trained_classifiers, self.features_size]
+
+        if gzip is None:
+            gzip = file_name.endswith('gz')
+        if gzip:
+            import gzip
+            open_meth = gzip.open
+        else:
+            open_meth = open
+        with open_meth(file_name, 'wb') as outfile:
+            pickle.dump(data, outfile)
 
     def load_model(self, file_name):
-        with open(file_name, 'rb') as model_file:
+        # Handle gzipped files.
+        if file_name.endswith('gz'):
+            import gzip
+            open_meth = gzip.open
+        else:
+            open_meth = open
+
+        with open_meth(file_name, 'rb') as model_file:
             (self.features_list, self.features_mapping,
              self.trained_classifiers,
              self.features_size) = pickle.load(model_file)
