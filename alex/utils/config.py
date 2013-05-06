@@ -85,6 +85,10 @@ class Config(object):
             using the configuration file.
 
     """
+    # TODO: Enable setting requirements on the configuration variables and
+    # checking that they are met (i.e., 2 things:
+    #   - requirements = property(get_reqs, set_reqs)
+    #   - def check_requirements_are_met(self)
 
     def __init__(self, file_name=None, project_root=False, config={}):
         self.config = config
