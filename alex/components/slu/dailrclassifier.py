@@ -17,6 +17,7 @@ import sys
 from sklearn import metrics, tree
 from sklearn.linear_model import LogisticRegression
 
+# TODO Rewrite using lazy imports.
 from alex.components.asr.utterance import Utterance, \
     UtteranceConfusionNetwork, UtteranceFeatures, UtteranceNBListFeatures, \
     UtteranceConfusionNetworkFeatures, UtteranceHyp

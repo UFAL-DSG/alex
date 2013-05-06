@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-import copy
-
 from collections import defaultdict
+import copy
 from itertools import product
 
 from exception import DAILRException
@@ -84,7 +83,6 @@ class CategoryLabelDatabase(object):
         for name in self.database:
             new_db[name] = dict()
             for value in self.database[name]:
-                # self.database[name][value] = map(
                 new_db[name][value] = map(
                     lambda phrase: tuple(phrase.split()),
                     self.database[name][value])

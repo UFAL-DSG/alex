@@ -788,15 +788,15 @@ class DialogueActConfusionNetwork(SLUHypothesis):
     def __len__(self):
         return len(self.cn)
 
-    def __getitem__(self, i):
-        return self.cn[i]
+    def __getitem__(self, idx):
+        return self.cn[idx]
 
     def __contains__(self, dai):
         return self.get_marginal(dai) is not None
 
     def __iter__(self):
-        for i in self.cn:
-            yield i
+        for dai_hyp in self.cn:
+            yield dai_hyp
 
     def add(self, probability, dai):
         """Append additional dialogue act item into the confusion network."""
