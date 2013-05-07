@@ -17,6 +17,7 @@ import sys
 from sklearn import metrics, tree
 from sklearn.linear_model import LogisticRegression
 
+# TODO Rewrite using lazy imports.
 from alex.components.asr.utterance import Utterance, \
     UtteranceConfusionNetwork, UtteranceFeatures, UtteranceNBListFeatures, \
     UtteranceConfusionNetworkFeatures, UtteranceHyp
@@ -116,6 +117,7 @@ class DAILogRegClassifier(SLUInterface):
     # TODO Document attributes from the original DAILogRegClassifier class
     # (from the load_model method on).
     # TODO Document changes made in slot value abstraction for DSTC.
+    # TODO Document intercepts, coefs.
     from exception import DAILRException
 
     # TODO Document.
@@ -143,6 +145,9 @@ class DAILogRegClassifier(SLUInterface):
         # Save the arguments.
         self.preprocessing = preprocessing
         self.clser_type = clser_type
+        if clser_type == 'logistic':
+            self.intercepts = dict()
+            self.coefs = dict()
         self.features_type = features_type
         self.features_size = features_size
         self.abstractions = abstractions
@@ -866,6 +871,11 @@ class DAILogRegClassifier(SLUInterface):
                     clser = LogisticRegression('l1', C=sparsification,
                                                tol=1e-6, class_weight='auto')
                     clser.fit(inputs, outputs)
+                    # Save only the classifier's coefficients.
+                    self.trained_classifiers[dai] = None  # to mark there IS
+                                                        # a clser for this DAI
+                    self.intercepts[dai] = clser.intercept_[0]
+                    self.coefs[dai] = clser.coef_[0, :]
                 else:
                     assert self.clser_type == 'tree'
                     inputs = inputs.toarray()  # dense format required by the
@@ -874,13 +884,13 @@ class DAILogRegClassifier(SLUInterface):
                     clser = tree.DecisionTreeClassifier(min_samples_split=5,
                                                         max_depth=4)
                     clser.fit(inputs, outputs)
+                    self.trained_classifiers[dai] = clser
             except:
                 if verbose:
                     msg = "...not enough training data."
                     print msg
                     print >>sys.stderr, msg
                 continue
-            self.trained_classifiers[dai] = clser
 
             # Calibrate the prior.
             if calibrate:
@@ -1063,11 +1073,17 @@ class DAILogRegClassifier(SLUInterface):
     def save_model(self, file_name, gzip=None):
         if gzip is None:
             gzip = file_name.endswith('gz')
-        version = '3.1'
+        version = '4'
+        if self.clser_type == 'logistic':
+            clser_data = (self.intercepts, self.coefs)
+        else:
+            # clser_data = ({dai: clser for (dai, clser) in
+                           # self.trained_classifiers.iteritems()}, )
+            clser_data = (self.trained_classifiers, )
+            # ...should be the same, right?
         data = (self.feature_idxs,
-                self.clser_type,
-                {dai: clser for dai, clser in
-                 self.trained_classifiers.iteritems()},
+                self.clser_type
+                ) + clser_data + (
                 self.features_type,
                 self.features_size,
                 dict(self.cls_thresholds),
@@ -1129,9 +1145,35 @@ class DAILogRegClassifier(SLUInterface):
                 self._do_abstract_values.add(False)
             if 'abstract' in self.abstractions:
                 self._do_abstract_values.add(True)
+        elif version == '4':
+            (self.feature_idxs, self.clser_type) = data[:2]
+            if self.clser_type == 'logistic':
+                (self.intercepts, self.coefs) = data[2:4]
+                self.trained_classifiers = {dai: None for dai in self.coefs}
+                next_idx = 4
+            else:
+                self.trained_classifiers = data[2]
+                next_idx = 3
+            (self.features_type, self.features_size, cls_thresholds_dict,
+             self.abstractions) = data[next_idx:]
+            # Interpret cls_thresholds_dict as a defaultdict of thresholds for
+            # all classifiers.
+            self.cls_thresholds = defaultdict(lambda: 0.5)
+            self.cls_thresholds.update(cls_thresholds_dict)
+            self.cls_threshold = 0.5
         else:
             raise SLUException('Unknown version of the SLU model file: '
                                '{v}.'.format(v=version))
+
+        # Recast model parameters from an sklearn object as plain lists of
+        # coefficients and intercept.
+        if version != '4' and self.clser_type == 'logistic':
+            self.intercepts = {
+                dai: self.trained_classifiers[dai].intercept_[0]
+                for dai in self.trained_classifiers}
+            self.coefs = {dai: self.trained_classifiers[dai].coef_[0, :]
+                          for dai in self.trained_classifiers}
+            self.trained_classifiers = {dai: None for dai in self.coefs}
 
     def get_size(self):
         """Returns the number of features in use."""
@@ -1159,6 +1201,14 @@ class DAILogRegClassifier(SLUInterface):
         # Let the true normalised value be the face value
         inst_dai.value2normalised(value)
         return inst_dai
+
+    def predict_prob(self, dai, feat_vec):
+        if self.clser_type == 'logistic':
+            exponent = (-self.intercepts[dai]
+                        - np.dot(self.coefs[dai], feat_vec))
+            return 1. / (1. + np.exp(exponent))
+        else:
+            return self.trained_classifiers[dai].predict_proba(feat_vec)
 
     def parse_1_best(self,
                      utterance=None,
@@ -1274,8 +1324,9 @@ class DAILogRegClassifier(SLUInterface):
                     feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
 
                     try:
-                        dai_prob = (self.trained_classifiers[dai]
-                                    .predict_proba(feat_vec))
+                        dai_prob = self.predict_prob(dai, feat_vec)
+                        # dai_prob = (self.trained_classifiers[dai]
+                                    # .predict_proba(feat_vec))
                     except Exception as ex:
                         print '(EE) Parsing exception: ', ex
                         continue
@@ -1288,7 +1339,7 @@ class DAILogRegClassifier(SLUInterface):
                     # Not strictly needed, but this information is easy to
                     # obtain now.
                     inst_dai.value2category_label(dai_catlab)
-                    da_confnet.add_merge(dai_prob[0][1], inst_dai,
+                    da_confnet.add_merge(dai_prob, inst_dai,
                                          is_normalised=False,
                                          overwriting=not dai.is_generic)
             else:
@@ -1297,8 +1348,7 @@ class DAILogRegClassifier(SLUInterface):
                     # instantiations for its slot on the input.
                     continue
                 try:
-                    dai_prob = (self.trained_classifiers[dai]
-                                .predict_proba(conc_feat_vec))
+                    dai_prob = self.predict_prob(dai, conc_feat_vec)
                 except Exception as ex:
                     print '(EE) Parsing exception: ', ex
                     continue
@@ -1306,7 +1356,7 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print "Classification result: ", dai_prob
 
-                da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
+                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
 
         if verbose:
             print "DA: ", da_confnet
@@ -1435,10 +1485,11 @@ class DAILogRegClassifier(SLUInterface):
                     feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
 
                     try:
-                        dai_prob = (self.trained_classifiers[dai]
-                                    .predict_proba(feat_vec))
+                        dai_prob = self.predict_prob(dai, feat_vec)
+                        # dai_prob = (self.trained_classifiers[dai]
+                                    # .predict_proba(feat_vec))
                     except Exception as ex:
-                        print '(EE) Parsing exception: ', ex
+                        print '(EE) Parsing exception: ', str(ex)
                         continue
 
                     if verbose:
@@ -1452,7 +1503,7 @@ class DAILogRegClassifier(SLUInterface):
                     # `overwriting' commented out to ensure passing the test
                     # with the current model. Otherwise, it would be reasonable
                     # to set it as it was set.
-                    da_confnet.add_merge(dai_prob[0][1], inst_dai,
+                    da_confnet.add_merge(dai_prob, inst_dai,
                                          is_normalised=False,
                                          # overwriting=not dai.is_generic)
                                          overwriting=None)
@@ -1463,17 +1514,18 @@ class DAILogRegClassifier(SLUInterface):
                     # instantiations for its slot on the input.
                     continue
                 try:
-                    dai_prob = (self.trained_classifiers[dai]
-                                .predict_proba(conc_feat_vec))
+                    dai_prob = self.predict_prob(dai, conc_feat_vec)
+                    # dai_prob = (self.trained_classifiers[dai]
+                                # .predict_proba(conc_feat_vec))
                 except Exception as ex:
-                    print '(EE) Parsing exception: ', ex
+                    print '(EE) Parsing exception: ', str(ex)
                     continue
 
                 if verbose:
                     print "Classification result: ", dai_prob
 
                 dai.category_label2value()
-                da_confnet.add_merge(dai_prob[0][1], dai, is_normalised=False)
+                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
 
         if verbose:
             print "DA: ", da_confnet

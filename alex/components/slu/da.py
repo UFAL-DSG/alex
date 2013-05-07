@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
+import codecs
 from collections import defaultdict
 import copy
+from itertools import islice
 from operator import xor
 
 from alex.components.slu.exception import SLUException
@@ -12,7 +14,7 @@ from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.utils.text import split_by
 
 
-def load_das(das_fname, limit=None):
+def load_das(das_fname, limit=None, encoding='UTF-8'):
     """Loads a dictionary of DAs from a given file. The file is assumed to
     contain lines of the following form:
 
@@ -21,46 +23,29 @@ def load_das(das_fname, limit=None):
     Arguments:
         das_fname -- path towards the file to read the DAs from
         limit -- limit on the number of DAs to read
+        encoding -- the file encoding
 
     Returns a dictionary with DAs (instances of DialogueAct) as values.
 
     """
-    with open(das_fname) as das_file:
+    with codecs.open(das_fname, encoding=encoding) as das_file:
         das = defaultdict(list)
-        count = 0
-        for line in das_file:
-            line = line.decode('utf8')
-            count += 1
-            if limit and count > limit:
-                break
-
+        for line in islice(das_file, 0, limit):
             line = line.strip()
             if not line:
                 continue
-
-            parts = line.split("=>")
-
-            if len(parts) == 2:
-                key = parts[0].strip()
-                sem = parts[1].strip()
-            else:
-                key = "%d" % count
-                sem = line
-
-            das[key] = DialogueAct(sem)
-
+            parts = line.split("=>", 2)
+            key = parts[0].strip()
+            da_str = parts[1].strip()
+            das[key] = DialogueAct(da_str)
     return das
 
 
 def save_das(file_name, das):
-    f = open(file_name, 'w+')
-
-    for u in sorted(das):
-        f.write(u)
-        f.write(" => ")
-        f.write(str(das[u]) + '\n')
-
-    f.close()
+    with open(file_name, 'w+') as outfile:
+        for turn_key in sorted(das):
+            outfile.write('{key} => {da}\n'.format(key=turn_key,
+                                                   da=das[turn_key]))
 
 
 class DialogueActItemException(SLUException):
@@ -803,15 +788,15 @@ class DialogueActConfusionNetwork(SLUHypothesis):
     def __len__(self):
         return len(self.cn)
 
-    def __getitem__(self, i):
-        return self.cn[i]
+    def __getitem__(self, idx):
+        return self.cn[idx]
 
     def __contains__(self, dai):
         return self.get_marginal(dai) is not None
 
     def __iter__(self):
-        for i in self.cn:
-            yield i
+        for dai_hyp in self.cn:
+            yield dai_hyp
 
     def add(self, probability, dai):
         """Append additional dialogue act item into the confusion network."""
@@ -835,23 +820,22 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
         # 'evidence_weight' instead (=1.) and count evidence collected so far
         # for each fact.
-        for i in xrange(len(self.cn)):
-            existing_dai = self.cn[i][1]
-            if dai == existing_dai:
-                # I found a matching DAI
-                # self.cn[i][0] += probability
+        for dai_idx, (prob_orig, dai_orig) in enumerate(self.cn):
+            if dai == dai_orig:
+                # dai_idx found a matching DAI
+                # self.cn[dai_idx][0] += probability
                 # DSTC
-                prob_orig = self.cn[i][0]
                 if overwriting is not None:
-                    self.cn[i][0] = probability if overwriting else prob_orig
+                    self.cn[dai_idx][0] = probability if overwriting else prob_orig
                 else:
                     if is_normalised:
-                        self.cn[i][0] += probability
+                        self.cn[dai_idx][0] += probability
                     else:
-                        self.cn[i][0] = .5 * (prob_orig + probability)
-                return
-        # if not found you should add it
+                        self.cn[dai_idx][0] = .5 * (prob_orig + probability)
+                return self
+        # If the DAI was not present, add it.
         self.add(probability, dai)
+        return self
 
     def get_best_da(self):
         """Return the best dialogue act (one with the highest probability)."""
@@ -1058,21 +1042,36 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return nblist
 
-    def merge(self):
+    def merge(self, is_normalised=False, overwriting=None):
         """Adds up probabilities for the same hypotheses.
 
-        This method has actually nothing to do. The alternatives for each
-        dialog act item (DAI) are just two: it is there, or it isn't. The data
-        model captures only the presence of DAI-s, and hence no other
-        hypothesis' probabilities need to be added.
-
-        XXX As yet, though, we know that different values for the same slot are
+        XXX As yet, we know that different values for the same slot are
         contradictory (and in general, the set of contradicting attr-value
         pairs could be larger).  We should therefore consider them alternatives
         to each other.
 
         """
-        pass
+        new_cn = list()
+        dai_idxs = dict()  # :: [dai-> dai_idx]
+        for dai_idx, (prob, dai) in enumerate(self.cn):
+            if dai in dai_idxs:
+                # dai_idx found a matching DAI
+                # self.cn[dai_idx][0] += probability
+                # DSTC
+                new_dai_idx = dai_idxs[dai]
+                prob_orig = new_cn[new_dai_idx][0]
+                if overwriting is not None:
+                    new_cn[new_dai_idx][0] = prob if overwriting else prob_orig
+                else:
+                    if is_normalised:
+                        new_cn[new_dai_idx][0] += prob
+                    else:
+                        new_cn[new_dai_idx][0] = .5 * (prob_orig + prob)
+            else:
+                dai_idxs[dai] = len(new_cn)
+                new_cn.append([prob, dai])
+        self.cn = new_cn
+        return self
 
     def prune(self, prune_prob=0.001):
         """Prune all low probability dialogue act items."""
@@ -1134,6 +1133,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     def sort(self):
         self.cn.sort(reverse=True)
+        return self
 
 
 def merge_slu_nblists(multiple_nblists):

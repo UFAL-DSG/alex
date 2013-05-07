@@ -73,16 +73,22 @@ def load_as_module(path, force=False):
 class Config(object):
     """
     Config handles configuration data necessary for all the components
-    in the alex. It implements a dictionary so that any component could
-    store arbitrary structured data.
+    in Alex. It is implemented using a dictionary so that any component can use
+    arbitrarily structured configuration data.
 
     When the configuration file is loaded, several automatic transformations
-    are applied.
-        1) '{cfg_abs_path}' as a substring of atomic attributes is replaced by
+    are applied:
+
+        1. '{cfg_abs_path}' as a substring of atomic attributes is replaced by
             an absolute path of the configuration files.  This can be used to
             make the configuration file independent of the location of programs
             using the configuration file.
+
     """
+    # TODO: Enable setting requirements on the configuration variables and
+    # checking that they are met (i.e., 2 things:
+    #   - requirements = property(get_reqs, set_reqs)
+    #   - def check_requirements_are_met(self)
 
     def __init__(self, file_name=None, project_root=False, config={}):
         self.config = config
@@ -113,7 +119,7 @@ class Config(object):
             yield i
 
     def __str__(self):
-        """ Converts the the config into a pretty print string.
+        """Converts the the config into a pretty print string.
 
         It removes all lines which include word:
             - password

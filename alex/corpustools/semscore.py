@@ -114,24 +114,24 @@ def score(refsem, testsem, item_level=False, outfile=sys.stdout):
                       'Precision', 'Recall', 'F-measure'))
         outfile.write("\n")
         for k in sorted(stats):
-            outfile.write("%40s %10.2f %10.2f %10.2f " % (k,
-                                                          stats[
-                                                              k]['precision'],
-                                                          stats[k]['recall'],
-                                                          2 * stats[k]['precision'] * stats[k]['recall'] / (stats[k]['precision'] + stats[k]['recall'])
-                                                          ))
-            outfile.write("\n")
+            outfile.write("%40s %10.2f %10.2f %10.2f\n" % (
+                k,
+                stats[k]['precision'],
+                stats[k]['recall'],
+                (2 * stats[k]['precision'] * stats[k]['recall']
+                 / (stats[k]['precision'] + stats[k]['recall']))))
 
         outfile.write("-" * 120)
         outfile.write("\n")
 
-    outfile.write("Total precision: %6.2f" % precision)
-    outfile.write("\n")
-    outfile.write("Total recall:    %6.2f" % recall)
-    outfile.write("\n")
-    outfile.write("Total F-measure: %6.2f" % (2 * precision * recall /
-                  (precision + recall), ))
-    outfile.write("\n")
+    outfile.write("Total precision: %6.2f\n" % precision)
+    outfile.write("Total recall:    %6.2f\n" % recall)
+    if precision + recall > 0.:
+        fscore = 2 * precision * recall / (precision + recall)
+    else:
+        fscore = 0.
+    outfile.write("Total F-measure: {fscore:6.2f}\n".format(fscore=fscore))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -155,7 +155,8 @@ if __name__ == '__main__':
         'refsem', action="store", help='a file with reference semantics')
     parser.add_argument(
         'testsem', action="store", help='a file with tested semantics')
-    parser.add_argument('-i', action="store_true", default=False, dest="item_level", help='print item level precision and recall')
+    parser.add_argument('-i', '--item-level', action="store_true", default=False,
+                        help='print item-level precision and recall')
 
     args = parser.parse_args()
 

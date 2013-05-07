@@ -4,9 +4,10 @@
 
 import numpy as np
 
+import codecs
 from collections import defaultdict, namedtuple
 import copy
-from itertools import izip, product
+from itertools import izip, islice, product
 from operator import itemgetter, mul
 
 from alex import utils
@@ -23,7 +24,7 @@ SENTENCE_START = '<s>'
 SENTENCE_END = '</s>'
 
 
-def load_utterances(utt_fname, limit=None):
+def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
     """Loads a dictionary of utterances from a given file. The file is assumed
     to contain lines of the following form:
 
@@ -32,18 +33,14 @@ def load_utterances(utt_fname, limit=None):
     Arguments:
         utt_fname -- path towards the file to read the utterances from
         limit -- limit on the number of utterances to read
+        encoding -- the file encoding
 
     Returns a dictionary with utterances (instances of Utterance) as values.
 
     """
-    with open(utt_fname) as utt_file:
+    with codecs.open(utt_fname, encoding=encoding) as utt_file:
         utterances = {}
-        count = 0
-        for line in utt_file:
-            count += 1
-            if limit is not None and count > limit:
-                break
-
+        for line in islice(utt_file, 0, limit):
             line = line.strip()
             if not line:
                 continue
@@ -58,7 +55,6 @@ def load_utterances(utt_fname, limit=None):
                 utt = line
 
             utterances[key] = Utterance(utt)
-
     return utterances
 
 
@@ -90,7 +86,10 @@ class Utterance(object):
         self._wordset = set(self._utterance)
 
     def __str__(self):
-        return ' '.join(self._utterance)
+        return ' '.join(word.encode('utf-8') for word in self._utterance)
+
+    def __unicode__(self):
+        return u' '.join(self._utterance)
 
     def __contains__(self, phrase):
         return self.find(phrase) != -1
@@ -130,6 +129,11 @@ class Utterance(object):
     @property
     def utterance(self):
         return self._utterance
+
+    @utterance.setter
+    def utterance(self, utt):
+        self._utterance = utt
+        self._wordset = set(self._utterance)
 
     def isempty(self):
         return len(self._utterance) == 0
@@ -225,7 +229,6 @@ class Utterance(object):
         """
         for widx, word in enumerate(self._utterance):
             self._utterance[widx] = word.lower()
-            self._utterance[word_idx] = self._utterance[word_idx].lower()
         self._wordset = set(self._utterance)
         return self
 
