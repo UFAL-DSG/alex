@@ -91,7 +91,7 @@ class SLUPreprocessing(object):
         """
         utterance.lower()
         for mapping in self.text_normalization_mapping:
-            utterance.replace(mapping[0], mapping[1])
+            utterance = utterance.replace(mapping[0], mapping[1])
         return utterance
 
     def values2category_labels_in_utterance(self, utterance):
@@ -125,7 +125,7 @@ class SLUPreprocessing(object):
                 category_labels[category_label] = (value, surface)
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
-                utterance.replace(surface, [category_label])
+                utterance = utterance.replace(surface, [category_label])
                 break
 
         return utterance, category_labels
