@@ -208,7 +208,7 @@ class SLUPreprocessing(object):
         # DAIs that did not get substituted are almost surely wrong. Remove
         # them.
         new_cn = [(prob, dai) for (prob, dai) in confnet.cn
-                  if dai.value and '-' not in dai.value]
+                  if not dai.value or '-' not in dai.value]
         # XXX This may break the correct behaviour of the Confnet class...
         confnet.cn = new_cn
 

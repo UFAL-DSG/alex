@@ -135,14 +135,14 @@ class DAILogRegClassifier(SLUInterface):
                             # print self.category_labels[utt_idx]
         return self._dai_counts
 
-    def prune_classifiers(self, min_classifier_count=5, *args, **kwargs):
+    def prune_classifiers(self, min_dai_count=5, *args, **kwargs):
         new_classifiers = {}
         for dai in self.dai_counts:
             dai_str = str(dai)
             # Prune these classfiers.
             if ('=' in dai_str
                     and '0' not in dai_str
-                    and self.dai_counts[dai] < min_classifier_count):
+                    and self.dai_counts[dai] < min_dai_count):
                 continue
 
             if ('="dontcare"' in dai_str
@@ -319,18 +319,13 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             print "DA: ", da_confnet
 
-        confnet = self.preprocessing.category_labels2values_in_confnet(
+        da_confnet = self.preprocessing.category_labels2values_in_confnet(
             da_confnet, category_labels)
-        confnet.sort().merge()
-
-        # DEBUG
-        for prob, dai in confnet.cn:
-            if '-' in str(dai):
-                import ipdb; ipdb.set_trace()
+        da_confnet.sort().merge()
 
         if ret_cl_map:
-            return confnet, category_labels
-        return confnet
+            return da_confnet, category_labels
+        return da_confnet
 
 
     def parse_nblist(self, utterance_list, *args, **kwargs):
