@@ -314,14 +314,19 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 print p
 
-            da_confnet.add(p[0][1], dai.extension())
+            da_confnet.add(p[0][1], dai)
 
         if verbose:
             print "DA: ", da_confnet
 
         confnet = self.preprocessing.category_labels2values_in_confnet(
             da_confnet, category_labels)
-        confnet.sort()
+        confnet.sort().merge()
+
+        # DEBUG
+        for prob, dai in confnet.cn:
+            if '-' in str(dai):
+                import ipdb; ipdb.set_trace()
 
         if ret_cl_map:
             return confnet, category_labels

@@ -820,23 +820,22 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
         # 'evidence_weight' instead (=1.) and count evidence collected so far
         # for each fact.
-        for i in xrange(len(self.cn)):
-            existing_dai = self.cn[i][1]
-            if dai == existing_dai:
-                # I found a matching DAI
-                # self.cn[i][0] += probability
+        for dai_idx, (prob_orig, dai_orig) in enumerate(self.cn):
+            if dai == dai_orig:
+                # dai_idx found a matching DAI
+                # self.cn[dai_idx][0] += probability
                 # DSTC
-                prob_orig = self.cn[i][0]
                 if overwriting is not None:
-                    self.cn[i][0] = probability if overwriting else prob_orig
+                    self.cn[dai_idx][0] = probability if overwriting else prob_orig
                 else:
                     if is_normalised:
-                        self.cn[i][0] += probability
+                        self.cn[dai_idx][0] += probability
                     else:
-                        self.cn[i][0] = .5 * (prob_orig + probability)
-                return
-        # if not found you should add it
+                        self.cn[dai_idx][0] = .5 * (prob_orig + probability)
+                return self
+        # If the DAI was not present, add it.
         self.add(probability, dai)
+        return self
 
     def get_best_da(self):
         """Return the best dialogue act (one with the highest probability)."""
@@ -1043,21 +1042,36 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return nblist
 
-    def merge(self):
+    def merge(self, is_normalised=False, overwriting=None):
         """Adds up probabilities for the same hypotheses.
 
-        This method has actually nothing to do. The alternatives for each
-        dialog act item (DAI) are just two: it is there, or it isn't. The data
-        model captures only the presence of DAI-s, and hence no other
-        hypothesis' probabilities need to be added.
-
-        XXX As yet, though, we know that different values for the same slot are
+        XXX As yet, we know that different values for the same slot are
         contradictory (and in general, the set of contradicting attr-value
         pairs could be larger).  We should therefore consider them alternatives
         to each other.
 
         """
-        pass
+        new_cn = list()
+        dai_idxs = dict()  # :: [dai-> dai_idx]
+        for dai_idx, (prob, dai) in enumerate(self.cn):
+            if dai in dai_idxs:
+                # dai_idx found a matching DAI
+                # self.cn[dai_idx][0] += probability
+                # DSTC
+                new_dai_idx = dai_idxs[dai]
+                prob_orig = new_cn[new_dai_idx][0]
+                if overwriting is not None:
+                    new_cn[new_dai_idx][0] = prob if overwriting else prob_orig
+                else:
+                    if is_normalised:
+                        new_cn[new_dai_idx][0] += prob
+                    else:
+                        new_cn[new_dai_idx][0] = .5 * (prob_orig + prob)
+            else:
+                dai_idxs[dai] = len(new_cn)
+                new_cn.append([prob, dai])
+        self.cn = new_cn
+        return self
 
     def prune(self, prune_prob=0.001):
         """Prune all low probability dialogue act items."""
@@ -1119,6 +1133,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     def sort(self):
         self.cn.sort(reverse=True)
+        return self
 
 
 def merge_slu_nblists(multiple_nblists):
