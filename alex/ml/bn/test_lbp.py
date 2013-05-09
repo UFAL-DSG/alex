@@ -5,7 +5,7 @@ import unittest
 
 from bn.factor import DiscreteFactor
 from bn.node import DiscreteVariableNode, DiscreteFactorNode
-from bn.lbp import LBP, SingleLinkedLBP
+from bn.lbp import LBP
 
 class TestLBP(unittest.TestCase):
 
@@ -163,7 +163,7 @@ class TestLBP(unittest.TestCase):
         hid3.add_edge_to(fact_h2_h3)
 
         # Add nodes to lbp.
-        lbp = SingleLinkedLBP()
+        lbp = LBP(strategy='tree')
         lbp.add_nodes([
             obs1, obs2, obs3,
             fact_h1_o1, fact_h2_o2, fact_h3_o3,

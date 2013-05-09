@@ -174,6 +174,28 @@ class TestFactor(unittest.TestCase):
         self.assertClose(f2[('a', 2)], 0.04)
         self.assertClose(f2[('b', 1)], 0.0625)
 
+    def test_fast_mul_correct(self):
+        f1 = DiscreteFactor(['B'],
+            {
+                'B': [0, 1, 2]
+            },
+            {
+                (0,): 0.2,
+                (1,): 0.25,
+                (2,): 0.55,
+            })
+
+        f2 = DiscreteFactor(['B'],
+            {
+                'B': [0, 1]
+            },
+            {
+                (0,): 0.7,
+                (1,): 0.3,
+            })
+
+        self.assertRaises(ValueError, lambda: f2 * f1)
+
     def test_division(self):
         factor = DiscreteFactor(
             ['A', 'B', 'C'],
