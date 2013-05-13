@@ -5,7 +5,7 @@
 
 import unittest
 
-from bn.factor import DiscreteFactor
+from alex.ml.bn.factor import DiscreteFactor
 
 
 class TestFactor(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,
@@ -46,7 +46,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,
@@ -71,7 +71,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,
@@ -100,7 +100,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,
@@ -205,7 +205,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,
@@ -267,7 +267,7 @@ class TestFactor(unittest.TestCase):
                 "C": [0, 1],
             },
             {
-            #   (A, B, C): P(A, B, C)
+#               (A, B, C): P(A, B, C)
                 (0, 0, 0): 0.01,
                 (0, 0, 1): 0.02,
                 (0, 1, 0): 0.03,

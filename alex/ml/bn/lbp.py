@@ -6,10 +6,14 @@
 import abc
 import itertools
 
-from collections import defaultdict
 
-class BPError(Exception): pass
-class LBPError(BPError): pass
+class BPError(Exception):
+    pass
+
+
+class LBPError(BPError):
+    pass
+
 
 class BP(object):
     """Abstract class for Belief Propagation algorithm."""

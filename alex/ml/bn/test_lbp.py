@@ -3,9 +3,10 @@
 
 import unittest
 
-from bn.factor import DiscreteFactor
-from bn.node import DiscreteVariableNode, DiscreteFactorNode
-from bn.lbp import LBP
+from alex.ml.bn.factor import DiscreteFactor
+from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode
+from alex.ml.bn.lbp import LBP
+
 
 class TestLBP(unittest.TestCase):
 

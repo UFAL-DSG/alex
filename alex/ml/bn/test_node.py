@@ -6,11 +6,13 @@
 import unittest
 import pdb
 
-from bn.factor import DiscreteFactor
-from bn.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
+from alex.ml.bn.factor import DiscreteFactor
+from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
+
 
 def same_or_different(assignment):
-    return (all(assignment[0] == x for x in assignment),)
+    return all(assignment[0] == x for x in assignment),
+
 
 class TestNode(unittest.TestCase):
 

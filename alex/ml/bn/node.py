@@ -6,7 +6,7 @@
 import abc
 import operator
 
-from bn.utils import constant_factor
+from alex.ml.bn.utils import constant_factor
 from copy import copy
 
 

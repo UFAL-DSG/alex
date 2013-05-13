@@ -12,6 +12,7 @@ from scipy.misc import logsumexp
 
 ZERO = 0.000000001
 
+
 def to_log(n, out=None):
     """Convert number to log arithmetic."""
     if np.isscalar(n):
@@ -19,6 +20,7 @@ def to_log(n, out=None):
     else:
         n[n < ZERO] = ZERO
         return np.log(n, out)
+
 
 def from_log(n):
     """Convert number from log arithmetic."""
