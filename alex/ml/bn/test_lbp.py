@@ -77,29 +77,27 @@ class TestLBP(unittest.TestCase):
 
         print hid1.belief
 
-        obs1.observed({('osave',):1})
+        obs1.observed({('osave',): 1})
         lbp.run(1)
-        hid1.normalize()
-        print hid1.belief
+        self.assertAlmostEqual(hid1.belief[('save',)], 0.8)
 
-        obs2.observed({('odel',):1})
+        obs2.observed({('odel',): 1})
         lbp.run(1)
-        hid1.normalize()
-        print hid1.belief
+        self.assertAlmostEqual(hid1.belief[('save',)], 0.56521738)
 
     def test_single_linked(self):
         f_h_o = {
             ("save", "osave"): 0.8,
-            ("save", "odel"): 0.3,
-            ("del", "osave"): 0.2,
-            ("del", "odel"): 0.7,
+            ("del",  "osave"): 0.2,
+            ("save", "odel"): 0.2,
+            ("del",  "odel"): 0.8,
         }
 
         f_h_h = {
             ("save", "save"): 0.9,
+            ("del",  "save"): 0.1,
             ("save", "del"): 0.1,
-            ("del", "save"): 0.1,
-            ("del", "del"): 0.9
+            ("del",  "del"): 0.9
         }
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
@@ -172,5 +170,9 @@ class TestLBP(unittest.TestCase):
             fact_h1_h2, fact_h2_h3
         ])
 
-        print "RUN"
+        obs1.observed({('osave',): 1})
         lbp.run()
+
+        self.assertAlmostEqual(hid1.belief[('save',)], 0.8)
+        self.assertAlmostEqual(hid2.belief[('save',)], 0.8 * 0.9 + 0.2 * 0.1, places=6)
+        self.assertAlmostEqual(hid3.belief[('save',)], 0.692000031471)

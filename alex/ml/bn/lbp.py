@@ -86,6 +86,9 @@ class LBP(BP):
             for node in reversed(self.nodes):
                 node.send_messages()
 
+        for node in self.nodes:
+            node.normalize()
+
     def _run_tree(self):
         ordering = []
 
@@ -115,10 +118,10 @@ class LBP(BP):
             node.send_messages()
 
         while len(ordering) > 0:
-            next = ordering.pop()
-            next.update()
-            for x in next.backward_send_to:
-                next.message_to(x)
+            next_node = ordering.pop()
+            next_node.update()
+            for x in next_node.backward_send_to:
+                next_node.message_to(x)
 
     def _run_layers(self, last_layer=None):
         if last_layer is None:
@@ -152,4 +155,3 @@ class LBP(BP):
             for name, neighbor in node.neighbors.iteritems():
                 if neighbor in to_layer:
                     node.message_to(neighbor)
-
