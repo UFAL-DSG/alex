@@ -13,6 +13,7 @@ from scipy.misc import logsumexp
 ZERO = 0.000000001
 
 def to_log(n, out=None):
+    """Convert number to log arithmetic."""
     if np.isscalar(n):
         return np.log(ZERO) if n < ZERO else np.log(n)
     else:
@@ -20,10 +21,13 @@ def to_log(n, out=None):
         return np.log(n, out)
 
 def from_log(n):
+    """Convert number from log arithmetic."""
     return np.exp(n)
 
 
 class Factor(object):
+
+    """Abstract class for factor."""
 
     __metaclass__ = abc.ABCMeta
 
@@ -34,15 +38,21 @@ class Factor(object):
 
 
 class DiscreteFactor(Factor):
-    """Factor representation with basic operations."""
+    """Discrete factor representation with basic operations."""
 
     def _factor_table_length(self, cardinalities):
         """Length of the factor table (number of assignments)."""
-        length = reduce(operator.mul, cardinalities.values())
-        return length
+        return reduce(operator.mul, cardinalities.values())
 
     def _compute_strides(self, variables, cardinalities, factor_length):
-        """Strides for variables for given factor table."""
+        """Strides for variables of given factor table.
+
+        Compute a stride for each variable. For example there are three
+        variables A, B, and C with cardinalities 2, 3, and 4. The length of
+        factor is 2 * 3 * 4 = 24. To get from assignment A = 0 to A = 1, we
+        have to go over 3 * 4 values: 000, 001, 002, 003, 010, ..., 023, 100.
+        As a result, the strides of A, B, and C will be 12, 4, 1.
+        """
         strides = defaultdict(int)
         last_stride = factor_length
         for variable in variables:
@@ -62,7 +72,8 @@ class DiscreteFactor(Factor):
         """Get assignment from factor table at given index."""
         assignment = []
         for var in self.variables:
-            assignment.append(self.variable_values[var][index / self.strides[var]])
+            assignment.append(
+                    self.variable_values[var][index / self.strides[var]])
             index %= self.strides[var]
         return tuple(assignment)
 
@@ -72,6 +83,9 @@ class DiscreteFactor(Factor):
         Variable values can be anything, but arrays are indexed by
         numbers. Translation table is used for getting an index from an
         assignment.
+
+        For example for a variable X with values ['a', 'b', 'c', 'd'], the
+        translation will be: 'a': 0, 'b': 1, 'c': 2, 'd': 3.
         """
         self.translation_table = {}
         for var in self.variables:
@@ -80,10 +94,12 @@ class DiscreteFactor(Factor):
                 self.translation_table[var][value] = i
 
     def __init__(self, variables, variable_values, prob_table):
-        super(DiscreteFactor, self).__init__(variables, variable_values,
+        super(DiscreteFactor, self).__init__(variables,
+                                             variable_values,
                                              prob_table)
         # Create translation table from variable values to indexes.
         self._create_translation_table()
+        # Compute cardinalities.
         self.cardinalities = {var: len(variable_values[var])
                               for var in self.variables}
 
@@ -96,7 +112,7 @@ class DiscreteFactor(Factor):
             self.factor_table = np.ndarray(self.factor_length, np.float32)
 
         # Compute strides (how many elements in the prob table we have to skip
-        # to get new assignment of a variable).
+        # to get a new assignment of a variable).
         self.strides = self._compute_strides(self.variables,
                                              self.cardinalities,
                                              self.factor_length)
@@ -112,25 +128,25 @@ class DiscreteFactor(Factor):
         # Save the factor table in case we'll modify it with observation.
         self.unobserved_factor_table = self.factor_table
 
-    def __str__(self):
+    def __str__(self, width=79):
         ret = ""
         num_columns = len(self.variables) + 1
-        column_len = 79 / num_columns
+        column_len = width / num_columns
         format_str = "{:^%d}" % column_len
 
-        ret += 79 * "-" + "\n"
+        ret += width * "-" + "\n"
 
         for var in self.variables:
             ret += format_str.format(var)
         ret += format_str.format("Value") + "\n"
-        ret += 79 * "-" + "\n"
+        ret += width * "-" + "\n"
 
         for i in range(len(self.factor_table)):
             for assignment in self._get_assignment_from_index(i):
                 ret += format_str.format(assignment)
             ret += format_str.format(from_log(self.factor_table[i])) + "\n"
 
-        ret += 79 * "-" + "\n"
+        ret += width * "-" + "\n"
         return ret
 
     def __iter__(self):
@@ -138,32 +154,13 @@ class DiscreteFactor(Factor):
             yield (self._get_assignment_from_index(i),
                    from_log(v))
 
-    def rename_variables(self, new_variables):
-        """Rename variables."""
-        for i, var in enumerate(self.variables):
-            if var in new_variables:
-                self.variables[i] = new_variables[var]
-                # Modify variables dict.
-                self.variable_values[new_variables[var]] = (
-                    self.variable_values.pop(var))
-                # Change the key to strides dict.
-                self.strides[new_variables[var]] = self.strides.pop(var)
-                # Change the key to cardinalities dict.
-                self.cardinalities[new_variables[var]] = (
-                    self.cardinalities.pop(var))
-                # Change the key to translation table.
-                self.translation_table[new_variables[var]] = (
-                    self.translation_table.pop(var))
-
     def marginalize(self, variables):
         """Marginalize the factor."""
         # Assignment counter
         assignment = defaultdict(int)
-        # New dictionary containing only cardinalities for resulting variables.
+        # New cardinalities and new factor table.
         new_cardinalities = {x: self.cardinalities[x] for x in variables}
-        # Length of the new factor table.
         new_factor_length = self._factor_table_length(new_cardinalities)
-        # The new factor table.
         new_factor_table = np.empty(new_factor_length, np.float32)
         new_factor_table[:] = np.log(ZERO)
         # Strides for resulting variables in the new factor table.
