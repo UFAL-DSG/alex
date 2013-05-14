@@ -1217,6 +1217,7 @@ class DAILogRegClassifier(SLUInterface):
                      da_nblist=None,
                      da_nblist_orig=None,
                      ret_cl_map=False,
+                     prob_combine_meth='max',
                      verbose=False):
         """Parses `utterance' and generates the best interpretation in the form
         of a confusion network of dialogue acts.
@@ -1242,6 +1243,9 @@ class DAILogRegClassifier(SLUInterface):
                         identified in the utterance to the pair (slot value,
                         surface form).  (The slot name can be parsed from the
                         category label itself.)
+            prob_combine_meth: be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                determines how probabilities for the same DAI from
+                different classifiers should be merged (default: 'max')
             verbose: print debugging output?  More output is printed if
                      verbose > 1.
 
@@ -1339,9 +1343,10 @@ class DAILogRegClassifier(SLUInterface):
                     # Not strictly needed, but this information is easy to
                     # obtain now.
                     inst_dai.value2category_label(dai_catlab)
+                    # TODO Parameterise with the merging method.
                     da_confnet.add_merge(dai_prob, inst_dai,
-                                         is_normalised=False,
-                                         overwriting=not dai.is_generic)
+                                         combine=prob_combine_meth)
+                                         # overwriting=not dai.is_generic)
             else:
                 if dai.is_generic:
                     # Cannot evaluate an abstract classifier with no
@@ -1356,7 +1361,9 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print "Classification result: ", dai_prob
 
-                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
+                # TODO Parameterise with the merging method.
+                da_confnet.add_merge(dai_prob, dai,
+                                     combine=prob_combine_meth)
 
         if verbose:
             print "DA: ", da_confnet
@@ -1389,7 +1396,7 @@ class DAILogRegClassifier(SLUInterface):
         if len(utterance_list) == 0:
             raise DAILRException("Empty utterance N-best list.")
 
-        confnets = []
+        confnet_hyps = []
         for prob, utt in utterance_list:
             if "__other__" == utt:
                 confnet = DialogueActConfusionNetwork()
@@ -1397,26 +1404,30 @@ class DAILogRegClassifier(SLUInterface):
             else:
                 confnet = self.parse_1_best(utt)
 
-            confnets.append((prob, confnet))
+            confnet_hyps.append((prob, confnet))
 
             # print prob, utt
             # confnet.prune()
             # confnet.sort()
             # print confnet
 
-        confnet = merge_slu_confnets(confnets)
+        confnet = merge_slu_confnet_hyps(confnet_hyps)
         confnet.prune()
         confnet.sort()
 
         return confnet
 
-    def parse_confnet(self, confnet, include_other=True, verbose=False):
+    def parse_confnet(self, confnet, include_other=True,
+                      prob_combine_meth='max', verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
         this N-best list.
 
         Arguments:
             confnet -- the utterance confnet to parse
             include_other -- include "other"-valued DAIs in the output confnet
+            prob_combine_meth: be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                determines how probabilities for the same DAI from
+                different classifiers should be merged (default: 'max')
             verbose -- print lots of output
 
         """
@@ -1497,16 +1508,10 @@ class DAILogRegClassifier(SLUInterface):
 
                     inst_dai = DialogueActItem(dai_dat, dai_slot,
                                                ' '.join(value))
-                    # Not strictly needed, but this information is easy to
-                    # obtain now.
-                    #
-                    # `overwriting' commented out to ensure passing the test
-                    # with the current model. Otherwise, it would be reasonable
-                    # to set it as it was set.
+                    # TODO Parameterise with the merging method.
                     da_confnet.add_merge(dai_prob, inst_dai,
-                                         is_normalised=False,
+                                         combine=prob_combine_meth)
                                          # overwriting=not dai.is_generic)
-                                         overwriting=None)
             else:
                 if dai.is_generic or (
                         not include_other and dai.other_val in dai.unnorm_values):
@@ -1525,7 +1530,8 @@ class DAILogRegClassifier(SLUInterface):
                     print "Classification result: ", dai_prob
 
                 dai.category_label2value()
-                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
+                da_confnet.add_merge(dai_prob, dai,
+                                     combine=prob_combine_meth)
 
         if verbose:
             print "DA: ", da_confnet

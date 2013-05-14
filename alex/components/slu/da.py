@@ -802,39 +802,53 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Append additional dialogue act item into the confusion network."""
         self.cn.append([probability, dai])
 
-    # TODO Document.
-    def add_merge(self, probability, dai, is_normalised=True,
-                  overwriting=None):
-        """Add the probability mass of the passed dialogue act item to an
+    @staticmethod
+    def _combine_new(prob1, prob2):
+        return prob2
+
+    @staticmethod
+    def _combine_max(prob1, prob2):
+        return max(prob1, prob2)
+
+    @staticmethod
+    def _combine_add(prob1, prob2):
+        return prob1 + prob2
+
+    @staticmethod
+    def _combine_arit(prob1, prob2):
+        return .5 * (prob1 + prob2)
+
+    @staticmethod
+    def _combine_harm(prob1, prob2):
+        return (0. if prob1 * prob2 == 0
+                else .5 * (prob1 + prob2) / (prob1 * prob2))
+
+    _combine_meths = {'new': _combine_new.__func__,
+                      'max': _combine_max.__func__,
+                      'add': _combine_add.__func__,
+                      'arit': _combine_arit.__func__,
+                      'harm': _combine_harm.__func__}
+
+    def add_merge(self, probability, dai, combine='max'):
+        """Combines the probability mass of the given dialogue act item with an
         existing dialogue act item or adds a new dialogue act item.
 
         Arguments:
             probability -- probability of the DAI being added
             dai -- the DAI being added
-            is_normalised -- whether the probability is already normalised
-                (with respect to all probabilities already present in this
-                confnet and those about to be added)
-            overwriting --
+            combine -- can be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                    determines how two probabilities should be merged
+                    (default: 'max')
 
         """
-        # FIXME The approach with 'is_normalised' is fundamentally wrong. Use
-        # 'evidence_weight' instead (=1.) and count evidence collected so far
-        # for each fact.
+        combine_meth = self._combine_meths[combine]
         for dai_idx, (prob_orig, dai_orig) in enumerate(self.cn):
             if dai == dai_orig:
-                # dai_idx found a matching DAI
-                # self.cn[dai_idx][0] += probability
-                # DSTC
-                if overwriting is not None:
-                    self.cn[dai_idx][0] = probability if overwriting else prob_orig
-                else:
-                    if is_normalised:
-                        self.cn[dai_idx][0] += probability
-                    else:
-                        self.cn[dai_idx][0] = .5 * (prob_orig + probability)
-                return self
-        # If the DAI was not present, add it.
-        self.add(probability, dai)
+                self.cn[dai_idx][0] = combine_meth(prob_orig, probability)
+                break
+        else:
+            # If the DAI was not present, add it.
+            self.add(probability, dai)
         return self
 
     def get_best_da(self):
@@ -1042,8 +1056,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
         return nblist
 
-    def merge(self, is_normalised=False, overwriting=None):
+    def merge(self, combine='max'):
         """Adds up probabilities for the same hypotheses.
+
+        Arguments:
+            combine -- can be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                    determines how two probabilities should be merged
+                    (default: 'max')
 
         XXX As yet, we know that different values for the same slot are
         contradictory (and in general, the set of contradicting attr-value
@@ -1051,22 +1070,14 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         to each other.
 
         """
+        combine_meth = self._combine_meths[combine]
         new_cn = list()
         dai_idxs = dict()  # :: [dai-> dai_idx]
         for dai_idx, (prob, dai) in enumerate(self.cn):
             if dai in dai_idxs:
-                # dai_idx found a matching DAI
-                # self.cn[dai_idx][0] += probability
-                # DSTC
                 new_dai_idx = dai_idxs[dai]
                 prob_orig = new_cn[new_dai_idx][0]
-                if overwriting is not None:
-                    new_cn[new_dai_idx][0] = prob if overwriting else prob_orig
-                else:
-                    if is_normalised:
-                        new_cn[new_dai_idx][0] += prob
-                    else:
-                        new_cn[new_dai_idx][0] = .5 * (prob_orig + prob)
+                new_cn[new_dai_idx][0] = combine_meth(prob_orig, prob)
             else:
                 dai_idxs[dai] = len(new_cn)
                 new_cn.append([prob, dai])
@@ -1158,14 +1169,14 @@ def merge_slu_nblists(multiple_nblists):
     return merged_nblists
 
 
-def merge_slu_confnets(multiple_confnets):
+def merge_slu_confnets(confnet_hyps):
     """Merge multiple dialogue act confusion networks."""
 
-    merged_confnets = DialogueActConfusionNetwork()
+    merged = DialogueActConfusionNetwork()
 
-    for prob_confnet, confnet in multiple_confnets:
+    for prob_confnet, confnet in confnet_hyps:
         if not isinstance(confnet, DialogueActConfusionNetwork):
-            raise SLUException("Cannot merge something that is not " + \
+            raise SLUException("Cannot merge something that is not a "
                                "DialogueActConfusionNetwork.")
 
         for prob, dai in confnet.cn:
@@ -1173,9 +1184,9 @@ def merge_slu_confnets(multiple_confnets):
             # if dai.dat == "other":
             #     continue
 
-            merged_confnets.add_merge(prob_confnet * prob, dai,
-                                      is_normalised=True)
+            merged.add_merge(prob_confnet * prob, dai,
+                                      combine='add')
 
-    merged_confnets.sort()
+    merged.sort()
 
-    return merged_confnets
+    return merged
