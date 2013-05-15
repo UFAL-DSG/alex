@@ -276,14 +276,12 @@ class TestLBP(unittest.TestCase):
         lbp.run()
         self.assertAlmostEqual(hid1.belief[('save',)], 0.8)
 
-        lbp.add_layers([
-            [obs2, hid2, fact_h2_o2, fact_h1_h2]
-        ])
-        lbp.run(last_layer=0)
+        lbp.add_layer([obs2, hid2, fact_h2_o2, fact_h1_h2])
+        lbp.run(from_layer=0)
         self.assertAlmostEqual(hid2.belief[('save',)], 0.8 * 0.9 + 0.2 * 0.1, places=6)
 
         lbp.add_layers([
             [obs3, hid3, fact_h3_o3, fact_h2_h3]
         ])
-        lbp.run(last_layer=1)
+        lbp.run(from_layer='last')
         self.assertAlmostEqual(hid3.belief[('save',)], hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1)

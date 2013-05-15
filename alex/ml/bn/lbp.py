@@ -63,6 +63,15 @@ class LBP(BP):
         for node in nodes:
             node.init_messages()
 
+    def clear_nodes(self):
+        self.nodes = []
+
+    def add_layer(self, layer):
+        self.add_nodes(layer)
+
+        if self.strategy == 'layers':
+            self.layers.append(layer)
+
     def add_layers(self, layers):
         """Add layers of nodes to graph."""
         # Flatten layers and save all nodes.
@@ -73,7 +82,11 @@ class LBP(BP):
         if self.strategy == 'layers':
             self.layers.extend(layers)
 
-    def run(self, n_iterations=1, last_layer=None):
+    def clear_layers(self):
+        self.layers = []
+        self.clear_nodes()
+
+    def run(self, n_iterations=1, from_layer=None):
         """Run the lbp algorithm."""
 
         if self.strategy == 'sequential':
@@ -81,7 +94,9 @@ class LBP(BP):
         elif self.strategy == 'tree':
             self._run_tree()
         elif self.strategy == 'layers':
-            self._run_layers(last_layer)
+            if from_layer == 'last':
+                from_layer = len(self.layers) - 2 if len(self.layers) else None
+            self._run_layers(from_layer)
 
         self._normalize_nodes()
 
@@ -159,7 +174,6 @@ class LBP(BP):
 
     def _send_messages_to_layer(self, from_layer, to_layer):
         for node in from_layer:
-            print node.neighbors
             node.update()
             for name, neighbor in node.neighbors.iteritems():
                 if neighbor in to_layer:
