@@ -38,8 +38,8 @@ class TestNode(unittest.TestCase):
             }))
 
         # Add edges.
-        obs.add_edge_to(fact_h1_o1)
-        fact_h1_o1.add_edge_to(hid)
+        obs.connect(fact_h1_o1)
+        fact_h1_o1.connect(hid)
 
         # Init messages.
         hid.init_messages()
@@ -87,8 +87,8 @@ class TestNode(unittest.TestCase):
             }),
             same_or_different)
 
-        s1.add_edge_to(same)
-        s2.add_edge_to(same)
+        s1.connect(same)
+        s2.connect(same)
 
         s1.init_messages()
         s2.init_messages()
@@ -127,8 +127,8 @@ class TestNode(unittest.TestCase):
                 ('b', 'b'): 0.5
             }))
 
-        s1.add_edge_to(f)
-        s2.add_edge_to(f)
+        s1.connect(f)
+        s2.connect(f)
 
         s1.init_messages()
         s2.init_messages()

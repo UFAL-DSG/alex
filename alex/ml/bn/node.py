@@ -22,7 +22,7 @@ class Node(object):
         self.incoming_message = {}
         self.belief = None
 
-    def add_edge_to(self, node):
+    def connect(self, node):
         """Add a neighboring node"""
         self.neighbors[node.name] = node
         node.neighbors[self.name] = self
