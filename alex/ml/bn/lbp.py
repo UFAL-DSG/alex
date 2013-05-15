@@ -46,37 +46,48 @@ class LBP(BP):
 
         self.options = kwargs
         self.nodes = []
+        self.layers = []
 
     def add_nodes(self, nodes):
         """Add nodes to graph."""
         self.nodes.extend(nodes)
 
+        # Create a tree structure for tree strategy.
         if self.strategy == 'tree':
             for node in self.nodes:
                 node.wait_for_n = set(
                     x for x in node.neighbors.values() if x in nodes)
                 node.backward_send_to = []
 
+        # Init new nodes.
         for node in nodes:
             node.init_messages()
 
     def add_layers(self, layers):
         """Add layers of nodes to graph."""
-        if self.strategy != 'layers':
-            self.add_nodes(itertools.chain.from_iterable(layers))
-        else:
-            self.nodes.extend(layers)
+        # Flatten layers and save all nodes.
+        new_nodes = list(itertools.chain.from_iterable(layers))
+        self.add_nodes(new_nodes)
 
-            for layer in layers:
-                for node in layer:
-                    node.init_messages()
+        # Save information about layers.
+        if self.strategy == 'layers':
+            self.layers.extend(layers)
 
-    def run(self, n_iterations=1):
+    def run(self, n_iterations=1, last_layer=None):
         """Run the lbp algorithm."""
+
         if self.strategy == 'sequential':
             self._run_sequential(n_iterations)
         elif self.strategy == 'tree':
             self._run_tree()
+        elif self.strategy == 'layers':
+            self._run_layers(last_layer)
+
+        self._normalize_nodes()
+
+    def _normalize_nodes(self):
+        for node in self.nodes:
+            node.normalize()
 
     def _run_sequential(self, n_iterations):
         for i in range(n_iterations):
@@ -85,9 +96,6 @@ class LBP(BP):
 
             for node in reversed(self.nodes):
                 node.send_messages()
-
-        for node in self.nodes:
-            node.normalize()
 
     def _run_tree(self):
         ordering = []
@@ -123,19 +131,19 @@ class LBP(BP):
             for x in next_node.backward_send_to:
                 next_node.message_to(x)
 
-    def _run_layers(self, last_layer=None):
-        if last_layer is None:
+    def _run_layers(self, idx_last_layer=None):
+        if idx_last_layer is None:
             # Forward
-            self._send_messages_through_layers(self.nodes)
+            self._send_messages_through_layers(self.layers)
             # Backward
-            self._send_messages_through_layers(reversed(self.nodes))
+            self._send_messages_through_layers(reversed(self.layers))
         else:
             # Forward
-            forward_layers = self.nodes[last_layer+1:]
-            last_layer = self.nodes[last_layer]
+            forward_layers = self.layers[idx_last_layer+1:]
+            last_layer = self.layers[idx_last_layer]
             self._send_messages_through_layers(forward_layers, last_layer)
             # Backward
-            backward_layers = reversed(self.nodes[last_layer:])
+            backward_layers = reversed(self.layers[idx_last_layer:])
             self._send_messages_through_layers(backward_layers)
 
     def _send_messages_through_layers(self, layers, last_layer=None):
@@ -151,6 +159,7 @@ class LBP(BP):
 
     def _send_messages_to_layer(self, from_layer, to_layer):
         for node in from_layer:
+            print node.neighbors
             node.update()
             for name, neighbor in node.neighbors.iteritems():
                 if neighbor in to_layer:
