@@ -101,7 +101,7 @@ class SLU(multiprocessing.Process):
                 self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
 
             elif isinstance(data_asr, Command):
-                cfg['Logging']['system_logger'].info(data_asr)
+                self.cfg['Logging']['system_logger'].info(data_asr)
             else:
                 raise DMException('Unsupported input.')
 
