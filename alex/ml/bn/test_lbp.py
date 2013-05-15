@@ -73,16 +73,12 @@ class TestLBP(unittest.TestCase):
             fact_h1_h2
         ])
 
-        lbp.run(1)
-
-        print hid1.belief
-
         obs1.observed({('osave',): 1})
-        lbp.run(1)
+        lbp.run(n_iterations=1)
         self.assertAlmostEqual(hid1.belief[('save',)], 0.8)
 
         obs2.observed({('odel',): 1})
-        lbp.run(1)
+        lbp.run(n_iterations=1)
         self.assertAlmostEqual(hid1.belief[('save',)], 0.56521738)
 
     def test_single_linked(self):
@@ -284,4 +280,10 @@ class TestLBP(unittest.TestCase):
             [obs2, hid2, fact_h2_o2, fact_h1_h2]
         ])
         lbp.run(last_layer=0)
+        self.assertAlmostEqual(hid2.belief[('save',)], 0.8 * 0.9 + 0.2 * 0.1, places=6)
 
+        lbp.add_layers([
+            [obs3, hid3, fact_h3_o3, fact_h2_h3]
+        ])
+        lbp.run(last_layer=1)
+        self.assertAlmostEqual(hid3.belief[('save',)], hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1)
