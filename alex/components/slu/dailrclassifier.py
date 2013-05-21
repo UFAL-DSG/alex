@@ -1070,7 +1070,44 @@ class DAILogRegClassifier(SLUInterface):
             print "Threshold: {thresh}".format(thresh=self.cls_thresholds[dai])
             print >>sys.stderr, "Done calibrating the prior."
 
-    def save_model(self, file_name, gzip=None):
+    def forget_useless_feats(self):
+        # Only implemented for the 'logistic' type of classifier.
+        if self.clser_type == 'logistic':
+            # Find feature indices actually used by classifiers.
+            # as a set:
+            # (the `[0]' selects the 0-th output variable, which is the only
+            # one)
+            used_fidxs = reduce(set.union, (set(coefs.nonzero()[0])
+                                            for coefs in self.coefs.values()))
+            # as an array:
+            used_fidxs_ar = np.array(sorted(used_fidxs))
+            # Map old feature indices onto new indices.
+            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs))
+
+            # Use the mappings to update feature indexing structures.
+            self.feature_idxs = dict((feat, fidx2new[fidx]) for (feat, fidx)
+                                     in self.feature_idxs.iteritems()
+                                     if fidx in used_fidxs)
+            self.coefs = dict((dai, coefs[used_fidxs_ar])
+                              for (dai, coefs) in self.coefs.iteritems())
+
+
+    def save_model(self, file_name, do_reduce=True, gzip=None):
+        """\
+        Exports the SLU model (obtained either from training or loaded).
+
+        Arguments:
+            file_name -- path to the file where to save the model
+            do_reduce -- should features that don't influence the classifiers'
+                         decisions be removed? (default: True)
+            gzip -- should the model be saved gzipped? If set to None, this is
+                    determined based on the `file_name':
+                        gzip = file_name.endswith('gz')
+                    (default: None)
+
+        """
+        if do_reduce:
+            self.forget_useless_feats()
         if gzip is None:
             gzip = file_name.endswith('gz')
         version = '4'
