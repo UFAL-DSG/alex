@@ -8,7 +8,6 @@ import operator
 
 from alex.ml.bn.utils import constant_factor
 from copy import copy
-from collections import defaultdict
 
 
 class Node(object):
@@ -80,8 +79,7 @@ class DiscreteVariableNode(Node):
         if self.is_observed:
             node.message_from(self, copy(self.belief))
         else:
-            node.message_from(self, self.belief /
-                                    self.incoming_message[node.name])
+            node.message_from(self, self.belief / self.incoming_message[node.name])
 
     def message_from(self, node, message):
         if not self.is_observed:
@@ -102,7 +100,7 @@ class DiscreteVariableNode(Node):
 
     def most_probable(self, n=None):
         self.normalize()
-        return self.belief.most_probable()
+        return self.belief.most_probable(n)
 
 
 class DiscreteFactorNode(Node):
@@ -184,4 +182,3 @@ class DirichletFactorNode(DiscreteFactorNode):
 
     def message_from_parameter(self, node, parameter):
         self.incoming_message[node.name] = self.factor ** parameter
-

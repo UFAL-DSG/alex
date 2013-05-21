@@ -73,7 +73,9 @@ class DiscreteFactor(Factor):
 
     def _get_assignment_from_index(self, index, chosen_vars=None):
         """Get assignment from factor table at given index."""
-        if chosen_vars is None: chosen_vars = self.variables
+        if chosen_vars is None:
+            chosen_vars = self.variables
+
         assignment = []
         for var in self.variables:
             if var in chosen_vars:
@@ -355,4 +357,3 @@ class DiscreteFactor(Factor):
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]
         return [(self._get_assignment_from_index(i)[0],
                  from_log(self.factor_table[i])) for i in indxs]
-
