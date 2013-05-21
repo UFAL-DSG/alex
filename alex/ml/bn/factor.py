@@ -33,10 +33,11 @@ class Factor(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, variables, variable_values, prob_table):
+    def __init__(self, variables, variable_values, prob_table, parents=None):
         self.variables = variables
         self.variable_values = variable_values
         self.prob_table = prob_table
+        self.parents = parents
 
 
 class DiscreteFactor(Factor):
@@ -70,12 +71,13 @@ class DiscreteFactor(Factor):
                       self.translation_table[var][assignment_i])
         return index
 
-    def _get_assignment_from_index(self, index):
+    def _get_assignment_from_index(self, index, chosen_vars=None):
         """Get assignment from factor table at given index."""
+        if chosen_vars is None: chosen_vars = self.variables
         assignment = []
         for var in self.variables:
-            assignment.append(
-                    self.variable_values[var][index / self.strides[var]])
+            if var in chosen_vars:
+                assignment.append(self.variable_values[var][index / self.strides[var]])
             index %= self.strides[var]
         return tuple(assignment)
 
@@ -95,10 +97,11 @@ class DiscreteFactor(Factor):
             for i, value in enumerate(self.variable_values[var]):
                 self.translation_table[var][value] = i
 
-    def __init__(self, variables, variable_values, prob_table):
+    def __init__(self, variables, variable_values, prob_table, parents=None):
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
-                                             prob_table)
+                                             prob_table,
+                                             parents)
         # Create translation table from variable values to indexes.
         self._create_translation_table()
         # Compute cardinalities.
@@ -210,6 +213,11 @@ class DiscreteFactor(Factor):
     def __getitem__(self, assignment):
         index = self._get_index_from_assignment(assignment)
         return from_log(self.factor_table[index])
+
+    def __pow__(self, value):
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
+                              self.factor_table * value)
 
     def multiply_by_converted(self, other_factor, convert):
         new_factor_table = self.factor_table.copy()
@@ -330,7 +338,18 @@ class DiscreteFactor(Factor):
 
     def normalize(self):
         """Normalize factor table."""
-        self.factor_table -= logsumexp(self.factor_table)
+        if self.parents is not None:
+            sums = defaultdict(lambda: np.log(ZERO))
+            assignments = {}
+
+            for i, value in enumerate(self.factor_table):
+                assignments[i] = self._get_assignment_from_index(i, self.parents)
+                sums[assignments[i]] = np.logaddexp(sums[assignments[i]], value)
+
+            for i in range(self.factor_length):
+                self.factor_table[i] -= sums[assignments[i]]
+        else:
+            self.factor_table -= logsumexp(self.factor_table)
 
     def most_probable(self, n=None):
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]

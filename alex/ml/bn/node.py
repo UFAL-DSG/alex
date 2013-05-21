@@ -8,6 +8,7 @@ import operator
 
 from alex.ml.bn.utils import constant_factor
 from copy import copy
+from collections import defaultdict
 
 
 class Node(object):
@@ -127,9 +128,6 @@ class DiscreteFactorNode(Node):
     def message_from(self, node, message):
         self.incoming_message[node.name] = message
 
-    def message_from_parameter(self, node, parameter):
-        self.parameters[node.name] = parameter
-
     def update(self):
         self.belief = self.factor * reduce(operator.mul,
                                            self.incoming_message.values())
@@ -148,13 +146,13 @@ class DiscreteConvertedFactorNode(DiscreteFactorNode):
         self.belief = product_of_messages.multiply_by_converted(self.factor,
                                                                 self.function)
 
-class ParameterNode(Node):
+
+class DirichletParameterNode(Node):
     """Node containing parameter."""
 
     def __init__(self, name, parameter):
-        super(ParameterNode, self).__init__(name)
+        super(DirichletParameterNode, self).__init__(name)
         self.parameter = parameter
-        self.beta = sum(log(gamma(self.parameter))) - gamma() # TODO
 
     def init_messages(self):
         pass
@@ -167,3 +165,23 @@ class ParameterNode(Node):
 
     def update(self):
         pass
+
+
+class DirichletFactorNode(DiscreteFactorNode):
+    def __init__(self, name, parents):
+        super(DirichletFactorNode, self).__init__(name)
+        self.parents = parents
+        self.parameters = {}
+
+    def connect(self, node, parents_assignment=None):
+        if isinstance(node, DirichletParameterNode):
+            self.parameters[node.name] = node
+        else:
+            super(DirichletFactorNode, self).connect(node)
+
+    def update(self):
+        self.belief = reduce(operator.mul, self.incoming_message.values())
+
+    def message_from_parameter(self, node, parameter):
+        self.incoming_message[node.name] = self.factor ** parameter
+

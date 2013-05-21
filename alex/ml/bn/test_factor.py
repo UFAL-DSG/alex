@@ -4,6 +4,7 @@
 # pylint: disable=W0212,C0111,C0103
 
 import unittest
+import numpy as np
 
 from alex.ml.bn.factor import DiscreteFactor
 
@@ -301,4 +302,44 @@ class TestFactor(unittest.TestCase):
         for i in range(f4.factor_length):
             assignment = f4._get_assignment_from_index(i)
             self.assertClose(f4[assignment], factor[assignment])
+
+    def test_parents_normalize(self):
+        f = DiscreteFactor(
+                ['A', 'B'],
+                {
+                    'A': ['a1', 'a2'],
+                    'B': ['b1', 'b2']
+                },
+                {
+                    ('a1', 'b1'): 1,
+                    ('a2', 'b1'): 1,
+                    ('a1', 'b2'): 1,
+                    ('a2', 'b2'): 1
+                }, parents=['B'])
+
+        f.normalize()
+        self.assertAlmostEqual(f[('a1', 'b1')], 0.5)
+
+    def test_power(self):
+        f = DiscreteFactor(
+                ['A', 'B'],
+                {
+                    'A': ['a1', 'a2'],
+                    'B': ['b1', 'b2']
+                },
+                {
+                    ('a1', 'b1'): 0.3,
+                    ('a1', 'b2'): 0.2,
+                    ('a2', 'b1'): 0.7,
+                    ('a2', 'b2'): 0.8,
+                }, parents=['B'])
+
+        f1 = f ** 2
+        self.assertAlmostEqual(f[('a1', 'b1')], 0.3)
+        self.assertAlmostEqual(f1[('a1', 'b1')], 0.09)
+
+        f2 = f ** np.array([2, 2, 3, 2])
+        self.assertAlmostEqual(f2[('a1', 'b1')], 0.09)
+        self.assertAlmostEqual(f2[('a2', 'b1')], 0.343)
+
 
