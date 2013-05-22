@@ -71,14 +71,14 @@ class GoogleASR():
 
         try:
             hyp = json.loads(json_hypotheses)
-            nblist = UtteranceNBList()
 
-            for h in hyp['hypotheses']:
-                nblist.add(h['confidence'], Utterance(h['utterance']))
+            for h in hyp['hypotheses']: # we process only first one
+                return Utterance(h['utterance'])
+
+            return Utterance("")
         except:
-            nblist = UtteranceNBList()
+            return Utterance("")
 
-        return nblist
 
     def rec_in(self, frame):
         """ This defines asynchronous interface for speech recognition.

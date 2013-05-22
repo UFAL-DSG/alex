@@ -1442,7 +1442,7 @@ class DAILogRegClassifier(SLUInterface):
         the results."""
 
         if len(utterance_list) == 0:
-            raise DAILRException("Empty utterance N-best list.")
+            return DialogueActConfusionNetwork()
 
         confnet_hyps = []
         for prob, utt in utterance_list:
