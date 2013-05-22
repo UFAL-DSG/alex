@@ -153,11 +153,13 @@ class WebHub(Hub):
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                # TODO HACK
+                #self.cfg['Logging']['system_logger'].info(command)
 
             if tts_commands.poll():
                 command = tts_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                # TODO HACK
+                # self.cfg['Logging']['system_logger'].info(command)
 
             current_time = time.time()
 

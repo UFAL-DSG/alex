@@ -256,7 +256,7 @@ class Abstracted(object):
 
     @classmethod
     def make_other(cls, type_):
-        return '{t}-OTHER'.format(t=type_)
+        return u'{t}-OTHER'.format(t=type_)
 
 
     def iter_typeval(self):

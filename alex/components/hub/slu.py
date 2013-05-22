@@ -9,6 +9,7 @@ import alex.components.slu.daiklrclassifier as DAIKLRSLU
 import alex.components.slu.templateclassifier as TSLU
 
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.utils.exception import DMException
 
@@ -30,7 +31,9 @@ class SLU(multiprocessing.Process):
         self.slu_hypotheses_out = slu_hypotheses_out
 
         self.cldb = CategoryLabelDatabase(self.cfg['SLU']['cldb'])
-        self.preprocessing = SLUPreprocessing(self.cldb)
+        preprocessing_cls = self.cfg['SLU'].get('preprocessing_cls', SLUPreprocessing)
+
+        self.preprocessing = preprocessing_cls(self.cldb)
 
         self.slu = None
         if self.cfg['SLU']['type'] == 'Template':
@@ -95,7 +98,13 @@ class SLU(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), slu_hyp)
+                if type(slu_hyp) is DialogueActConfusionNetwork:
+                    confnet = slu_hyp
+                else:
+                    confnet = None
+
+                # TODO HACK
+                #self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
 
                 self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
                 self.slu_hypotheses_out.send(SLUHyp(slu_hyp))

@@ -16,7 +16,6 @@ from alex.components.slu.da import *
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 from alex.utils.config import Config
-from alex.utils.exception import UtteranceException, TextHubException
 from alex.utils.ui import getTerminalSize
 
 
@@ -41,7 +40,10 @@ class TextHub(Hub):
         self.nlg = None
 
         self.cldb = CategoryLabelDatabase(self.cfg['SLU']['cldb'])
-        self.preprocessing = SLUPreprocessing(self.cldb)
+        preprocessing_cls = self.cfg['SLU'].get('preprocessing_cls', SLUPreprocessing)
+
+        self.preprocessing = preprocessing_cls(self.cldb)
+
 
         if self.cfg['SLU']['type'] == 'DAILogRegClassifier':
             self.slu = DAILogRegClassifier(self.preprocessing)
@@ -54,6 +56,7 @@ class TextHub(Hub):
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
+        self.dm.new_dialogue()
 
         nlg_type = get_nlg_type(cfg)
         self.nlg = nlg_factory(nlg_type, cfg)
@@ -126,7 +129,7 @@ class TextHub(Hub):
         nblist = UtteranceNBList()
         i = 1
         while i < 100:
-            l = raw_input("User %d:    " % i)
+            l = raw_input("User %d:    " % i).decode('utf8')
             if l.startswith("."):
                 print
                 break

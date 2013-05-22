@@ -20,8 +20,8 @@ from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 from alex.ml.features import *
 
 
-SENTENCE_START = '<s>'
-SENTENCE_END = '</s>'
+SENTENCE_START = u'<s>'
+SENTENCE_END = u'</s>'
 
 
 def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
@@ -40,7 +40,7 @@ def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
     """
     with codecs.open(utt_fname, encoding=encoding) as utt_file:
         utterances = {}
-        for line in islice(utt_file, 0, limit):
+        for line_id, line in enumerate(islice(utt_file, 0, limit)):
             line = line.strip()
             if not line:
                 continue
@@ -51,7 +51,7 @@ def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
                 key = parts[0].strip()
                 utt = parts[1].strip()
             else:
-                key = "%d" % count
+                key = "%d" % line_id
                 utt = line
 
             utterances[key] = Utterance(utt)
@@ -292,7 +292,7 @@ class AbstractedUtterance(Utterance, Abstracted):
 
     @classmethod
     def make_other(cls, type_):
-        return ('{t}-OTHER'.format(t=type_[0]), )
+        return (u'{t}-OTHER'.format(t=type_[0]), )
 
     def join_typeval(self, type_, val):
         return (self.splitter.join((type_[0], ' '.join(val))), )
@@ -623,7 +623,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # Abstracted implementations.
     @classmethod
     def make_other(cls, type_):
-        return ('{t}-OTHER'.format(t=type_[0]), )
+        return (u'{t}-OTHER'.format(t=type_[0]), )
 
     def iter_typeval(self):
         for widx, altidx in self._abstr_idxs:

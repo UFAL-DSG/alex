@@ -30,13 +30,17 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     """
     with codecs.open(das_fname, encoding=encoding) as das_file:
         das = defaultdict(list)
-        for line in islice(das_file, 0, limit):
+        for line_id, line in enumerate(islice(das_file, 0, limit)):
             line = line.strip()
             if not line:
                 continue
             parts = line.split("=>", 2)
-            key = parts[0].strip()
-            da_str = parts[1].strip()
+            if len(parts) == 2:
+                key = parts[0].strip()
+                da_str = parts[1].strip()
+            else:
+                key = str(line_id)
+                da_str = parts[0].strip()
             das[key] = DialogueAct(da_str)
     return das
 
@@ -1145,6 +1149,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
     def sort(self):
         self.cn.sort(reverse=True)
         return self
+
+    @classmethod
+    def make_from_da(self, da):
+        cn = DialogueActConfusionNetwork()
+        for dai in da:
+            cn.add(1.0, dai)
+        return cn
 
 
 def merge_slu_nblists(multiple_nblists):

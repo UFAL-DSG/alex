@@ -14,6 +14,7 @@ from datetime import datetime
 
 from alex.utils.mproc import global_lock
 from alex.utils.exception import AlexException
+import alex.utils.pdbonerror
 
 
 class SessionLoggerException(AlexException):
@@ -390,7 +391,7 @@ class SessionLogger:
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("hypothesis"))
                     hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(str(h)))
+                    hyp.appendChild(doc.createTextNode(unicode(h)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))

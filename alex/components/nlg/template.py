@@ -41,7 +41,7 @@ class AbstractTemplateNLG(object):
             self.templates = {}
             for k, v in templates.iteritems():
                 k = DialogueAct(k)
-                k.sort()
+                #k.sort()
                 k = str(k)
                 self.templates[k] = v
         except Exception as ex:
@@ -100,7 +100,7 @@ class AbstractTemplateNLG(object):
         Then try to find a relaxed match of a more generic template and
         fill in the actual values of the variables.
         """
-        da.sort()
+        #da.sort()
         try:
             # try to return exact match
             return self.random_select(self.templates[str(da)])

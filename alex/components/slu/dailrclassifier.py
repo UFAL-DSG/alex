@@ -1082,7 +1082,7 @@ class DAILogRegClassifier(SLUInterface):
             # as an array:
             used_fidxs_ar = np.array(sorted(used_fidxs))
             # Map old feature indices onto new indices.
-            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs))
+            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs_ar))
 
             # Use the mappings to update feature indexing structures.
             self.feature_idxs = dict((feat, fidx2new[fidx]) for (feat, fidx)
@@ -1241,6 +1241,11 @@ class DAILogRegClassifier(SLUInterface):
 
     def predict_prob(self, dai, feat_vec):
         if self.clser_type == 'logistic':
+            #if str(dai) == 'inform(to="STOP:0")':
+            #    #import ipdb; ipdb.set_trace()
+            #    xx=dict(zip(self.feature_idxs.values(), self.feature_idxs.keys()))
+            #    print "\n".join(str((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
+
             exponent = (-self.intercepts[dai]
                         - np.dot(self.coefs[dai], feat_vec))
             return 1. / (1. + np.exp(exponent))
@@ -1321,7 +1326,9 @@ class DAILogRegClassifier(SLUInterface):
                          self.feature_idxs))
 
         if verbose >= 2:
-            print 'Features: ', utterance_features
+            print 'Features: '
+            for f in utterance_features:
+                print f
 
         da_confnet = DialogueActConfusionNetwork()
 
@@ -1363,6 +1370,10 @@ class DAILogRegClassifier(SLUInterface):
                         utt_hyp=utterance, abutt_hyp=abutterance,
                         inst=(type_, value))
                     feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
+                    if verbose >= 2:
+                        print 'Features*: '
+                        for f in inst_feats:
+                            print f
 
                     try:
                         dai_prob = self.predict_prob(dai, feat_vec)
@@ -1448,7 +1459,7 @@ class DAILogRegClassifier(SLUInterface):
             # confnet.sort()
             # print confnet
 
-        confnet = merge_slu_confnet_hyps(confnet_hyps)
+        confnet = merge_slu_confnets(confnet_hyps)
         confnet.prune()
         confnet.sort()
 

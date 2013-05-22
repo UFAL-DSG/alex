@@ -6,8 +6,9 @@
 from alex.utils.exception import SemHubException
 
 from .dummydialoguemanager import DummyDM
-from ruledm.ufalruledm import UfalRuleDM
-from ruledm.ufalruledm import PUfalRuleDM
+from alex.components.dm.ruledm.ufalruledm import UfalRuleDM
+from alex.components.dm.ruledm.ufalruledm import PUfalRuleDM
+from alex.applications.AlexOnTheBus.aotb_dm import AOTBDM
 
 
 def dm_factory(dm_type, cfg):
@@ -20,6 +21,8 @@ def dm_factory(dm_type, cfg):
         dm = UfalRuleDM(cfg)
     elif dm_type == 'PUfalRuleDM':
         dm = PUfalRuleDM(cfg)
+    elif dm_type == 'AOTBDM':
+        dm = AOTBDM(cfg)
     else:
         raise SemHubException(
             'Unsupported dialogue manager: %s' % dm_type)
