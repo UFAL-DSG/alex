@@ -1,0 +1,132 @@
+kdy mi jede další tramvaj ze $from$ na $to$
+kdy mi to jede na $from$
+z $from$
+od $from$
+kolik je
+kolik je hodin
+chci jet do $from$
+co jede z $from$ do $to$
+chci být v pět na $from$
+za jak dlouho to jede
+Čím se odpoledne dostanu z $from$ na $to$
+kolem $time$ večer
+ve $time$ odpoledne
+kdy mi jede autobus
+jak se dostanu z $from$
+tramvají
+busem
+autobusem
+metrem
+chci jet na $from$
+radši bych jel tramvají
+jsem na autobusové zastávce
+jsem na $from$
+v kolik jede další
+v kolik mi to teda jede
+kolik je hodin
+jaký je čas
+kolik je
+Řekni mi čas
+Řekni mi hodiny
+aktuální čas
+chci najít spojení z $from$ do $to$
+chci jet z $from$ do $to$
+chci jet na $to$ z $from$
+chci jet do $to$ z $from$
+najdi mi spojení na $to$
+najdi mi spojení do $to$
+najdi mi spojení z $from$
+spojení z $from$
+spojení z $from$ na $to$
+spojení z $from$ do $to$
+jak se dostanu z $from$ do $to$
+jak se dostanu z $from$ na $to$
+chci najít spojení z $from$ do $to$ $time$
+chci jet z $from$ do $to$ $time$
+chci jet $time$ z $from$ do $to$
+chci jet na $to$ z $from$ $time$
+chci jet $time$ do $to$ z $from$
+najdi mi spojení na $to$ $time$
+najdi mi spojení do $to$ $time$
+najdi mi spojení $time$ z $from$
+spojení z $from$ $time$
+spojení z $from$ na $to$ $time$
+spojení $time$ z $from$ do $to$
+jak se dostanu z $from$ do $to$ $time$
+jak se dostanu z $from$ na $to$ $time$
+chci najít spojení z $from$ do $to$ $time$ $ampm$
+chci jet z $from$ do $to$ $time$ $ampm$
+chci jet $time$ $ampm$ z $from$ do $to$
+chci jet na $to$ z $from$ $time$ $ampm$
+chci jet $time$ $ampm$ do $to$ z $from$
+najdi mi spojení na $to$ $time$ $ampm$
+najdi mi spojení do $to$ $time$ $ampm$
+najdi mi spojení $time$ $ampm$ z $from$
+spojení z $from$ $time$ $ampm$
+spojení z $from$ na $to$ $time$ $ampm$
+spojení $time$ $ampm$ z $from$ do $to$
+jak se dostanu z $from$ do $to$ $time$ $ampm$
+jak se dostanu z $from$ na $to$ $time$ $ampm$
+najdi mi nějaké spojení zítra ráno z $from$ do $to$
+jak se dostanu $ampm$ z $from$ do $to$
+kdy mi to jede z $from$ do $to$
+kdy jede další $tt$ z $from$ do $to$ po $time$
+najdi mi $tt$ z $from$ do $to$
+hledám $tt$ z $from$ do $to$
+jede nějaký $tt$ z $from$ do $to$ okolo $time$
+jede nějaký $tt$ z $from$ do $to$ okolo $time$ $ampm$
+potřebuji jet z $from$ $tt$ do $to$
+$tt$ z $from$ do $to$
+$tt$ z $from$ do $to$ $time$
+mohl bych  prosím  získat spojení  které jede z $from$ do $to$ a nejlépe odjíždí z $from$ $time$
+prosím o nalezení $tt$ z $from$ do $to$
+kdy mi prosím jede další $tt$  jsem na $from$ a jedu do $to$
+stojím na $from$ a potřebuji se dostat do $to$
+stojím na $from$ a potřebuji se dostat na $to$
+potřebuji najít  jak se dostanu na $to$  teď jsem na $from$
+chci jet tramvají
+autobusem
+busem
+Šalinou
+tramvají
+krtkem
+metrem
+kdy mi jede tramvaj z $from$ na $to$
+potřebuji se dostat na $to$  jsem na $from$
+za $time$ minut chci jet z $from$ na $to$
+v kolik jede další autobus z $from$ na $to$
+najdi nejbližší spojení z $from$ na $to$
+kolik je hodin
+jaký je čas kolik je hodin
+Čas
+přesný čas
+kolik je
+spojení z $from$ na $to$ v $time$
+jsem na místě $from$ a chci se dostat na místo $to$  jak mám jet
+za $time$ chci vyrazit z místa $from$ do místa $to$  najdi mi spojení
+za kolik minut jede autobus z $from$ na $to$
+za jak dlouho jede metro z $from$ na $to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
+$time$
+$from$
+$to$
