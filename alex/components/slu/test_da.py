@@ -88,10 +88,14 @@ class TestDA(unittest.TestCase):
         merged_confnets = merge_slu_confnets(confnets)
 
         correct_merged_confnet = DialogueActConfusionNetwork()
-        correct_merged_confnet.add_merge(0.7*0.7, DialogueActItem('hello'))
-        correct_merged_confnet.add_merge(0.7*0.2, DialogueActItem('bye'))
-        correct_merged_confnet.add_merge(0.3*0.6, DialogueActItem('hello'))
-        correct_merged_confnet.add_merge(0.3*0.3, DialogueActItem('restart'))
+        correct_merged_confnet.add_merge(0.7*0.7, DialogueActItem('hello'),
+                                         combine='add')
+        correct_merged_confnet.add_merge(0.7*0.2, DialogueActItem('bye'),
+                                         combine='add')
+        correct_merged_confnet.add_merge(0.3*0.6, DialogueActItem('hello'),
+                                         combine='add')
+        correct_merged_confnet.add_merge(0.3*0.3, DialogueActItem('restart'),
+                                         combine='add')
 
         s = []
         s.append("")

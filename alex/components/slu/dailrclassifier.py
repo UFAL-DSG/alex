@@ -1070,7 +1070,44 @@ class DAILogRegClassifier(SLUInterface):
             print "Threshold: {thresh}".format(thresh=self.cls_thresholds[dai])
             print >>sys.stderr, "Done calibrating the prior."
 
-    def save_model(self, file_name, gzip=None):
+    def forget_useless_feats(self):
+        # Only implemented for the 'logistic' type of classifier.
+        if self.clser_type == 'logistic':
+            # Find feature indices actually used by classifiers.
+            # as a set:
+            # (the `[0]' selects the 0-th output variable, which is the only
+            # one)
+            used_fidxs = reduce(set.union, (set(coefs.nonzero()[0])
+                                            for coefs in self.coefs.values()))
+            # as an array:
+            used_fidxs_ar = np.array(sorted(used_fidxs))
+            # Map old feature indices onto new indices.
+            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs))
+
+            # Use the mappings to update feature indexing structures.
+            self.feature_idxs = dict((feat, fidx2new[fidx]) for (feat, fidx)
+                                     in self.feature_idxs.iteritems()
+                                     if fidx in used_fidxs)
+            self.coefs = dict((dai, coefs[used_fidxs_ar])
+                              for (dai, coefs) in self.coefs.iteritems())
+
+
+    def save_model(self, file_name, do_reduce=True, gzip=None):
+        """\
+        Exports the SLU model (obtained either from training or loaded).
+
+        Arguments:
+            file_name -- path to the file where to save the model
+            do_reduce -- should features that don't influence the classifiers'
+                         decisions be removed? (default: True)
+            gzip -- should the model be saved gzipped? If set to None, this is
+                    determined based on the `file_name':
+                        gzip = file_name.endswith('gz')
+                    (default: None)
+
+        """
+        if do_reduce:
+            self.forget_useless_feats()
         if gzip is None:
             gzip = file_name.endswith('gz')
         version = '4'
@@ -1217,6 +1254,7 @@ class DAILogRegClassifier(SLUInterface):
                      da_nblist=None,
                      da_nblist_orig=None,
                      ret_cl_map=False,
+                     prob_combine_meth='max',
                      verbose=False):
         """Parses `utterance' and generates the best interpretation in the form
         of a confusion network of dialogue acts.
@@ -1242,6 +1280,9 @@ class DAILogRegClassifier(SLUInterface):
                         identified in the utterance to the pair (slot value,
                         surface form).  (The slot name can be parsed from the
                         category label itself.)
+            prob_combine_meth: be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                determines how probabilities for the same DAI from
+                different classifiers should be merged (default: 'max')
             verbose: print debugging output?  More output is printed if
                      verbose > 1.
 
@@ -1339,9 +1380,10 @@ class DAILogRegClassifier(SLUInterface):
                     # Not strictly needed, but this information is easy to
                     # obtain now.
                     inst_dai.value2category_label(dai_catlab)
+                    # TODO Parameterise with the merging method.
                     da_confnet.add_merge(dai_prob, inst_dai,
-                                         is_normalised=False,
-                                         overwriting=not dai.is_generic)
+                                         combine=prob_combine_meth)
+                                         # overwriting=not dai.is_generic)
             else:
                 if dai.is_generic:
                     # Cannot evaluate an abstract classifier with no
@@ -1356,7 +1398,9 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print "Classification result: ", dai_prob
 
-                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
+                # TODO Parameterise with the merging method.
+                da_confnet.add_merge(dai_prob, dai,
+                                     combine=prob_combine_meth)
 
         if verbose:
             print "DA: ", da_confnet
@@ -1389,7 +1433,7 @@ class DAILogRegClassifier(SLUInterface):
         if len(utterance_list) == 0:
             raise DAILRException("Empty utterance N-best list.")
 
-        confnets = []
+        confnet_hyps = []
         for prob, utt in utterance_list:
             if "__other__" == utt:
                 confnet = DialogueActConfusionNetwork()
@@ -1397,26 +1441,30 @@ class DAILogRegClassifier(SLUInterface):
             else:
                 confnet = self.parse_1_best(utt)
 
-            confnets.append((prob, confnet))
+            confnet_hyps.append((prob, confnet))
 
             # print prob, utt
             # confnet.prune()
             # confnet.sort()
             # print confnet
 
-        confnet = merge_slu_confnets(confnets)
+        confnet = merge_slu_confnet_hyps(confnet_hyps)
         confnet.prune()
         confnet.sort()
 
         return confnet
 
-    def parse_confnet(self, confnet, include_other=True, verbose=False):
+    def parse_confnet(self, confnet, include_other=True,
+                      prob_combine_meth='max', verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
         this N-best list.
 
         Arguments:
             confnet -- the utterance confnet to parse
             include_other -- include "other"-valued DAIs in the output confnet
+            prob_combine_meth: be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                determines how probabilities for the same DAI from
+                different classifiers should be merged (default: 'max')
             verbose -- print lots of output
 
         """
@@ -1497,16 +1545,10 @@ class DAILogRegClassifier(SLUInterface):
 
                     inst_dai = DialogueActItem(dai_dat, dai_slot,
                                                ' '.join(value))
-                    # Not strictly needed, but this information is easy to
-                    # obtain now.
-                    #
-                    # `overwriting' commented out to ensure passing the test
-                    # with the current model. Otherwise, it would be reasonable
-                    # to set it as it was set.
+                    # TODO Parameterise with the merging method.
                     da_confnet.add_merge(dai_prob, inst_dai,
-                                         is_normalised=False,
+                                         combine=prob_combine_meth)
                                          # overwriting=not dai.is_generic)
-                                         overwriting=None)
             else:
                 if dai.is_generic or (
                         not include_other and dai.other_val in dai.unnorm_values):
@@ -1525,7 +1567,8 @@ class DAILogRegClassifier(SLUInterface):
                     print "Classification result: ", dai_prob
 
                 dai.category_label2value()
-                da_confnet.add_merge(dai_prob, dai, is_normalised=False)
+                da_confnet.add_merge(dai_prob, dai,
+                                     combine=prob_combine_meth)
 
         if verbose:
             print "DA: ", da_confnet
