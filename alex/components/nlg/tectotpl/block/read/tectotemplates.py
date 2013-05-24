@@ -74,6 +74,7 @@ class TectoTemplates(Block):
             # create a tree with the linear part up to the next treelet
             tnode = troot.create_child(data={'t_lemma': text[off:pos],
                                              'nodetype': 'atom',
+                                             'functor': '???',
                                              'formeme': 'x'})
             tnode.shift_after_subtree(last_tnode)
             last_tnode = tnode
@@ -116,6 +117,8 @@ class TectoTemplates(Block):
                 pos += len(values)
                 values = values.split('|')
                 tnode.t_lemma = values[0]
+                # set dummy functor
+                tnode.functor = '???'
                 # fill in formeme (if applicable, default to x/atom)
                 if len(values) >= 2:
                     tnode.formeme = values[1]
