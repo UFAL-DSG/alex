@@ -7,7 +7,7 @@ import autopath
 from alex.components.asr.utterance import Utterance
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
-from alex.components.slu.da import DialogueActNode, DialogueAct, DialogueActItem, \
+from alex.components.slu.da import DialogueAct, DialogueActItem, \
     DialogueActConfusionNetwork
 from alex.utils.czech_stemmer import cz_stem
 
