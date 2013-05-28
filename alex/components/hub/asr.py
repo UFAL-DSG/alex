@@ -141,8 +141,10 @@ class ASR(multiprocessing.Process):
                     # the ASR component can return either NBList or a confusion network
                     if isinstance(asr_hyp, UtteranceNBList):
                         self.cfg['Logging']['session_logger'].asr("user", asr_hyp, None)
-                    else:
+                    elif isinstance(asr_hyp, UtteranceConfusionNetwork):
                         self.cfg['Logging']['session_logger'].asr("user", asr_hyp.get_utterance_nblist(), asr_hyp)
+                    else:
+                        self.cfg['Logging']['session_logger'].asr("user", [(-1, asr_hyp)], None)
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
