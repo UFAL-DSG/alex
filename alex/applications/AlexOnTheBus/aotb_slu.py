@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# encoding: utf8
+from collections import defaultdict
+
+import autopath
+
+from alex.components.asr.utterance import Utterance
+from alex.components.slu.base import SLUInterface
+from alex.components.slu.dailrclassifier import DAILogRegClassifier
+from alex.components.slu.da import DialogueActNode, DialogueAct, DialogueActItem, \
+    DialogueActConfusionNetwork
+from alex.utils.czech_stemmer import cz_stem
+
+def _fill_utterance_values(abutterance, category, res):
+    for _, value in abutterance.insts_for_type((category.upper(), )):
+            if value == ("[OTHER]", ): continue
+
+            res[category].append(value)
+
+
+class AOTBSLU(SLUInterface):
+    def __init__(self, preprocessing, cfg=None):
+        super(AOTBSLU, self).__init__(preprocessing, cfg)
+
+        # self.helper_slu = DAILogRegClassifier(preprocessing)
+        #self.helper_slu.load_model(
+        #    cfg['SLU']['DAILogRegClassifier']['model'])
+
+    def parse_stop(self, abutterance, cn):
+        res = defaultdict(list)
+        _fill_utterance_values(abutterance, 'stop', res)
+
+        stop_name = None
+        for slot, values in res.iteritems():
+            for value in values:
+                stop_name = " ".join(value)
+                break
+
+        utt_set = set(abutterance)
+
+        preps_from = set([u"z", u"za", u"ze", u"od", u"začátek"])
+        preps_to = set([u"k", u"do", u"konec", u"na"])
+
+        preps_from_used = preps_from.intersection(utt_set)
+        preps_to_used = preps_to.intersection(utt_set)
+
+        preps_from_in = len(preps_from_used) > 0
+        preps_to_in = len(preps_to_used) > 0
+
+        cn.add(1.0, DialogueActItem("inform", "stop", stop_name))
+        if preps_from_in and not preps_to_in:
+            cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name, attrs={'prep': next(iter(preps_from_used))}))
+
+        if not preps_from_in and preps_to_in:
+            cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name, attrs={'prep': next(iter(preps_to_used))}))
+
+
+    def parse_time(self, abutterance, cn):
+        res = defaultdict(list)
+        _fill_utterance_values(abutterance, 'time', res)
+
+        for slot, values in res.iteritems():
+            for value in values:
+                cn.add(1.0, DialogueActItem("inform", slot, " ".join(value)))
+                break
+
+    def parse_meta(self, abutterance, cn):
+        for alt_expr in [u"jiný", u"jiné", u"jiná", u"další", u"dál", u"jiného" ]:
+            if cz_stem(alt_expr) in abutterance.utterance:
+                cn.add(1.0, DialogueActItem("request", "alternatives"))
+                break
+
+        for alt_expr in [u"děkuji", u"nashledanou", u"díky", ]:
+            if cz_stem(alt_expr) in abutterance.utterance:
+                cn.add(1.0, DialogueActItem("bye"))
+                break
+
+
+
+
+
+
+
+
+    def parse(self, utterance, *args, **kwargs):
+        if not isinstance(utterance, Utterance):
+            utterance_1 = utterance.get_best_utterance()
+        else:
+            utterance_1 = utterance
+        utt_norm = self.preprocessing.text_normalisation(utterance_1)
+        abutterance, category_labels = \
+                self.preprocessing.values2category_labels_in_utterance(utt_norm)
+
+        print abutterance
+        res_cn = DialogueActConfusionNetwork()
+        if 'STOP' in category_labels:
+            self.parse_stop(abutterance, res_cn)
+        elif 'TIME' in category_labels:
+            self.parse_time(abutterance, res_cn)
+
+        self.parse_meta(abutterance, res_cn)
+
+        return res_cn
