@@ -120,6 +120,9 @@ class SystemLogger(object):
         self.file_log_level = stdout_log_level
         self.output_dir = output_dir
 
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+
         self.current_session_log_dir_name = multiprocessing.Array(
             'c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
