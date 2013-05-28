@@ -12,8 +12,11 @@ def nlg_factory(nlg_type, cfg):
     elif nlg_type == 'Template':
         nlg = TemplateNLG(cfg)
     else:
-        raise SemHubException(
-            'Unsupported NLG: %s' % nlg_type)
+        try:
+            nlg = nlg_type(cfg)
+        except:
+            raise SemHubException(
+                'Unsupported NLG: %s' % nlg_type)
 
     return nlg
 
