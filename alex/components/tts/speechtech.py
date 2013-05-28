@@ -12,10 +12,10 @@ import traceback
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
-from alex.utils.exception import TTSException
+from alex.components.tts import TTSException, TTSInterface
 
 
-class SpeechtechTTS():
+class SpeechtechTTS(TTSInterface):
     """ Uses SpeechTech TTS service to synthesize sentences in a specific language, e.g. en, cs.
 
     The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.

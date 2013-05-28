@@ -21,10 +21,6 @@ class NLGException(AlexException):
     pass
 
 
-class TTSException(AlexException):
-    pass
-
-
 class HubException(AlexException):
     pass
 
