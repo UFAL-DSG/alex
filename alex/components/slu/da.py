@@ -87,7 +87,7 @@ class DialogueActItem(Abstracted):
 
     # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
-                 dai=None):
+                 dai=None, attrs=None):
         """Initialise the dialogue act item. Assigns the default values to
         dialogue act type (dat), slot name (name), and slot value (value).
 
@@ -96,6 +96,7 @@ class DialogueActItem(Abstracted):
         self._dat = dialogue_act_type
         self._name = name
         self._value = value
+        self._attrs = {} if attrs is None else attrs
 
         # Bookkeeping.
         self._orig_values = set()
@@ -368,7 +369,7 @@ class DialogueActItem(Abstracted):
                     self._value = self._value[1:-1]
             else:
                 raise DialogueActItemException(
-                    "Parsing error in: {dai_str}: {atval}".format(
+                    u"Parsing error in: {dai_str}: {atval}".format(
                         dai_str=dai_str, atval=name_val))
 
         self._str = None
@@ -524,7 +525,7 @@ class DialogueAct(object):
             raise DialogueActException(
                 "DialogueAct can only be merged with another DialogueAct")
         self._dais.extend(da.dais)
-        self.sort()
+        #self.sort()
         return self
 
     def merge_same_dais(self):
@@ -832,6 +833,15 @@ class DialogueActConfusionNetwork(SLUHypothesis):
                       'add': _combine_add.__func__,
                       'arit': _combine_arit.__func__,
                       'harm': _combine_harm.__func__}
+
+    def make_dict(self):
+        res = {}
+        for prob, dai in self.cn:
+            if dai.name is None:
+                res[dai.dat] = dai
+            else:
+                res[(dai.dat, dai.name)] = dai
+        return res
 
     def add_merge(self, probability, dai, combine='max'):
         """Combines the probability mass of the given dialogue act item with an
@@ -1201,3 +1211,7 @@ def merge_slu_confnets(confnet_hyps):
     merged.sort()
 
     return merged
+
+if __name__ == '__main__':
+    dan = DialogueActNode()
+    dan.asdf.asdf = "asdf"
