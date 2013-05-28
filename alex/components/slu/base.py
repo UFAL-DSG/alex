@@ -522,6 +522,10 @@ class SLUInterface(object):
           - output: SLUHypothesis sub-class
 
     """
+    def __init__(self, preprocessing, cfg=None):
+        self.preprocessing = preprocessing
+        self.cfg = cfg
+
     def parse_1_best(self, utterance, *args, **kwargs):
         from exception import SLUException
         raise SLUException("Not implemented")
