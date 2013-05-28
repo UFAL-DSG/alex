@@ -405,7 +405,7 @@ class UtteranceFeatures(Features):
         if utterance is not None:
             self.parse(utterance)
 
-    def parse(self, utterance):
+    def parse(self, utterance, with_boundaries=True):
         """Extracts the features from `utterance'."""
         if utterance.isempty():
             self.features['__empty__'] += 1.0
@@ -414,28 +414,27 @@ class UtteranceFeatures(Features):
             for word in utterance:
                 self.features[(word, )] += 1.
             if self.size >= 2:
-                for ngram in utterance.iter_ngrams(2, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(2, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
             # Compute n-grams and skip n-grams for size 3.
             if self.size >= 3:
-                for ngram in utterance.iter_ngrams(3, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(3, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
                     self.features[(ngram[0], '*1', ngram[2])] += 1.
             # Compute n-grams and skip n-grams for size 4.
             if self.size >= 4:
-                for ngram in utterance.iter_ngrams(4, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(4, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
                     self.features[(ngram[0], '*2', ngram[3])] += 1.
             # Compute longer n-grams.
             for length in xrange(5, self.size + 1):
                 for ngram in utterance.iter_ngrams(length,
-                                                   with_boundaries=True):
+                                                   with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
         else:
             raise NotImplementedError(
                 "Features can be extracted only from an empty utterance or "
                 "for the `ngrams' feature type.")
-
         # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
         # etc. or raise it as an exception.
         if len(self.features) == 0:
