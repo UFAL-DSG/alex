@@ -42,10 +42,11 @@ class ASRHyp(Message):
         return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
 
 class SLUHyp(Message):
-    def __init__(self, hyp, source=None, target=None):
+    def __init__(self, hyp, asr_hyp=None, source=None, target=None):
         Message.__init__(self, source, target)
 
         self.hyp = hyp
+        self.asr_hyp = asr_hyp
 
     def __str__(self):
         return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)

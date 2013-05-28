@@ -100,7 +100,7 @@ class DM(multiprocessing.Process):
             data_slu = self.slu_hypotheses_in.recv()
 
             if isinstance(data_slu, SLUHyp):
-                self.dm.da_in(data_slu.hyp)
+                self.dm.da_in(data_slu.hyp, utterance=data_slu.asr_hyp)
                 da = self.dm.da_out()
 
                 if self.cfg['DM']['debug']:
