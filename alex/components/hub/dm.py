@@ -113,8 +113,7 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['system_logger'].debug(s)
 
                 self.cfg['Logging']['session_logger'].turn("system")
-                # TODO HACK
-                #self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                 self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
                 self.dialogue_act_out.send(DMDA(da))

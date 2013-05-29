@@ -149,6 +149,8 @@ class TextHub(Hub):
         sys_da = self.dm.da_out()
         self.output_sys_da(sys_da)
 
+        import ipdb; ipdb.set_trace()
+
         sys_utt = self.nlg.generate(sys_da)
         self.output_sys_utt(sys_utt)
 

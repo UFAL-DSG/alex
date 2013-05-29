@@ -126,7 +126,7 @@ class SessionLogger:
         """ Format the message - pretty print
         """
 
-        s = '    ' + str(message)
+        s = '    ' + unicode(message)
         s = re.sub(r'\n', '\n    ', s)
 
         return s + '\n'
@@ -305,7 +305,7 @@ class SessionLogger:
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("dialogue_act"))
                 da.setAttribute("time", self.get_time_str())
-                da.appendChild(doc.createTextNode(str(dialogue_act)))
+                da.appendChild(doc.createTextNode(unicode(dialogue_act)))
                 break
         else:
             raise SessionLoggerException(("Missing turn element for %s "
@@ -326,7 +326,7 @@ class SessionLogger:
                 da.setAttribute("time", self.get_time_str())
                 if cost:
                     da.setAttribute("cost", str(cost))
-                da.appendChild(doc.createTextNode(str(text)))
+                da.appendChild(doc.createTextNode(text))
                 break
         else:
             raise SessionLoggerException(("Missing turn element for %s "
@@ -403,7 +403,7 @@ class SessionLogger:
                         for p, w in alts:
                             wa = was.appendChild(doc.createElement("word"))
                             wa.setAttribute("p", "%.3f" % p)
-                            wa.appendChild(doc.createTextNode(str(w)))
+                            wa.appendChild(doc.createTextNode(unicode(w)))
 
                 break
         else:
@@ -430,7 +430,7 @@ class SessionLogger:
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("interpretation"))
                     hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(str(h)))
+                    hyp.appendChild(doc.createTextNode(unicode(h)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
@@ -441,7 +441,7 @@ class SessionLogger:
 
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % p)
-                        daia.appendChild(doc.createTextNode(str(dai)))
+                        daia.appendChild(doc.createTextNode(unicode(dai)))
 
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % (1 - p))
