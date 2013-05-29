@@ -169,14 +169,11 @@ class VAD(multiprocessing.Process):
                             'vad-{stamp}.wav'.format(stamp=timestamp))
 
                         self.session_logger.turn("user")
-                        self.session_logger.rec_start(
-                            "user", os.path.basename(self.output_file_name))
+                        self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command(
-                            'speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command(
-                            'speech_start()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug(

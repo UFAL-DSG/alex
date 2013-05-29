@@ -13,9 +13,10 @@ from alex.utils.czech_stemmer import cz_stem
 
 def _fill_utterance_values(abutterance, category, res):
     for _, value in abutterance.insts_for_type((category.upper(), )):
-            if value == ("[OTHER]", ): continue
+        if value == ("[OTHER]", ):
+            continue
 
-            res[category].append(value)
+        res[category].append(value)
 
 
 class AOTBSLU(SLUInterface):
@@ -30,10 +31,11 @@ class AOTBSLU(SLUInterface):
         res = defaultdict(list)
         _fill_utterance_values(abutterance, 'stop', res)
 
+        print unicode(res)
         stop_name = None
         for slot, values in res.iteritems():
             for value in values:
-                stop_name = " ".join(value)
+                stop_name = u" ".join(value)
                 break
 
         utt_set = set(abutterance)
@@ -48,6 +50,7 @@ class AOTBSLU(SLUInterface):
         preps_to_in = len(preps_to_used) > 0
 
         cn.add(1.0, DialogueActItem("inform", "stop", stop_name))
+
         if preps_from_in and not preps_to_in:
             cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name, attrs={'prep': next(iter(preps_from_used))}))
 
@@ -87,11 +90,13 @@ class AOTBSLU(SLUInterface):
             utterance_1 = utterance.get_best_utterance()
         else:
             utterance_1 = utterance
+
+
         utt_norm = self.preprocessing.text_normalisation(utterance_1)
+
         abutterance, category_labels = \
                 self.preprocessing.values2category_labels_in_utterance(utt_norm)
 
-        print abutterance
         res_cn = DialogueActConfusionNetwork()
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)

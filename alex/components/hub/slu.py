@@ -82,7 +82,7 @@ class SLU(multiprocessing.Process):
                     s = []
                     s.append("SLU Hypothesis")
                     s.append("-"*60)
-                    s.append(str(slu_hyp))
+                    s.append(unicode(slu_hyp))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)

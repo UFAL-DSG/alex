@@ -86,7 +86,7 @@ class Utterance(object):
         self._wordset = set(self._utterance)
 
     def __str__(self):
-        return ' '.join(word.encode('utf-8') for word in self._utterance)
+        return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
         return u' '.join(self._utterance)
@@ -150,7 +150,7 @@ class Utterance(object):
         index = self.find(phrase)
         if index == -1:
             # No match found.
-            raise ValueError('Missing "{phrase}" in "{utt}"'
+            raise ValueError(u'Missing "{phrase}" in "{utt}"'
                              .format(phrase=phrase, utt=self._utterance))
         return index
 
@@ -438,7 +438,7 @@ class UtteranceFeatures(Features):
         # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
         # etc. or raise it as an exception.
         if len(self.features) == 0:
-            print '(EE) Utterance with no features: "{utt}"'.format(
+            print u'(EE) Utterance with no features: "{utt}"'.format(
                 utt=utterance.utterance)
 
 
@@ -449,6 +449,9 @@ class UtteranceHyp(ASRHypothesis):
         self.utterance = utterance
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         return "%.3f %s" % (self.prob, self.utterance)
 
     def get_best_utterance(self):
@@ -592,10 +595,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         Abstracted.__init__(self)
 
     def __str__(self):
-        return '\n'.join(' '.join('({p:.3f}: {w})'.format(p=hyp[0], w=hyp[1])
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return u'\n'.join(u' '.join('({p:.3f}: {w})'.format(p=hyp[0], w=hyp[1])
                                   for hyp in alts)
-                         + ' ' +
-                         ' '.join('[{len_} ({p:.3f}: {phr})]'.format(
+                         + u' ' +
+                         u' '.join('[{len_} ({p:.3f}: {phr})]'.format(
                                len_=link.end - start,
                                p=link.hyp[0],
                                phr=' '.join(link.hyp[1]))
@@ -688,7 +694,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def index(self, phrase, start=0, end=None):
         index = self.find(phrase)
         if index == -1:
-            raise ValueError('Missing "{phrase}" in "{cn}"'
+            raise ValueError(u'Missing "{phrase}" in "{cn}"'
                              .format(phrase=" ".join(phrase), cn=self._cn))
         return index
 
@@ -1365,5 +1371,5 @@ class UtteranceConfusionNetworkFeatures(Features):
 
         if len(self.features) == 0:
             raise UtteranceConfusionNetworkException(
-                    'No features extracted from the confnet:\n{}'.format(
+                    u'No features extracted from the confnet:\n{}'.format(
                         confnet))

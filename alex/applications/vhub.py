@@ -211,13 +211,11 @@ class VoipHub(Hub):
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
-                # TODO HACK
-                # self.cfg['Logging']['system_logger'].info(command)
+                self.cfg['Logging']['system_logger'].info(command)
 
             if tts_commands.poll():
                 command = tts_commands.recv()
-                # TODO HACK
-                # self.cfg['Logging']['system_logger'].info(command)
+                self.cfg['Logging']['system_logger'].info(command)
 
             current_time = time.time()
 

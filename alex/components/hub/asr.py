@@ -119,7 +119,7 @@ class ASR(multiprocessing.Process):
                             s = []
                             s.append("ASR Hypothesis")
                             s.append("-"*60)
-                            s.append(str(asr_hyp))
+                            s.append(unicode(asr_hyp))
                             s.append("")
                             s = '\n'.join(s)
                             self.cfg['Logging']['system_logger'].debug(s)

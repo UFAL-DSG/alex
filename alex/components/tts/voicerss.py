@@ -26,7 +26,7 @@ class VoiceRssTTS():
         for a text.
         Returns a string with a WAV stream."""
         baseurl = "http://api.voicerss.org"
-        values = {'src': text,
+        values = {'src': text.encode('utf8'),
                   'hl': language,
                   'key': self.cfg['TTS']['VoiceRSS']['api_key']}
         data = urllib.urlencode(values)

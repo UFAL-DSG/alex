@@ -11,6 +11,7 @@ import os
 import os.path
 import sys
 import re
+import codecs
 
 from datetime import datetime
 
@@ -70,7 +71,7 @@ def global_lock(lock):
 def file_lock(file_name):
     """ Multiprocessing lock using files. Lock on a specific file.
     """
-    lock_file = open(file_name, 'w')
+    lock_file = codecs.open(file_name, 'w', encoding='utf8')
     fcntl.lockf(lock_file, fcntl.LOCK_EX)
     return lock_file
 
@@ -157,8 +158,7 @@ class SystemLogger(object):
 
         """
         session_name = self.get_time_str() + '-' + remote_uri
-        self.current_session_log_dir_name.value = os.path.join(self.output_dir,
-                                                               session_name)
+        self.current_session_log_dir_name.value = os.path.join(self.output_dir, session_name)
         os.makedirs(self.current_session_log_dir_name.value)
         self._session_started = True
 
@@ -199,7 +199,7 @@ class SystemLogger(object):
         s += '%-10s ' % lvl
         s += '\n'
 
-        ss = '    ' + str(message)
+        ss = '    ' + unicode(message)
         ss = re.sub(r'\n', '\n    ', ss)
 
         return s + ss + '\n'
@@ -220,7 +220,7 @@ class SystemLogger(object):
             if SystemLogger.levels[lvl] <= \
                     SystemLogger.levels[self.file_log_level]:
                 # log to the global log
-                f = open(os.path.join(self.output_dir, 'system.log'), "a+", 0)
+                f = codecs.open(os.path.join(self.output_dir, 'system.log'), "a+", encoding='utf8', buffering=0)
                 fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')
@@ -232,9 +232,7 @@ class SystemLogger(object):
                 or SystemLogger.levels[lvl] <= \
                     SystemLogger.levels[self.file_log_level]):
                 # log to the call specific log
-                f = open(os.path.join(self.current_session_log_dir_name.value,
-                                      'system.log'),
-                         "a+", 0)
+                f = codecs.open(os.path.join(self.current_session_log_dir_name.value, 'system.log'), "a+", encoding='utf8', buffering=0)
                 fcntl.lockf(f, fcntl.LOCK_EX)
                 f.write(self.formatter(lvl, message))
                 f.write('\n')

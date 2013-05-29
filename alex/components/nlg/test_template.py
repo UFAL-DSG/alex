@@ -28,23 +28,23 @@ class TestTemplateNLG(unittest.TestCase):
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(task="find")&inform(pricerange="cheap")')
-        correct_text = "Ok, you are looking for something in the cheap price range."
+        correct_text = u"Ok, you are looking for something in the cheap price range."
         generated_text = nlg.generate(da)
 
         s = []
         s.append("")
         s.append("Input DA:")
-        s.append(str(da))
+        s.append(unicode(da))
         s.append("")
         s.append("Correct text:")
-        s.append(str(correct_text))
+        s.append(unicode(correct_text))
         s.append("")
         s.append("Generated text:")
-        s.append(str(generated_text))
+        s.append(unicode(generated_text))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(correct_text), str(generated_text))
+        self.assertEqual(unicode(correct_text), unicode(generated_text))
 
     def test_template_nlg_r(self):
         cfg = Config(config=CONFIG_DICT)
@@ -57,17 +57,17 @@ class TestTemplateNLG(unittest.TestCase):
         s = []
         s.append("")
         s.append("Input DA:")
-        s.append(str(da))
+        s.append(unicode(da))
         s.append("")
         s.append("Correct text:")
-        s.append(str(correct_text))
+        s.append(unicode(correct_text))
         s.append("")
         s.append("Generated text:")
-        s.append(str(generated_text))
+        s.append(unicode(generated_text))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(correct_text), str(generated_text))
+        self.assertEqual(unicode(correct_text), unicode(generated_text))
 
 if __name__ == '__main__':
     unittest.main()

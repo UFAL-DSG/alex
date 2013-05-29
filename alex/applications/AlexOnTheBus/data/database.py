@@ -1,5 +1,6 @@
 # encoding: utf8
 import os
+import codecs
 
 database = {
         u"task": {
@@ -76,7 +77,7 @@ def add_time():
 
         time_str = "%s" % hh_word
         db_add("time", ftime, time_wrap(time_str))
-        db_add("time", ftime, str(hh))
+        db_add("time", ftime, unicode(hh))
         # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
 
         time_str = "%s hodin" % hh_word
@@ -110,9 +111,9 @@ def add_time():
 
 def add_zastavky():
     dir = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(dir, "zastavky.expanded.txt")) as f_in:
+    with codecs.open(os.path.join(dir, "zastavky.expanded.txt"), encoding='utf-8') as f_in:
         for ln in f_in:
-            ln = ln.strip().decode('utf8').lower()
+            ln = ln.strip().lower()
             ln = ln.split(';')
 
             db_add('stop', ln[0], ln[0])

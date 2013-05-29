@@ -29,7 +29,7 @@ class AOTBNLG(object):
             else:
                 return u"Systémová chyba 3"
         elif dai.name == u"line":
-            return str(dai.value)
+            return unicode(dai.value)
         elif dai.name == u"go_at":
             return u"v %s" % dai.value
         elif dai.name == u"headsign":

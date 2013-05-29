@@ -53,7 +53,7 @@ class SpeechtechTTS(TTSInterface):
             opener = urllib2.build_opener(auth_handler)
             urllib2.install_opener(opener)
 
-            params = urllib.urlencode([('text', text), ('engine', voice)])
+            params = urllib.urlencode([('text', text.encode('utf8')), ('engine', voice.encode('utf8'))])
             task_id = urllib2.urlopen(
                 '%s/add_to_queue' % ROOT_URI, params).read().strip()
 

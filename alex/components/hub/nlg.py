@@ -77,7 +77,7 @@ class NLG(multiprocessing.Process):
                     s.append(text)
                     s.append("")
                     s = '\n'.join(s)
-                    self.cfg['Logging']['system_logger'].debug(s.encode('utf8'))
+                    self.cfg['Logging']['system_logger'].debug(s)
 
 
                 self.cfg['Logging']['session_logger'].text("system", text)

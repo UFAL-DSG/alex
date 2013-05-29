@@ -119,12 +119,13 @@ class DialogueActItem(Abstracted):
         return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
         # This check is needed for the DAI gets into a partially constructed
         # state during copy.deepcopying.
+
         try:
             str_self = self._str
         except AttributeError:
@@ -145,6 +146,7 @@ class DialogueActItem(Abstracted):
                              .format(type_=self._dat,
                                      name=self._name or u'',
                                      eq_val=eq_val))
+
         return self._str
 
     def iter_typeval(self):
@@ -349,7 +351,7 @@ class DialogueActItem(Abstracted):
             first_par_idx = dai_str.index('(')
         except ValueError:
             raise DialogueActItemException(
-                'Parsing error in: "{dai}". Missing opening parenthesis.'
+                u'Parsing error in: "{dai}". Missing opening parenthesis.'
                 .format(dai=dai_str))
 
         self._dat = dai_str[:first_par_idx]
@@ -409,11 +411,11 @@ class DialogueAct(object):
                                            "constructed from a basestring.")
             self.parse(da_str)
 
+    def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
     def __unicode__(self):
         return '&'.join(unicode(dai) for dai in self._dais)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
@@ -584,7 +586,7 @@ class DialogueActFeatures(Features):
                 if dai.value is not None:
                     full_feat = AbstractedTuple2(
                         (dai.dat,
-                         '{n}={v}'.format(n=dai.name, v=dai.value)))
+                         u'{n}={v}'.format(n=dai.name, v=dai.value)))
                     self.features[full_feat] += 1.
                     self.generic[full_feat] = full_feat.get_generic()
                     self.instantiable[full_feat] = full_feat
@@ -612,6 +614,9 @@ class DialogueActHyp(SLUHypothesis):
         self.da = da
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         return "%.3f %s" % (self.prob, self.da)
 
     def get_best_da(self):
@@ -782,13 +787,15 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         self.cn = []
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
 
+    def __unicode__(self):
         ret = []
         for prob, dai in sorted(self.cn, reverse=True):
             # FIXME Works only for DSTC.
-            ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
+            ret.append(u"{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
-        return "\n".join(ret)
+        return u"\n".join(ret)
 
     def __len__(self):
         return len(self.cn)
@@ -1118,17 +1125,17 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
-                    ("The probability of the {dai!s} dialogue act item is " + \
-                     "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+                    (u"The probability of the {dai!s} dialogue act item is " + \
+                     u"larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
 
     def normalise_by_slot(self):
         """Ensures that probabilities for alternative values for the same slot
         sum up to one (taking account for the `other' value).
         """
-        slot_sums = {dai.name: 0. for (p, dai) in self.cn if dai.name}
+        slot_sums = {dai.name: 0.0 for (p, dai) in self.cn if dai.name}
         dai_weights = list()
         has_prob1 = list()
-        slot_1probs = {dai_name: 0 for dai_name in slot_sums}
+        slot_1probs = {dai_name: 0.0 for dai_name in slot_sums}
         for p, dai in self.cn:
             this_has_prob1 = True  # whatever, these values will be overwritten
             dai_weight = 1.        # or never used

@@ -103,7 +103,10 @@ class AOTBDM(DialogueManager):
 
         utterance = self._get_best_utterance(utterance)
 
-        print "understood:", da.cn
+        print "understood:"
+        print unicode(da)
+        print
+
         self.state.turn_number += 1
 
         from_dai = None

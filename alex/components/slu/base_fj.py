@@ -117,7 +117,7 @@ class SLUPreprocessing(object):
         for surface, value, slot in self.cldb:
             slot_upper = slot.upper()
             if surface in utterance:
-                category_label = '{cat}-{idx}'.format(
+                category_label = u'{cat}-{idx}'.format(
                     cat=slot_upper,
                     idx=category_label_counter[slot_upper])
                 category_label_counter[slot_upper] += 1

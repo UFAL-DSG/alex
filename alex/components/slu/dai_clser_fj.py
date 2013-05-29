@@ -224,8 +224,8 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 mean_accuracy = lr.score(
                     self.input_matrix, self.outputs[dai])
-                print ("Training data prediction mean accuracy of the "
-                       "training data: {0:6.2f}").format(100.0 * mean_accuracy)
+                print (u"Training data prediction mean accuracy of the "
+                       u"training data: {0:6.2f}").format(100.0 * mean_accuracy)
                 print "Size of the params:", lr.coef_.shape, \
                       "Number of non-zero params:", np.count_nonzero(lr.coef_)
 

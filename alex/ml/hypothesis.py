@@ -43,6 +43,9 @@ class NBList(Hypothesis):
         self.tolerance_over1 = 1e-5
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         return '\n'.join('{p:.3f} {fact}'.format(p=p, fact=fact)
                          for p, fact in self.n_best)
 

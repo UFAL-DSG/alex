@@ -48,10 +48,9 @@ class TTS(multiprocessing.Process):
 
 
     def synthesize(self, user_id, text):
-        self.commands.send(Command('tts_start(user_id="%s",text="%s")' %
-                           (user_id, text.encode('utf8')), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
 
-        wav = self.tts.synthesize(text.encode('utf8'))
+        wav = self.tts.synthesize(text)
 
         # FIXME: split the wave so that the last bin is of the size of the full frame
         # this bug is at many places in the code

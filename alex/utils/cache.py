@@ -36,8 +36,7 @@ def lru_cache(maxsize=100):
     '''
     maxqueue = maxsize * 10
 
-    def decorator(user_function,
-                  len=len, iter=iter, tuple=tuple, sorted=sorted, KeyError=KeyError):
+    def decorator(user_function, len=len, iter=iter, tuple=tuple, sorted=sorted, KeyError=KeyError):
         cache = {}                  # mapping of args to results
         queue = collections.deque()  # order that keys have been used
         refcount = Counter()        # times each key is in the queue

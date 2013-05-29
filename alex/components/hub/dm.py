@@ -74,7 +74,7 @@ class DM(multiprocessing.Process):
                         s = []
                         s.append("DM Output")
                         s.append("-"*60)
-                        s.append(str(da))
+                        s.append(unicode(da))
                         s.append("")
                         s = '\n'.join(s)
                         self.cfg['Logging']['system_logger'].debug(s)
@@ -107,7 +107,7 @@ class DM(multiprocessing.Process):
                     s = []
                     s.append("DM Output")
                     s.append("-"*60)
-                    s.append(str(da))
+                    s.append(unicode(da))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
