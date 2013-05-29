@@ -22,7 +22,7 @@ import autopath
 
 from alex.components.dm import DialogueManager
 from alex.components.nlg.template import TemplateNLG
-from alex.components.slu.da import DialogueAct, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 SlotChange = namedtuple('SlotChange', ['from_value', 'to_value', 'slot'])
@@ -197,10 +197,18 @@ class AOTBDM(DialogueManager):
             return res
         elif self.state.not_understood:
             self.state.not_understood = False
-            if self.state.last_utterance is not None:
-                return DialogueAct(u"not_understood(text='%s')" % " ".join(self.state.last_utterance.utterance))
-            else:
-                return DialogueAct(u"not_understood()")
+            res = DialogueAct(u"not_understood()")
+            if self.state.from_stop is None:
+                res.append(DialogueActItem("help", "from_stop"))
+            elif self.state.to_stop is None:
+                res.append(DialogueActItem("help", "to_stop"))
+
+            return res
+
+            #if self.state.last_utterance is not None:
+            #    return DialogueAct(u"not_understood(text='%s')" % " ".join(self.state.last_utterance.utterance))
+            #else:
+            #    return DialogueAct(u"not_understood()")
         else:
             da_strs = []
             for slot in ['from_stop', 'to_stop']:

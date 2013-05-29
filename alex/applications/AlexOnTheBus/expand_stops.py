@@ -63,17 +63,47 @@ class ExpandStops(object):
     def expand_morfflex(self):
         morf_dict = defaultdict(set)
         with open('/tmp/morfflex-cz.2013-05-02.utf8.lemmaID_suff-tag-form.tab.csv') as f_in:
-            for i, ln in enumerate(f_in):
-                t1, x, t2 = ln.strip().lower().decode('utf8').split('\t')
-                if t2 in self.stops_words:
-                    morf_dict[t2].add(t1)
+            curr_word = None
+            curr_buff = []
+            curr_in = False
+            def curr_save():
+                if curr_in:
+                    for t in curr_buff:
+                        morf_dict[t].add(curr_word)
+                        morf_dict[curr_word].add(t)
 
-                #if i > 10000:
+            for i, ln in enumerate(f_in):
+                t1, _, t2 = ln.strip().lower().decode('utf8').split('\t')
+                t1x = t1.split('-')[0]
+                t1x = t1x.split('_')[0]
+                if t1x != curr_word:
+                    curr_save()
+                    curr_word = t1x
+                    curr_buff = []
+                    curr_in = False
+
+                curr_buff.append(t2)
+
+                if t2 in self.stops_words:
+                    curr_in = True
+
+                #if i > 1000000:
                 #    break
+                #print i
+            #import ipdb; ipdb.set_trace()
+            curr_save()
+
+        # save morf dict
+
+        with open('/tmp/morf_dict', 'w') as f_out:
+            for key, values in morf_dict.iteritems():
+                f_out.write(key.encode('utf8') + " : ")
+                f_out.write(";".join(values).encode('utf8'))
+                f_out.write("\n")
 
         for stop in self.stops.keys():
             res = []
-            stop_s = stop.split()
+            stop_s = stop.lower().split()
 
             #print stop_s
             #print morf_dict.items()[:10]
@@ -81,6 +111,9 @@ class ExpandStops(object):
 
             for part in stop_s:
                 res.append(morf_dict.get(part, set([part])))
+                #print len(morf_dict.get(part, set([part])))
+
+
 
             #print res
             for word in itertools.product(*res):
