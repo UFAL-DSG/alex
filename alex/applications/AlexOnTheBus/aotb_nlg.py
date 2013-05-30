@@ -69,9 +69,9 @@ class AOTBNLG(object):
 
     def generate_help(self, dai):
         if dai.name == "from_stop":
-            return u"Řekni například z Anděla."
+            return u"Řekněte například z Anděla."
         elif dai.name == "to_stop":
-            return u"Řekni například na Zličín."
+            return u"Řekněte například na Zličín."
         else:
             return u"Dokážu hledat spojení MHD po Praze. Řekněte postupně odkud a kam chcete jet. Případně v kolik hodin."
 
@@ -89,7 +89,7 @@ class AOTBNLG(object):
                        ]
                 res += [random.choice(
                           [
-                            u"Tato experimentální služba je poskytována laboratoří výzkumu hlasových dialogových systémů na Ústavu Fomrmální a Aplikované Lingvistiky na Karlově Univerzitě. " +
+                            u"Tato experimentální služba je poskytována laboratoří výzkumu hlasových dialogových systémů na Ústavu Formální a Aplikované Lingvistiky na Karlově Univerzitě. " +
                             u'',
                           ]
                         )
