@@ -16,7 +16,7 @@ def catch_ioerror(user_function, msg = ""):
             return user_function(*args, **kwds)
         except IOError:
             print "#"*120
-            print "Unhandled exception IOError in %s" % (str(fn))
+            print u"Unhandled exception IOError in %s" % (unicode(user_function))
             if msg:
                 print msg
             print "#"*120
