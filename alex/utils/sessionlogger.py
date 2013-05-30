@@ -167,6 +167,7 @@ class SessionLogger:
         self.f.close()
 
     @global_lock(lock)
+    @catch_ioerror
     def config(self, cfg):
         """ Adds the config tag to the session log.
         """
@@ -184,6 +185,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def header(self, system_txt, version_txt):
         """ Adds host, date, system, and version info into the header element.
         The host and date will be derived automatically.
@@ -206,6 +208,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def input_source(self, input_source):
         """Adds the input_source optional tag to the header."""
         doc = self.open_session_xml()
@@ -344,6 +347,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def rec_start(self, speaker, fname):
         """Adds the optional recorded input/output element to the last
         "speaker" turn.

@@ -125,7 +125,7 @@ class TTS(multiprocessing.Process):
 
     def run(self):
         self.command = None
-        set_proc_name("alex_TTS")
+        set_proc_name("Alex_TTS")
 
         while not self.exit:
             try:

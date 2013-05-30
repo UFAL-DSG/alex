@@ -154,6 +154,11 @@ class VoipHub(Hub):
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
+                        # FIXME this is not an ideal synchronisation for the stopped components
+                        # we should do better.
+                        # FJ
+                        time.sleep(0.5)
+
                         self.cfg['Logging']['system_logger'].session_end()
                         self.cfg['Logging']['session_logger'].session_end()
 
@@ -256,7 +261,7 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
         VoipHub builds a full featured VOIP telephone system.
-        It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
+        It builds a pipeline of VAD, ASR, SLU, DM, NLG, TTS components.
         Then it connects ASR and TTS with the VOIP to handle audio input and output.
 
         The program reads the default config in the resources directory ('../resources/default.cfg') config

@@ -153,7 +153,7 @@ class ASR(multiprocessing.Process):
 
     def run(self):
         self.recognition_on = False
-        set_proc_name("alex_ASR")
+        set_proc_name("Alex_ASR")
 
         while 1:
             try:
