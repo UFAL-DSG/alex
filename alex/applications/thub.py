@@ -84,7 +84,7 @@ class TextHub(Hub):
 
     def output_sys_da(self, da):
         """Prints the system dialogue act to the output."""
-        print "System DA:", da
+        print "System DA:", unicode(da)
         print
 
     def output_sys_utt(self, utt):
@@ -102,13 +102,13 @@ class TextHub(Hub):
         """Print the user input dialogue acts."""
         if isinstance(das, DialogueActConfusionNetwork):
             print "User DA confusion network:"
-            print das
+            print unicode(das)
             print
             print "User best DA hypothesis:"
-            print das.get_best_da_hyp()
+            print unicode(das.get_best_da_hyp())
         else:
             print "User DA:"
-            print das
+            print unicode(das)
             print
 
     def input_usr_utt_nblist(self):
@@ -149,7 +149,7 @@ class TextHub(Hub):
         sys_da = self.dm.da_out()
         self.output_sys_da(sys_da)
 
-        import ipdb; ipdb.set_trace()
+        #import ipdb; ipdb.set_trace()
 
         sys_utt = self.nlg.generate(sys_da)
         self.output_sys_utt(sys_utt)

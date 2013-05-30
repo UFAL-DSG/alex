@@ -59,7 +59,7 @@ class SemHub(Hub):
 
     def output_da(self, da):
         """Prints the system dialogue act to the output."""
-        print "System DA:", da
+        print "System DA:", unicode(da)
         print
 
     def input_da_nblist(self):

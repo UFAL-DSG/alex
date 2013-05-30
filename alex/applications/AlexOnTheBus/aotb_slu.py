@@ -18,6 +18,17 @@ def _fill_utterance_values(abutterance, category, res):
 
         res[category].append(value)
 
+def _any_word_in(abutterance, words):
+    for alt_expr in words:
+        if cz_stem(alt_expr) in abutterance.utterance:
+            return True
+    return False
+
+def _all_words_in(abutterance, words):
+    for alt_expr in words:
+        if cz_stem(alt_expr) not in abutterance.utterance:
+            return False
+    return True
 
 class AOTBSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
@@ -57,7 +68,6 @@ class AOTBSLU(SLUInterface):
         if not preps_from_in and preps_to_in:
             cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name, attrs={'prep': next(iter(preps_to_used))}))
 
-
     def parse_time(self, abutterance, cn):
         res = defaultdict(list)
         _fill_utterance_values(abutterance, 'time', res)
@@ -68,29 +78,21 @@ class AOTBSLU(SLUInterface):
                 break
 
     def parse_meta(self, abutterance, cn):
-        for alt_expr in [u"jiný", u"jiné", u"jiná", u"další", u"dál", u"jiného" ]:
-            if cz_stem(alt_expr) in abutterance.utterance:
-                cn.add(1.0, DialogueActItem("request", "alternatives"))
-                break
+        if _any_word_in(abutterance, [u"jiný", u"jiné", u"jiná", u"další", u"dál", u"jiného" ]):
+            cn.add(1.0, DialogueActItem("reqalts"))
 
-        for alt_expr in [u"děkuji", u"nashledanou", u"díky", ]:
-            if cz_stem(alt_expr) in abutterance.utterance:
-                cn.add(1.0, DialogueActItem("bye"))
-                break
+        if _any_word_in(abutterance, [u"děkuji", u"nashledanou", u"díky", u"sbohem", u"zdar"]):
+            cn.add(1.0, DialogueActItem("bye"))
 
-
-
-
-
-
-
+        if _any_word_in(abutterance, [u"zopakovat",  u"opakovat", u"znovu", ]) or \
+            _all_words_in(abutterance, [u"ještě",  u"jednou" ]):
+            cn.add(1.0, DialogueActItem("repeat"))
 
     def parse(self, utterance, *args, **kwargs):
         if not isinstance(utterance, Utterance):
             utterance_1 = utterance.get_best_utterance()
         else:
             utterance_1 = utterance
-
 
         utt_norm = self.preprocessing.text_normalisation(utterance_1)
 

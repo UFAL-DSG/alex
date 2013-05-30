@@ -617,7 +617,7 @@ class DialogueActHyp(SLUHypothesis):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return "%.3f %s" % (self.prob, self.da)
+        return "%.3f %s" % (self.prob, unicode(self.da))
 
     def get_best_da(self):
         return self.da

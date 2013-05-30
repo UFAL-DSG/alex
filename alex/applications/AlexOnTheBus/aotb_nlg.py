@@ -17,15 +17,16 @@ ORD_NUMBERS = {
 class AOTBNLG(object):
     def __init__(self, cfg):
         self.cfg = cfg
+        self.last_utterance = "Dobrý den."
 
     def generate_inform(self, dai):
         if dai.name == u"vehicle":
             if dai.value == u"SUBWAY":
-                return u"jeďte metrem"
+                return u"Jeďte metrem"
             elif dai.value == u"TRAM":
-                return u"jeďte tramvají číslo"
+                return u"Jeďte tramvají číslo"
             elif dai.value == u"BUS":
-                return u"jeďte autobusem číslo"
+                return u"Jeďte autobusem číslo"
             else:
                 return u"Systémová chyba 3"
         elif dai.name == u"line":
@@ -37,13 +38,31 @@ class AOTBNLG(object):
         elif dai.name == u"enter_at":
             return u"z %s," % dai.value
         elif dai.name == u"exit_at":
-            return u"vystup na %s." % dai.value
+            return u"Vystupte na %s." % dai.value
         elif dai.name == u"transfer":
-            return u"a pak přestup a"
+            return u"A pak přestup a "
         elif dai.name == u"alternatives":
-            return u"našla jsem %s cest." % dai.value
+            return u"Našla jsem %s cesty." % dai.value
         elif dai.name == u"alternative":
-            return u"možnost %s." % ORD_NUMBERS[dai.value]
+            return u"Možnost %s." % ORD_NUMBERS[dai.value]
+        elif dai.name == u"not_understood":
+            return random.choice(
+                    [
+                        u"Nerozuměla jsem. Jěště jednou prosím.",
+                        u"Můžete to zopakovat?",
+                        u"Ještě jednou prosím.",
+                    ])
+
+        elif dai.name == u"not_found":
+            return random.choice(
+                     [
+                        u"Jemi líto, ale žádné spojení jsem nenašla.",
+                        u"Promiňte požadovanou cestu jsem nenašla.",
+                     ])
+        elif dai.name == u"from_stop":
+            return u"Chcete cestovat z %s " % dai.value
+        elif dai.name == u"to_stop":
+            return " cestujete do %s" % dai.value
         else:
             return u"Systémová chyba 4"
 
@@ -69,9 +88,18 @@ class AOTBNLG(object):
 
     def generate_help(self, dai):
         if dai.name == "from_stop":
-            return u"Řekněte například z Anděla."
+            return random.choice(
+                     [
+                        u"Řekněte například chtěl bych jet z Anděla.",
+                        u"Řekněte například chtěl bych jet z Malostranského náměstí.",
+                     ])
+
         elif dai.name == "to_stop":
-            return u"Řekněte například na Zličín."
+            return random.choice(
+                     [
+                        u"Řekněte například chtěl bych jet na Zličín.",
+                        u"Řekněte například chtěl bych jet na Zvonařku.",
+                     ])
         else:
             return u"Dokážu hledat spojení MHD po Praze. Řekněte postupně odkud a kam chcete jet. Případně v kolik hodin."
 
@@ -82,45 +110,47 @@ class AOTBNLG(object):
             if dai.dat == u"hello":
                 res += [random.choice(
                           [
-                            u"Dobrý den, dovolali jste se na informace o veřejné dopravě v Praze. ",
+                            u"Dobrý den, dovolali jste se na informace o veřejné dopravě v Praze.",
                             u'Dobrý den.',
                           ]
                         )
                        ]
                 res += [random.choice(
                           [
-                            u"Tato experimentální služba je poskytována laboratoří výzkumu hlasových dialogových systémů na Ústavu Formální a Aplikované Lingvistiky na Karlově Univerzitě. " +
+                            u"Tato experimentální služba je poskytována laboratoří výzkumu hlasových dialogových systémů na Ústavu Formální a Aplikované Lingvistiky na Karlově Univerzitě.",
                             u'',
                           ]
                         )
                        ]
-                res += [u"Hovor je nahráván. Více informací o této službě je na stránkách projektu."]
+                res += [u"Hovor je nahráván. Více informací o této službě je na internetu."]
                 res += [u"Odkud a kam chcete jet?",]
                 res += [random.choice(
                           [
-                            u"Můžete říct například chci jet z Malostranského náměstí na Zvonařku.",
+                            u"Můžete například říct chtěl bych jet z Malostranského náměstí na Zvonařku.",
+                            u"Můžete například říct chtěl bych jet z Malostranského náměstí.",
+                            u"Můžete například říct chtěl bych jet na Zvonařku.",
+                            u"Můžete například říct chtěl bych jet z Anděla na Zličín.",
+                            u"Můžete například říct chtěl bych jet z Anděla.",
+                            u"Můžete například říct chtěl bych jet na Zličín.",
                             u"",
                           ]
                         )
                        ]
-
-            elif dai.dat == u"not_understood":
-                res += [random.choice([u"Nerozuměla jsem. Jěště jednou prosím.", u"Můžete to zopakovat?", u"Ještě jednou prosím."])]
-                #if dai.value is not None:
-                #    res += [u"Rozuměla jsem: %s" % dai.value]
             elif dai.dat == u"request":
                 res += [self.generate_request(dai)]
+            elif dai.dat == u"inform" and dai.name == u"repeat":
+                res += [self.last_utterance]
             elif dai.dat == u"inform":
                 res += [self.generate_inform(dai)]
             elif dai.dat == u"implicit_confirm":
                 res += [self.generate_implicit_confirm(dai)]
             elif dai.dat == u"bye":
                 res += [u"Na shledanou."]
-            elif dai.dat == u"not_found":
-                res += [u"Cestu jsem nenašla."]
             elif dai.dat == u"help":
                 res += [self.generate_help(dai)]
             else:
                 return u"Systémová chyba 2"
 
-        return u" ".join(res)
+        self.last_utterance = u" ".join(res)
+
+        return self.last_utterance

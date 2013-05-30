@@ -35,6 +35,7 @@ class AOTBState(object):
     time = None
     stop = None
     bye = False
+    repeat = False
 
     def __init__(self):
         self.slot_changes = []
@@ -75,8 +76,10 @@ class AOTBDM(DialogueManager):
         super(AOTBDM, self).__init__(cfg)
 
         self.cfg = cfg
-        self.state = None  # wait for new_dialogue to intialize it
+        self.state = None  # wait for a new_dialogue to initialize it
         self.directions = GooglePIDDirectionsFinder()
+
+        self.last_system_dialogue_act = None
 
     def new_dialogue(self):
         """Initialise the dialogue manager and makes it ready for a new dialogue conversation."""
@@ -118,9 +121,10 @@ class AOTBDM(DialogueManager):
         to_dai = cn_dict.get(('inform', 'to_stop', ))
         time_dai = cn_dict.get(('inform', 'time', ))
         bye_dai = cn_dict.get('bye')
-        request_alternatives_dai = cn_dict.get(('request', 'alternatives', ))
+        request_alternatives_dai = cn_dict.get('reqalts')
+        repeat_dai = cn_dict.get('repeat')
 
-        self.state.not_understood = not any([from_dai, to_dai, time_dai, bye_dai, request_alternatives_dai])
+        self.state.not_understood = not any([from_dai, to_dai, time_dai, bye_dai, request_alternatives_dai, repeat_dai])
 
         if request_alternatives_dai is not None:
             self.state.alternatives += 1
@@ -139,6 +143,9 @@ class AOTBDM(DialogueManager):
         if time_dai is not None:
             self.state.time = time_dai.value
 
+        if repeat_dai is not None:
+            self.state.repeat = True
+
     def update_state(self, dai):
         """Copy values from the dai to the state. (i.e. "understand the dai")."""
         if dai.dat == 'inform':
@@ -147,8 +154,6 @@ class AOTBDM(DialogueManager):
     def say_directions(self):
         """Given the state say current directions."""
         route = self.state.directions.routes[self.state.alternatives]
-
-
 
         leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
 
@@ -168,20 +173,20 @@ class AOTBDM(DialogueManager):
                 res.append(u"inform(enter_at=%s)" % step.departure_stop)
                 res.append(u"inform(headsign=%s)" % step.headsign)
                 res.append(u"inform(exit_at=%s)" % step.arrival_stop)
-                res.append(u"inform(transfer)")
+                res.append(u"inform(transfer='True')")
 
         res = res[:-1]
 
         if len(res) == 0:
-            res.append(u"inform(not_found)")
+            res.append(u'inform(not_found="True")')
             res.append(u"inform(from_stop='%s')" % self.state.from_stop)
             res.append(u"inform(to_stop='%s')" % self.state.to_stop)
 
-        print res
+        print unicode(res)
         print [type(x) for x in res]
         res_da = DialogueAct(u"&".join(res))
 
-        print res_da
+        print unicode(res_da)
 
         return res_da
 
@@ -196,22 +201,22 @@ class AOTBDM(DialogueManager):
             res = DialogueAct("hello()")
             return res
         if self.state.bye:
+            self.state.bye = False
             res = DialogueAct("bye()")
+            return res
+        if self.state.repeat:
+            self.state.repeat = False
+            res = DialogueAct('inform(repeat="True")')
             return res
         elif self.state.not_understood:
             self.state.not_understood = False
-            res = DialogueAct(u"not_understood()")
+            res = DialogueAct(u'inform(not_understood="True")')
             if self.state.from_stop is None:
                 res.append(DialogueActItem("help", "from_stop"))
             elif self.state.to_stop is None:
                 res.append(DialogueActItem("help", "to_stop"))
 
             return res
-
-            #if self.state.last_utterance is not None:
-            #    return DialogueAct(u"not_understood(text='%s')" % " ".join(self.state.last_utterance.utterance))
-            #else:
-            #    return DialogueAct(u"not_understood()")
         else:
             da_strs = []
             for slot in ['from_stop', 'to_stop']:
@@ -220,6 +225,9 @@ class AOTBDM(DialogueManager):
 
             ack_strs = []
             for slot_change in self.state.slot_changes:
+                # FIXME In the dialogue act standard, there are no implicit_confirm(s)
+                # This must be properly defined and added into the documentation.
+                # FJ: it looks to me like a regular inform.
                 ack_strs.append("implicit_confirm(%s=%s)" % (slot_change.slot, slot_change.to_value, ))
                 if slot_change.slot in ["from_stop", "to_stop", "time"]:
                     self.state.alternatives = 0
