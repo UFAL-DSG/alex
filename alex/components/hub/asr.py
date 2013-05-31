@@ -119,7 +119,7 @@ class ASR(multiprocessing.Process):
                             s = []
                             s.append("ASR Hypothesis")
                             s.append("-"*60)
-                            s.append(str(asr_hyp))
+                            s.append(unicode(asr_hyp))
                             s.append("")
                             s = '\n'.join(s)
                             self.cfg['Logging']['system_logger'].debug(s)
@@ -141,8 +141,10 @@ class ASR(multiprocessing.Process):
                     # the ASR component can return either NBList or a confusion network
                     if isinstance(asr_hyp, UtteranceNBList):
                         self.cfg['Logging']['session_logger'].asr("user", asr_hyp, None)
-                    else:
+                    elif isinstance(asr_hyp, UtteranceConfusionNetwork):
                         self.cfg['Logging']['session_logger'].asr("user", asr_hyp.get_utterance_nblist(), asr_hyp)
+                    else:
+                        self.cfg['Logging']['session_logger'].asr("user", [(-1, asr_hyp)], None)
 
                     self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
@@ -151,7 +153,7 @@ class ASR(multiprocessing.Process):
 
     def run(self):
         self.recognition_on = False
-        set_proc_name("alex_ASR")
+        set_proc_name("Alex_ASR")
 
         while 1:
             try:

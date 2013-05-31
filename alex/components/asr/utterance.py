@@ -86,7 +86,7 @@ class Utterance(object):
         self._wordset = set(self._utterance)
 
     def __str__(self):
-        return ' '.join(word.encode('utf-8') for word in self._utterance)
+        return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
         return u' '.join(self._utterance)
@@ -150,7 +150,7 @@ class Utterance(object):
         index = self.find(phrase)
         if index == -1:
             # No match found.
-            raise ValueError('Missing "{phrase}" in "{utt}"'
+            raise ValueError(u'Missing "{phrase}" in "{utt}"'
                              .format(phrase=phrase, utt=self._utterance))
         return index
 
@@ -405,7 +405,7 @@ class UtteranceFeatures(Features):
         if utterance is not None:
             self.parse(utterance)
 
-    def parse(self, utterance):
+    def parse(self, utterance, with_boundaries=True):
         """Extracts the features from `utterance'."""
         if utterance.isempty():
             self.features['__empty__'] += 1.0
@@ -414,32 +414,31 @@ class UtteranceFeatures(Features):
             for word in utterance:
                 self.features[(word, )] += 1.
             if self.size >= 2:
-                for ngram in utterance.iter_ngrams(2, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(2, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
             # Compute n-grams and skip n-grams for size 3.
             if self.size >= 3:
-                for ngram in utterance.iter_ngrams(3, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(3, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
                     self.features[(ngram[0], '*1', ngram[2])] += 1.
             # Compute n-grams and skip n-grams for size 4.
             if self.size >= 4:
-                for ngram in utterance.iter_ngrams(4, with_boundaries=True):
+                for ngram in utterance.iter_ngrams(4, with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
                     self.features[(ngram[0], '*2', ngram[3])] += 1.
             # Compute longer n-grams.
             for length in xrange(5, self.size + 1):
                 for ngram in utterance.iter_ngrams(length,
-                                                   with_boundaries=True):
+                                                   with_boundaries=with_boundaries):
                     self.features[tuple(ngram)] += 1.
         else:
             raise NotImplementedError(
                 "Features can be extracted only from an empty utterance or "
                 "for the `ngrams' feature type.")
-
         # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
         # etc. or raise it as an exception.
         if len(self.features) == 0:
-            print '(EE) Utterance with no features: "{utt}"'.format(
+            print u'(EE) Utterance with no features: "{utt}"'.format(
                 utt=utterance.utterance)
 
 
@@ -450,6 +449,9 @@ class UtteranceHyp(ASRHypothesis):
         self.utterance = utterance
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         return "%.3f %s" % (self.prob, self.utterance)
 
     def get_best_utterance(self):
@@ -593,10 +595,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         Abstracted.__init__(self)
 
     def __str__(self):
-        return '\n'.join(' '.join('({p:.3f}: {w})'.format(p=hyp[0], w=hyp[1])
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return u'\n'.join(u' '.join('({p:.3f}: {w})'.format(p=hyp[0], w=hyp[1])
                                   for hyp in alts)
-                         + ' ' +
-                         ' '.join('[{len_} ({p:.3f}: {phr})]'.format(
+                         + u' ' +
+                         u' '.join('[{len_} ({p:.3f}: {phr})]'.format(
                                len_=link.end - start,
                                p=link.hyp[0],
                                phr=' '.join(link.hyp[1]))
@@ -689,7 +694,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def index(self, phrase, start=0, end=None):
         index = self.find(phrase)
         if index == -1:
-            raise ValueError('Missing "{phrase}" in "{cn}"'
+            raise ValueError(u'Missing "{phrase}" in "{cn}"'
                              .format(phrase=" ".join(phrase), cn=self._cn))
         return index
 
@@ -1366,5 +1371,5 @@ class UtteranceConfusionNetworkFeatures(Features):
 
         if len(self.features) == 0:
             raise UtteranceConfusionNetworkException(
-                    'No features extracted from the confnet:\n{}'.format(
+                    u'No features extracted from the confnet:\n{}'.format(
                         confnet))

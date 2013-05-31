@@ -19,9 +19,7 @@ das = load_das('./data/train_slu.sem')
 # Load processing data and configuration.
 cldb = CategoryLabelDatabase('./data/database.py')
 pp = AOTBSLUPreprocessing(cldb)
-pp.text_normalization_mapping += [
-    (["ve"], ["v"]),
-]
+
 
 utterances2 = {}
 das2 = {}

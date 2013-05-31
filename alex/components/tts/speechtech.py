@@ -12,10 +12,10 @@ import traceback
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
-from alex.utils.exception import TTSException
+from alex.components.tts import TTSException, TTSInterface
 
 
-class SpeechtechTTS():
+class SpeechtechTTS(TTSInterface):
     """ Uses SpeechTech TTS service to synthesize sentences in a specific language, e.g. en, cs.
 
     The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.
@@ -53,7 +53,7 @@ class SpeechtechTTS():
             opener = urllib2.build_opener(auth_handler)
             urllib2.install_opener(opener)
 
-            params = urllib.urlencode([('text', text), ('engine', voice)])
+            params = urllib.urlencode([('text', text.encode('utf8')), ('engine', voice.encode('utf8'))])
             task_id = urllib2.urlopen(
                 '%s/add_to_queue' % ROOT_URI, params).read().strip()
 

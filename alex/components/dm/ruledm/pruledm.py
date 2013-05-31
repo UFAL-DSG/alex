@@ -18,7 +18,7 @@ from collections import defaultdict
 
 from alex.components.dm import DialogueManager
 from alex.components.dm.ruledm.iruleds import IRuleDS
-from alex.components.dm.pstate import PDDiscrete
+from alex.components.dm.pstate import PDDiscrete, PDDiscreteOther
 from alex.utils.enums import enum
 from alex.components.slu.da import (
     DialogueAct,
@@ -67,8 +67,34 @@ class SimpleSlotUpdater(object):
 
         return new_pd
 
+class ExtendedSlotUpdater(object):
+    @classmethod
+    def update_slot(cls, curr_pd, observ_pd, deny_pd=None):
+        if deny_pd is None:
+            deny_pd = PDDiscreteOther()
+        observed_items = observ_pd.get_items()
+        observed_items += deny_pd.get_items()
+        new_pd = PDDiscrete()
+
+        p_stay = 1.0 #2.2
+
+        items = set(curr_pd.get_items() + observed_items)
+        for item in items:
+            new_pd[item] = curr_pd[item] * observ_pd[None]
+            if item is not None:
+                new_pd[item] += observ_pd[item] * 1 / p_stay
+
+
+            new_pd[item] *= (1-deny_pd[item])
+            if item is not deny_pd.NULL:
+                new_pd[item] += (1 - deny_pd[item] * curr_pd[item] - deny_pd[deny_pd.NULL]) / (max(len(items), deny_pd.space_size - 1))
+
+        return new_pd
+
+
 
 class PRuleDS(IRuleDS):
+    """Represents Dialogue State (DS) for Probabilistic Rule Dialogue Manager"""
     def __init__(self, user_slots):
         super(PRuleDS, self).__init__()
 
@@ -81,8 +107,6 @@ class PRuleDS(IRuleDS):
         self.request = {}
         for slot in user_slots:
             self.request[slot] = PDDiscrete()
-
-        self.confirm = PDDiscrete()
 
         self.meta = {}
         self.meta['reset'] = PDDiscrete()
@@ -168,7 +192,7 @@ class PReqTransition(PStateVariableTransition):
 
 def state_update(storage, key, slot_key, slot_prob):
     slot_pd = storage[key]
-    storage[key] = SimpleSlotUpdater.update_slot(slot_pd, PDDiscrete({slot_key: slot_prob}))
+    storage[key] = ExtendedSlotUpdater.update_slot(slot_pd, PDDiscrete({slot_key: slot_prob}))
 
 
 class PMetaTransition(object):

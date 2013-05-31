@@ -74,7 +74,7 @@ class DM(multiprocessing.Process):
                         s = []
                         s.append("DM Output")
                         s.append("-"*60)
-                        s.append(str(da))
+                        s.append(unicode(da))
                         s.append("")
                         s = '\n'.join(s)
                         self.cfg['Logging']['system_logger'].debug(s)
@@ -100,21 +100,20 @@ class DM(multiprocessing.Process):
             data_slu = self.slu_hypotheses_in.recv()
 
             if isinstance(data_slu, SLUHyp):
-                self.dm.da_in(data_slu.hyp)
+                self.dm.da_in(data_slu.hyp, utterance=data_slu.asr_hyp)
                 da = self.dm.da_out()
 
                 if self.cfg['DM']['debug']:
                     s = []
                     s.append("DM Output")
                     s.append("-"*60)
-                    s.append(str(da))
+                    s.append(unicode(da))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
                 self.cfg['Logging']['session_logger'].turn("system")
-                # TODO HACK
-                #self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                 self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
                 self.dialogue_act_out.send(DMDA(da))

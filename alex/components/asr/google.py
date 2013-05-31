@@ -75,9 +75,9 @@ class GoogleASR():
             for h in hyp['hypotheses']: # we process only first one
                 return Utterance(h['utterance'])
 
-            return Utterance("")
+            return Utterance(u"")
         except:
-            return Utterance("")
+            return Utterance(u"")
 
 
     def rec_in(self, frame):

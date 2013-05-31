@@ -6,9 +6,9 @@ kolik je
 kolik je hodin
 chci jet do $from$
 co jede z $from$ do $to$
-chci být v pět na $from$
+chci být v $time$ na $from$
 za jak dlouho to jede
-Čím se odpoledne dostanu z $from$ na $to$
+čím se odpoledne dostanu z $from$ na $to$
 kolem $time$ večer
 ve $time$ odpoledne
 kdy mi jede autobus
@@ -23,12 +23,6 @@ jsem na autobusové zastávce
 jsem na $from$
 v kolik jede další
 v kolik mi to teda jede
-kolik je hodin
-jaký je čas
-kolik je
-Řekni mi čas
-Řekni mi hodiny
-aktuální čas
 chci najít spojení z $from$ do $to$
 chci jet z $from$ do $to$
 chci jet na $to$ z $from$

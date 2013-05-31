@@ -8,11 +8,11 @@ import subprocess
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
-from alex.utils.exception import TTSException
+from alex.components.tts import TTSException, TTSInterface
 from alex.utils.text import escape_special_characters_shell
 
 
-class FliteTTS():
+class FliteTTS(TTSInterface):
     """ Uses Flite TTS to synthesize sentences in a English language.
 
     The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.

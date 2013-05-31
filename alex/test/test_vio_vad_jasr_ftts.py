@@ -119,7 +119,7 @@ if __name__ == '__main__':
                 m = []
                 m.append("Recognised hypotheses:")
                 m.append("-" * 120)
-                m.append(str(asr_hyp.hyp))
+                m.append(unicode(asr_hyp.hyp))
                 cfg['Logging']['system_logger'].info('\n'.join(m))
 
                 # get top hypotheses text

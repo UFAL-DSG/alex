@@ -77,10 +77,10 @@ class NLG(multiprocessing.Process):
                     s.append(text)
                     s.append("")
                     s = '\n'.join(s)
-                    self.cfg['Logging']['system_logger'].debug(s.encode('utf8'))
+                    self.cfg['Logging']['system_logger'].debug(s)
 
-                # TODO HACK
-                #self.cfg['Logging']['session_logger'].text("system", text.encode('utf8'))
+
+                self.cfg['Logging']['session_logger'].text("system", text)
 
                 self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
                 self.text_out.send(TTSText(text))

@@ -11,7 +11,8 @@ import alex.components.slu.templateclassifier as TSLU
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
-from alex.utils.exception import DMException
+from alex.components.slu.exception import SLUException
+from alex.components.slu.common import get_slu_type, slu_factory
 
 class SLU(multiprocessing.Process):
     """The SLU component receives an ASR hypotheses and converts them into hypotheses about the meaning
@@ -35,20 +36,8 @@ class SLU(multiprocessing.Process):
 
         self.preprocessing = preprocessing_cls(self.cldb)
 
-        self.slu = None
-        if self.cfg['SLU']['type'] == 'Template':
-            self.slu = TNLG.TemplateClassifier(cfg)
-        elif self.cfg['SLU']['type'] == 'DAILogRegClassifier':
-            # FIXME: maybe the SLU components should use the Config class to initialise themselves.
-            # As a result it would created their category label database and pre-processing classes.
-
-            self.slu = DAILRSLU.DAILogRegClassifier(self.preprocessing)
-            self.slu.load_model(self.cfg['SLU']['DAILogRegClassifier']['model'])
-        elif self.cfg['SLU']['type'] == 'DAIKerLogRegClassifier':
-            self.slu = DAILRSLU.DAIKerLogRegClassifier(self.preprocessing)
-            self.slu.load_model(self.cfg['SLU']['DAIKerLogRegClassifier']['model'])
-        else:
-            raise VoipHubException('Unsupported SLU component: %s' % self.cfg['NLG']['type'])
+        slu_type = get_slu_type(cfg)
+        self.slu = slu_factory(slu_type, cfg)
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -93,7 +82,7 @@ class SLU(multiprocessing.Process):
                     s = []
                     s.append("SLU Hypothesis")
                     s.append("-"*60)
-                    s.append(str(slu_hyp))
+                    s.append(unicode(slu_hyp))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
@@ -107,12 +96,12 @@ class SLU(multiprocessing.Process):
                 #self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
 
                 self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
-                self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
+                self.slu_hypotheses_out.send(SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))
 
             elif isinstance(data_asr, Command):
                 self.cfg['Logging']['system_logger'].info(data_asr)
             else:
-                raise DMException('Unsupported input.')
+                raise SLUException('Unsupported input.')
 
     def run(self):
         self.recognition_on = False

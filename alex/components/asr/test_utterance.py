@@ -104,17 +104,17 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         s = []
         s.append("")
         s.append("Confusion network:")
-        s.append(str(confnet))
+        s.append(unicode(confnet))
         s.append("")
         s.append("Generated nblist:")
-        s.append(str(gen_nblist))
+        s.append(unicode(gen_nblist))
         s.append("")
         s.append("Correct nblist:")
-        s.append(str(correct_nblist))
+        s.append(unicode(correct_nblist))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(gen_nblist), str(correct_nblist))
+        self.assertEqual(unicode(gen_nblist), unicode(correct_nblist))
 
     def test_ngram_iterator(self):
         tolerance = 0.01

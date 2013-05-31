@@ -45,8 +45,6 @@ class VAD(multiprocessing.Process):
     def __init__(self, cfg, commands, audio_recorded_in, audio_out):
         multiprocessing.Process.__init__(self)
 
-        set_proc_name("alex_VAD")
-
         self.cfg = cfg
         self.system_logger = cfg['Logging']['system_logger']
         self.session_logger = cfg['Logging']['session_logger']
@@ -107,6 +105,8 @@ class VAD(multiprocessing.Process):
                     while self.audio_recorded_in.poll():
                         data_play = self.audio_recorded_in.recv()
 
+                    self.detection_window_speech.clear()
+                    self.detection_window_sil.clear()
                     self.deque_audio_recorded_in.clear()
 
                     # reset other state variables
@@ -169,14 +169,11 @@ class VAD(multiprocessing.Process):
                             'vad-{stamp}.wav'.format(stamp=timestamp))
 
                         self.session_logger.turn("user")
-                        self.session_logger.rec_start(
-                            "user", os.path.basename(self.output_file_name))
+                        self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command(
-                            'speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command(
-                            'speech_start()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug(
@@ -245,6 +242,8 @@ class VAD(multiprocessing.Process):
                         self.wf.writeframes(bytearray(data_rec))
 
     def run(self):
+        set_proc_name("Alex_VAD")
+
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
