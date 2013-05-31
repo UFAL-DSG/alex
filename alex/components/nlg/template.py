@@ -107,7 +107,10 @@ class AbstractTemplateNLG(object):
         except KeyError:
             # try to find a relaxed match
             svs = da.get_slots_and_values()
-            tpl = self.random_select(self.match_generic_templates(da, svs))
+            try:
+                tpl = self.random_select(self.match_generic_templates(da, svs))
+            except TemplateNLGException:
+                tpl = self.backoff(da)
             return self.fill_in_template(tpl, svs)
 
     def fill_in_template(self, tpl, svs):
@@ -115,6 +118,9 @@ class AbstractTemplateNLG(object):
         Fill in the given slot values of a dialogue act into the given
         template. This should be implemented in derived classes.
         """
+        raise NotImplementedError()
+
+    def backoff(self, da):
         raise NotImplementedError()
 
 
@@ -131,25 +137,11 @@ class TemplateNLG(AbstractTemplateNLG):
         if self.cfg['NLG']['Template']['model']:
             self.load_templates(self.cfg['NLG']['Template']['model'])
 
-        # if there is no match in the templates, back off to DummyNLG
-        self.backoff_nlg = DummyNLG(cfg)
-
     def fill_in_template(self, tpl, svs):
         """\
         Simple text replacement template filling.
         """
         return tpl.format(**dict(svs))
-
-    def generate(self, da):
-        """\
-        Try the normal template generation process and use back-off NLG if
-        no template was found.
-        """
-        try:
-            return super(TemplateNLG, self).generate(da)
-        except TemplateNLGException:
-            # no template was found, use back-off
-            return self.backoff_nlg.generate(da)
 
 
 class TectoTemplateNLG(AbstractTemplateNLG):
