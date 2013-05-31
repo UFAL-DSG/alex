@@ -9,7 +9,6 @@ import copy
 
 from alex.components.slu.da import DialogueAct
 from alex.utils.exception import TemplateNLGException
-from dummynlg import DummyNLG
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 
@@ -121,6 +120,10 @@ class AbstractTemplateNLG(object):
         raise NotImplementedError()
 
     def backoff(self, da):
+        """\
+        Provide an alternative NLG template for the dialogue output which is not covered in the templates.
+        This serves as a backoff solution. This should be implemented in derived classes.
+        """
         raise NotImplementedError()
 
 
