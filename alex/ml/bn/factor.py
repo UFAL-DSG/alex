@@ -33,11 +33,10 @@ class Factor(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, variables, variable_values, prob_table, parents=None):
+    def __init__(self, variables, variable_values, prob_table):
         self.variables = variables
         self.variable_values = variable_values
         self.prob_table = prob_table
-        self.parents = parents
 
 
 class DiscreteFactor(Factor):
@@ -99,11 +98,10 @@ class DiscreteFactor(Factor):
             for i, value in enumerate(self.variable_values[var]):
                 self.translation_table[var][value] = i
 
-    def __init__(self, variables, variable_values, prob_table, parents=None):
+    def __init__(self, variables, variable_values, prob_table):
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
-                                             prob_table,
-                                             parents)
+                                             prob_table)
         # Create translation table from variable values to indexes.
         self._create_translation_table()
         # Compute cardinalities.
@@ -338,14 +336,14 @@ class DiscreteFactor(Factor):
         else:
             return self._divide_different(other_factor)
 
-    def normalize(self):
+    def normalize(self, parents=None):
         """Normalize factor table."""
-        if self.parents is not None:
+        if parents is not None:
             sums = defaultdict(lambda: np.log(ZERO))
             assignments = {}
 
             for i, value in enumerate(self.factor_table):
-                assignments[i] = self._get_assignment_from_index(i, self.parents)
+                assignments[i] = self._get_assignment_from_index(i, parents)
                 sums[assignments[i]] = np.logaddexp(sums[assignments[i]], value)
 
             for i in range(self.factor_length):

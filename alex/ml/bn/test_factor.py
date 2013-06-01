@@ -327,9 +327,9 @@ class TestFactor(unittest.TestCase):
                 ('a2', 'b1'): 1,
                 ('a1', 'b2'): 1,
                 ('a2', 'b2'): 1
-            }, parents=['B'])
+            })
 
-        f.normalize()
+        f.normalize(parents=['B'])
         self.assertAlmostEqual(f[('a1', 'b1')], 0.5)
 
     def test_power(self):
@@ -344,7 +344,7 @@ class TestFactor(unittest.TestCase):
                 ('a1', 'b2'): 0.2,
                 ('a2', 'b1'): 0.7,
                 ('a2', 'b2'): 0.8,
-            }, parents=['B'])
+            })
 
         f1 = f ** 2
         self.assertAlmostEqual(f[('a1', 'b1')], 0.3)
