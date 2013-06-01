@@ -162,6 +162,33 @@ class TestFactor(unittest.TestCase):
         self.assertClose(f3[('b', 1, 0)], f1[('b', 1)] * f2[(1, 0)])
         self.assertClose(f3[('b', 2, 1)], f1[('b', 2)] * f2[(2, 1)])
 
+    def test_multiplication_different_values(self):
+        f1 = DiscreteFactor(
+            ['A'],
+            {
+                'A': ['a1', 'a2']
+            },
+            {
+                ('a1',): 0.8,
+                ('a2',): 0.2
+            }
+        )
+
+        f2 = DiscreteFactor(
+            ['B'],
+            {
+                'B': ['b1', 'b2']
+            },
+            {
+                ('b1',): 0.8,
+                ('b2',): 0.2
+            }
+        )
+
+        f3 = f1 * f2
+        self.assertEqual(f3.variables, ['A', 'B'])
+        self.assertAlmostEqual(f3[('a1', 'b1')], 0.64)
+
     def test_fast_mul(self):
         f1 = DiscreteFactor(
             ['A', 'B'],
