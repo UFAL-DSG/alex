@@ -14,33 +14,56 @@ from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.components.slu.exception import SLUException
 from alex.components.slu.common import get_slu_type, slu_factory
 
-class SLU(multiprocessing.Process):
-    """The SLU component receives an ASR hypotheses and converts them into hypotheses about the meaning
-    of the input in the form of dialogue acts.
 
-    This component is a wrapper around multiple SLU components which handles multiprocessing
-    communication.
+class SLU(multiprocessing.Process):
+    """\
+    The SLU component receives ASR hypotheses and converts them into hypotheses
+    about the meaning of the input in the form of dialogue acts.
+
+    This component is a wrapper around multiple SLU components which handles
+    inter-process communication.
     """
 
     def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
+        """\
+        Initialises an SLU object according to the configuration (cfg['SLU']
+        is the relevant section), and stores ends of pipes to other processes.
+
+        Arguments:
+            cfg: a Config object specifying the configuration to use
+            commands: our end of a pipe (multiprocessing.Pipe) for receiving
+                commands
+            asr_hypotheses_in: our end of a pipe (multiprocessing.Pipe) for
+                receiving audio frames (from ASR)
+            slu_hypotheses_out: our end of a pipe (multiprocessing.Pipe) for
+                sending SLU hypotheses
+
+        """
+
         multiprocessing.Process.__init__(self)
 
+        # Save the configuration.
         self.cfg = cfg
 
+        # Save the pipe ends.
         self.commands = commands
         self.asr_hypotheses_in = asr_hypotheses_in
         self.slu_hypotheses_out = slu_hypotheses_out
 
+        # FIXME Seems this is done again in the next chunk of code.
+        # Initialise the preprocessing machinery.
         self.cldb = CategoryLabelDatabase(self.cfg['SLU']['cldb'])
-        preprocessing_cls = self.cfg['SLU'].get('preprocessing_cls', SLUPreprocessing)
-
+        preprocessing_cls = self.cfg['SLU'].get('preprocessing_cls',
+                                                SLUPreprocessing)
         self.preprocessing = preprocessing_cls(self.cldb)
 
+        # Load the SLU.
         slu_type = get_slu_type(cfg)
         self.slu = slu_factory(slu_type, cfg)
 
     def process_pending_commands(self):
-        """Process all pending commands.
+        """\
+        Process all pending commands.
 
         Available commands:
           stop() - stop processing and exit the process
@@ -60,12 +83,12 @@ class SLU(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
-                    # discard all data in in input buffers
+                    # Discard all data in input buffers.
                     while self.asr_hypotheses_in.poll():
                         data_in = self.asr_hypotheses_in.recv()
 
-                    # the SLU components does not have to be flused
-                    #self.slu.flush()
+                    # the SLU components does not have to be flushed
+                    # self.slu.flush()
 
                     return False
 
@@ -81,7 +104,7 @@ class SLU(multiprocessing.Process):
                 if self.cfg['SLU']['debug']:
                     s = []
                     s.append("SLU Hypothesis")
-                    s.append("-"*60)
+                    s.append("-" * 60)
                     s.append(unicode(slu_hyp))
                     s.append("")
                     s = '\n'.join(s)
