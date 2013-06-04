@@ -306,11 +306,8 @@ class DiscreteFactor(Factor):
         reversed_variables = self.variables[::-1]
 
         for i in range(self.factor_length):
-            if self.factor_table[i] == 0:
-                new_factor_table[i] = 0
-            else:
-                new_factor_table[i] = (self.factor_table[i] -
-                                       other_factor.factor_table[index_other])
+            new_factor_table[i] = (self.factor_table[i] -
+                                   other_factor.factor_table[index_other])
 
             for var in reversed_variables:
                 assignment[var] += 1
