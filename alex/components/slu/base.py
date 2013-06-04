@@ -509,20 +509,22 @@ class SLUPreprocessing(object):
 
 
 class SLUInterface(object):
-    """Defines a prototypical interface each parser should provide for parsing.
+    """\
+    Defines a prototypical interface each SLU parser should provide.
 
     It should be able to parse:
       1) an utterance hypothesis (an instance of UtteranceHyp)
-          - output: SLUHypothesis sub-class
+          - output: an instance of SLUHypothesis
 
-      2) an N-best list of utterances (an instance of UtteranceNBList)
-          - output: SLUHypothesis sub-class
+      2) an n-best list of utterances (an instance of UtteranceNBList)
+          - output: an instance of SLUHypothesis
 
       3) a confusion network (an instance of UtteranceConfusionNetwork)
-          - output: SLUHypothesis sub-class
+          - output: an instance of SLUHypothesis
 
     """
-    def __init__(self, preprocessing, cfg=None):
+
+    def __init__(self, preprocessing, cfg=None, *args, **kwargs):
         self.preprocessing = preprocessing
         self.cfg = cfg
 

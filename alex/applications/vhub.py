@@ -20,12 +20,15 @@ from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
 from alex.utils.config import Config
 
+
 class VoipHub(Hub):
+    """\
+    VoipHub builds a full-featured VOIP telephone system.
+    It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
+    Then it connects ASR and TTS with the VOIP to handle audio input and
+    output.
     """
-      VoipHub builds a full featured VOIP telephone system.
-      It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
-      Then it connects ASR and TTS with the VOIP to handle audio input and output.
-    """
+
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -256,16 +259,18 @@ class VoipHub(Hub):
 #########################################################################
 #########################################################################
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
+        description="""\
         VoipHub builds a full featured VOIP telephone system.
         It builds a pipeline of VAD, ASR, SLU, DM, NLG, TTS components.
-        Then it connects ASR and TTS with the VOIP to handle audio input and output.
+        Then it connects ASR and TTS with the VOIP to handle audio input and
+        output.
 
-        The program reads the default config in the resources directory ('../resources/default.cfg') config
-        in the current directory.
+        The program reads the default config in the resources directory
+        ('../resources/default.cfg') config in the current directory.
 
         In addition, it reads all config file passed as an argument of a '-c'.
         The additional config files overwrites any default or previous values.
