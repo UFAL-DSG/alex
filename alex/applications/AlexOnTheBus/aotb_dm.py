@@ -102,7 +102,10 @@ class AOTBDM(DialogueManager):
         return utterance_1
 
     def da_in(self, da, utterance=None):
-        """Receives an input dialogue act or dialogue act list with probabilities or dialogue act confusion network.
+        """\
+        Receives an input dialogue act or dialogue act list with
+        probabilities or dialogue act confusion network.
+
         When the dialogue act is received, an update of the state is performed.
         """
 
@@ -251,7 +254,7 @@ class AOTBDM(DialogueManager):
 
             if len(req_das) > 0:
                 req_da = DialogueAct("&".join(req_das))
-                iconf_da.merge(req_da)
+                iconf_da.extend(req_da)
                 return iconf_da
             else:
                 time = self.state.time

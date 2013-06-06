@@ -216,7 +216,10 @@ class DRuleDMPolicy:
             for conflict in conflicts:
                 conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], )]
             res = DialogueAct("negate()")
-            res.merge(DialogueAct("&".join(conf_acts)))
+            # XXX I understood sorting was not desired.  Substituted with
+            # the non-sorting version.
+            # res.merge(DialogueAct("&".join(conf_acts)))
+            res.extend(conf_acts)
             return res
 
     def pick_record(self, state, res):
@@ -279,8 +282,12 @@ class DRuleDMPolicy:
         # if nothing matches, tell him
         if res0 is None:
             da = self.say_nomatch()
-            da.merge(self.say_query(state))
-            da.merge(self.say_canreset())
+            # XXX I understood sorting was not desired.  Substituted with
+            # the non-sorting version.
+            # da.merge(self.say_query(state))
+            # da.merge(self.say_canreset())
+            da.extend(self.say_query(state).dais)
+            da.extend(self.say_canreset().dais)
             return state, da
 
         if self.debug:

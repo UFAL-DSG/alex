@@ -8,10 +8,10 @@ import autopath
 
 from alex.components.asr.utterance import Utterance
 from alex.components.slu.base import SLUInterface
-from alex.components.slu.dailrclassifier import DAILogRegClassifier
-from alex.components.slu.da import DialogueAct, DialogueActItem, \
+from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork
 from alex.utils.czech_stemmer import cz_stem
+
 
 def _fill_utterance_values(abutterance, category, res):
     for _, value in abutterance.insts_for_type((category.upper(), )):
@@ -20,17 +20,24 @@ def _fill_utterance_values(abutterance, category, res):
 
         res[category].append(value)
 
+
 def _any_word_in(abutterance, words):
+    # FIXME: Stems should be compared to stems.  Here they can get compared to
+    # items (strings) in the form 'CATLAB=value'.
     for alt_expr in words:
         if cz_stem(alt_expr) in abutterance.utterance:
             return True
     return False
 
+
 def _all_words_in(abutterance, words):
+    # FIXME: Stems should be compared to stems.  Here they can get compared to
+    # items (strings) in the form 'CATLAB=value'.
     for alt_expr in words:
         if cz_stem(alt_expr) not in abutterance.utterance:
             return False
     return True
+
 
 class AOTBSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
@@ -64,10 +71,15 @@ class AOTBSLU(SLUInterface):
         cn.add(1.0, DialogueActItem("inform", "stop", stop_name))
 
         if preps_from_in and not preps_to_in:
-            cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name, attrs={'prep': next(iter(preps_from_used))}))
+            cn.add(1.0,
+                   DialogueActItem("inform", "from_stop", stop_name,
+                                   attrs={'prep': next(iter(preps_from_used))})
+                   )
 
         if not preps_from_in and preps_to_in:
-            cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name, attrs={'prep': next(iter(preps_to_used))}))
+            cn.add(1.0,
+                   DialogueActItem("inform", "to_stop", stop_name,
+                                   attrs={'prep': next(iter(preps_to_used))}))
 
     def parse_time(self, abutterance, cn):
         res = defaultdict(list)
@@ -79,14 +91,17 @@ class AOTBSLU(SLUInterface):
                 break
 
     def parse_meta(self, abutterance, cn):
-        if _any_word_in(abutterance, [u"jiný", u"jiné", u"jiná", u"další", u"dál", u"jiného" ]):
+        if _any_word_in(abutterance, [u"jiný", u"jiné", u"jiná", u"další",
+                                      u"dál", u"jiného"]):
             cn.add(1.0, DialogueActItem("reqalts"))
 
-        if _any_word_in(abutterance, [u"děkuji", u"shledanou", u"shle", u"díky", u"sbohem", u"zdar"]):
+        if _any_word_in(abutterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"díky",
+                                        u"sbohem", u"zdar"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(abutterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj" ]) or \
             _all_words_in(abutterance, [u"ještě",  u"jednou" ]):
+
             cn.add(1.0, DialogueActItem("repeat"))
 
         if _any_word_in(abutterance, [u"napověda",  u"pomoc", u"znovu", ]):
@@ -100,8 +115,8 @@ class AOTBSLU(SLUInterface):
 
         utt_norm = self.preprocessing.text_normalisation(utterance_1)
 
-        abutterance, category_labels = \
-                self.preprocessing.values2category_labels_in_utterance(utt_norm)
+        abutterance, category_labels = (
+            self.preprocessing.values2category_labels_in_utterance(utt_norm))
 
         res_cn = DialogueActConfusionNetwork()
         if 'STOP' in category_labels:

@@ -16,19 +16,36 @@ from alex.utils.procname import set_proc_name
 
 
 class ASR(multiprocessing.Process):
-    """ ASR recognizes input audio and returns N-best list hypothesis or a confusion network.
+    """\
+    ASR recognizes input audio and returns an N-best list hypothesis or
+    a confusion network.
 
-    Recognition starts with the "speech_start()" command in the input audio stream and ends
-    with the "speech_end()" command.
+    Recognition starts with the "speech_start()" command in the input audio
+    stream and ends with the "speech_end()" command.
 
-    When the "speech_end()" command is received, the component asks responsible ASR module
-    to return hypotheses and sends them to the output.
+    When the "speech_end()" command is received, the component asks responsible
+    ASR module to return hypotheses and sends them to the output.
 
-    This component is a wrapper around multiple recognition engines which handles multiprocessing
-    communication.
+    This component is a wrapper around multiple recognition engines which
+    handles inter-process communication.
     """
 
     def __init__(self, cfg, commands, audio_in, asr_hypotheses_out):
+        """\
+        Initialises an ASR object according to the configuration (cfg['ASR']
+        is the relevant section), and stores pipe ends to other processes.
+
+        Arguments:
+            cfg: a Config object specifying the configuration to use
+            commands: our end of a pipe (multiprocessing.Pipe) for receiving
+                commands
+            audio_in: our end of a pipe (multiprocessing.Pipe) for receiving
+                audio frames (from VAD)
+            asr_hypotheses_out: our end of a pipe (multiprocessing.Pipe) for
+                sending ASR hypotheses
+
+        """
+
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
@@ -66,7 +83,7 @@ class ASR(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
-                    # discard all data in in input buffers
+                    # discard all data in input buffers
                     while self.audio_in.poll():
                         data_in = self.audio_in.recv()
 
@@ -167,4 +184,3 @@ class ASR(multiprocessing.Process):
                 self.read_audio_write_asr_hypotheses()
             except Exception, e:
                 traceback.print_exc()
-

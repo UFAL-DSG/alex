@@ -126,7 +126,8 @@ class DAILogRegClassifier(SLUInterface):
                  clser_type='logistic',
                  features_type='ngram',
                  features_size=4,
-                 abstractions=('concrete',            'abstract')):
+                 abstractions=('concrete',            'abstract'),
+                 cfg=None):
         """TODO
 
         Arguments (partial listing):
@@ -135,6 +136,8 @@ class DAILogRegClassifier(SLUInterface):
                 'partial'  ... include DAs instantiated with do_abstract=False
                 'abstract' ... include DAs instantiated with do_abstract=True
                 (default: ('concrete', 'partial', 'abstract'))
+            cfg: currently ignored (included after it was added to
+                SLUInterface constructor)
 
         """
         # FIXME: maybe the SLU components should use the Config class to
@@ -178,7 +181,7 @@ class DAILogRegClassifier(SLUInterface):
     def _get_conc_feats_idxs(self):
         cur_idx = 0
         conc_idxs = list()
-        # Mimic the process of extracting features, note down indices of
+        # Mimick the process of extracting features, note down indices of
         # features that are concrete.
         if 'ngram' in self.features_type:
             for do_abstract in self._do_abstract_values:

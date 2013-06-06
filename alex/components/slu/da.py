@@ -88,14 +88,18 @@ class DialogueActItem(Abstracted):
     # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
                  dai=None, attrs=None):
-        """Initialise the dialogue act item. Assigns the default values to
+        """\
+        Initialise the dialogue act item. Assigns the default values to
         dialogue act type (dat), slot name (name), and slot value (value).
+
+        TODO: Document what the `attrs' kwarg is for, please.
 
         """
         # Store the arguments.
         self._dat = dialogue_act_type
         self._name = name
         self._value = value
+        # XXX! What is this for?!
         self._attrs = {} if attrs is None else attrs
 
         # Bookkeeping.
@@ -522,11 +526,14 @@ class DialogueAct(object):
         """Merges another DialogueAct into self.  This is done by concatenating
         lists of the DAIs, and sorting and merging own DAIs afterwards.
 
+        If sorting is not desired, use `extend' instead.
+
         """
         if not isinstance(da, DialogueAct):
             raise DialogueActException(
                 "DialogueAct can only be merged with another DialogueAct")
         self._dais.extend(da.dais)
+        self.sort()
         return self
 
     def merge_same_dais(self):
@@ -841,13 +848,18 @@ class DialogueActConfusionNetwork(SLUHypothesis):
                       'harm': _combine_harm.__func__}
 
     def make_dict(self):
-        res = {}
+        """\
+        Creates a dictionary mapping a simplified tuple representation of a DAI
+        to that DAI for DAIs present in this DA confnet.
+
+        """
+        daitup2dai = dict()
         for prob, dai in self.cn:
             if dai.name is None:
-                res[dai.dat] = dai
+                daitup2dai[dai.dat] = dai
             else:
-                res[(dai.dat, dai.name)] = dai
-        return res
+                daitup2dai[(dai.dat, dai.name)] = dai
+        return daitup2dai
 
     def add_merge(self, probability, dai, combine='max'):
         """Combines the probability mass of the given dialogue act item with an
@@ -1217,7 +1229,3 @@ def merge_slu_confnets(confnet_hyps):
     merged.sort()
 
     return merged
-
-if __name__ == '__main__':
-    dan = DialogueActNode()
-    dan.asdf.asdf = "asdf"

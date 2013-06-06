@@ -13,7 +13,7 @@ from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
-from alex.components.slu.base_fj import SLUInterface
+from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, merge_slu_confnets
 
