@@ -41,11 +41,6 @@ class TestNode(unittest.TestCase):
         obs.connect(fact_h1_o1)
         fact_h1_o1.connect(hid)
 
-        # Init messages.
-        hid.init_messages()
-        obs.init_messages()
-        fact_h1_o1.init_messages()
-
         # 1. Without observations, send_messages used.
         obs.send_messages()
         fact_h1_o1.send_messages()
@@ -90,10 +85,6 @@ class TestNode(unittest.TestCase):
         s1.connect(same)
         s2.connect(same)
 
-        s1.init_messages()
-        s2.init_messages()
-        same.init_messages()
-
         s2.observed({('a',):1})
 
         s1.send_messages()
@@ -129,10 +120,6 @@ class TestNode(unittest.TestCase):
 
         s1.connect(f)
         s2.connect(f)
-
-        s1.init_messages()
-        s2.init_messages()
-        f.init_messages()
 
         s2.observed({
             ('a',): 0.7,

@@ -55,7 +55,7 @@ class DiscreteFactor(Factor):
         have to go over 3 * 4 values: 000, 001, 002, 003, 010, ..., 023, 100.
         As a result, the strides of A, B, and C will be 12, 4, 1.
         """
-        strides = defaultdict(int)
+        strides = {}
         last_stride = factor_length
         for variable in variables:
             last_stride = last_stride / cardinalities[variable]
@@ -241,7 +241,7 @@ class DiscreteFactor(Factor):
         new_variables = sorted(
             set(self.variables).union(other_factor.variables))
         # New cardinalities will contain cardinalities of all variables.
-        new_cardinalities = self.cardinalities
+        new_cardinalities = dict(self.cardinalities)
         new_cardinalities.update(other_factor.cardinalities)
         # The new factor table will be larger, because it will contain more
         # variables.
@@ -270,13 +270,13 @@ class DiscreteFactor(Factor):
                     assignment[var] = 0
                     # Move indexes in tables to correct assignment.
                     index_self -= ((new_cardinalities[var] - 1) *
-                                   self.strides[var])
+                                   self.strides.get(var, 0))
                     index_other -= ((new_cardinalities[var] - 1) *
-                                    other_factor.strides[var])
+                                    other_factor.strides.get(var, 0))
                 else:
                     # var is the last variable that changed.
-                    index_self += self.strides[var]
-                    index_other += other_factor.strides[var]
+                    index_self += self.strides.get(var, 0)
+                    index_other += other_factor.strides.get(var, 0)
                     break
 
         new_variable_values = dict(self.variable_values)
@@ -314,9 +314,9 @@ class DiscreteFactor(Factor):
                 if assignment[var] == self.cardinalities[var]:
                     assignment[var] = 0
                     index_other -= ((self.cardinalities[var] - 1) *
-                                    other_factor.strides[var])
+                                    other_factor.strides.get(var, 0))
                 else:
-                    index_other += other_factor.strides[var]
+                    index_other += other_factor.strides.get(var, 0)
                     break
 
         return DiscreteFactor(self.variables,
@@ -332,6 +332,47 @@ class DiscreteFactor(Factor):
             return self._divide_same(other_factor)
         else:
             return self._divide_different(other_factor)
+
+    def subtract_superset(self, other):
+        """Subtract other factor while broadcasting dimenstions of this factor.
+
+        This is a helper function, we want to subtract from this factor, but
+        the variables in this factor are a subset of variables in the other
+        factor, we need to broadcast the dimensions of this factor first.
+
+        Note: Used only for computing with parameters in dirichlet distribution.
+
+        Example:
+        A:
+        x0  |   val
+        0   |   5
+        1   |   3
+
+        B:
+        x0  |   x1  |   val
+        0   |   0   |   1
+        0   |   1   |   2
+        1   |   0   |   1
+        1   |   1   |   0.5
+
+        A.subtract_from_self_other_larger(B):
+        x0  |   x1  |   val
+        0   |   0   |   4
+        0   |   1   |   3
+        1   |   0   |   2
+        1   |   1   |   2.5
+
+        Fixme: The subtraction is done naively. It is possible to do it better
+        without exponentiating the values first.
+        """
+        new_factor_table = np.empty_like(other.factor_table)
+        for i in range(other.factor_length):
+            assignment = other._get_assignment_from_index(i, self.variables)
+            index = self._get_index_from_assignment(assignment)
+            self_value = self.factor_table[index]
+            other_value = other.factor_table[i]
+            new_factor_table[i] = to_log(np.exp(self_value) - np.exp(other_value))
+        return DiscreteFactor(other.variables, other.variable_values, new_factor_table)
 
     def normalize(self, parents=None):
         """Normalize factor table."""
@@ -352,3 +393,11 @@ class DiscreteFactor(Factor):
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]
         return [(self._get_assignment_from_index(i)[0],
                  from_log(self.factor_table[i])) for i in indxs]
+
+    def add(self, n, assignment=None):
+        if assignment is not None:
+            index = self._get_index_from_assignment(assignment)
+            self.factor_table[index] = np.logaddexp(self.factor_table[index], to_log(n))
+        else:
+            for i in range(self.factor_length):
+                self.factor_table[i] = np.logaddexp(self.factor_table[i], to_log(n))
