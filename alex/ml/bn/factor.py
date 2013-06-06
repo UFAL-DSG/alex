@@ -43,11 +43,25 @@ class DiscreteFactor(Factor):
     """Discrete factor representation with basic operations."""
 
     def __init__(self, variables, variable_values, prob_table):
+        """Create a discrete factor.
+
+        Creates a discrete factor represented by a probability table.
+        This factor contains a probability for every value combination of
+        variables.
+
+        :param variables: Variables contained in the factor.
+        :type variables: list
+        :param variable_values: For each variable a list of possible values.
+        :type variable_values: dict
+        :param prob_table: Probabilities of every combination of variables.
+        :type prob_table: numpy.ndarray() or dict
+        """
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
                                              prob_table)
         # Create translation table from variable values to indexes.
         self._create_translation_table()
+
         # Compute cardinalities.
         self.cardinalities = {var: len(variable_values[var])
                               for var in self.variables}
@@ -66,79 +80,212 @@ class DiscreteFactor(Factor):
                                              self.cardinalities,
                                              self.factor_length)
 
+        # Save the values if the prob_table is a dictionary.
         if isinstance(prob_table, dict):
-            # Save values from dictionary.
             for assignment, value in prob_table.iteritems():
                 self.factor_table[
                     self._get_index_from_assignment(assignment)] = value
+
             # Convert values to log form.
             to_log(self.factor_table, self.factor_table)
 
         # Save the factor table in case we'll modify it with observation.
-        self.unobserved_factor_table = self.factor_table
+        self.unobserved_factor_table = np.array(self.factor_table)
 
-    def __str__(self, width=79):
-        ret = ""
-        num_columns = len(self.variables) + 1
-        column_len = width / num_columns
-        format_str = "{:^%d}" % column_len
-
-        ret += width * "-" + "\n"
-
-        for var in self.variables:
-            ret += format_str.format(var)
-        ret += format_str.format("Value") + "\n"
-        ret += width * "-" + "\n"
-
-        for i in range(len(self.factor_table)):
-            for assignment in self._get_assignment_from_index(i):
-                ret += format_str.format(assignment)
-            ret += format_str.format(from_log(self.factor_table[i])) + "\n"
-
-        ret += width * "-" + "\n"
-        return ret
+    def __str__(self):
+        return self.pretty_print()
 
     def __iter__(self):
+        """Iterate over assignments and values.
+
+        Each element is a tuple, where the first element is the assignment
+        and the second element is the probability of this assignment.
+
+        Example of an element is `(("a", "b", "c"), 0.8)`.
+
+        :rtype: (tuple, float)
+        """
         for i, v in enumerate(self.factor_table):
             yield (self._get_assignment_from_index(i),
                    from_log(v))
 
     def __getitem__(self, assignment):
+        """Return the value of a given assignment."""
         index = self._get_index_from_assignment(assignment)
         return from_log(self.factor_table[index])
 
-    def __pow__(self, value):
+    def __pow__(self, n):
+        """Raise every element of the factor to the power of n.
+
+        :param n: The power.
+        """
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              self.factor_table * value)
+                              self.factor_table * n)
 
-    def __mul__(self, other_factor):
-        if self.variables == other_factor.variables:
-            return self._multiply_same(other_factor)
+    def __mul__(self, other):
+        """Multiply two factors.
+
+        These two factors don't have to have the same variables. However, if
+        they share two variables that have the same name, these variables
+        also must have the same domain.
+
+        >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                    {
+        ...                         ('a1',): 0.8,
+        ...                         ('a2',): 0.2
+        ...                    })
+        >>> b = DiscreteFactor(['B'], {'B': ['b1', 'b2']},
+        ...                    {
+        ...                         ('b1',): 0.5,
+        ...                         ('b2',): 0.5
+        ...                     })
+        >>> result = a * b
+        >>> print result.pretty_print(width=30)
+        ------------------------------
+            A         B       Value
+        ------------------------------
+            a1        b1       0.4
+            a1        b2       0.4
+            a2        b1       0.1
+            a2        b2       0.1
+        ------------------------------
+
+        :param other: The other factor.
+        :type other: DiscreteFactor
+        :returns: The result of multiplication.
+        :rtype: DiscreteFactor
+        """
+        if self.variables == other.variables:
+            return self._multiply_same(other)
         else:
-            return self._multiply_different(other_factor)
+            return self._multiply_different(other)
 
-    def __div__(self, other_factor):
-        if not set(self.variables).issuperset(set(other_factor.variables)):
+    def __div__(self, other):
+        """Divide two factors.
+
+        These two factors don't have to have the same variables. However, the
+        second factor must be a subset of the first one. This means that every
+        variable in denominator must be also in dividend.
+
+        Example:
+        >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                    {
+        ...                         ('a1',): 0.8,
+        ...                         ('a2',): 0.2
+        ...                    })
+        >>> f = DiscreteFactor(['A', 'B'],
+        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+        ...                    {
+        ...                         ('a1', 'b1'): 0.8,
+        ...                         ('a2', 'b1'): 0.2,
+        ...                         ('a1', 'b2'): 0.3,
+        ...                         ('a2', 'b2'): 0.7
+        ...                    })
+        >>> result = f / a
+        >>> print result.pretty_print(width=30, precision=3)
+        ------------------------------
+            A         B       Value
+        ------------------------------
+            a1        b1       1.0
+            a1        b2       0.375
+            a2        b1       1.0
+            a2        b2       3.5
+        ------------------------------
+
+        :param other: Denominator.
+        :type other: DiscreteFactor
+        :returns: The result of the division.
+        :rtype: DiscreteFactor
+        """
+        if not set(self.variables).issuperset(set(other.variables)):
             raise ValueError(
                 "The denominator is not a subset of the numerator.")
 
-        if self.variables == other_factor.variables:
-            return self._divide_same(other_factor)
+        if self.variables == other.variables:
+            return self._divide_same(other)
         else:
-            return self._divide_different(other_factor)
+            return self._divide_different(other)
 
-    def marginalize(self, variables):
-        """Marginalize the factor."""
+    def __add__(self, other):
+        """Add two factors.
+
+        Add two factors together. They must have the same variables.
+
+        Example:
+        >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                     {
+        ...                          ('a1',): 0.8,
+        ...                          ('a2',): 0.2
+        ...                     })
+        >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                     {
+        ...                          ('a1',): 0.1,
+        ...                          ('a2',): 0.5
+        ...                     })
+        >>> result = a1 + a2
+        >>> print result.pretty_print(width=30)
+        ------------------------------
+               A            Value
+        ------------------------------
+              a1             0.9
+              a2             0.7
+        ------------------------------
+
+        :param other: The other factor.
+        :type other: DiscreteFactor
+        :returns: The result of the addition.
+        :rtype: DiscreteFactor
+        """
+        if self.variables != other.variables:
+            raise Exception("Addition of factors with different variables not supported")
+
+        new_factor_table = np.empty_like(self.factor_table)
+        for i in range(self.factor_length):
+            new_factor_table[i] = np.logaddexp(self.factor_table[i], other.factor_table[i])
+
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
+                              new_factor_table)
+
+    def marginalize(self, keep):
+        """Marginalize all but specified variables.
+
+        Marginalizing means summing out values which are not in keep. The
+        result is a new factor, which contains only variables from keep.
+
+        Example:
+        >>> f = DiscreteFactor(['A', 'B'],
+        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+        ...                    {
+        ...                         ('a1', 'b1'): 0.8,
+        ...                         ('a2', 'b1'): 0.2,
+        ...                         ('a1', 'b2'): 0.3,
+        ...                         ('a2', 'b2'): 0.7
+        ...                    })
+        >>> result = f.marginalize(['A'])
+        >>> print result.pretty_print(width=30)
+        ------------------------------
+               A            Value
+        ------------------------------
+              a1             1.1
+              a2             0.9
+        ------------------------------
+
+        :param keep: Variables which should be left in marginalized factor.
+        :type keep: list of str
+        :returns: Marginalized factor.
+        :rtype: DiscreteFactor
+        """
         # Assignment counter
         assignment = defaultdict(int)
         # New cardinalities and new factor table.
-        new_cardinalities = {x: self.cardinalities[x] for x in variables}
+        new_cardinalities = {x: self.cardinalities[x] for x in keep}
         new_factor_length = self._factor_table_length(new_cardinalities)
         new_factor_table = np.empty(new_factor_length, np.float32)
         new_factor_table[:] = np.log(ZERO)
         # Strides for resulting variables in the new factor table.
-        new_strides = self._compute_strides(variables,
+        new_strides = self._compute_strides(keep,
                                             self.cardinalities,
                                             new_factor_length)
         # Index into the new factor table.
@@ -151,7 +298,7 @@ class DiscreteFactor(Factor):
                                                    self.factor_table[i])
 
             # Update the assignment and indexes.
-            for var in variables:
+            for var in keep:
                 # The assignment of variable var changed, so we must add its
                 # stride to the index.
                 if (i+1) % self.strides[var] == 0:
@@ -165,19 +312,19 @@ class DiscreteFactor(Factor):
                               new_strides[var])
 
         # Return new factor with marginalized variables.
-        new_variable_values = {v: self.variable_values[v] for v in variables}
-        return DiscreteFactor(variables, new_variable_values, new_factor_table)
+        new_variable_values = {v: self.variable_values[v] for v in keep}
+        return DiscreteFactor(keep, new_variable_values, new_factor_table)
 
     def observed(self, assignment_dict):
         """Set observation."""
         if assignment_dict is not None:
-            self.factor_table = np.empty(self.factor_length)
+            # Clear the factor table.
             self.factor_table[:] = np.log(ZERO)
             for assignment, value in assignment_dict.iteritems():
                 self.factor_table[
                     self._get_index_from_assignment(assignment)] = to_log(value)
         else:
-            self.factor_table = self.unobserved_factor_table
+            self.factor_table[:] = self.unobserved_factor_table
 
     def normalize(self, parents=None):
         """Normalize factor table."""
@@ -198,6 +345,41 @@ class DiscreteFactor(Factor):
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]
         return [(self._get_assignment_from_index(i)[0],
                  from_log(self.factor_table[i])) for i in indxs]
+
+    def pretty_print(self, width=79, precision=2):
+        """Create a readable representation of the factor.
+
+        Creates a table with a column for each variable and value. Every row
+        represents one assignemnt and its corresponding value. The default
+        width of the table is 79 chars, to fit to terminal window.
+
+        :param width: Width of the table.
+        :type width: int
+        :param precision: Precision of values.
+        :type precision: int
+        :returns: Pretty printed factor table.
+        :rtype: str
+        """
+        ret = ""
+        num_columns = len(self.variables) + 1
+        column_len = width / num_columns
+        format_str = "{:^%d}" % column_len
+        value_str = "{:^%d.%d}" % (column_len, precision)
+
+        ret += width * "-" + "\n"
+
+        for var in self.variables:
+            ret += format_str.format(var)
+        ret += format_str.format("Value") + "\n"
+        ret += width * "-" + "\n"
+
+        for i in range(len(self.factor_table)):
+            for assignment in self._get_assignment_from_index(i):
+                ret += format_str.format(assignment)
+            ret += value_str.format(from_log(self.factor_table[i])) + "\n"
+
+        ret += width * "-" + "\n"
+        return ret
 
     def _factor_table_length(self, cardinalities):
         """Length of the factor table (number of assignments)."""

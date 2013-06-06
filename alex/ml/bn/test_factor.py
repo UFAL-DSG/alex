@@ -6,6 +6,7 @@
 import unittest
 import numpy as np
 import copy
+import operator
 
 from alex.ml.bn.factor import DiscreteFactor
 
@@ -40,6 +41,27 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
         self.assertEquals(factor.strides, {"A": 6, "B": 2, "C": 1})
+
+    def test_observations(self):
+        f = DiscreteFactor(
+            ['X'],
+            {
+                'X': [0, 1],
+            },
+            {
+                (0,): 0.8,
+                (1,): 0.2,
+            }
+        )
+
+        self.assertAlmostEqual(f[(0,)], 0.8)
+        f.observed({(1,): 0.2})
+        self.assertAlmostEqual(f[(0,)], 0)
+        self.assertAlmostEqual(f[(1,)], 0.2)
+
+        f.observed(None)
+        self.assertAlmostEqual(f[(0,)], 0.8)
+        self.assertAlmostEqual(f[(1,)], 0.2)
 
     def test_get_index_from_assignment(self):
         factor = DiscreteFactor(
@@ -518,6 +540,6 @@ class TestFactor(unittest.TestCase):
             expected_value_k = new_alpha / sum_of_alphas_plus_1
             expected_values.append(w_k * expected_value * expected_value_k)
 
-
+        expected_value_sum = reduce(operator.add, expected_values)
 
         print w0
