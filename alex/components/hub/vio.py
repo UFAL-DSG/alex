@@ -275,6 +275,7 @@ class VoipIO(multiprocessing.Process):
         self.local_commands = deque()
 
         self.audio_record = audio_record
+        self.audio_recording = False
 
         self.audio_play = audio_play
         self.local_audio_play = deque()
@@ -419,7 +420,11 @@ class VoipIO(multiprocessing.Process):
         if self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2:
             # get and send recorded data, it must be read at the other end
             data_rec = self.mem_capture.get_frame()
-            self.audio_record.send(Frame(data_rec))
+
+            # send the audio only if the call is connected
+            # ignore any audio signal left after the call was disconnected
+            if self.audio_recording:
+                self.audio_record.send(Frame(data_rec))
 
     def is_sip_uri(self, dst):
         """ Check whether it is a SIP URI.
@@ -613,12 +618,18 @@ class VoipIO(multiprocessing.Process):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_confirmed")
 
+        # enable recording of audio
+        self.audio_recording = True
+
         # send a message that the call is confirmed
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_disconnected(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_disconnected")
+
+        # disable recording of audio
+        self.audio_recording = False
 
         # send a message that the call is disconnected
         self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))

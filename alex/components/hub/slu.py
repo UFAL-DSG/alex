@@ -50,13 +50,6 @@ class SLU(multiprocessing.Process):
         self.asr_hypotheses_in = asr_hypotheses_in
         self.slu_hypotheses_out = slu_hypotheses_out
 
-        # FIXME Seems this is done again in the next chunk of code.
-        # Initialise the preprocessing machinery.
-        self.cldb = CategoryLabelDatabase(self.cfg['SLU']['cldb'])
-        preprocessing_cls = self.cfg['SLU'].get('preprocessing_cls',
-                                                SLUPreprocessing)
-        self.preprocessing = preprocessing_cls(self.cldb)
-
         # Load the SLU.
         slu_type = get_slu_type(cfg)
         self.slu = slu_factory(slu_type, cfg)
