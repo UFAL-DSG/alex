@@ -276,6 +276,7 @@ class DiscreteFactor(Factor):
         :type keep: list of str
         :returns: Marginalized factor.
         :rtype: DiscreteFactor
+
         """
         # Assignment counter
         assignment = defaultdict(int)

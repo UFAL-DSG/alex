@@ -487,6 +487,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(factor[('x0_0', 'x1_1', 'x2_0', 'x3_0')], 5.0/6)
 
         msg = factor.marginalize(['X1'])
+        self.assertAlmostEqual(msg[('x1_0',)], 0.5)
 
         # Compute message to X0.
 
@@ -512,6 +513,7 @@ class TestFactor(unittest.TestCase):
         factor = belief * expected_value
         msg = factor.marginalize(['X0'])
         w0 = msg.subtract_superset(factor)
+        self.assertAlmostEqual(w0[('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
 
         # Compute w_k.
 
