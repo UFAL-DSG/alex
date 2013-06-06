@@ -144,20 +144,6 @@ class DiscreteFactorNode(FactorNode):
             len(node.values))
 
 
-class DiscreteConvertedFactorNode(DiscreteFactorNode):
-    """Node containing factor and a function, which preprocess values."""
-
-    def __init__(self, name, factor, function):
-        super(DiscreteConvertedFactorNode, self).__init__(name, factor)
-        self.function = function
-
-    def update(self):
-        product_of_messages = reduce(operator.mul,
-                                     self.incoming_message.values())
-        self.belief = product_of_messages.multiply_by_converted(self.factor,
-                                                                self.function)
-
-
 class DirichletParameterNode(VariableNode):
     """Node containing parameter."""
 

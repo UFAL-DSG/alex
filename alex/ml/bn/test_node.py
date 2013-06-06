@@ -7,7 +7,7 @@ import unittest
 import pdb
 
 from alex.ml.bn.factor import DiscreteFactor
-from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DiscreteConvertedFactorNode
+from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode
 
 
 def same_or_different(assignment):
@@ -67,40 +67,6 @@ class TestNode(unittest.TestCase):
         hid.update()
         hid.normalize()
         self.assertClose(hid.belief[("save",)], 0.45)
-
-    def test_function_node(self):
-        s1 = DiscreteVariableNode('s1', ['a', 'b'])
-        s2 = DiscreteVariableNode('s2', ['a', 'b'])
-        same = DiscreteConvertedFactorNode('f', DiscreteFactor(
-            ['same'],
-            {
-                'same': [True, False]
-            },
-            {
-                (True,): 0.8,
-                (False,): 0.2
-            }),
-            same_or_different)
-
-        s1.connect(same)
-        s2.connect(same)
-
-        s2.observed({('a',):1})
-
-        s1.send_messages()
-        s2.send_messages()
-
-        same.update()
-        same.normalize()
-
-        same.send_messages()
-
-        s1.update()
-        s1.normalize()
-
-        self.assertClose(s1.belief[('a',)], 0.8)
-        self.assertClose(s1.belief[('b',)], 0.2)
-        self.assertClose(s2.belief[('a',)], 1)
 
     def test_observed_complex(self):
         s1 = DiscreteVariableNode('s1', ['a', 'b'])

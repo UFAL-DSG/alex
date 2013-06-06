@@ -42,62 +42,6 @@ class Factor(object):
 class DiscreteFactor(Factor):
     """Discrete factor representation with basic operations."""
 
-    def _factor_table_length(self, cardinalities):
-        """Length of the factor table (number of assignments)."""
-        return reduce(operator.mul, cardinalities.values())
-
-    def _compute_strides(self, variables, cardinalities, factor_length):
-        """Strides for variables of given factor table.
-
-        Compute a stride for each variable. For example there are three
-        variables A, B, and C with cardinalities 2, 3, and 4. The length of
-        factor is 2 * 3 * 4 = 24. To get from assignment A = 0 to A = 1, we
-        have to go over 3 * 4 values: 000, 001, 002, 003, 010, ..., 023, 100.
-        As a result, the strides of A, B, and C will be 12, 4, 1.
-        """
-        strides = {}
-        last_stride = factor_length
-        for variable in variables:
-            last_stride = last_stride / cardinalities[variable]
-            strides[variable] = last_stride
-        return strides
-
-    def _get_index_from_assignment(self, assignment):
-        """Transform variables assignment to index into factor table."""
-        index = 0
-        for var, assignment_i in zip(self.variables, assignment):
-            index += (self.strides[var] *
-                      self.translation_table[var][assignment_i])
-        return index
-
-    def _get_assignment_from_index(self, index, chosen_vars=None):
-        """Get assignment from factor table at given index."""
-        if chosen_vars is None:
-            chosen_vars = self.variables
-
-        assignment = []
-        for var in self.variables:
-            if var in chosen_vars:
-                assignment.append(self.variable_values[var][index / self.strides[var]])
-            index %= self.strides[var]
-        return tuple(assignment)
-
-    def _create_translation_table(self):
-        """Create translation from string values to numbers.
-
-        Variable values can be anything, but arrays are indexed by
-        numbers. Translation table is used for getting an index from an
-        assignment.
-
-        For example for a variable X with values ['a', 'b', 'c', 'd'], the
-        translation will be: 'a': 0, 'b': 1, 'c': 2, 'd': 3.
-        """
-        self.translation_table = {}
-        for var in self.variables:
-            self.translation_table[var] = {}
-            for i, value in enumerate(self.variable_values[var]):
-                self.translation_table[var][value] = i
-
     def __init__(self, variables, variable_values, prob_table):
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
@@ -159,6 +103,31 @@ class DiscreteFactor(Factor):
             yield (self._get_assignment_from_index(i),
                    from_log(v))
 
+    def __getitem__(self, assignment):
+        index = self._get_index_from_assignment(assignment)
+        return from_log(self.factor_table[index])
+
+    def __pow__(self, value):
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
+                              self.factor_table * value)
+
+    def __mul__(self, other_factor):
+        if self.variables == other_factor.variables:
+            return self._multiply_same(other_factor)
+        else:
+            return self._multiply_different(other_factor)
+
+    def __div__(self, other_factor):
+        if not set(self.variables).issuperset(set(other_factor.variables)):
+            raise ValueError(
+                "The denominator is not a subset of the numerator.")
+
+        if self.variables == other_factor.variables:
+            return self._divide_same(other_factor)
+        else:
+            return self._divide_different(other_factor)
+
     def marginalize(self, variables):
         """Marginalize the factor."""
         # Assignment counter
@@ -210,24 +179,81 @@ class DiscreteFactor(Factor):
         else:
             self.factor_table = self.unobserved_factor_table
 
-    def __getitem__(self, assignment):
-        index = self._get_index_from_assignment(assignment)
-        return from_log(self.factor_table[index])
+    def normalize(self, parents=None):
+        """Normalize factor table."""
+        if parents is not None:
+            sums = defaultdict(lambda: np.log(ZERO))
+            assignments = {}
 
-    def __pow__(self, value):
-        return DiscreteFactor(self.variables,
-                              self.variable_values,
-                              self.factor_table * value)
+            for i, value in enumerate(self.factor_table):
+                assignments[i] = self._get_assignment_from_index(i, parents)
+                sums[assignments[i]] = np.logaddexp(sums[assignments[i]], value)
 
-    def multiply_by_converted(self, other_factor, convert):
-        new_factor_table = self.factor_table.copy()
-        for index, value in enumerate(self.factor_table):
-            assignment = self._get_assignment_from_index(index)
-            converted_assignment = convert(assignment)
-            other_index = other_factor._get_index_from_assignment(converted_assignment)
-            new_factor_table[index] += other_factor.factor_table[other_index]
-        return DiscreteFactor(self.variables, self.variable_values,
-                              new_factor_table)
+            for i in range(self.factor_length):
+                self.factor_table[i] -= sums[assignments[i]]
+        else:
+            self.factor_table -= logsumexp(self.factor_table)
+
+    def most_probable(self, n=None):
+        indxs = list(reversed(np.argsort(self.factor_table)))[:n]
+        return [(self._get_assignment_from_index(i)[0],
+                 from_log(self.factor_table[i])) for i in indxs]
+
+    def _factor_table_length(self, cardinalities):
+        """Length of the factor table (number of assignments)."""
+        return reduce(operator.mul, cardinalities.values())
+
+    def _compute_strides(self, variables, cardinalities, factor_length):
+        """Strides for variables of given factor table.
+
+        Compute a stride for each variable. For example there are three
+        variables A, B, and C with cardinalities 2, 3, and 4. The length of
+        factor is 2 * 3 * 4 = 24. To get from assignment A = 0 to A = 1, we
+        have to go over 3 * 4 values: 000, 001, 002, 003, 010, ..., 023, 100.
+        As a result, the strides of A, B, and C will be 12, 4, 1.
+        """
+        strides = {}
+        last_stride = factor_length
+        for variable in variables:
+            last_stride = last_stride / cardinalities[variable]
+            strides[variable] = last_stride
+        return strides
+
+    def _get_index_from_assignment(self, assignment):
+        """Transform variables assignment to index into factor table."""
+        index = 0
+        for var, assignment_i in zip(self.variables, assignment):
+            index += (self.strides[var] *
+                      self.translation_table[var][assignment_i])
+        return index
+
+    def _get_assignment_from_index(self, index, chosen_vars=None):
+        """Get assignment from factor table at given index."""
+        if chosen_vars is None:
+            chosen_vars = self.variables
+
+        assignment = []
+        for var in self.variables:
+            if var in chosen_vars:
+                assignment.append(self.variable_values[var][index / self.strides[var]])
+            index %= self.strides[var]
+        return tuple(assignment)
+
+    def _create_translation_table(self):
+        """Create a translation from string values to numbers.
+
+        Variable values can be anything, but arrays are indexed by
+        numbers. Translation table is used for getting an index from an
+        assignment.
+
+        For example for a variable X with values ['a', 'b', 'c', 'd'], the
+        translation will be: 'a': 0, 'b': 1, 'c': 2, 'd': 3.
+        """
+        self.translation_table = {}
+        for var in self.variables:
+            self.translation_table[var] = {}
+            for i, value in enumerate(self.variable_values[var]):
+                self.translation_table[var][value] = i
 
     def _multiply_same(self, other_factor):
         """Multiply two factors with same variables."""
@@ -286,12 +312,6 @@ class DiscreteFactor(Factor):
                               new_variable_values,
                               new_factor_table)
 
-    def __mul__(self, other_factor):
-        if self.variables == other_factor.variables:
-            return self._multiply_same(other_factor)
-        else:
-            return self._multiply_different(other_factor)
-
     def _divide_same(self, other_factor):
         """Divide factor by other factor with same variables."""
         return DiscreteFactor(self.variables,
@@ -322,16 +342,6 @@ class DiscreteFactor(Factor):
         return DiscreteFactor(self.variables,
                               self.variable_values,
                               new_factor_table)
-
-    def __div__(self, other_factor):
-        if not set(self.variables).issuperset(set(other_factor.variables)):
-            raise ValueError(
-                "The denominator is not a subset of the numerator.")
-
-        if self.variables == other_factor.variables:
-            return self._divide_same(other_factor)
-        else:
-            return self._divide_different(other_factor)
 
     def subtract_superset(self, other):
         """Subtract other factor while broadcasting dimenstions of this factor.
@@ -373,26 +383,6 @@ class DiscreteFactor(Factor):
             other_value = other.factor_table[i]
             new_factor_table[i] = to_log(np.exp(self_value) - np.exp(other_value))
         return DiscreteFactor(other.variables, other.variable_values, new_factor_table)
-
-    def normalize(self, parents=None):
-        """Normalize factor table."""
-        if parents is not None:
-            sums = defaultdict(lambda: np.log(ZERO))
-            assignments = {}
-
-            for i, value in enumerate(self.factor_table):
-                assignments[i] = self._get_assignment_from_index(i, parents)
-                sums[assignments[i]] = np.logaddexp(sums[assignments[i]], value)
-
-            for i in range(self.factor_length):
-                self.factor_table[i] -= sums[assignments[i]]
-        else:
-            self.factor_table -= logsumexp(self.factor_table)
-
-    def most_probable(self, n=None):
-        indxs = list(reversed(np.argsort(self.factor_table)))[:n]
-        return [(self._get_assignment_from_index(i)[0],
-                 from_log(self.factor_table[i])) for i in indxs]
 
     def add(self, n, assignment=None):
         if assignment is not None:
