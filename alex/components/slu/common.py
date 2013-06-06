@@ -75,17 +75,6 @@ def slu_factory(slu_type, cfg, require_model=False):
         from alex.components.slu.dailrclassifier import DAILogRegClassifier
         from alex.components.slu.base import CategoryLabelDatabase, \
             SLUPreprocessing
-        # # Load the CLDB and the preprocessing.
-        # from alex.components.slu.base import CategoryLabelDatabase, \
-            # SLUPreprocessing
-        # preprocessing = None
-        # cldb = CategoryLabelDatabase(cfg_this_slu.get('cldb_fname', None))
-        # if cldb is not None:
-            # preprocessing_cls = cfg_this_slu.get('preprocessing_cls',
-                                                 # SLUPreprocessing)
-            # if preprocessing_cls is not None:
-                # preprocessing = preprocessing_cls(cldb)
-        # return slu_type(preprocessing=preprocessing, cfg=cfg)
     # Load appropriate classes based on the classifier type required.
     elif slu_type == 'cl-seq':
         from alex.components.slu.dai_clser_fj import DAILogRegClassifier
@@ -105,6 +94,7 @@ def slu_factory(slu_type, cfg, require_model=False):
     if 'clser' in cfg_this_slu:
         dai_clser = cfg_this_slu['clser']
     else:
+        # Preprocessing
         if cfg_this_slu.get('do_preprocessing', True):
             # Load the CLDB.
             cldb_fname = cfg_this_slu.get('cldb_fname', None)
@@ -129,8 +119,10 @@ def slu_factory(slu_type, cfg, require_model=False):
             preprocessing = preprocessing_cls(cldb)
         else:
             preprocessing = None
-        # Try to load the model.
+
         dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg)
+
+        # Try to load the model.
         try:
             model_fname = cfg_te.get('model_fname', None)
             dai_clser.load_model(model_fname)

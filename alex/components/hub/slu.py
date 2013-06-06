@@ -51,8 +51,7 @@ class SLU(multiprocessing.Process):
         self.slu_hypotheses_out = slu_hypotheses_out
 
         # Load the SLU.
-        slu_type = get_slu_type(cfg)
-        self.slu = slu_factory(slu_type, cfg)
+        self.slu = slu_factory(get_slu_type(cfg), cfg)
 
     def process_pending_commands(self):
         """\
