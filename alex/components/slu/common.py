@@ -1,6 +1,11 @@
-import inspect
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
+import inspect
 import autopath
+
 from alex.components.slu.base import SLUInterface, SLUPreprocessing, \
                                      CategoryLabelDatabase
 from alex.components.slu.exception import SLUException
@@ -8,7 +13,7 @@ from alex.components.slu.dailrclassifier import DAILogRegClassifier
 
 
 def get_slu_type(cfg):
-    """Get slu type from the configuration."""
+    """Get SLU type from the configuration."""
     return cfg['SLU']['type']
 
 
@@ -28,6 +33,5 @@ def slu_factory(slu_type, cfg):
 
         return slu
     else:
-        raise SLUException(
-            'Unsupported spoken language understanding: {type_}'\
+        raise SLUException('Unsupported spoken language understanding: {type_}'\
             .format(type_=cfg['SLU']['type']))

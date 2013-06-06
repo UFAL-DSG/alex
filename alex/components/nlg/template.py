@@ -19,6 +19,12 @@ class AbstractTemplateNLG(object):
     routines for template loading and selection.
 
     The generation (i.e. template filling) is left to the derived classes.
+
+    It implements numerous backoff strategies:
+    1) it matches the exactly the input dialogue against the templates
+    2) if it cannot find exact match, then it tries to find a generic template (slot independent)
+    3) if it cannot find a generic template, the it tries to compose
+        the template from templates for individual dialogue act items
     """
 
     def __init__(self, cfg):
@@ -26,6 +32,8 @@ class AbstractTemplateNLG(object):
         Constructor, just save a link to the configuration.
         """
         self.cfg = cfg
+
+        self.last_utterance = u""
 
     def load_templates(self, file_name):
         """\
@@ -68,8 +76,21 @@ class AbstractTemplateNLG(object):
         using substitutions in case of the slot values.
         """
         tpl = None
+
         # try to find increasingly generic templates
-        for r in range(1, len(svs) + 1):
+        # limit the complexity of the search
+        if len(svs) == 0:
+            rng = []
+        elif len(svs) == 1:
+            rng = [1,]
+        elif len(svs) == 2:
+            rng = [1, 2, ]
+        elif len(svs) == 3:
+            rng = [1, 2, 3, ]
+        else:
+            rng = [1, 2, len(svs)-1, len(svs)]
+
+        for r in rng:
             for cmb in itertools.combinations(svs, r):
                 generic_da = self.get_generic_da(da, cmb)
                 try:
@@ -77,17 +98,83 @@ class AbstractTemplateNLG(object):
                 except KeyError:
                     continue
                 return tpl
-        # did not find anything
+
+        # I did not find anything
         raise TemplateNLGException("No match with generic templates.")
 
-    def random_select(self, tmp):
+    def random_select(self, tpl):
         """\
         Randomly select alternative templates for generation.
+
+        The selection process is modeled by an embedded list structure
+        (a tree like structure).
+        In the first level the algorithm selects one of N.
+        In the second level, for every item it selects one of M, and joins them together.
+        This continues toward the leaves which must be non-list objects.
+
+        There are the following random selection options (only the first three):
+
+        (1)
+            {
+            'hello()' : u"Hello",
+            }
+
+            It will return the "Hello" string.
+
+        (2)
+            {
+            'hello()' : (u"Hello",
+                         u"Hi",
+                        ),
+            }
+
+            It will return one of the "Hello" or "Hi" strings.
+
+
+        (2)
+            {
+            'hello()' : (
+                         [
+                          (u"Hello.",
+                           u"Hi.",
+                          )
+                          (u"How are you doing?",
+                           u"Welcome".
+                          ),
+                          u"Speak!",
+                         ],
+
+                         u"Hi my friend."
+                        ),
+            }
+
+            It will return one of the following strings:
+                "Hello. How are you doing? Speak!"
+                "Hi. How are you doing? Speak!"
+                "Hello. Welcome. Speak!"
+                "Hi. Welcome. Speak!"
+                "Hi my friend"
         """
-        if isinstance(tmp, list):
-            return random.choice(tmp)
-        elif isinstance(tmp, basestring):
-            return tmp
+        if isinstance(tpl, basestring):
+            return tpl
+        elif isinstance(tpl, tuple):
+            tpl_rc_or = random.choice(tpl)
+
+            if isinstance(tpl_rc_or, basestring):
+                return tpl_rc_or
+            elif isinstance(tpl_rc_or, list):
+                tpl_rc_and = []
+
+                for t in tpl_rc_or:
+                    tpl_rc_and.append(self.random_select(t))
+
+                return u" ".join(tpl_rc_and).replace(u'  ', u' ')
+            elif isinstance(tpl_rc_or, tuple):
+                raise TemplateNLGException("Unsupported generation type. "\
+                 "At this level, the template cannot be a tuple: template = %s" % unicode(tpl))
+        elif isinstance(tpl, list):
+            raise TemplateNLGException("Unsupported generation type. "\
+             "At this level, the template must cannot be a list: template = %s" % unicode(tpl))
         else:
             raise TemplateNLGException("Unsupported generation type.")
 
@@ -99,18 +186,46 @@ class AbstractTemplateNLG(object):
         Then try to find a relaxed match of a more generic template and
         fill in the actual values of the variables.
         """
-        #da.sort()
+
         try:
-            # try to return exact match
-            return self.random_select(self.templates[str(da)])
+            if unicode(da) == 'irepeat()':
+                pass
+            else:
+                # try to return exact match
+                self.last_utterance = self.random_select(self.templates[unicode(da)])
         except KeyError:
             # try to find a relaxed match
             svs = da.get_slots_and_values()
             try:
                 tpl = self.random_select(self.match_generic_templates(da, svs))
             except TemplateNLGException:
-                tpl = self.backoff(da)
-            return self.fill_in_template(tpl, svs)
+                composed_tpl = []
+
+                # try to find a template for each dialogue act item and concatenate them
+                try:
+                    dai_tpl = []
+                    for dai in da:
+                        try:
+                            dai_tpl = self.random_select(self.templates[unicode(dai)])
+                        except KeyError:
+                            # try to find a relaxed match
+                            dax = DialogueAct()
+                            dax.append(dai)
+                            svsx = dax.get_slots_and_values()
+                            dai_tpl = self.random_select(self.match_generic_templates(dax, svsx))
+                            dai_tpl = self.fill_in_template(dai_tpl, svsx)
+
+                        composed_tpl.append(dai_tpl)
+
+                    tpl = ' '.join(composed_tpl)
+
+                except TemplateNLGException:
+                    # nothing to do, I must backoff
+                    tpl = self.backoff(da)
+
+            self.last_utterance = self.fill_in_template(tpl, svs)
+
+        return self.last_utterance
 
     def fill_in_template(self, tpl, svs):
         """\

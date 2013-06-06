@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # encoding: utf8
+
+from __future__ import unicode_literals
 from collections import defaultdict
 
 import autopath
@@ -42,7 +44,6 @@ class AOTBSLU(SLUInterface):
         res = defaultdict(list)
         _fill_utterance_values(abutterance, 'stop', res)
 
-        print unicode(res)
         stop_name = None
         for slot, values in res.iteritems():
             for value in values:
@@ -81,12 +82,15 @@ class AOTBSLU(SLUInterface):
         if _any_word_in(abutterance, [u"jiný", u"jiné", u"jiná", u"další", u"dál", u"jiného" ]):
             cn.add(1.0, DialogueActItem("reqalts"))
 
-        if _any_word_in(abutterance, [u"děkuji", u"nashledanou", u"díky", u"sbohem", u"zdar"]):
+        if _any_word_in(abutterance, [u"děkuji", u"shledanou", u"shle", u"díky", u"sbohem", u"zdar"]):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if _any_word_in(abutterance, [u"zopakovat",  u"opakovat", u"znovu", ]) or \
+        if _any_word_in(abutterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj" ]) or \
             _all_words_in(abutterance, [u"ještě",  u"jednou" ]):
             cn.add(1.0, DialogueActItem("repeat"))
+
+        if _any_word_in(abutterance, [u"napověda",  u"pomoc", u"znovu", ]):
+            cn.add(1.0, DialogueActItem("help"))
 
     def parse(self, utterance, *args, **kwargs):
         if not isinstance(utterance, Utterance):

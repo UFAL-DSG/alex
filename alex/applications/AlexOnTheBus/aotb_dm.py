@@ -24,6 +24,7 @@ from alex.components.dm import DialogueManager
 from alex.components.nlg.template import TemplateNLG
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
+from alex.applications.AlexOnTheBus.aotb_nlg import AOTBNLG
 
 SlotChange = namedtuple('SlotChange', ['from_value', 'to_value', 'slot'])
 
@@ -36,6 +37,7 @@ class AOTBState(object):
     stop = None
     bye = False
     repeat = False
+    help = False
 
     def __init__(self):
         self.slot_changes = []
@@ -123,8 +125,9 @@ class AOTBDM(DialogueManager):
         bye_dai = cn_dict.get('bye')
         request_alternatives_dai = cn_dict.get('reqalts')
         repeat_dai = cn_dict.get('repeat')
+        help_dai = cn_dict.get('help')
 
-        self.state.not_understood = not any([from_dai, to_dai, time_dai, bye_dai, request_alternatives_dai, repeat_dai])
+        self.state.not_understood = not any([from_dai, to_dai, time_dai, bye_dai, request_alternatives_dai, repeat_dai,  help_dai])
 
         if request_alternatives_dai is not None:
             self.state.alternatives += 1
@@ -135,16 +138,19 @@ class AOTBDM(DialogueManager):
             self.state.bye = True
 
         if from_dai is not None:
-            self.state.from_stop = from_dai.value
+            self.update_state(from_dai)
 
         if to_dai is not None:
-            self.state.to_stop = to_dai.value
+            self.update_state(to_dai)
 
         if time_dai is not None:
-            self.state.time = time_dai.value
+            self.update_state(time_dai)
 
         if repeat_dai is not None:
             self.state.repeat = True
+
+        if help_dai is not None:
+            self.state.help = True
 
     def update_state(self, dai):
         """Copy values from the dai to the state. (i.e. "understand the dai")."""
@@ -178,15 +184,15 @@ class AOTBDM(DialogueManager):
         res = res[:-1]
 
         if len(res) == 0:
-            res.append(u'inform(not_found="True")')
+            res.append(u'apology()')
             res.append(u"inform(from_stop='%s')" % self.state.from_stop)
             res.append(u"inform(to_stop='%s')" % self.state.to_stop)
 
-        print unicode(res)
-        print [type(x) for x in res]
+#        print unicode(res)
+#        print [type(x) for x in res]
         res_da = DialogueAct(u"&".join(res))
 
-        print unicode(res_da)
+#        print unicode(res_da)
 
         return res_da
 
@@ -204,13 +210,17 @@ class AOTBDM(DialogueManager):
             self.state.bye = False
             res = DialogueAct("bye()")
             return res
+        if self.state.help:
+            self.state.help = False
+            res = DialogueAct("help()")
+            return res
         if self.state.repeat:
             self.state.repeat = False
-            res = DialogueAct('inform(repeat="True")')
+            res = DialogueAct('irepeat()')
             return res
         elif self.state.not_understood:
             self.state.not_understood = False
-            res = DialogueAct(u'inform(not_understood="True")')
+            res = DialogueAct(u'notunderstood()')
             if self.state.from_stop is None:
                 res.append(DialogueActItem("help", "from_stop"))
             elif self.state.to_stop is None:
@@ -218,30 +228,31 @@ class AOTBDM(DialogueManager):
 
             return res
         else:
-            da_strs = []
+            req_das = []
             for slot in ['from_stop', 'to_stop']:
                 if self.state.get(slot) is None:
-                    da_strs.append("request(%s)" % slot)
+                    req_das.append("request(%s)" % slot)
 
-            ack_strs = []
+            iconf_das = []
+            print self.state.slot_changes
+
             for slot_change in self.state.slot_changes:
-                # FIXME In the dialogue act standard, there are no implicit_confirm(s)
+                # FIXME: In the dialogue act standard, there are no iconfirm(s)
                 # This must be properly defined and added into the documentation.
-                # FJ: it looks to me like a regular inform.
-                ack_strs.append("implicit_confirm(%s=%s)" % (slot_change.slot, slot_change.to_value, ))
+                iconf_das.append("iconfirm(%s=%s)" % (slot_change.slot, slot_change.to_value, ))
                 if slot_change.slot in ["from_stop", "to_stop", "time"]:
                     self.state.alternatives = 0
-            if len(ack_strs) > 0:
-                ack_da = DialogueAct("&".join(ack_strs))
+            if len(iconf_das) > 0:
+                iconf_da = DialogueAct("&".join(iconf_das))
             else:
-                ack_da = DialogueAct()
+                iconf_da = DialogueAct()
 
             self.state.slot_changes = []
 
-            if len(da_strs) > 0:
-                req_da = DialogueAct("&".join(da_strs))
-                ack_da.merge(req_da)
-                return ack_da
+            if len(req_das) > 0:
+                req_da = DialogueAct("&".join(req_das))
+                iconf_da.merge(req_da)
+                return iconf_da
             else:
                 time = self.state.time
                 if time is None:
@@ -262,8 +273,8 @@ class AOTBDM(DialogueManager):
 
                 directions_da = self.say_directions()
 
-                ack_da.extend(directions_da)
-                return ack_da
+                iconf_da.extend(directions_da)
+                return iconf_da
 
 
     def end_dialogue(self):
@@ -359,7 +370,7 @@ def main():
     cfg = {
       'NLG': {
         'debug': True,
-        'type': 'Template',
+        'type': AOTBNLG,
         'Template' : {
             'model': 'nlg_templates.cfg'
         },
