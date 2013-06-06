@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import struct
 import StringIO
 import mad
 import pyaudio
@@ -9,7 +8,6 @@ import pysox
 import audioop
 import wave
 import subprocess
-import time
 
 from os import remove, fdopen
 from tempfile import mkstemp
@@ -29,7 +27,8 @@ be named as "wav" or "wav_*".
 
 
 def load_wav(cfg, file_name):
-    """Reads all audio data from the file and returns it in a string.
+    """\
+    Reads all audio data from the file and returns it in a string.
 
     The content is re-sampled into the default sample rate.
 

@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
+import re
+
+
+def findall(text, char, start=0, end=-1):
+    idxs = list()
+    if end == -1:
+        end = len(text)
+    nextidx = text.find(char, start, end)
+    while nextidx != -1:
+        idxs.append(nextidx)
+        nextidx = text.find(char, nextidx + 1, end)
+    return idxs
 
 def split_by_comma(text):
     parentheses = 0
@@ -84,7 +98,7 @@ def split_by(text, splitter,
 
 
 def parse_command(command):
-    """Parse the command name(var1="val1",...) into a dictionary strucure:
+    """Parse the command name(var1="val1",...) into a dictionary structure:
 
       E.g. call(destination="1245",opt="X") will be parsed into:
 
@@ -116,9 +130,11 @@ def parse_command(command):
     for command_sv in command_svs:
         i = split_by(command_sv, '=', '', '', '"')
         if len(i) == 1:
-            raise Exception("Parsing error in: %s: %s. There is only variable name" % (command, str(i)))
+            raise Exception(("Parsing error in: {cmd}: {slot}. There is only "
+                             "variable name")
+                            .format(cmd=command, slot=unicode(i)))
         elif len(i) == 2:
-            # there is slot name and value
+            # There is a slot name and a value.
             d[i[0]] = i[1][1:-1]
         else:
             raise Exception("Parsing error in: %s: %s" % (command, str(i)))
@@ -126,7 +142,97 @@ def parse_command(command):
     return d
 
 
+class Escaper(object):
+    """\
+    Creates a customised escaper for strings.  The characters that need
+    escaping, as well as the one used for escaping can be specified.
+
+    """
+    # TODO Write tests.
+
+    # Constants for types of characters in a text that has been escaped.
+    ESCAPER = 0
+    ESCAPED = 1
+    NORMAL = 2
+
+    def __init__(self, chars="'\"", escaper='\\', re_flags=0):
+        """Constructs an escaper for escaping the specified characters.
+
+        Arguments:
+            chars -- a collection of characters to escape (default: "'\"")
+            escaper -- the character used as the escaper (default: '\\')
+            re_flags -- any regex flags (as defined in the built-in `re'
+                module) to use when building the escaping regexp (default: 0)
+
+        """
+        self.rx = re.compile(Escaper.re_literal_list(chars + escaper),
+                             re_flags)
+        escaper_lit = Escaper.re_literal(escaper)
+        self.sub = escaper_lit + '\\g<0>'
+        self.unrx = re.compile(escaper_lit + '(.)')
+        self.unsub = '\\1'
+
+    _re_br_spec_chars_rx = re.compile('[]\\\\^-]')
+
+    @staticmethod
+    def re_literal_list(chars):
+        """\
+        Builds a [] group for a regular expression that matches exactly the
+        characters specified.
+
+        """
+        return '[{esced}]'.format(
+            esced=Escaper._re_br_spec_chars_rx.sub('\\\\\\g<0>', chars))
+
+    _re_combining_chars = '1234567890AbBdDsSwWZafnrtvx'
+
+    @staticmethod
+    def re_literal(char):
+        """\
+        Escapes the character so that when it is used in a regexp, it matches
+        itself.
+        """
+        return char if (char in Escaper._re_combining_chars) else ('\\' + char)
+
+    def escape(self, text):
+        """Escapes the text using the parameters defined in the constructor."""
+        return self.rx.sub(self.sub, text)
+
+    def unescape(self, text):
+        """\
+        Unescapes the text using the parameters defined in the constructor."""
+        # TODO Test whether this picks disjunct matches (yes, it should).
+        return self.unrx.sub(self.unsub, text)
+
+    def annotate(self, esced):
+        """\
+        Annotates each character of a text that has been escaped whether:
+
+            Escaper.ESCAPER - it is the escape character
+            Escaper.ESCAPED - it is a character that was escaped
+            Escaper.NORMAL  - otherwise.
+
+        It is expected that only parts of the text may have actually been
+        escaped.
+
+        Returns a list with the annotation values, co-indexed with characters
+        of the input text.
+
+        """
+        annion = [Escaper.NORMAL] * len(esced)
+        for match in self.unrx.finditer(esced):
+            first = match.start()
+            annion[first] = Escaper.ESCAPER
+            annion[first + 1] = Escaper.ESCAPED
+        return annion
+
+
 def escape_special_characters_shell(text, characters="'\""):
+    """\
+    Simple function that tries to escape quotes.  Not guaranteed to produce
+    the correct result!!  If that is needed, use the new `Escaper' class.
+
+    """
     for character in characters:
         text = text.replace(character, '\\' + character)
     return text
