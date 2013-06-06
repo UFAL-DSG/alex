@@ -20,21 +20,15 @@ def _fill_utterance_values(abutterance, category, res):
 
         res[category].append(value)
 
-
-def _any_word_in(abutterance, words):
-    # FIXME: Stems should be compared to stems.  Here they can get compared to
-    # items (strings) in the form 'CATLAB=value'.
+def _any_word_in(utterance, words):
     for alt_expr in words:
-        if cz_stem(alt_expr) in abutterance.utterance:
+        if alt_expr in utterance.utterance:
             return True
     return False
 
-
-def _all_words_in(abutterance, words):
-    # FIXME: Stems should be compared to stems.  Here they can get compared to
-    # items (strings) in the form 'CATLAB=value'.
+def _all_words_in(utterance, words):
     for alt_expr in words:
-        if cz_stem(alt_expr) not in abutterance.utterance:
+        if alt_expr not in utterance.utterance:
             return False
     return True
 
@@ -90,21 +84,22 @@ class AOTBSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem("inform", slot, " ".join(value)))
                 break
 
-    def parse_meta(self, abutterance, cn):
-        if _any_word_in(abutterance, [u"jiný", u"jiné", u"jiná", u"další",
+    def parse_meta(self, utterance, cn):
+
+        if _any_word_in(utterance, [u"jiný", u"jiné", u"jiná", u"další",
                                       u"dál", u"jiného"]):
             cn.add(1.0, DialogueActItem("reqalts"))
 
-        if _any_word_in(abutterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"díky",
+        if _any_word_in(utterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"díky",
                                         u"sbohem", u"zdar"]):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if _any_word_in(abutterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj" ]) or \
-            _all_words_in(abutterance, [u"ještě",  u"jednou" ]):
+        if _any_word_in(utterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj" ]) or \
+            _all_words_in(utterance, [u"ještě",  u"jednou" ]):
 
             cn.add(1.0, DialogueActItem("repeat"))
 
-        if _any_word_in(abutterance, [u"napověda",  u"pomoc", u"znovu", ]):
+        if _any_word_in(utterance, [u"napověda",  u"pomoc", u"znovu", ]):
             cn.add(1.0, DialogueActItem("help"))
 
     def parse(self, utterance, *args, **kwargs):
@@ -124,6 +119,6 @@ class AOTBSLU(SLUInterface):
         elif 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
 
-        self.parse_meta(abutterance, res_cn)
+        self.parse_meta(utt_norm, res_cn)
 
         return res_cn

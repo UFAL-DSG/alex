@@ -93,6 +93,11 @@ class Utterance(object):
         return u' '.join(self._utterance)
 
     def __contains__(self, phrase):
+        """ Returns True if the phrase is in the utterance.
+
+        Arguments:
+            phrase -- a list of words constituting the phrase sought
+        """
         return self.find(phrase) != -1
 
     def __lt__(self, other):
