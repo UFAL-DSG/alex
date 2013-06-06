@@ -5,6 +5,8 @@
 
 import unittest
 import numpy as np
+import copy
+import operator
 
 from alex.ml.bn.factor import DiscreteFactor
 
@@ -39,6 +41,27 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
         self.assertEquals(factor.strides, {"A": 6, "B": 2, "C": 1})
+
+    def test_observations(self):
+        f = DiscreteFactor(
+            ['X'],
+            {
+                'X': [0, 1],
+            },
+            {
+                (0,): 0.8,
+                (1,): 0.2,
+            }
+        )
+
+        self.assertAlmostEqual(f[(0,)], 0.8)
+        f.observed({(1,): 0.2})
+        self.assertAlmostEqual(f[(0,)], 0)
+        self.assertAlmostEqual(f[(1,)], 0.2)
+
+        f.observed(None)
+        self.assertAlmostEqual(f[(0,)], 0.8)
+        self.assertAlmostEqual(f[(1,)], 0.2)
 
     def test_get_index_from_assignment(self):
         factor = DiscreteFactor(
@@ -380,3 +403,145 @@ class TestFactor(unittest.TestCase):
         f2 = f ** np.array([2, 2, 3, 2])
         self.assertAlmostEqual(f2[('a1', 'b1')], 0.09)
         self.assertAlmostEqual(f2[('a2', 'b1')], 0.343)
+
+    def test_alphas(self):
+        alpha = DiscreteFactor(
+            ['X0', 'X1', 'X2', 'X3'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0', 'x1_1'],
+                'X2': ['x2_0', 'x2_1'],
+                'X3': ['x3_0', 'x3_1'],
+            },
+            {
+                ('x0_0', 'x1_0', 'x2_0', 'x3_0'): 1,
+                ('x0_0', 'x1_0', 'x2_0', 'x3_1'): 1,
+                ('x0_0', 'x1_0', 'x2_1', 'x3_0'): 1,
+                ('x0_0', 'x1_0', 'x2_1', 'x3_1'): 2,
+                ('x0_0', 'x1_1', 'x2_0', 'x3_0'): 5,
+                ('x0_0', 'x1_1', 'x2_0', 'x3_1'): 1,
+                ('x0_0', 'x1_1', 'x2_1', 'x3_0'): 3,
+                ('x0_0', 'x1_1', 'x2_1', 'x3_1'): 1,
+                ('x0_1', 'x1_0', 'x2_0', 'x3_0'): 1,
+                ('x0_1', 'x1_0', 'x2_0', 'x3_1'): 1,
+                ('x0_1', 'x1_0', 'x2_1', 'x3_0'): 1,
+                ('x0_1', 'x1_0', 'x2_1', 'x3_1'): 1,
+                ('x0_1', 'x1_1', 'x2_0', 'x3_0'): 1,
+                ('x0_1', 'x1_1', 'x2_0', 'x3_1'): 1,
+                ('x0_1', 'x1_1', 'x2_1', 'x3_0'): 1,
+                ('x0_1', 'x1_1', 'x2_1', 'x3_1'): 1,
+            })
+
+        X0 = DiscreteFactor(
+            ['X0'],
+            {
+                'X0': ['x0_0', 'x0_1']
+            },
+            {
+                ('x0_0',): 1,
+                ('x0_1',): 0,
+            })
+
+        X1 = DiscreteFactor(
+            ['X1'],
+            {
+                'X1': ['x1_0', 'x1_1']
+            },
+            {
+                ('x1_0',): 0,
+                ('x1_1',): 1,
+            })
+
+        X2 = DiscreteFactor(
+            ['X2'],
+            {
+                'X2': ['x2_0', 'x2_1']
+            },
+            {
+                ('x2_0',): 1,
+                ('x2_1',): 0,
+            })
+
+        X3 = DiscreteFactor(
+            ['X3'],
+            {
+                'X3': ['x3_0', 'x3_1']
+            },
+            {
+                ('x3_0',): 1,
+                ('x3_1',): 0,
+            })
+
+        # Compute message to X1.
+
+        cavity = X0 * X2 * X3
+        self.assertAlmostEqual(cavity[('x0_0', 'x2_0', 'x3_0')], 1.0)
+
+        sum_of_alphas = alpha.marginalize(['X1', 'X2', 'X3'])
+        self.assertAlmostEqual(sum_of_alphas[('x1_1', 'x2_0', 'x3_0')], 6)
+
+        expected_value = alpha / sum_of_alphas
+        self.assertAlmostEqual(expected_value[('x0_0', 'x1_1', 'x2_1', 'x3_0')], 0.75)
+
+        factor = cavity * expected_value
+        self.assertAlmostEqual(factor[('x0_0', 'x1_1', 'x2_0', 'x3_0')], 5.0/6)
+
+        msg = factor.marginalize(['X1'])
+        self.assertAlmostEqual(msg[('x1_0',)], 0.5)
+
+        # Compute message to X0.
+
+        cavity = X1 * X2 * X3
+        self.assertAlmostEqual(cavity[('x1_1', 'x2_0', 'x3_0')], 1.0)
+        self.assertAlmostEqual(cavity[('x1_0', 'x2_0', 'x3_0')], 0.0)
+
+        sum_of_alphas = alpha.marginalize(['X1', 'X2', 'X3'])
+
+        expected_value = alpha / sum_of_alphas
+        self.assertAlmostEqual(expected_value[('x0_0', 'x1_1', 'x2_0', 'x3_1')], 0.5)
+
+        factor = cavity * expected_value
+
+        msg = factor.marginalize(['X0'])
+        self.assertAlmostEqual(msg[('x0_0',)], 5.0/6)
+
+        # Compute w_0.
+
+        sum_of_alphas = alpha.marginalize(['X1', 'X2', 'X3'])
+        expected_value = alpha / sum_of_alphas
+        belief = X0 * X1 * X2 * X3
+        factor = belief * expected_value
+        msg = factor.marginalize(['X0'])
+        w0 = msg.subtract_superset(factor)
+        self.assertAlmostEqual(w0[('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
+
+        # Compute w_k.
+
+        # When we want to compute w_k for each j, we can just compute the belief.
+        # Each j is denoted by an assignment of parents, which in this case is
+        # the assignment of X1, X2, X3, and each k is a value of a child, in
+        # this case it's the value of X0.
+        # For given j and k, we can get the value of w_jk, by getting one row
+        # from w_k.
+        w_k = X0 * X1 * X2 * X3
+
+        # Compute expected value of p(\theta)
+        sum_of_alphas = alpha.marginalize(['X1', 'X2', 'X3'])
+        expected_value_0 = alpha / sum_of_alphas
+
+        sum_of_alphas_plus_1 = alpha.marginalize(['X1', 'X2', 'X3'])
+        sum_of_alphas_plus_1.add(1)
+
+        expected_values = [w0 * expected_value_0]
+
+        for k in X0.variable_values['X0']:
+            new_alpha = copy.deepcopy(alpha)
+            for i, (assignment, value) in enumerate(new_alpha):
+                if assignment[0] == k:
+                    new_alpha.add(1, assignment)
+            expected_value_k = new_alpha / sum_of_alphas_plus_1
+            expected_values.append(w_k * expected_value * expected_value_k)
+
+        expected_value_sum = reduce(operator.add, expected_values)
+
+        print w0

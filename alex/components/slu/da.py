@@ -116,10 +116,10 @@ class DialogueActItem(Abstracted):
         # Identity of a DAI is determined by its textual representation.
         # That means, if two DAIs have the same DA type, slot name, and slot
         # value, they hash to the same spot.
-        return hash(str(self))
+        return hash(unicode(self))
 
     def __cmp__(self, other):
-        self_str, other_str = str(self), str(other)
+        self_str, other_str = unicode(self), unicode(other)
         return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
@@ -430,7 +430,7 @@ class DialogueAct(object):
         if isinstance(other, DialogueAct):
             if self._dais == other.dais:
                 return 0
-            self_str = str(self)
+            self_str = unicode(self)
             mydais_sorted = (self._dais if self._dais_sorted else
                              sorted(self._dais))
             theirdais_sorted = (other._dais if other._dais_sorted else

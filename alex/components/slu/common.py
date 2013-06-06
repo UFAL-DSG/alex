@@ -1,10 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # vim: set fileencoding=UTF-8 :
 
 from __future__ import unicode_literals
+import autopath
 import inspect
 
-import autopath
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.exception import SLUException
 

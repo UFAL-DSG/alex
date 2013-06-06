@@ -95,7 +95,7 @@ class TextHub(Hub):
     def output_usr_utt_nblist(self, utt_nblist):
         """Print the user input N-best list."""
         print "User utterance NBList:"
-        print utt_nblist
+        print unicode(utt_nblist)
         print
 
     def output_usr_da(self, das):

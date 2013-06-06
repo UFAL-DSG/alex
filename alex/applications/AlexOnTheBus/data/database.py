@@ -106,12 +106,7 @@ def add_time():
         time_str = "%s minut" % (mm_word, )
         # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
 
-
-
-
-
-
-def add_zastavky():
+def add_stops():
     dir = os.path.dirname(os.path.abspath(__file__))
     with codecs.open(os.path.join(dir, "zastavky.expanded.txt"), encoding='utf-8') as f_in:
         for ln in f_in:
@@ -137,8 +132,10 @@ def stem():
             vals[cann_value] = [" ".join(cz_stem(ww) for ww in w.split()) for w in vals[cann_value]]
 
 
-
+########################################################################
+# Expand automatically the database
+########################################################################
 
 add_time()
-add_zastavky()
+add_stops()
 stem()

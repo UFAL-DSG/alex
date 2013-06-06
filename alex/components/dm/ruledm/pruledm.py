@@ -609,7 +609,7 @@ class SimpleSayer(object):
 
     def do_nomatch(self):
         query = PDbInfo.make_query(self.state.inform)
-        res = ["Sorry, our database does not contain anything that is matching your criterions."]
+        res = ["Sorry, our database does not contain anything that is matching your criteria."]
         for key, value in query.items():
             res += ["you want %s" % self.say_want(key, value)]
         return res
