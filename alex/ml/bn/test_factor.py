@@ -511,9 +511,10 @@ class TestFactor(unittest.TestCase):
         expected_value = alpha / sum_of_alphas
         belief = X0 * X1 * X2 * X3
         factor = belief * expected_value
-        msg = factor.marginalize(['X0'])
-        w0 = msg.subtract_superset(factor)
+        msg = factor.marginalize(['X1', 'X2', 'X3'])
+        w0 = factor.sum_other()
         self.assertAlmostEqual(w0[('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
+        self.assertAlmostEqual(w0[('x0_1', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
 
         # Compute w_k.
 
@@ -524,8 +525,10 @@ class TestFactor(unittest.TestCase):
         # For given j and k, we can get the value of w_jk, by getting one row
         # from w_k.
         w_k = X0 * X1 * X2 * X3
+        self.assertAlmostEqual(w_k[('x0_0', 'x1_0', 'x2_0', 'x3_0')], 0)
+        self.assertAlmostEqual(w_k[('x0_0', 'x1_1', 'x2_0', 'x3_0')], 1)
 
-        # Compute expected value of p(\theta)
+        # Compute expected value of p(theta)
         sum_of_alphas = alpha.marginalize(['X1', 'X2', 'X3'])
         expected_value_0 = alpha / sum_of_alphas
 
@@ -533,6 +536,8 @@ class TestFactor(unittest.TestCase):
         sum_of_alphas_plus_1.add(1)
 
         expected_values = [w0 * expected_value_0]
+        self.assertAlmostEqual(expected_values[0][('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/12)
+        self.assertAlmostEqual(expected_values[0][('x0_1', 'x1_0', 'x2_0', 'x3_0')], 5.0/12)
 
         for k in X0.variable_values['X0']:
             new_alpha = copy.deepcopy(alpha)
