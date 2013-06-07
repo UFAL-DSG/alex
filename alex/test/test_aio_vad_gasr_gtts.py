@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import multiprocessing
 import time
-
-import __init__
 
 from alex.components.hub.aio import AudioIO
 from alex.components.hub.vad import VAD
