@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+
 """This module collects classes representing the uncertainty about the actual
 value of a base type instance.
 """
+
+from __future__ import unicode_literals
 
 from collections import namedtuple
 from operator import mul
@@ -46,8 +49,7 @@ class NBList(Hypothesis):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return '\n'.join('{p:.3f} {fact}'.format(p=p, fact=fact)
-                         for p, fact in self.n_best)
+        return u'\n'.join('{p:.3f} {fact}'.format(p=p, fact=unicode(fact)) for p, fact in self.n_best)
 
     def __len__(self):
         return len(self.n_best)

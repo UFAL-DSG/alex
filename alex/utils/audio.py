@@ -49,7 +49,7 @@ def load_wav(cfg, file_name):
 
     # read all the samples
     chunk = 1024
-    wav = ''
+    wav = b''
     wavPart = wf.readframes(chunk)
     while wavPart:
         wav += str(wavPart)
@@ -138,7 +138,7 @@ def convert_mp3_to_wav(cfg, mp3_string):
 
     # read all the samples
     chunk = 1024
-    wav = ''
+    wav = b''
     wavPart = mf.read(chunk)
     while wavPart:
         wav += str(wavPart)

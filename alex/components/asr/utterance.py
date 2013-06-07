@@ -461,7 +461,7 @@ class UtteranceHyp(ASRHypothesis):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return "%.3f %s" % (self.prob, self.utterance)
+        return u"%.3f %s" % (self.prob, unicode(self.utterance))
 
     def get_best_utterance(self):
         return self.utterance

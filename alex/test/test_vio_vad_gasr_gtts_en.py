@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+#this cannot be used with GASR
+#from __future__ import unicode_literals
 import autopath
 
 import multiprocessing
@@ -21,7 +24,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        test_vio_vad.py tests the VoipIO, VAD, ASR, and TTS components.
+        test_vio_vad_gasr_gtts_en.py tests the VoipIO, VAD, ASR, and TTS components.
 
         This application uses the Google ASR and TTS.
 
@@ -117,7 +120,7 @@ if __name__ == '__main__':
 
             if isinstance(asr_hyp, ASRHyp):
                 if len(asr_hyp.hyp):
-                    print asr_hyp.hyp
+                    #print asr_hyp.hyp
 
                     # get the top hypotheses text
                     top_text = asr_hyp.hyp[0][1]

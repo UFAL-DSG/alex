@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+#this cannot be used with GASR
+#from __future__ import unicode_literals
+
 import urllib
 import urllib2
 import json
@@ -25,6 +28,7 @@ class GoogleASR():
     def __init__(self, cfg):
         self.cfg = cfg
         self.language = self.cfg['ASR']['Google']['language']
+        self.maxresults  = self.cfg['ASR']['Google']['maxresults']
         self.rec_buffer = []
 
     def flush(self):
@@ -36,7 +40,7 @@ class GoogleASR():
         Note that the returned hypotheses are in JSON format.
 
         """
-        baseurl = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=%s" % self.language
+        baseurl = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=%s&maxresults=%d" % (self.language, self.maxresults)
 
         header = {"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11",
                   "Content-Type": "audio/x-flac; rate=%d" % self.cfg['Audio']['sample_rate']}
@@ -72,13 +76,20 @@ class GoogleASR():
         try:
             hyp = json.loads(json_hypotheses)
 
-            for h in hyp['hypotheses']: # we process only first one
-                return Utterance(h['utterance'])
-
-            return Utterance(u"")
+            nblist = UtteranceNBList()
+            n = len(hyp['hypotheses'])
+            for i, h in enumerate(hyp['hypotheses']):
+                if i == 0:
+                    nblist.add(h['confidence'], Utterance(h['utterance']))
+                    conf1 = hyp['hypotheses'][0]['confidence']
+                else:
+                    # guess the confX score
+                    nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['utterance']))
+                
         except:
-            return Utterance(u"")
-
+            nblist = UtteranceNBList()
+            
+        return nblist
 
     def rec_in(self, frame):
         """ This defines asynchronous interface for speech recognition.
@@ -99,7 +110,7 @@ class GoogleASR():
 
         Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
         """
-        wav = ''.join(self.rec_buffer)
+        wav = b''.join(self.rec_buffer)
         self.rec_buffer = []
 
         nblist = self.recognize(wav)

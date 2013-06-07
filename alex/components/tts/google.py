@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import urllib
 import urllib2
 
@@ -30,8 +32,9 @@ class GoogleTTS(TTSInterface):
         """
 
         baseurl = "http://translate.google.com/translate_tts"
-        values = {'q': text, 'tl': language, 'rate': rate}
-        print values
+        values = {'q': text.encode('utf8'), 'tl': language, 'rate': rate}
+        if self.cfg['ASR']['Google']['debug']:
+            print values
         data = urllib.urlencode(values)
         request = urllib2.Request(baseurl, data)
         request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")

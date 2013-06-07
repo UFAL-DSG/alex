@@ -155,8 +155,8 @@ class ASR(multiprocessing.Process):
                             msg.append("ASR Hypothesis")
                             msg.append("-" * 60)
                             msg.append(unicode(asr_hyp))
-                            msg.append("")
-                            msg = '\n'.join(msg)
+                            msg.append(u"")
+                            msg = u'\n'.join(msg)
                             self.system_logger.debug(msg)
 
                     except (ASRException, JuliusASRTimeoutException):
@@ -167,7 +167,7 @@ class ASR(multiprocessing.Process):
                             msg.append("-" * 60)
                             msg.append("sil")
                             msg.append("")
-                            msg = '\n'.join(msg)
+                            msg = u'\n'.join(msg)
                             self.system_logger.debug(msg)
 
                         asr_hyp = UtteranceConfusionNetwork()
