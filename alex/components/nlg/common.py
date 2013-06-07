@@ -15,9 +15,9 @@ def nlg_factory(nlg_type, cfg):
 
     # do not forget to maintain all supported dialogue managers
     if nlg_type == 'Template':
-        nlg = DummyNLG(cfg)
-    elif nlg_type == 'TectoTemplate':
         nlg = TemplateNLG(cfg)
+    elif nlg_type == 'TectoTemplate':
+        nlg = TectoTemplateNLG(cfg)
     else:
         try:
             nlg = nlg_type(cfg)
