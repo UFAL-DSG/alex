@@ -31,4 +31,3 @@ are used by this project.
 = CODING STYLE =
 
 This project follows the coding convention defined in PEP8.
-

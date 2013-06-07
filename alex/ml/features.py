@@ -286,6 +286,7 @@ class Abstracted(object):
             types.add(type_)
             yield type_, value
         # Construct the other-instantiations for each type yet.
+        # FIXME: Is this the correct thing to do?
         for type_ in types:
             yield type_, self.other_val
 

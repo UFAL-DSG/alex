@@ -25,7 +25,7 @@ class SemHub(Hub):
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
-
+        self.dm.new_dialogue()
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.

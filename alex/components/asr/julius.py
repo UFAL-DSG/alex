@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import socket
 import os
 import struct
@@ -17,10 +19,12 @@ from alex.utils.various import get_text_from_xml_node
 
 
 class JuliusASR(object):
-    """ Uses Julius ASR service to recognize recorded audio.
+    """\
+    Uses Julius ASR service to recognize recorded audio.
 
-    The main function recognize returns a list of recognized hypotheses.
-    One can also obtain a confusion network for the hypotheses.
+    The main function, `get_results`, returns the hypotheses as an n-best list
+    and a confusion network.  The function for asynchronous output, `hyp_out`,
+    returns just the confusion network.
 
     """
 
@@ -131,8 +135,7 @@ class JuliusASR(object):
         with open(self.pidfile) as pidfile:
             pid = pidfile.read()
 
-
-        os.system('kill -9 {pid}' .format(pid=pid))
+        os.system('kill -9 {pid}'.format(pid=pid))
 
     def kill_all_juliuses(self):
         os.system('killall julius', shell=True)
@@ -144,7 +147,7 @@ class JuliusASR(object):
     def start_server(self):
         jconf = self.jconffile
         log = self.logfile
-	jbin = self.jbin
+        jbin = self.jbin
 
         config = open(jconf, "w")
         for k in sorted(self.cfg['ASR']['Julius']['jconf']):
@@ -164,7 +167,12 @@ class JuliusASR(object):
             self.julius_server = subprocess.Popen(
                 '%s -C %s > %s' % (jbin, jconf, log, ),
                 shell=True, bufsize=1)
-            self.save_pid(self.julius_server.pid)
+            # FIXME There must be an error here somewhere.  After
+            # killing_my_julius using this pid, its apparently child process
+            # (PID one greater) remains running, and that seems to be the
+            # actual julius.
+            # self.save_pid(self.julius_server.pid)
+            self.save_pid(self.julius_server.pid + 1)
 
     def connect_to_server(self):
         """Connects to the Julius ASR server to start recognition and receive
@@ -434,7 +442,8 @@ class JuliusASR(object):
         return
 
     def rec_in(self, frame):
-        """ This defines asynchronous interface for speech recognition.
+        """\
+        This defines asynchronous interface for speech recognition.
 
         Call this input function with audio data belonging into one speech
         segment that should be recognized.
@@ -448,7 +457,8 @@ class JuliusASR(object):
         return
 
     def hyp_out(self):
-        """ This defines asynchronous interface for speech recognition.
+        """\
+        This defines asynchronous interface for speech recognition.
 
         Returns recognizers hypotheses about the input speech audio and
         a confusion network for the input.
@@ -458,8 +468,8 @@ class JuliusASR(object):
         # server before.
         # A new ASR hypothesis is decoded.
         while True:
-            m = self.read_server_message()
-            if m is None:
+            msg = self.read_server_message()
+            if msg is None:
                 break
 
         if self.recognition_on:

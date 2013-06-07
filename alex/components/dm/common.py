@@ -4,12 +4,12 @@
 # http://www.python.org/dev/peps/pep-0008/.
 
 from alex.utils.exception import SemHubException
-
 from .dummydialoguemanager import DummyDM
 from alex.components.dm.ruledm.ufalruledm import UfalRuleDM
 from alex.components.dm.ruledm.ufalruledm import PUfalRuleDM
-from alex.applications.AlexOnTheBus.aotb_dm import AOTBDM
 
+def get_dm_type(cfg):
+    return cfg['DM']['type']
 
 def dm_factory(dm_type, cfg):
     dm = None
@@ -21,14 +21,11 @@ def dm_factory(dm_type, cfg):
         dm = UfalRuleDM(cfg)
     elif dm_type == 'PUfalRuleDM':
         dm = PUfalRuleDM(cfg)
-    elif dm_type == 'AOTBDM':
-        dm = AOTBDM(cfg)
     else:
-        raise SemHubException(
+        try:
+            dm = dm_type(cfg)
+        except NameError:
+            raise SemHubException(
             'Unsupported dialogue manager: %s' % dm_type)
 
     return dm
-
-
-def get_dm_type(cfg):
-    return cfg['DM']['type']
