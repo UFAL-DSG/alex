@@ -27,6 +27,15 @@ def from_log(n):
     return np.exp(n)
 
 
+def logsubexp(a, b):
+    """Subtract one number from another in log arithmetic"""
+    if a < b:
+        raise Exception("Computing the log of a negative number.")
+    elif a == b:
+        return np.log(ZERO)
+    return a + np.log1p(-np.exp(b - a))
+
+
 class Factor(object):
 
     """Abstract class for factor."""
@@ -526,46 +535,14 @@ class DiscreteFactor(Factor):
                               self.variable_values,
                               new_factor_table)
 
-    def subtract_superset(self, other):
-        """Subtract other factor while broadcasting dimenstions of this factor.
-
-        This is a helper function, we want to subtract from this factor, but
-        the variables in this factor are a subset of variables in the other
-        factor, we need to broadcast the dimensions of this factor first.
-
-        Note: Used only for computing with parameters in dirichlet distribution.
-
-        Example:
-        A:
-        x0  |   val
-        0   |   5
-        1   |   3
-
-        B:
-        x0  |   x1  |   val
-        0   |   0   |   1
-        0   |   1   |   2
-        1   |   0   |   1
-        1   |   1   |   0.5
-
-        A.subtract_from_self_other_larger(B):
-        x0  |   x1  |   val
-        0   |   0   |   4
-        0   |   1   |   3
-        1   |   0   |   2
-        1   |   1   |   2.5
-
-        Fixme: The subtraction is done naively. It is possible to do it better
-        without exponentiating the values first.
-        """
-        new_factor_table = np.empty_like(other.factor_table)
-        for i in range(other.factor_length):
-            assignment = other._get_assignment_from_index(i, self.variables)
-            index = self._get_index_from_assignment(assignment)
-            self_value = self.factor_table[index]
-            other_value = other.factor_table[i]
-            new_factor_table[i] = to_log(np.exp(self_value) - np.exp(other_value))
-        return DiscreteFactor(other.variables, other.variable_values, new_factor_table)
+    def sum_other(self):
+        factor_sum = logsumexp(self.factor_table)
+        new_factor_table = np.empty_like(self.factor_table)
+        for i in range(self.factor_length):
+            new_factor_table[i] = logsubexp(factor_sum, self.factor_table[i])
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
+                              new_factor_table)
 
     def add(self, n, assignment=None):
         if assignment is not None:
