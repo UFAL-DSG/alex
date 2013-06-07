@@ -87,9 +87,8 @@ class SemHub(Hub):
 
         nblist.merge()
         nblist.scale()
-        nblist.normalise()
-        nblist.sort()
-
+        nblist.add_other()
+        
         return nblist
 
     def run(self):

@@ -88,7 +88,10 @@ class GoogleASR():
                 
         except:
             nblist = UtteranceNBList()
-            
+
+        nblist.merge()
+        nblist.add_other()
+        
         return nblist
 
     def rec_in(self, frame):

@@ -93,7 +93,6 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         correct_nblist.add(A1*B2*C3, Utterance("A1 B2 C3"))
         correct_nblist.merge()
         correct_nblist.add_other()
-        correct_nblist.sort()
 
         confnet = UtteranceConfusionNetwork()
         confnet.add([[A1, 'A1'], [A2, 'A2'], [A3, 'A3'],])

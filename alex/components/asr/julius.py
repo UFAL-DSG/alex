@@ -392,8 +392,7 @@ class JuliusASR(object):
                 nblist.add(cm, Utterance(utterance))
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
 
         cn = UtteranceConfusionNetwork()
 

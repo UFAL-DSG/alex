@@ -1185,8 +1185,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # print
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
+
 
         # print nblist
         # print
