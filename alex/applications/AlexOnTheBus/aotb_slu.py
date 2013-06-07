@@ -94,7 +94,7 @@ class AOTBSLU(SLUInterface):
                                         u"sbohem", u"zdar"]):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if _any_word_in(utterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj" ]) or \
+        if _any_word_in(utterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj", u"zopakuj" ]) or \
             _all_words_in(utterance, [u"ještě",  u"jednou" ]):
 
             cn.add(1.0, DialogueActItem("repeat"))
