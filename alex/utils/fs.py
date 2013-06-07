@@ -11,6 +11,7 @@ import fnmatch
 import glob
 import os
 import os.path
+import re
 
 
 def normalise_path(path):
@@ -23,8 +24,9 @@ def normalise_path(path):
 
 
 def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
-         ignore_paths=None, follow_symlinks=True, prune=False):
-    """
+         ignore_paths=None, follow_symlinks=True, prune=False, rx=None,
+         notrx=None):
+    """\
     A simplified version of the GNU `find' utility.  Lists files with basename
     matching `glob_' found in `dir_' in depth between `mindepth' and
     `maxdepth'.
@@ -40,6 +42,9 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     the traversal are avoided.
 
         - prune: whether to prune the subtree below a matching directory
+        - rx: regexp to use as an additional matching criterion apart from
+            `glob_'; the `re.match' function is used, as opposed to `re.find'
+        - notrx: like `rx' but this specifies the regexp that must NOT match
 
     The returned set of files consists of real absolute pathnames of those
     files.
@@ -66,7 +71,9 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
             if fnmatch.fnmatch(dirname, ignore_glob):
                 return set()
         # Match the glob.
-        if fnmatch.fnmatch(dirname, glob_):
+        if (fnmatch.fnmatch(dirname, glob_)
+                and (rx is None or re.match(rx, dirname))
+                and (notrx is None or not re.match(notrx, dirname))):
             ret = set((dir_, ))
         # Special case: also maxdepth == 0. Or we prune the whole subtree.
         if maxdepth == 0 or (ret and prune):
@@ -84,15 +91,15 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     # Call the implementation with the filter function.
     ret.update(_find_ignorefunc(dir_, glob_, mindepth, maxdepth,
                                 ignore_globs, ignore_path_filter,
-                                follow_symlinks, prune, set())[0])
+                                follow_symlinks, prune, rx, notrx, set())[0])
 
     return ret
 
 
 def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
                      ignore_path_filter=lambda _: True, follow_symlinks=True,
-                     prune=False, visited=set()):
-    """
+                     prune=False, rx=None, notrx=None, visited=set()):
+    """\
     Implements the same functionality as the `find' function in this module.
     The difference is that the ignored paths are specified by a function.
     `ignore_path_filter' is a function that takes a tuple (basename,
@@ -131,7 +138,9 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
     # Match children by the glob.
     if mindepth is None or mindepth < 2:
         matched = filter(
-            lambda child: fnmatch.fnmatch(child[0], glob_),
+            lambda child: (fnmatch.fnmatch(child[0], glob_)
+                           and (rx is None or re.match(rx, child[0]))
+                           and (notrx is None or not re.match(notrx, child[0]))),
             children)
         matched = set(map(lambda child: child[1], matched))
     else:
@@ -153,7 +162,7 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
                                  maxdepth - 1 if isinstance(maxdepth, int)
                                     else None,
                                  ignore_globs, ignore_path_filter,
-                                 follow_symlinks, prune, visited)
+                                 follow_symlinks, prune, rx, notrx, visited)
             matched.update(more_matched)
             visited.update(more_visited)
     # Return.

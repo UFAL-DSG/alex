@@ -597,6 +597,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def __init__(self, rep=None):
         self._cn = list()
         self._wordset = set()
+        self._abstr_idxs = list()  # :: [ (word idx, alt idx) ]
+                                   # sorted in the increasing order
         self._long_links = list()  # :: [word_idx-> [ long_link ]]
         #   where long_link describes a link in the confnet from word_idx to an
         #   index larger than (word_idx + 1), and is represented as follows:
@@ -664,9 +666,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 for ll_end in ll_ends:
                     self._long_links[-1].append(eval(unesc(hyps[ll_start:ll_end])))
                     ll_start = ll_end + 1
-        else:  # if constructing an empty confnet
-            self._abstr_idxs = list()  # :: [ (word idx, alt idx) ]
-                                    # sorted in the increasing order
+
         ASRHypothesis.__init__(self)
         Abstracted.__init__(self)
 
@@ -726,10 +726,6 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                  for hyp in alts)
                         + '|' +
                         ','.join(esc(repr(link))
-                        # u','.join('[{len_!r}({p!r}:{phr})]'.format(
-                            # len_=link.end - start,
-                            # p=link.hyp[0],
-                            # phr=','.join(esc(link.hyp[1])))
                             for link in self._long_links[start])
                         for (start, alts) in enumerate(self._cn)))
         return 'UtteranceConfusionNetwork("{rep}")'.format(
