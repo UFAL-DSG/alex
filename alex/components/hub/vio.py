@@ -337,13 +337,23 @@ class VoipIO(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
+                    self.local_commands.clear()
+                    
                     # discard all data in play buffer
                     while self.audio_play.poll():
                         data_play = self.audio_play.recv()
 
-                    self.local_commands.clear()
                     self.local_audio_play.clear()
+                    self.mem_player.flush()
 
+                    return False
+
+                if command.parsed['__name__'] == 'flush_out':
+                    # discard all data in play buffer
+                    while self.audio_play.poll():
+                        data_play = self.audio_play.recv()
+
+                    self.local_audio_play.clear()
                     self.mem_player.flush()
 
                     return False

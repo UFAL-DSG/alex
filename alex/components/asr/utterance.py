@@ -720,7 +720,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # that would be serialised (including simple hypotheses, which are used
         # also here and dealt with explicitly).
         esc = self.repr_escer.escape
-        ret = ('({idxs})'.format(idxs=','.join(unicode(idx) for idx in
+        ret = ('({idxs})'.format(idxs=u','.join(unicode(idx) for idx in
                                                self._abstr_idxs)) +
                ';'.join(','.join('({p!r}:{w})'.format(p=hyp[0], w=esc(hyp[1]))
                                  for hyp in alts)

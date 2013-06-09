@@ -419,7 +419,7 @@ class DialogueAct(object):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return '&'.join(unicode(dai) for dai in self._dais)
+        return u'&'.join(unicode(dai) for dai in self._dais)
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
@@ -887,7 +887,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Return the best dialogue act (one with the highest probability)."""
         da = DialogueAct()
         for prob, dai in self.cn:
-            if prob > 0.5:
+            if prob >= 0.5:
                 da.append(dai)
 
         if len(da) == 0:

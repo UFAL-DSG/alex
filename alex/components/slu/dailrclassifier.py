@@ -1247,7 +1247,7 @@ class DAILogRegClassifier(SLUInterface):
             #if str(dai) == 'inform(to="STOP:0")':
             #    #import ipdb; ipdb.set_trace()
             #    xx=dict(zip(self.feature_idxs.values(), self.feature_idxs.keys()))
-            #    print "\n".join(str((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
+            #    print u"\n".join(unicode((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
 
             exponent = (-self.intercepts[dai]
                         - np.dot(self.coefs[dai], feat_vec))

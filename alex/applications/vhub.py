@@ -212,10 +212,8 @@ class VoipHub(Hub):
                         tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
 
                     # if we understand some speech, stop playing current TTS stuff
-                    #if command.parsed['__name__'] == "speech_understood":
-                    #    nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
-                    #    tts_commands.send(Command('flush()', 'HUB', 'TTS'))
-
+                    if not hangup and command.parsed['__name__'] == "dm_da_generated":
+                        vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
@@ -227,8 +225,8 @@ class VoipHub(Hub):
 
             current_time = time.time()
 
-            if hangup and s_last_dm_activity_time + 1.0 < current_time and \
-                s_voice_activity == False and s_last_voice_activity_time + 1.0 < current_time:
+            if hangup and s_last_dm_activity_time + 2.0 < current_time and \
+                s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
                 # we are ready to hangup only when all voice activity finished,
                 hangup = False
                 vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
