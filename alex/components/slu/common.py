@@ -72,7 +72,6 @@ def slu_factory(slu_type, cfg, require_model=False):
             raise SLUException(msg)
 
         clser_class = slu_type
-        from alex.components.slu.dailrclassifier import DAILogRegClassifier
         from alex.components.slu.base import CategoryLabelDatabase, \
             SLUPreprocessing
     # Load appropriate classes based on the classifier type required.
@@ -123,8 +122,8 @@ def slu_factory(slu_type, cfg, require_model=False):
         dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg)
 
         # Try to load the model.
+        model_fname = cfg_this_slu.get('testing', dict()).get('model_fname', None)
         try:
-            model_fname = cfg_te.get('model_fname', None)
             dai_clser.load_model(model_fname)
         except:
             if require_model:
