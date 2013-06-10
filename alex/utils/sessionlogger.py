@@ -480,6 +480,7 @@ class SessionLogger:
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("barge-in"))
+                da.setAttribute("time", self.get_time_str())
                 if tts_time:
                     da.setAttribute("tts_time", self.get_time_str())
                 if asr_time:

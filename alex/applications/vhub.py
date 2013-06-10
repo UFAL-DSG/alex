@@ -186,6 +186,9 @@ class VoipHub(Hub):
                     if command.parsed['__name__'] == "speech_start":
                         u_voice_activity = True
 
+                        if s_voice_activity:
+                            self.cfg['Logging']['session_logger'].barge_in("system")
+
                     if command.parsed['__name__'] == "speech_end":
                         u_voice_activity = False
                         u_last_voice_activity_time = time.time()
@@ -214,9 +217,11 @@ class VoipHub(Hub):
 
                         tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
 
-                    # if we understand some speech, stop playing current TTS stuff
+                    # if a dialogue act is generated, stop playing current TTS audio
                     if not hangup and command.parsed['__name__'] == "dm_da_generated":
                         vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
+                        s_voice_activity = False
+                        s_last_voice_activity_time = time.time()
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
