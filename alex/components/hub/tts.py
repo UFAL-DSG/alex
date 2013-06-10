@@ -6,6 +6,9 @@ import time
 import sys
 import traceback
 import select
+import os
+
+from datetime import datetime
 
 READ_ONLY = select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR
 
@@ -17,7 +20,7 @@ from alex.components.tts import TTSException
 from alex.components.tts.common import get_tts_type, tts_factory
 
 from alex.utils.procname import set_proc_name
-
+from alex.utils.audio import save_wav
 
 class TTS(multiprocessing.Process):
     """ TTS synthesizes input text and returns speech audio signal.
@@ -47,25 +50,35 @@ class TTS(multiprocessing.Process):
         self.tts = tts_factory(tts_type, cfg)
 
 
+    def save_wav(self, wav):
+        # Create new wave file.
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        fname = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
+            'tts-{stamp}.wav'.format(stamp=timestamp))
+
+        save_wav(self.cfg, fname, wav)
+
+        return os.path.basename(fname)
+
     def synthesize(self, user_id, text):
         self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
 
         wav = self.tts.synthesize(text)
 
-        # FIXME: split the wave so that the last bin is of the size of the full frame
-        # this bug is at many places in the code
+        fname = self.save_wav(wav)
+
         wav = various.split_to_bins(
             wav, 2 * self.cfg['Audio']['samples_per_frame'])
 
-        self.audio_out.send(Command('utterance_start(user_id="%s",text="%s")' %
-                            (user_id, text), 'TTS', 'AudioOut'))
+        self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s")' %
+                            (user_id, text, fname), 'TTS', 'AudioOut'))
         for frame in wav:
             self.audio_out.send(Frame(frame))
-        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s")' %
-                            (user_id, text), 'TTS', 'AudioOut'))
+        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s")' %
+                            (user_id, text, fname), 'TTS', 'AudioOut'))
 
-        self.commands.send(Command('tts_end(user_id="%s",text="%s")' %
-                           (user_id, text), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' %
+                           (user_id, text, fname), 'TTS', 'HUB'))
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -120,8 +133,6 @@ class TTS(multiprocessing.Process):
                 self.read_text_write_audio()
             elif fd_obj == self.commands:
                 self.process_pending_commands()
-
-
 
     def run(self):
         self.command = None

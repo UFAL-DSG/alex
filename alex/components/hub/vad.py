@@ -172,8 +172,10 @@ class VAD(multiprocessing.Process):
                         self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_start()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
+                                                    'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
+                                                    'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug(
@@ -195,10 +197,10 @@ class VAD(multiprocessing.Process):
                             self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command(
-                            'speech_end()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command(
-                            'speech_end()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
+                            'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
+                            'VAD', 'HUB'))
                         # Close the current wave file.
                         if self.wf:
                             self.wf.close()

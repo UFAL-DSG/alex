@@ -22,13 +22,13 @@ def _fill_utterance_values(abutterance, category, res):
 
 def _any_word_in(utterance, words):
     for alt_expr in words:
-        if alt_expr in utterance.utterance:
+        if  cz_stem(alt_expr) in utterance.utterance:
             return True
     return False
 
 def _all_words_in(utterance, words):
     for alt_expr in words:
-        if alt_expr not in utterance.utterance:
+        if  cz_stem(alt_expr) not in utterance.utterance:
             return False
     return True
 
@@ -97,7 +97,7 @@ class AOTBSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("hello"))
 
         if _any_word_in(utterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"nashle", u"díky",
-                                        u"sbohem", u"zdar"]):
+            u"sbohem", u"zbohem", u"konec"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(utterance, [u"jiný", u"jiné", u"jiná", u"další",
@@ -124,6 +124,10 @@ class AOTBSLU(SLUInterface):
 
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
+            utterance = unicode(utterance).split()
+            utterance = u" ".join([cz_stem(w) for w in utterance])
+            utterance = Utterance(utterance)
+
             abutterance, category_labels = \
                 self.preprocessing.values2category_labels_in_utterance(utterance)
             if verbose:

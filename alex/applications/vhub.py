@@ -160,8 +160,7 @@ class VoipHub(Hub):
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
                         # FIXME: this is not an ideal synchronisation for the stopped components
-                        # we should do better.
-                        # FJ
+                        # we should do better. FJ
                         time.sleep(0.5)
 
                         self.cfg['Logging']['system_logger'].session_end()
@@ -185,6 +184,9 @@ class VoipHub(Hub):
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "speech_start":
                         u_voice_activity = True
+
+                        if s_voice_activity:
+                            self.cfg['Logging']['session_logger'].barge_in("system")
 
                     if command.parsed['__name__'] == "speech_end":
                         u_voice_activity = False
@@ -214,9 +216,11 @@ class VoipHub(Hub):
 
                         tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
 
-                    # if we understand some speech, stop playing current TTS stuff
+                    # if a dialogue act is generated, stop playing current TTS audio
                     if not hangup and command.parsed['__name__'] == "dm_da_generated":
                         vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
+                        s_voice_activity = False
+                        s_last_voice_activity_time = time.time()
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
