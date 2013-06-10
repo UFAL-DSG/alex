@@ -91,8 +91,8 @@ class AOTBDM(DialogueManager):
         print unicode(da)
         print "AOTBDM best_da:"
         print unicode(best_da)
-        print 
-        
+        print
+
         self.state.turn_number += 1
 
         for dai in best_da:
@@ -116,7 +116,7 @@ class AOTBDM(DialogueManager):
                 self.state.alternatives += 1
                 self.state.alternatives %= \
                     len(self.state.directions) if self.state.directions is not None else 1
-            
+
     def update_state(self, dai):
         """Copy values from the dai to the state. (i.e. "understand the dai")."""
         if dai.dat == 'inform':
@@ -171,7 +171,7 @@ class AOTBDM(DialogueManager):
         if self.state.turn_number == 0:
             res = DialogueAct("hello()")
             return res
-        if self.state.turn_number > 30:
+        if self.state.turn_number > self.cfg['AlexOnTheBus']['max_turns']:
             res = DialogueAct('bye()&inform(toolong="True")')
             return res
         if self.state.hello:
@@ -210,7 +210,7 @@ class AOTBDM(DialogueManager):
                 iconf_das.append("iconfirm(%s=%s)" % (slot_change.slot, slot_change.to_value, ))
                 if slot_change.slot in ["from_stop", "to_stop", "time"]:
                     self.state.alternatives = 0
-                    
+
             if len(iconf_das) > 0:
                 iconf_da = DialogueAct("&".join(iconf_das))
             else:
