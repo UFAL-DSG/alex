@@ -1296,6 +1296,11 @@ class DAILogRegClassifier(SLUInterface):
 
 
         """
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
+
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -1482,11 +1487,11 @@ class DAILogRegClassifier(SLUInterface):
             verbose -- print lots of output
 
         """
-        # nblist = confnet.get_utterance_nblist(n=40)
-        # return self.parse_nblist(nblist)
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
 
-        # XXX Start of the new implementation. It cannot handle preprocessing
-        # and instantiation yet, though, so it is not used as yet.
         if verbose:
             print 'Parsing confnet "{cn}".'.format(cn=confnet)
 
