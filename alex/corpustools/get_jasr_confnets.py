@@ -14,6 +14,7 @@ from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
 from alex.utils.audio import load_wav
 from alex.utils.config import Config
+from alex.utils.exception import ASRException
 from alex.utils.fs import find
 
 
@@ -48,7 +49,10 @@ def main(dirname, outfname, jul):
             mywav = load_wav(cfg, wav_fname)
             for startidx in xrange(0, len(mywav), 256):
                 jul.rec_in(Frame(mywav[startidx:startidx + 256]))
-            hyp = jul.hyp_out()
+            try:
+                hyp = jul.hyp_out()
+            except ASRException:
+                hyp = 'None'
             outfile.write('{id_} => {hyp!r}\n'.format(id_=wav_id, hyp=hyp))
 
 

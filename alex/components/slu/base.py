@@ -508,6 +508,8 @@ class SLUPreprocessing(object):
         return confnet
 
 
+# XXX This in fact is not an interface anymore (for it has a constructor).  It
+# had better be called AbstractSLU.
 class SLUInterface(object):
     """\
     Defines a prototypical interface each SLU parser should provide.
