@@ -1,0 +1,10 @@
+This readme is the first piece of what should become the documentation of
+Alex On The Bus in the future.
+
+
+Representation of Semantics
+---------------------------
+
+Suggestion (MK): It would be better to treat the specification of hours and
+minutes separately. When they are put together, all ways the whole time
+expression can be said have to be enumerated in the CLDB manually.

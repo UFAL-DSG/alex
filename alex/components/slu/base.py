@@ -530,6 +530,25 @@ class SLUInterface(object):
         self.preprocessing = preprocessing
         self.cfg = cfg
 
+    # TODO Document the methods.
+    def extract_features(self, *args, **kwargs):
+        pass
+
+    def prune_features(self, *args, **kwargs):
+        pass
+
+    def prune_classifiers(self, *args, **kwargs):
+        pass
+
+    def print_classifiers(self, *args, **kwargs):
+        pass
+
+    def train(self, *args, **kwargs):
+        pass
+
+    def save_model(self, *args, **kwargs):
+        pass
+
     def parse_1_best(self, utterance, *args, **kwargs):
         from exception import SLUException
         raise SLUException("Not implemented")

@@ -72,12 +72,12 @@ jede nějaký $tt$ z $from$ do $to$ okolo $time$ $ampm$
 potřebuji jet z $from$ $tt$ do $to$
 $tt$ z $from$ do $to$
 $tt$ z $from$ do $to$ $time$
-mohl bych  prosím  získat spojení  které jede z $from$ do $to$ a nejlépe odjíždí z $from$ $time$
+mohl bych prosím získat spojení které jede z $from$ do $to$ a nejlépe odjíždí z $from$ $time$
 prosím o nalezení $tt$ z $from$ do $to$
-kdy mi prosím jede další $tt$  jsem na $from$ a jedu do $to$
+kdy mi prosím jede další $tt$ jsem na $from$ a jedu do $to$
 stojím na $from$ a potřebuji se dostat do $to$
 stojím na $from$ a potřebuji se dostat na $to$
-potřebuji najít  jak se dostanu na $to$  teď jsem na $from$
+potřebuji najít jak se dostanu na $to$ teď jsem na $from$
 chci jet tramvají
 autobusem
 busem
@@ -86,35 +86,21 @@ tramvají
 krtkem
 metrem
 kdy mi jede tramvaj z $from$ na $to$
-potřebuji se dostat na $to$  jsem na $from$
+potřebuji se dostat na $to$ jsem na $from$
 za $time$ minut chci jet z $from$ na $to$
 v kolik jede další autobus z $from$ na $to$
 najdi nejbližší spojení z $from$ na $to$
 kolik je hodin
-jaký je čas kolik je hodin
+jaký je čas
+kolik je hodin
 Čas
 přesný čas
 kolik je
 spojení z $from$ na $to$ v $time$
-jsem na místě $from$ a chci se dostat na místo $to$  jak mám jet
-za $time$ chci vyrazit z místa $from$ do místa $to$  najdi mi spojení
+jsem na místě $from$ a chci se dostat na místo $to$ jak mám jet
+za $time$ chci vyrazit z místa $from$ do místa $to$ najdi mi spojení
 za kolik minut jede autobus z $from$ na $to$
 za jak dlouho jede metro z $from$ na $to$
-$time$
-$from$
-$to$
-$time$
-$from$
-$to$
-$time$
-$from$
-$to$
-$time$
-$from$
-$to$
-$time$
-$from$
-$to$
 $time$
 $from$
 $to$
