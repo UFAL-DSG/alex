@@ -44,8 +44,13 @@ class AOTBSLU(SLUInterface):
         stop_name = None
         for slot, values in res.iteritems():
             for value in values:
+                # FIXME: This extracts only the first STOP.
+                # I cannot say: z Anděla na Malostranské náměstí
                 stop_name = u" ".join(value)
                 break
+
+        if not stop_name:
+            return
 
         utt_set = set(abutterance)
 
@@ -58,9 +63,6 @@ class AOTBSLU(SLUInterface):
         preps_from_in = len(preps_from_used) > 0
         preps_to_in = len(preps_to_used) > 0
 
-#       this is not used in the DM, the do not generate
-#        cn.add(1.0, DialogueActItem("inform", "stop", stop_name))
-
         if preps_from_in and not preps_to_in:
             cn.add(1.0,
                    DialogueActItem("inform", "from_stop", stop_name,
@@ -72,11 +74,13 @@ class AOTBSLU(SLUInterface):
                    DialogueActItem("inform", "to_stop", stop_name,
                                    attrs={'prep': next(iter(preps_to_used))}))
 
-        # backoff to default from
-        if not preps_from_in and not preps_to_in:
-            cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name))
-            
-            
+        # backoff: add both from and to stop slots
+        if not preps_from_in and not preps_to_in or \
+            preps_from_in and preps_to_in:
+            cn.add(0.501, DialogueActItem("inform", "from_stop", stop_name))
+            cn.add(0.499, DialogueActItem("inform", "to_stop", stop_name))
+
+
     def parse_time(self, abutterance, cn):
         res = defaultdict(list)
         _fill_utterance_values(abutterance, 'time', res)
@@ -91,7 +95,7 @@ class AOTBSLU(SLUInterface):
         if _any_word_in(utterance, [u"ahoj",  u"nazdar", u"zdar", ]) or \
             _all_words_in(utterance, [u"dobrý",  u"den" ]):
             cn.add(1.0, DialogueActItem("hello"))
-            
+
         if _any_word_in(utterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"nashle", u"díky",
                                         u"sbohem", u"zdar"]):
             cn.add(1.0, DialogueActItem("bye"))
@@ -117,7 +121,7 @@ class AOTBSLU(SLUInterface):
 
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
-        
+
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
             abutterance, category_labels = \
@@ -127,7 +131,7 @@ class AOTBSLU(SLUInterface):
                 print category_labels
         else:
             category_labels = dict()
-            
+
         res_cn = DialogueActConfusionNetwork()
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
@@ -138,7 +142,7 @@ class AOTBSLU(SLUInterface):
 
         if not res_cn:
             res_cn.add(1.0, DialogueActItem("other"))
-            
+
         return res_cn
 
     def parse_nblist(self, utterance_list):
@@ -168,7 +172,7 @@ class AOTBSLU(SLUInterface):
         confnet.sort()
 
         return confnet
-        
+
     def parse_confnet(self, confnet, verbose=False):
         """Parse the confusion network by generating an N-best list and parsing
         this N-best list."""
@@ -176,4 +180,4 @@ class AOTBSLU(SLUInterface):
         nblist = confnet.get_utterance_nblist(n=40)
         sem = self.parse_nblist(nblist)
 
-        return sem        
+        return sem
