@@ -97,7 +97,7 @@ class AOTBSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("hello"))
 
         if _any_word_in(utterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"nashle", u"díky",
-                                        u"sbohem", u"zdar"]):
+            u"sbohem", u"zbohem", u"zdar",  u"čau", u"konec"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(utterance, [u"jiný", u"jiné", u"jiná", u"další",
