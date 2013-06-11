@@ -126,12 +126,7 @@ class AOTBSLU(SLUInterface):
             # the text normalisation performs stemming
             utterance = self.preprocessing.text_normalisation(utterance)
             
-#            utterance = unicode(utterance).split()
-#            utterance = u" ".join([cz_stem(w) for w in utterance])
-#            utterance = Utterance(utterance)
-
-            abutterance, category_labels = \
-                self.preprocessing.values2category_labels_in_utterance(utterance)
+            abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
             if verbose:
                 print 'After preprocessing: "{utt}".'.format(utt=abutterance)
                 print category_labels

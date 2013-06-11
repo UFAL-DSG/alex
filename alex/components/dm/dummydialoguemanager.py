@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+""" This is an example of implementation of a dialogue manager. It includes a decent implementation
+of a dialogue state and a dummy yet funny dialogue policy.
+"""
 from collections import defaultdict
 
 from alex.components.dm import DialogueManager
@@ -189,12 +192,12 @@ class DummyDialogueState(object):
         return confirmed_slots
 
     def get_non_informed_slots(self):
-        """Return all slots provided by the use and the system has not informed about them yet along with
+        """Return all slots provided by the user and the system has not informed about them yet along with
         the value of the slot.
 
         This will not detect a change in a goal. For example::
 
-            U: I wan a Chinese restaurant.
+            U: I want a Chinese restaurant.
             S: Ok, you want a Chinese restaurant. What price range you have in mind?
             U: Well, I would rather want an Italian Restaurant.
             S: Ok, no problem. You want an Italian restaurant. What price range you have in mind?
@@ -215,7 +218,7 @@ class DummyDialogueState(object):
         return non_informed_slots
 
 class DummyPolicy(object):
-    """This is a trivial policy just to demonstrate basic functionality DM."""
+    """This is a trivial policy just to demonstrate basic functionality of a proper DM."""
 
     def __init__(self, cfg):
         self.cfg = cfg
