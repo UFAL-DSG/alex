@@ -22,6 +22,9 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
         super(AOTBSLUPreprocessing, self).__init__(*args, **kwargs)
         # XXX This is not very nice.  The parent class cares mainly about
         # normalising English, not Czech.
+        # not really, the implicit mapping is just an example.
+        # In fact, it could be moved into a default config.
+        
         self.text_normalization_mapping += [
             (['ve'], ['v']),
             (['ke'], ['k']),
@@ -33,4 +36,5 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
     def text_normalisation(self, utterance):
         utterance = super(AOTBSLUPreprocessing,
                           self).text_normalisation(utterance)
-        return Utterance(" ".join(map(cz_stem, utterance)))
+        utt = Utterance(" ".join(map(cz_stem, utterance)))
+        return utt

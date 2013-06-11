@@ -26,7 +26,7 @@ def from_log(n):
     """Convert number from log arithmetic."""
     return np.exp(n)
 
-
+@np.vectorize
 def logsubexp(a, b):
     """Subtract one number from another in log arithmetic"""
     if a < b:
@@ -242,21 +242,64 @@ class DiscreteFactor(Factor):
         ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor
+        :type other: DiscreteFactor or int
         :returns: The result of the addition.
         :rtype: DiscreteFactor
         """
-        if self.variables != other.variables:
-            raise Exception("Addition of factors with different variables not supported")
+        if np.isscalar(other):
+            new_factor_table = np.logaddexp(self.factor_table, to_log(other))
+        else:
+            if self.variables != other.variables:
+                raise Exception("Addition of factors with different variables not supported")
 
-        new_factor_table = np.empty_like(self.factor_table)
-        for i in range(self.factor_length):
-            new_factor_table[i] = np.logaddexp(self.factor_table[i], other.factor_table[i])
+            new_factor_table = np.logaddexp(self.factor_table, other.factor_table)
 
         return DiscreteFactor(self.variables,
                               self.variable_values,
                               new_factor_table)
 
+    def __sub__(self, other):
+        """Subtract two factors.
+
+        Subtract two factors or a subtract a number from a factor.
+        If both are factors, then they must have the same variables.
+
+        Example:
+        >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                     {
+        ...                          ('a1',): 0.8,
+        ...                          ('a2',): 0.2
+        ...                     })
+        >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                     {
+        ...                          ('a1',): 0.1,
+        ...                          ('a2',): 0.5
+        ...                     })
+        >>> result = a1 + a2
+        >>> print result.pretty_print(width=30)
+        ------------------------------
+               A            Value
+        ------------------------------
+              a1             0.9
+              a2             0.7
+        ------------------------------
+
+        :param other: The other factor.
+        :type other: DiscreteFactor or int
+        :returns: The result of the subtraction.
+        :rtype: DiscreteFactor
+        """
+        if np.isscalar(other):
+            new_factor_table = logsubexp(self.factor_table, to_log(other))
+        else:
+            if self.variables != other.variables:
+                raise Exception("Addition of factors with different variables not supported")
+
+            new_factor_table = logsubexp(self.factor_table, other.factor_table)
+
+        return DiscreteFactor(self.variables,
+                              self.variable_values,
+                              new_factor_table)
     def marginalize(self, keep):
         """Marginalize all but specified variables.
 

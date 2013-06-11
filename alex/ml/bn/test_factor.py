@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import operator
 
-from alex.ml.bn.factor import DiscreteFactor
+from alex.ml.bn.factor import DiscreteFactor, to_log, from_log, logsubexp
 
 
 class TestFactor(unittest.TestCase):
@@ -403,6 +403,38 @@ class TestFactor(unittest.TestCase):
         f2 = f ** np.array([2, 2, 3, 2])
         self.assertAlmostEqual(f2[('a1', 'b1')], 0.09)
         self.assertAlmostEqual(f2[('a2', 'b1')], 0.343)
+
+    def test_add(self):
+        X0 = DiscreteFactor(
+            ['X0'],
+            {
+                'X0': ['x0_0', 'x0_1']
+            },
+            {
+                ('x0_0',): 1,
+                ('x0_1',): 0,
+            })
+
+        f = X0 + 1
+        self.assertAlmostEqual(f[('x0_0',)], 2)
+        self.assertAlmostEqual(f[('x0_1',)], 1)
+
+        f = X0 + X0
+        self.assertAlmostEqual(f[('x0_0',)], 2)
+        self.assertAlmostEqual(f[('x0_1',)], 0)
+
+    def test_logsubexp(self):
+        a1 = to_log(np.array([1, 2, 3]))
+        a2 = to_log(np.array([1, 1, 2]))
+        result = from_log(logsubexp(a1, a2))
+        self.assertAlmostEqual(result[0], 0)
+        self.assertAlmostEqual(result[1], 1)
+        self.assertAlmostEqual(result[2], 1)
+
+        result = from_log(logsubexp(a1, to_log(1)))
+        self.assertAlmostEqual(result[0], 0)
+        self.assertAlmostEqual(result[1], 1)
+        self.assertAlmostEqual(result[2], 2)
 
     def test_alphas(self):
         alpha = DiscreteFactor(
