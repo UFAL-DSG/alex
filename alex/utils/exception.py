@@ -49,13 +49,5 @@ class JuliusASRTimeoutException(ASRException):
     pass
 
 
-class DialogueManagerException(AlexException):
-    pass
-
-
-class DummyDialogueManagerException(DialogueManagerException):
-    pass
-
-
 class TemplateNLGException(NLGException):
     pass
