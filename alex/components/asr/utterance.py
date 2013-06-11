@@ -212,6 +212,21 @@ class Utterance(object):
         return -1
 
     def replace(self, orig, replacement, return_startidx=False):
+        """\
+        Analogous to the `str.replace' method.  If the original phrase is not
+        found in this utterance, this instance is returned.  If it is found,
+        only the first match is replaced.
+
+        Arguments:
+            orig -- the phrase to replace, as a sequence of words
+            replacement -- the replacement in the same form
+            return_startidx -- if set to True, the tuple (replaced, orig_pos)
+                is returned where `replaced' is the new utterance and
+                `orig_pos' is the index of the word where `orig' was found in
+                the original utterance.  If set to False (the default), only
+                the resulting utterance is returned.
+
+        """
         orig_pos = self.find(orig)
         if orig_pos == -1:
             # If `orig' does not occur in self, do nothing, return self.
@@ -461,7 +476,7 @@ class UtteranceHyp(ASRHypothesis):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return "%.3f %s" % (self.prob, self.utterance)
+        return u"%.3f %s" % (self.prob, unicode(self.utterance))
 
     def get_best_utterance(self):
         return self.utterance
@@ -720,7 +735,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # that would be serialised (including simple hypotheses, which are used
         # also here and dealt with explicitly).
         esc = self.repr_escer.escape
-        ret = ('({idxs})'.format(idxs=','.join(unicode(idx) for idx in
+        ret = ('({idxs})'.format(idxs=u','.join(unicode(idx) for idx in
                                                self._abstr_idxs)) +
                ';'.join(','.join('({p!r}:{w})'.format(p=hyp[0], w=esc(hyp[1]))
                                  for hyp in alts)
@@ -1185,8 +1200,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # print
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
+
 
         # print nblist
         # print

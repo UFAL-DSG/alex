@@ -1247,7 +1247,7 @@ class DAILogRegClassifier(SLUInterface):
             #if str(dai) == 'inform(to="STOP:0")':
             #    #import ipdb; ipdb.set_trace()
             #    xx=dict(zip(self.feature_idxs.values(), self.feature_idxs.keys()))
-            #    print "\n".join(str((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
+            #    print u"\n".join(unicode((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
 
             exponent = (-self.intercepts[dai]
                         - np.dot(self.coefs[dai], feat_vec))
@@ -1296,6 +1296,11 @@ class DAILogRegClassifier(SLUInterface):
 
 
         """
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
+
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -1482,11 +1487,11 @@ class DAILogRegClassifier(SLUInterface):
             verbose -- print lots of output
 
         """
-        # nblist = confnet.get_utterance_nblist(n=40)
-        # return self.parse_nblist(nblist)
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
 
-        # XXX Start of the new implementation. It cannot handle preprocessing
-        # and instantiation yet, though, so it is not used as yet.
         if verbose:
             print 'Parsing confnet "{cn}".'.format(cn=confnet)
 

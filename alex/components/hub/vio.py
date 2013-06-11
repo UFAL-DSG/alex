@@ -337,13 +337,23 @@ class VoipIO(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
+                    self.local_commands.clear()
+
                     # discard all data in play buffer
                     while self.audio_play.poll():
                         data_play = self.audio_play.recv()
 
-                    self.local_commands.clear()
                     self.local_audio_play.clear()
+                    self.mem_player.flush()
 
+                    return False
+
+                if command.parsed['__name__'] == 'flush_out':
+                    # discard all data in play buffer
+                    while self.audio_play.poll():
+                        data_play = self.audio_play.recv()
+
+                    self.local_audio_play.clear()
                     self.mem_player.flush()
 
                     return False
@@ -418,16 +428,19 @@ class VoipIO(multiprocessing.Process):
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
                     self.message_queue.append(
-                        (Command('play_utterance_start(user_id="{uid}")'
-                                    .format(uid=data_play.parsed['user_id']),
+                        (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
+                                    .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
+                    self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+
                 if data_play.parsed['__name__'] == 'utterance_end':
                     self.message_queue.append(
-                        (Command('play_utterance_end(user_id="{uid}")'
-                                 .format(uid=data_play.parsed['user_id']),
+                        (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
+                                 .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
+                    self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
 
         if (self.mem_capture.get_read_available()
                 > self.cfg['Audio']['samples_per_frame'] * 2):

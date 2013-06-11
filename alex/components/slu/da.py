@@ -419,7 +419,7 @@ class DialogueAct(object):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return '&'.join(unicode(dai) for dai in self._dais)
+        return u'&'.join(unicode(dai) for dai in self._dais)
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
@@ -887,7 +887,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Return the best dialogue act (one with the highest probability)."""
         da = DialogueAct()
         for prob, dai in self.cn:
-            if prob > 0.5:
+            if prob >= 0.5:
                 da.append(dai)
 
         if len(da) == 0:
@@ -1080,8 +1080,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         # print
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
 
         # print nblist
         # print
@@ -1196,14 +1195,13 @@ def merge_slu_nblists(multiple_nblists):
             raise SLUException(
                 "Cannot merge something that is not DialogueActNBList.")
         nblist.merge()
-        nblist.normalise()
+        nblist.add_other()
 
         for prob, da in nblist:
             merged_nblists.add(prob_nblist * prob, da)
 
     merged_nblists.merge()
-    merged_nblists.normalise()
-    merged_nblists.sort()
+    merged_nblists.add_other()
 
     return merged_nblists
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import __init__
+from __future__ import unicode_literals
+import autopath
 
 import alex.utils.audio as audio
 
@@ -12,7 +13,7 @@ if __name__ == '__main__':
     print "=" * 120
     print
 
-    text = 'Dobrý den. Děkujeme za zavolání.'
+    text = u'Dobrý den. Děkujeme za zavolání.'
     language = 'cs'
     sample_rate = 16000
 

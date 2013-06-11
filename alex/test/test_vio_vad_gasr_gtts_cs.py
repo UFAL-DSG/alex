@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+#this cannot be used with GASR
+#from __future__ import unicode_literals
 import autopath
 
 import multiprocessing
@@ -9,7 +12,10 @@ import argparse
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
-from alex.components.hub.messages import Command, Frame
+from alex.components.hub.asr import ASR
+from alex.components.hub.tts import TTS
+from alex.components.hub.messages import Command, ASRHyp, TTSText
+
 from alex.utils.config import Config
 
 #########################################################################
@@ -18,7 +24,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        test_vio_vad.py tests the VoipIO and VAD components.
+        test_vio_vad_gasr_gtts_cs.py tests the VoipIO, VAD, ASR, and TTS components.
+
+        This application uses the Google ASR and TTS.
 
         The program reads the default config in the resources directory ('../resources/default.cfg') and any
         additional config files passed as an argument of a '-c'. The additional config file
@@ -28,18 +36,25 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configure file')
+        help='additional configuration file')
     args = parser.parse_args()
 
     cfg = Config('../resources/default.cfg')
     if args.configs:
         for c in args.configs:
             cfg.merge(c)
+
+    # set using Google ASR and Google TTS
+    cfg['ASR']['type'] = 'Google'
+    cfg['ASR']['Google']['language'] = 'cs'
+    cfg['TTS']['type'] = 'Google'
+    cfg['TTS']['Google']['language'] = 'cs'
+
     cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Test of the VoipIO and VAD components\n" + "=" * 120)
+    cfg['Logging']['system_logger'].info("Test of the VoipIO, VAD, ASR, and TTS components\n" + "=" * 120)
 
     vio_commands, vio_child_commands = multiprocessing.Pipe()
     # used to send commands to VoipIO
@@ -57,55 +72,72 @@ if __name__ == '__main__':
     vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()
     # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
-    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
 
-    command_connections = [vio_commands, vad_commands]
+    asr_commands, asr_child_commands = multiprocessing.Pipe()
+    # used to send commands to ASR
+
+    asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()
+    # used to read ASR hypotheses
+
+
+    tts_commands, tts_child_commands = multiprocessing.Pipe()
+    # used to send commands to TTS
+
+    tts_text_in, tts_child_text_in = multiprocessing.Pipe()
+    # used to send TTS text
+
+    command_connections = (vio_commands, vad_commands, asr_commands, tts_commands)
 
     non_command_connections = (vio_record, vio_child_record,
                                vio_play, vio_child_play,
-                               vad_audio_out, vad_child_audio_out, )
+                               vad_audio_out, vad_child_audio_out,
+                               asr_hypotheses_out, asr_child_hypotheses,
+                               tts_text_in, tts_child_text_in)
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
+    asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
+    tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
 
     vio.start()
     vad.start()
+    asr.start()
+    tts.start()
 
     # Actively call a number configured.
-    # vio_commands.send(Command('make_call(destination="sip:4366@SECRET:5066")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="\'Bejcek Eduard\' <sip:4366@SECRET:5066>")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="sip:4366@SECRET:5066")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="4366")', 'HUB', 'VoipIO'))
+    #vio_commands.send(Command('make_call(destination="155")', 'HUB', 'VoipIO'))
 
     count = 0
     max_count = 50000
-    wav = None
-    
+
     while count < max_count:
         time.sleep(cfg['Hub']['main_loop_sleep_time'])
         count += 1
 
-        # write one frame into the audio output
-        if wav:
-            data_play = wav.pop(0)
-            #print len(wav), len(data_play)
-            vio_play.send(Frame(data_play))
+        if asr_hypotheses_out.poll():
+            asr_hyp = asr_hypotheses_out.recv()
 
-        # read all VAD output audio
-        if vad_audio_out.poll():
-            data_vad = vad_audio_out.recv()
+            if isinstance(asr_hyp, ASRHyp):
+                if len(asr_hyp.hyp):
+                    #print unicode(asr_hyp.hyp)
 
-            if isinstance(data_vad, Command):
-                if data_vad.parsed['__name__'] == 'speech_start':
-                    print 'VAD:', 'Speech start'
-                if data_vad.parsed['__name__'] == 'speech_end':
-                    print 'VAD:', 'Speech end'
+                    # get the top hypotheses text
+                    top_text = asr_hyp.hyp[0][1]
 
-        # read all messages 
+                    tts_text_in.send(TTSText(u'Rozpoznaný text: %s' % top_text))
+                else:
+                    # nothing was recognised
+                    print u'Nic nebylo rozpoznáno.'
+
+        # read all messages
         if vio_commands.poll():
             command = vio_commands.recv()
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
-                    wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
-                    # split audio into frames
-                    wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
-                
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
                     cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
                     cfg['Logging']['system_logger'].info(command)
@@ -113,38 +145,30 @@ if __name__ == '__main__':
                     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
                     cfg['Logging']['session_logger'].config('config = ' + str(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
-                    cfg['Logging']['session_logger'].input_source("voip")                
-                
+                    cfg['Logging']['session_logger'].input_source("voip")
+
+                    tts_text_in.send(TTSText(u'Řekni něco a rozpoznaný text bude přehrán.'))
+
                 elif command.parsed['__name__'] == "call_disconnected":
                     cfg['Logging']['system_logger'].info(command)
 
                     vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
-                    
-                    cfg['Logging']['system_logger'].session_end()
-                    cfg['Logging']['session_logger'].session_end()                    
-                   
-        
-        if vad_commands.poll():
-            command = vad_commands.recv()
-            cfg['Logging']['system_logger'].info(command)
 
-            if isinstance(command, Command):
-                if command.parsed['__name__'] == "speech_start":
-                    u_voice_activity = True
-                if command.parsed['__name__'] == "speech_end":
-                    u_voice_activity = False
-                    u_last_voice_activity_time = time.time()
+                    cfg['Logging']['system_logger'].session_end()
+                    cfg['Logging']['session_logger'].session_end()
 
         # read all messages
         for c in command_connections:
             if c.poll():
                 command = c.recv()
-                system_logger.info(command)
+                cfg['Logging']['system_logger'].info(command)
 
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
     vad_commands.send(Command('stop()', 'HUB', 'VAD'))
-    
+    asr_commands.send(Command('stop()', 'HUB', 'ASR'))
+    tts_commands.send(Command('stop()', 'HUB', 'TTS'))
+
     # clean connections
     for c in command_connections:
         while c.poll():
@@ -153,9 +177,16 @@ if __name__ == '__main__':
     for c in non_command_connections:
         while c.poll():
             c.recv()
-                
+
     # wait for processes to stop
     vio.join()
-    system_logger.debug('VIO stopped.')
+    cfg['Logging']['system_logger'].debug('VIO stopped.')
     vad.join()
-    system_logger.debug('VAD stopped.')
+    cfg['Logging']['system_logger'].debug('VAD stopped.')
+    asr.join()
+    cfg['Logging']['system_logger'].debug('ASR stopped.')
+    tts.join()
+    cfg['Logging']['system_logger'].debug('TTS stopped.')
+
+
+

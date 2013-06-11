@@ -184,8 +184,8 @@ class DRuleDMPolicy:
 
         return DialogueAct("&".join(d_str))
 
-    def say_noentiendo(self):
-        return DialogueAct("noentiendo()")
+    def say_notunderstood(self):
+        return DialogueAct("notunderstood()")
 
     def answer_confirm(self, state, res0, slots_to_confirm):
         conflicts = []
@@ -262,7 +262,7 @@ class DRuleDMPolicy:
 
         # if we didn't understand tell him
         if len(user_da) == 0 or user_da.has_dat("null"):
-            return state, self.say_noentiendo()
+            return state, self.say_notunderstood()
 
         # if the user hasn't specified anything (i.e. blank filter)
         # tell him what he can do

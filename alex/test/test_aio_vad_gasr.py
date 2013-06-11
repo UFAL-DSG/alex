@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import multiprocessing
 import time
-
-import __init__
 
 import alex.utils.audio as audio
 import alex.utils.various as various

@@ -28,13 +28,13 @@ from alex.applications.AlexOnTheBus.aotb_nlg import AOTBNLG
 
 SlotChange = namedtuple('SlotChange', ['from_value', 'to_value', 'slot'])
 
-
 class AOTBState(object):
     """Represents the state of dialogue in AOTB dialogue system."""
     from_stop = None
     to_stop = None
     time = None
     stop = None
+    hello = False
     bye = False
     repeat = False
     help = False
@@ -59,16 +59,6 @@ class AOTBState(object):
         return getattr(self, slot)
 
 
-def _get_from_to_diff(cn):
-    res = 0.0
-    for prob, dai in cn:
-        if dai.dat == "inform" and dai.name == "from_stop":
-            res -= prob
-        if dai.dat == "inform" and dai.name == "to_stop":
-            res += prob
-    return res
-
-
 class AOTBDM(DialogueManager):
     """Transport Directions DM"""
 
@@ -84,22 +74,8 @@ class AOTBDM(DialogueManager):
         self.last_system_dialogue_act = None
 
     def new_dialogue(self):
-        """Initialise the dialogue manager and makes it ready for a new dialogue conversation."""
+        """Initialize the dialogue manager and makes it ready for a new dialogue conversation."""
         self.state = AOTBState()
-
-    def _get_best_utterance(self, utterance):
-        if utterance is not None:
-            if isinstance(utterance, UtteranceNBList):
-                utterance_1 = utterance.get_best()
-            elif isinstance(utterance, UtteranceConfusionNetwork):
-                utterance_1 = utterance.get_best_hyp()[1]
-            elif not isinstance(utterance, Utterance):
-                raise Exception("unknown utterance type: %s" % str(type(utterance)))
-            else:
-                utterance_1 = utterance
-
-            self.state.last_utterance = utterance_1
-        return utterance_1
 
     def da_in(self, da, utterance=None):
         """\
@@ -109,51 +85,37 @@ class AOTBDM(DialogueManager):
         When the dialogue act is received, an update of the state is performed.
         """
 
-        utterance = self._get_best_utterance(utterance)
+        best_da = da.get_best_nonnull_da()
 
-        print "understood:"
+        print "AOTBDM da_in:"
         print unicode(da)
+        print "AOTBDM best_da:"
+        print unicode(best_da)
         print
 
         self.state.turn_number += 1
 
-        from_dai = None
-        to_dai = None
-        time_dai = None
-
-        cn_dict = da.make_dict()
-        from_dai = cn_dict.get(('inform', 'from_stop', ))
-        to_dai = cn_dict.get(('inform', 'to_stop', ))
-        time_dai = cn_dict.get(('inform', 'time', ))
-        bye_dai = cn_dict.get('bye')
-        request_alternatives_dai = cn_dict.get('reqalts')
-        repeat_dai = cn_dict.get('repeat')
-        help_dai = cn_dict.get('help')
-
-        self.state.not_understood = not any([from_dai, to_dai, time_dai, bye_dai, request_alternatives_dai, repeat_dai,  help_dai])
-
-        if request_alternatives_dai is not None:
-            self.state.alternatives += 1
-            self.state.alternatives %= \
-                len(self.state.directions) if self.state.directions is not None else 1
-
-        if bye_dai is not None:
-            self.state.bye = True
-
-        if from_dai is not None:
-            self.update_state(from_dai)
-
-        if to_dai is not None:
-            self.update_state(to_dai)
-
-        if time_dai is not None:
-            self.update_state(time_dai)
-
-        if repeat_dai is not None:
-            self.state.repeat = True
-
-        if help_dai is not None:
-            self.state.help = True
+        for dai in best_da:
+            if dai.dat == u"hello":
+                self.state.hello = True
+            elif dai.dat == u"bye":
+                self.state.bye = True
+            elif dai.dat == u"repeat":
+                self.state.repeat = True
+            elif dai.dat == u"help":
+                self.state.help = True
+            elif dai.dat == u"other":
+                self.state.not_understood = True
+            elif dai.dat == "inform" and dai.name == u"from_stop":
+                self.update_state(dai)
+            elif dai.dat == "inform" and dai.name == u"to_stop":
+                self.update_state(dai)
+            elif dai.dat == "inform" and dai.name == u"time":
+                self.update_state(dai)
+            elif dai.dat == u"reqalts":
+                self.state.alternatives += 1
+                self.state.alternatives %= \
+                    len(self.state.directions) if self.state.directions is not None else 1
 
     def update_state(self, dai):
         """Copy values from the dai to the state. (i.e. "understand the dai")."""
@@ -209,6 +171,11 @@ class AOTBDM(DialogueManager):
         if self.state.turn_number == 0:
             res = DialogueAct("hello()")
             return res
+        if self.state.turn_number > self.cfg['AlexOnTheBus']['max_turns']:
+            res = DialogueAct('bye()&inform(toolong="True")')
+            return res
+        if self.state.hello:
+            self.state.hello = False
         if self.state.bye:
             self.state.bye = False
             res = DialogueAct("bye()")
@@ -221,7 +188,7 @@ class AOTBDM(DialogueManager):
             self.state.repeat = False
             res = DialogueAct('irepeat()')
             return res
-        elif self.state.not_understood:
+        if self.state.not_understood:
             self.state.not_understood = False
             res = DialogueAct(u'notunderstood()')
             if self.state.from_stop is None:
@@ -240,11 +207,10 @@ class AOTBDM(DialogueManager):
             print self.state.slot_changes
 
             for slot_change in self.state.slot_changes:
-                # FIXME: In the dialogue act standard, there are no iconfirm(s)
-                # This must be properly defined and added into the documentation.
                 iconf_das.append("iconfirm(%s=%s)" % (slot_change.slot, slot_change.to_value, ))
                 if slot_change.slot in ["from_stop", "to_stop", "time"]:
                     self.state.alternatives = 0
+
             if len(iconf_das) > 0:
                 iconf_da = DialogueAct("&".join(iconf_das))
             else:

@@ -94,7 +94,7 @@ class TestRuleDM(unittest.TestCase):
 
         dm.da_in([(1.0, DialogueAct("asdf(fdsa=asdf)"))])
         turn_2 = dm.da_out()
-        self.assertEquals(turn_2.has_dat("noentiendo"), True)
+        self.assertEquals(turn_2.has_dat("notunderstood"), True)
 
         dm.da_in([(1.0, DialogueAct("inform(price=cheap)"))])
         turn_3 = dm.da_out()
@@ -144,7 +144,7 @@ class TestPRuleDM(unittest.TestCase):
 
         dm.da_in([(1.0, DialogueAct("asdf(fdsa=asdf)"))])
         turn_2 = dm.da_out()
-        self.assertEquals(turn_2.has_dat("noentiendo"), True)
+        self.assertEquals(turn_2.has_dat("notunderstood"), True)
 
         dm.da_in([(1.0, DialogueAct("inform(price=cheap)"))])
         turn_3 = dm.da_out()

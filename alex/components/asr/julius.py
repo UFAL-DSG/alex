@@ -138,7 +138,7 @@ class JuliusASR(object):
         os.system('kill -9 {pid}'.format(pid=pid))
 
     def kill_all_juliuses(self):
-        os.system('killall julius', shell=True)
+        os.system('killall julius')
 
     def save_pid(self, pid):
         with open(self.pidfile, "w") as f_out:
@@ -392,8 +392,7 @@ class JuliusASR(object):
                 nblist.add(cm, Utterance(utterance))
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
 
         cn = UtteranceConfusionNetwork()
 

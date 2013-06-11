@@ -136,8 +136,7 @@ class TextHub(Hub):
 
         nblist.merge()
         nblist.scale()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
 
         return nblist
 
@@ -167,7 +166,8 @@ class TextHub(Hub):
         term_width = getTerminalSize()[1] or 120
         print '-' * term_width
         print
-        self.dm.da_in(das, utterance_hyp)
+        # self.dm.da_in(das, utterance_hyp)
+        self.dm.da_in(das)
 
     def run(self):
         """Controls the dialogue manager."""

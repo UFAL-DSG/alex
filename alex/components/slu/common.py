@@ -20,11 +20,35 @@ def get_slu_type(cfg):
     return cfg['SLU']['type']
 
 
+def load_data(cfg_tr):
+    """\
+    Loads training data for SLU.
+
+    Arguments:
+        cfg_tr -- the subconfig residing under the 'training' key of this SLU
+            type's config
+
+    Returns a tuple (utterances, das) of co-indexed dictionaries where
+    `utterances' has the training utterances (object Utterance) as values, and
+    `das' has their corresponding DAs (object DialogueAct) as its values.
+
+    """
+    from alex.components.asr.utterance import load_utterances
+    from alex.components.slu.da import load_das
+    # TODO Should be extended to handle other types of input features.
+    utterances = load_utterances(cfg_tr['utts_fname'],
+                                 limit=cfg_tr.get('max_examples', None))
+    das = load_das(cfg_tr['sem_fname'],
+                   limit=cfg_tr.get('max_examples', None))
+    return utterances, das
+
+
 # TODO Make the configuration structure simpler.  Blending type names with
 # types, putting things into different places in the configuration, that makes
 # it hard to use.
 
-def slu_factory(slu_type, cfg, require_model=False):
+def slu_factory(slu_type, cfg, require_model=False, training=False,
+                verbose=True):
     """\
     Creates an SLU parser.
 
@@ -48,6 +72,9 @@ def slu_factory(slu_type, cfg, require_model=False):
             option.
         require_model -- boil out if model cannot be loaded (e.g. none was
             specified in the config)?
+        training -- is the SLU about to be trained (as opposed to being tested
+            or used in general)?  This implies `require_model == False'.
+        verbose -- be verbose?
 
     """
     # Preprocess the configuration a bit.
@@ -59,10 +86,7 @@ def slu_factory(slu_type, cfg, require_model=False):
             msg = ('The class specified for the SLU parser in configuration '
                    'must implement SLUInterface!')
             raise SLUException(msg)
-        slu_typename = slu_type.__name__
-        cfg_this_slu = cfg_slu.get(slu_typename, dict())
-    else:
-        cfg_this_slu = cfg_slu.get(slu_type, dict())
+    cfg_this_slu = cfg_slu.get(slu_type, dict())
 
     # Allow for specifying a Python class as the clser type (as opposed to its
     # name).
@@ -72,7 +96,6 @@ def slu_factory(slu_type, cfg, require_model=False):
             raise SLUException(msg)
 
         clser_class = slu_type
-        from alex.components.slu.dailrclassifier import DAILogRegClassifier
         from alex.components.slu.base import CategoryLabelDatabase, \
             SLUPreprocessing
     # Load appropriate classes based on the classifier type required.
@@ -120,20 +143,57 @@ def slu_factory(slu_type, cfg, require_model=False):
         else:
             preprocessing = None
 
-        dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg)
+        # Get all the kwargs that should be used to construct the classifier.
+        clser_kwargs = dict()
+        if training:
+            cfg_tr = cfg_this_slu['training']
+            if slu_type in ('cl-seq', 'cl-tracing'):
+                clser_kwargs['clser_type'] = cfg_tr.get('clser_type', None)
+                clser_kwargs['features_type'] = cfg_this_slu.get('features_type', None)
+                clser_kwargs['abstractions'] = cfg_tr.get('abstractions', None)
 
-        # Try to load the model.
-        try:
-            model_fname = cfg_te.get('model_fname', None)
-            dai_clser.load_model(model_fname)
-        except:
-            if require_model:
-                msg = 'Could not load SLU model.'
-                if model_fname is None:
-                    msg += '  None was specified in the config.'
-                else:
-                    msg += '  Tried to load it from "{fname}".'.format(
-                        frame=model_fname)
-                raise SLUException(msg)
+        dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg,
+                                **clser_kwargs)
+
+        # If a model needs to be trained yet,
+        if training:
+            # Construct the inputs and the outputs for learning.
+            das, utterances = load_data(cfg_tr)
+            dai_clser.extract_features(das=das, utterances=utterances,
+                                       verbose=verbose)
+            dai_clser.prune_features(
+                min_feature_count=cfg_tr.get('min_feat_count', None),
+                min_conc_feature_count=cfg_tr.get('min_feat_count_conc', None),
+                verbose=verbose)
+            dai_clser.prune_classifiers(
+                min_dai_count=cfg_tr.get('min_dai_count', None))
+            if verbose:
+                dai_clser.print_classifiers()
+
+            # Train the model.
+            dai_clser.train(balance=cfg_tr.get('balance', None),
+                            calibrate=cfg_tr.get('calibrate', None),
+                            sparsification=cfg_tr.get('sparsification', None),
+                            verbose=verbose)
+            # Save the model.
+            model_fname = cfg_tr.get('model_fname', None)
+            if model_fname is not None:
+                dai_clser.save_model(model_fname)
+                print >>sys.stderr, ('SLU model saved to "{fname}".'
+                                     .format(fname=model_fname))
+        else:
+            # Try to load the model.
+            model_fname = cfg_this_slu.get('testing', dict()).get('model_fname', None)
+            try:
+                dai_clser.load_model(model_fname)
+            except:
+                if require_model:
+                    msg = 'Could not load SLU model.'
+                    if model_fname is None:
+                        msg += '  None was specified in the config.'
+                    else:
+                        msg += '  Tried to load it from "{fname}".'.format(
+                            frame=model_fname)
+                    raise SLUException(msg)
 
     return dai_clser

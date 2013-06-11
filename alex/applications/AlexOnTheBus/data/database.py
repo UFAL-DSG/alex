@@ -1,141 +1,164 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import os
 import codecs
 
-database = {
-        u"task": {
-            u"next_tram": [u"next_tram"]
-        },
-        u"time": {
-            u'$time$': [u'$time$']
-        },
-        u"from": {
-        #    "$from$": ["$from$"],
-        #    "andel": ["andel"],
-        #    "karlak": ["karlak"],
-        #    "ipak": ["ipak", "ip"],
-        },
-        u"to": {
-        #    "$to$": ["$to$"],
-        #    "andel": ["andel"],
-        #    "I. P. Pavlova": ["ipak", "ip", "ípák", "i p pavlova"],
-        },
-        u"stop": {
-            u"$from$": [u"$from$"],
-            u"$to$": [u"$to$"],
 
+__all__ = ['database']
+
+
+database = {
+        "task": {
+            "next_tram": ["další"]
+        },
+        "time": {
+        },
+        "stop": {
+        },
+        u"tt": {
+            u"bus": [u"bus", u"autobus"],
+            u"tram": [u"tram", u"tramvaj", u"tramvajka"],
+            u"metro": [u"metro", u"krtek", u"podzemka"],
+            u"vlak": [u"vlak", u"rychlík", u"panťák"],
+            u"lanovka": [u"lanovka"],
+            u"přívoz": [u"přívoz", u"loď"],
+        },
+        u"ampm": {
+            u"am": [u"dopo", u"dopoledne", u"ráno"],
+            u"pm": [u"odpo", u"odpoledne", u"večer"],
         },
 }
 
-numbers = ["nula", "jedna", "dve", "tri", "ctyri", "pet", "sest", "sedm", "osm", "devet", ]
-numbers_10 = ["", "deset", "dvacet", "tricet", "ctyricet", "padesat", "sedesat", ]
+NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
+             "osm", "devět", ]
+NUMBERS_10 = ["", "deset", "dvacet", "třicet", "čtyřicet", "padesát",
+              "šedesát", ]
+NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
+                "patnáct", "šestnáct", "sedmnáct", "osmnáct", "devatenáct"]
 
-def db_add(slot, canonical, surface):
+# name of the file with one stop per line, assumed to reside in the same
+# directory as this script
+#
+# The file is expected to have this format:
+#   <value>; <phrase>; <phrase>; ...
+# where <value> is the value for a slot and <phrase> is its possible surface
+# form.
+STOPS_FNAME = "zastavky.expanded.txt"  # this has been expanded to include
+                                       # other forms of the words; still very
+                                       # dirty, though
+
+
+def db_add(slot, value, surface):
+    """A wrapper for adding a specified triple to the database."""
     surface = surface.strip()
-    if len(canonical) == 0 or len(surface) == 0:
+    if len(value) == 0 or len(surface) == 0:
         return
+    database[slot].setdefault(value, list()).append(surface)
 
 
-    if len(canonical) == 0 or len(surface) == 0:
-        import ipdb; ipdb.set_trace()
+def spell_number(num):
+    """Spells out the number given in the argument."""
+    tens, units = num / 10, num % 10
+    tens_str = NUMBERS_10[tens]
+    units_str = NUMBERS_1[units]
+    if tens == 1:
+        return NUMBERS_TEEN[units]
+    elif tens:
+        if units:
+            return "{t} {u}".format(t=tens_str, u=units_str)
+        return "{t}".format(t=tens_str)
+    else:
+        return units_str
 
-    if not canonical in database[slot]:
-        database[slot][canonical] = []
 
-    database[slot][canonical] += [surface]
+# DEPRECATED
+# def time_wrap(what):
+#     return "v %s" % what
+# DEPRECATED
+# def time_rel_wrap(what):
+#     return "za %s" % what
+# DEPRECATED
+# def time_rel_prefix(what):
+#     return "+%s" % what
 
-
-def num_to_word(x):
-    res = ""
-    if x / 10 > 0:
-        res += numbers_10[x / 10]
-        res += " "
-
-    if x % 10 > 0:
-        res += numbers[x % 10]
-
-    res = res.strip()
-
-    return res
-
-def time_wrap(what):
-    return "v %s" % what
-
-def time_rel_wrap(what):
-    return "za %s" % what
-
-def time_rel_prefix(what):
-    return "+%s" % what
 
 def add_time():
-    for hh in range(24):
-        hh_word = num_to_word(hh)
-        ftime = "%d:00" % (hh, )
+    """\
+    Basic approximation of all known explicit time expressions.
 
-        db_add("time", ftime, time_wrap("%d" % hh))
-        db_add("time", ftime, time_wrap("%d hodin" % hh))
+    Handles:
+        <hour>
+        <hour> hodin <minute>
+        <houn> <minute>
+    where <hour> and <minute> are spelled as numbers.
 
-        time_str = "%s" % hh_word
-        db_add("time", ftime, time_wrap(time_str))
-        db_add("time", ftime, unicode(hh))
-        # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
+    Cannot handle:
+        pět nula nula
+        pět nula jedna
+        jedna hodina dvacet   ...would have to be "jedna hodin dvacet"
+        tři hodiny dvacet     ...would have to be "tři hodin dvacet"
+        za pět osum
+        dvě odpoledne         ...only "čtrnáct" is taken to denote "14"
 
-        time_str = "%s hodin" % hh_word
-        db_add("time", ftime, time_wrap(time_str))
-        # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
+    """
+    numbers_str = [spell_number(num) for num in xrange(60)]
+    # ["nula", "jedna", ..., "padesát devět"]
+    for hour in xrange(24):
+        hour_str = numbers_str[hour]
+        time_val = "{h}:00".format(h=hour)
+        db_add("time", time_val, hour_str)
+        # db_add("time", time_val, time_wrap(hour_str))
+        # db_add("time", time_rel_prefix(time_val), time_rel_wrap(hour_str))
 
-        for mm in range(60):
-            mm_word = num_to_word(mm)
-            ftime = "%d:%d" % (hh, mm,)
-            db_add("time", ftime, time_wrap("%d %d" % (hh, mm)))
-            db_add("time", ftime, time_wrap("%d hodin %d minut" % (hh, mm)))
+        for minute in xrange(60):
+            minute_str = numbers_str[minute]
+            time_val = "{h}:{m}".format(h=hour, m=minute)
+            # FIXME This is not always appropriate.
+            time_str = "{h} hodin {m}".format(h=hour_str, m=minute_str)
+            db_add("time", time_val, time_str)
+            time_str = "{h} {m}".format(h=hour_str, m=minute_str)
+            db_add("time", time_val, time_str)
+            # db_add("time", time_val, time_wrap(time_str))
+            # db_add("time", time_rel_prefix(time_val), time_rel_wrap(time_str))
 
-            time_str = "%s hodin %s minut" % (hh_word, mm_word, )
-            db_add("time", ftime, time_wrap(time_str))
-            # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
+    # DEPRECATED
+    # for minute in xrange(60):
+        # time_val = "%d" % minute
+        # mm_word = spell_number(minute)
+        # time_str = "%s minut" % (mm_word, )
+        # db_add("time", time_rel_prefix(time_val), time_rel_wrap(time_str))
 
-            time_str = "%s %s" % (hh_word, mm_word, )
-            db_add("time", ftime, time_wrap(time_str))
-            # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
-
-    for mm in range(60):
-        ftime = "%d" % mm
-        mm_word = num_to_word(mm)
-        time_str = "%s minut" % (mm_word, )
-        # db_add("time", time_rel_prefix(ftime), time_rel_wrap(time_str))
 
 def add_stops():
-    dir = os.path.dirname(os.path.abspath(__file__))
-    with codecs.open(os.path.join(dir, "zastavky.expanded.txt"), encoding='utf-8') as f_in:
-        for ln in f_in:
+    """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    with codecs.open(os.path.join(dirname, STOPS_FNAME),
+                     encoding='utf-8') as stops_file:
+        for ln in stops_file:
             ln = ln.strip().lower()
-            ln = ln.split(';')
+            stop_val, stop_names = ln.split(';', 1)
+            for synonym in stop_names.split(';'):
+                db_add('stop', stop_val, synonym)
 
-            db_add('stop', ln[0], ln[0])
-
-            alternatives = set(ln[1:])
-            for alternative_form in alternatives:
-                db_add('stop', ln[0], alternative_form)
-
-            #db_add('from', ln, ln)
-            #db_add('to', ln, ln)
-            #db_add('to', ln, ln)
 
 def stem():
+    """Stems words of all surface forms in the database."""
     import autopath
     from alex.utils.czech_stemmer import cz_stem
 
     for _, vals in database.iteritems():
-        for cann_value in vals.keys():
-            vals[cann_value] = [" ".join(cz_stem(ww) for ww in w.split()) for w in vals[cann_value]]
+        for value in vals.keys():
+            vals[value] = [" ".join(cz_stem(word) for word in surface.split())
+                           for surface in vals[value]]
 
 
 ########################################################################
-# Expand automatically the database
+#                  Automatically expand the database                   #
 ########################################################################
-
 add_time()
 add_stops()
+# FIXME: This is not the best place to do stemming.
 stem()

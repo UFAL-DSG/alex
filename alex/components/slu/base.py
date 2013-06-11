@@ -508,6 +508,8 @@ class SLUPreprocessing(object):
         return confnet
 
 
+# XXX This in fact is not an interface anymore (for it has a constructor).  It
+# had better be called AbstractSLU.
 class SLUInterface(object):
     """\
     Defines a prototypical interface each SLU parser should provide.
@@ -527,6 +529,25 @@ class SLUInterface(object):
     def __init__(self, preprocessing, cfg=None, *args, **kwargs):
         self.preprocessing = preprocessing
         self.cfg = cfg
+
+    # TODO Document the methods.
+    def extract_features(self, *args, **kwargs):
+        pass
+
+    def prune_features(self, *args, **kwargs):
+        pass
+
+    def prune_classifiers(self, *args, **kwargs):
+        pass
+
+    def print_classifiers(self, *args, **kwargs):
+        pass
+
+    def train(self, *args, **kwargs):
+        pass
+
+    def save_model(self, *args, **kwargs):
+        pass
 
     def parse_1_best(self, utterance, *args, **kwargs):
         from exception import SLUException
