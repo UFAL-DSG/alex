@@ -4,9 +4,10 @@
 # pylint: disable=W0212,C0111,C0103
 
 import unittest
-import numpy as np
 import copy
 import operator
+
+import numpy as np
 
 from alex.ml.bn.factor import DiscreteFactor, to_log, from_log, logsubexp
 
@@ -16,6 +17,22 @@ class TestFactor(unittest.TestCase):
     def assertClose(self, first, second, epsilon=0.000001):
         delta = abs(first - second)
         self.assertLess(delta, epsilon)
+
+    def test_setitem(self):
+        f = DiscreteFactor(
+            ['X'],
+            {
+                'X': [0, 1],
+            },
+            {
+                (0,): 0.8,
+                (1,): 0.2,
+            }
+        )
+
+        self.assertAlmostEqual(f[(0,)], 0.8)
+        f[(0,)] = 0.6
+        self.assertAlmostEqual(f[(0,)], 0.6)
 
     def test_strides(self):
         factor = DiscreteFactor(
@@ -436,6 +453,48 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(result[1], 1)
         self.assertAlmostEqual(result[2], 2)
 
+    def test_sum_other(self):
+        alpha = DiscreteFactor(
+            ['X0', 'X1'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0', 'x1_1'],
+            },
+            {
+                ('x0_0', 'x1_0'): 8,
+                ('x0_0', 'x1_1'): 1,
+                ('x0_1', 'x1_0'): 2,
+                ('x0_1', 'x1_1'): 1,
+            }
+        )
+
+        f = alpha.sum_other()
+        self.assertAlmostEqual(f[('x0_0', 'x1_0')], 4)
+        self.assertAlmostEqual(f[('x0_0', 'x1_1')], 11, places=5)
+        self.assertAlmostEqual(f[('x0_1', 'x1_0')], 10)
+        self.assertAlmostEqual(f[('x0_1', 'x1_1')], 11, places=5)
+
+    def test_expected_value_squared(self):
+        alpha = DiscreteFactor(
+            ['X0', 'X1'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0', 'x1_1'],
+            },
+            {
+                ('x0_0', 'x1_0'): 8,
+                ('x0_0', 'x1_1'): 1,
+                ('x0_1', 'x1_0'): 2,
+                ('x0_1', 'x1_1'): 1,
+            }
+        )
+        sum_of_alphas = alpha.marginalize(['X1'])
+        expected_value_squared = alpha * (alpha + 1) / (sum_of_alphas * (sum_of_alphas + 1))
+        self.assertAlmostEqual(expected_value_squared[('x0_0', 'x1_0')], 72.0/110)
+        self.assertAlmostEqual(expected_value_squared[('x0_0', 'x1_1')], 1.0/3)
+        self.assertAlmostEqual(expected_value_squared[('x0_1', 'x1_0')], 6.0/110)
+        self.assertAlmostEqual(expected_value_squared[('x0_1', 'x1_1')], 1.0/3)
+
     def test_alphas(self):
         alpha = DiscreteFactor(
             ['X0', 'X1', 'X2', 'X3'],
@@ -544,9 +603,8 @@ class TestFactor(unittest.TestCase):
         belief = X0 * X1 * X2 * X3
         factor = belief * expected_value
         msg = factor.marginalize(['X1', 'X2', 'X3'])
-        w0 = factor.sum_other()
-        self.assertAlmostEqual(w0[('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
-        self.assertAlmostEqual(w0[('x0_1', 'x1_0', 'x2_0', 'x3_0')], 5.0/6)
+        w0 = msg.sum_other()
+        self.assertAlmostEqual(w0[('x1_0', 'x2_0', 'x3_0')], 5.0/6)
 
         # Compute w_k.
 
@@ -573,7 +631,8 @@ class TestFactor(unittest.TestCase):
 
         for k in X0.variable_values['X0']:
             new_alpha = copy.deepcopy(alpha)
-            for i, (assignment, value) in enumerate(new_alpha):
+            for i, item in enumerate(new_alpha):
+                (assignment, value) = item
                 if assignment[0] == k:
                     new_alpha.add(1, assignment)
             expected_value_k = new_alpha / sum_of_alphas_plus_1
