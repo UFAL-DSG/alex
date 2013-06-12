@@ -20,7 +20,7 @@ class DialogueState(object):
     def __str__(self):
         """Get the content of the dialogue state in a human readable form."""
         pass
-        
+
     def restart(self):
         """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
 
@@ -42,24 +42,24 @@ class DialogueState(object):
         :param last_system_da: Last system dialogue act.
 
         """
-        
+
     def get_requested_slots(self):
         """Return all slots which are currently being requested by the user along with the correct value."""
         pass
-        
+
     def get_confirmed_slots(self):
         """Return all slots which are currently being confirmed by the user along with the value being confirmed."""
         pass
-        
+
     def get_non_informed_slots(self):
         """Return all slots provided by the user and the system has not informed about them yet along with
         the value of the slot.
         """
         pass
-        
+
 class DialoguePolicyException(AlexException):
     pass
-    
+
 class DialoguePolicy(object):
     """This is a base class policy. """
 
@@ -88,14 +88,14 @@ class DialogueManager(object):
         self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']
         self.last_system_dialogue_act = None
         self.new_dialogue()
-        
+
     def new_dialogue(self):
         """Initialise the dialogue manager and makes it ready for a new dialogue conversation."""
-        
+
         self.dialogue_state = self.dialogue_state_class(self.cfg)
         self.policy = self.dialogue_policy_class(self.cfg)
         self.last_system_dialogue_act = None
-        
+
     def da_in(self, da):
         """Receives an input dialogue act or dialogue act list with probabilities or dialogue act confusion network.
 

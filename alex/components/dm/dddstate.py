@@ -12,7 +12,7 @@ class DeterministicDiscriminativeDialogueStateException(DialogueStateException):
 class DeterministicDiscriminativeDialogueState(DialogueState):
     """This is a trivial implementation of a dialogue state and its update.
 
-    It uses only the best dialogue act from the input. 
+    It uses only the best dialogue act from the input.
     Based on this it updates its state.
     """
 
@@ -21,6 +21,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         self.slots = defaultdict(lambda: "None")
         self.turns = []
+        self.turn_number = 0
 
     def __str__(self):
         """Get the content of the dialogue state in a human readable form."""
@@ -66,7 +67,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
 
         if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug('DDDState Dialogue Act in: %s' % da)
+            self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
 
         # store the input
         self.turns.append([da, last_system_da])
@@ -74,6 +75,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         # perform the update
         user_da = self.context_resolution(da, last_system_da)
         self.state_update(da, last_system_da)
+        self.turn_number +=1
 
         # print the dialogue state if requested
         if self.cfg['DM']['basic']['debug']:
@@ -137,6 +139,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         if isinstance(last_system_da, DialogueAct):
             for dai in last_system_da:
                 if dai.dat == "inform":
+                    # set that the system already informed about the slot
+                    self.slots["rh_" + dai.name] = "system-informed"
+                    self.slots["ch_" + dai.name] = "system-informed"
+                    self.slots["sh_" + dai.name] = "system-informed"
+
+                if dai.dat == "iconfirm":
                     # set that the system already informed about the slot
                     self.slots["rh_" + dai.name] = "system-informed"
                     self.slots["ch_" + dai.name] = "system-informed"
