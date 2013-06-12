@@ -138,6 +138,8 @@ class TextHub(Hub):
         nblist.scale()
         nblist.add_other()
 
+        self.write_readline()
+
         return nblist
 
     def process_dm(self):
@@ -232,7 +234,7 @@ if __name__ == '__main__':
     #########################################################################
     #########################################################################
     term_width = getTerminalSize()[1] or 120
-    cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * (term_width - 4))
+    cfg['Logging']['system_logger'].info("Text Hub\n" + "=" * (term_width - 4))
 
     shub = TextHub(cfg)
 
