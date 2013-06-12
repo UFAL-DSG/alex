@@ -92,11 +92,17 @@ class AOTBSLU(SLUInterface):
                 if not from_stop and to_stop:
                     cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name))
 
-                # backoff: add both from and to stop slots
-                if not from_stop and not to_stop or \
-                    from_stop and to_stop:
+                # backoff 1: add both from and to stop slots
+                if from_stop and to_stop:
                     cn.add(0.501, DialogueActItem("inform", "from_stop", stop_name))
                     cn.add(0.499, DialogueActItem("inform", "to_stop", stop_name))
+
+                # backoff 2: we do not know what slot it belongs to, let the DM decide in
+                # the context resolution
+                if not from_stop and not to_stop or \
+                    from_stop and to_stop:
+                    cn.add(0.501, DialogueActItem("inform", "", stop_name))
+                    cn.add(0.499, DialogueActItem("inform", "", stop_name))
 
 
     def parse_time(self, abutterance, cn):
