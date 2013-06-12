@@ -137,8 +137,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
             # XXX No other preprocessing class is expected in the SLU part of
             # the code, but this would be the place to swap the class for
             # another one.
-            preprocessing_cls = cfg_slu.get('preprocessing_cls',
-                                            SLUPreprocessing)
+            preprocessing_cls = cfg_this_slu.get('preprocessing_cls',
+                                                 SLUPreprocessing)
             preprocessing = preprocessing_cls(cldb)
         else:
             preprocessing = None
