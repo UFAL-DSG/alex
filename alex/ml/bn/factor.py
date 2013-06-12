@@ -123,6 +123,10 @@ class DiscreteFactor(Factor):
         index = self._get_index_from_assignment(assignment)
         return from_log(self.factor_table[index])
 
+    def __setitem__(self, assignment, value):
+        index = self._get_index_from_assignment(assignment)
+        self.factor_table[index] = to_log(value)
+
     def __pow__(self, n):
         """Raise every element of the factor to the power of n.
 
@@ -580,9 +584,7 @@ class DiscreteFactor(Factor):
 
     def sum_other(self):
         factor_sum = logsumexp(self.factor_table)
-        new_factor_table = np.empty_like(self.factor_table)
-        for i in range(self.factor_length):
-            new_factor_table[i] = logsubexp(factor_sum, self.factor_table[i])
+        new_factor_table = logsubexp(factor_sum, self.factor_table)
         return DiscreteFactor(self.variables,
                               self.variable_values,
                               new_factor_table)
