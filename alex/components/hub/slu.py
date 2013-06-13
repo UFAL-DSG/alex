@@ -107,8 +107,7 @@ class SLU(multiprocessing.Process):
                 else:
                     confnet = None
 
-                # TODO HACK
-                #self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
+                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
 
                 self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
                 self.slu_hypotheses_out.send(SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))

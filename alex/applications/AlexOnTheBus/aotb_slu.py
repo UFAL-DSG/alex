@@ -38,47 +38,71 @@ class AOTBSLU(SLUInterface):
         super(AOTBSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
-        res = defaultdict(list)
-        _fill_utterance_values(abutterance, 'stop', res)
-
-        stop_name = None
-        for slot, values in res.iteritems():
-            for value in values:
-                # FIXME: This extracts only the first STOP.
-                # I cannot say: z Anděla na Malostranské náměstí
-                stop_name = u" ".join(value)
-                break
-
-        if not stop_name:
-            return
-
-        utt_set = set(abutterance)
-
         preps_from = set([u"z", u"za", u"ze", u"od", u"začátek"])
         preps_to = set([u"k", u"do", u"konec", u"na"])
 
-        preps_from_used = preps_from.intersection(utt_set)
-        preps_to_used = preps_to.intersection(utt_set)
+        u = abutterance
+        N = len(u)
 
-        preps_from_in = len(preps_from_used) > 0
-        preps_to_in = len(preps_to_used) > 0
+        for i, w in enumerate(u):
+            if w.startswith("STOP="):
+                stop_name = w[5:]
+                from_stop = False
+                to_stop = False
 
-        if preps_from_in and not preps_to_in:
-            cn.add(1.0,
-                   DialogueActItem("inform", "from_stop", stop_name,
-                                   attrs={'prep': next(iter(preps_from_used))})
-                   )
+                if i >= 2:
+                    if not u[i-1].startswith("STOP="):
+                        if u[i-2] in preps_from:
+                            from_stop = True
+                        elif u[i-2] in preps_to:
+                            to_stop = True
 
-        if not preps_from_in and preps_to_in:
-            cn.add(1.0,
-                   DialogueActItem("inform", "to_stop", stop_name,
-                                   attrs={'prep': next(iter(preps_to_used))}))
+                if i >= 1:
+                    if u[i-1] in preps_from:
+                        from_stop = True
+                    elif u[i-1] in preps_to:
+                        to_stop = True
 
-        # backoff: add both from and to stop slots
-        if not preps_from_in and not preps_to_in or \
-            preps_from_in and preps_to_in:
-            cn.add(0.501, DialogueActItem("inform", "from_stop", stop_name))
-            cn.add(0.499, DialogueActItem("inform", "to_stop", stop_name))
+                if not from_stop and not to_stop:
+                    if i <= N - 3:
+                        if not u[i+1].startswith("STOP="):
+                            if u[i+2] in preps_from:
+                                to_stop = True
+                            elif u[i+2] in preps_to:
+                                from_stop = True
+
+                    if i <= N - 2:
+                        if u[i+1] in preps_from:
+                            to_stop = True
+                        elif u[i+1] in preps_to:
+                            from_stop = True
+
+                if not from_stop and not to_stop:
+                    if 1 <= i:
+                        if u[i-1].startswith('STOP'):
+                            to_stop = True
+
+                    if  i <= N - 2:
+                        if u[i+1].startswith('STOP'):
+                            from_stop = True
+
+                if from_stop and not to_stop:
+                    cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name))
+
+                if not from_stop and to_stop:
+                    cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name))
+
+                # backoff 1: add both from and to stop slots
+                if from_stop and to_stop:
+                    cn.add(0.501, DialogueActItem("inform", "from_stop", stop_name))
+                    cn.add(0.499, DialogueActItem("inform", "to_stop", stop_name))
+
+                # backoff 2: we do not know what slot it belongs to, let the DM decide in
+                # the context resolution
+                if not from_stop and not to_stop or \
+                    from_stop and to_stop:
+                    cn.add(0.501, DialogueActItem("inform", "", stop_name))
+                    cn.add(0.499, DialogueActItem("inform", "", stop_name))
 
 
     def parse_time(self, abutterance, cn):
@@ -125,13 +149,8 @@ class AOTBSLU(SLUInterface):
         if self.preprocessing:
             # the text normalisation performs stemming
             utterance = self.preprocessing.text_normalisation(utterance)
-            
-#            utterance = unicode(utterance).split()
-#            utterance = u" ".join([cz_stem(w) for w in utterance])
-#            utterance = Utterance(utterance)
 
-            abutterance, category_labels = \
-                self.preprocessing.values2category_labels_in_utterance(utterance)
+            abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
             if verbose:
                 print 'After preprocessing: "{utt}".'.format(utt=abutterance)
                 print category_labels
