@@ -612,6 +612,18 @@ class DialogueActHyp(SLUHypothesis):
     def get_best_da(self):
         return self.da
 
+    def get_da_nblist(self):
+        # AUTHOR: Oplatek
+        # REASON: webhub supposed that slu_hyp must have get_da_nblist method see error
+        # SOLUTION: get_da_nblist will return nblist get_best_da(self) -> TEMPORARY-> FIXME
+        # Error:
+        #  File "/a/LRC_TMP/oplatek/vystadial/alex/components/hub/slu.py", line 119, in run
+        #  self.read_asr_hypotheses_write_slu_hypotheses()
+        #  File "/a/LRC_TMP/oplatek/vystadial/alex/components/hub/slu.py", line 98, in read_asr_hypotheses_write_slu_hypotheses
+        #  self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), slu_hyp)
+        # The error occured when running webhub.py.
+        return DialogueActNBList().add(1.0, self.get_best_da())
+
 
 class DialogueActNBList(SLUHypothesis, NBList):
     """Provides functionality of N-best lists for dialogue acts.
@@ -752,7 +764,6 @@ class DialogueActNBListFeatures(Features):
             self.features[(2, 'prob')] = da_nblist[0][0]
             for feat, feat_val in first_da_feats.iteritems():
                 self.features[(2, feat)] = feat_val
-
 
 
 class DialogueActConfusionNetwork(SLUHypothesis):
@@ -1104,7 +1115,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
-                    ("The probability of the {dai!s} dialogue act item is " + \
+                    ("The probability of the {dai!s} dialogue act item is " +
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
 
     def normalise_by_slot(self):
@@ -1185,7 +1196,7 @@ def merge_slu_confnets(confnet_hyps):
             #     continue
 
             merged.add_merge(prob_confnet * prob, dai,
-                                      combine='add')
+                             combine='add')
 
     merged.sort()
 

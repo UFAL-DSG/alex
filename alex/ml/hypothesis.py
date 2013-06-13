@@ -6,12 +6,12 @@ value of a base type instance.
 """
 
 from collections import namedtuple
-from operator import mul
 
 from alex.utils.exception import AlexException
 
 
 _HypWithEv = namedtuple('HypothesisWithEvidence', ['prob', 'fact', 'evidence'])
+
 
 class NBListException(AlexException):
     pass
@@ -76,6 +76,7 @@ class NBList(Hypothesis):
                 insert_idx += 1
                 break
         self.n_best.insert(insert_idx, [probability, fact])
+        return self
 
     def merge(self):
         """Adds up probabilities for the same hypotheses. Returns self."""
