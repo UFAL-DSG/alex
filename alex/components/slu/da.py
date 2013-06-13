@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
+from __future__ import unicode_literals
+
 import codecs
 from collections import defaultdict
 import copy
@@ -10,7 +12,8 @@ from operator import xor
 
 from alex.components.slu.exception import SLUException
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
-from alex.ml.hypothesis import Hypothesis, NBList, NBListException
+from alex.ml.hypothesis import Hypothesis, NBList, NBListException, \
+        ConfusionNetwork
 from alex.utils.text import split_by
 
 
@@ -771,14 +774,14 @@ class DialogueActNBListFeatures(Features):
 
 
 
-class DialogueActConfusionNetwork(SLUHypothesis):
-    """Dialogue act item confusion network. This is a very simple
-    implementation in which all dialogue act items are assumed to be
-    independent. Therefore, the network stores only posteriors for dialogue act
-    items.
+class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
+    """\
+    Dialogue act item confusion network. This is a very simple implementation
+    in which all dialogue act items are assumed to be independent.  Therefore,
+    the network stores only posteriors for dialogue act items.
 
     This can be efficiently stored as a list of DAIs each associated with its
-    probability. The alternative for each DAI is that there is no such DAI in
+    probability.  The alternative for each DAI is that there is no such DAI in
     the DA. This can be represented as the null() dialogue act and its
     probability is 1 - p(DAI).
 
@@ -790,35 +793,19 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     """
     def __init__(self):
-        self.cn = []
-
-    def __str__(self):
-        return unicode(self).encode('ascii', 'replace')
+        ConfusionNetwork.__init__(self)
 
     def __unicode__(self):
+        # DAs in a DA confnet are in no particular order, so we sort them here.
         ret = []
         for prob, dai in sorted(self.cn, reverse=True):
-            # FIXME Works only for DSTC.
             ret.append(u"{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
         return u"\n".join(ret)
 
-    def __len__(self):
-        return len(self.cn)
-
-    def __getitem__(self, idx):
-        return self.cn[idx]
-
-    def __contains__(self, dai):
-        return self.get_marginal(dai) is not None
-
     def __iter__(self):
         for dai_hyp in self.cn:
             yield dai_hyp
-
-    def add(self, probability, dai):
-        """Append additional dialogue act item into the confusion network."""
-        self.cn.append([probability, dai])
 
     @staticmethod
     def _combine_new(prob1, prob2):
