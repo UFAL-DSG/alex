@@ -1,21 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# TODO: Propagate timeout setting.
 
 from __future__ import unicode_literals
 
-import socket
+if __name__ == "__main__":
+    import autopath
+
 import os
+import os.path
+import socket
 import struct
+import subprocess
 import time
 import xml.dom.minidom
-import subprocess
-import os.path
 
+from alex.components.asr.exception import ASRException
 from alex.components.asr.utterance import UtteranceNBList, Utterance, \
     UtteranceConfusionNetwork
-from alex.utils.exception import JuliusASRException, \
-    JuliusASRTimeoutException, ASRException
 from alex.utils.various import get_text_from_xml_node
+
+
+class JuliusASRException(ASRException):
+    pass
+
+
+class JuliusASRTimeoutException(ASRException):
+    pass
 
 
 class JuliusASR(object):
@@ -28,19 +40,23 @@ class JuliusASR(object):
 
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, popen_kwargs=dict()):
         self.recognition_on = False
 
         self.cfg = cfg
+        self.debug = cfg['ASR']['Julius'].get('debug', False)
         self.julius_server = None
         self.hostname = self.cfg['ASR']['Julius']['hostname']
         self.serverport = self.cfg['ASR']['Julius']['serverport']
         self.adinnetport = self.cfg['ASR']['Julius']['adinnetport']
         self.reuse_server = self.cfg['ASR']['Julius']['reuse_server']
         self.pidfile = self.cfg['ASR']['Julius']['pidfile']
-        self.jconffile = self.cfg['ASR']['Julius']['jconffile']
-        self.logfile = self.cfg['ASR']['Julius']['logfile']
+        self.jconf_fname = self.cfg['ASR']['Julius']['jconffile']
+        self.log_fname = self.cfg['ASR']['Julius']['logfile']
+        self.logfile = None
         self.jbin = self.cfg['ASR']['Julius']['binary']
+        self.msg_timeout = self.cfg['ASR']['Julius'].get('msg_timeout', 0.3)
+        self.timeout = self.cfg['ASR']['Julius'].get('timeout', 2.0)
 
         system_logger = self.cfg['Logging']['system_logger']
         try:
@@ -63,7 +79,7 @@ class JuliusASR(object):
                     system_logger.debug("I just killed ALL JULIŌS!")
 
             system_logger.debug("Starting the Julius ASR server...")
-            self.start_server()
+            self.start_server(popen_kwargs)
             if not self.wait():
                 raise JuliusASRTimeoutException(
                     'Could not wait for Julius to start up.')
@@ -87,10 +103,15 @@ class JuliusASR(object):
             exit(0)
 
     def __del__(self):
+        # FIXME We might want to rewrite this functionality as a context
+        # manager. Cf.
+        # http://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object.
         if not self.reuse_server:
             self.julius_server.terminate()
             time.sleep(1)
             self.julius_server.kill()
+        if self.logfile:
+            self.logfile.close()
 
     def is_server_running(self):
         # Try to connect to the server.
@@ -137,42 +158,44 @@ class JuliusASR(object):
 
         os.system('kill -9 {pid}'.format(pid=pid))
 
-    def kill_all_juliuses(self):
+    @staticmethod
+    def kill_all_juliuses():
         os.system('killall julius')
 
     def save_pid(self, pid):
         with open(self.pidfile, "w") as f_out:
             f_out.write(str(pid))
 
-    def start_server(self):
-        jconf = self.jconffile
-        log = self.logfile
+    def start_server(self, popen_kwargs=dict()):
+        jconf_fname = self.jconf_fname
+        self.logfile = open(self.log_fname, 'a+')
         jbin = self.jbin
 
-        config = open(jconf, "w")
-        for k in sorted(self.cfg['ASR']['Julius']['jconf']):
-            config.write('%s %s\n' % (k,
-                                      self.cfg['ASR']['Julius']['jconf'][k]))
-        config.close()
+        # Copy configuration from the Python cfg file to Julius jconf file.
+        with open(jconf_fname, 'w') as jconf_file:
+            jconf_dict = self.cfg['ASR']['Julius']['jconf']
+            jconf_file.writelines(
+                '{key} {val}\n'.format(key=key, val=val)
+                for (key, val) in sorted(jconf_dict.iteritems()))
 
         # Kill all running instances of the Julius ASR server.
         if self.cfg['ASR']['Julius']['killall']:
             self.kill_all_juliuses()
 
-        # Start the server with the -debug options.
+        # Combine the default Popen arguments with those supplied by the
+        # caller.
+        usr_popen_kwargs = popen_kwargs
+        popen_kwargs = {'stdout': self.logfile,
+                        'bufsize': 0}
+        popen_kwargs.update(usr_popen_kwargs)
+
+        # Start the server with the -debug option.
         # With this option, it does not generate segfaults.
-        if self.reuse_server:
-            os.system("%s -debug -C %s > %s &" % (jbin, jconf, log,))
-        else:
-            self.julius_server = subprocess.Popen(
-                '%s -C %s > %s' % (jbin, jconf, log, ),
-                shell=True, bufsize=1)
-            # FIXME There must be an error here somewhere.  After
-            # killing_my_julius using this pid, its apparently child process
-            # (PID one greater) remains running, and that seems to be the
-            # actual julius.
-            # self.save_pid(self.julius_server.pid)
-            self.save_pid(self.julius_server.pid + 1)
+        self.julius_server = subprocess.Popen(
+                [jbin, '-debug', '-C', jconf_fname], **popen_kwargs)
+        # XXX If using shell in Popen, beware that Julius gets another
+        # pid than the return value of Popen.
+        self.save_pid(self.julius_server.pid)
 
     def connect_to_server(self):
         """Connects to the Julius ASR server to start recognition and receive
@@ -215,8 +238,9 @@ class JuliusASR(object):
         self.a_socket.setblocking(1)
         return cmd
 
-    def read_server_message(self, timeout=0.1):
-        """Reads a complete message from the Julius ASR server.
+    def read_server_message(self, timeout=0.3):
+        """\
+        Reads a complete message from the Julius ASR server.
 
         A complete message is denoted by a period on a new line at the end of
         the string.
@@ -224,65 +248,79 @@ class JuliusASR(object):
         Timeout specifies how long it will wait for the end of message.
         """
         results = ""
+        time_slept = 0.0
 
-        to = 0.0
-        while True:
-            if to >= timeout:
-                raise ASRException(
-                    "Timeout when waiting for the Julius server message.")
-
+        # FIXME: Count real time elapsed.
+        while time_slept < timeout:
             try:
+                if self.debug >= 2:
+                    print "receiving"
                 results += self.s_socket.recv(1)
-            except socket.error:
-                # FIXME: You should check the type of error. If the server dies
-                # then there will be a deadlock.
-
+            except socket.error as ex:
+                # errno = ex.errno
+                # FIXME: We would like to determine (by the errno) what
+                # happened.  If the server dies, there will be a deadlock.
+                # However, in the situations seen so far, errno on its own does
+                # not provide the necessary information.
                 if not results:
+                    if self.debug:
+                        print "ERROR: ", ex
+                        print "results: ", results
                     # There are no data waiting for us.
                     return None
-                else:
-                    # We already read some data but we did not received the
-                    # final period, so continue reading.
-                    time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-                    to += self.cfg['Hub']['main_loop_sleep_time']
-                    continue
 
             if results.endswith("\n.\n"):
+                if self.debug:
+                    print "***** results retrieved:", results
                 results = results[:-3].strip()
                 break
+            else:
+                # We already read some data but we did not receive the
+                # final period, so continue reading.
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                time_slept += self.cfg['Hub']['main_loop_sleep_time']
+                if self.debug >= 2:
+                    print "rm.time_slept:", time_slept
+        else:
+            if self.debug:
+                print "**** results so far: ", results
+            raise JuliusASRTimeoutException(
+                "Timeout when waiting for the Julius server message.")
 
+        if self.debug:
+            print "rm.return:", results
         return results
 
     def get_results(self, timeout=0.6):
-        """"Waits for the recognition results from the Julius ASR server.
+        """"\
+        Waits for the complete recognition results from the Julius ASR server.
 
         Timeout specifies how long it will wait for the end of message.
         """
         msg = ""
 
         # Get results from the server.
-        to = 0.0
-        while True:
-            if to >= timeout:
-                raise JuliusASRTimeoutException(
-                    "Timeout when waiting for the Julius server results.")
-
-            m = self.read_server_message()
-            if not m:
+        time_slept = 0.0
+        while time_slept < timeout:
+            msg_part = self.read_server_message(self.msg_timeout)
+            if not msg_part:
                 # Wait and check whether there is a message.
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-                to += self.cfg['Hub']['main_loop_sleep_time']
+                time_slept += self.cfg['Hub']['main_loop_sleep_time']
+                if self.debug >= 2:
+                    print "gr.time_slept:", time_slept
                 continue
 
-            msg += m + '\n'
+            msg += msg_part + '\n'
 
-            print msg
+            if self.debug:
+                print msg
 
             if '<CONFNET>' in msg:
                 break
-
-        if self.cfg['ASR']['Julius']['debug']:
-            print msg
+        else:
+            raise JuliusASRTimeoutException(
+                "Timeout when waiting for the Julius server results.")
 
         # Process the results.
         """ Typical result returned by the Julius ASR.
@@ -425,7 +463,8 @@ class JuliusASR(object):
         return nblist, cn
 
     def flush(self):
-        """Sends command to the Julius ASR to terminate the recognition and get
+        """\
+        Sends a command to the Julius ASR to terminate recognition and get
         ready for new recognition.
 
         """
@@ -447,7 +486,7 @@ class JuliusASR(object):
         Call this input function with audio data belonging into one speech
         segment that should be recognized.
 
-        Output hypotheses is obtained by calling hyp_out().
+        Output hypothesis is obtained by calling hyp_out().
         """
 
         self.recognition_on = True
@@ -474,8 +513,7 @@ class JuliusASR(object):
         if self.recognition_on:
             self.audio_finished()
 
-            nblist, cn = self.get_results(
-                timeout=self.cfg['ASR']['Julius']['timeout'])
+            nblist, cn = self.get_results(timeout=self.timeout)
 
             return cn
 

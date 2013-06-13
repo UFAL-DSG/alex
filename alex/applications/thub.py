@@ -22,7 +22,7 @@ from alex.utils.config import as_project_path
 
 
 class TextHub(Hub):
-    """
+    """\
       Provides a natural text interface to the dialogue system.
 
       TextHub builds a text based testing environment for SLU, DM, and NLG
@@ -138,6 +138,8 @@ class TextHub(Hub):
         nblist.scale()
         nblist.add_other()
 
+        self.write_readline()
+
         return nblist
 
     def process_dm(self):
@@ -232,7 +234,7 @@ if __name__ == '__main__':
     #########################################################################
     #########################################################################
     term_width = getTerminalSize()[1] or 120
-    cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * (term_width - 4))
+    cfg['Logging']['system_logger'].info("Text Hub\n" + "=" * (term_width - 4))
 
     shub = TextHub(cfg)
 

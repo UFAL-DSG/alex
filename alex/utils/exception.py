@@ -9,10 +9,6 @@ class AlexException(Exception):
     pass
 
 
-class ASRException(AlexException):
-    pass
-
-
 class DMException(AlexException):
     pass
 
@@ -38,14 +34,6 @@ class VoipHubException(HubException):
 
 
 class VoipIOException(Exception):
-    pass
-
-
-class JuliusASRException(ASRException):
-    pass
-
-
-class JuliusASRTimeoutException(ASRException):
     pass
 
 

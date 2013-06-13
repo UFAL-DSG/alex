@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import struct
-import numpy as np
-
-from scipy.misc import logsumexp
 from collections import deque
+import numpy as np
+from scipy.misc import logsumexp
+import struct
 
-from alex.utils.exception import ASRException
+from alex.components.asr.exception import ASRException
 from alex.ml.gmm import GMM
 from alex.utils.mfcc import MFCCFrontEnd
 
