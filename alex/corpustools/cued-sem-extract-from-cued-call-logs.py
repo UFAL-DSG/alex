@@ -11,17 +11,22 @@ import __init__
 
 from alex.utils.various import flatten, get_text_from_xml_node
 
-"""
-This program extracts CUED semantic annotations from CUED call logs into a format which can be later processed by
-cued-sem2ufal-sem.py program.
+"""\
+This program extracts CUED semantic annotations from CUED call logs into
+a format which can be later processed by cued-sem2ufal-sem.py program.
 
-It scans for 'user-transcription.norm.xml' to extract the transcriptions and the semantics.
+It scans for 'user-transcription.norm.xml' to extract the transcriptions and
+the semantics.
 
 """
 
 
 def extract_trns_sems_from_file(file, verbose):
-    """Extracts transcriptions and their semantic annotation from the provided CUED call log file."""
+    """\
+    Extracts transcriptions and their semantic annotation from the provided
+    CUED call log file.
+
+    """
 
     trns_sems = []
 
@@ -37,9 +42,11 @@ def extract_trns_sems_from_file(file, verbose):
         asrhyp = el.getElementsByTagName("asrhyp")
         audio = el.getElementsByTagName("rec")
 
-        if len(transcription) != 1 or len(cued_da) != 1 or len(cued_dahyp) == 0 or len(asrhyp) == 0 or len(audio) != 1:
-            # skip this node, it contains multiple elements of either transcriptionm, cued_da,
-            # cued_dahyp, asrhyp, or audio.
+        if (len(transcription) != 1 or len(cued_da) != 1
+                or len(cued_dahyp) == 0 or len(asrhyp) == 0
+                or len(audio) != 1):
+            # Skip this node, it contains multiple elements of either
+            # transcriptionm, cued_da, cued_dahyp, asrhyp, or audio.
             continue
 
         transcription = get_text_from_xml_node(transcription[0]).lower()
@@ -112,22 +119,25 @@ def write_asrhyp_semhyp(outdir, fname, data):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-      This program extracts CUED semantic annotations from CUED call logs into a format
-      which can be later processed by cued-sem2ufal-sem.py program.
+        description="""\
+      This program extracts CUED semantic annotations from CUED call logs into
+      a format which can be later processed by cued-sem2ufal-sem.py program.
 
-      Note that no normalisation of the transcription or the recognised speech is performed.
-      Any normalisation of the input text should be done before the SLU component starts
-      to process the input text.
+      Note that no normalisation of the transcription or the recognised speech
+      is performed.  Any normalisation of the input text should be done before
+      the SLU component starts to process the input text.
 
-      It scans for 'user-transcription.norm.xml' to extract the transcriptions and the semantics.
+      It scans for 'user-transcription.norm.xml' to extract the transcriptions
+      and the semantics.
 
       """)
 
     parser.add_argument('--indir', action="store", default='./cued_call_logs',
-                        help='an input directory with CUED call log files (default: ./cued_call_logs)')
+                        help=('an input directory with CUED call log files '
+                              '(default: ./cued_call_logs)'))
     parser.add_argument('--outdir', action="store", default='./cued_data',
-                        help='an output directory for files with audio and their transcription (default: ./cued_data)')
+                        help=('an output directory for files with audio and '
+                              'their transcription (default: ./cued_data)'))
     parser.add_argument(
         '-v', action="store_true", default=False, dest="verbose",
         help='set verbose oputput')

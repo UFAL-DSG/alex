@@ -1,24 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import deque
+from datetime import datetime
 import multiprocessing
 import os.path
-import wave
 import sys
 import time
+import wave
 
-from datetime import datetime
-from collections import deque
-
-from alex.utils.exception import ASRException
+from alex.components.asr.exception import ASRException
+from alex.components.hub.messages import Command, Frame
+from alex.utils.procname import set_proc_name
 from alex.utils.sessionlogger import SessionClosedException
 
 import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD
-
-from alex.components.hub.messages import Command, Frame
-
-from alex.utils.procname import set_proc_name
 
 
 class VAD(multiprocessing.Process):

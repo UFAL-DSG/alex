@@ -3,8 +3,9 @@
 
 from __future__ import unicode_literals
 
-import os
 import codecs
+import os
+import re
 
 __all__ = ['database']
 
@@ -49,6 +50,43 @@ NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
 STOPS_FNAME = "zastavky.expanded.txt"  # this has been expanded to include
                                        # other forms of the words; still very
                                        # dirty, though
+STOPS_FNAME = "zastavky.txt"
+
+
+_substs_lit = [
+    ('\\bn\\.L\\.', ['nad Labem']),
+    ('\\bn\\.Vlt\\.', ['nad Vltavou']),
+    ('žel\\.st\\.', ['železniční stanice']),  # FIXME Noone would say this.
+                                              # Factorise.
+    ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
+    ('žel\\.zast\\.', ['železniční zastávka']),
+    ('[Kk]ult\\.dům', ['kulturní dům', 'kulturák']),
+    ('n\\.Č\\.[Ll]\\.', ['nad černými lesy']),
+    ('n\\.[Ll]\\.', ['nad lesy']),
+    ('St\\.Bol\\.', ['stará boleslav']),
+    ('\\brozc\\.', ['rozcestí']),
+    ('\\bnádr\\.', ['nádraží']),
+    ('\\bsídl\\.', ['sídliště']),
+    ('\\bnám\\.', ['náměstí']),
+    ('\\bnem\\.', ['nemocnice']),
+    ('\\bzdr\\.stř\\.', ['zdravotní středisko']),
+    ('\\bzdrav\\.stř\\.', ['zdravotní středisko']),
+    ('\\bhost\\.', ['hostinec']),
+    ('\\bháj\\.', ['hájovna']),
+    ('\\bkřiž\\.', ['křižovatka']),
+    ('\\bodb\\.', ['odbočka']),
+    ('\\bzast\\.', ['zastávka']),
+    ('\\bhl\\.sil\\.', ['hlavní silnice']),
+    ('\\bn\\.', ['nad']),
+    ('\\bp\\.', ['pod']),
+    ('\\b(\w)\\.', ['\\1']),   # ideally uppercase...
+    ('\\bI\\b', ['jedna']),
+    ('\\bII\\b', ['dva']),
+]
+_substs = [(re.compile(regex), [val + ' ' for val in vals])
+           for (regex, vals) in _substs_lit]
+_num_rx = re.compile('[1-9][0-9]*')
+_num_rx_exh = re.compile('^[1-9][0-9]*$')
 
 
 def db_add(slot, value, surface):
@@ -132,15 +170,58 @@ def add_time():
         # db_add("time", time_rel_prefix(time_val), time_rel_wrap(time_str))
 
 
+def preprocess_stops_line(line, expanded_format=False):
+    line = line.strip()
+    if expanded_format:
+        val, names = line.split(';', 1)
+        names = names.split(';')
+    else:
+        val = line
+        names = [line]
+
+    # Do some basic preprocessing.
+    # Expand abbreviations.
+    for regex, subs in _substs:
+        if any(map(regex.search, names)):
+            old_names = names
+            names = list()
+            for old_name in old_names:
+                if regex.search(old_name):
+                    for sub in subs:
+                        names.append(regex.sub(sub, old_name))
+                else:
+                    names.append(old_name)
+    # Spell out numerals.
+    if any(map(_num_rx.search, names)):
+        old_names = names
+        names = list()
+        for name in old_names:
+            new_words = list()
+            for word in name.split():
+                if _num_rx_exh.match(word):
+                    try:
+                        new_words.append(spell_number(int(word)))
+                    except:
+                        new_words.append(word)
+                else:
+                    new_words.append(word)
+            names.append(' '.join(new_words))
+    # Remove extra spaces, lowercase.
+    names = [' '.join(name.split()).lower() for name in names]
+
+    return val, names
+
+
 def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
+    is_expanded = 'expanded' in STOPS_FNAME
     with codecs.open(os.path.join(dirname, STOPS_FNAME),
                      encoding='utf-8') as stops_file:
-        for ln in stops_file:
-            ln = ln.strip().lower()
-            stop_val, stop_names = ln.split(';', 1)
-            for synonym in stop_names.split(';'):
+        for line in stops_file:
+            stop_val, stop_names = preprocess_stops_line(
+                line, expanded_format=is_expanded)
+            for synonym in stop_names:
                 db_add('stop', stop_val, synonym)
 
 
@@ -161,4 +242,4 @@ def stem():
 add_time()
 add_stops()
 # FIXME: This is not the best place to do stemming.
-stem()
+# stem()

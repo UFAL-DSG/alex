@@ -106,6 +106,44 @@ class TestNode(unittest.TestCase):
         self.assertClose(s1.belief[('b',)], 0.15)
         self.assertClose(s2.belief[('a',)], 0.7)
 
+    def test_parameter_simple(self):
+        alpha = DirichletParameterNode('theta', DiscreteFactor(
+            ['X0', 'X1'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0'],
+            },
+            {
+                ('x0_0', 'x1_0'): 3,
+                ('x0_1', 'x1_0'): 1,
+            }
+        ))
+
+        factor = DirichletFactorNode('factor')
+        x0 = DiscreteVariableNode('X0', ['x0_0', 'x0_1'])
+        x1 = DiscreteVariableNode('X1', ['x1_0'])
+
+        x1.observed({('x1_0',): 1})
+
+        factor.connect(alpha)
+        factor.connect(x0, parent=False)
+        factor.connect(x1, parent=True)
+
+        x0.message_to(factor)
+        x1.message_to(factor)
+
+        factor.update()
+        self.assertAlmostEqual(factor.belief[('x0_0', 'x1_0')], 0.5)
+
+        factor.message_to(x0)
+        factor.message_to(x1)
+
+        x0.update()
+        self.assertAlmostEqual(x0.belief[('x0_0',)], 3.0/4)
+
+        factor.message_to(alpha)
+        print alpha.alpha
+
     def test_parameter(self):
         alpha = DirichletParameterNode('theta', DiscreteFactor(
             ['X0', 'X1'],
@@ -114,12 +152,12 @@ class TestNode(unittest.TestCase):
                 'X1': ['x1_0', 'x1_1', 'x1_2'],
             },
             {
-                ('x0_0', 'x1_0'): 8,
-                ('x0_0', 'x1_1'): 1,
-                ('x0_0', 'x1_2'): 3,
-                ('x0_1', 'x1_0'): 2,
-                ('x0_1', 'x1_1'): 1,
-                ('x0_1', 'x1_2'): 2,
+                ('x0_0', 'x1_0'): 1,
+                ('x0_0', 'x1_1'): 8,
+                ('x0_0', 'x1_2'): 1,
+                ('x0_1', 'x1_0'): 1,
+                ('x0_1', 'x1_1'): 2,
+                ('x0_1', 'x1_2'): 1,
             }
         ))
 
@@ -127,6 +165,7 @@ class TestNode(unittest.TestCase):
         x0 = DiscreteVariableNode('X0', ['x0_0', 'x0_1'])
         x1 = DiscreteVariableNode('X1', ['x1_0', 'x1_1', 'x1_2'])
 
+        x0.observed({('x0_0',): 1})
         x1.observed({('x1_0',): 0.7, ('x1_1',): 0.2, ('x1_2',): 0.1})
 
         factor.connect(alpha)
@@ -137,15 +176,16 @@ class TestNode(unittest.TestCase):
         x1.message_to(factor)
 
         factor.update()
-        self.assertAlmostEqual(factor.belief[('x0_0', 'x1_0')], 0.7)
-        self.assertAlmostEqual(factor.belief[('x0_0', 'x1_1')], 0.2)
-        self.assertAlmostEqual(factor.belief[('x0_0', 'x1_2')], 0.1)
+        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_0')], 0.35)
+        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_1')], 0.1)
+        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_2')], 0.05)
 
         factor.message_to(x0)
         factor.message_to(x1)
 
         x0.update()
-        self.assertAlmostEqual(x0.belief[('x0_0',)], 0.72)
+        #self.assertAlmostEqual(x0.belief[('x0_0',)], 0.56)
 
         factor.message_to(alpha)
         print alpha.alpha
+        raise
