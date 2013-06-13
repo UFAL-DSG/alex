@@ -13,6 +13,7 @@ import traceback
 
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
+import alex.components.asr.kaldi as KASR
 
 from alex.components.asr.exception import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
@@ -70,6 +71,8 @@ class ASR(multiprocessing.Process):
             self.asr = GASR.GoogleASR(cfg)
         elif self.cfg['ASR']['type'] == 'Julius':
             self.asr = JASR.JuliusASR(cfg)
+        elif self.cfg['ASR']['type'] == 'Kaldi':
+            slef.asr = KASR.KaldiASR(cfg)
         else:
             raise ASRException(
                 'Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
