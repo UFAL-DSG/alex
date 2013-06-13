@@ -1,5 +1,5 @@
-#!python
-# encoding: utf8
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ''' Czech stemmer
 Copyright © 2010 Luís Gomes <luismsgomes@gmail.com>.
 
@@ -10,7 +10,7 @@ Ported from the Java implementation available at:
 import re
 import sys
 
-def cz_stem(word, aggressive=False):
+def cz_stem_word(word, aggressive=False):
     if not re.match(u"^\\w+$", word):
         return word
     if not word.islower() and not word.istitle() and not word.isupper():
@@ -29,6 +29,12 @@ def cz_stem(word, aggressive=False):
         return s.title()
     return s
 
+def cz_stem(l, aggressive=False):
+    if isinstance(l, str) or isinstance(l, unicode):
+        return cz_stem_word(l)
+    else:
+        return [cz_stem(w) for w in l if w]
+    
 def _remove_case(word):
     if len(word) > 7 and word.endswith(u"atech"):
         return word[:-5]

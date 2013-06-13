@@ -31,6 +31,9 @@ CARD_NUMBERS = {
     '9': u'devět',
 }
 
+class AOTBNLGException(TemplateNLGException):
+    pass
+    
 class AOTBNLG(TemplateNLG):
     def __init__(self, cfg):
         super(AOTBNLG, self).__init__(cfg)
@@ -121,5 +124,6 @@ class AOTBNLG(TemplateNLG):
 #                return u"Systémová chyba 2"
 #
 #        return u" ".join(res)
-
-        raise TemplateNLGException("The backoff NLG should not be necessary at this moment.")
+        
+        print "Add template for:", unicode(da)
+        raise AOTBNLGException("The backoff NLG should not be necessary at this moment.")

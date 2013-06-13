@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import os
 import codecs
 
-
 __all__ = ['database']
 
 
@@ -15,6 +14,7 @@ database = {
             "next_tram": ["další"]
         },
         "time": {
+            "now": ["nyní", "teď", "následující"]
         },
         "stop": {
         },

@@ -49,6 +49,8 @@ class GoogleRouteLegStep(object):
             self.departure_time = \
                 self.parsetime(input_json['transit_details']['departure_time']['text'])
             self.arrival_stop = input_json['transit_details']['arrival_stop']['name']
+            self.arrival_time = \
+                self.parsetime(input_json['transit_details']['arrival_time']['text'])
             self.headsign = input_json['transit_details']['headsign']
             self.vehicle = input_json['transit_details']['line']['vehicle']['type']
             self.line_name = input_json['transit_details']['line']['short_name']
