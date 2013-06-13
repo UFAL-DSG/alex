@@ -22,7 +22,7 @@ from alex.utils.config import as_project_path
 
 
 class TextHub(Hub):
-    """
+    """\
       Provides a natural text interface to the dialogue system.
 
       TextHub builds a text based testing environment for SLU, DM, and NLG

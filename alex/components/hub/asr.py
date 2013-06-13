@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
 from __future__ import unicode_literals
+
+if __name__ == "__main__":
+    import autopath
 
 import multiprocessing
 import time
@@ -10,10 +14,11 @@ import traceback
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
 
+from alex.components.asr.exception import ASRException
+from alex.components.asr.julius import JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, \
     UtteranceConfusionNetwork
 from alex.components.hub.messages import Command, Frame, ASRHyp
-from alex.utils.exception import ASRException, JuliusASRTimeoutException
 
 from alex.utils.procname import set_proc_name
 
@@ -80,7 +85,7 @@ class ASR(multiprocessing.Process):
           flush() - flush input buffers.
             Now it only flushes the input connection.
 
-        Return True if the process should terminate.
+        Returns True iff the process should terminate.
         """
 
         if self.commands.poll():

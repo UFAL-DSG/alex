@@ -10,12 +10,13 @@ import __init__
 
 from alex.corpustools.cuedda import CUEDDialogueAct
 
-"""
-This program processes the CUED call logs for <semitran> tags, converts the CUED semantic annotations
-therein to the UFAL semantic format and stores them in a <semitran_ufal> tag.
+"""\
+This program processes the CUED call logs for <semitran> tags, converts the
+CUED semantic annotations therein to the UFAL semantic format and stores them
+in a <semitran_ufal> tag.
 
-It scans for all */*/user-transcription.norm.xml files in the directory given by the --indir argument.
-By default, this is ./cued_call_logs.
+It scans for all */*/user-transcription.norm.xml files in the directory given
+by the --indir argument.  By default, this is ./cued_call_logs.
 
 The files are processed in-place.
 
@@ -53,28 +54,34 @@ def process_log(infile, outfile, verbose):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-      This program processes the CUED call logs for <semitran> tags, converts the UCED semantic annotations
-      therein to the UFAL semantic format and stores them in a <semitran_ufal> tag.
+        description="""\
+      This program processes the CUED call logs for <semitran> tags, converts
+      the UCED semantic annotations therein to the UFAL semantic format and
+      stores them in a <semitran_ufal> tag.
 
-      It scans for all */user-transcription.norm.xml files in the directory given by the --indir argument.
-      By default, this is ./cued_call_logs.
+      It scans for all */user-transcription.norm.xml files in the directory
+      given by the --indir argument.  By default, this is ./cued_call_logs.
 
-      The resulting files (with both <semitrans> and <semitrans_ufal>) are named ufalized-user-transcription.norm.xml.
-      The prefix can also be specified by the --prefix arguement.
+      The resulting files (with both <semitrans> and <semitrans_ufal>) are
+      named ufalized-user-transcription.norm.xml.  The prefix can also be
+      specified by the --prefix arguement.
 
-      The --outdir argument controls the destination folder of ufalized files. If given, all the output files
-      will be written to that directory, without preserving the original directory structure. If not given,
-      the output files go to the directories where they came from.
+      The --outdir argument controls the destination folder of ufalized files.
+      If given, all the output files will be written to that directory, without
+      preserving the original directory structure. If not given, the output
+      files go to the directories where they came from.
 
       """)
 
     parser.add_argument('--indir', action="store", default='./cued_call_logs',
-                        help='an input directory with CUED call log */*/*.xml files (default: ./cued_call_logs)')
+                        help=('an input directory with CUED call log '
+                              '*/*/*.xml files (default: ./cued_call_logs)'))
     parser.add_argument('--prefix', action="store", default='ufalized',
                         help='a prefix for the modified files.')
     parser.add_argument('--outdir', action="store", default='NONE',
-                        help='optional output directory where all the modified files will be written (without dir. structure)')
+                        help=('optional output directory where all the '
+                              'modified files will be written (without dir. '
+                              'structure)'))
     parser.add_argument(
         '-v', action="store_true", default=False, dest="verbose",
         help='set verbose output')
