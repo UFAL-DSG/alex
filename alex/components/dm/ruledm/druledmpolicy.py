@@ -184,8 +184,8 @@ class DRuleDMPolicy:
 
         return DialogueAct("&".join(d_str))
 
-    def say_noentiendo(self):
-        return DialogueAct("noentiendo()")
+    def say_notunderstood(self):
+        return DialogueAct("notunderstood()")
 
     def answer_confirm(self, state, res0, slots_to_confirm):
         conflicts = []
@@ -216,7 +216,10 @@ class DRuleDMPolicy:
             for conflict in conflicts:
                 conf_acts += ["inform(%s='%s')" % (conflict, res0[conflict], )]
             res = DialogueAct("negate()")
-            res.merge(DialogueAct("&".join(conf_acts)))
+            # XXX I understood sorting was not desired.  Substituted with
+            # the non-sorting version.
+            # res.merge(DialogueAct("&".join(conf_acts)))
+            res.extend(conf_acts)
             return res
 
     def pick_record(self, state, res):
@@ -259,7 +262,7 @@ class DRuleDMPolicy:
 
         # if we didn't understand tell him
         if len(user_da) == 0 or user_da.has_dat("null"):
-            return state, self.say_noentiendo()
+            return state, self.say_notunderstood()
 
         # if the user hasn't specified anything (i.e. blank filter)
         # tell him what he can do
@@ -279,8 +282,12 @@ class DRuleDMPolicy:
         # if nothing matches, tell him
         if res0 is None:
             da = self.say_nomatch()
-            da.merge(self.say_query(state))
-            da.merge(self.say_canreset())
+            # XXX I understood sorting was not desired.  Substituted with
+            # the non-sorting version.
+            # da.merge(self.say_query(state))
+            # da.merge(self.say_canreset())
+            da.extend(self.say_query(state).dais)
+            da.extend(self.say_canreset().dais)
             return state, da
 
         if self.debug:

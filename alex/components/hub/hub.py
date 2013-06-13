@@ -20,3 +20,10 @@ class Hub(object):
                 pass
 
             atexit.register(readline.write_history_file, self.hub_history_file)
+
+    def write_readline(self):
+        if self.hub_history_file is not None:
+            try:
+                readline.write_history_file(self.hub_history_file)
+            except IOError:
+                pass

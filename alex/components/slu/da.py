@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
+from __future__ import unicode_literals
+
 import codecs
 from collections import defaultdict
 import copy
@@ -10,7 +12,8 @@ from operator import xor
 
 from alex.components.slu.exception import SLUException
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
-from alex.ml.hypothesis import Hypothesis, NBList, NBListException
+from alex.ml.hypothesis import Hypothesis, NBList, NBListException, \
+    ConfusionNetwork
 from alex.utils.text import split_by
 
 
@@ -30,13 +33,17 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     """
     with codecs.open(das_fname, encoding=encoding) as das_file:
         das = defaultdict(list)
-        for line in islice(das_file, 0, limit):
+        for line_id, line in enumerate(islice(das_file, 0, limit)):
             line = line.strip()
             if not line:
                 continue
             parts = line.split("=>", 2)
-            key = parts[0].strip()
-            da_str = parts[1].strip()
+            if len(parts) == 2:
+                key = parts[0].strip()
+                da_str = parts[1].strip()
+            else:
+                key = str(line_id)
+                da_str = parts[0].strip()
             das[key] = DialogueAct(da_str)
     return das
 
@@ -83,15 +90,20 @@ class DialogueActItem(Abstracted):
 
     # TODO Rename dai to dai_str for sake of clarity.
     def __init__(self, dialogue_act_type=None, name=None, value=None,
-                 dai=None):
-        """Initialise the dialogue act item. Assigns the default values to
+                 dai=None, attrs=None):
+        """\
+        Initialise the dialogue act item. Assigns the default values to
         dialogue act type (dat), slot name (name), and slot value (value).
+
+        TODO: Document what the `attrs' kwarg is for, please.
 
         """
         # Store the arguments.
         self._dat = dialogue_act_type
         self._name = name
         self._value = value
+        # XXX! What is this for?!
+        self._attrs = {} if attrs is None else attrs
 
         # Bookkeeping.
         self._orig_values = set()
@@ -107,19 +119,20 @@ class DialogueActItem(Abstracted):
         # Identity of a DAI is determined by its textual representation.
         # That means, if two DAIs have the same DA type, slot name, and slot
         # value, they hash to the same spot.
-        return hash(str(self))
+        return hash(unicode(self))
 
     def __cmp__(self, other):
-        self_str, other_str = str(self), str(other)
+        self_str, other_str = unicode(self), unicode(other)
         return (self_str >= other_str) - (self_str <= other_str)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
         # This check is needed for the DAI gets into a partially constructed
         # state during copy.deepcopying.
+
         try:
             str_self = self._str
         except AttributeError:
@@ -140,6 +153,7 @@ class DialogueActItem(Abstracted):
                              .format(type_=self._dat,
                                      name=self._name or u'',
                                      eq_val=eq_val))
+
         return self._str
 
     def iter_typeval(self):
@@ -344,7 +358,7 @@ class DialogueActItem(Abstracted):
             first_par_idx = dai_str.index('(')
         except ValueError:
             raise DialogueActItemException(
-                'Parsing error in: "{dai}". Missing opening parenthesis.'
+                u'Parsing error in: "{dai}". Missing opening parenthesis.'
                 .format(dai=dai_str))
 
         self._dat = dai_str[:first_par_idx]
@@ -364,7 +378,7 @@ class DialogueActItem(Abstracted):
                     self._value = self._value[1:-1]
             else:
                 raise DialogueActItemException(
-                    "Parsing error in: {dai_str}: {atval}".format(
+                    u"Parsing error in: {dai_str}: {atval}".format(
                         dai_str=dai_str, atval=name_val))
 
         self._str = None
@@ -404,11 +418,11 @@ class DialogueAct(object):
                                            "constructed from a basestring.")
             self.parse(da_str)
 
-    def __unicode__(self):
-        return '&'.join(unicode(dai) for dai in self._dais)
-
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return u'&'.join(unicode(dai) for dai in self._dais)
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
@@ -419,7 +433,7 @@ class DialogueAct(object):
         if isinstance(other, DialogueAct):
             if self._dais == other.dais:
                 return 0
-            self_str = str(self)
+            self_str = unicode(self)
             mydais_sorted = (self._dais if self._dais_sorted else
                              sorted(self._dais))
             theirdais_sorted = (other._dais if other._dais_sorted else
@@ -515,6 +529,8 @@ class DialogueAct(object):
         """Merges another DialogueAct into self.  This is done by concatenating
         lists of the DAIs, and sorting and merging own DAIs afterwards.
 
+        If sorting is not desired, use `extend' instead.
+
         """
         if not isinstance(da, DialogueAct):
             raise DialogueActException(
@@ -579,7 +595,7 @@ class DialogueActFeatures(Features):
                 if dai.value is not None:
                     full_feat = AbstractedTuple2(
                         (dai.dat,
-                         '{n}={v}'.format(n=dai.name, v=dai.value)))
+                         u'{n}={v}'.format(n=dai.name, v=dai.value)))
                     self.features[full_feat] += 1.
                     self.generic[full_feat] = full_feat.get_generic()
                     self.instantiable[full_feat] = full_feat
@@ -607,7 +623,10 @@ class DialogueActHyp(SLUHypothesis):
         self.da = da
 
     def __str__(self):
-        return "%.3f %s" % (self.prob, self.da)
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return "%.3f %s" % (self.prob, unicode(self.da))
 
     def get_best_da(self):
         return self.da
@@ -766,14 +785,14 @@ class DialogueActNBListFeatures(Features):
                 self.features[(2, feat)] = feat_val
 
 
-class DialogueActConfusionNetwork(SLUHypothesis):
-    """Dialogue act item confusion network. This is a very simple
-    implementation in which all dialogue act items are assumed to be
-    independent. Therefore, the network stores only posteriors for dialogue act
-    items.
+class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
+    """\
+    Dialogue act item confusion network. This is a very simple implementation
+    in which all dialogue act items are assumed to be independent.  Therefore,
+    the network stores only posteriors for dialogue act items.
 
     This can be efficiently stored as a list of DAIs each associated with its
-    probability. The alternative for each DAI is that there is no such DAI in
+    probability.  The alternative for each DAI is that there is no such DAI in
     the DA. This can be represented as the null() dialogue act and its
     probability is 1 - p(DAI).
 
@@ -785,33 +804,19 @@ class DialogueActConfusionNetwork(SLUHypothesis):
 
     """
     def __init__(self):
-        self.cn = []
+        ConfusionNetwork.__init__(self)
 
-    def __str__(self):
-
+    def __unicode__(self):
+        # DAs in a DA confnet are in no particular order, so we sort them here.
         ret = []
         for prob, dai in sorted(self.cn, reverse=True):
-            # FIXME Works only for DSTC.
-            ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=dai))
+            ret.append(u"{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
-        return "\n".join(ret)
-
-    def __len__(self):
-        return len(self.cn)
-
-    def __getitem__(self, idx):
-        return self.cn[idx]
-
-    def __contains__(self, dai):
-        return self.get_marginal(dai) is not None
+        return u"\n".join(ret)
 
     def __iter__(self):
         for dai_hyp in self.cn:
             yield dai_hyp
-
-    def add(self, probability, dai):
-        """Append additional dialogue act item into the confusion network."""
-        self.cn.append([probability, dai])
 
     @staticmethod
     def _combine_new(prob1, prob2):
@@ -840,6 +845,20 @@ class DialogueActConfusionNetwork(SLUHypothesis):
                       'arit': _combine_arit.__func__,
                       'harm': _combine_harm.__func__}
 
+    def make_dict(self):
+        """\
+        Creates a dictionary mapping a simplified tuple representation of a DAI
+        to that DAI for DAIs present in this DA confnet.
+
+        """
+        daitup2dai = dict()
+        for prob, dai in self.cn:
+            if dai.name is None:
+                daitup2dai[dai.dat] = dai
+            else:
+                daitup2dai[(dai.dat, dai.name)] = dai
+        return daitup2dai
+
     def add_merge(self, probability, dai, combine='max'):
         """Combines the probability mass of the given dialogue act item with an
         existing dialogue act item or adds a new dialogue act item.
@@ -866,7 +885,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         """Return the best dialogue act (one with the highest probability)."""
         da = DialogueAct()
         for prob, dai in self.cn:
-            if prob > 0.5:
+            if prob >= 0.5:
                 da.append(dai)
 
         if len(da) == 0:
@@ -1059,8 +1078,7 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         # print
 
         nblist.merge()
-        nblist.normalise()
-        nblist.sort()
+        nblist.add_other()
 
         # print nblist
         # print
@@ -1115,17 +1133,17 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
-                    ("The probability of the {dai!s} dialogue act item is " +
-                     "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+                    (u"The probability of the {dai!s} dialogue act item is " +
+                     u"larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
 
     def normalise_by_slot(self):
         """Ensures that probabilities for alternative values for the same slot
         sum up to one (taking account for the `other' value).
         """
-        slot_sums = {dai.name: 0. for (p, dai) in self.cn if dai.name}
+        slot_sums = {dai.name: 0.0 for (p, dai) in self.cn if dai.name}
         dai_weights = list()
         has_prob1 = list()
-        slot_1probs = {dai_name: 0 for dai_name in slot_sums}
+        slot_1probs = {dai_name: 0.0 for dai_name in slot_sums}
         for p, dai in self.cn:
             this_has_prob1 = True  # whatever, these values will be overwritten
             dai_weight = 1.        # or never used
@@ -1157,6 +1175,13 @@ class DialogueActConfusionNetwork(SLUHypothesis):
         self.cn.sort(reverse=True)
         return self
 
+    @classmethod
+    def make_from_da(self, da):
+        cn = DialogueActConfusionNetwork()
+        for dai in da:
+            cn.add(1.0, dai)
+        return cn
+
 
 def merge_slu_nblists(multiple_nblists):
     """Merge multiple dialogue act N-best lists."""
@@ -1168,14 +1193,13 @@ def merge_slu_nblists(multiple_nblists):
             raise SLUException(
                 "Cannot merge something that is not DialogueActNBList.")
         nblist.merge()
-        nblist.normalise()
+        nblist.add_other()
 
         for prob, da in nblist:
             merged_nblists.add(prob_nblist * prob, da)
 
     merged_nblists.merge()
-    merged_nblists.normalise()
-    merged_nblists.sort()
+    merged_nblists.add_other()
 
     return merged_nblists
 

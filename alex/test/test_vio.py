@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import multiprocessing
 import sys
 import time
 import argparse
-
-import __init__
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.messages import Command, Frame

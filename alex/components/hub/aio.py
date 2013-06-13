@@ -23,9 +23,11 @@ FIXME: There is confusion in naming packets, frames, and samples.
 
 """
 
-
-class WebIO(multiprocessing.Process):
-    """
+class AudioIO(multiprocessing.Process):
+    """ AudioIO implements IO operation with a soundcard. Currently, it uses the default sound device for both input
+    and output. I enabled then it logs all recorded and played audio into a file.
+    The file is in RIFF wave in stereo, where left channel contains recorded audio and the right channel contains
+    played audio.
     """
 
     def __init__(self, cfg, commands, audio_record, audio_play):

@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import autopath
 
 import multiprocessing
 import sys
 import time
 import argparse
-
-import __init__
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -119,7 +118,7 @@ if __name__ == '__main__':
                 m = []
                 m.append("Recognised hypotheses:")
                 m.append("-" * 120)
-                m.append(str(asr_hyp.hyp))
+                m.append(unicode(asr_hyp.hyp))
                 cfg['Logging']['system_logger'].info('\n'.join(m))
 
                 # get top hypotheses text

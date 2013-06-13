@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import urllib
 import urllib2
 
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
+from alex.components.tts import TTSInterface
 
-class GoogleTTS():
+
+class GoogleTTS(TTSInterface):
     """ Uses Google TTS service to synthesize sentences in a specific language, e.g. en, cs.
 
     The main function synthesize returns a string which contain a RIFF wave file audio of the synthesized text.
@@ -19,7 +23,7 @@ class GoogleTTS():
         self.cfg = cfg
 
     @cache.persistent_cache(True, 'GoogleTTS.get_tts_mp3.')
-    def get_tts_mp3(self, language, text):
+    def get_tts_mp3(self, language, text, rate=1.0):
         """ Access Google TTS service and get synthesized audio.
         Note that the returned audio is in the MP3 format.
 
@@ -28,7 +32,9 @@ class GoogleTTS():
         """
 
         baseurl = "http://translate.google.com/translate_tts"
-        values = {'q': text, 'tl': language}
+        values = {'q': text.encode('utf8'), 'tl': language, 'rate': rate}
+        if self.cfg['ASR']['Google']['debug']:
+            print values
         data = urllib.urlencode(values)
         request = urllib2.Request(baseurl, data)
         request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
@@ -39,7 +45,7 @@ class GoogleTTS():
     def synthesize(self, text):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
-        mp3 = self.get_tts_mp3(self.cfg['TTS']['Google']['language'], text)
+        mp3 = self.get_tts_mp3(self.cfg['TTS']['Google']['language'], text, self.cfg['TTS']['Google'].get('rate', 1.0))
         wav = audio.convert_mp3_to_wav(self.cfg, mp3)
 
         return wav

@@ -256,7 +256,7 @@ class Abstracted(object):
 
     @classmethod
     def make_other(cls, type_):
-        return '{t}-OTHER'.format(t=type_)
+        return u'{t}-OTHER'.format(t=type_)
 
 
     def iter_typeval(self):
@@ -286,6 +286,7 @@ class Abstracted(object):
             types.add(type_)
             yield type_, value
         # Construct the other-instantiations for each type yet.
+        # FIXME: Is this the correct thing to do?
         for type_ in types:
             yield type_, self.other_val
 

@@ -20,12 +20,15 @@ from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
 from alex.utils.config import Config
 
+
 class VoipHub(Hub):
+    """\
+    VoipHub builds a full-featured VOIP telephone system.
+    It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
+    Then it connects ASR and TTS with the VOIP to handle audio input and
+    output.
     """
-      VoipHub builds a full featured VOIP telephone system.
-      It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
-      Then it connects ASR and TTS with the VOIP to handle audio input and output.
-    """
+
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -82,6 +85,7 @@ class VoipHub(Hub):
         call_start = 0
         call_back_time = -1
         call_back_uri = None
+        number_of_turns = -1
 
         s_voice_activity = False
         s_last_voice_activity_time = 0
@@ -132,6 +136,7 @@ class VoipHub(Hub):
 
                         # init the system
                         call_start = time.time()
+                        number_of_turns = 0
 
                         s_voice_activity = False
                         s_last_voice_activity_time = 0
@@ -154,6 +159,10 @@ class VoipHub(Hub):
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
+                        # FIXME: this is not an ideal synchronisation for the stopped components
+                        # we should do better. FJ
+                        time.sleep(0.5)
+
                         self.cfg['Logging']['system_logger'].session_end()
                         self.cfg['Logging']['session_logger'].session_end()
 
@@ -175,6 +184,10 @@ class VoipHub(Hub):
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "speech_start":
                         u_voice_activity = True
+
+                        if s_voice_activity:
+                            self.cfg['Logging']['session_logger'].barge_in("system")
+
                     if command.parsed['__name__'] == "speech_end":
                         u_voice_activity = False
                         u_last_voice_activity_time = time.time()
@@ -199,6 +212,15 @@ class VoipHub(Hub):
                     if command.parsed['__name__'] == "dm_da_generated":
                         # record the time of the last system generated dialogue act
                         s_last_dm_activity_time = time.time()
+                        number_of_turns += 1
+
+                        tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
+
+                    # if a dialogue act is generated, stop playing current TTS audio
+                    if not hangup and command.parsed['__name__'] == "dm_da_generated":
+                        vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
+                        s_voice_activity = False
+                        s_last_voice_activity_time = time.time()
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
@@ -210,11 +232,18 @@ class VoipHub(Hub):
 
             current_time = time.time()
 
-            if hangup and s_last_dm_activity_time + 1.0 < current_time and \
-                s_voice_activity == False and s_last_voice_activity_time + 1.0 < current_time:
+            if hangup and s_last_dm_activity_time + 2.0 < current_time and \
+                s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
                 # we are ready to hangup only when all voice activity finished,
                 hangup = False
                 vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+
+            # hard hangup due to the hard limits
+            if number_of_turns != -1 and current_time - call_start > self.cfg['VoipHub']['hard_time_limit'] or \
+                number_of_turns > self.cfg['VoipHub']['hard_turn_limit']:
+                number_of_turns = -1
+                vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+
 
         # stop processes
         vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
@@ -242,16 +271,18 @@ class VoipHub(Hub):
 #########################################################################
 #########################################################################
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
+        description="""\
         VoipHub builds a full featured VOIP telephone system.
-        It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
-        Then it connects ASR and TTS with the VOIP to handle audio input and output.
+        It builds a pipeline of VAD, ASR, SLU, DM, NLG, TTS components.
+        Then it connects ASR and TTS with the VOIP to handle audio input and
+        output.
 
-        The program reads the default config in the resources directory ('../resources/default.cfg') config
-        in the current directory.
+        The program reads the default config in the resources directory
+        ('../resources/default.cfg') config in the current directory.
 
         In addition, it reads all config file passed as an argument of a '-c'.
         The additional config files overwrites any default or previous values.

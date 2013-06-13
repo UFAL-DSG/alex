@@ -1,0 +1,41 @@
+#!/bin/bash
+set -e
+
+ENVDIR="/xdisk/devel/vystadial_lab/vystadial_env"
+TMPDIR="/tmp/aotb" #$(date +%s)
+cd ../../../
+
+rm -rf $TMPDIR
+mkdir $TMPDIR
+
+find alex \
+    -type f \
+    \( \
+        -path "alex/ml/*" \
+    -or -path "alex/components/*" \
+    -or -path "alex/utils/*" \
+    -or -path "alex/resources/vad/*" \
+    -or -path "alex/applications/AlexOnTheBus/*" \
+    -or -path "alex/applications/__init__.py" \
+    -or -path "alex/applications/autopath.py" \
+    -or -path "alex/applications/vhub.py" \
+    -or -path "alex/applications/thub.py" \
+    -or -path "alex/applications/shub.py" \
+    -or -path "alex/README.txt" \
+    -or -path "alex/__init__.py" \
+    \) \
+    ! -path "**/.git*" \
+    ! -path "**/.svn*" \
+    ! -name "*.pyc" \
+    ! -name "*~" \
+    ! -name ".*" \
+    -exec cp --parents {} $TMPDIR \;
+
+cp alex/applications/AlexOnTheBus/aotb.cfg ${TMPDIR}/alex/resources/default.cfg
+
+mkdir ${TMPDIR}/env
+cp -r $ENVDIR/setenv ${TMPDIR}/
+cp -r $ENVDIR/python2.7/ ${TMPDIR}/env/
+
+cd /tmp/
+zip -r aotb.zip aotb

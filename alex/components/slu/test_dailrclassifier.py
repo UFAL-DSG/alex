@@ -57,20 +57,20 @@ class TestDAILRClassifier(unittest.TestCase):
         s = []
         s.append("")
         s.append("ASR confnet:")
-        s.append(str(asr_confnet))
+        s.append(unicode(asr_confnet))
         s.append("")
         s.append("Correct Best SLU dialogue act:")
-        s.append(str(slu_best_da))
+        s.append(unicode(slu_best_da))
         s.append("")
         s.append("SLU confnet:")
-        s.append(str(slu_hyp))
+        s.append(unicode(slu_hyp))
         s.append("")
         s.append("Best SLU dialogue act:")
-        s.append(str(slu_hyp_best_da))
+        s.append(unicode(slu_hyp_best_da))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(slu_best_da), str(slu_hyp_best_da))
+        self.assertEqual(unicode(slu_best_da), unicode(slu_hyp_best_da))
 
 if __name__ == '__main__':
     unittest.main()

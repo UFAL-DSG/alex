@@ -59,10 +59,6 @@ class LBP(BP):
                     x for x in node.neighbors.values() if x in nodes)
                 node.backward_send_to = []
 
-        # Init new nodes.
-        for node in nodes:
-            node.init_messages()
-
     def clear_nodes(self):
         self.nodes = []
 

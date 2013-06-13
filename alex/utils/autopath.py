@@ -1,23 +1,23 @@
 """
-self cloning, automatic path configuration 
+self cloning, automatic path configuration
 
-copy this into any subdirectory of pypy from which scripts need 
-to be run, typically all of the test subdirs. 
+copy this into any subdirectory of pypy from which scripts need
+to be run, typically all of the test subdirs.
 The idea is that any such script simply issues
 
     import autopath
 
 and this will make sure that the parent directory containing "pypy"
-is in sys.path. 
+is in sys.path.
 
-If you modify the master "autopath.py" version (in pypy/tool/autopath.py) 
+If you modify the master "autopath.py" version (in pypy/tool/autopath.py)
 you can directly run it which will copy itself on all autopath.py files
-it finds under the pypy root directory. 
+it finds under the pypy root directory.
 
 This module always provides these attributes:
 
-    pypydir    pypy root directory path 
-    this_dir   directory where this autopath.py resides 
+    pypydir    pypy root directory path
+    this_dir   directory where this autopath.py resides
 
 """
 
@@ -57,13 +57,13 @@ def __dirinfo(part):
     if error:
         raise EnvironmentError("Invalid source tree - bogus checkout! " +
                                error)
-    
+
     pypy_root = os.path.join(head, '')
     try:
         sys.path.remove(head)
     except ValueError:
         pass
-    sys.path.insert(0, os.path.join(head, "../external_libs"))  # 3rd party libraries 
+    sys.path.insert(0, os.path.join(head, "../external_libs"))  # 3rd party libraries
     sys.path.insert(0, head)
 
     munged = {}

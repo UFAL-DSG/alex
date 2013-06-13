@@ -5,7 +5,7 @@ Note that the unit tests should be placed in the same directory as the tested mo
 
 1. Using unittest module:
 
-				$ python -m unittest alex.test.test_string
+        $ python -m unittest alex.test.test_string
 
     This approach works everywhere but doesn't support test discovery.
 

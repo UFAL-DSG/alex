@@ -79,6 +79,7 @@ class NLG(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
+
                 self.cfg['Logging']['session_logger'].text("system", text)
 
                 self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))

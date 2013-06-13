@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import unittest
 
 import __init__
@@ -91,7 +93,6 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         correct_nblist.add(A1*B2*C3, Utterance("A1 B2 C3"))
         correct_nblist.merge()
         correct_nblist.add_other()
-        correct_nblist.sort()
 
         confnet = UtteranceConfusionNetwork()
         confnet.add([[A1, 'A1'], [A2, 'A2'], [A3, 'A3'],])
@@ -104,17 +105,57 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         s = []
         s.append("")
         s.append("Confusion network:")
-        s.append(str(confnet))
+        s.append(unicode(confnet))
         s.append("")
         s.append("Generated nblist:")
-        s.append(str(gen_nblist))
+        s.append(unicode(gen_nblist))
         s.append("")
         s.append("Correct nblist:")
-        s.append(str(correct_nblist))
+        s.append(unicode(correct_nblist))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(gen_nblist), str(correct_nblist))
+        self.assertEqual(unicode(gen_nblist), unicode(correct_nblist))
+
+    def test_repr_basic(self):
+        A1, A2, A3 = 0.90, 0.05, 0.05
+        B1, B2, B3 = 0.50, 0.35, 0.15
+        C1, C2, C3 = 0.60, 0.30, 0.10
+
+        confnet = UtteranceConfusionNetwork()
+        confnet.add([[A1, 'A ("1\\")'], [A2, 'A2'], [A3, 'A3'],])
+        confnet.add([[B1, 'B1'], [B2, 'B2'], [B3, 'B3'],])
+        confnet.add([[C1, 'C1'], [C2, 'C2'], [C3, 'C3'],])
+
+        rep = repr(confnet)
+        self.assertEqual(repr(eval(rep)), rep)
+
+    def test_repr_w_long_links(self):
+        A1, A2, A3 = 0.90, 0.05, 0.05
+        B1, B2, B3 = 0.70, 0.20, 0.10
+        C1, C2, C3 = 0.80, 0.10, 0.10
+
+        asr_confnet = UtteranceConfusionNetwork()
+        asr_confnet.add([[A1, "want"], [A2, "has"], [A3, 'ehm']])
+        asr_confnet.add([[B1, "Chinese"],  [B2, "English"], [B3, 'cheap']])
+        asr_confnet.add([[C1, "restaurant"],  [C2, "pub"],   [C3, 'hotel']])
+        asr_confnet.merge().sort()
+
+        confnet = asr_confnet.replace(("has", ), ("is", ))
+        rep = repr(confnet)
+        self.assertEqual(repr(eval(rep)), rep)
+
+        confnet = asr_confnet.replace(("has", ), tuple())
+        rep = repr(confnet)
+        self.assertEqual(repr(eval(rep)), rep)
+
+        confnet = asr_confnet.replace(("has", ), ("should", "have", ))
+        rep = repr(confnet)
+        self.assertEqual(repr(eval(rep)), rep)
+
+        confnet.add([(0.5, 'want'), (0.5, 'pub')])
+        rep = repr(confnet)
+        self.assertEqual(repr(eval(rep)), rep)
 
     def test_ngram_iterator(self):
         tolerance = 0.01

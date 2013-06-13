@@ -6,34 +6,27 @@ import urllib2
 
 import alex.utils.cache as cache
 import alex.utils.audio as audio
-from alex.utils.exception import TTSException
+from alex.components.tts import TTSException
 
 
 class VoiceRssTTS():
-    """\
-    Uses The VoiceRSS TTS service to synthesize sentences in a
+    """Uses The VoiceRSS TTS service to synthesize sentences in a
     specific language, e.g. en-us.
 
     The main function synthesize returns a string which contain a RIFF
-    wave file audio of the synthesized text.
-    """
+    wave file audio of the synthesized text."""
 
     def __init__(self, cfg):
-        """\
-        Intitialize: just remember the configuration.
-        """
+        """Intitialize: just remember the configuration."""
         self.cfg = cfg
 
     @cache.persistent_cache(True, 'VoiceRssTTS.get_tts_wav.')
     def get_tts_wav(self, language, text):
-        """\
-        Access the VoiceRSS TTS service and get synthesized audio
+        """Access the VoiceRSS TTS service and get synthesized audio
         for a text.
-        Returns a string with a WAV stream.
-        """
-
+        Returns a string with a WAV stream."""
         baseurl = "http://api.voicerss.org"
-        values = {'src': text,
+        values = {'src': text.encode('utf8'),
                   'hl': language,
                   'key': self.cfg['TTS']['VoiceRSS']['api_key']}
         data = urllib.urlencode(values)
@@ -47,10 +40,8 @@ class VoiceRssTTS():
             raise TTSException("TTS error: " + str(e))
 
     def synthesize(self, text):
-        """\
-        Synthesize the text and return it in a string
-        with audio in default format and sample rate.
-        """
+        """Synthesize the text and return it in a string
+        with audio in default format and sample rate."""
 
         wav = self.get_tts_wav(self.cfg['TTS']['VoiceRSS']['language'], text)
         return wav

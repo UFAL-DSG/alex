@@ -2,6 +2,10 @@
 import sys
 
 def info(type, value, tb):
+    #print 'running remote debugger!'
+    #import rpdb
+    #rpdb.Rpdb().set_trace()
+
     if hasattr(sys, 'ps1') or not sys.stderr.isatty():
     # we are in interactive mode or we don't have a tty-like
     # device, so we call the default hook

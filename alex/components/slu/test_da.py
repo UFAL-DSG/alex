@@ -24,10 +24,10 @@ class TestDA(unittest.TestCase):
         s = []
         s.append("")
         s.append("Using merge().normalise():")
-        s.append(str(nblist1))
+        s.append(unicode(nblist1))
         s.append("")
         s.append("Using normalise().merge():")
-        s.append(str(nblist2))
+        s.append(unicode(nblist2))
         s.append("")
         print '\n'.join(s)
 
@@ -65,14 +65,14 @@ class TestDA(unittest.TestCase):
         s = []
         s.append("")
         s.append("Merged nblists:")
-        s.append(str(merged_nblists))
+        s.append(unicode(merged_nblists))
         s.append("")
         s.append("Correct merged results:")
-        s.append(str(correct_merged_nblists))
+        s.append(unicode(correct_merged_nblists))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(merged_nblists), str(correct_merged_nblists))
+        self.assertEqual(unicode(merged_nblists), unicode(correct_merged_nblists))
 
     def test_merge_slu_confnets(self):
         confnet1 = DialogueActConfusionNetwork()
@@ -100,14 +100,14 @@ class TestDA(unittest.TestCase):
         s = []
         s.append("")
         s.append("Merged confnets:")
-        s.append(str(merged_confnets))
+        s.append(unicode(merged_confnets))
         s.append("")
         s.append("Correct merged results:")
-        s.append(str(correct_merged_confnet))
+        s.append(unicode(correct_merged_confnet))
         s.append("")
         print '\n'.join(s)
 
-        self.assertEqual(str(merged_confnets), str(correct_merged_confnet))
+        self.assertEqual(unicode(merged_confnets), unicode(correct_merged_confnet))
 
 if __name__ == '__main__':
     unittest.main()

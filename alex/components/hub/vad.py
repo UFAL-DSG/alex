@@ -1,24 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import deque
+from datetime import datetime
 import multiprocessing
 import os.path
-import wave
 import sys
 import time
+import wave
 
-from datetime import datetime
-from collections import deque
-
-from alex.utils.exception import ASRException
+from alex.components.asr.exception import ASRException
+from alex.components.hub.messages import Command, Frame
+from alex.utils.procname import set_proc_name
 from alex.utils.sessionlogger import SessionClosedException
 
 import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD
-
-from alex.components.hub.messages import Command, Frame
-
-from alex.utils.procname import set_proc_name
 
 
 class VAD(multiprocessing.Process):
@@ -44,8 +41,6 @@ class VAD(multiprocessing.Process):
 
     def __init__(self, cfg, commands, audio_recorded_in, audio_out):
         multiprocessing.Process.__init__(self)
-
-        set_proc_name("alex_VAD")
 
         self.cfg = cfg
         self.system_logger = cfg['Logging']['system_logger']
@@ -107,6 +102,8 @@ class VAD(multiprocessing.Process):
                     while self.audio_recorded_in.poll():
                         data_play = self.audio_recorded_in.recv()
 
+                    self.detection_window_speech.clear()
+                    self.detection_window_sil.clear()
                     self.deque_audio_recorded_in.clear()
 
                     # reset other state variables
@@ -153,8 +150,8 @@ class VAD(multiprocessing.Process):
                 # buffer the recorded and played audio
                 self.deque_audio_recorded_in.append(data_rec)
 
-                decison = self.vad.decide(data_rec.payload)
-                vad, change = self.smoothe_decison(decison)
+                decision = self.vad.decide(data_rec.payload)
+                vad, change = self.smoothe_decison(decision)
 
                 if self.cfg['VAD']['debug']:
                     self.system_logger.debug("vad: %s change:%s" % (vad, change))
@@ -169,14 +166,13 @@ class VAD(multiprocessing.Process):
                             'vad-{stamp}.wav'.format(stamp=timestamp))
 
                         self.session_logger.turn("user")
-                        self.session_logger.rec_start(
-                            "user", os.path.basename(self.output_file_name))
+                        self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command(
-                            'speech_start()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command(
-                            'speech_start()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
+                                                    'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
+                                                    'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug(
@@ -198,10 +194,10 @@ class VAD(multiprocessing.Process):
                             self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command(
-                            'speech_end()', 'VAD', 'AudioIn'))
-                        self.commands.send(Command(
-                            'speech_end()', 'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
+                            'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
+                            'VAD', 'HUB'))
                         # Close the current wave file.
                         if self.wf:
                             self.wf.close()
@@ -245,6 +241,8 @@ class VAD(multiprocessing.Process):
                         self.wf.writeframes(bytearray(data_rec))
 
     def run(self):
+        set_proc_name("Alex_VAD")
+
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 

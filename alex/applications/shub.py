@@ -25,7 +25,7 @@ class SemHub(Hub):
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
-
+        self.dm.new_dialogue()
 
     def parse_input_da(self, l):
         """Converts a text including a dialogue act and its probability into a dialogue act instance and float probability.
@@ -59,7 +59,7 @@ class SemHub(Hub):
 
     def output_da(self, da):
         """Prints the system dialogue act to the output."""
-        print "System DA:", da
+        print "System DA:", unicode(da)
         print
 
     def input_da_nblist(self):
@@ -87,9 +87,8 @@ class SemHub(Hub):
 
         nblist.merge()
         nblist.scale()
-        nblist.normalise()
-        nblist.sort()
-
+        nblist.add_other()
+        
         return nblist
 
     def run(self):

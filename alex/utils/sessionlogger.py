@@ -9,11 +9,15 @@ import os.path
 import re
 import xml.dom.minidom
 import socket
+import codecs
 
 from datetime import datetime
 
 from alex.utils.mproc import global_lock
 from alex.utils.exception import AlexException
+from alex.utils.exdec import catch_ioerror
+
+import alex.utils.pdbonerror
 
 
 class SessionLoggerException(AlexException):
@@ -22,7 +26,6 @@ class SessionLoggerException(AlexException):
 
 class SessionClosedException(AlexException):
     pass
-
 
 class SessionLogger:
     """ This is a multiprocessing safe logger. It should be used by the alex to
@@ -75,8 +78,7 @@ class SessionLogger:
         """
         self.session_dir_name.value = output_dir
 
-        f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
-                 "w", 0)
+        f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
@@ -125,7 +127,7 @@ class SessionLogger:
         """ Format the message - pretty print
         """
 
-        s = '    ' + str(message)
+        s = '    ' + unicode(message)
         s = re.sub(r'\n', '\n    ', s)
 
         return s + '\n'
@@ -135,8 +137,7 @@ class SessionLogger:
         modifying it.
 
         """
-        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
-                      "r+", 0)
+        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
@@ -152,18 +153,21 @@ class SessionLogger:
         self.f.seek(0)
         self.f.truncate(0)
 
-        x = doc.toprettyxml(encoding="UTF-8")
+        x = doc.toprettyxml(encoding='utf-8')
+
         for i in range(5):
             x = re.sub(r'\n\t*\n', '\n', x)
             x = re.sub(r'\n *\n', '\n', x)
 #            x = re.sub(r'>\n\t*(\w)', r'>\1', x)
         x = re.sub(r'\t', '    ', x)
+#        x = unicode(x, encoding='utf-8')
 
         self.f.write(x)
         fcntl.lockf(self.f, fcntl.LOCK_UN)
         self.f.close()
 
     @global_lock(lock)
+    @catch_ioerror
     def config(self, cfg):
         """ Adds the config tag to the session log.
         """
@@ -181,6 +185,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def header(self, system_txt, version_txt):
         """ Adds host, date, system, and version info into the header element.
         The host and date will be derived automatically.
@@ -203,6 +208,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def input_source(self, input_source):
         """Adds the input_source optional tag to the header."""
         doc = self.open_session_xml()
@@ -215,6 +221,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def dialogue_rec_start(self, speaker, fname):
         """ Adds the optional recorded input/output element to the last
         "speaker" turn.
@@ -240,6 +247,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
         """
@@ -257,6 +265,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def evaluation(self, num_turns, task_success, user_sat, score):
         """Adds the evaluation optional tag to the header."""
         raise SessionLoggerException("Not implemented")
@@ -274,12 +283,15 @@ class SessionLogger:
 
         return 0
 
-#    @global_lock(lock)
+    @global_lock(lock)
+    @catch_ioerror
     def turn(self, speaker):
         """ Adds a new turn at the end of the dialogue element.
 
         The turn_number for the speaker is automatically computed
 
+        FIXME: It can happen that the session.xml is already closed when this
+        function is called.
         """
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("dialogue")
@@ -288,12 +300,13 @@ class SessionLogger:
         if els:
             turn = els[0].appendChild(doc.createElement("turn"))
             turn.setAttribute("speaker", speaker)
-            turn.setAttribute("turn_number", str(trns + 1))
+            turn.setAttribute("turn_number", unicode(trns + 1))
             turn.setAttribute("time", self.get_time_str())
 
         self.close_session_xml(doc)
 
-#    @global_lock(lock)
+    @global_lock(lock)
+    @catch_ioerror
     def dialogue_act(self, speaker, dialogue_act):
         """ Adds the dialogue_act element to the last "speaker" turn.
         """
@@ -304,7 +317,7 @@ class SessionLogger:
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("dialogue_act"))
                 da.setAttribute("time", self.get_time_str())
-                da.appendChild(doc.createTextNode(str(dialogue_act)))
+                da.appendChild(doc.createTextNode(unicode(dialogue_act)))
                 break
         else:
             raise SessionLoggerException(("Missing turn element for %s "
@@ -312,7 +325,8 @@ class SessionLogger:
 
         self.close_session_xml(doc)
 
-#    @global_lock(lock)
+    @global_lock(lock)
+    @catch_ioerror
     def text(self, speaker, text, cost=None):
         """ Adds the text (prompt) element to the last "speaker" turn.
         """
@@ -324,16 +338,16 @@ class SessionLogger:
                 da = els[i].appendChild(doc.createElement("text"))
                 da.setAttribute("time", self.get_time_str())
                 if cost:
-                    da.setAttribute("cost", str(cost))
-                da.appendChild(doc.createTextNode(str(text)))
+                    da.setAttribute("cost", unicode(cost))
+                da.appendChild(doc.createTextNode(unicode(text)))
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
 
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def rec_start(self, speaker, fname):
         """Adds the optional recorded input/output element to the last
         "speaker" turn.
@@ -356,6 +370,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def rec_end(self, fname):
         """ Stores the end time in the rec element with fname file.
         """
@@ -374,7 +389,8 @@ class SessionLogger:
 
         self.rec_started_filename = None
 
-#    @global_lock(lock)
+    @global_lock(lock)
+    @catch_ioerror
     def asr(self, speaker, nblist, confnet=None):
         """ Adds the ASR nblist to the last speaker turn.
 
@@ -390,7 +406,7 @@ class SessionLogger:
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("hypothesis"))
                     hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(str(h)))
+                    hyp.appendChild(doc.createTextNode(unicode(h)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
@@ -402,7 +418,7 @@ class SessionLogger:
                         for p, w in alts:
                             wa = was.appendChild(doc.createElement("word"))
                             wa.setAttribute("p", "%.3f" % p)
-                            wa.appendChild(doc.createTextNode(str(w)))
+                            wa.appendChild(doc.createTextNode(unicode(w)))
 
                 break
         else:
@@ -411,7 +427,8 @@ class SessionLogger:
 
         self.close_session_xml(doc)
 
-#    @global_lock(lock)
+    @global_lock(lock)
+    @catch_ioerror
     def slu(self, speaker, nblist, confnet=None):
         """ Adds the slu nbest list to the last speaker turn.
 
@@ -429,7 +446,7 @@ class SessionLogger:
                 for p, h in nblist:
                     hyp = asr.appendChild(doc.createElement("interpretation"))
                     hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(str(h)))
+                    hyp.appendChild(doc.createTextNode(unicode(h)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
@@ -440,7 +457,7 @@ class SessionLogger:
 
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % p)
-                        daia.appendChild(doc.createTextNode(str(dai)))
+                        daia.appendChild(doc.createTextNode(unicode(dai)))
 
                         daia = sas.appendChild(doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % (1 - p))
@@ -454,6 +471,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def barge_in(self, speaker, tts_time=False, asr_time=False):
         """Add the optional barge-in element to the last speaker turn."""
         doc = self.open_session_xml()
@@ -462,6 +480,7 @@ class SessionLogger:
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 da = els[i].appendChild(doc.createElement("barge-in"))
+                da.setAttribute("time", self.get_time_str())
                 if tts_time:
                     da.setAttribute("tts_time", self.get_time_str())
                 if asr_time:
@@ -474,6 +493,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
+    @catch_ioerror
     def hangup(self, speaker):
         """ Adds the user hangup element to the last user turn.
         """
@@ -496,6 +516,7 @@ class SessionLogger:
     ########################################################################
 
     @global_lock(lock)
+    @catch_ioerror
     def dialogue_state(self, speaker, dstate):
         """ Adds the dialogue state to the log.
 
@@ -504,6 +525,7 @@ class SessionLogger:
         raise SessionLoggerException("Not implemented")
 
     @global_lock(lock)
+    @catch_ioerror
     def belief_state(self, speaker, bstate):
         """ Adds the belief state to the log.
 

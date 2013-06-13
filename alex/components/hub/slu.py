@@ -9,46 +9,53 @@ import alex.components.slu.daiklrclassifier as DAIKLRSLU
 import alex.components.slu.templateclassifier as TSLU
 
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
-from alex.utils.exception import DMException
+from alex.components.slu.exception import SLUException
+from alex.components.slu.common import get_slu_type, slu_factory
+
 
 class SLU(multiprocessing.Process):
-    """The SLU component receives an ASR hypotheses and converts them into hypotheses about the meaning
-    of the input in the form of dialogue acts.
+    """\
+    The SLU component receives ASR hypotheses and converts them into hypotheses
+    about the meaning of the input in the form of dialogue acts.
 
-    This component is a wrapper around multiple SLU components which handles multiprocessing
-    communication.
+    This component is a wrapper around multiple SLU components which handles
+    inter-process communication.
     """
 
     def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
+        """\
+        Initialises an SLU object according to the configuration (cfg['SLU']
+        is the relevant section), and stores ends of pipes to other processes.
+
+        Arguments:
+            cfg: a Config object specifying the configuration to use
+            commands: our end of a pipe (multiprocessing.Pipe) for receiving
+                commands
+            asr_hypotheses_in: our end of a pipe (multiprocessing.Pipe) for
+                receiving audio frames (from ASR)
+            slu_hypotheses_out: our end of a pipe (multiprocessing.Pipe) for
+                sending SLU hypotheses
+
+        """
+
         multiprocessing.Process.__init__(self)
 
+        # Save the configuration.
         self.cfg = cfg
 
+        # Save the pipe ends.
         self.commands = commands
         self.asr_hypotheses_in = asr_hypotheses_in
         self.slu_hypotheses_out = slu_hypotheses_out
 
-        self.cldb = CategoryLabelDatabase(self.cfg['SLU']['cldb'])
-        self.preprocessing = SLUPreprocessing(self.cldb)
-
-        self.slu = None
-        if self.cfg['SLU']['type'] == 'Template':
-            self.slu = TNLG.TemplateClassifier(cfg)
-        elif self.cfg['SLU']['type'] == 'DAILogRegClassifier':
-            # FIXME: maybe the SLU components should use the Config class to initialise themselves.
-            # As a result it would created their category label database and pre-processing classes.
-
-            self.slu = DAILRSLU.DAILogRegClassifier(self.preprocessing)
-            self.slu.load_model(self.cfg['SLU']['DAILogRegClassifier']['model'])
-        elif self.cfg['SLU']['type'] == 'DAIKerLogRegClassifier':
-            self.slu = DAILRSLU.DAIKerLogRegClassifier(self.preprocessing)
-            self.slu.load_model(self.cfg['SLU']['DAIKerLogRegClassifier']['model'])
-        else:
-            raise VoipHubException('Unsupported SLU component: %s' % self.cfg['NLG']['type'])
+        # Load the SLU.
+        self.slu = slu_factory(get_slu_type(cfg), cfg)
 
     def process_pending_commands(self):
-        """Process all pending commands.
+        """\
+        Process all pending commands.
 
         Available commands:
           stop() - stop processing and exit the process
@@ -68,12 +75,12 @@ class SLU(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
-                    # discard all data in in input buffers
+                    # Discard all data in input buffers.
                     while self.asr_hypotheses_in.poll():
                         data_in = self.asr_hypotheses_in.recv()
 
-                    # the SLU components does not have to be flused
-                    #self.slu.flush()
+                    # the SLU components does not have to be flushed
+                    # self.slu.flush()
 
                     return False
 
@@ -89,21 +96,26 @@ class SLU(multiprocessing.Process):
                 if self.cfg['SLU']['debug']:
                     s = []
                     s.append("SLU Hypothesis")
-                    s.append("-"*60)
-                    s.append(str(slu_hyp))
+                    s.append("-" * 60)
+                    s.append(unicode(slu_hyp))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), slu_hyp)
+                if type(slu_hyp) is DialogueActConfusionNetwork:
+                    confnet = slu_hyp
+                else:
+                    confnet = None
+
+                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
 
                 self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
-                self.slu_hypotheses_out.send(SLUHyp(slu_hyp))
+                self.slu_hypotheses_out.send(SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))
 
             elif isinstance(data_asr, Command):
                 self.cfg['Logging']['system_logger'].info(data_asr)
             else:
-                raise DMException('Unsupported input.')
+                raise SLUException('Unsupported input.')
 
     def run(self):
         self.recognition_on = False

@@ -13,7 +13,7 @@ from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
-from alex.components.slu.base_fj import SLUInterface
+from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, merge_slu_confnets
 
@@ -224,8 +224,8 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 mean_accuracy = lr.score(
                     self.input_matrix, self.outputs[dai])
-                print ("Training data prediction mean accuracy of the "
-                       "training data: {0:6.2f}").format(100.0 * mean_accuracy)
+                print (u"Training data prediction mean accuracy of the "
+                       u"training data: {0:6.2f}").format(100.0 * mean_accuracy)
                 print "Size of the params:", lr.coef_.shape, \
                       "Number of non-zero params:", np.count_nonzero(lr.coef_)
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+
 """This module collects classes representing the uncertainty about the actual
 value of a base type instance.
 """
 
+from __future__ import unicode_literals
+
 from collections import namedtuple
+# from operator import mul
 
 from alex.utils.exception import AlexException
 
@@ -22,7 +26,12 @@ class Hypothesis(object):
     representations.
 
     """
-    pass
+    @classmethod
+    def from_fact(cls, fact):
+        """\
+        Constructs a deterministic hypothesis that asserts the given `fact'.
+        """
+        raise NotImplementedError("abstract method")
 
 
 # TODO Make into a class template.
@@ -43,8 +52,11 @@ class NBList(Hypothesis):
         self.tolerance_over1 = 1e-5
 
     def __str__(self):
-        return '\n'.join('{p:.3f} {fact}'.format(p=p, fact=fact)
-                         for p, fact in self.n_best)
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return '\n'.join('{p:.3f} {fact}'.format(p=prob, fact=unicode(fact))
+                         for prob, fact in self.n_best)
 
     def __len__(self):
         return len(self.n_best)
@@ -59,12 +71,21 @@ class NBList(Hypothesis):
     def __cmp__(self, other):
         return (self.n_best >= other.n_best) - (other.n_best >= self.n_best)
 
+    @classmethod
+    def from_fact(cls, fact):
+        # Create a new object of our class.
+        inst = cls()
+        # Add the fact as the only hypothesis on the list.
+        inst.add(1.0, fact)
+        return inst
+
     def get_best(self):
         """Returns the most probable value of the object."""
         return self.n_best[0][1]
 
     def add(self, probability, fact):
-        """Finds the last hypothesis with a lower probability and inserts the
+        """\
+        Finds the last hypothesis with a lower probability and inserts the
         new item before that one.  Optimised for adding objects from the
         highest probability ones to the lowest probability ones.
 
@@ -149,42 +170,62 @@ class NBList(Hypothesis):
 
 
 # UNDER CONSTRUCTION
-# class ConfusionNetwork(Hypothesis):
-#     """Confusion network."""
-#     def __init__(self):
-#         self.net = []
-#
-#     def __str__(self):
-#         return '\n'.join('{p:.30} {f}'.format(p=prob, f=fact)
-#                          for (prob, fact) in self.net)
-#
-#     def __len__(self):
-#         return len(self.net)
-#
-#     def __getitem__(self, i):
-#         return self.net[i]
-#
-#     def __contains__(self, fact):
-#         return self.get_marginal(fact) is not None
-#
-#     def __iter__(self):
-#         for i in self.net:
-#             yield i
-#
-#     def add(self, probability, fact):
-#         """Append additional dialogue act item into the confusion network."""
-#         self.net.append([probability, fact])
-#
+class ConfusionNetwork(Hypothesis):
+    """\
+    Confusion network.  In this representation, each fact breaks down into
+    a sequence of elemntary acts.
+
+    """
+    def __init__(self):
+        self.cn = list()
+
+    def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        return '\n'.join('{p:.30} {f}'.format(p=prob, f=fact)
+                         for (prob, fact) in self.cn)
+
+    def __len__(self):
+        return len(self.cn)
+
+    def __getitem__(self, i):
+        return self.cn[i]
+
+    def __contains__(self, fact):
+        return self.get_marginal(fact) is not None
+
+    def __iter__(self):
+        for fact in self.cn:
+            yield fact
+
+    def add(self, probability, fact):
+        """Append a fact to the confusion network."""
+        self.cn.append([probability, fact])
+
+    @classmethod
+    def from_fact(cls, fact):
+        """\
+        Constructs a deterministic confusion network that asserts the given
+        `fact'.  Note that `fact' has to be an iterable of elementary acts.
+
+        """
+        # Create a new object of our class.
+        inst = cls()
+        # Add the fact as the only hypothesis to the network.
+        inst.cn.extend([1., efact] for efact in fact)
+        return inst
+
 #     def add_merge(self, probability, fact):
 #         """Add the probability mass of the passed dialogue act item to an
 #         existing dialogue act item or adds a new dialogue act item.
 #
 #         """
 #
-#         for i in range(len(self.net)):
-#             if fact == self.net[i][1]:
+#         for i in range(len(self.cn)):
+#             if fact == self.cn[i][1]:
 #                 # I found a matching DAI
-#                 self.net[i][0] += probability
+#                 self.cn[i][0] += probability
 #                 return
 #         # if not found you should add it
 #         self.add(probability, fact)
@@ -192,7 +233,7 @@ class NBList(Hypothesis):
 #     def get_best_da(self):
 #         """Return the best dialogue act (one with the highest probability)."""
 #         da = DialogueAct()
-#         for prob, fact in self.net:
+#         for prob, fact in self.cn:
 #             if prob > 0.5:
 #                 da.append(fact)
 #
@@ -208,7 +249,7 @@ class NBList(Hypothesis):
 #
 #         if res[0].dat == "null":
 #             da = DialogueAct()
-#             for prob, fact in self.net:
+#             for prob, fact in self.cn:
 #                 if fact.name is not None and len(fact.name) > 0:
 #                     da.append(fact)
 #                     break
@@ -238,7 +279,7 @@ class NBList(Hypothesis):
 #             logprob = 0.
 #         else:
 #             prob = 1.0
-#         for edge_p, fact in self.net:
+#         for edge_p, fact in self.cn:
 #             if edge_p > threshold:
 #                 da.append(fact)
 #                 # multiply with probability of presence of a dialogue act
@@ -264,7 +305,7 @@ class NBList(Hypothesis):
 #         """Return a probability of the given hypothesis."""
 #
 #         prob = 1.0
-#         for i, (p, fact) in zip(hyp_index, self.net):
+#         for i, (p, fact) in zip(hyp_index, self.cn):
 #             if i == 0:
 #                 prob *= p
 #             else:
@@ -273,7 +314,7 @@ class NBList(Hypothesis):
 #         return prob
 #
 #     def get_marginal(self, fact):
-#         for prob, my_dai in self.net:
+#         for prob, my_dai in self.cn:
 #             if my_dai == fact:
 #                 return prob
 #         return None
@@ -300,7 +341,7 @@ class NBList(Hypothesis):
 #
 #     def get_hyp_index_dialogue_act(self, hyp_index):
 #         da = DialogueAct()
-#         for i, (p, fact) in zip(hyp_index, self.net):
+#         for i, (p, fact) in zip(hyp_index, self.cn):
 #             if i == 0:
 #                 da.append(fact)
 #
@@ -313,7 +354,7 @@ class NBList(Hypothesis):
 #         """For each CN item creates a NB list item."""
 #
 #         res = []
-#         for cn_item in self.net:
+#         for cn_item in self.cn:
 #             nda = DialogueAct()
 #             print type(cn_item)
 #             print cn_item
@@ -345,7 +386,7 @@ class NBList(Hypothesis):
 #         closed_hyp = {}
 #
 #         # create index for the best hypothesis
-#         best_hyp = tuple([0] * len(self.net))
+#         best_hyp = tuple([0] * len(self.cn))
 #         best_prob = self.get_prob(best_hyp)
 #         open_hyp.append((best_prob, best_hyp))
 #
@@ -405,14 +446,14 @@ class NBList(Hypothesis):
 #     def prune(self, prune_prob=0.001):
 #         """Prune all low probability dialogue act items."""
 #         pruned_cn = []
-#         for prob, fact in self.net:
+#         for prob, fact in self.cn:
 #             if prob < prune_prob:
 #                 # prune out
 #                 continue
 #
 #             pruned_cn.append([prob, fact])
 #
-#         self.net = pruned_cn
+#         self.cn = pruned_cn
 #
 #     def normalise(self):
 #         """Makes sure that all probabilities add up to one. They should
@@ -420,40 +461,40 @@ class NBList(Hypothesis):
 #
 #         """
 #
-#         for p,  fact in self.net:
+#         for p,  fact in self.cn:
 #             if p >= 1.0:
 #                 raise DialogueActConfusionNetworkException(
 #                     ("The probability of the {fact!s} dialogue act item is " + \
 #                      "larger than 1.0, namely {p:0.3f}").format(fact=fact, p=p))
 #
 #     def sort(self):
-#         self.net.sort(reverse=True)
+#         self.cn.sort(reverse=True)
 #
 #
 # class TypedConfusionNetwork(Hypothesis):
 #     """Typed confusion network."""
-#     # Implemented using this structure for self.net:
+#     # Implemented using this structure for self.cn:
 #     # [(type_1, [hyp1, hyp2, ...]),
 #     #  (type_2, [hyp1, hyp2, ...]),
 #     #  ...]
 #     #  where hypn is a _HypWithEv.
 #     # TODO Define a corresponding namedtuple for HypWithEvidence.
 #     def __init__(self):
-#         self.net = list()
+#         self.cn = list()
 #
 #     def __str__(self):
 #         ret = ('  {t}=({alts})'.format(
 #                t=type_,
 #                alts=(' | '.join('{h.p:.3f}:{h.f} ({h.e})'.format(h=hwe)
 #                      for hwe in alts))
-#                for (type_, alts) in self.net)
+#                for (type_, alts) in self.cn)
 #         return '\n'.join(ret)
 #
 #     def __len__(self):
-#         return sum(map(len, self.net))
+#         return sum(map(len, self.cn))
 #
 #     def __contains__(self, fact):
-#         return any((fact in alts) for (type_, alts) in self.net)
+#         return any((fact in alts) for (type_, alts) in self.cn)
 #
 #     def _gen_null(self):
 #         """A method to be overriden in inheriting classes."""
@@ -465,7 +506,7 @@ class NBList(Hypothesis):
 #
 #     def add(self, probability, type_, fact, evidence=1.):
 #         new_item = (probability, fact, evidence)
-#         for my_type, alts in self.net:
+#         for my_type, alts in self.cn:
 #             if my_type == type_:
 #                 ins_idx = len(alts)
 #                 for idx, alt in enumerate(alts):
@@ -480,28 +521,28 @@ class NBList(Hypothesis):
 #                         ins_idx = idx
 #                 alts.insert(ins_idx, new_item)
 #         else:
-#             self.net.append((type_, [new_item]))
+#             self.cn.append((type_, [new_item]))
 #         return self
 #
 #     def get_best(self):
 #         return self._join_items(
-#             (type_, alts[0][1]) for (type_, alts) in self.net
+#             (type_, alts[0][1]) for (type_, alts) in self.cn
 #              if alts[0][0] > .5)
 #
 #     def get_best_nonempty(self):
-#         best = [(type_, alts[0][1]) for (type_, alts) in self.net
+#         best = [(type_, alts[0][1]) for (type_, alts) in self.cn
 #                 if alts[0][0] > .5]
 #         if best:
 #             return self._join_items(best)
 #         else:
-#             max_prob = max(alts[0][0] for (type_, alts) in self.net)
-#             max_hyps = [(type_, alts[0][1]) for (type_, alts) in self.net
+#             max_prob = max(alts[0][0] for (type_, alts) in self.cn)
+#             max_hyps = [(type_, alts[0][1]) for (type_, alts) in self.cn
 #                         if alts[0][0] == max_prob]
 #             return self._join_items((max_hyps[0], ))
 #
 #     def get_best_hyp(self, use_log=True):
-#         probs = [alts[0][0] for (type_, alts) in self.net if alts[0][0] > .5]
-#         items = [(type_, alts[0][1]) for (type_, alts) in self.net
+#         probs = [alts[0][0] for (type_, alts) in self.cn if alts[0][0] > .5]
+#         items = [(type_, alts[0][1]) for (type_, alts) in self.cn
 #                  if alts[0][0] > .5]
 #         if use_log:
 #             from math import log

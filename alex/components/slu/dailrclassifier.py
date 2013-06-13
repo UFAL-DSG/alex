@@ -126,7 +126,8 @@ class DAILogRegClassifier(SLUInterface):
                  clser_type='logistic',
                  features_type='ngram',
                  features_size=4,
-                 abstractions=('concrete',            'abstract')):
+                 abstractions=('concrete',            'abstract'),
+                 cfg=None):
         """TODO
 
         Arguments (partial listing):
@@ -135,6 +136,8 @@ class DAILogRegClassifier(SLUInterface):
                 'partial'  ... include DAs instantiated with do_abstract=False
                 'abstract' ... include DAs instantiated with do_abstract=True
                 (default: ('concrete', 'partial', 'abstract'))
+            cfg: currently ignored (included after it was added to
+                SLUInterface constructor)
 
         """
         # FIXME: maybe the SLU components should use the Config class to
@@ -178,7 +181,7 @@ class DAILogRegClassifier(SLUInterface):
     def _get_conc_feats_idxs(self):
         cur_idx = 0
         conc_idxs = list()
-        # Mimic the process of extracting features, note down indices of
+        # Mimick the process of extracting features, note down indices of
         # features that are concrete.
         if 'ngram' in self.features_type:
             for do_abstract in self._do_abstract_values:
@@ -1082,7 +1085,7 @@ class DAILogRegClassifier(SLUInterface):
             # as an array:
             used_fidxs_ar = np.array(sorted(used_fidxs))
             # Map old feature indices onto new indices.
-            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs))
+            fidx2new = dict((idx, order) for (order, idx) in enumerate(used_fidxs_ar))
 
             # Use the mappings to update feature indexing structures.
             self.feature_idxs = dict((feat, fidx2new[fidx]) for (feat, fidx)
@@ -1241,6 +1244,11 @@ class DAILogRegClassifier(SLUInterface):
 
     def predict_prob(self, dai, feat_vec):
         if self.clser_type == 'logistic':
+            #if str(dai) == 'inform(to="STOP:0")':
+            #    #import ipdb; ipdb.set_trace()
+            #    xx=dict(zip(self.feature_idxs.values(), self.feature_idxs.keys()))
+            #    print u"\n".join(unicode((xx[i], x, )) for i, x in enumerate(zip(self.coefs[dai], feat_vec)))
+
             exponent = (-self.intercepts[dai]
                         - np.dot(self.coefs[dai], feat_vec))
             return 1. / (1. + np.exp(exponent))
@@ -1288,6 +1296,11 @@ class DAILogRegClassifier(SLUInterface):
 
 
         """
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
+
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -1321,7 +1334,9 @@ class DAILogRegClassifier(SLUInterface):
                          self.feature_idxs))
 
         if verbose >= 2:
-            print 'Features: ', utterance_features
+            print 'Features: '
+            for f in utterance_features:
+                print f
 
         da_confnet = DialogueActConfusionNetwork()
 
@@ -1363,6 +1378,10 @@ class DAILogRegClassifier(SLUInterface):
                         utt_hyp=utterance, abutt_hyp=abutterance,
                         inst=(type_, value))
                     feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
+                    if verbose >= 2:
+                        print 'Features*: '
+                        for f in inst_feats:
+                            print f
 
                     try:
                         dai_prob = self.predict_prob(dai, feat_vec)
@@ -1431,7 +1450,7 @@ class DAILogRegClassifier(SLUInterface):
         the results."""
 
         if len(utterance_list) == 0:
-            raise DAILRException("Empty utterance N-best list.")
+            return DialogueActConfusionNetwork()
 
         confnet_hyps = []
         for prob, utt in utterance_list:
@@ -1448,7 +1467,7 @@ class DAILogRegClassifier(SLUInterface):
             # confnet.sort()
             # print confnet
 
-        confnet = merge_slu_confnet_hyps(confnet_hyps)
+        confnet = merge_slu_confnets(confnet_hyps)
         confnet.prune()
         confnet.sort()
 
@@ -1468,11 +1487,11 @@ class DAILogRegClassifier(SLUInterface):
             verbose -- print lots of output
 
         """
-        # nblist = confnet.get_utterance_nblist(n=40)
-        # return self.parse_nblist(nblist)
+        # Precondition checking.
+        if not hasattr(self, 'feature_idxs'):
+            raise DAILRException('Attempted to use the SLU parser without '
+                                 'a model.')
 
-        # XXX Start of the new implementation. It cannot handle preprocessing
-        # and instantiation yet, though, so it is not used as yet.
         if verbose:
             print 'Parsing confnet "{cn}".'.format(cn=confnet)
 
