@@ -22,7 +22,7 @@ class debugSLU:
         self.cfg = cfg
 
     def parse(self, asr_hyp):
-        return DialogueActHyp(1, "DummySLU ASR input: %s" % str(asr_hyp))
+        return DialogueActHyp(1, "DummySLU ASR input:\n%s" % str(asr_hyp))
 
 
 class DummySLU(SLU):
@@ -68,35 +68,7 @@ class WebHub(Hub):
         # used to read SLU hypotheses
         slu_hypotheses_out, slu_child_hypotheses = multiprocessing.Pipe()
 
-        # # DM pipes
-        # # used to send commands to DM
-        # dm_commands, dm_child_commands = multiprocessing.Pipe()
-        # # used to read DM actions
-        # dm_actions_out, dm_child_actions = multiprocessing.Pipe()
-
-        # # NLG pipes
-        # # used to send commands to NLG
-        # nlg_commands, nlg_child_commands = multiprocessing.Pipe()
-        # # used to read NLG output
-        # nlg_text_out, nlg_child_text = multiprocessing.Pipe()
-
-        # # TTS pipes
-        # # used to send commands to TTS
-        # tts_commands, tts_child_commands = multiprocessing.Pipe()
-
-        # command_connections = [aio_commands, vad_commands, asr_commands,
-        #                        slu_commands, dm_commands, nlg_commands,
-        #                        tts_commands]
-
         command_connections = [aio_commands, vad_commands, asr_commands, slu_commands]
-
-        # non_command_connections = [aio_record, aio_child_record,
-        #                            aio_play, aio_child_play,
-        #                            vad_audio_out, vad_child_audio_out,
-        #                            asr_hypotheses_out, asr_child_hypotheses,
-        #                            slu_hypotheses_out, slu_child_hypotheses,
-        #                            dm_actions_out, dm_child_actions,
-        #                            nlg_text_out, nlg_child_text]
 
         non_command_connections = [aio_record, aio_child_record,
                                    aio_play, aio_child_play,
