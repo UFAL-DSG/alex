@@ -22,7 +22,7 @@ class debugSLU:
         self.cfg = cfg
 
     def parse(self, asr_hyp):
-        return DialogueActHyp(1, "DummySLU ASR input:\n%s" % str(asr_hyp))
+        return DialogueActHyp(1, "DebugSLU ASR output:\n%s" % str(asr_hyp))
 
 
 class DummySLU(SLU):

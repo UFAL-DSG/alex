@@ -55,13 +55,15 @@ class KaldiASR(object):
         self.model = Kcfg['model']
         self.LM_scale = Kcfg['LM_scale']
         self.lat_depth = Kcfg['lat_depth']
-        # etc:
+        # etc: FIXME
         # self.max_active
         # self.beam
         # self.latbeam
         # self.acoustic_scale
         # self.wst
         # self.hclg
+        system_logger = self.cfg['Logging']['system_logger']
+        system_logger.info('model: %s\nLM_scale %f\nlat_depth %d\n' % (self.model, self.LM_scale, self.lat_depth))
 
     def _decode_confnet(self, arg1):
         """@todo: Docstring for _decode_confnet
