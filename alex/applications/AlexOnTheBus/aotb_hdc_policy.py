@@ -85,7 +85,7 @@ ontology = \
             'user_requests',
         ],
 
-    'alternatives':
+    'route_alternative':
         [], 
     },
 }
@@ -168,11 +168,11 @@ class AOTBHDCPolicy(DialoguePolicy):
             # NLG("There is nothing else in the database.")
             dialogue_state["lda"] = "None"
             
-            if dialogue_state['alternatives'] == "None":
+            if dialogue_state['route_alternative'] == "None":
                 res_da = DialogueAct('request(from_stop)')
             else:
-                dialogue_state['alternatives'] += 1
-                dialogue_state['alternatives'] %= \
+                dialogue_state['route_alternative'] += 1
+                dialogue_state['route_alternative'] %= \
                     len(dialogue_state.directions) if dialogue_state.directions is not None else 1
                 
                 res_da = self.get_directions(dialogue_state)
@@ -181,16 +181,19 @@ class AOTBHDCPolicy(DialoguePolicy):
             # inform about all requested slots
             res_da = DialogueAct()
             for slot in requested_slots:
-                if slot == "from_stop":
-                    res_da.extend(self.get_from_stop(dialogue_state))
-                elif slot == "to_stop":
-                    res_da.extend(self.get_to_stop(dialogue_state))
-                elif slot == "num_transfers":
-                    res_da.extend(self.get_num_transfers(dialogue_state))
+                if dialogue_state['route_alternative'] != "None":
+                    if slot == "from_stop":
+                        res_da.extend(self.get_from_stop(dialogue_state))
+                    elif slot == "to_stop":
+                        res_da.extend(self.get_to_stop(dialogue_state))
+                    elif slot == "num_transfers":
+                        res_da.extend(self.get_num_transfers(dialogue_state))
                 else:
                     dai = DialogueActItem("inform", slot, requested_slots[slot])
                     res_da.append(dai)
                     dialogue_state["rh_"+slot] = "None"
+                    
+                dialogue_state["rh_"+slot] = "None"
 
         elif confirmed_slots:
             # inform about all slots being confirmed by the user
@@ -228,14 +231,13 @@ class AOTBHDCPolicy(DialoguePolicy):
                 res_da.extend(iconf_da)
                 
             req_da = DialogueAct()
-                 
             if dialogue_state['from_stop'] == "None" or dialogue_state['to_stop'] == "None":
                 if dialogue_state['time'] == "None" and randbool(9):
                     req_da.extend(DialogueAct('request(time)'))
                 elif dialogue_state['from_centre'] == "None" and dialogue_state['to_centre'] == "None" and randbool(9):
-                    if dialogue_state['from_stop'] == "None" and randbool(2):
+                    if randbool(2):
                         req_da.extend(DialogueAct('confirm(from_centre="true")'))
-                    elif dialogue_state['to_stop'] == "None" and randbool(2):
+                    else:
                         req_da.extend(DialogueAct('confirm(to_centre="true")'))
                 elif dialogue_state['from_stop'] == "None" and dialogue_state['to_stop'] == "None" and randbool(3):
                     req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
@@ -243,7 +245,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                     req_da.extend(DialogueAct("request(from_stop)"))
                 elif dialogue_state['to_stop'] == "None":
                     req_da.extend(DialogueAct('request(to_stop)'))
-            
+                
             res_da.extend(req_da)
             
             if len(req_da) == 0:
@@ -268,11 +270,11 @@ class AOTBHDCPolicy(DialoguePolicy):
 
 
     def get_from_stop(self, dialogue_state):
-        route = dialogue_state.directions.routes[dialogue_state['alternatives']]
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
         leg = route.legs[0]
+        da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                da = DialogueAct()
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
@@ -281,18 +283,18 @@ class AOTBHDCPolicy(DialoguePolicy):
                 return da
 
     def get_to_stop(self, dialogue_state):
-        route = dialogue_state.directions.routes[dialogue_state['alternatives']]
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
         leg = route.legs[0]
+        da = DialogueAct()
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
-                da = DialogueAct()
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(DialogueActItem('inform', 'arrive_at', step.arrival_time.strftime("%H:%M")))
                 
                 return da
 
     def get_num_transfers(self, dialogue_state):
-        route = dialogue_state.directions.routes[dialogue_state['alternatives']]
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
@@ -320,19 +322,19 @@ class AOTBHDCPolicy(DialoguePolicy):
 
     def say_directions(self, dialogue_state):
         """Given the state say current directions."""
-        if dialogue_state['alternatives'] == "None":
-            dialogue_state['alternatives'] = 0
+        if dialogue_state['route_alternative'] == "None":
+            dialogue_state['route_alternative'] = 0
             
-        route = dialogue_state.directions.routes[dialogue_state['alternatives']]
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
 
         leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
 
         res = []
 
         if len(dialogue_state.directions) > 1:
-            if dialogue_state['alternatives'] == 0:
+            if dialogue_state['route_alternative'] == 0:
                 res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
-            res.append("inform(alternative=%d)" % (dialogue_state['alternatives'] + 1))
+            res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
 
 
         for step_ndx, step in enumerate(leg.steps):

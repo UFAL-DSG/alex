@@ -170,7 +170,7 @@ class AOTBSLU(SLUInterface):
         if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','to_centre','false'))
 
-        if _all_words_in(utterance, ["od", "kud", "to", "jede"]) or \
+        if _all_words_in(utterance, ["od", "to", "jede"]) or \
             _all_words_in(utterance, ["odkud", "to", "jede"]) or \
             _all_words_in(utterance, ["odkud", "pojede"]) or \
             _all_words_in(utterance, ["od", "kud", "pojede"]):
