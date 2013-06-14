@@ -85,7 +85,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             pass
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
             # get only the best dialogue act
-            da = user_da.get_best_da()
+#            da = user_da.get_best_da()
+            # in DSTS baselien like approach I will dais conf. score, so I will not have to pick the best hyp
+            da = user_da.get_best_nonnull_da()
         else:
             raise DDDStateException("Unsupported input for the dialogue manager.")
 
