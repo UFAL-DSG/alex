@@ -11,26 +11,26 @@ __all__ = ['database']
 
 
 database = {
-        "task": {
-            "next_tram": ["další"]
-        },
-        "time": {
-            "now": ["nyní", "teď", "následující"]
-        },
-        "stop": {
-        },
-        u"tt": {
-            u"bus": [u"bus", u"autobus"],
-            u"tram": [u"tram", u"tramvaj", u"tramvajka"],
-            u"metro": [u"metro", u"krtek", u"podzemka"],
-            u"vlak": [u"vlak", u"rychlík", u"panťák"],
-            u"lanovka": [u"lanovka"],
-            u"přívoz": [u"přívoz", u"loď"],
-        },
-        u"ampm": {
-            u"am": [u"dopo", u"dopoledne", u"ráno"],
-            u"pm": [u"odpo", u"odpoledne", u"večer"],
-        },
+    "task": {
+        "next_tram": ["další"]
+    },
+    "time": {
+        "now": ["nyní", "teď", "následující"]
+    },
+    "stop": {
+    },
+    "tt": {
+        "bus": ["bus", "autobus"],
+        "tram": ["tram", "tramvaj", "tramvajka"],
+        "metro": ["metro", "krtek", "podzemka"],
+        "vlak": ["vlak", "rychlík", "panťák"],
+        "lanovka": ["lanovka"],
+        "přívoz": ["přívoz", "loď"],
+    },
+    "ampm": {
+        "am": ["dopo", "dopoledne", "ráno"],
+        "pm": ["odpo", "odpoledne", "večer"],
+    },
 }
 
 NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
@@ -242,4 +242,4 @@ def stem():
 add_time()
 add_stops()
 # FIXME: This is not the best place to do stemming.
-# stem()
+stem()

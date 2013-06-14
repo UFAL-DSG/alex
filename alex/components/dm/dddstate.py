@@ -17,8 +17,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     Based on this it updates its state.
     """
 
-    def __init__(self, cfg):
-        super(DeterministicDiscriminativeDialogueState, self).__init__(cfg)
+    def __init__(self, cfg, ontology):
+        super(DeterministicDiscriminativeDialogueState, self).__init__(cfg, ontology)
 
         self.slots = defaultdict(lambda: "None")
         self.turns = []
@@ -98,9 +98,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         # store the input
         self.turns.append([da, last_system_da])
 
-        # perform the update
+        # perform the context resolution
         user_da = self.context_resolution(da, last_system_da)
-        self.state_update(da, last_system_da)
+        
+        if self.cfg['DM']['basic']['debug']:
+            self.cfg['Logging']['system_logger'].debug(u'Context Resolution - Dialogue Act: %s' % user_da)
+            
+        # perform the state update
+        self.state_update(user_da, last_system_da)
         self.turn_number +=1
 
         # print the dialogue state if requested
@@ -144,6 +149,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                             user_dai.name == "" and user_dai.value == "dontcare":
                         new_user_dai = DialogueActItem("inform", system_dai.name, system_dai.value)
 
+                    elif system_dai.dat == "request" and user_dai.dat == "inform" and \
+                            system_dai.name != "" and user_dai.name == "" and \
+                            self.ontology.slot_has_value(system_dai.name, user_dai.value):
+                        new_user_dai = DialogueActItem("inform", system_dai.name, user_dai.value)
+
                     elif system_dai.dat == "request" and user_dai.dat == "affirm" and user_dai.name.startswith("has_"):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
@@ -159,9 +169,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     if new_user_dai:
                         new_user_da.append(new_user_dai)
 
-        user_da.extend(new_user_da)
+        new_user_da.extend(user_da)
         
-        return user_da
+        return new_user_da
 
     def state_update(self, user_da, last_system_da):
         """Records the information provided by the system and/or by the user."""

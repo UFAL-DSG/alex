@@ -180,7 +180,8 @@ class AOTBSLU(SLUInterface):
             _all_words_in(utterance, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _any_word_in(utterance, ["kolik",]) and _any_word_in(utterance, ["přestupů", "stupňů", "přestup", "přestupku"]):
+        if _any_word_in(utterance, ["kolik", "jsou"]) and \
+            _any_word_in(utterance, ["přestupů", "přestupy", "stupňů", "přestup", "přestupku"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
     def parse_1_best(self, utterance, verbose=False):

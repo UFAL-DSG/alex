@@ -21,94 +21,15 @@ def randbool(n):
         
     return False
     
-ontology = \
-{
-'slots':
-    {
-    'from_stop': set(['zličín', 'anděl', 'zvonařka', 'malostranské náměstí', 'karlovo náměstí']), 
-    'to_stop': set(['zličín', 'anděl', 'zvonařka', 'malostranské náměstí', 'karlovo náměstí']), 
-    'time': ['now', '7:00', '8:00', '10:00'], 
-    'from_centre': ['dontknow', 'true', 'false'], 
-    'to_centre': ['dontknow', 'true', 'false'], 
-    },
     
-'slot_attributes':
-    {
-    'from_stop': 
-        ['user_informs','user_requests','user_confirms',
-         'system_informs','system_requests','system_confirms','system_iconfirms','system_selects'
-        ],
-    'to_stop':   
-        ['user_informs','user_requests','user_confirms',
-         'system_informs','system_requests','system_confirms','system_iconfirms','system_selects'
-        ],
-    'time':
-        ['user_informs','user_requests','user_confirms',
-         'system_informs',
-         #'system_requests',
-         'system_confirms','system_iconfirms','system_selects'
-        ],
-        
-    'from_centre':
-        ['user_informs','user_requests','user_confirms',
-         'system_informs',
-         #'system_requests',
-         'system_confirms','system_iconfirms','system_selects'
-        ],
-    'to_centre':  
-        ['user_informs','user_requests','user_confirms',
-         'system_informs',
-         #'system_requests',
-         'system_confirms','system_iconfirms','system_selects'
-        ],
-    'num_transfers':
-        [
-            'user_requests',
-        ],
-        
-    # not implemented yet
-    'transfer_stops':
-        [
-            'user_requests',
-        ],
-    'connection_duration':
-        [
-            'user_requests',
-        ],
-    'connection_price':
-        [
-            'user_requests',
-        ],
-
-    'connection_time':
-        [
-            'user_requests',
-        ],
-
-    'route_alternative':
-        [], 
-    },
-}
-
-def ontology_system_requests():
-    return [slot for slot in ontology['slots'] if 'system_requests' in ontology['slot_attributes'][slot]]
-    
-class Ontology(object):
-    def __init__(self, cfg):
-        self.cfg = cfg
-
-    def __getitem__(self, i):
-        return ontology[i]
-
-
 class AOTBHDCPolicyException(DialoguePolicyException):
     pass
 
 class AOTBHDCPolicy(DialoguePolicy):
     """The handcrafted policy for the AOTB system."""
 
-    def __init__(self, cfg):
-        super(AOTBHDCPolicy, self).__init__(cfg)
+    def __init__(self, cfg, ontology):
+        super(AOTBHDCPolicy, self).__init__(cfg, ontology)
 
         self.directions = GooglePIDDirectionsFinder()
 
@@ -224,7 +145,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                 iconf_da = DialogueAct()
                 # implicitly confirm all slots provided but not yet implicitly confirmed
                 for slot in non_informed_slots:
-                    if 'system_iconfirms' in ontology['slot_attributes'][slot]:
+                    if 'system_iconfirms' in self.ontology['slot_attributes'][slot]:
                         dai = DialogueActItem("iconfirm", slot, non_informed_slots[slot])
                         iconf_da.append(dai)
                     
