@@ -132,7 +132,7 @@ class AOTBSLU(SLUInterface):
             _all_words_in(utterance, ["dobrý",  "den" ]):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "zbohem", "konec"]):
+        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "zbohem", "konec", "hledanou"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
@@ -151,8 +151,12 @@ class AOTBSLU(SLUInterface):
         if _any_word_in(utterance, ["ne", "nejed"]):
             cn.add(1.0, DialogueActItem("negate"))
             
-        if _any_word_in(utterance, ["díky", "dikec"]):
-            cn.add(1.0, DialogueActItem("thankyo"))
+        if _any_word_in(utterance, ["díky", "dikec", "děkuji", "děkuju", "děkují"]):
+            cn.add(1.0, DialogueActItem("thankyou"))
+
+        if _any_word_in(utterance, ["od", "začít", ]) and _any_word_in(utterance, ["začátku", "znov", ]) or \
+            _any_word_in(utterance, ["restart", ]) :
+            cn.add(1.0, DialogueActItem("restart"))
 
         if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','from_centre','true'))
@@ -176,7 +180,7 @@ class AOTBSLU(SLUInterface):
             _all_words_in(utterance, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _any_word_in(utterance, ["kolik",]) and _any_word_in(["přestupů", "stupňů", "přestup", "přestupku"]):
+        if _any_word_in(utterance, ["kolik",]) and _any_word_in(utterance, ["přestupů", "stupňů", "přestup", "přestupku"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
     def parse_1_best(self, utterance, verbose=False):

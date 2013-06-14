@@ -148,6 +148,11 @@ class AOTBHDCPolicy(DialoguePolicy):
             res_da = DialogueAct("help()")
             dialogue_state["lda"] = "None"
             
+        elif dialogue_state["lda"] == "thankyou":
+            # NLG("Nashledanou.")
+            res_da = DialogueAct('inform(cordiality="true")&hello()')
+            dialogue_state["lda"] = "None"
+            
         elif dialogue_state["lda"] == "restart":
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
@@ -223,19 +228,21 @@ class AOTBHDCPolicy(DialoguePolicy):
                 res_da.extend(iconf_da)
                 
             req_da = DialogueAct()
-                    
-            if dialogue_state['time'] == "None" and randbool(9):
-                req_da.extend(DialogueAct('request(time)'))
-            elif dialogue_state['from_centre'] == "None" and randbool(4):
-                req_da.extend(DialogueAct('confirm(from_centre="true")'))
-            elif dialogue_state['from_centre'] == "None" and dialogue_state['to_centre'] == "None" and randbool(4):
-                req_da.extend(DialogueAct('confirm(to_centre="true")'))
-            elif dialogue_state['from_stop'] == "None" and dialogue_state['to_stop'] == "None" and randbool(2):
-                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-            elif dialogue_state['from_stop'] == "None":
-                req_da.extend(DialogueAct("request(from_stop)"))
-            elif dialogue_state['to_stop'] == "None":
-                req_da.extend(DialogueAct('request(to_stop)'))
+                 
+            if dialogue_state['from_stop'] == "None" or dialogue_state['to_stop'] == "None":
+                if dialogue_state['time'] == "None" and randbool(9):
+                    req_da.extend(DialogueAct('request(time)'))
+                elif dialogue_state['from_centre'] == "None" and dialogue_state['to_centre'] == "None" and randbool(9):
+                    if dialogue_state['from_stop'] == "None" and randbool(2):
+                        req_da.extend(DialogueAct('confirm(from_centre="true")'))
+                    elif dialogue_state['to_stop'] == "None" and randbool(2):
+                        req_da.extend(DialogueAct('confirm(to_centre="true")'))
+                elif dialogue_state['from_stop'] == "None" and dialogue_state['to_stop'] == "None" and randbool(3):
+                    req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+                elif dialogue_state['from_stop'] == "None":
+                    req_da.extend(DialogueAct("request(from_stop)"))
+                elif dialogue_state['to_stop'] == "None":
+                    req_da.extend(DialogueAct('request(to_stop)'))
             
             res_da.extend(req_da)
             
