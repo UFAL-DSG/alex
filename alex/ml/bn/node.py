@@ -331,5 +331,3 @@ class DirichletFactorNode(FactorNode):
 
         new_alpha = E_alpha * new_alpha_0
         return new_alpha
-
-
