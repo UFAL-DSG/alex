@@ -159,7 +159,7 @@ class VoipHub(Hub):
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
-                        # FIXME: this is not an ideal synchronisation for the stopped components
+                        # FIXME: this is not an ideal synchronization for the stopped components
                         # we should do better. FJ
                         time.sleep(0.5)
 
