@@ -82,7 +82,7 @@ class KaldiASR(object):
         nb = UtteranceNBList()
 
         # FIXME
-        nb.add(1.0, Utterance('This is decoded UTTERANCE :) Testing purposes [Oplatek] --'))
+        nb.add(1.0, Utterance('This is decoded UTTERANCE :) Testing purposes [Oplatek]!'))
 
         return nb
 
@@ -111,5 +111,5 @@ class KaldiASR(object):
         :frame: @todo
         :returns: self - The instance of KaldiASR
         """
-        self.rec_buffer.append(frame.payload)
+        # self.rec_buffer.append(frame.payload)
         return self

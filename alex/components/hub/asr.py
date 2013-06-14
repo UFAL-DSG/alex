@@ -72,7 +72,7 @@ class ASR(multiprocessing.Process):
         elif self.cfg['ASR']['type'] == 'Julius':
             self.asr = JASR.JuliusASR(cfg)
         elif self.cfg['ASR']['type'] == 'Kaldi':
-            slef.asr = KASR.KaldiASR(cfg)
+            self.asr = KASR.KaldiASR(cfg)
         else:
             raise ASRException(
                 'Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
