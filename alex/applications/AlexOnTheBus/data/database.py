@@ -47,10 +47,10 @@ NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
 #   <value>; <phrase>; <phrase>; ...
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
-STOPS_FNAME = "zastavky.expanded.txt"  # this has been expanded to include
+STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
                                        # other forms of the words; still very
                                        # dirty, though
-STOPS_FNAME = "zastavky.txt"
+#STOPS_FNAME = "stops.txt"
 
 
 _substs_lit = [
