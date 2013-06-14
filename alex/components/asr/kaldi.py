@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 # author: Ondrej Platek
-from alex.components.asr.exception import ASRException
 from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork, Utterance
+from alex.components.asr.kaldiException import KaldiSetupException
+import os
+import os.path
+import sys
 
-
-class KaldiException(ASRException):
-    pass
 
 '''
 Remarks
@@ -38,11 +38,14 @@ class KaldiASR(object):
     '''
     Just now it is empty stub with public interface
     '''
+    # do not set up env. variables twice
+    _set_path_executed = False
+
     def __init__(self, cfg):
+        self.logger = cfg['Logging']['system_logger']
         self.cfg = cfg
         Kcfg = cfg['ASR']['Kaldi']
-
-        self.debug = Kcfg.get('debug', False)
+        self.debug = cfg['ASR'].get('debug', False)
 
         hyp_type = Kcfg['hypothesis_type']
         if hyp_type == 'confnet':
@@ -50,8 +53,9 @@ class KaldiASR(object):
         elif hyp_type == 'nblist':
             self.hyp_out = self._decode_nblist
         else:
-            raise KaldiException("Not supported output type")
+            raise KaldiSetupException("Not supported output type")
 
+        self._set_path(Kcfg['ENV_SETTINGS'])
         self.model = Kcfg['model']
         self.LM_scale = Kcfg['LM_scale']
         self.lat_depth = Kcfg['lat_depth']
@@ -62,8 +66,25 @@ class KaldiASR(object):
         # self.acoustic_scale
         # self.wst
         # self.hclg
-        system_logger = self.cfg['Logging']['system_logger']
-        system_logger.info('model: %s\nLM_scale %f\nlat_depth %d\n' % (self.model, self.LM_scale, self.lat_depth))
+        self.logger.info('debug:%r\nmodel:%s\nLM_scale:%f\nlat_depth:%d\n' % (
+            self.debug, self.model, self.LM_scale, self.lat_depth))
+
+    def _set_path(self, d):
+        """Set the environment (LD_LIBRARY_PATH, PYTHON_PATH)
+        for running Kaldi.
+        :d: Dictionary containing system and Python variables
+        """
+        if KaldiASR._set_path_executed:
+            self.logger.debug('Setting ENVIROMENT VARIABLE SECOND time!')
+        else:
+            for k, path in d.iteritems():
+                if not os.path.isdir(path):
+                    raise KaldiSetupException(
+                        'Cannot set %s.\n%s\nPath does not exists!\n' % (k, path))
+            sys.path.append(d['kaldi_python'])
+            llp = os.environ['LD_LIBRARY_PATH'].rstrip(':')
+            os.environ['LD_LIBRARY_PATH'] = ':'.join([llp, d['openblas'], d['openfst'], d['portaudio']])
+            self.logger.debug(os.environ['LD_LIBRARY_PATH'])
 
     def _decode_confnet(self, arg1):
         """@todo: Docstring for _decode_confnet
