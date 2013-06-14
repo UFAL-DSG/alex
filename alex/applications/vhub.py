@@ -159,7 +159,7 @@ class VoipHub(Hub):
 
                         dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
 
-                        # FIXME: this is not an ideal synchronisation for the stopped components
+                        # FIXME: this is not an ideal synchronization for the stopped components
                         # we should do better. FJ
                         time.sleep(0.5)
 
@@ -188,6 +188,10 @@ class VoipHub(Hub):
                         if s_voice_activity:
                             self.cfg['Logging']['session_logger'].barge_in("system")
 
+                            vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
+                            s_voice_activity = False
+                            s_last_voice_activity_time = time.time()
+
                     if command.parsed['__name__'] == "speech_end":
                         u_voice_activity = False
                         u_last_voice_activity_time = time.time()
@@ -214,13 +218,12 @@ class VoipHub(Hub):
                         s_last_dm_activity_time = time.time()
                         number_of_turns += 1
 
-                        tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
-
                     # if a dialogue act is generated, stop playing current TTS audio
-                    if not hangup and command.parsed['__name__'] == "dm_da_generated":
-                        vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
-                        s_voice_activity = False
-                        s_last_voice_activity_time = time.time()
+                    # theoretically it is a good place because if the DM decides to be silent
+                    # the TTS can continue
+                    # however, if it decides to say something, it is for the implementation 
+                    # late to flush old audio. If implemented better, it could work.
+                    # As of now, audio is flushed when speech is detected using VAD
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()

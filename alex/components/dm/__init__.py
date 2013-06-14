@@ -96,7 +96,7 @@ class DialogueManager(object):
         self.policy = self.dialogue_policy_class(self.cfg)
         self.last_system_dialogue_act = None
 
-    def da_in(self, da):
+    def da_in(self, da, utterance):
         """Receives an input dialogue act or dialogue act list with probabilities or dialogue act confusion network.
 
         When the dialogue act is received an update of the state is performed.

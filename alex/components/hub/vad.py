@@ -190,8 +190,7 @@ class VAD(multiprocessing.Process):
                             self.system_logger.debug(
                                 'REC END Output file name: {out}'.format(
                                     out=self.output_file_name))
-                        self.session_logger.rec_end(os.path.basename(
-                            self.output_file_name))
+                        self.session_logger.rec_end(os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
                         self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),

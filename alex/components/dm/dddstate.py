@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
 from collections import defaultdict
 
 from alex.components.dm import DialogueStateException, DialogueState
@@ -28,12 +29,35 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("DDDState - Dialogue state content:")
         s.append("")
-        for name in sorted(self.slots):
+        s.append("%s = %s" % ('lda', self.slots['lda']))
+        
+        for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and \
+                     not sl.startswith('sh_') and not sl.startswith('rh_') and \
+                     not sl.startswith('lda')]:
             s.append("%s = %s" % (name, self.slots[name]))
+        s.append("")
+        
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
+            s.append("%s = %s" % (name, self.slots[name]))
+        s.append("")
+        
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
+            s.append("%s = %s" % (name, self.slots[name]))
+        s.append("")
+        
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
+            s.append("%s = %s" % (name, self.slots[name]))
+
         s.append("")
 
         return '\n'.join(s)
 
+    def __getitem__(self, key):
+        return self.slots[key]
+
+    def __setitem__(self, key, value):
+        self.slots[key] = value
+    
     def restart(self):
         """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
 
@@ -61,7 +85,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             pass
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
             # get only the best dialogue act
-            da = user_da.get_best_da()
+#            da = user_da.get_best_da()
+            # in DSTS baselien like approach I will dais conf. score, so I will not have to pick the best hyp
+            da = user_da.get_best_nonnull_da()
         else:
             raise DDDStateException("Unsupported input for the dialogue manager.")
 
@@ -100,36 +126,41 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
     def context_resolution(self, user_da, last_system_da):
         """Resolves and converts meaning of some user dialogue acts given the context."""
+        
+        new_user_da = DialogueAct()
+        
         if isinstance(last_system_da, DialogueAct):
-            for system_dai in user_da:
+            for system_dai in last_system_da:
                 for user_dai in user_da:
                     new_user_dai = None
 
-                    if last_system_da.has_only_dat("confirm") and user_dai.dat == "affirm":
+                    if system_dai.dat == "confirm" and user_dai.dat == "affirm":
                         new_user_dai = DialogueActItem("inform", system_dai.name, system_dai.value)
 
-                    elif last_system_da.has_only_dat("confirm") and user_dai.dat == "negate":
-                        new_user_dai = DialogueActItem("deny", last_system_da.name, last_system_da.value)
+                    elif system_dai.dat == "confirm" and user_dai.dat == "negate":
+                        new_user_dai = DialogueActItem("deny", system_dai.name, system_dai.value)
 
-                    elif last_system_da.has_only_dat("request") and user_dai.dat == "inform" and \
+                    elif system_dai.dat == "request" and user_dai.dat == "inform" and \
                             user_dai.name == "" and user_dai.value == "dontcare":
-                        new_user_dai = DialogueActItem("inform", last_system_da.name, last_system_da.value)
+                        new_user_dai = DialogueActItem("inform", system_dai.name, system_dai.value)
 
-                    elif last_system_da.has_only_dat("request") and user_dai.dat == "affirm" and user_dai.name.startswith("has_"):
-                        new_user_dai = DialogueActItem("inform", last_system_da.name, "true")
+                    elif system_dai.dat == "request" and user_dai.dat == "affirm" and user_dai.name.startswith("has_"):
+                        new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
-                    elif last_system_da.has_only_dat("request") and user_dai.dat == "negate" and user_dai.name.startswith("has_"):
-                        new_user_dai = DialogueActItem("inform", last_system_da.name, "false")
+                    elif system_dai.dat == "request" and user_dai.dat == "negate" and user_dai.name.startswith("has_"):
+                        new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
-                    elif last_system_da.has_only_dat("request") and user_dai.dat == "affirm" and user_dai.name.endswith("_allowed"):
-                        user_dai = DialogueActItem("inform", last_system_da.name, "true")
+                    elif system_dai.dat == "request" and user_dai.dat == "affirm" and user_dai.name.endswith("_allowed"):
+                        new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
-                    elif last_system_da.has_only_dat("request") and user_dai.dat == "negate" and user_dai.name.endswith("_allowed"):
-                        user_dai = DialogueActItem("inform", last_system_da.name, "false")
+                    elif system_dai.dat == "request" and user_dai.dat == "negate" and user_dai.name.endswith("_allowed"):
+                        new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
                     if new_user_dai:
-                        user_da.append(new_user_dai)
+                        new_user_da.append(new_user_dai)
 
+        user_da.extend(new_user_da)
+        
         return user_da
 
     def state_update(self, user_da, last_system_da):
@@ -156,8 +187,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 if dai.name:
                     self.slots[dai.name] = dai.value
             elif dai.dat == "deny":
+                # handle true and false values because we know their opposite values
+                if dai.value == "true":
+                    self.slots[dai.name] = "false"
+                elif dai.value == "false":
+                    self.slots[dai.name] = "true"
+                    
                 if self.slots[dai.name] == dai.value:
-                    # it must be changed since user does not want this but we do not know for what to change it
+                    # it must be changed since user does not want this value but we do not know for what to change it
                     # therefore it will be changed to None
                     self.slots[dai.name] = "None"
                 else:

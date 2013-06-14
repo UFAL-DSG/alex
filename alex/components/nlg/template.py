@@ -46,19 +46,36 @@ class AbstractTemplateNLG(object):
             templates = load_as_module(file_name, force=True).templates
             # normalize the templates
             self.templates = {}
+            # generalised templates
+            self.gtemplates = {}
             for k, v in templates.iteritems():
-                k = DialogueAct(k)
+                da = DialogueAct(k)
                 #k.sort()
-                k = str(k)
-                self.templates[k] = v
+                self.templates[unicode(da)] = v
+                self.gtemplates[unicode(self.get_generic_da(da))] = (da, v)
+            
         except Exception as ex:
             raise TemplateNLGException('No templates loaded from %s -- %s!' %
                                        (file_name, ex))
 
-    def get_generic_da(self, da, svs):
+    def get_generic_da(self, da):
         """\
         Given a dialogue act and a list of slots and values, substitute
-        the values with generic slot names.
+        the generic values (starting with { and ending with }) with empty string.
+        """
+        # copy the instance
+        da = copy.deepcopy(da)
+        # find matching slots & values
+        for dai in da:
+            if dai.value and dai.value.startswith('{') :
+                # there is match, make it generic
+                dai.value = "{%s}" % dai.name
+        return da
+        
+    def get_generic_da_given_svs(self, da, svs):
+        """\
+        Given a dialogue act and a list of slots and values, substitute
+        the matching slot and values with empty string.
         """
         # copy the instance
         da = copy.deepcopy(da)
@@ -67,7 +84,7 @@ class AbstractTemplateNLG(object):
             for dai in da:
                 if dai.name == name and dai.value == value:
                     # there is match, make it generic
-                    dai.value = '{%s}' % name
+                    dai.value = "{%s}" % dai.name
         return da
 
     def match_generic_templates(self, da, svs):
@@ -92,12 +109,13 @@ class AbstractTemplateNLG(object):
 
         for r in rng:
             for cmb in itertools.combinations(svs, r):
-                generic_da = self.get_generic_da(da, cmb)
+                generic_da = self.get_generic_da_given_svs(da, cmb)
                 try:
-                    tpl = self.random_select(self.templates[str(generic_da)])
+                    gda, tpls = self.gtemplates[unicode(generic_da)]
+                    tpl = self.random_select(tpls)
                 except KeyError:
                     continue
-                return tpl
+                return tpl, gda
 
         # I did not find anything
         raise TemplateNLGException("No match with generic templates.")
@@ -139,7 +157,7 @@ class AbstractTemplateNLG(object):
                            u"Hi.",
                           )
                           (u"How are you doing?",
-                           u"Welcome".
+                           u"Welcome".,
                           ),
                           u"Speak!",
                          ],
@@ -196,34 +214,50 @@ class AbstractTemplateNLG(object):
         except KeyError:
             # try to find a relaxed match
             svs = da.get_slots_and_values()
-            try:
-                tpl = self.random_select(self.match_generic_templates(da, svs))
-            except TemplateNLGException:
-                composed_tpl = []
 
+            try:
+                tpls, mda = self.match_generic_templates(da, svs)
+                tpl = self.random_select(tpls)
+                svs_mda = mda.get_slots_and_values()
+                
+                # update the format names from the generic template
+                svsx = []
+                for (so, vo), (sg, vg) in zip(svs, svs_mda):
+                    
+                    if vg.startswith('{'):
+                        svsx.append([vg[1:-1], vo])
+                    else:
+                        svsx.append([so, vo])
+                
+                self.last_utterance = self.fill_in_template(tpl, svsx)
+            except TemplateNLGException:
+                composed_utt = []
+                
                 # try to find a template for each dialogue act item and concatenate them
                 try:
                     dai_tpl = []
                     for dai in da:
                         try:
-                            dai_tpl = self.random_select(self.templates[unicode(dai)])
+                            dai_utt = self.random_select(self.templates[unicode(dai)])
                         except KeyError:
                             # try to find a relaxed match
                             dax = DialogueAct()
                             dax.append(dai)
                             svsx = dax.get_slots_and_values()
-                            dai_tpl = self.random_select(self.match_generic_templates(dax, svsx))
-                            dai_tpl = self.fill_in_template(dai_tpl, svsx)
+                            try:
+                                tpls, mda = self.match_generic_templates(dax, svsx)
+                                dai_tpl = self.random_select(tpls)
+                                dai_utt = self.fill_in_template(dai_tpl, svsx)
+                            except TemplateNLGException:
+                                dai_utt = "#1"
 
-                        composed_tpl.append(dai_tpl)
-
-                    tpl = ' '.join(composed_tpl)
-
+                        composed_utt.append(dai_utt)
+                        
+                    self.last_utterance = ' '.join(composed_utt)
+                    
                 except TemplateNLGException:
                     # nothing to do, I must backoff
-                    tpl = self.backoff(da)
-
-            self.last_utterance = self.fill_in_template(tpl, svs)
+                    self.last_utterance = self.backoff(da)
 
         return self.last_utterance
 
