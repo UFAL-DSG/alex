@@ -84,8 +84,8 @@ class DialogueManager(object):
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.dialogue_state_class = self.cfg['DM']['dialogue_state']
-        self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']
+        self.dialogue_state_class = self.cfg['DM']['dialogue_state']['type']
+        self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']['type']
         self.last_system_dialogue_act = None
         self.new_dialogue()
 
