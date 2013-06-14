@@ -82,7 +82,7 @@ class SpeechtechTTS(TTSInterface):
         except urllib2.HTTPError:
             raise TTSException("SpeechTech TTS error.")
 
-        raise TTSException("Time out: No data synthesised.")
+        raise TTSException("Time out: No data synthesized.")
 
     def synthesize(self, text):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
@@ -91,9 +91,14 @@ class SpeechtechTTS(TTSInterface):
             mp3 = self.get_tts_mp3(
                 self.cfg['TTS']['SpeechTech']['voice'], text)
             wav = audio.convert_mp3_to_wav(self.cfg, mp3)
-        except TTSException:
-            # send empty wave data
-            # FIXME: log the exception
-            return ""
+
+#            if self.cfg['TTS']['debug']:
+#                m = "TTS cache hits %d and misses %d " % (self.get_tts_mp3.hits, self.get_tts_mp3.misses)
+#                self.cfg['Logging']['system_logger'].debug(m)
+            
+        except TTSException as e:
+            m = e + "Text: %" % text
+            self.cfg['Logging']['system_logger'].warning(m)
+            return b""
 
         return wav
