@@ -214,8 +214,6 @@ class VoipHub(Hub):
                         s_last_dm_activity_time = time.time()
                         number_of_turns += 1
 
-                        tts_commands.send(Command('keeplast()', 'HUB', 'TTS'))
-
                     # if a dialogue act is generated, stop playing current TTS audio
                     if not hangup and command.parsed['__name__'] == "dm_da_generated":
                         vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
