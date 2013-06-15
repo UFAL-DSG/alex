@@ -26,6 +26,7 @@ def from_log(n):
     """Convert number from log arithmetic."""
     return np.exp(n)
 
+
 @np.vectorize
 def logsubexp(a, b):
     """Subtract one number from another in log arithmetic"""
@@ -37,12 +38,40 @@ def logsubexp(a, b):
 
 
 class Factor(object):
-
-    """Abstract class for factor."""
+    """Abstract class for a factor."""
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, variables, variable_values, prob_table):
+        """Create a new factor.
+
+        Needs a list of variables, because assignments must be in the same
+        order. Variable values are used to compute properties of variables,
+        like their cardinalities. Probability table must contain a value for
+        each possible assignment of variables. They key must always be a tuple,
+        this can be tricky, when there is only one variable.
+
+        Example:
+        >>> f = Factor(
+        ...     ['A', 'B'],
+        ...     {
+        ...         'A': ['a1', 'a2'],
+        ...         'B': ['b1', 'b2'],
+        ...     },
+        ...     {
+        ...         ('a1', 'b1'): 0.8,
+        ...         ('a2', 'b1'): 0.2,
+        ...         ('a1', 'b2'): 0.7,
+        ...         ('a2', 'b2'): 0.3,
+        ...     })
+
+        :param variables: Variables which this factor contains.
+        :type variables: list
+        :param variable_values: Dictionary containing for each variable a list of possible values.
+        :type variable_values: dict
+        :param prob_table: Probality table, contains a value for each possible assignment.
+        :type prob_table: dict
+        """
         self.variables = variables
         self.variable_values = variable_values
         self.prob_table = prob_table
@@ -119,11 +148,22 @@ class DiscreteFactor(Factor):
                    from_log(v))
 
     def __getitem__(self, assignment):
-        """Return the value of a given assignment."""
+        """Return the value of a given assignment.
+
+        :param assignment: Assignment of variables whose value should be returned.
+        :type assignment: tuple
+        """
         index = self._get_index_from_assignment(assignment)
         return from_log(self.factor_table[index])
 
     def __setitem__(self, assignment, value):
+        """Set a value.
+
+        :param assignment: Assignment of variables whose value should be changed.
+        :type assignment: tuple
+        :param value: The new value.
+        :type value: number
+        """
         index = self._get_index_from_assignment(assignment)
         self.factor_table[index] = to_log(value)
 
@@ -131,6 +171,7 @@ class DiscreteFactor(Factor):
         """Raise every element of the factor to the power of n.
 
         :param n: The power.
+        :type n: number
         """
         return DiscreteFactor(self.variables,
                               self.variable_values,
@@ -304,6 +345,7 @@ class DiscreteFactor(Factor):
         return DiscreteFactor(self.variables,
                               self.variable_values,
                               new_factor_table)
+
     def marginalize(self, keep):
         """Marginalize all but specified variables.
 
@@ -358,7 +400,7 @@ class DiscreteFactor(Factor):
             for var in keep:
                 # The assignment of variable var changed, so we must add its
                 # stride to the index.
-                if (i+1) % self.strides[var] == 0:
+                if (i + 1) % self.strides[var] == 0:
                     assignment[var] += 1
                     index += new_strides[var]
                 # The assignment of variable var overflowed to 0, we must
@@ -373,7 +415,37 @@ class DiscreteFactor(Factor):
         return DiscreteFactor(keep, new_variable_values, new_factor_table)
 
     def observed(self, assignment_dict):
-        """Set observation."""
+        """Set observation.
+
+        Example:
+        >>> f = DiscreteFactor(
+        ...     ['X'],
+        ...     {
+        ...         'X': ['x0', 'x1'],
+        ...     },
+        ...     {
+        ...         ('x0',): 0.5,
+        ...         ('x1',): 0.5,
+        ...     })
+        >>> print f.pretty_print(width=30, precision=3)
+        ------------------------------
+               X            Value
+        ------------------------------
+              x0             0.5
+              x1             0.5
+        ------------------------------
+        >>> f.observed({('x0',): 0.8, ('x1',): 0.2})
+        >>> print f.pretty_print(width=30, precision=3)
+        ------------------------------
+               X            Value
+        ------------------------------
+              x0             0.8
+              x1             0.2
+        ------------------------------
+
+        :param assignment_dict: Observed values for different assignments of values.
+        :type assignment_dict: dict
+        """
         if assignment_dict is not None:
             # Clear the factor table.
             self.factor_table[:] = np.log(ZERO)

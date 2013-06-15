@@ -172,7 +172,7 @@ class AOTBDM(DialogueManager):
             res = DialogueAct("hello()")
             return res
         if self.state.turn_number > self.cfg['AlexOnTheBus']['max_turns']:
-            res = DialogueAct('bye()&inform(toolong="True")')
+            res = DialogueAct('bye()&inform(toolong="true")')
             return res
         if self.state.hello:
             self.state.hello = False

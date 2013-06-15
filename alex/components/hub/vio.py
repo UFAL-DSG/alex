@@ -280,6 +280,7 @@ class VoipIO(multiprocessing.Process):
         self.audio_recording = False
 
         self.audio_play = audio_play
+        self.audio_playing = False
         self.local_audio_play = deque()
 
         self.last_frame_id = 1
@@ -345,7 +346,8 @@ class VoipIO(multiprocessing.Process):
 
                     self.local_audio_play.clear()
                     self.mem_player.flush()
-
+                    self.audio_playing = False
+                    
                     return False
 
                 if command.parsed['__name__'] == 'flush_out':
@@ -355,7 +357,8 @@ class VoipIO(multiprocessing.Process):
 
                     self.local_audio_play.clear()
                     self.mem_player.flush()
-
+                    self.audio_playing = False
+                    
                     return False
 
                 if command.parsed['__name__'] == 'make_call':
@@ -417,16 +420,13 @@ class VoipIO(multiprocessing.Process):
             # send a frame from input to be played
             data_play = self.local_audio_play.popleft()
 
-            if isinstance(data_play, Frame):
+            if self.audio_playing and isinstance(data_play, Frame):
                 if len(data_play) == self.cfg['Audio']['samples_per_frame'] * 2:
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
 
-                    # send played audio
-                    # FIXME: I should save what I am playing
-                    # self.audio_played.send(data_play)
-
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
+                    self.audio_playing = True
                     self.message_queue.append(
                         (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
@@ -434,7 +434,8 @@ class VoipIO(multiprocessing.Process):
                          self.last_frame_id))
                     self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
 
-                if data_play.parsed['__name__'] == 'utterance_end':
+                if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
+                    self.audio_playing = False
                     self.message_queue.append(
                         (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),

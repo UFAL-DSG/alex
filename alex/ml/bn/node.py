@@ -210,10 +210,11 @@ class DirichletFactorNode(FactorNode):
             else:
                 self.child = node
             self.incoming_message[node.name] = node.belief
+            self.incoming_message[node.name].normalize()
 
     def _compute_message_to_parameter(self, node):
         alpha = self._approximate_true_marginal()
-        message = alpha - self.incoming_parameter + 1
+        message = alpha + 1 - self.incoming_parameter
         node.message_from(self, message)
 
     def _compute_message_to_variable(self, node):
@@ -226,53 +227,60 @@ class DirichletFactorNode(FactorNode):
 
     def _approximate_true_marginal(self):
         # Compute w_0*:
-        # (1) Compute product of cavity distributions for variables.
+        # (1) Compute a product of cavity distributions for variables.
         prod_cavity = reduce(operator.mul, self.incoming_message.itervalues())
         # (2) Compute expected value of theta
         sum_of_alphas = self.incoming_parameter.marginalize(self.parents)
-        expected_alpha = self.incoming_parameter / sum_of_alphas
+        expected_theta = self.incoming_parameter / sum_of_alphas
         # (3) Multiply (1) and (2).
-        msgs = prod_cavity * expected_alpha
+        msgs = prod_cavity * expected_theta
         # (4) Marginalize child node.
-        msgs.marginalize(self.parents)
+        msgs = msgs.marginalize(self.parents)
         # (5) For j-th assignment, sum every other assignment from (4).
         w_0 = msgs.sum_other()
 
         # Compute w_k*:
         # (1) w_k* is a product of w_k and expected x_k
-        w_k = prod_cavity * expected_alpha
+        w_k = prod_cavity * expected_theta
 
-        # Normalize weights.
-        # FIXME: It doesn't work with normalization.
-        #sum_of_weights = w_0 + w_k
-        #sum_of_weights = sum_of_weights.marginalize(self.parents)
-        #w_0 /= sum_of_weights
-        #w_k /= sum_of_weights
+        # Normalize weights:
+        sum_of_weights = w_0 + w_k.marginalize(self.parents)
+        sum_of_weights = sum_of_weights.marginalize(self.parents)
+        w_0 /= sum_of_weights
+        w_k /= sum_of_weights
 
         # Compute expected value of every part of the mixture:
         # (1) Expected value of theta without any observations.
-        expected_values = [w_0 * expected_alpha]
+        expected_values = [w_0 * expected_theta]
         # (2) For each possible value k of a child node, compute expected value
         # of alpha with one observation of k.
         # (2.1) Compute sum of alpha with plus 1.
         sum_of_alphas_1 = self.incoming_parameter.marginalize(self.parents)
         sum_of_alphas_1.add(1)
+        # (2.2) Find index of a child variable, so we can check its
+        # assignment
+        index_of_child = self.incoming_parameter.variables.index(self.child.name)
+
         for k in self.child.values:
-            # (2.2) Create new alphas.
+            # (2.3) Create new alphas.
             alpha_k = deepcopy(self.incoming_parameter)
-            # (2.3) Find index of a child variable, so we can check its
-            # assignment
-            index_of_child = alpha_k.variables.index(self.child.name)
             # (2.4) Add one to every assignment where child variable is
             # assigned to k.
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
                     alpha_k.add(1, assignment)
+
             # (2.5) Compute expected value.
             expected_value_k = alpha_k / sum_of_alphas_1
             # (2.6) Multiply expected value by weight and save.
-            expected_value_k_weighted = w_k * expected_value_k
+            w_k_c = w_k.marginalize(self.parents)
+            for assignment, value in w_k:
+                if assignment[index_of_child] == k:
+                    child_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
+                    w_k_c[child_assignment] = value
+
+            expected_value_k_weighted = w_k_c * expected_value_k
             expected_values.append(expected_value_k_weighted)
 
         # The resulting expected parameters are a sum of weighted expectations
@@ -290,9 +298,6 @@ class DirichletFactorNode(FactorNode):
         for k in self.child.values:
             # (2.2) Create new alphas.
             alpha_k = deepcopy(self.incoming_parameter)
-            # (2.3) Find index of a child variable, so we can check its
-            # assignment
-            index_of_child = alpha_k.variables.index(self.child.name)
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
@@ -300,16 +305,22 @@ class DirichletFactorNode(FactorNode):
             # (2.5) Compute expected value.
             expected_value_k_squared = alpha_k * (alpha_k + 1) / (sum_of_alphas_1 * sum_of_alphas_2)
             # (2.6) Multiply expected value by weight and save.
-            expected_value_k_squared_weighted = w_k * expected_value_k_squared
+            w_k_c = w_k.marginalize(self.parents)
+            for assignment, value in w_k:
+                if assignment[index_of_child] == k:
+                    child_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
+                    w_k_c[child_assignment] = value
+
+            expected_value_k_squared_weighted = w_k_c * expected_value_k_squared
             expected_values_squared.append(expected_value_k_squared_weighted)
 
         # The resulting expected parameters are a sum of weighted expectations
         E_alpha2 = reduce(operator.add, expected_values_squared)
 
         alpha_0 = defaultdict(list)
-        index_of_child = E_alpha.variables.index(self.child.name)
+
         for i, (assignment, value) in enumerate(E_alpha):
-            if E_alpha[assignment] > 0:
+            if value > 0:
                 parent_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
                 alpha_0[parent_assignment].append((E_alpha[assignment] - E_alpha2[assignment]) /
                                                   (E_alpha2[assignment] - E_alpha[assignment]**2))

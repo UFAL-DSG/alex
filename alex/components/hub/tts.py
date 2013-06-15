@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import multiprocessing
 import time
 import sys
 import traceback
 import select
 import os
+import string
 
 from datetime import datetime
 
@@ -50,35 +53,63 @@ class TTS(multiprocessing.Process):
         self.tts = tts_factory(tts_type, cfg)
 
 
-    def save_wav(self, wav):
-        # Create new wave file.
+    def get_wav_name(self):
+        """ Generates a new wave name for the TTS output.
+        
+        Returns the full path and the base name.
+        """
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
         fname = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
             'tts-{stamp}.wav'.format(stamp=timestamp))
 
-        save_wav(self.cfg, fname, wav)
-
-        return os.path.basename(fname)
-
+        return fname, os.path.basename(fname)
+        
+    def parse_into_segments(self, text):
+        segments = []
+        last_split = 0
+        lc = [c for c in string.lowercase]
+        lc.extend('ěščřžýáíé')
+        up = [c for c in string.uppercase]
+        up.extend('ĚŠČČŘŽÝÁÍÉ')
+        
+        for i in range(1, len(text)-2):
+            if text[i-1] in lc and \
+               text[i] in ['.', ",", "?"] and \
+               text[i+1] == " " and \
+               text[i+2] in up:
+                segments.append(text[last_split:i+1])
+                last_split = i + 2 
+        else:
+            segments.append(text[last_split:])
+            
+        return segments
+        
     def synthesize(self, user_id, text):
+        wav = []
+        fname, bn = self.get_wav_name()
+        
         self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
-
-        wav = self.tts.synthesize(text)
-
-        fname = self.save_wav(wav)
-
-        wav = various.split_to_bins(
-            wav, 2 * self.cfg['Audio']['samples_per_frame'])
-
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s")' %
-                            (user_id, text, fname), 'TTS', 'AudioOut'))
-        for frame in wav:
-            self.audio_out.send(Frame(frame))
+                            (user_id, text, bn), 'TTS', 'AudioOut'))
+                  
+        segments = self.parse_into_segments (text)
+        for segment_text in segments:
+            segment_wav = self.tts.synthesize(segment_text)
+            wav.append(segment_wav)
+
+            segment_wav = various.split_to_bins(segment_wav, 2 * self.cfg['Audio']['samples_per_frame'])
+
+            for frame in segment_wav:
+                self.audio_out.send(Frame(frame))
+                
         self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s")' %
-                            (user_id, text, fname), 'TTS', 'AudioOut'))
+                            (user_id, text, bn), 'TTS', 'AudioOut'))
 
         self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' %
-                           (user_id, text, fname), 'TTS', 'HUB'))
+                           (user_id, text, bn), 'TTS', 'HUB'))
+
+
+        save_wav(self.cfg, fname, b"".join(wav))
 
     def process_pending_commands(self):
         """Process all pending commands.

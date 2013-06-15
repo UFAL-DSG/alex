@@ -12,6 +12,8 @@ from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, merge_slu_confnets
 from alex.utils.czech_stemmer import cz_stem
 
+# if there is change in search parameters from_stop, to_stop, time, then reset alternatives
+
 
 def _fill_utterance_values(abutterance, category, res):
     for _, value in abutterance.insts_for_type((category.upper(), )):
@@ -21,29 +23,34 @@ def _fill_utterance_values(abutterance, category, res):
         res[category].append(value)
 
 def _any_word_in(utterance, words):
-    for alt_expr in words:
-        if  cz_stem(alt_expr) in utterance.utterance:
+    for alt_expr in cz_stem(words):
+        if  alt_expr in utterance.utterance:
             return True
+            
     return False
 
 def _all_words_in(utterance, words):
-    for alt_expr in words:
-        if  cz_stem(alt_expr) not in utterance.utterance:
+    for alt_expr in cz_stem(words):
+        if  alt_expr not in utterance.utterance:
             return False
     return True
 
+def _phrase_in(utterance, words):
+    return cz_stem(words) in utterance
 
 class AOTBSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
         super(AOTBSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
-        preps_from = set([u"z", u"za", u"ze", u"od", u"začátek"])
-        preps_to = set([u"k", u"do", u"konec", u"na"])
+        preps_from = set(["z", "za", "ze", "od", "začátek"])
+        preps_to = set(["k", "do", "konec", "na"])
 
         u = abutterance
         N = len(u)
-
+        
+        confirm = _phrase_in(abutterance, ['jede', 'to']) or _phrase_in(abutterance, ['odjíždí', 'to'])
+        
         for i, w in enumerate(u):
             if w.startswith("STOP="):
                 stop_name = w[5:]
@@ -86,23 +93,28 @@ class AOTBSLU(SLUInterface):
                         if u[i+1].startswith('STOP'):
                             from_stop = True
 
+                if confirm:
+                    dat = "confirm"
+                else:
+                    dat = "inform"
+                    
                 if from_stop and not to_stop:
-                    cn.add(1.0, DialogueActItem("inform", "from_stop", stop_name))
+                    cn.add(1.0, DialogueActItem(dat, "from_stop", stop_name))
 
                 if not from_stop and to_stop:
-                    cn.add(1.0, DialogueActItem("inform", "to_stop", stop_name))
+                    cn.add(1.0, DialogueActItem(dat, "to_stop", stop_name))
 
                 # backoff 1: add both from and to stop slots
                 if from_stop and to_stop:
-                    cn.add(0.501, DialogueActItem("inform", "from_stop", stop_name))
-                    cn.add(0.499, DialogueActItem("inform", "to_stop", stop_name))
+                    cn.add(0.501, DialogueActItem(dat, "from_stop", stop_name))
+                    cn.add(0.499, DialogueActItem(dat, "to_stop", stop_name))
 
                 # backoff 2: we do not know what slot it belongs to, let the DM decide in
                 # the context resolution
                 if not from_stop and not to_stop or \
                     from_stop and to_stop:
-                    cn.add(0.501, DialogueActItem("inform", "", stop_name))
-                    cn.add(0.499, DialogueActItem("inform", "", stop_name))
+                    cn.add(0.501, DialogueActItem(dat, "", stop_name))
+                    cn.add(0.499, DialogueActItem(dat, "", stop_name))
 
 
     def parse_time(self, abutterance, cn):
@@ -116,25 +128,61 @@ class AOTBSLU(SLUInterface):
 
     def parse_meta(self, utterance, cn):
 
-        if _any_word_in(utterance, [u"ahoj",  u"nazdar", u"zdar", ]) or \
-            _all_words_in(utterance, [u"dobrý",  u"den" ]):
+        if _any_word_in(utterance, ["ahoj",  "nazdar", "zdar", ]) or \
+            _all_words_in(utterance, ["dobrý",  "den" ]):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if _any_word_in(utterance, [u"děkuji", u"nashledanou", u"shledanou", u"shle", u"nashle", u"díky",
-            u"sbohem", u"zbohem", u"konec"]):
+        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "zbohem", "konec", "hledanou"]):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if _any_word_in(utterance, [u"jiný", u"jiné", u"jiná", u"další",
-                                      u"dál", u"jiného"]):
+        if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
             cn.add(1.0, DialogueActItem("reqalts"))
 
-        if _any_word_in(utterance, [u"zopakovat",  u"opakovat", u"znovu", u"opakuj", u"zopakuj" ]) or \
-            _all_words_in(utterance, [u"ještě",  u"jednou" ]):
-
+        if _any_word_in(utterance, ["zopakovat",  "opakovat", "znov", "opakuj", "zopakuj" ]) or \
+            ["ještě",  "jedno" ] in utterance:
             cn.add(1.0, DialogueActItem("repeat"))
 
-        if _any_word_in(utterance, [u"nápověda",  u"pomoc", ]):
+        if _any_word_in(utterance, ["nápověda",  "pomoc", "help"]):
             cn.add(1.0, DialogueActItem("help"))
+
+        if _any_word_in(utterance, ["ano",  "jo", "jasně"]):
+            cn.add(1.0, DialogueActItem("affirm"))
+
+        if _any_word_in(utterance, ["ne", "nejed"]):
+            cn.add(1.0, DialogueActItem("negate"))
+            
+        if _any_word_in(utterance, ["díky", "dikec", "děkuji", "děkuju", "děkují"]):
+            cn.add(1.0, DialogueActItem("thankyou"))
+
+        if _any_word_in(utterance, ["od", "začít", ]) and _any_word_in(utterance, ["začátku", "znov", ]) or \
+            _any_word_in(utterance, ["restart", ]) :
+            cn.add(1.0, DialogueActItem("restart"))
+
+        if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','from_centre','true'))
+            
+        if _phrase_in(utterance, ["do", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','to_centre','true'))
+
+        if _phrase_in(utterance, ["z", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','from_centre','false'))
+            
+        if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','to_centre','false'))
+
+        if _all_words_in(utterance, ["od", "to", "jede"]) or \
+            _all_words_in(utterance, ["odkud", "to", "jede"]) or \
+            _all_words_in(utterance, ["odkud", "pojede"]) or \
+            _all_words_in(utterance, ["od", "kud", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','from_stop'))
+
+        if _all_words_in(utterance, ["kam", "to", "jede"]) or \
+            _all_words_in(utterance, ["kam", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','to_stop'))
+
+        if _any_word_in(utterance, ["kolik", "jsou"]) and \
+            _any_word_in(utterance, ["přestupů", "přestupy", "stupňů", "přestup", "přestupku"]):
+            cn.add(1.0, DialogueActItem('request','num_transfers'))
 
     def parse_1_best(self, utterance, verbose=False):
         """Parse an utterance into a dialogue act.

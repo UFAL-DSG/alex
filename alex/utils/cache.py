@@ -155,9 +155,12 @@ def lfu_cache(maxsize=100):
 
 
 def get_persitent_cache_content(key):
-    key_name = persistent_cache_directory + '/' + '_'.join([str(i) for i in key]).replace(' ', '_')
+    key_name = os.path.join(persistent_cache_directory, '_'.join([str(i) for i in key]).replace(' ', '_'))
+    
     try:
-        f = open(key_name, 'rb')
+        # you cannot have exlusive lock if you don't ask for writing permissions
+        # therefor use "r+" mode
+        f = open(key_name, 'r+b')
         fcntl.lockf(f, fcntl.LOCK_EX)
     except IOError:
         raise KeyError
@@ -171,7 +174,8 @@ def get_persitent_cache_content(key):
 
 
 def set_persitent_cache_content(key, value):
-    key_name = persistent_cache_directory + '/' + '_'.join([str(i) for i in key]).replace(' ', '_')
+    key_name = os.path.join(persistent_cache_directory,'_'.join([str(i) for i in key]).replace(' ', '_'))
+    
     f = open(key_name, 'wb')
     fcntl.lockf(f, fcntl.LOCK_EX)
 
@@ -214,8 +218,8 @@ def persistent_cache(method=False, file_prefix='', file_suffix=''):
                 result = user_function(*args, **kwds)
                 wrapper.misses += 1
 
-                set_persitent_cache_content(
-                    key, result)         # record this key
+                # record this key
+                set_persitent_cache_content(key, result)         
 
             return result
 
@@ -263,7 +267,7 @@ if __name__ == '__main__':
 
     print "persistent LRU cache"
 
-    @persistent_cache()
+    @persistent_cache(False, 'f3')
     def f3(x, y):
         return 3 * x + y
 

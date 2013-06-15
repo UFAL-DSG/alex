@@ -7,30 +7,30 @@ import codecs
 import os
 import re
 
-
 __all__ = ['database']
 
 
 database = {
-        "task": {
-            "next_tram": ["další"]
-        },
-        "time": {
-        },
-        "stop": {
-        },
-        u"tt": {
-            u"bus": [u"bus", u"autobus"],
-            u"tram": [u"tram", u"tramvaj", u"tramvajka"],
-            u"metro": [u"metro", u"krtek", u"podzemka"],
-            u"vlak": [u"vlak", u"rychlík", u"panťák"],
-            u"lanovka": [u"lanovka"],
-            u"přívoz": [u"přívoz", u"loď"],
-        },
-        u"ampm": {
-            u"am": [u"dopo", u"dopoledne", u"ráno"],
-            u"pm": [u"odpo", u"odpoledne", u"večer"],
-        },
+    "task": {
+        "next_tram": ["další"]
+    },
+    "time": {
+        "now": ["nyní", "teď", "následující"]
+    },
+    "stop": {
+    },
+    "tt": {
+        "bus": ["bus", "autobus"],
+        "tram": ["tram", "tramvaj", "tramvajka"],
+        "metro": ["metro", "krtek", "podzemka"],
+        "vlak": ["vlak", "rychlík", "panťák"],
+        "lanovka": ["lanovka"],
+        "přívoz": ["přívoz", "loď"],
+    },
+    "ampm": {
+        "am": ["dopo", "dopoledne", "ráno"],
+        "pm": ["odpo", "odpoledne", "večer"],
+    },
 }
 
 NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
@@ -47,10 +47,10 @@ NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
 #   <value>; <phrase>; <phrase>; ...
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
-STOPS_FNAME = "zastavky.expanded.txt"  # this has been expanded to include
+STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
                                        # other forms of the words; still very
                                        # dirty, though
-STOPS_FNAME = "zastavky.txt"
+#STOPS_FNAME = "stops.txt"
 
 
 _substs_lit = [
@@ -242,4 +242,4 @@ def stem():
 add_time()
 add_stops()
 # FIXME: This is not the best place to do stemming.
-# stem()
+stem()

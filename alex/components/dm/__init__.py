@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from alex.utils.exception import AlexException
+from alex.components.dm.ontology import Ontology
 
 class DialogueStateException(AlexException):
     pass
@@ -14,8 +15,9 @@ class DialogueState(object):
 
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, ontology):
         self.cfg = cfg
+        self.ontology = ontology
 
     def __str__(self):
         """Get the content of the dialogue state in a human readable form."""
@@ -63,8 +65,9 @@ class DialoguePolicyException(AlexException):
 class DialoguePolicy(object):
     """This is a base class policy. """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, ontology):
         self.cfg = cfg
+        self.ontology = ontology
 
     def get_da(self, dialogue_state):
         pass
@@ -84,19 +87,23 @@ class DialogueManager(object):
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.dialogue_state_class = self.cfg['DM']['dialogue_state']
-        self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']
+        
+        self.ontology = Ontology(self.cfg['DM']['ontology'])
+        self.dialogue_state_class = self.cfg['DM']['dialogue_state']['type']
+        self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']['type']
+        
         self.last_system_dialogue_act = None
+        
         self.new_dialogue()
 
     def new_dialogue(self):
         """Initialise the dialogue manager and makes it ready for a new dialogue conversation."""
 
-        self.dialogue_state = self.dialogue_state_class(self.cfg)
-        self.policy = self.dialogue_policy_class(self.cfg)
+        self.dialogue_state = self.dialogue_state_class(self.cfg, self.ontology)
+        self.policy = self.dialogue_policy_class(self.cfg, self.ontology)
         self.last_system_dialogue_act = None
 
-    def da_in(self, da):
+    def da_in(self, da, utterance):
         """Receives an input dialogue act or dialogue act list with probabilities or dialogue act confusion network.
 
         When the dialogue act is received an update of the state is performed.
