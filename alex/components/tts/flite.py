@@ -8,6 +8,7 @@ import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts import TTSException, TTSInterface
+from alex.components.tts.preprocessing import TTSPreprocessing
 
 
 class FliteTTS(TTSInterface):
@@ -19,12 +20,13 @@ class FliteTTS(TTSInterface):
     """
 
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(FliteTTS, self).__init__(cfg)
+        self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['Flite']['preprocessing'])
 
     @cache.persistent_cache(True, 'FliteTTS.get_tts_wav.')
     def get_tts_wav(self, voice, text):
         """Runs flite from the command line and gets the synthesized audio.
-        Note that the returned audio is in the resampled PCM audio format.
+        Note that the returned audio is in the re-sampled PCM audio format.
 
         """
 
@@ -38,7 +40,7 @@ class FliteTTS(TTSInterface):
                             (voice, text, wav_file_name), shell=True)
             wav = audio.load_wav(self.cfg, wav_file_name)
         except:
-            raise TTSException("No data synthesised.")
+            raise TTSException("No data synthesized.")
 
         return wav
 
@@ -50,10 +52,12 @@ class FliteTTS(TTSInterface):
         """
 
         try:
+            text = self.preprocessing.process(text)
+            
             wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
         except TTSException:
-            # Send empty wave data.
-            # FIXME: log the exception
-            return ""
+            m = e + "Text: %" % text
+            self.cfg['Logging']['system_logger'].warning(m)
+            return b""
 
         return wav

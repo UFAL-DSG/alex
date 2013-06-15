@@ -23,7 +23,7 @@ def tts_factory(tts_type, cfg):
         return FTTS.FliteTTS(cfg)
     elif tts_type == 'SpeechTech':
         return STTS.SpeechtechTTS(cfg)
-    elif tts_type == 'VoiceRSS':
+    elif tts_type == 'VoiceRss':
         return VTTS.VoiceRssTTS(cfg)
     else:
         raise TTSException('Unsupported TTS engine: %s' % (tts_type, ))
