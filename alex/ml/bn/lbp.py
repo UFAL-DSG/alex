@@ -96,6 +96,10 @@ class LBP(BP):
 
         self._normalize_nodes()
 
+    def init_messages(self):
+        for node in self.nodes:
+            node.init_messages()
+
     def _normalize_nodes(self):
         for node in self.nodes:
             node.normalize()

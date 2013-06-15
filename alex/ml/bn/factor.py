@@ -10,7 +10,7 @@ import abc
 from collections import defaultdict
 from scipy.misc import logsumexp
 
-ZERO = 0.000000001
+ZERO = 1e-20
 
 
 def to_log(n, out=None):
