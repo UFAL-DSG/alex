@@ -13,7 +13,6 @@ import traceback
 
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
-import alex.components.asr.kaldi as KASR
 
 from alex.components.asr.exception import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
@@ -72,6 +71,7 @@ class ASR(multiprocessing.Process):
         elif self.cfg['ASR']['type'] == 'Julius':
             self.asr = JASR.JuliusASR(cfg)
         elif self.cfg['ASR']['type'] == 'Kaldi':
+            import alex.components.asr.kaldi as KASR
             self.asr = KASR.KaldiASR(cfg)
         else:
             raise ASRException(
