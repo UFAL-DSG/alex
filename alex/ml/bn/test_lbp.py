@@ -4,7 +4,7 @@
 import unittest
 
 from alex.ml.bn.factor import DiscreteFactor
-from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode
+from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 from alex.ml.bn.lbp import LBP
 
 
@@ -285,3 +285,83 @@ class TestLBP(unittest.TestCase):
         ])
         lbp.run(from_layer='last')
         self.assertAlmostEqual(hid3.belief[('save',)], hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1)
+
+    def test_ep(self):
+        # Create nodes.
+        hid1 = DiscreteVariableNode("hid1", ["save", "del"])
+        obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
+        fact_h1_o1 = DirichletFactorNode("fact_h1_o1")
+        theta_h1_o1 = DirichletParameterNode('theta_h1_o1', DiscreteFactor(
+            ['hid1', 'obs1'],
+            {
+                "hid1": ["save", "del"],
+                "obs1": ["osave", "odel"]
+            },
+            {
+                ("save", "osave"): 1,
+                ("save", "odel"): 1,
+                ("del", "osave"): 1,
+                ("del", "odel"): 1,
+            }))
+
+        hid2 = DiscreteVariableNode("hid2", ["save", "del"])
+        obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
+        fact_h2_o2 = DirichletFactorNode("fact_h2_o2")
+        theta_h2_o2 = DirichletParameterNode('theta_h2_o2', DiscreteFactor(
+            ['hid2', 'obs2'],
+            {
+                "hid2": ["save", "del"],
+                "obs2": ["osave", "odel"]
+            },
+            {
+                ("save", "osave"): 1,
+                ("save", "odel"): 1,
+                ("del", "osave"): 1,
+                ("del", "odel"): 1,
+            }))
+
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+            ['hid1', 'hid2'],
+            {
+                "hid1": ["save", "del"],
+                "hid2": ["save", "del"],
+            },
+            {
+                ("save", "save"): 0.9,
+                ("save", "del"): 0.1,
+                ("del", "save"): 0,
+                ("del", "del"): 1
+            }))
+
+        # Connect nodes.
+        obs1.connect(fact_h1_o1, parent=False)
+        fact_h1_o1.connect(hid1)
+        fact_h1_o1.connect(theta_h1_o1)
+
+        obs2.connect(fact_h2_o2, parent=False)
+        fact_h2_o2.connect(hid2)
+        fact_h2_o2.connect(theta_h2_o2)
+
+        hid1.connect(fact_h1_h2)
+        hid2.connect(fact_h1_h2)
+
+        # Add nodes to lbp.
+        lbp = LBP(strategy='tree')
+        lbp.add_nodes([
+            obs1, obs2,
+            fact_h1_o1, fact_h2_o2,
+            theta_h1_o1, theta_h2_o2,
+            hid1, hid2,
+            fact_h1_h2
+        ])
+
+        obs1.observed({('osave',): 1})
+        obs2.observed({('osave',): 1})
+        hid1.observed({('save',): 1})
+        hid2.observed({('save',): 1})
+
+        for i in range(100):
+            lbp.run()
+            print theta_h1_o1.alpha.pretty_print(precision=5)
+            lbp.init_messages()
+        raise

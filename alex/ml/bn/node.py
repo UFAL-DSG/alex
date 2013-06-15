@@ -65,6 +65,10 @@ class Node(object):
         """Normalize belief state."""
         self.belief.normalize(parents)
 
+    @abc.abstractmethod
+    def init_messages(self):
+        raise NotImplementedError()
+
 
 class FactorNode(Node):
     pass
@@ -117,6 +121,13 @@ class DiscreteVariableNode(VariableNode):
         self.normalize()
         return self.belief.most_probable(n)
 
+    def init_messages(self):
+        for (name, node) in self.neighbors.iteritems():
+            self.incoming_message[name] = constant_factor(
+                [self.name],
+                {self.name: self.values},
+                len(self.values))
+
 
 class DiscreteFactorNode(FactorNode):
     """Node containing factor."""
@@ -145,6 +156,13 @@ class DiscreteFactorNode(FactorNode):
             {node.name: node.values},
             len(node.values))
 
+    def init_messages(self):
+        for (name, node) in self.neighbors.iteritems():
+            self.incoming_message[name] = constant_factor(
+                [name],
+                {name: node.values},
+                len(node.values))
+
 
 class DirichletParameterNode(VariableNode):
     """Node containing parameter."""
@@ -152,23 +170,36 @@ class DirichletParameterNode(VariableNode):
     def __init__(self, name, alpha):
         super(DirichletParameterNode, self).__init__(name)
         self.alpha = alpha
-        self.factors = []
+        self.outgoing_message = {}
 
     def message_to(self, node):
-        node.message_from(self, self.alpha - self.incoming_message[node.name] + 1)
+        self.outgoing_message[node.name] = self.alpha + 1 - self.incoming_message[node.name]
+        node.message_from(self, self.outgoing_message[node.name])
 
     def message_from(self, node, message):
-        message_to_node = self.alpha - self.incoming_message[node.name] + 1
-        self.alpha = message_to_node + message
+        self.incoming_message[node.name] = message
+        self.alpha = self.outgoing_message[node.name] + message - 1
 
     def add_neighbor(self, node):
-        self.factors.append(node)
+        self.neighbors[node.name] = node
         self.incoming_message[node.name] = constant_factor(self.alpha.variables,
                                                            self.alpha.variable_values,
                                                            self.alpha.factor_length)
+        self.outgoing_message[node.name] = self.alpha - self.incoming_message[node.name] + 1
 
     def update(self):
         pass
+
+    def normalize(self, parents=None):
+        pass
+
+    def init_messages(self):
+        for (name, node) in self.neighbors.iteritems():
+            self.incoming_message[name] = constant_factor(self.alpha.variables,
+                                                          self.alpha.variable_values,
+                                                          self.alpha.factor_length)
+
+            self.outgoing_message[name] = self.alpha + 1 - self.incoming_message[node.name]
 
 
 class DirichletFactorNode(FactorNode):
@@ -200,6 +231,7 @@ class DirichletFactorNode(FactorNode):
         self.belief = reduce(operator.mul, self.incoming_message.values())
 
     def add_neighbor(self, node, parent=True, **kwargs):
+        self.neighbors[node.name] = node
         if isinstance(node, DirichletParameterNode):
             self.parameters[node.name] = node
             self.incoming_parameter = node.alpha
@@ -211,6 +243,17 @@ class DirichletFactorNode(FactorNode):
                 self.child = node
             self.incoming_message[node.name] = node.belief
             self.incoming_message[node.name].normalize()
+
+    def normalize(self, parents=None):
+        pass
+
+    def init_messages(self):
+        for (name, node) in self.neighbors.iteritems():
+            if isinstance(node, DirichletParameterNode):
+                self.incoming_parameter = node.alpha
+            else:
+                self.incoming_message[name] = node.belief
+                self.incoming_message[name].normalize()
 
     def _compute_message_to_parameter(self, node):
         alpha = self._approximate_true_marginal()

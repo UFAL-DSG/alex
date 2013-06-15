@@ -176,16 +176,19 @@ class TestNode(unittest.TestCase):
         x1.message_to(factor)
 
         factor.update()
-        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_0')], 0.35)
-        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_1')], 0.1)
-        #self.assertAlmostEqual(factor.belief[('x0_0', 'x1_2')], 0.05)
 
         factor.message_to(x0)
         factor.message_to(x1)
 
         x0.update()
-        #self.assertAlmostEqual(x0.belief[('x0_0',)], 0.56)
 
         factor.message_to(alpha)
         print alpha.alpha
+
+        alpha.message_to(factor)
+
+        factor.update()
+        factor.message_to(alpha)
+        print alpha.alpha
         raise
+
