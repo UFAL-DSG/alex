@@ -132,7 +132,7 @@ class AOTBSLU(SLUInterface):
             _all_words_in(utterance, ["dobrý",  "den" ]):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "zbohem", "konec", "hledanou"]):
+        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "zbohem", "konec", "hledanou", "naschledanou"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):

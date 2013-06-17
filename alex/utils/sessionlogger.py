@@ -363,8 +363,7 @@ class SessionLogger:
                 da.setAttribute("starttime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for the %s speaker") % speaker)
 
         self.rec_started_filename = fname
         self.close_session_xml(doc)
@@ -382,8 +381,7 @@ class SessionLogger:
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing rec element for %s "
-                                          "fname") % fname)
+            raise SessionLoggerException(("Missing rec element for the %s fname.") % fname)
 
         self.close_session_xml(doc)
 

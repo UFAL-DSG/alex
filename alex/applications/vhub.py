@@ -18,6 +18,7 @@ from alex.components.hub.dm import DM
 from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
+from alex.components.hub.calldb import CallDB
 from alex.utils.config import Config
 
 
@@ -96,6 +97,9 @@ class VoipHub(Hub):
 
         hangup = False
 
+        call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
+        call_db.log()
+
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
@@ -128,23 +132,72 @@ class VoipHub(Hub):
                     if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                         self.cfg['Logging']['system_logger'].info(command)
 
+                        remote_uri = command.parsed['remote_uri']
+
+                        num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
+
+                        m = []
+                        m.append('')
+                        m.append('=' * 120)
+                        m.append('Rejected incoming call from blacklisted URI: %s' % remote_uri)
+                        m.append('-' * 120)
+                        m.append('Total calls:                  %d' % num_all_calls)
+                        m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                        m.append('Last period total calls:      %d' % last_period_num_calls)
+                        m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
+                        m.append('=' * 120)
+                        m.append('')
+                        self.cfg['Logging']['system_logger'].info('\n'.join(m))
+
                     if command.parsed['__name__'] == "call_connecting":
                         self.cfg['Logging']['system_logger'].info(command)
 
                     if command.parsed['__name__'] == "call_confirmed":
                         self.cfg['Logging']['system_logger'].info(command)
 
-                        # init the system
-                        call_start = time.time()
-                        number_of_turns = 0
+                        remote_uri = command.parsed['remote_uri']
+                        num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
 
-                        s_voice_activity = False
-                        s_last_voice_activity_time = 0
-                        u_voice_activity = False
-                        u_last_voice_activity_time = 0
-                        hungup = False
+                        m = []
+                        m.append('')
+                        m.append('=' * 120)
+                        m.append('Incoming call from :          %s' % remote_uri)
+                        m.append('-' * 120)
+                        m.append('Total calls:                  %d' % num_all_calls)
+                        m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                        m.append('Last period total calls:      %d' % last_period_num_calls)
+                        m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
+                        m.append('-' * 120)
 
-                        dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
+                        if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
+                                last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
+
+                            tts_commands.send(Command('synthesize(text="%s")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
+                            # prepare for ending the call
+                            hangup = True
+                            s_voice_activity = True
+                            vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+                              time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
+                            m.append('CALL REJECTED')
+                        else:
+                            # init the system
+                            call_start = time.time()
+                            number_of_turns = 0
+
+                            s_voice_activity = False
+                            s_last_voice_activity_time = 0
+                            u_voice_activity = False
+                            u_last_voice_activity_time = 0
+                            hungup = False
+
+                            dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
+                            m.append('CALL ACCEPTED')
+
+                        m.append('=' * 120)
+                        m.append('')
+                        self.cfg['Logging']['system_logger'].info('\n'.join(m))
+
+                        call_db.track_confirmed_call(remote_uri)
 
                     if command.parsed['__name__'] == "call_disconnected":
                         self.cfg['Logging']['system_logger'].info(command)
@@ -165,6 +218,9 @@ class VoipHub(Hub):
 
                         self.cfg['Logging']['system_logger'].session_end()
                         self.cfg['Logging']['session_logger'].session_end()
+
+                        remote_uri = command.parsed['remote_uri']
+                        call_db.track_disconnected_call(remote_uri)
 
                     if command.parsed['__name__'] == "play_utterance_start":
                         self.cfg['Logging']['system_logger'].info(command)
@@ -221,7 +277,7 @@ class VoipHub(Hub):
                     # if a dialogue act is generated, stop playing current TTS audio
                     # theoretically it is a good place because if the DM decides to be silent
                     # the TTS can continue
-                    # however, if it decides to say something, it is for the implementation 
+                    # however, if it decides to say something, it is for the implementation
                     # late to flush old audio. If implemented better, it could work.
                     # As of now, audio is flushed when speech is detected using VAD
 
@@ -302,7 +358,7 @@ if __name__ == '__main__':
     if args.configs:
         for c in args.configs:
             cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
+    cfg['Logging']['system_logger'].info('config = ' + unicode(cfg))
 
     #########################################################################
     #########################################################################

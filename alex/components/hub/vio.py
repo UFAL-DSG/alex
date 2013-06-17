@@ -25,7 +25,7 @@ import alex.utils.text as string
 
 from alex.components.hub.messages import Command, Frame
 from alex.utils.exception import VoipIOException
-
+from alex.utils.sessionlogger import SessionLoggerException
 from alex.utils.procname import set_proc_name
 
 # Logging callback
@@ -347,7 +347,7 @@ class VoipIO(multiprocessing.Process):
                     self.local_audio_play.clear()
                     self.mem_player.flush()
                     self.audio_playing = False
-                    
+
                     return False
 
                 if command.parsed['__name__'] == 'flush_out':
@@ -358,7 +358,7 @@ class VoipIO(multiprocessing.Process):
                     self.local_audio_play.clear()
                     self.mem_player.flush()
                     self.audio_playing = False
-                    
+
                     return False
 
                 if command.parsed['__name__'] == 'make_call':
@@ -432,7 +432,11 @@ class VoipIO(multiprocessing.Process):
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                    try:
+                        self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                    except SessionLoggerException as ex:
+                        print ex
+                        pass
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
                     self.audio_playing = False
@@ -441,7 +445,11 @@ class VoipIO(multiprocessing.Process):
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                    try:
+                        self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                    except SessionLoggerException as ex:
+                        print ex
+                        pass
 
         if (self.mem_capture.get_read_available()
                 > self.cfg['Audio']['samples_per_frame'] * 2):

@@ -103,6 +103,7 @@ class ASR(multiprocessing.Process):
                         self.audio_in.recv()
 
                     self.asr.flush()
+                    self.recognition_on = False
 
                     return False
 
