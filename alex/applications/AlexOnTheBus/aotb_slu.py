@@ -26,7 +26,7 @@ def _any_word_in(utterance, words):
     for alt_expr in cz_stem(words):
         if  alt_expr in utterance.utterance:
             return True
-            
+
     return False
 
 def _all_words_in(utterance, words):
@@ -48,9 +48,9 @@ class AOTBSLU(SLUInterface):
 
         u = abutterance
         N = len(u)
-        
+
         confirm = _phrase_in(abutterance, ['jede', 'to']) or _phrase_in(abutterance, ['odjíždí', 'to'])
-        
+
         for i, w in enumerate(u):
             if w.startswith("STOP="):
                 stop_name = w[5:]
@@ -97,7 +97,7 @@ class AOTBSLU(SLUInterface):
                     dat = "confirm"
                 else:
                     dat = "inform"
-                    
+
                 if from_stop and not to_stop:
                     cn.add(1.0, DialogueActItem(dat, "from_stop", stop_name))
 
@@ -150,7 +150,7 @@ class AOTBSLU(SLUInterface):
 
         if _any_word_in(utterance, ["ne", "nejed"]):
             cn.add(1.0, DialogueActItem("negate"))
-            
+
         if _any_word_in(utterance, ["díky", "dikec", "děkuji", "děkuju", "děkují"]):
             cn.add(1.0, DialogueActItem("thankyou"))
 
@@ -160,23 +160,27 @@ class AOTBSLU(SLUInterface):
 
         if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','from_centre','true'))
-            
+
         if _phrase_in(utterance, ["do", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','to_centre','true'))
 
         if _phrase_in(utterance, ["z", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','from_centre','false'))
-            
+
         if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
             cn.add(1.0, DialogueActItem('inform','to_centre','false'))
 
         if _all_words_in(utterance, ["od", "to", "jede"]) or \
+            _all_words_in(utterance, ["z", "jake", "jede"]) or \
+            _all_words_in(utterance, ["z", "jaké", "jede"]) or \
             _all_words_in(utterance, ["odkud", "to", "jede"]) or \
             _all_words_in(utterance, ["odkud", "pojede"]) or \
             _all_words_in(utterance, ["od", "kud", "pojede"]):
             cn.add(1.0, DialogueActItem('request','from_stop'))
 
         if _all_words_in(utterance, ["kam", "to", "jede"]) or \
+            _all_words_in(utterance, ["do", "jake", "jede"]) or \
+            _all_words_in(utterance, ["do", "jaké", "jede"]) or \
             _all_words_in(utterance, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 

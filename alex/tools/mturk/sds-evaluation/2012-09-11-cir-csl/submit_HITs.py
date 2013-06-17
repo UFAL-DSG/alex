@@ -20,7 +20,7 @@ frame_height = 2500
 EQ = ExternalQuestion(external_url, frame_height)
 
 title = "UFAL - Test an automated tourist information service (it takes 2 minutes on average)"
-description = "Rate a speech enabled tourist infomation system."
+description = "Rate a speech enabled tourist information system."
 keywords = "speech,test,voice,evaluation,call,conversation,dialog,dialogue,chat,quick,fast,mark,rate"
 reward = 0.20
 max_assignments = 1
