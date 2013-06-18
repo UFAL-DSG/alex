@@ -127,17 +127,13 @@ class DM(multiprocessing.Process):
     def run(self):
         set_proc_name("alex_DM")
 
-        try:
-            while 1:
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        while 1:
+            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                # process all pending commands
-                if self.process_pending_commands():
-                    return
+            # process all pending commands
+            if self.process_pending_commands():
+                return
 
-                # process the incoming SLU hypothesis
-                self.read_slu_hypotheses_write_dialogue_act()
-        except: 
-            print "Unexpected error:", sys.exc_info()          
-            print "Exiting!"
-            os._exit(1)
+            # process the incoming SLU hypothesis
+            self.read_slu_hypotheses_write_dialogue_act()
+    

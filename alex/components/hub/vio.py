@@ -436,7 +436,7 @@ class VoipIO(multiprocessing.Process):
                     try:
                         self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
                     except SessionLoggerException as ex:
-                        self.system_logger.exception(ex)
+                        self.cfg['Logging']['system_logger'].exception(ex)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
                     self.audio_playing = False
@@ -448,7 +448,7 @@ class VoipIO(multiprocessing.Process):
                     try:
                         self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
                     except SessionLoggerException as ex:
-                        self.system_logger.exception(ex)
+                        self.cfg['Logging']['system_logger'].exception(ex)
 
         while (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
@@ -769,9 +769,3 @@ class VoipIO(multiprocessing.Process):
             print "Exception: " + str(e)
             self.lib.destroy()
             self.lib = None
-            print "Exiting!"
-            os._exit(1)
-        except: 
-            print "Unexpected error:", sys.exc_info()          
-            print "Exiting!"
-            os._exit(1)

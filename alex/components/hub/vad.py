@@ -235,33 +235,28 @@ class VAD(multiprocessing.Process):
     def run(self):
         set_proc_name("alex_VAD")
 
-        try:
-            while 1:
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        while 1:
+            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                # Process all pending commands.
-                if self.process_pending_commands():
-                    return
+            # Process all pending commands.
+            if self.process_pending_commands():
+                return
 
-                # FIXME: Make the following test work.
-                # # Wait until a session has started.
-                # if self.session_logger.is_open:
-                # Process audio data.
-                try:
-                    self.read_write_audio()
-                except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'
-                                                    .format(ex=ex))
-                # FIXME: Make the following test work.
-                # # Wait until a session has started.
-                # if self.session_logger.is_open:
-                # Process audio data.
-                try:
-                    self.read_write_audio()
-                except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'\
-                                                 .format(ex=ex))
-        except: 
-            print "Unexpected error:", sys.exc_info()          
-            print "Exiting!"
-            os._exit(1)
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
+            # Process audio data.
+            try:
+                self.read_write_audio()
+            except SessionClosedException as ex:
+                self.system_logger.exception('VAD:read_write_audio: {ex!s}'
+                                                .format(ex=ex))
+            # FIXME: Make the following test work.
+            # # Wait until a session has started.
+            # if self.session_logger.is_open:
+            # Process audio data.
+            try:
+                self.read_write_audio()
+            except SessionClosedException as ex:
+                self.system_logger.exception('VAD:read_write_audio: {ex!s}'\
+                                             .format(ex=ex))

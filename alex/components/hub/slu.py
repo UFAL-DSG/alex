@@ -15,6 +15,7 @@ from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.components.slu.exception import SLUException
 from alex.components.slu.common import get_slu_type, slu_factory
+from alex.utils.procname import set_proc_name
 
 
 class SLU(multiprocessing.Process):
@@ -122,17 +123,12 @@ class SLU(multiprocessing.Process):
     def run(self):
         set_proc_name("alex_SLU")
         
-        try:
-            while 1:
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        while 1:
+            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                # process all pending commands
-                if self.process_pending_commands():
-                    return
+            # process all pending commands
+            if self.process_pending_commands():
+                return
 
-                # process the incoming ASR hypotheses
-                self.read_asr_hypotheses_write_slu_hypotheses()
-        except: 
-            print "Unexpected error:", sys.exc_info()          
-            print "Exiting!"
-            os._exit(1)
+            # process the incoming ASR hypotheses
+            self.read_asr_hypotheses_write_slu_hypotheses()

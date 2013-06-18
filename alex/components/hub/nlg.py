@@ -94,17 +94,13 @@ class NLG(multiprocessing.Process):
     def run(self):
         set_proc_name("alex_NLG")
     
-        try:
-            while 1:
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        while 1:
+            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                # process all pending commands
-                if self.process_pending_commands():
-                    return
+            # process all pending commands
+            if self.process_pending_commands():
+                return
 
-                # process the incoming DM dialogue acts
-                self.read_dialogue_act_write_text()
-        except: 
-            print "Unexpected error:", sys.exc_info()          
-            print "Exiting!"
-            os._exit(1)
+            # process the incoming DM dialogue acts
+            self.read_dialogue_act_write_text()
+    
