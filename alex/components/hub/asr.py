@@ -126,6 +126,7 @@ class ASR(multiprocessing.Process):
                 elif data_rec.parsed['__name__'] == "speech_end":
                     dr_speech_start = "speech_end"
 
+                
                 # Check consistency of the input command.
                 if dr_speech_start:
                     if ((not self.recognition_on
@@ -138,7 +139,7 @@ class ASR(multiprocessing.Process):
                                'command: {cmd}').format(
                                    rec=self.recognition_on,
                                    cmd=dr_speech_start)
-                        raise ASRException(msg)
+                        self.system_logger.exception(msg)
 
                 if dr_speech_start == "speech_start":
                     self.commands.send(Command("asr_start()", 'ASR', 'HUB'))
