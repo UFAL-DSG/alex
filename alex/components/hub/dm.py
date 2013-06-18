@@ -3,6 +3,8 @@
 
 import multiprocessing
 import time
+import sys
+import os
 
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub.messages import Command, SLUHyp, DMDA
@@ -123,15 +125,19 @@ class DM(multiprocessing.Process):
                 raise DMException('Unsupported input.')
 
     def run(self):
-        self.recognition_on = False
         set_proc_name("alex_DM")
 
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        try:
+            while 1:
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
 
-            # process the incoming SLU hypothesis
-            self.read_slu_hypotheses_write_dialogue_act()
+                # process the incoming SLU hypothesis
+                self.read_slu_hypotheses_write_dialogue_act()
+        except: 
+            print "Unexpected error:", sys.exc_info()          
+            print "Exiting!"
+            os._exit(1)

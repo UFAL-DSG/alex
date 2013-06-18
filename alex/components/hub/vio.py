@@ -10,6 +10,7 @@ import random
 import multiprocessing
 import sys
 import os.path
+import os
 import struct
 import array
 import threading
@@ -675,6 +676,7 @@ class VoipIO(multiprocessing.Process):
 
     def run(self):
         set_proc_name("alex_VIO")
+        
         try:
             global logger
             logger = self.cfg['Logging']['system_logger']
@@ -767,3 +769,9 @@ class VoipIO(multiprocessing.Process):
             print "Exception: " + str(e)
             self.lib.destroy()
             self.lib = None
+            print "Exiting!"
+            os._exit(1)
+        except: 
+            print "Unexpected error:", sys.exc_info()          
+            print "Exiting!"
+            os._exit(1)

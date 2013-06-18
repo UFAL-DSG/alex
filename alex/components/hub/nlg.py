@@ -3,6 +3,8 @@
 
 import multiprocessing
 import time
+import sys
+import os
 
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 
@@ -90,15 +92,19 @@ class NLG(multiprocessing.Process):
                 raise DMException('Unsupported input.')
 
     def run(self):
-        self.recognition_on = False
         set_proc_name("alex_NLG")
+    
+        try:
+            while 1:
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
-
-            # process the incoming DM dialogue acts
-            self.read_dialogue_act_write_text()
+                # process the incoming DM dialogue acts
+                self.read_dialogue_act_write_text()
+        except: 
+            print "Unexpected error:", sys.exc_info()          
+            print "Exiting!"
+            os._exit(1)

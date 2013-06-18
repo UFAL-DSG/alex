@@ -3,6 +3,8 @@
 
 import multiprocessing
 import time
+import sys
+import os
 
 import alex.components.slu.dailrclassifier as DAILRSLU
 import alex.components.slu.daiklrclassifier as DAIKLRSLU
@@ -118,14 +120,19 @@ class SLU(multiprocessing.Process):
                 raise SLUException('Unsupported input.')
 
     def run(self):
-        self.recognition_on = False
+        set_proc_name("alex_SLU")
+        
+        try:
+            while 1:
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
-
-            # process the incoming ASR hypotheses
-            self.read_asr_hypotheses_write_slu_hypotheses()
+                # process the incoming ASR hypotheses
+                self.read_asr_hypotheses_write_slu_hypotheses()
+        except: 
+            print "Unexpected error:", sys.exc_info()          
+            print "Exiting!"
+            os._exit(1)
