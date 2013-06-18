@@ -409,12 +409,12 @@ class VoipIO(multiprocessing.Process):
                               not in del_messages]
 
     def read_write_audio(self):
-        """Send some of the available data to the output.
+        """Send as much possible of the available data to the output and read as much as possible from the input.
 
         It should be a non-blocking operation.
         """
 
-        if (self.local_audio_play and
+        while (self.local_audio_play and
                 (self.mem_player.get_write_available()
                  > self.cfg['Audio']['samples_per_frame'] * 2)):
             # send a frame from input to be played
@@ -451,8 +451,7 @@ class VoipIO(multiprocessing.Process):
                         print ex
                         pass
 
-        if (self.mem_capture.get_read_available()
-                > self.cfg['Audio']['samples_per_frame'] * 2):
+        while (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
             data_rec = self.mem_capture.get_frame()
 

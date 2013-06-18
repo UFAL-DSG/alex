@@ -57,8 +57,7 @@ class VAD(multiprocessing.Process):
         elif self.cfg['VAD']['type'] == 'gmm':
             self.vad = GVAD.GMMVAD(cfg)
         else:
-            raise ASRException(
-                'Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
+            raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
         # stores information about each frame whether it was classified as
         # speech or non speech
@@ -117,10 +116,8 @@ class VAD(multiprocessing.Process):
         self.detection_window_speech.append(decision)
         self.detection_window_sil.append(decision)
 
-        speech = (float(sum(self.detection_window_speech))
-                    / len(self.detection_window_speech))
-        sil = (float(sum(self.detection_window_sil))
-                / len(self.detection_window_sil))
+        speech = float(sum(self.detection_window_speech)) / (len(self.detection_window_speech) + 1.0)
+        sil = float(sum(self.detection_window_sil)) / (len(self.detection_window_sil) + 1.0)
         if self.cfg['VAD']['debug']:
             self.system_logger.debug('SPEECH: %s SIL: %s' % (speech, sil))
 
@@ -173,8 +170,7 @@ class VAD(multiprocessing.Process):
                                                     'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
-                            self.system_logger.debug(
-                                'Output file name: %s' % self.output_file_name)
+                            self.system_logger.debug('Output file name: %s' % self.output_file_name)
 
                         self.wf = wave.open(self.output_file_name, 'w')
                         self.wf.setnchannels(1)
@@ -185,9 +181,7 @@ class VAD(multiprocessing.Process):
                         # Log the change.
                         # if self.session_logger.is_open:
                         if self.cfg['VAD']['debug']:
-                            self.system_logger.debug(
-                                'REC END Output file name: {out}'.format(
-                                    out=self.output_file_name))
+                            self.system_logger.debug('REC END Output file name: {out}'.format(out=self.output_file_name))
                         self.session_logger.rec_end(os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
