@@ -17,8 +17,8 @@ of .wav files.
 # An example ignore list file could contain the following three lines: #
 ########################################################################
 
-/home/matej/wc/vystadial/data/call-logs/voip-0012097903339-121001_014358/jurcic-010-121001_014624_0014528_0014655.wav
-jurcic-006-121001_014526_0008608_0008758.wav
+/some-path/call-logs/log_dir/some_id.wav
+some_id.wav
 jurcic-??[13579]*.wav
 
 The first one is an example of an ignored path. On UNIX, it has to start with
@@ -515,7 +515,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
 
         if not missing_wav:
             if verbose:
-                term_width = getTerminalSize()[1] or 120
+                term_width = getTerminalSize()[1] or 80
                 print '-' * term_width
                 print " # f:", wav_basename, "t:", trs
 
@@ -552,13 +552,13 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
         else:
             n_missing_wav += 1
             if args.verbose:
-                term_width = getTerminalSize()[1] or 120
+                term_width = getTerminalSize()[1] or 80
                 print '-' * term_width
                 print "(WW) Ignoring or missing_wav the file '{0}'."\
                     .format(wav_basename)
 
     if verbose:
-        term_width = getTerminalSize()[1] or 120
+        term_width = getTerminalSize()[1] or 80
         print '-' * term_width
         print
     return size, n_overwrites, n_missing_wav, n_missing_trs
@@ -730,7 +730,7 @@ if __name__ == '__main__':
     # Parse arguments. {{{
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
+        description="""\
       This program processes CUED call log files and copies all audio into
       a destination directory.
       It also extracts transcriptions from the log files and saves them

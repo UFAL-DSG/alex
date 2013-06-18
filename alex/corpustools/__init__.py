@@ -1,3 +1,6 @@
+# TODO: Remove dependencies on this file (substitute by `autopath.py') and
+# delete this file.
+
 import sys
 import os.path
 

@@ -3,6 +3,9 @@
 #
 # Makes Julius extract word confnets from wav files.
 # Run with the -h flag for an overview of arguments.
+#
+# 2013-06
+# Matěj Korvas
 
 from __future__ import unicode_literals
 
@@ -54,6 +57,19 @@ def on_no_context(outstr):
     raise ASRException('Julius said: "NO CONTEXT?"')
 
 
+def start_julius(cfg, callback, err_fname='julius.err'):
+    popen_kwargs = {'stderr': PIPE}
+    jul = JuliusASR(cfg, popen_kwargs)
+
+    # Start the grepping filter on Julius' stderr.
+    errfile = open(err_fname, 'a+')
+    grep = GrepFilter(jul.julius_server.stderr, errfile)
+    grep.add_listener(re.compile('NO CONTEXT\?'), callback)
+    grep.start()
+
+    return jul, grep, errfile
+
+
 def main(dirname, outfname, cfg, skip=0):
     """\
 
@@ -67,29 +83,42 @@ def main(dirname, outfname, cfg, skip=0):
     wavs = sorted(get_wav_fnames(dirname), key=itemgetter(1))
 
     # Start Julius.
-    # popen_kwargs = {'stderr': PIPE, 'bufsize': 0}
-    popen_kwargs = {'stderr': PIPE}
-    jul = JuliusASR(cfg, popen_kwargs)
+    jul, grep, errfile = start_julius(cfg, on_no_context)
 
-    # Start the grepping filter on Julius' stderr.
-    errfile = open('julius.err', 'w')
-    grep = GrepFilter(jul.julius_server.stderr, errfile)
-    grep.add_listener(re.compile('NO CONTEXT\?'), on_no_context)
-    grep.start()
+    try:
+        with codecs.open(outfname, 'a+', encoding='UTF-8') as outfile:
+            for wav_fname, wav_id in wavs[skip:]:
+                mywav = load_wav(cfg, wav_fname)
 
-    with codecs.open(outfname, 'a+', encoding='UTF-8') as outfile:
-        for wav_fname, wav_id in wavs[skip:]:
-            mywav = load_wav(cfg, wav_fname)
+                # Insist on feeding all the input data to Julius, regardless of how
+                # many times it crashes.
+                exception = 1
+                while exception:
+                    try:
+                        for startidx in xrange(0, len(mywav), FRAME_SIZE):
+                            jul.rec_in(Frame(mywav[startidx:startidx + FRAME_SIZE]))
+                            # sleep(SLEEP_TIME)
+                        # sleep(RT_RATIO * len(mywav) / 32000.)
+                    except socket.error as er:
+                        # Julius crashing results in
+                        # error: [Errno 104] Connection reset by peer
+                        # Catch only that one.
+                        if er.errno != 104:
+                            raise er
+                        exception = er
+                        traceback.print_exc()
+                        print "get_jasr_confnets: Restarting Julius."
+                        jul.kill_all_juliuses()
+                        errfile.close()
+                        jul, grep, errfile = start_julius(cfg, on_no_context)
+                    else:
+                        exception = None
 
-            # Insist on feeding all the input data to Julius, regardless of how
-            # many times it crashes.
-            exception = 1
-            while exception:
+                exception = None
                 try:
-                    for startidx in xrange(0, len(mywav), FRAME_SIZE):
-                        jul.rec_in(Frame(mywav[startidx:startidx + FRAME_SIZE]))
-                        # sleep(SLEEP_TIME)
-                    # sleep(RT_RATIO * len(mywav) / 32000.)
+                    hyp = jul.hyp_out()
+                except ASRException as ex:
+                    exception = ex
                 except socket.error as er:
                     # Julius crashing results in
                     # error: [Errno 104] Connection reset by peer
@@ -97,38 +126,21 @@ def main(dirname, outfname, cfg, skip=0):
                     if er.errno != 104:
                         raise er
                     exception = er
+                if exception is not None:
                     traceback.print_exc()
-                    print "get_jasr_confnets: Restarting Julius."
                     jul.kill_all_juliuses()
-                    jul = JuliusASR(cfg, popen_kwargs)
-                else:
+                    errfile.close()
+                    jul, grep, errfile = start_julius(cfg, on_no_context)
+                    hyp = 'None'
                     exception = None
 
-            exception = None
-            try:
-                hyp = jul.hyp_out()
-            except ASRException as ex:
-                exception = ex
-            except socket.error as er:
-                # Julius crashing results in
-                # error: [Errno 104] Connection reset by peer
-                # Catch only that one.
-                if er.errno != 104:
-                    raise er
-                exception = er
-            if exception is not None:
-                traceback.print_exc()
-                jul.kill_all_juliuses()
-                jul = JuliusASR(cfg, popen_kwargs)
-                hyp = 'None'
-                exception = None
-
-            outfile.write('{id_} => {hyp!r}\n'.format(id_=wav_id, hyp=hyp))
-            sys.stderr.write('.')
-            sys.stderr.flush()
-    grep.flush()
-    grep.terminate()
-    errfile.close()
+                outfile.write('{id_} => {hyp!r}\n'.format(id_=wav_id, hyp=hyp))
+                sys.stderr.write('.')
+                sys.stderr.flush()
+    finally:
+        grep.flush()
+        grep.terminate()
+        errfile.close()
 
 
 if __name__ == "__main__":
