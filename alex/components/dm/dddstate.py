@@ -146,7 +146,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         new_user_dai = DialogueActItem("deny", system_dai.name, system_dai.value)
 
                     elif system_dai.dat == "request" and user_dai.dat == "inform" and \
-                            user_dai.name == "" and user_dai.value == "dontcare":
+                            system_dai.name != "" and user_dai.name == "" and \
+                            user_dai.value == "dontcare":
                         new_user_dai = DialogueActItem("inform", system_dai.name, system_dai.value)
 
                     elif system_dai.dat == "request" and user_dai.dat == "inform" and \
@@ -154,16 +155,20 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                             self.ontology.slot_has_value(system_dai.name, user_dai.value):
                         new_user_dai = DialogueActItem("inform", system_dai.name, user_dai.value)
 
-                    elif system_dai.dat == "request" and user_dai.dat == "affirm" and user_dai.name.startswith("has_"):
+                    elif system_dai.dat == "request" and system_dai.name != "" and \
+                            user_dai.dat == "affirm" and system_dai.name.startswith("has_"):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
-                    elif system_dai.dat == "request" and user_dai.dat == "negate" and user_dai.name.startswith("has_"):
+                    elif system_dai.dat == "request" and system_dai.name != "" and \
+                            user_dai.dat == "negate" and system_dai.name.startswith("has_"):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
-                    elif system_dai.dat == "request" and user_dai.dat == "affirm" and user_dai.name.endswith("_allowed"):
+                    elif system_dai.dat == "request" and system_dai.name != "" and \
+                            user_dai.dat == "affirm" and system_dai.name.endswith("_allowed"):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
-                    elif system_dai.dat == "request" and user_dai.dat == "negate" and user_dai.name.endswith("_allowed"):
+                    elif system_dai.dat == "request" and system_dai.name != "" and \
+                            user_dai.dat == "negate" and system_dai.name.endswith("_allowed"):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
                     if new_user_dai:
