@@ -49,7 +49,10 @@ class AOTBSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        confirm = _phrase_in(u, ['jede', 'to']) or _phrase_in(u, ['odjíždí', 'to'])
+        confirm = _phrase_in(u, ['jede', 'to']) or \
+                  _any_word_in(u, ['jedete']) or \
+                  _phrase_in(u, ['odjíždí', 'to']) or \
+                  _any_word_in(u, ['odjíždíte'])
 
         for i, w in enumerate(u):
             if w.startswith("STOP="):
@@ -194,7 +197,7 @@ class AOTBSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
         if _any_word_in(utterance, ["kolik", "jsou"]) and \
-            _any_word_in(utterance, ["přestupů", "přestupy", "stupňů", "přestup", "přestupku"]):
+            _any_word_in(utterance, ["přestupů", "přestupy", "stupňů", "přestup", "přestupku", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
     def parse_1_best(self, utterance, verbose=False):
