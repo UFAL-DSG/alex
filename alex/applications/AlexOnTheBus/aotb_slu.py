@@ -196,8 +196,8 @@ class AOTBSLU(SLUInterface):
             _all_words_in(utterance, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _any_word_in(utterance, ["kolik", "jsou"]) and \
-            _any_word_in(utterance, ["přestupů", "přestupy", "stupňů", "přestup", "přestupku", "přestupků"]):
+        if _any_word_in(utterance, ["kolik", "jsou", "je"]) and \
+            _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
     def parse_1_best(self, utterance, verbose=False):
