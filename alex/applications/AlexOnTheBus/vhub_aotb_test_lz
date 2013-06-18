@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ..
-
-./vhub.py -c ./AlexOnTheBus/aotb.cfg -c ./AlexOnTheBus/aotb_lz.cfg
