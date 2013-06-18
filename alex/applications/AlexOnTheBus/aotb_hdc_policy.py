@@ -110,9 +110,15 @@ class AOTBHDCPolicy(DialoguePolicy):
                     elif slot == "num_transfers":
                         res_da.extend(self.get_num_transfers(dialogue_state))
                 else:
-                    dai = DialogueActItem("inform", slot, requested_slots[slot])
-                    res_da.append(dai)
-                    dialogue_state["rh_"+slot] = "None"
+                    if slot == "from_stop" or slot == "to_stop" or slot == "num_transfers":
+                        dai = DialogueActItem("help", "no_stop")
+                        res_da.append(dai)
+                        dai = DialogueActItem("help", "from_stop")
+                        res_da.append(dai)
+                    else:
+                        dai = DialogueActItem("inform", slot, requested_slots[slot])
+                        res_da.append(dai)
+                        dialogue_state["rh_"+slot] = "None"
 
                 dialogue_state["rh_"+slot] = "None"
 
