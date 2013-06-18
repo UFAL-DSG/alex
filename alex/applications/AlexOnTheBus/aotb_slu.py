@@ -49,7 +49,7 @@ class AOTBSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        confirm = _phrase_in(abutterance, ['jede', 'to']) or _phrase_in(abutterance, ['odjíždí', 'to'])
+        confirm = _phrase_in(u, ['jede', 'to']) or _phrase_in(u, ['odjíždí', 'to'])
 
         for i, w in enumerate(u):
             if w.startswith("STOP="):
@@ -118,13 +118,22 @@ class AOTBSLU(SLUInterface):
 
 
     def parse_time(self, abutterance, cn):
-        res = defaultdict(list)
-        _fill_utterance_values(abutterance, 'time', res)
+        preps_in = set(["v", ])
+        
+        u = abutterance
+        N = len(u)
 
-        for slot, values in res.iteritems():
-            for value in values:
-                cn.add(1.0, DialogueActItem("inform", slot, " ".join(value)))
-                break
+        for i, w in enumerate(u):
+            if w.startswith("TIME="):
+                time_value = w[5:]
+                time = False
+                
+                if i >= 1:
+                    if u[i-1] in preps_in:
+                        time = True
+                
+                if time:
+                    cn.add(1.0, DialogueActItem("inform", 'time', time_value))
 
     def parse_meta(self, utterance, cn):
 
@@ -139,7 +148,7 @@ class AOTBSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("reqalts"))
 
         if _any_word_in(utterance, ["zopakovat",  "opakovat", "znov", "opakuj", "zopakuj" ]) or \
-            ["ještě",  "jedno" ] in utterance:
+            _phrase_in(utterance, ["ještě", "jedno"]):
             cn.add(1.0, DialogueActItem("repeat"))
 
         if _any_word_in(utterance, ["nápověda",  "pomoc", "help"]):
