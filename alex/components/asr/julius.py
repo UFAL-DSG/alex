@@ -192,7 +192,7 @@ class JuliusASR(object):
         # Start the server with the -debug option.
         # With this option, it does not generate segfaults.
         self.julius_server = subprocess.Popen(
-                [jbin, '-debug', '-C', jconf_fname], **popen_kwargs)
+            [jbin, '-debug', '-C', jconf_fname], **popen_kwargs)
         # XXX If using shell in Popen, beware that Julius gets another
         # pid than the return value of Popen.
         self.save_pid(self.julius_server.pid)
