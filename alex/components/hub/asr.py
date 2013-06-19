@@ -71,6 +71,9 @@ class ASR(multiprocessing.Process):
             self.asr = GASR.GoogleASR(cfg)
         elif self.cfg['ASR']['type'] == 'Julius':
             self.asr = JASR.JuliusASR(cfg)
+        elif self.cfg['ASR']['type'] == 'Kaldi':
+            import alex.components.asr.kaldi as KASR
+            self.asr = KASR.KaldiASR(cfg)
         else:
             raise ASRException(
                 'Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))

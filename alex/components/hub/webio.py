@@ -14,6 +14,7 @@ import urlparse
 import Queue
 import BaseHTTPServer
 from threading import Thread
+import traceback
 
 from alex.utils.audio import load_wav
 import alex.utils.various as various
@@ -67,7 +68,7 @@ class WebIO(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        #TO-DO: I could use stream.abort() function to flush output buffers of pyaudio()
+        # TO-DO: I could use stream.abort() function to flush output buffers of pyaudio()
 
         if self.commands.poll():
             command = self.commands.recv()
@@ -78,7 +79,7 @@ class WebIO(multiprocessing.Process):
                 if command.parsed['__name__'] == 'stop':
                     # discard all data in play buffer
                     while self.audio_play.poll():
-                        _ = self.audio_play.recv()
+                        self.audio_play.recv()
 
                     # stop recording and playing
                     stream.stop_stream()
@@ -91,7 +92,7 @@ class WebIO(multiprocessing.Process):
                 if command.parsed['__name__'] == 'flush':
                     # discard all data in play buffer
                     while self.audio_play.poll():
-                        _ = self.audio_play.recv()
+                        self.audio_play.recv()
 
                     return False
 
@@ -162,7 +163,7 @@ class WebIO(multiprocessing.Process):
 
             # start webserver for the webinterface
             httpd = self.get_webserver()
-            t = Thread(target = lambda *args: httpd.serve_forever())
+            t = Thread(target=lambda *args: httpd.serve_forever())
             t.start()
 
             # open audio pipe to the speakers
@@ -251,7 +252,7 @@ class WebIOHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def render_template(self, tpl_name, context, f_out):
         """Render given context into given template and save it to given file."""
         env = Environment(loader=FileSystemLoader(os.path.dirname(__file__)),
-                         trim_blocks=True)
+                          trim_blocks=True)
 
         print >> f_out, env.get_template(tpl_name).render(**context)
 
@@ -261,4 +262,3 @@ class WebIOHttpServer(BaseHTTPServer.HTTPServer):
     def __init__(self, comm_queue, *args, **kwargs):
         self.comm_queue = comm_queue
         BaseHTTPServer.HTTPServer.__init__(self, *args, **kwargs)
-
