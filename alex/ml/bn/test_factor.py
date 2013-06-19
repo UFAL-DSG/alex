@@ -421,6 +421,37 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f2[('a1', 'b1')], 0.09)
         self.assertAlmostEqual(f2[('a2', 'b1')], 0.343)
 
+    def test_rename(self):
+        f = DiscreteFactor(
+            ['A', 'B'],
+            {
+                'A': ['a1', 'a2'],
+                'B': ['b1', 'b2']
+            },
+            {
+                ('a1', 'b1'): 0.3,
+                ('a1', 'b2'): 0.2,
+                ('a2', 'b1'): 0.7,
+                ('a2', 'b2'): 0.8,
+            })
+
+        f.rename_variables({'A': 'Z'})
+        self.assertAlmostEqual(f[('a1', 'b1')], 0.3)
+
+        f1 = DiscreteFactor(
+            ['Z'],
+            {
+                'Z': ['a1', 'a2'],
+            },
+            {
+                ('a1',): 0.5,
+                ('a2',): 0.5,
+            })
+
+        f2 = f * f1
+        self.assertAlmostEqual(f2[('b1', 'a1')], 0.15)
+        self.assertAlmostEqual(f2[('b1', 'a2')], 0.35)
+
     def test_add(self):
         X0 = DiscreteFactor(
             ['X0'],
