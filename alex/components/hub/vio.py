@@ -32,8 +32,10 @@ from alex.utils.procname import set_proc_name
 # Logging callback
 logger = None
 
+
 def log_cb(level, str, len):
     logger.info(str)
+
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.
@@ -252,7 +254,7 @@ class VoipIO(multiprocessing.Process):
     played audio.
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play):
+    def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         """ Initialize VoipIO
 
         cfg - configuration dictionary
@@ -286,6 +288,8 @@ class VoipIO(multiprocessing.Process):
 
         self.last_frame_id = 1
         self.message_queue = []
+
+        self.close_event = close_event
 
         self.black_list = defaultdict(int)
 
@@ -675,9 +679,9 @@ class VoipIO(multiprocessing.Process):
         self.commands.send(Command('dtmf_digit(digit="%s")' % digits, 'VoipIO', 'HUB'))
 
     def run(self):
-        set_proc_name("alex_VIO")
-        
         try:
+            set_proc_name("alex_VIO")
+
             global logger
             logger = self.cfg['Logging']['system_logger']
 
@@ -744,6 +748,10 @@ class VoipIO(multiprocessing.Process):
             self.mem_capture.create()
 
             while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
+
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
                 self.recv_input_localy()
@@ -765,7 +773,10 @@ class VoipIO(multiprocessing.Process):
             self.lib.destroy()
             self.lib = None
 
-        except pj.Error, e:
-            print "Exception: " + str(e)
+        except:
             self.lib.destroy()
             self.lib = None
+
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in VAD process.')
+            self.close_event.set()
+            raise

@@ -1,6 +1,7 @@
 import atexit
 import readline
 
+
 class Hub(object):
     """Common functionality for the hubs."""
     hub_type = "Hub"

@@ -3,22 +3,22 @@
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008/.
 
+"""
+Implements useful classes for handling multiprocessing implementation of
+the alex.
+"""
+
 import functools
 import multiprocessing
 import fcntl
 import time
 import os
-import os.path
 import sys
 import re
 import codecs
+import traceback
 
 from datetime import datetime
-
-"""Implements useful classes for handling multiprocessing implementation of
-the alex.
-
-"""
 
 
 def local_lock():
@@ -99,55 +99,54 @@ class InstanceID(object):
 
 
 class SystemLogger(object):
-    """ This is a multiprocessing safe logger. It should be used by all
-    components in the alex.
+    """ This is a multiprocessing-safe logger.  It should be used by all
+    components in Alex.
 
     """
 
     lock = multiprocessing.RLock()
-    levels = {'INFO':             0,
-              'DEBUG':           10,
-              'WARNING':         20,
-              'CRITICAL':        30,
-              'EXCEPTION':       40,
-              'ERROR':           50,
-              'SYSTEM-LOG':      60,
-              }
+    levels = {
+        'DEBUG':            0,
+        'INFO':            10,
+        'WARNING':         20,
+        'CRITICAL':        30,
+        'EXCEPTION':       40,
+        'ERROR':           50,
+        'SYSTEM-LOG':      60,
+    }
 
-    def __init__(self, stdout_log_level='ERROR', stdout=True,
-                 file_log_level='ERROR', output_dir=None):
+    def __init__(self, output_dir, stdout_log_level='INFO', stdout=True,
+                 file_log_level='INFO'):
         self.stdout_log_level = stdout_log_level
         self.stdout = stdout
-        self.file_log_level = stdout_log_level
+        self.file_log_level = file_log_level
         self.output_dir = output_dir
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
+        # Create a buffer of size 1000 bytes in shared memory to hold
+        # the name of the logging directory for current session.
         self.current_session_log_dir_name = multiprocessing.Array(
             'c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
         self._session_started = False
 
     def __repr__(self):
-        return ("SystemLogger(stdout_log_level='{lvl_out}', stdout={stdout}, "
-                "file_log_level='{lvl_f}', output_dir={outdir})").format(
-                    lvl_out=self.stdout_log_level, stdout=self.stdout,
-                    lvl_f=self.file_log_level, outdir=self.output_dir)
+        return ("SystemLogger(output_dir={outdir}, stdout_log_level='"
+                "{lvl_out}', stdout={stdout}, file_log_level='{lvl_f}')"
+                ).format(lvl_out=self.stdout_log_level, stdout=self.stdout,
+                         lvl_f=self.file_log_level, outdir=self.output_dir)
 
-    # XXX: Is the lock any use here?
-    @global_lock(lock)
     def get_time_str(self):
         """ Return current time in dashed ISO-like format.
 
         It is useful in constructing file and directory names.
 
         """
-        # dt = datetime.now().isoformat('-').replace(':', '-')
-        # The explicit format seems clearer to me. (Matěj)
         return '{dt}-{tz}'.format(
-                    dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
-                    tz=time.tzname[time.localtime().tm_isdst])
+            dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
+            tz=time.tzname[time.localtime().tm_isdst])
 
     @global_lock(lock)
     def session_start(self, remote_uri):
@@ -206,38 +205,43 @@ class SystemLogger(object):
 
     @global_lock(lock)
     def log(self, lvl, message, session_system_log=False):
-        """ Log the message based on its level and the logging setting.
-        Before writing into a logging file it locks the file.
+        """
+        Logs the message based on its level and the logging setting.
+        Before writing into a logging file, it locks the file.
+
         """
         if self.stdout:
-            # log to stdout
-            if SystemLogger.levels[lvl] <= \
-                    SystemLogger.levels[self.stdout_log_level]:
+            # Log to stdout.
+            if (SystemLogger.levels[lvl] >=
+                    SystemLogger.levels[self.stdout_log_level]):
                 print self.formatter(lvl, message)
                 sys.stdout.flush()
 
         if self.output_dir:
-            if SystemLogger.levels[lvl] <= \
-                    SystemLogger.levels[self.file_log_level]:
-                # log to the global log
-                f = codecs.open(os.path.join(self.output_dir, 'system.log'), "a+", encoding='utf8', buffering=0)
-                fcntl.lockf(f, fcntl.LOCK_EX)
-                f.write(self.formatter(lvl, message))
-                f.write('\n')
-                fcntl.lockf(f, fcntl.LOCK_UN)
-                f.close()
+            if (SystemLogger.levels[lvl] >=
+                    SystemLogger.levels[self.file_log_level]):
+                # Log to the global log.
+                log_fname = os.path.join(self.output_dir, 'system.log')
+                with codecs.open(log_fname, "a+", encoding='utf8',
+                                 buffering=0) as log_file:
+                    fcntl.lockf(log_file, fcntl.LOCK_EX)
+                    log_file.write(self.formatter(lvl, message))
+                    log_file.write('\n')
+                    fcntl.lockf(log_file, fcntl.LOCK_UN)
 
         if self.current_session_log_dir_name.value:
             if (session_system_log
-                or SystemLogger.levels[lvl] <= \
+                or SystemLogger.levels[lvl] >=
                     SystemLogger.levels[self.file_log_level]):
-                # log to the call specific log
-                f = codecs.open(os.path.join(self.current_session_log_dir_name.value, 'system.log'), "a+", encoding='utf8', buffering=0)
-                fcntl.lockf(f, fcntl.LOCK_EX)
-                f.write(self.formatter(lvl, message))
-                f.write('\n')
-                fcntl.lockf(f, fcntl.LOCK_UN)
-                f.close()
+                # Log to the call-specific log.
+                session_log_fname = os.path.join(
+                    self.current_session_log_dir_name.value, 'system.log')
+                with codecs.open(session_log_fname, "a+", encoding='utf8',
+                                 buffering=0) as session_log_file:
+                    fcntl.lockf(session_log_file, fcntl.LOCK_EX)
+                    session_log_file.write(self.formatter(lvl, message))
+                    session_log_file.write('\n')
+                    fcntl.lockf(session_log_file, fcntl.LOCK_UN)
 
     @global_lock(lock)
     def info(self, message):
@@ -257,7 +261,8 @@ class SystemLogger(object):
 
     @global_lock(lock)
     def exception(self, message):
-        self.log('EXCEPTION', message)
+        tb = traceback.format_exc()
+        self.log('EXCEPTION', message + '\n' + tb)
 
     @global_lock(lock)
     def error(self, message):

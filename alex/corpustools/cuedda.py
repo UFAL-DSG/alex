@@ -43,7 +43,8 @@ class CUEDSlot:
         self.value = self.value.replace('"', '')
 
         if self.value == 'value':
-            raise ValueError('FIXME: Ignore slots for which no values were found in the database.')
+            raise ValueError('FIXME: Ignore slots for which no values were '
+                             'found in the database.')
 
         return
 

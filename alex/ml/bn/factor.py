@@ -14,22 +14,47 @@ ZERO = 1e-20
 
 
 def to_log(n, out=None):
-    """Convert number to log arithmetic."""
+    """Convert number to log arithmetic.
+
+    We want to be able to represent zero, therefore every number smaller than
+    epsilon is considered a zero.
+
+    :param n: Number to be converted.
+    :type n: number or array like
+    :param out: Output array.
+    :type out: ndarray
+    :returns: Number in log arithmetic.
+    :rtype: number or array like
+    """
     if np.isscalar(n):
-        return np.log(ZERO) if n < ZERO else np.log(n)
+        return np.log(ZERO, out) if n < ZERO else np.log(n, out)
     else:
         n[n < ZERO] = ZERO
         return np.log(n, out)
 
 
 def from_log(n):
-    """Convert number from log arithmetic."""
+    """Convert number from log arithmetic.
+
+    :param n: Number to be converted from log arithmetic.
+    :type n: number or array like
+    :returns: Number in decimal scale.
+    :rtype: number or array like
+    """
     return np.exp(n)
 
 
 @np.vectorize
 def logsubexp(a, b):
-    """Subtract one number from another in log arithmetic"""
+    """Subtract one number from another in log arithmetic.
+
+    :param a: Minuend.
+    :type a: number or array like
+    :param b: Subtrahend.
+    :type b: number or array like
+    :returns: Difference.
+    :rtype: number or array like
+    """
     if a < b:
         raise Exception("Computing the log of a negative number.")
     elif a == b:
@@ -131,6 +156,7 @@ class DiscreteFactor(Factor):
         self.unobserved_factor_table = np.array(self.factor_table)
 
     def __str__(self):
+        """Convert a factor to a string representation."""
         return self.pretty_print()
 
     def __iter__(self):
@@ -152,6 +178,8 @@ class DiscreteFactor(Factor):
 
         :param assignment: Assignment of variables whose value should be returned.
         :type assignment: tuple
+        :returns: Value in table at assignment.
+        :rtype: float
         """
         index = self._get_index_from_assignment(assignment)
         return from_log(self.factor_table[index])
@@ -170,8 +198,25 @@ class DiscreteFactor(Factor):
     def __pow__(self, n):
         """Raise every element of the factor to the power of n.
 
+        Example:
+        >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+        ...                    {
+        ...                         ('a1',): 0.8,
+        ...                         ('a2',): 0.2
+        ...                    })
+        >>> result = a**2
+        >>> print result.pretty_print(width=30)
+        ------------------------------
+               A            Value
+        ------------------------------
+              a1             0.64
+              a2             0.04
+        ------------------------------
+
         :param n: The power.
         :type n: number
+        :returns: New factor raised to the power of n.
+        :rtype: DiscreteFactor
         """
         return DiscreteFactor(self.variables,
                               self.variable_values,
@@ -262,7 +307,7 @@ class DiscreteFactor(Factor):
             return self._divide_different(other)
 
     def __add__(self, other):
-        """Add two factors.
+        """Add two factors together.
 
         Add two factors together. They must have the same variables.
 
@@ -287,7 +332,7 @@ class DiscreteFactor(Factor):
         ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor or int
+        :type other: DiscreteFactor or float
         :returns: The result of the addition.
         :rtype: DiscreteFactor
         """
@@ -330,7 +375,7 @@ class DiscreteFactor(Factor):
         ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor or int
+        :type other: DiscreteFactor or float
         :returns: The result of the subtraction.
         :rtype: DiscreteFactor
         """
@@ -443,8 +488,8 @@ class DiscreteFactor(Factor):
               x1             0.2
         ------------------------------
 
-        :param assignment_dict: Observed values for different assignments of values.
-        :type assignment_dict: dict
+        :param assignment_dict: Observed values for different assignments of values or None.
+        :type assignment_dict: dict or None
         """
         if assignment_dict is not None:
             # Clear the factor table.
@@ -456,7 +501,36 @@ class DiscreteFactor(Factor):
             self.factor_table[:] = self.unobserved_factor_table
 
     def normalize(self, parents=None):
-        """Normalize factor table."""
+        """Normalize a factor table.
+
+        The table is normalized so all elements sum to one.
+        The parents argument is a list of names of parents. If it is
+        specified, then only those rows in table, which share the same
+        parents, are normalized.
+
+        Example:
+        >>> f = DiscreteFactor(['A', 'B'],
+        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+        ...                    {
+        ...                         ('a1', 'b1'): 3,
+        ...                         ('a1', 'b2'): 1,
+        ...                         ('a2', 'b1'): 1,
+        ...                         ('a2', 'b2'): 1,
+        ...                    })
+        >>> f.normalize(parents=['B'])
+        >>> print f.pretty_print(width=30)
+        ------------------------------
+            A         B       Value
+        ------------------------------
+            a1        b1       0.75
+            a1        b2       0.5
+            a2        b1       0.25
+            a2        b2       0.5
+        ------------------------------
+
+        :param parents: Parents of the factor.
+        :type parents: list
+        """
         if parents is not None:
             sums = defaultdict(lambda: np.log(ZERO))
             assignments = {}
@@ -470,7 +544,37 @@ class DiscreteFactor(Factor):
         else:
             self.factor_table -= logsumexp(self.factor_table)
 
+    def rename_variables(self, mapping):
+        for i in range(len(self.variables)):
+            if self.variables[i] in mapping:
+                old_variable = self.variables[i]
+                new_variable = mapping[old_variable]
+                self.variables[i] = new_variable
+
+                self.variable_values[new_variable] = self.variable_values[old_variable]
+                del self.variable_values[old_variable]
+
+                self.strides[new_variable] = self.strides[old_variable]
+                del self.strides[old_variable]
+
+                self.cardinalities[new_variable] = self.cardinalities[old_variable]
+                del self.cardinalities[old_variable]
+
+                self.translation_table[new_variable] = self.translation_table[old_variable]
+                del self.translation_table[old_variable]
+
     def most_probable(self, n=None):
+        """Return a list of most probable assignments from the table.
+
+        Returns a sorted list of assignment and their values according to
+        their probability. The size of the list can be changed by specifying
+        n.
+
+        :param n: The number of most probable elements, which should be returned.
+        :type n: int
+        :returns: A list of tuples (assignment, value) in descending order.
+        :rtype: list of (tuple, float)
+        """
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]
         return [(self._get_assignment_from_index(i)[0],
                  from_log(self.factor_table[i])) for i in indxs]
