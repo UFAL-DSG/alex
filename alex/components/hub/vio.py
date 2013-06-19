@@ -10,6 +10,7 @@ import random
 import multiprocessing
 import sys
 import os.path
+import os
 import struct
 import array
 import threading
@@ -25,7 +26,7 @@ import alex.utils.text as string
 
 from alex.components.hub.messages import Command, Frame
 from alex.utils.exception import VoipIOException
-
+from alex.utils.sessionlogger import SessionLoggerException
 from alex.utils.procname import set_proc_name
 
 # Logging callback
@@ -347,7 +348,7 @@ class VoipIO(multiprocessing.Process):
                     self.local_audio_play.clear()
                     self.mem_player.flush()
                     self.audio_playing = False
-                    
+
                     return False
 
                 if command.parsed['__name__'] == 'flush_out':
@@ -358,7 +359,7 @@ class VoipIO(multiprocessing.Process):
                     self.local_audio_play.clear()
                     self.mem_player.flush()
                     self.audio_playing = False
-                    
+
                     return False
 
                 if command.parsed['__name__'] == 'make_call':
@@ -409,12 +410,12 @@ class VoipIO(multiprocessing.Process):
                               not in del_messages]
 
     def read_write_audio(self):
-        """Send some of the available data to the output.
+        """Send as much possible of the available data to the output and read as much as possible from the input.
 
         It should be a non-blocking operation.
         """
 
-        if (self.local_audio_play and
+        while (self.local_audio_play and
                 (self.mem_player.get_write_available()
                  > self.cfg['Audio']['samples_per_frame'] * 2)):
             # send a frame from input to be played
@@ -432,7 +433,10 @@ class VoipIO(multiprocessing.Process):
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                    try:
+                        self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                    except SessionLoggerException as ex:
+                        self.cfg['Logging']['system_logger'].exception(ex)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
                     self.audio_playing = False
@@ -441,10 +445,12 @@ class VoipIO(multiprocessing.Process):
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                    try:
+                        self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                    except SessionLoggerException as ex:
+                        self.cfg['Logging']['system_logger'].exception(ex)
 
-        if (self.mem_capture.get_read_available()
-                > self.cfg['Audio']['samples_per_frame'] * 2):
+        while (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
             data_rec = self.mem_capture.get_frame()
 
@@ -670,6 +676,7 @@ class VoipIO(multiprocessing.Process):
 
     def run(self):
         set_proc_name("alex_VIO")
+        
         try:
             global logger
             logger = self.cfg['Logging']['system_logger']

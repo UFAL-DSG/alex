@@ -3,6 +3,8 @@
 
 import multiprocessing
 import time
+import sys
+import os
 
 import alex.components.slu.dailrclassifier as DAILRSLU
 import alex.components.slu.daiklrclassifier as DAIKLRSLU
@@ -13,6 +15,7 @@ from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.components.slu.exception import SLUException
 from alex.components.slu.common import get_slu_type, slu_factory
+from alex.utils.procname import set_proc_name
 
 
 class SLU(multiprocessing.Process):
@@ -118,8 +121,8 @@ class SLU(multiprocessing.Process):
                 raise SLUException('Unsupported input.')
 
     def run(self):
-        self.recognition_on = False
-
+        set_proc_name("alex_SLU")
+        
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 

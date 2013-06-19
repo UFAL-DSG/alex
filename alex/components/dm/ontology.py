@@ -29,7 +29,7 @@ class Ontology(object):
         self.ontology = on_mod.ontology
 
     def slot_has_value(self, name, value):
-        """ Check whether the slo and the value are compatible.
+        """ Check whether the slot and the value are compatible.
         """
         return value in self.ontology['slots'][name]
     

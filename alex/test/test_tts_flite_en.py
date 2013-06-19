@@ -7,6 +7,7 @@ import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts.flite import FliteTTS
+from alex.utils.config import Config
 
 if __name__ == '__main__':
     print "Testing Flite TTS"
@@ -15,24 +16,21 @@ if __name__ == '__main__':
 
     text = 'Hello. Thank you for calling. '
     voice = 'kal'
-    sample_rate = 16000
 
     print "Synthesize text:", text
     print "Voice:          ", voice
-    print "Sample rate:    ", sample_rate
     print
 
-    cfg = {
-        'Audio': {
-            'sample_rate': sample_rate
-        },
+    c = {
         'TTS': {
-        'Flite': {
-            'debug': False,
-            'voice': 'kal'
-        }
+            'Flite': {
+                'debug': False,
+                'voice': 'kal'
+            }
         }
     }
+    cfg = Config('../resources/default.cfg')
+    cfg.update(c)
 
     tts = FliteTTS(cfg)
 

@@ -13,7 +13,7 @@ import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts import TTSException, TTSInterface
-
+from alex.components.tts.preprocessing import TTSPreprocessing
 
 class SpeechtechTTS(TTSInterface):
     """ Uses SpeechTech TTS service to synthesize sentences in a specific language, e.g. en, cs.
@@ -23,8 +23,9 @@ class SpeechtechTTS(TTSInterface):
     """
 
     def __init__(self, cfg):
-        self.cfg = cfg
-
+        super(SpeechtechTTS, self).__init__(cfg)
+        self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['SpeechTech']['preprocessing'])
+        
     @cache.persistent_cache(True, 'SpeechtechTTS.get_tts_mp3.')
     def get_tts_mp3(self, voice, text):
         """ Access SpeechTech TTS service and get synthesized audio.
@@ -88,6 +89,8 @@ class SpeechtechTTS(TTSInterface):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
         try:
+            text = self.preprocessing.process(text)
+            
             mp3 = self.get_tts_mp3(
                 self.cfg['TTS']['SpeechTech']['voice'], text)
             wav = audio.convert_mp3_to_wav(self.cfg, mp3)

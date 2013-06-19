@@ -7,6 +7,7 @@ import autopath
 import alex.utils.audio as audio
 
 from alex.components.tts.google import GoogleTTS
+from alex.utils.config import Config
 
 if __name__ == '__main__':
     print "Testing Google TTS service"
@@ -15,24 +16,21 @@ if __name__ == '__main__':
 
     text = u'Dobrý den. Děkujeme za zavolání.'
     language = 'cs'
-    sample_rate = 16000
-
+    
     print "Synthesize text:", text
     print "Language:       ", language
-    print "Sample rate:    ", sample_rate
     print
 
-    cfg = {
-        'Audio': {
-            'sample_rate': sample_rate
-        },
+    c = {
         'TTS': {
-        'Google': {
-            'debug': False,
-            'language': language
-        }
+            'Google': {
+                'debug': False,
+                'language': language
+            }
         }
     }
+    cfg = Config('../resources/default.cfg')
+    cfg.update(c)
 
     tts = GoogleTTS(cfg)
 

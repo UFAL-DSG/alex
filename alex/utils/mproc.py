@@ -99,8 +99,8 @@ class InstanceID(object):
 
 
 class SystemLogger(object):
-    """ This is a multiprocessing safe logger. It should be used by all
-    components in the alex.
+    """ This is a multiprocessing-safe logger.  It should be used by all
+    components in Alex.
 
     """
 
@@ -114,8 +114,8 @@ class SystemLogger(object):
               'SYSTEM-LOG':      60,
               }
 
-    def __init__(self, stdout_log_level='ERROR', stdout=True,
-                 file_log_level='ERROR', output_dir=None):
+    def __init__(self, output_dir, stdout_log_level='ERROR', stdout=True,
+                 file_log_level='ERROR'):
         self.stdout_log_level = stdout_log_level
         self.stdout = stdout
         self.file_log_level = stdout_log_level
@@ -124,16 +124,17 @@ class SystemLogger(object):
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
+        # XXX This is hard to read!  What does it do?
         self.current_session_log_dir_name = multiprocessing.Array(
             'c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
         self._session_started = False
 
     def __repr__(self):
-        return ("SystemLogger(stdout_log_level='{lvl_out}', stdout={stdout}, "
-                "file_log_level='{lvl_f}', output_dir={outdir})").format(
-                    lvl_out=self.stdout_log_level, stdout=self.stdout,
-                    lvl_f=self.file_log_level, outdir=self.output_dir)
+        return ("SystemLogger(output_dir={outdir}, stdout_log_level='"
+                "{lvl_out}', stdout={stdout}, file_log_level='{lvl_f}')"
+                ).format(lvl_out=self.stdout_log_level, stdout=self.stdout,
+                         lvl_f=self.file_log_level, outdir=self.output_dir)
 
     # XXX: Is the lock any use here?
     @global_lock(lock)
@@ -206,11 +207,13 @@ class SystemLogger(object):
 
     @global_lock(lock)
     def log(self, lvl, message, session_system_log=False):
-        """ Log the message based on its level and the logging setting.
-        Before writing into a logging file it locks the file.
+        """\
+        Logs the message based on its level and the logging setting.
+        Before writing into a logging file, it locks the file.
+
         """
         if self.stdout:
-            # log to stdout
+            # Log to stdout.
             if SystemLogger.levels[lvl] <= \
                     SystemLogger.levels[self.stdout_log_level]:
                 print self.formatter(lvl, message)
@@ -219,25 +222,28 @@ class SystemLogger(object):
         if self.output_dir:
             if SystemLogger.levels[lvl] <= \
                     SystemLogger.levels[self.file_log_level]:
-                # log to the global log
-                f = codecs.open(os.path.join(self.output_dir, 'system.log'), "a+", encoding='utf8', buffering=0)
-                fcntl.lockf(f, fcntl.LOCK_EX)
-                f.write(self.formatter(lvl, message))
-                f.write('\n')
-                fcntl.lockf(f, fcntl.LOCK_UN)
-                f.close()
+                # Log to the global log.
+                log_fname = os.path.join(self.output_dir, 'system.log')
+                with codecs.open(log_fname, "a+", encoding='utf8',
+                                 buffering=0) as log_file:
+                    fcntl.lockf(log_file, fcntl.LOCK_EX)
+                    log_file.write(self.formatter(lvl, message))
+                    log_file.write('\n')
+                    fcntl.lockf(log_file, fcntl.LOCK_UN)
 
         if self.current_session_log_dir_name.value:
             if (session_system_log
                 or SystemLogger.levels[lvl] <= \
                     SystemLogger.levels[self.file_log_level]):
-                # log to the call specific log
-                f = codecs.open(os.path.join(self.current_session_log_dir_name.value, 'system.log'), "a+", encoding='utf8', buffering=0)
-                fcntl.lockf(f, fcntl.LOCK_EX)
-                f.write(self.formatter(lvl, message))
-                f.write('\n')
-                fcntl.lockf(f, fcntl.LOCK_UN)
-                f.close()
+                # Log to the call-specific log.
+                session_log_fname = os.path.join(
+                    self.current_session_log_dir_name.value, 'system.log')
+                with codecs.open(session_log_fname, "a+", encoding='utf8',
+                                 buffering=0) as session_log_file:
+                    fcntl.lockf(session_log_file, fcntl.LOCK_EX)
+                    session_log_file.write(self.formatter(lvl, message))
+                    session_log_file.write('\n')
+                    fcntl.lockf(session_log_file, fcntl.LOCK_UN)
 
     @global_lock(lock)
     def info(self, message):

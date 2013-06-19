@@ -10,6 +10,7 @@ import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts import TTSInterface
+from alex.components.tts.preprocessing import TTSPreprocessing
 
 
 class GoogleTTS(TTSInterface):
@@ -20,7 +21,8 @@ class GoogleTTS(TTSInterface):
     """
 
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(GoogleTTS, self).__init__(cfg)
+        self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['Google']['preprocessing'])
 
     @cache.persistent_cache(True, 'GoogleTTS.get_tts_mp3.')
     def get_tts_mp3(self, language, text, rate=1.0):
@@ -45,6 +47,8 @@ class GoogleTTS(TTSInterface):
     def synthesize(self, text):
         """ Synthesize the text and returns it in a string with audio in default format and sample rate. """
 
+        text = self.preprocessing.process(text)
+        
         mp3 = self.get_tts_mp3(self.cfg['TTS']['Google']['language'], text, self.cfg['TTS']['Google'].get('rate', 1.0))
         wav = audio.convert_mp3_to_wav(self.cfg, mp3)
 
