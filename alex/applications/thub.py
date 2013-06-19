@@ -171,24 +171,27 @@ class TextHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        cfg['Logging']['system_logger'].info(
-            """Enter the first user utterance.  You can enter multiple
-            utterances to form an N-best list.  The probability for each
-            utterance must be provided before the utterance itself.  When
-            finished, the entry can be terminated by a period (".").
+        try:
+            cfg['Logging']['system_logger'].info(
+                """Enter the first user utterance.  You can enter multiple
+                utterances to form an N-best list.  The probability for each
+                utterance must be provided before the utterance itself.  When
+                finished, the entry can be terminated by a period (".").
 
-            For example:
+                For example:
 
-            System DA 1: 0.6 Hello
-            System DA 2: 0.4 Hello, I am looking for a bar
-            System DA 3: .
-        """)
+                System DA 1: 0.6 Hello
+                System DA 2: 0.4 Hello, I am looking for a bar
+                System DA 3: .
+            """)
 
-        while True:
-            self.process_dm()
-            utt_nblist = self.input_usr_utt_nblist()
-            self.process_utterance_hyp(utt_nblist)
-
+            while True:
+                self.process_dm()
+                utt_nblist = self.input_usr_utt_nblist()
+                self.process_utterance_hyp(utt_nblist)
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
+            raise
 
 
 #########################################################################

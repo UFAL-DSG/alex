@@ -19,16 +19,18 @@ from alex.utils.procname import set_proc_name
 
 
 class SLU(multiprocessing.Process):
-    """\
-    The SLU component receives ASR hypotheses and converts them into hypotheses
-    about the meaning of the input in the form of dialogue acts.
+    """
+    The SLU component receives ASR hypotheses and converts them into
+    hypotheses about the meaning of the input in the form of dialogue
+    acts.
 
     This component is a wrapper around multiple SLU components which handles
     inter-process communication.
     """
 
-    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
-        """\
+    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out,
+                 close_event):
+        """
         Initialises an SLU object according to the configuration (cfg['SLU']
         is the relevant section), and stores ends of pipes to other processes.
 
@@ -52,6 +54,7 @@ class SLU(multiprocessing.Process):
         self.commands = commands
         self.asr_hypotheses_in = asr_hypotheses_in
         self.slu_hypotheses_out = slu_hypotheses_out
+        self.close_event = close_event
 
         # Load the SLU.
         self.slu = slu_factory(get_slu_type(cfg), cfg)
@@ -121,14 +124,23 @@ class SLU(multiprocessing.Process):
                 raise SLUException('Unsupported input.')
 
     def run(self):
-        set_proc_name("alex_SLU")
-        
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        try:
+            set_proc_name("alex_SLU")
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            # process the incoming ASR hypotheses
-            self.read_asr_hypotheses_write_slu_hypotheses()
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
+
+                # process the incoming ASR hypotheses
+                self.read_asr_hypotheses_write_slu_hypotheses()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in SLU process.')
+            self.close_event.set()
+            raise

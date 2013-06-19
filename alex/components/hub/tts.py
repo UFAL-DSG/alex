@@ -32,7 +32,7 @@ class TTS(multiprocessing.Process):
     communication.
     """
 
-    def __init__(self, cfg, commands, text_in, audio_out):
+    def __init__(self, cfg, commands, text_in, audio_out, close_event):
         multiprocessing.Process.__init__(self)
 
         self.exit = False
@@ -41,6 +41,7 @@ class TTS(multiprocessing.Process):
         self.commands = commands
         self.text_in = text_in
         self.audio_out = audio_out
+        self.close_event = close_event
 
         self.poll = select.poll()
 
@@ -164,12 +165,18 @@ class TTS(multiprocessing.Process):
                 self.process_pending_commands()
 
     def run(self):
-        self.command = None
-        set_proc_name("alex_TTS")
+        try:
+            self.command = None
+            set_proc_name("alex_TTS")
 
-        while not self.exit:
-            try:
+            while not self.exit:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
+
                 self.wait_for_message()
-            except Exception:
-                traceback.print_exc()
-                import alex.utils.rdb as rdb; rdb.set_trace()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in TTS process.')
+            self.close_event.set()
+            raise
+

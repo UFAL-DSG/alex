@@ -20,13 +20,14 @@ class DM(multiprocessing.Process):
     communication.
     """
 
-    def __init__(self, cfg, commands, slu_hypotheses_in, dialogue_act_out):
+    def __init__(self, cfg, commands, slu_hypotheses_in, dialogue_act_out, close_event):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
         self.commands = commands
         self.slu_hypotheses_in = slu_hypotheses_in
         self.dialogue_act_out = dialogue_act_out
+        self.close_event = close_event
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
@@ -124,15 +125,24 @@ class DM(multiprocessing.Process):
                 raise DMException('Unsupported input.')
 
     def run(self):
-        set_proc_name("alex_DM")
+        try:
+            set_proc_name("alex_DM")
 
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            # process the incoming SLU hypothesis
-            self.read_slu_hypotheses_write_dialogue_act()
-    
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
+
+                # process the incoming SLU hypothesis
+                self.read_slu_hypotheses_write_dialogue_act()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in DM process.')
+            self.close_event.set()
+            raise
+

@@ -28,301 +28,310 @@ class VoipHub(Hub):
     """
 
     def __init__(self, cfg):
-        self.cfg = cfg
+        super(VoipHub, self).__init__(cfg)
+        self.close_event = multiprocessing.Event()
 
     def run(self):
-        vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
-        vio_record, vio_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
-        vio_play, vio_child_play = multiprocessing.Pipe()          # I write in audio to be played
+        try:
+            vio_commands, vio_child_commands = multiprocessing.Pipe()  # used to send commands to VoipIO
+            vio_record, vio_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
+            vio_play, vio_child_play = multiprocessing.Pipe()          # I write in audio to be played
 
-        vad_commands, vad_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
-        vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+            vad_commands, vad_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
+            vad_audio_out, vad_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
 
-        asr_commands, asr_child_commands = multiprocessing.Pipe()          # used to send commands to ASR
-        asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
+            asr_commands, asr_child_commands = multiprocessing.Pipe()          # used to send commands to ASR
+            asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
 
-        slu_commands, slu_child_commands = multiprocessing.Pipe()          # used to send commands to SLU
-        slu_hypotheses_out, slu_child_hypotheses = multiprocessing.Pipe()  # used to read SLU hypotheses
+            slu_commands, slu_child_commands = multiprocessing.Pipe()          # used to send commands to SLU
+            slu_hypotheses_out, slu_child_hypotheses = multiprocessing.Pipe()  # used to read SLU hypotheses
 
-        dm_commands, dm_child_commands = multiprocessing.Pipe()            # used to send commands to DM
-        dm_actions_out, dm_child_actions = multiprocessing.Pipe()          # used to read DM actions
+            dm_commands, dm_child_commands = multiprocessing.Pipe()            # used to send commands to DM
+            dm_actions_out, dm_child_actions = multiprocessing.Pipe()          # used to read DM actions
 
-        nlg_commands, nlg_child_commands = multiprocessing.Pipe()          # used to send commands to NLG
-        nlg_text_out, nlg_child_text = multiprocessing.Pipe()              # used to read NLG output
+            nlg_commands, nlg_child_commands = multiprocessing.Pipe()          # used to send commands to NLG
+            nlg_text_out, nlg_child_text = multiprocessing.Pipe()              # used to read NLG output
 
-        tts_commands, tts_child_commands = multiprocessing.Pipe()          # used to send commands to TTS
+            tts_commands, tts_child_commands = multiprocessing.Pipe()          # used to send commands to TTS
 
-        command_connections = [vio_commands, vad_commands, asr_commands, slu_commands,
-                                             dm_commands, nlg_commands, tts_commands]
+            command_connections = [vio_commands, vad_commands, asr_commands, slu_commands,
+                                   dm_commands, nlg_commands, tts_commands]
 
-        non_command_connections = [vio_record, vio_child_record,
-                                   vio_play, vio_child_play,
-                                   vad_audio_out, vad_child_audio_out,
-                                   asr_hypotheses_out, asr_child_hypotheses,
-                                   slu_hypotheses_out, slu_child_hypotheses,
-                                   dm_actions_out, dm_child_actions,
-                                   nlg_text_out, nlg_child_text]
+            non_command_connections = [vio_record, vio_child_record,
+                                       vio_play, vio_child_play,
+                                       vad_audio_out, vad_child_audio_out,
+                                       asr_hypotheses_out, asr_child_hypotheses,
+                                       slu_hypotheses_out, slu_child_hypotheses,
+                                       dm_actions_out, dm_child_actions,
+                                       nlg_text_out, nlg_child_text]
 
-        vio = VoipIO(self.cfg, vio_child_commands, vio_child_record, vio_child_play)
-        vad = VAD(self.cfg, vad_child_commands, vio_record, vad_child_audio_out)
-        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-        slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
-        dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)
-        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text)
-        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, vio_play)
+            vio = VoipIO(self.cfg, vio_child_commands, vio_child_record, vio_child_play, self.close_event)
+            vad = VAD(self.cfg, vad_child_commands, vio_record, vad_child_audio_out, self.close_event)
+            asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, self.close_event)
+            slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses, self.close_event)
+            dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions, self.close_event)
+            nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text, self.close_event)
+            tts = TTS(self.cfg, tts_child_commands, nlg_text_out, vio_play, self.close_event)
 
-        vio.start()
-        vad.start()
-        asr.start()
-        slu.start()
-        dm.start()
-        nlg.start()
-        tts.start()
+            vio.start()
+            vad.start()
+            asr.start()
+            slu.start()
+            dm.start()
+            nlg.start()
+            tts.start()
 
-        # init the system
-        call_start = 0
-        call_back_time = -1
-        call_back_uri = None
-        number_of_turns = -1
+            # init the system
+            call_start = 0
+            call_back_time = -1
+            call_back_uri = None
+            number_of_turns = -1
 
-        s_voice_activity = False
-        s_last_voice_activity_time = 0
-        u_voice_activity = False
-        u_last_voice_activity_time = 0
+            s_voice_activity = False
+            s_last_voice_activity_time = 0
+            u_voice_activity = False
+            u_last_voice_activity_time = 0
 
-        s_last_dm_activity_time = 0
+            s_last_dm_activity_time = 0
 
-        hangup = False
+            hangup = False
 
-        call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
-        call_db.log()
+            call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
+            call_db.log()
 
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            if call_back_time != -1 and call_back_time < time.time():
-                vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
-                call_back_time = -1
-                call_back_uri = None
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            # read all messages
-            if vio_commands.poll():
-                command = vio_commands.recv()
+                if call_back_time != -1 and call_back_time < time.time():
+                    vio_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO'))
+                    call_back_time = -1
+                    call_back_uri = None
 
-                if isinstance(command, Command):
-                    if command.parsed['__name__'] == "incoming_call":
-                        self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                        self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
-                        self.cfg['Logging']['system_logger'].info(command)
+                # read all messages
+                if vio_commands.poll():
+                    command = vio_commands.recv()
 
-                        self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
-                        self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
-                        self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
-                        self.cfg['Logging']['session_logger'].input_source("voip")
+                    if isinstance(command, Command):
+                        if command.parsed['__name__'] == "incoming_call":
+                            self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
+                            self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                    if command.parsed['__name__'] == "rejected_call":
-                        self.cfg['Logging']['system_logger'].info(command)
+                            self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
+                            self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
+                            self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
+                            self.cfg['Logging']['session_logger'].input_source("voip")
 
-                        call_back_time = time.time() + self.cfg['VoipHub']['wait_time_before_calling_back']
-                        call_back_uri = command.parsed['remote_uri']
+                        if command.parsed['__name__'] == "rejected_call":
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                    if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
-                        self.cfg['Logging']['system_logger'].info(command)
+                            call_back_time = time.time() + self.cfg['VoipHub']['wait_time_before_calling_back']
+                            call_back_uri = command.parsed['remote_uri']
 
-                        remote_uri = command.parsed['remote_uri']
+                        if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                        num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
+                            remote_uri = command.parsed['remote_uri']
 
-                        m = []
-                        m.append('')
-                        m.append('=' * 120)
-                        m.append('Rejected incoming call from blacklisted URI: %s' % remote_uri)
-                        m.append('-' * 120)
-                        m.append('Total calls:                  %d' % num_all_calls)
-                        m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
-                        m.append('Last period total calls:      %d' % last_period_num_calls)
-                        m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
-                        m.append('=' * 120)
-                        m.append('')
-                        self.cfg['Logging']['system_logger'].info('\n'.join(m))
+                            num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
 
-                    if command.parsed['__name__'] == "call_connecting":
-                        self.cfg['Logging']['system_logger'].info(command)
+                            m = []
+                            m.append('')
+                            m.append('=' * 120)
+                            m.append('Rejected incoming call from blacklisted URI: %s' % remote_uri)
+                            m.append('-' * 120)
+                            m.append('Total calls:                  %d' % num_all_calls)
+                            m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                            m.append('Last period total calls:      %d' % last_period_num_calls)
+                            m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
+                            m.append('=' * 120)
+                            m.append('')
+                            self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
-                    if command.parsed['__name__'] == "call_confirmed":
-                        self.cfg['Logging']['system_logger'].info(command)
+                        if command.parsed['__name__'] == "call_connecting":
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                        remote_uri = command.parsed['remote_uri']
-                        num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
+                        if command.parsed['__name__'] == "call_confirmed":
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                        m = []
-                        m.append('')
-                        m.append('=' * 120)
-                        m.append('Incoming call from :          %s' % remote_uri)
-                        m.append('-' * 120)
-                        m.append('Total calls:                  %d' % num_all_calls)
-                        m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
-                        m.append('Last period total calls:      %d' % last_period_num_calls)
-                        m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
-                        m.append('-' * 120)
+                            remote_uri = command.parsed['remote_uri']
+                            num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
 
-                        if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
-                                last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
+                            m = []
+                            m.append('')
+                            m.append('=' * 120)
+                            m.append('Incoming call from :          %s' % remote_uri)
+                            m.append('-' * 120)
+                            m.append('Total calls:                  %d' % num_all_calls)
+                            m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                            m.append('Last period total calls:      %d' % last_period_num_calls)
+                            m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
+                            m.append('-' * 120)
 
-                            tts_commands.send(Command('synthesize(text="%s")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
-                            # prepare for ending the call
-                            hangup = True
+                            if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
+                                    last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
+
+                                tts_commands.send(Command('synthesize(text="%s")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
+                                # prepare for ending the call
+                                hangup = True
+                                s_voice_activity = True
+                                vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+                                  time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
+                                m.append('CALL REJECTED')
+                            else:
+                                # init the system
+                                call_start = time.time()
+                                number_of_turns = 0
+
+                                s_voice_activity = False
+                                s_last_voice_activity_time = 0
+                                u_voice_activity = False
+                                u_last_voice_activity_time = 0
+                                hungup = False
+
+                                dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
+                                m.append('CALL ACCEPTED')
+
+                            m.append('=' * 120)
+                            m.append('')
+                            self.cfg['Logging']['system_logger'].info('\n'.join(m))
+
+                            call_db.track_confirmed_call(remote_uri)
+
+                        if command.parsed['__name__'] == "call_disconnected":
+                            self.cfg['Logging']['system_logger'].info(command)
+
+                            vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
+                            vad_commands.send(Command('flush()', 'HUB', 'VAD'))
+                            asr_commands.send(Command('flush()', 'HUB', 'ASR'))
+                            slu_commands.send(Command('flush()', 'HUB', 'SLU'))
+                            dm_commands.send(Command('flush()', 'HUB', 'DM'))
+                            nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
+                            tts_commands.send(Command('flush()', 'HUB', 'TTS'))
+
+                            dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
+
+                            # FIXME: this is not an ideal synchronization for the stopped components
+                            # we should do better. FJ
+                            time.sleep(0.5)
+
+                            self.cfg['Logging']['system_logger'].session_end()
+                            self.cfg['Logging']['session_logger'].session_end()
+
+                            remote_uri = command.parsed['remote_uri']
+                            call_db.track_disconnected_call(remote_uri)
+
+                        if command.parsed['__name__'] == "play_utterance_start":
+                            self.cfg['Logging']['system_logger'].info(command)
                             s_voice_activity = True
-                            vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
-                              time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
-                            m.append('CALL REJECTED')
-                        else:
-                            # init the system
-                            call_start = time.time()
-                            number_of_turns = 0
+                            s_last_voice_activity_time = time.time()
 
-                            s_voice_activity = False
-                            s_last_voice_activity_time = 0
-                            u_voice_activity = False
-                            u_last_voice_activity_time = 0
-                            hungup = False
+                        if command.parsed['__name__'] == "play_utterance_end":
+                            self.cfg['Logging']['system_logger'].info(command)
 
-                            dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
-                            m.append('CALL ACCEPTED')
-
-                        m.append('=' * 120)
-                        m.append('')
-                        self.cfg['Logging']['system_logger'].info('\n'.join(m))
-
-                        call_db.track_confirmed_call(remote_uri)
-
-                    if command.parsed['__name__'] == "call_disconnected":
-                        self.cfg['Logging']['system_logger'].info(command)
-
-                        vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
-                        vad_commands.send(Command('flush()', 'HUB', 'VAD'))
-                        asr_commands.send(Command('flush()', 'HUB', 'ASR'))
-                        slu_commands.send(Command('flush()', 'HUB', 'SLU'))
-                        dm_commands.send(Command('flush()', 'HUB', 'DM'))
-                        nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
-                        tts_commands.send(Command('flush()', 'HUB', 'TTS'))
-
-                        dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
-
-                        # FIXME: this is not an ideal synchronization for the stopped components
-                        # we should do better. FJ
-                        time.sleep(0.5)
-
-                        self.cfg['Logging']['system_logger'].session_end()
-                        self.cfg['Logging']['session_logger'].session_end()
-
-                        remote_uri = command.parsed['remote_uri']
-                        call_db.track_disconnected_call(remote_uri)
-
-                    if command.parsed['__name__'] == "play_utterance_start":
-                        self.cfg['Logging']['system_logger'].info(command)
-                        s_voice_activity = True
-                        s_last_voice_activity_time = time.time()
-
-                    if command.parsed['__name__'] == "play_utterance_end":
-                        self.cfg['Logging']['system_logger'].info(command)
-
-                        s_voice_activity = False
-                        s_last_voice_activity_time = time.time()
-
-            if vad_commands.poll():
-                command = vad_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
-
-                if isinstance(command, Command):
-                    if command.parsed['__name__'] == "speech_start":
-                        u_voice_activity = True
-
-                        if s_voice_activity:
-                            self.cfg['Logging']['session_logger'].barge_in("system")
-
-                            vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
                             s_voice_activity = False
                             s_last_voice_activity_time = time.time()
 
-                    if command.parsed['__name__'] == "speech_end":
-                        u_voice_activity = False
-                        u_last_voice_activity_time = time.time()
+                if vad_commands.poll():
+                    command = vad_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
-            if asr_commands.poll():
-                command = asr_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                    if isinstance(command, Command):
+                        if command.parsed['__name__'] == "speech_start":
+                            u_voice_activity = True
 
-            if slu_commands.poll():
-                command = slu_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                            if s_voice_activity:
+                                self.cfg['Logging']['session_logger'].barge_in("system")
 
-            if dm_commands.poll():
-                command = dm_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                                vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
+                                s_voice_activity = False
+                                s_last_voice_activity_time = time.time()
 
-                if isinstance(command, Command):
-                    if command.parsed['__name__'] == "hangup":
-                        # prepare for ending the call
-                        hangup = True
+                        if command.parsed['__name__'] == "speech_end":
+                            u_voice_activity = False
+                            u_last_voice_activity_time = time.time()
 
-                    if command.parsed['__name__'] == "dm_da_generated":
-                        # record the time of the last system generated dialogue act
-                        s_last_dm_activity_time = time.time()
-                        number_of_turns += 1
+                if asr_commands.poll():
+                    command = asr_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
-                    # if a dialogue act is generated, stop playing current TTS audio
-                    # theoretically it is a good place because if the DM decides to be silent
-                    # the TTS can continue
-                    # however, if it decides to say something, it is for the implementation
-                    # late to flush old audio. If implemented better, it could work.
-                    # As of now, audio is flushed when speech is detected using VAD
+                if slu_commands.poll():
+                    command = slu_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
-            if nlg_commands.poll():
-                command = nlg_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                if dm_commands.poll():
+                    command = dm_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
-            if tts_commands.poll():
-                command = tts_commands.recv()
-                self.cfg['Logging']['system_logger'].info(command)
+                    if isinstance(command, Command):
+                        if command.parsed['__name__'] == "hangup":
+                            # prepare for ending the call
+                            hangup = True
 
-            current_time = time.time()
+                        if command.parsed['__name__'] == "dm_da_generated":
+                            # record the time of the last system generated dialogue act
+                            s_last_dm_activity_time = time.time()
+                            number_of_turns += 1
 
-            if hangup and s_last_dm_activity_time + 2.0 < current_time and \
-                s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
-                # we are ready to hangup only when all voice activity finished,
-                hangup = False
-                vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+                        # if a dialogue act is generated, stop playing current TTS audio
+                        # theoretically it is a good place because if the DM decides to be silent
+                        # the TTS can continue
+                        # however, if it decides to say something, it is for the implementation
+                        # late to flush old audio. If implemented better, it could work.
+                        # As of now, audio is flushed when speech is detected using VAD
 
-            # hard hangup due to the hard limits
-            if number_of_turns != -1 and current_time - call_start > self.cfg['VoipHub']['hard_time_limit'] or \
-                number_of_turns > self.cfg['VoipHub']['hard_turn_limit']:
-                number_of_turns = -1
-                vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
+                if nlg_commands.poll():
+                    command = nlg_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
+                if tts_commands.poll():
+                    command = tts_commands.recv()
+                    self.cfg['Logging']['system_logger'].info(command)
 
-        # stop processes
-        vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
-        vad_commands.send(Command('stop()', 'HUB', 'VAD'))
-        asr_commands.send(Command('stop()', 'HUB', 'ASR'))
-        slu_commands.send(Command('stop()', 'HUB', 'SLU'))
-        dm_commands.send(Command('stop()', 'HUB', 'DM'))
-        nlg_commands.send(Command('stop()', 'HUB', 'NLG'))
-        tts_commands.send(Command('stop()', 'HUB', 'TTS'))
+                current_time = time.time()
 
-        # clean connections
-        for c in command_connections:
-            while c.poll():
-                c.recv()
+                if hangup and s_last_dm_activity_time + 2.0 < current_time and \
+                    s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
+                    # we are ready to hangup only when all voice activity finished,
+                    hangup = False
+                    vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
-        for c in non_command_connections:
-            while c.poll():
-                c.recv()
+                # hard hangup due to the hard limits
+                if number_of_turns != -1 and current_time - call_start > self.cfg['VoipHub']['hard_time_limit'] or \
+                    number_of_turns > self.cfg['VoipHub']['hard_turn_limit']:
+                    number_of_turns = -1
+                    vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
-        # wait for processes to stop
-        vio.join()
-        vad.join()
-        tts.join()
+            # stop processes
+            vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
+            vad_commands.send(Command('stop()', 'HUB', 'VAD'))
+            asr_commands.send(Command('stop()', 'HUB', 'ASR'))
+            slu_commands.send(Command('stop()', 'HUB', 'SLU'))
+            dm_commands.send(Command('stop()', 'HUB', 'DM'))
+            nlg_commands.send(Command('stop()', 'HUB', 'NLG'))
+            tts_commands.send(Command('stop()', 'HUB', 'TTS'))
+
+            # clean connections
+            for c in command_connections:
+                while c.poll():
+                    c.recv()
+
+            for c in non_command_connections:
+                while c.poll():
+                    c.recv()
+
+            # wait for processes to stop
+            vio.join()
+            vad.join()
+            tts.join()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in VHUB process.')
+            self.close_event.set()
+            raise
 
 #########################################################################
 #########################################################################
