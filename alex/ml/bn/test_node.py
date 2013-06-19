@@ -190,5 +190,57 @@ class TestNode(unittest.TestCase):
         factor.update()
         factor.message_to(alpha)
         print alpha.alpha
-        raise
 
+    def test_two_factors_one_theta(self):
+        alpha = DirichletParameterNode('theta', DiscreteFactor(
+            ['X0', 'X1'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0', 'x1_1', 'x1_2'],
+            },
+            {
+                ('x0_0', 'x1_0'): 1,
+                ('x0_0', 'x1_1'): 8,
+                ('x0_0', 'x1_2'): 1,
+                ('x0_1', 'x1_0'): 1,
+                ('x0_1', 'x1_1'): 2,
+                ('x0_1', 'x1_2'): 1,
+            }
+        ))
+
+        f1 = DirichletFactorNode('f1')
+        x0 = DiscreteVariableNode('X0', ['x0_0', 'x0_1'])
+        x1 = DiscreteVariableNode('X1', ['x1_0', 'x1_1', 'x1_2'])
+
+        f2 = DirichletFactorNode('f2')
+        x2 = DiscreteVariableNode('X0', ['x0_0', 'x0_1'])
+        x3 = DiscreteVariableNode('X1', ['x1_0', 'x1_1', 'x1_2'])
+
+        f1.connect(x0, parent=False)
+        f1.connect(x1)
+
+        f2.connect(x2, parent=False)
+        f2.connect(x3)
+
+        f1.connect(alpha)
+        f2.connect(alpha)
+
+        x0.observed({('x0_0',): 1})
+        x1.observed({('x1_0',): 1})
+
+        x2.observed({('x0_1',): 1})
+        x3.observed({('x1_0',): 1})
+
+        x0.message_to(f1)
+        x1.message_to(f1)
+        x2.message_to(f2)
+        x3.message_to(f2)
+
+        f1.update()
+        f2.update()
+
+        f1.message_to(alpha)
+        f2.message_to(alpha)
+
+        print alpha.alpha
+        raise

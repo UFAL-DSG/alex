@@ -171,14 +171,17 @@ class DirichletParameterNode(VariableNode):
         super(DirichletParameterNode, self).__init__(name)
         self.alpha = alpha
         self.outgoing_message = {}
+        self.aliases = {}
 
     def message_to(self, node):
         self.outgoing_message[node.name] = self.alpha + 1 - self.incoming_message[node.name]
-        node.message_from(self, self.outgoing_message[node.name])
+        message = self._rename_vars_in_message(node, self.outgoing_message[node.name])
+        node.message_from(self, message)
 
     def message_from(self, node, message):
+        message = self._rename_vars_in_message(node, message)
+        self.alpha = self.alpha + message - self.incoming_message[node.name]
         self.incoming_message[node.name] = message
-        self.alpha = self.outgoing_message[node.name] + message - 1
 
     def add_neighbor(self, node):
         self.neighbors[node.name] = node
@@ -200,6 +203,9 @@ class DirichletParameterNode(VariableNode):
                                                           self.alpha.factor_length)
 
             self.outgoing_message[name] = self.alpha + 1 - self.incoming_message[node.name]
+
+    def _rename_vars_in_message(self, node, message):
+        return message
 
 
 class DirichletFactorNode(FactorNode):
