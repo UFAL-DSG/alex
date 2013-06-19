@@ -11,18 +11,17 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList, \
     UtteranceException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub import Hub
-from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.slu.common import slu_factory, get_slu_type
-from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.components.nlg.common import nlg_factory, get_nlg_type
+from alex.utils.exception import TextHubException
 from alex.utils.config import Config
 from alex.utils.ui import getTerminalSize
 from alex.utils.config import as_project_path
 
 
 class TextHub(Hub):
-    """\
+    """
       Provides a natural text interface to the dialogue system.
 
       TextHub builds a text based testing environment for SLU, DM, and NLG
@@ -78,7 +77,7 @@ class TextHub(Hub):
         try:
             utt = Utterance(utt)
         except UtteranceException:
-            raise TextHubEception("Invalid utterance: %s" % utt)
+            raise TextHubException("Invalid utterance: %s" % utt)
 
         return prob, utt
 
@@ -158,7 +157,6 @@ class TextHub(Hub):
         term_width = getTerminalSize()[1] or 120
         print '-' * term_width
         print
-
 
     def process_utterance_hyp(self, utterance_hyp):
         #self.output_usr_utt_nblist(utt_nblist)
@@ -246,6 +244,5 @@ if __name__ == '__main__':
                     ln = ln.decode('utf8').strip()
                     print "SCRIPT: %s" % ln
                     shub.process_utterance_hyp(Utterance(ln))
-
 
     shub.run()

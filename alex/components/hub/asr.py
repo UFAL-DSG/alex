@@ -24,7 +24,7 @@ from alex.utils.procname import set_proc_name
 
 
 class ASR(multiprocessing.Process):
-    """\
+    """
     ASR recognizes input audio and returns an N-best list hypothesis or
     a confusion network.
 

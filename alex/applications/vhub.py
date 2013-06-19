@@ -4,9 +4,6 @@ import autopath
 
 import multiprocessing
 import time
-import sys
-import random
-import sys
 import argparse
 
 from alex.components.hub import Hub
@@ -23,7 +20,7 @@ from alex.utils.config import Config
 
 
 class VoipHub(Hub):
-    """\
+    """
     VoipHub builds a full-featured VOIP telephone system.
     It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
     Then it connects ASR and TTS with the VOIP to handle audio input and

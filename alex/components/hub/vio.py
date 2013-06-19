@@ -32,8 +32,10 @@ from alex.utils.procname import set_proc_name
 # Logging callback
 logger = None
 
+
 def log_cb(level, str, len):
     logger.info(str)
+
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.

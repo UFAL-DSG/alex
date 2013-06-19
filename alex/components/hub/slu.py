@@ -57,7 +57,7 @@ class SLU(multiprocessing.Process):
         self.slu = slu_factory(get_slu_type(cfg), cfg)
 
     def process_pending_commands(self):
-        """\
+        """
         Process all pending commands.
 
         Available commands:

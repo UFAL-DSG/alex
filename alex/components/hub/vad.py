@@ -63,11 +63,11 @@ class VAD(multiprocessing.Process):
         # stores information about each frame whether it was classified as
         # speech or non speech
         self.detection_window_speech = \
-                deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+            deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
         self.detection_window_sil = \
-                deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
+            deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
         self.deque_audio_recorded_in = \
-                deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
+            deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
@@ -159,7 +159,7 @@ class VAD(multiprocessing.Process):
                         # Create new wave file.
                         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
                         self.output_file_name = os.path.join(self.system_logger.get_session_dir_name(),
-                            'vad-{stamp}.wav'.format(stamp=timestamp))
+                                                             'vad-{stamp}.wav'.format(stamp=timestamp))
 
                         self.session_logger.turn("user")
                         self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
@@ -187,9 +187,9 @@ class VAD(multiprocessing.Process):
 
                         # Inform both the parent and the consumer.
                         self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
-                            'VAD', 'AudioIn'))
+                                                    'VAD', 'AudioIn'))
                         self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
-                            'VAD', 'HUB'))
+                                                   'VAD', 'HUB'))
                         # Close the current wave file.
                         if self.wf:
                             self.wf.close()

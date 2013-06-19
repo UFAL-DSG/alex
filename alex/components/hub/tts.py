@@ -19,14 +19,14 @@ READ_ONLY = select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR
 import alex.utils.various as various
 
 from alex.components.hub.messages import Command, Frame, TTSText
-from alex.components.tts import TTSException
 from alex.components.tts.common import get_tts_type, tts_factory
 
 from alex.utils.procname import set_proc_name
 from alex.utils.audio import save_wav
 
+
 class TTS(multiprocessing.Process):
-    """ TTS synthesizes input text and returns speech audio signal.
+    """TTS synthesizes input text and returns speech audio signal.
 
     This component is a wrapper around multiple TTS engines which handles multiprocessing
     communication.
@@ -52,7 +52,6 @@ class TTS(multiprocessing.Process):
         tts_type = get_tts_type(cfg)
         self.tts = tts_factory(tts_type, cfg)
 
-
     def get_wav_name(self):
         """ Generates a new wave name for the TTS output.
         
@@ -60,7 +59,7 @@ class TTS(multiprocessing.Process):
         """
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
         fname = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
-            'tts-{stamp}.wav'.format(stamp=timestamp))
+                             'tts-{stamp}.wav'.format(stamp=timestamp))
 
         return fname, os.path.basename(fname)
         
@@ -73,10 +72,10 @@ class TTS(multiprocessing.Process):
         up.extend('ĚŠČČŘŽÝÁÍÉ')
         
         for i in range(1, len(text)-2):
-            if text[i-1] in lc and \
-               text[i] in ['.', ",", "?"] and \
-               text[i+1] == " " and \
-               text[i+2] in up:
+            if (text[i-1] in lc
+                and text[i] in ['.', ",", "?"]
+                and text[i+1] == " "
+                and text[i+2] in up):
                 segments.append(text[last_split:i+1])
                 last_split = i + 2 
         else:
@@ -107,7 +106,6 @@ class TTS(multiprocessing.Process):
 
         self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' %
                            (user_id, text, bn), 'TTS', 'HUB'))
-
 
         save_wav(self.cfg, fname, b"".join(wav))
 
@@ -154,7 +152,7 @@ class TTS(multiprocessing.Process):
 
     def wait_for_message(self):
         # block until a message is ready
-        ready = self.poll.poll()
+        ready = self.poll.poll(self.cfg['Hub']['main_loop_sleep_time'])
 
         # process each available message
         for fd, event in ready:
