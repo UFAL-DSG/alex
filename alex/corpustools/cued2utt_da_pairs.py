@@ -8,6 +8,7 @@ import os
 import os.path
 import random
 import xml.dom.minidom
+from xml.parsers.expat import ExpatError
 
 if __name__ == "__main__":
     import autopath
@@ -197,9 +198,14 @@ def extract_trns_sems(infname, verbose, fields=None, ignore_list_file=None,
     log_paths.sort()
     turn_recs = list()
     for log_path in log_paths:
-        turn_recs.extend(extract_trns_sems_from_file(
-            log_path, verbose, fields=fields, normalise=normalise,
-            do_exclude=do_exclude, known_words=known_words))
+        try:
+            turn_recs.extend(extract_trns_sems_from_file(
+                log_path, verbose, fields=fields, normalise=normalise,
+                do_exclude=do_exclude, known_words=known_words))
+        except ExpatError:
+            # This happens for empty XML files, or whenever the XML file cannot
+            # be parsed.
+            continue
     return turn_recs
 
 

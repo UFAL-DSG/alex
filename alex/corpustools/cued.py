@@ -74,16 +74,17 @@ def find_matching(infname, pat, ignore_list_file=None, find_kwargs=dict()):
     # First option: the infile is actually a directory.  Then, take all
     # matching files from below that directory.
     if os.path.isdir(infname):
-        find_kwargs = _build_find_args(find_kwargs, ignore_globs=ignore_globs,
-                                       ignore_paths=ignore_paths)
+        find_kwargs = _build_find_kwargs(find_kwargs,
+                                         ignore_globs=ignore_globs,
+                                         ignore_paths=ignore_paths)
         file_paths = set(find(infname, pat, **find_kwargs))
     # Second option: the infile is a file listing all paths to check for
     # matching files.
     else:
         file_paths = set()
-        find_kwargs = _build_find_args(find_kwargs, mindepth=1, maxdepth=1,
-                                       ignore_globs=ignore_globs,
-                                       ignore_paths=ignore_paths)
+        find_kwargs = _build_find_kwargs(find_kwargs, mindepth=1, maxdepth=1,
+                                         ignore_globs=ignore_globs,
+                                         ignore_paths=ignore_paths)
         with open(infname, 'r') as inlist:
             for line in inlist:
                 line = line.rstrip('\n')
