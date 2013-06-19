@@ -11,18 +11,17 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList, \
     UtteranceException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub import Hub
-from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.slu.common import slu_factory, get_slu_type
-from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.components.nlg.common import nlg_factory, get_nlg_type
+from alex.utils.exception import TextHubException
 from alex.utils.config import Config
 from alex.utils.ui import getTerminalSize
 from alex.utils.config import as_project_path
 
 
 class TextHub(Hub):
-    """\
+    """
       Provides a natural text interface to the dialogue system.
 
       TextHub builds a text based testing environment for SLU, DM, and NLG
@@ -78,7 +77,7 @@ class TextHub(Hub):
         try:
             utt = Utterance(utt)
         except UtteranceException:
-            raise TextHubEception("Invalid utterance: %s" % utt)
+            raise TextHubException("Invalid utterance: %s" % utt)
 
         return prob, utt
 
@@ -159,7 +158,6 @@ class TextHub(Hub):
         print '-' * term_width
         print
 
-
     def process_utterance_hyp(self, utterance_hyp):
         #self.output_usr_utt_nblist(utt_nblist)
         das = self.slu.parse(utterance_hyp)
@@ -173,24 +171,27 @@ class TextHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
-        cfg['Logging']['system_logger'].info(
-            """Enter the first user utterance.  You can enter multiple
-            utterances to form an N-best list.  The probability for each
-            utterance must be provided before the utterance itself.  When
-            finished, the entry can be terminated by a period (".").
+        try:
+            cfg['Logging']['system_logger'].info(
+                """Enter the first user utterance.  You can enter multiple
+                utterances to form an N-best list.  The probability for each
+                utterance must be provided before the utterance itself.  When
+                finished, the entry can be terminated by a period (".").
 
-            For example:
+                For example:
 
-            System DA 1: 0.6 Hello
-            System DA 2: 0.4 Hello, I am looking for a bar
-            System DA 3: .
-        """)
+                System DA 1: 0.6 Hello
+                System DA 2: 0.4 Hello, I am looking for a bar
+                System DA 3: .
+            """)
 
-        while True:
-            self.process_dm()
-            utt_nblist = self.input_usr_utt_nblist()
-            self.process_utterance_hyp(utt_nblist)
-
+            while True:
+                self.process_dm()
+                utt_nblist = self.input_usr_utt_nblist()
+                self.process_utterance_hyp(utt_nblist)
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
+            raise
 
 
 #########################################################################
@@ -246,6 +247,5 @@ if __name__ == '__main__':
                     ln = ln.decode('utf8').strip()
                     print "SCRIPT: %s" % ln
                     shub.process_utterance_hyp(Utterance(ln))
-
 
     shub.run()

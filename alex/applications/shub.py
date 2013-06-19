@@ -11,6 +11,7 @@ from alex.components.dm.common import dm_factory, get_dm_type
 from alex.utils.config import Config
 from alex.utils.exception import SemHubException
 
+
 class SemHub(Hub):
     """
       SemHub builds a text based testing environment for the dialogue manager components.
@@ -93,26 +94,29 @@ class SemHub(Hub):
 
     def run(self):
         """Controls the dialogue manager."""
+        try:
+            self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
+            The probability for each dialogue act must be be provided before the the dialogue act itself.
+            When finished, the entry can be terminated by a period ".".
 
-        self.cfg['Logging']['system_logger'].info("""Enter the first user dialogue act. You can enter multiple dialogue acts to create an N-best list.
-        The probability for each dialogue act must be be provided before the the dialogue act itself.
-        When finished, the entry can be terminated by a period ".".
+            For example:
 
-        For example:
+              System DA 1: 0.6 hello()
+              System DA 2: 0.4 hello()&inform(type="bar")
+              System DA 3: .
+            """)
 
-          System DA 1: 0.6 hello()
-          System DA 2: 0.4 hello()&inform(type="bar")
-          System DA 3: .
-        """)
+            while True:
+                sys_da = self.dm.da_out()
+                self.output_da(sys_da)
 
-        while True:
-            sys_da = self.dm.da_out()
-            self.output_da(sys_da)
+                nblist = self.input_da_nblist()
+                self.dm.da_in(nblist)
 
-            nblist = self.input_da_nblist()
-            self.dm.da_in(nblist)
-
-        print nblist
+                print nblist
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in SHUB process.')
+            raise
 
 #########################################################################
 #########################################################################

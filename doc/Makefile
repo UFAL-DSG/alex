@@ -40,11 +40,11 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -rf modules.rst SDS*.rst
+	-rm -rf modules.rst alex*.rst
 	-rm -rf $(BUILDDIR)/*
 
 html:
-	$(SPHINXAPIDOC) -o . -f ../SDS
+	$(SPHINXAPIDOC) -o . -f ../alex
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

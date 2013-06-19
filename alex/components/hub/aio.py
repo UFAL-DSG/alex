@@ -30,7 +30,7 @@ class AudioIO(multiprocessing.Process):
     played audio.
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play):
+    def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         """ Initialize AudioIO
 
         cfg - configuration dictionary
@@ -49,6 +49,7 @@ class AudioIO(multiprocessing.Process):
         self.commands = commands
         self.audio_record = audio_record
         self.audio_play = audio_play
+        self.close_event = close_event
 
         self.output_file_name = os.path.join(self.cfg['AudioIO']['output_dir'],
                                              'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
@@ -167,29 +168,38 @@ class AudioIO(multiprocessing.Process):
         wf.writeframes(data_stereo)
 
     def run(self):
-        wf = wave.open(self.output_file_name, 'w')
-        wf.setnchannels(2)
-        wf.setsampwidth(2)
-        wf.setframerate(self.cfg['Audio']['sample_rate'])
+        try:
+            wf = wave.open(self.output_file_name, 'w')
+            wf.setnchannels(2)
+            wf.setsampwidth(2)
+            wf.setframerate(self.cfg['Audio']['sample_rate'])
 
-        play_buffer_frames = 0
+            play_buffer_frames = 0
 
-        p = pyaudio.PyAudio()
-        # open stream
-        stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
-                        channels=1,
-                        rate=self.cfg['Audio']['sample_rate'],
-                        input=True,
-                        output=True,
-                        frames_per_buffer=self.cfg['Audio']['samples_per_frame'])
+            p = pyaudio.PyAudio()
+            # open stream
+            stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
+                            channels=1,
+                            rate=self.cfg['Audio']['sample_rate'],
+                            input=True,
+                            output=True,
+                            frames_per_buffer=self.cfg['Audio']['samples_per_frame'])
 
-        # this is a play buffer for synchronization with recorded audio
-        play_buffer = []
+            # this is a play buffer for synchronization with recorded audio
+            play_buffer = []
 
-        while 1:
-            # process all pending commands
-            if self.process_pending_commands(p, stream, wf):
-                return
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            # process audio data
-            self.read_write_audio(p, stream, wf, play_buffer)
+                # process all pending commands
+                if self.process_pending_commands(p, stream, wf):
+                    return
+
+                # process audio data
+                self.read_write_audio(p, stream, wf, play_buffer)
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in AIO process.')
+            self.close_event.set()
+            raise
