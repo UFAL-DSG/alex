@@ -25,11 +25,12 @@ class Node(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name):
+    def __init__(self, name, aliases={}):
         self.name = name
         self.incoming_message = {}
         self.belief = None
         self.neighbors = {}
+        self.aliases = aliases
 
     def connect(self, node, **kwargs):
         """Add a neighboring node."""
@@ -68,6 +69,11 @@ class Node(object):
     @abc.abstractmethod
     def init_messages(self):
         raise NotImplementedError()
+
+    def rename_msg(self, msg):
+        if self.aliases:
+            msg.rename_variables(self.aliases)
+        return msg
 
 
 class FactorNode(Node):
@@ -167,19 +173,18 @@ class DiscreteFactorNode(FactorNode):
 class DirichletParameterNode(VariableNode):
     """Node containing parameter."""
 
-    def __init__(self, name, alpha):
-        super(DirichletParameterNode, self).__init__(name)
+    def __init__(self, name, alpha, aliases={}):
+        super(DirichletParameterNode, self).__init__(name, aliases)
         self.alpha = alpha
         self.outgoing_message = {}
         self.aliases = {}
 
     def message_to(self, node):
         self.outgoing_message[node.name] = self.alpha + 1 - self.incoming_message[node.name]
-        message = self._rename_vars_in_message(node, self.outgoing_message[node.name])
-        node.message_from(self, message)
+        node.message_from(self, self.outgoing_message[node.name])
 
     def message_from(self, node, message):
-        message = self._rename_vars_in_message(node, message)
+        message = self.rename_msg(message)
         self.alpha = self.alpha + message - self.incoming_message[node.name]
         self.incoming_message[node.name] = message
 
@@ -211,8 +216,8 @@ class DirichletParameterNode(VariableNode):
 class DirichletFactorNode(FactorNode):
     """Node containing dirichlet factor."""
 
-    def __init__(self, name):
-        super(DirichletFactorNode, self).__init__(name)
+    def __init__(self, name, aliases={}):
+        super(DirichletFactorNode, self).__init__(name, aliases)
         self.parents = []
         self.child = None
         self.parameters = {}
@@ -229,7 +234,7 @@ class DirichletFactorNode(FactorNode):
 
     def message_from(self, node, message):
         if isinstance(node, DirichletParameterNode):
-            self.incoming_parameter = message
+            self.incoming_parameter = self.rename_msg(message)
         else:
             self.incoming_message[node.name] = message
 
@@ -240,13 +245,15 @@ class DirichletFactorNode(FactorNode):
         self.neighbors[node.name] = node
         if isinstance(node, DirichletParameterNode):
             self.parameters[node.name] = node
-            self.incoming_parameter = node.alpha
+
+            self.incoming_parameter = self.rename_msg(deepcopy(node.alpha))
         else:
             self.neighbors[node.name] = node
             if parent:
                 self.parents.append(node.name)
             else:
                 self.child = node
+
             self.incoming_message[node.name] = node.belief
             self.incoming_message[node.name].normalize()
 

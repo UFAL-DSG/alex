@@ -190,6 +190,9 @@ class TestNode(unittest.TestCase):
         factor.update()
         factor.message_to(alpha)
         print alpha.alpha
+        self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 1.3892210400497993)
+        self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_1')], 8.2168830001373632)
+        self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_2')], 1.0325065031960947)
 
     def test_two_factors_one_theta(self):
         alpha = DirichletParameterNode('theta', DiscreteFactor(
@@ -243,4 +246,62 @@ class TestNode(unittest.TestCase):
         f2.message_to(alpha)
 
         print alpha.alpha
-        raise
+        self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 2, places=5)
+        self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
+
+    def test_two_factors_one_theta2(self):
+        alpha = DirichletParameterNode('theta', DiscreteFactor(
+            ['X0', 'X1'],
+            {
+                'X0': ['x0_0', 'x0_1'],
+                'X1': ['x1_0', 'x1_1', 'x1_2'],
+            },
+            {
+                ('x0_0', 'x1_0'): 1,
+                ('x0_0', 'x1_1'): 8,
+                ('x0_0', 'x1_2'): 1,
+                ('x0_1', 'x1_0'): 1,
+                ('x0_1', 'x1_1'): 2,
+                ('x0_1', 'x1_2'): 1,
+            }
+        ))
+
+        f1 = DirichletFactorNode('f1', aliases={'X0': 'X0_a', 'X1': 'X1_a'})
+        x0 = DiscreteVariableNode('X0_a', ['x0_0', 'x0_1'])
+        x1 = DiscreteVariableNode('X1_a', ['x1_0', 'x1_1', 'x1_2'])
+
+        f2 = DirichletFactorNode('f2', aliases={'X0': 'X0_b', 'X1': 'X1_b'})
+        x2 = DiscreteVariableNode('X0_b', ['x0_0', 'x0_1'])
+        x3 = DiscreteVariableNode('X1_b', ['x1_0', 'x1_1', 'x1_2'])
+
+        f1.connect(x0, parent=False)
+        f1.connect(x1)
+
+        f2.connect(x2, parent=False)
+        f2.connect(x3)
+
+        f1.connect(alpha)
+        f2.connect(alpha)
+
+        alpha.aliases = {'X0_a': 'X0', 'X0_b': 'X0', 'X1_a': 'X1', 'X1_b': 'X1'}
+
+        x0.observed({('x0_0',): 1})
+        x1.observed({('x1_0',): 1})
+
+        x2.observed({('x0_1',): 1})
+        x3.observed({('x1_0',): 1})
+
+        x0.message_to(f1)
+        x1.message_to(f1)
+        x2.message_to(f2)
+        x3.message_to(f2)
+
+        f1.update()
+        f2.update()
+
+        f1.message_to(alpha)
+        f2.message_to(alpha)
+
+        print alpha.alpha
+        self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 2, places=5)
+        self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
