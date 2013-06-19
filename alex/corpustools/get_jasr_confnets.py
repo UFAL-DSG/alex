@@ -10,7 +10,6 @@
 from __future__ import unicode_literals
 
 import codecs
-from multiprocessing import Pipe
 from operator import itemgetter
 from os.path import basename
 import re
