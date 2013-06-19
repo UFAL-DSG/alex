@@ -488,8 +488,8 @@ class DiscreteFactor(Factor):
               x1             0.2
         ------------------------------
 
-        :param assignment_dict: Observed values for different assignments of values.
-        :type assignment_dict: dict
+        :param assignment_dict: Observed values for different assignments of values or None.
+        :type assignment_dict: dict or None
         """
         if assignment_dict is not None:
             # Clear the factor table.
@@ -543,6 +543,25 @@ class DiscreteFactor(Factor):
                 self.factor_table[i] -= sums[assignments[i]]
         else:
             self.factor_table -= logsumexp(self.factor_table)
+
+    def rename_variables(self, mapping):
+        for i in range(len(self.variables)):
+            if self.variables[i] in mapping:
+                old_variable = self.variables[i]
+                new_variable = mapping[old_variable]
+                self.variables[i] = new_variable
+
+                self.variable_values[new_variable] = self.variable_values[old_variable]
+                del self.variable_values[old_variable]
+
+                self.strides[new_variable] = self.strides[old_variable]
+                del self.strides[old_variable]
+
+                self.cardinalities[new_variable] = self.cardinalities[old_variable]
+                del self.cardinalities[old_variable]
+
+                self.translation_table[new_variable] = self.translation_table[old_variable]
+                del self.translation_table[old_variable]
 
     def most_probable(self, n=None):
         """Return a list of most probable assignments from the table.
