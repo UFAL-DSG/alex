@@ -29,6 +29,7 @@ all odd dialogue turns should be ignored.
 
 import argparse
 import os
+import os.path
 
 if __name__ == "__main__":
     import autopath
@@ -53,6 +54,9 @@ def main(args):
     if 'rec' not in req_fields:
         req_fields.append('rec')  # We require the rec fname for all the
                                   # records.
+    if not os.path.isdir(args.outdir):
+        os.makedirs(args.outdir)
+
     # Read in the dictionary.
     if args.dictionary:
         known_words = set(line.split()[0] for line in args.dictionary)
