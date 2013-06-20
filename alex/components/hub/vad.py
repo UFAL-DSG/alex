@@ -266,7 +266,7 @@ class VAD(multiprocessing.Process):
                 except SessionClosedException as ex:
                     self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=ex))
         except:
-            self.cfg['Logging']['system_logger'].exception('Uncaught exception in VAD process.')
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()
             raise
 

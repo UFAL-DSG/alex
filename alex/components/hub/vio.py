@@ -777,6 +777,6 @@ class VoipIO(multiprocessing.Process):
             self.lib.destroy()
             self.lib = None
 
-            self.cfg['Logging']['system_logger'].exception('Uncaught exception in VAD process.')
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VIO process.')
             self.close_event.set()
             raise
