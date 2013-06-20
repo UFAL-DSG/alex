@@ -1,8 +1,25 @@
 #!/usr/bin/python
 # vim: set fileencoding=UTF-8 :
-#
-# Makes Julius extract word confnets from wav files.
-# Run with the -h flag for an overview of arguments.
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+"""
+Makes Julius extract word confnets from wav files.
+Run with the -h flag for an overview of arguments.
+
+An example ignore list file could contain the following three lines:
+
+/some-path/call-logs/log_dir/some_id.wav
+some_id.wav
+jurcic-??[13579]*.wav
+
+The first one is an example of an ignored path. On UNIX, it has to start with
+a slash. On other platforms, an analogic convention has to be used.
+
+The second one is an example of a literal glob.
+
+The last one is an example of a more advanced glob. It says basically that
+all odd dialogue turns should be ignored.
+
+"""
 #
 # 2013-06
 # Matěj Korvas
@@ -19,12 +36,12 @@ import sys
 from time import sleep
 import traceback
 
+from alex.components.asr.exception import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
+from alex.corpustools.cued import find_matching
 from alex.utils.audio import load_wav
 from alex.utils.config import Config
-from alex.components.asr.exception import ASRException
-from alex.utils.fs import find
 from alex.utils.io import GrepFilter
 
 DEBUG = False
@@ -35,18 +52,24 @@ RT_RATIO = 0.0    # determines how long to give Julius before asking him for
 SLEEP_TIME = RT_RATIO * FRAME_SIZE / 32000.
 
 
-def get_wav_fnames(dirname):
-    """\
+def get_wav_fnames(dirname, ignore_list_file=None):
+    """
     Finds WAV files that should be decoded.
 
     Returns a list of tuples (filename, WAV unique ID).
 
     Arguments:
         dirname -- the directory to search for WAVs
+        ignore_list_file -- a file of absolute paths or globs (can be mixed)
+            specifying logs that should be skipped
 
     """
-    wav_fnames = find(dirname, '*.wav', mindepth=0, maxdepth=None,
-                      notrx=re.compile('^.*_all\\.wav$'))
+    find_kwargs = {'mindepth': 0,
+                   'maxdepth': None,
+                   'notrx': re.compile('^.*_all\\.wav$')}
+    wav_fnames = find_matching(dirname, '*.wav',
+                               ignore_list_file=ignore_list_file,
+                               find_kwargs=find_kwargs)
     return [(fname, basename(fname)) for fname in wav_fnames]
 
 
@@ -69,8 +92,8 @@ def start_julius(cfg, callback, err_fname='julius.err'):
     return jul, grep, errfile
 
 
-def main(dirname, outfname, cfg, skip=0):
-    """\
+def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
+    """
 
     Arguments:
         dirname -- the directory to search for WAVs
@@ -79,7 +102,7 @@ def main(dirname, outfname, cfg, skip=0):
         skip -- how many wavs to skip (default: 0)
 
     """
-    wavs = sorted(get_wav_fnames(dirname), key=itemgetter(1))
+    wavs = sorted(get_wav_fnames(dirname, ignore_list_file), key=itemgetter(1))
 
     # Start Julius.
     jul, grep, errfile = start_julius(cfg, on_no_context)
@@ -89,14 +112,15 @@ def main(dirname, outfname, cfg, skip=0):
             for wav_fname, wav_id in wavs[skip:]:
                 mywav = load_wav(cfg, wav_fname)
 
-                # Insist on feeding all the input data to Julius, regardless of how
-                # many times it crashes.
+                # Insist on feeding all the input data to Julius, regardless of
+                # how many times it crashes.
                 exception = 1
                 while exception:
                     try:
                         for startidx in xrange(0, len(mywav), FRAME_SIZE):
-                            jul.rec_in(Frame(mywav[startidx:startidx + FRAME_SIZE]))
-                            # sleep(SLEEP_TIME)
+                            jul.rec_in(Frame(
+                                mywav[startidx:startidx + FRAME_SIZE]))
+                            sleep(SLEEP_TIME)
                         # sleep(RT_RATIO * len(mywav) / 32000.)
                     except socket.error as er:
                         # Julius crashing results in
@@ -155,6 +179,14 @@ if __name__ == "__main__":
                        required=True)
     arger.add_argument('-s', '--skip', type=int,
                        help="how many wavs to skip")
+    arger.add_argument('-g', '--ignore',
+                       type=argparse.FileType('r'),
+                       metavar='FILE',
+                       help='Path towards a file listing globs of CUED '
+                            'call log files that should be ignored.\n'
+                            'The globs are interpreted wrt. the current '
+                            'working directory. For an example, see the '
+                            'source code.')
     args = arger.parse_args()
 
     cfg = Config()
@@ -162,6 +194,6 @@ if __name__ == "__main__":
         cfg.merge(next_cfg)
 
     try:
-        main(args.dirname, args.outfname, cfg, args.skip)
+        main(args.dirname, args.outfname, cfg, args.skip, args.ignore)
     finally:
         JuliusASR.kill_all_juliuses()
