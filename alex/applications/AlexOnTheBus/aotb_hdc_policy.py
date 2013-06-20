@@ -176,8 +176,17 @@ class AOTBHDCPolicy(DialoguePolicy):
             res_da.extend(req_da)
 
             if len(req_da) == 0:
-                dir_da = self.get_directions(dialogue_state)
-                res_da.extend(dir_da)
+
+                if dialogue_state['from_stop'] == dialogue_state['to_stop']:
+                    apology_da = DialogueAct()
+                    apology_da.extend(DialogueAct(u'apology()'))
+                    apology_da.extend(DialogueAct(u'inform(stops_conflict="thesame")'))
+                    apology_da.extend(DialogueAct(u"inform(from_stop='%s')" % dialogue_state['from_stop']))
+                    apology_da.extend(DialogueAct(u"inform(to_stop='%s')" % dialogue_state['to_stop']))
+                    res_da.extend(apology_da)
+                else:
+                    dir_da = self.get_directions(dialogue_state)
+                    res_da.extend(dir_da)
 
         if res_da is None:
             res_da = DialogueAct("notunderstood()")

@@ -43,8 +43,8 @@ class AOTBSLU(SLUInterface):
         super(AOTBSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
-        preps_from = set(["z", "za", "ze", "od", "začátek", "výchozí", "start"])
-        preps_to = set(["k", "do", "konec", "na", "konečná", "cílová", "cíl"])
+        preps_from = set(["z", "za", "ze", "od", "začátek", "začáteční", "počáteční", "počátek", "výchozí", "start"])
+        preps_to = set(["k", "do", "konec", "na", "konečná", "koncová", "cílová", "cíl", "výstupní"])
 
         u = abutterance
         N = len(u)
