@@ -77,6 +77,8 @@ def find_matching(infname, pat, ignore_list_file=None, find_kwargs=dict()):
         find_kwargs = _build_find_kwargs(find_kwargs,
                                          ignore_globs=ignore_globs,
                                          ignore_paths=ignore_paths)
+        if 'mindepth' not in find_kwargs:
+            find_kwargs['mindepth'] = 1
         file_paths = set(find(infname, pat, **find_kwargs))
     # Second option: the infile is a file listing all paths to check for
     # matching files.
@@ -137,7 +139,7 @@ def _log_fname_key(xml_path_tup):
         return 42  # must be a number greater than len(_log_fnames)
 
 
-def find_logs(infname, ignore_list_file=None):
+def find_logs(infname, ignore_list_file=None, verbose=False):
     """
     Finds CUED logs below the paths specified and returns their filenames.
     The logs are determined as files matching one of the following patterns:
@@ -156,11 +158,16 @@ def find_logs(infname, ignore_list_file=None):
             determining the log to include.
         ignore_list_file -- a file of absolute paths or globs (can be mixed)
             specifying logs that should be excluded from the results
+        verbose -- print lots of output?
 
     Returns a set of paths to files satisfying the criteria.
 
     """
     xml_paths = find_matching(infname, '*.xml', ignore_list_file)
+    if verbose:
+        print "XML files found:"
+        for xml_path in xml_paths:
+            print "    {path}".format(path=xml_path)
     xml_path_tups = map(os.path.split, xml_paths)
     # sort | uniq the paths, taking uniq over their prefixes (call log dirs)
     # only.
