@@ -31,27 +31,27 @@ class DummyDialoguePolicy(DialoguePolicy):
         if len(self.das) == 0:
             # NLG("Thank you for calling. How may I help you?")
             self.last_system_dialogue_act = DialogueAct("hello()&thankyou()")
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         elif dialogue_state.slots["lda"] == "bye":
             # NLG("Goodbye.")
             self.last_system_dialogue_act = DialogueAct("bye()")
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         elif dialogue_state.slots["lda"] == "restart":
             # NLG("Let's start again from scratch. How may I help you?")
             dialogue_state.restart()
             self.last_system_dialogue_act = DialogueAct("restart()&hello()")
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         elif dialogue_state.slots["lda"] == "repeat":
             # NLG - use the last dialogue act
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         elif dialogue_state.slots["lda"] == "reqalts":
             # NLG("There is nothing else in the database.")
             self.last_system_dialogue_act = DialogueAct("deny(alternatives=true")
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         elif requested_slots:
             # inform about all requested slots
@@ -59,7 +59,7 @@ class DummyDialoguePolicy(DialoguePolicy):
             for slot in requested_slots:
                 dai = DialogueActItem("inform", slot, requested_slots[slot])
                 self.last_system_dialogue_act.append(dai)
-                dialogue_state.slots["rh_"+slot] = "None"
+                dialogue_state.slots["rh_"+slot] = "none"
 
         elif confirmed_slots:
             # inform about all slots being confirmed by the user
@@ -78,7 +78,7 @@ class DummyDialoguePolicy(DialoguePolicy):
                     dai = DialogueActItem("inform", slot, dialogue_state.slots[slot])
                     self.last_system_dialogue_act.append(dai)
 
-                dialogue_state.slots["ch_"+slot] = "None"
+                dialogue_state.slots["ch_"+slot] = "none"
         elif non_informed_slots:
             # implicitly confirm all slots provided but not yet implicitly confirmed
             self.last_system_dialogue_act = DialogueAct()
@@ -89,9 +89,8 @@ class DummyDialoguePolicy(DialoguePolicy):
         else:
             # NLG("Can I help you with anything else?")
             self.last_system_dialogue_act = DialogueAct("reqmore()")
-            dialogue_state.slots["lda"] = "None"
+            dialogue_state.slots["lda"] = "none"
 
         # record the system dialogue acts
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
-

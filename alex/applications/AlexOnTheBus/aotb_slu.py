@@ -190,6 +190,8 @@ class AOTBSLU(SLUInterface):
         if _all_words_in(utterance, ["od", "to", "jede"]) or \
             _all_words_in(utterance, ["z", "jake", "jede"]) or \
             _all_words_in(utterance, ["z", "jaké", "jede"]) or \
+            _all_words_in(utterance, ["jaká", "výchozí", ]) or \
+            _all_words_in(utterance, ["kde", "začátek", ]) or \
             _all_words_in(utterance, ["odkud", "to", "jede"]) or \
             _all_words_in(utterance, ["odkud", "pojede"]) or \
             _all_words_in(utterance, ["od", "kud", "pojede"]):
@@ -198,6 +200,10 @@ class AOTBSLU(SLUInterface):
         if _all_words_in(utterance, ["kam", "to", "jede"]) or \
             _all_words_in(utterance, ["do", "jake", "jede"]) or \
             _all_words_in(utterance, ["do", "jaké", "jede"]) or \
+            _all_words_in(utterance, ["co", "cíl", ]) or \
+            _all_words_in(utterance, ["jaká", "cílová", ]) or \
+            _all_words_in(utterance, ["kde", "konečná", ]) or \
+            _all_words_in(utterance, ["kde", "konečná", ]) or \
             _all_words_in(utterance, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
