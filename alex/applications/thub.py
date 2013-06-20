@@ -12,7 +12,7 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList, \
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub import Hub
 from alex.components.slu.da import DialogueActConfusionNetwork
-from alex.components.slu.common import slu_factory, get_slu_type
+from alex.components.slu.common import slu_factory
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 from alex.utils.exception import TextHubException
 from alex.utils.config import Config
@@ -40,8 +40,7 @@ class TextHub(Hub):
         self.dm = None
         self.nlg = None
 
-        slu_type = get_slu_type(cfg)
-        self.slu = slu_factory(slu_type, cfg)
+        self.slu = slu_factory(cfg)
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)

@@ -11,7 +11,7 @@ from alex.components.slu.exception import SLUException
 
 
 def get_slu_type(cfg):
-    """\
+    """
     Reads the SLU type from the configuration.  This should be either a string
     (currently 'slu-seq' and 'slu-tracing' are recognised), or a custom class
     implementing SLUInterface.
@@ -21,7 +21,7 @@ def get_slu_type(cfg):
 
 
 def load_data(cfg_tr):
-    """\
+    """
     Loads training data for SLU.
 
     Arguments:
@@ -40,16 +40,24 @@ def load_data(cfg_tr):
                                  limit=cfg_tr.get('max_examples', None))
     das = load_das(cfg_tr['sem_fname'],
                    limit=cfg_tr.get('max_examples', None))
-    return utterances, das
+
+    features = [utterances, das]
+    # Ensure all features use exactly the same set of keys.
+    common_keys = reduce(set.intersection,
+                         (set(feats.viewkeys()) for feats in features))
+    features = [{key: val for (key, val) in feats.iteritems()
+                 if key in common_keys}
+                for feats in features]
+    return features
 
 
 # TODO Make the configuration structure simpler.  Blending type names with
 # types, putting things into different places in the configuration, that makes
 # it hard to use.
 
-def slu_factory(slu_type, cfg, require_model=False, training=False,
+def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                 verbose=True):
-    """\
+    """
     Creates an SLU parser.
 
     Arguments:
@@ -79,7 +87,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
     """
     # Preprocess the configuration a bit.
     cfg_slu = cfg['SLU']
-    slu_type = cfg_slu.get('type', 'cl-tracing')
+    if slu_type is None:
+        slu_type = cfg_slu.get('type', 'cl-tracing')
     is_custom_class = inspect.isclass(slu_type)
     if is_custom_class:
         if not issubclass(slu_type, SLUInterface):
@@ -149,7 +158,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
             cfg_tr = cfg_this_slu['training']
             if slu_type in ('cl-seq', 'cl-tracing'):
                 clser_kwargs['clser_type'] = cfg_tr.get('clser_type', None)
-                clser_kwargs['features_type'] = cfg_this_slu.get('features_type', None)
+                clser_kwargs['features_type'] = cfg_this_slu.get(
+                    'features_type', None)
                 clser_kwargs['abstractions'] = cfg_tr.get('abstractions', None)
 
         dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg,
@@ -183,7 +193,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
                                      .format(fname=model_fname))
         else:
             # Try to load the model.
-            model_fname = cfg_this_slu.get('testing', dict()).get('model_fname', None)
+            model_fname = cfg_this_slu.get('testing', dict()
+                                           ).get('model_fname', None)
             try:
                 dai_clser.load_model(model_fname)
             except:

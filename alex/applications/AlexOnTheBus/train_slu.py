@@ -130,11 +130,10 @@ def expand_trdata(cfg):
 
 
 def main(cfg):
-    from alex.components.slu.common import get_slu_type, slu_factory
-    slu_type = get_slu_type(cfg)
+    from alex.components.slu.common import slu_factory
     # The following also saves the model, provided a filename has been
     # specified in the config.
-    slu_factory(slu_type, cfg, training=True, verbose=True)
+    slu_factory(cfg, training=True, verbose=True)
 
 
 if __name__ == "__main__":

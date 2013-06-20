@@ -6,15 +6,15 @@ import time
 import sys
 import os
 
-import alex.components.slu.dailrclassifier as DAILRSLU
 import alex.components.slu.daiklrclassifier as DAIKLRSLU
+import alex.components.slu.dailrclassifier as DAILRSLU
 import alex.components.slu.templateclassifier as TSLU
 
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
+from alex.components.slu.common import slu_factory
 from alex.components.slu.exception import SLUException
-from alex.components.slu.common import get_slu_type, slu_factory
 from alex.utils.procname import set_proc_name
 
 
@@ -57,7 +57,7 @@ class SLU(multiprocessing.Process):
         self.close_event = close_event
 
         # Load the SLU.
-        self.slu = slu_factory(get_slu_type(cfg), cfg)
+        self.slu = slu_factory(cfg)
 
     def process_pending_commands(self):
         """
