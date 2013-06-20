@@ -106,13 +106,13 @@ class SystemLogger(object):
 
     lock = multiprocessing.RLock()
     levels = {
-        'DEBUG':            0,
-        'INFO':            10,
-        'WARNING':         20,
-        'CRITICAL':        30,
-        'EXCEPTION':       40,
-        'ERROR':           50,
-        'SYSTEM-LOG':      60,
+        'SYSTEM-LOG':       0,
+        'DEBUG':           10,
+        'INFO':            20,
+        'WARNING':         30,
+        'CRITICAL':        40,
+        'EXCEPTION':       50,
+        'ERROR':           60,
     }
 
     def __init__(self, output_dir, stdout_log_level='DEBUG', stdout=True,
