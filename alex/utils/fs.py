@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# vim: set fdm=marker :
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 """
 Filesystem utility functions.
@@ -26,7 +25,7 @@ def normalise_path(path):
 def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
          ignore_paths=None, follow_symlinks=True, prune=False, rx=None,
          notrx=None):
-    """\
+    """
     A simplified version of the GNU `find' utility.  Lists files with basename
     matching `glob_' found in `dir_' in depth between `mindepth' and
     `maxdepth'.
@@ -51,7 +50,8 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
 
     """
     # Check the arguments.
-    if isinstance(mindepth, int) and isinstance(maxdepth, int) and mindepth > maxdepth:
+    if (isinstance(mindepth, int) and isinstance(maxdepth, int)
+            and mindepth > maxdepth):
         return set()
 
     # Normalise paths specified.
@@ -59,7 +59,7 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
     if ignore_paths:
         ignore_paths = map(normalise_path, ignore_paths)
 
-    # Special case: mindepth == 0. {{{
+    # Special case: mindepth == 0.
     ret = set() # Return an empty set by default.
     if mindepth is None or mindepth == 0:
         dirname = os.path.basename(dir_)
@@ -78,7 +78,6 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
         # Special case: also maxdepth == 0. Or we prune the whole subtree.
         if maxdepth == 0 or (ret and prune):
             return ret
-    # }}}
 
     # If ignored paths are specified and non-empty,
     if ignore_paths:
@@ -99,7 +98,7 @@ def find(dir_, glob_, mindepth=2, maxdepth=6, ignore_globs=list(),
 def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
                      ignore_path_filter=lambda _: True, follow_symlinks=True,
                      prune=False, rx=None, notrx=None, visited=set()):
-    """\
+    """
     Implements the same functionality as the `find' function in this module.
     The difference is that the ignored paths are specified by a function.
     `ignore_path_filter' is a function that takes a tuple (basename,
@@ -111,10 +110,15 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
     function `find'.
 
     """
-    #{{{
     # List files/dirs in this directory, and remove symlinks if asked to.
     if os.path.isdir(dir_):
-        children = os.listdir(dir_)
+        try:
+            children = os.listdir(dir_)
+        except OSError as er:
+            import sys
+            print >>sys.stderr, er
+            matched = set()
+            return matched, visited
     else:
         children = [dir_]
     if follow_symlinks is False:
@@ -167,4 +171,3 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
             visited.update(more_visited)
     # Return.
     return matched, visited
-    #}}}
