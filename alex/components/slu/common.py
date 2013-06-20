@@ -38,7 +38,7 @@ def load_data(cfg_tr):
     # TODO Should be extended to handle other types of input features.
     utterances = load_utterances(cfg_tr['utts_fname'],
                                  limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['sem_fname'],
+    das = load_das(cfg_tr['das_fname'],
                    limit=cfg_tr.get('max_examples', None))
 
     features = [utterances, das]
