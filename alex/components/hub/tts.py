@@ -70,6 +70,13 @@ class TTS(multiprocessing.Process):
 
         return segments
 
+    def remove_final_silence(self, wav):
+        for i, x in enumerate(reversed(wav)):
+            if ord(x) != 0:
+                break
+
+        return wav[:-int(i*self.cfg['TTS']['final_silence_removal_proportion']) - 1]
+
     def synthesize(self, user_id, text):
         wav = []
         fname, bn = self.get_wav_name()
@@ -78,9 +85,11 @@ class TTS(multiprocessing.Process):
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s")' %
                             (user_id, text, bn), 'TTS', 'AudioOut'))
 
-        segments = self.parse_into_segments (text)
+        segments = self.parse_into_segments(text)
+
         for segment_text in segments:
             segment_wav = self.tts.synthesize(segment_text)
+            segment_wav = self.remove_final_silence(segment_wav)
             wav.append(segment_wav)
 
             segment_wav = various.split_to_bins(segment_wav, 2 * self.cfg['Audio']['samples_per_frame'])

@@ -25,7 +25,7 @@ class SpeechtechTTS(TTSInterface):
     def __init__(self, cfg):
         super(SpeechtechTTS, self).__init__(cfg)
         self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['SpeechTech']['preprocessing'])
-        
+
     @cache.persistent_cache(True, 'SpeechtechTTS.get_tts_mp3.')
     def get_tts_mp3(self, voice, text):
         """ Access SpeechTech TTS service and get synthesized audio.
@@ -90,15 +90,14 @@ class SpeechtechTTS(TTSInterface):
 
         try:
             text = self.preprocessing.process(text)
-            
-            mp3 = self.get_tts_mp3(
-                self.cfg['TTS']['SpeechTech']['voice'], text)
+
+            mp3 = self.get_tts_mp3(self.cfg['TTS']['SpeechTech']['voice'], text)
             wav = audio.convert_mp3_to_wav(self.cfg, mp3)
 
 #            if self.cfg['TTS']['debug']:
 #                m = "TTS cache hits %d and misses %d " % (self.get_tts_mp3.hits, self.get_tts_mp3.misses)
 #                self.cfg['Logging']['system_logger'].debug(m)
-            
+
         except TTSException as e:
             m = e + "Text: %" % text
             self.cfg['Logging']['system_logger'].warning(m)
