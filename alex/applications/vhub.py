@@ -5,6 +5,7 @@ import autopath
 import multiprocessing
 import time
 import argparse
+import os
 
 from alex.components.hub import Hub
 from alex.components.hub.vio import VoipIO
@@ -30,6 +31,14 @@ class VoipHub(Hub):
     def __init__(self, cfg):
         super(VoipHub, self).__init__(cfg)
         self.close_event = multiprocessing.Event()
+
+    def write_pid_file(self, pids):
+        f = open(self.cfg['VoipHub']['pid_file'], "w+")
+
+        f.write("vhub: %d\n" % os.getpid())
+        for name, pid in pids:
+            f.write("%s: %d\n" % (name, pid))
+        f.close()
 
     def run(self):
         try:
@@ -80,6 +89,9 @@ class VoipHub(Hub):
             dm.start()
             nlg.start()
             tts.start()
+
+            self.write_pid_file([['vio', vio.pid], ['vad', vad.pid], ['asr', asr.pid],
+                                 ['slu', slu.pid], ['dm', dm.pid], ['nlg', nlg.pid], ['tts', tts.pid]])
 
             # init the system
             call_start = 0

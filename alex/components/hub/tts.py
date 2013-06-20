@@ -55,7 +55,7 @@ class TTS(multiprocessing.Process):
 
     def get_wav_name(self):
         """ Generates a new wave name for the TTS output.
-        
+
         Returns the full path and the base name.
         """
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
@@ -63,7 +63,7 @@ class TTS(multiprocessing.Process):
                              'tts-{stamp}.wav'.format(stamp=timestamp))
 
         return fname, os.path.basename(fname)
-        
+
     def parse_into_segments(self, text):
         segments = []
         last_split = 0
@@ -71,27 +71,27 @@ class TTS(multiprocessing.Process):
         lc.extend('ěščřžýáíé')
         up = [c for c in string.uppercase]
         up.extend('ĚŠČČŘŽÝÁÍÉ')
-        
+
         for i in range(1, len(text)-2):
             if (text[i-1] in lc
                 and text[i] in ['.', ",", "?"]
                 and text[i+1] == " "
                 and text[i+2] in up):
                 segments.append(text[last_split:i+1])
-                last_split = i + 2 
+                last_split = i + 2
         else:
             segments.append(text[last_split:])
-            
+
         return segments
-        
+
     def synthesize(self, user_id, text):
         wav = []
         fname, bn = self.get_wav_name()
-        
+
         self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s")' %
                             (user_id, text, bn), 'TTS', 'AudioOut'))
-                  
+
         segments = self.parse_into_segments (text)
         for segment_text in segments:
             segment_wav = self.tts.synthesize(segment_text)
@@ -101,7 +101,7 @@ class TTS(multiprocessing.Process):
 
             for frame in segment_wav:
                 self.audio_out.send(Frame(frame))
-                
+
         self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s")' %
                             (user_id, text, bn), 'TTS', 'AudioOut'))
 
@@ -152,7 +152,7 @@ class TTS(multiprocessing.Process):
             self.synthesize(None, data_tts.text)
 
     def wait_for_message(self):
-        # block until a message is ready
+        # block only for small faction of time
         ready = self.poll.poll(self.cfg['Hub']['main_loop_sleep_time'])
 
         # process each available message
@@ -173,6 +173,8 @@ class TTS(multiprocessing.Process):
                 # Check the close event.
                 if self.close_event.is_set():
                     return
+
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
                 self.wait_for_message()
         except:

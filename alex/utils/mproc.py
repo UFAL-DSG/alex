@@ -115,8 +115,8 @@ class SystemLogger(object):
         'SYSTEM-LOG':      60,
     }
 
-    def __init__(self, output_dir, stdout_log_level='INFO', stdout=True,
-                 file_log_level='INFO'):
+    def __init__(self, output_dir, stdout_log_level='DEBUG', stdout=True,
+                 file_log_level='DEBUG'):
         self.stdout_log_level = stdout_log_level
         self.stdout = stdout
         self.file_log_level = file_log_level
