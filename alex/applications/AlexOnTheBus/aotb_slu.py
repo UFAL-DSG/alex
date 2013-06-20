@@ -43,8 +43,8 @@ class AOTBSLU(SLUInterface):
         super(AOTBSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
-        preps_from = set(["z", "za", "ze", "od", "začátek"])
-        preps_to = set(["k", "do", "konec", "na"])
+        preps_from = set(["z", "za", "ze", "od", "začátek", "výchozí", "start"])
+        preps_to = set(["k", "do", "konec", "na", "konečná", "cílová", "cíl"])
 
         u = abutterance
         N = len(u)
@@ -121,8 +121,8 @@ class AOTBSLU(SLUInterface):
 
 
     def parse_time(self, abutterance, cn):
-        preps_in = set(["v", ])
-        
+        preps_in = set(["v", "čas"])
+
         u = abutterance
         N = len(u)
 
@@ -130,11 +130,15 @@ class AOTBSLU(SLUInterface):
             if w.startswith("TIME="):
                 time_value = w[5:]
                 time = False
-                
+
                 if i >= 1:
                     if u[i-1] in preps_in:
                         time = True
-                
+
+                if N == 1:
+                    # if there is only one word in the utterance then can be time
+                    time = True
+
                 if time:
                     cn.add(1.0, DialogueActItem("inform", 'time', time_value))
 
@@ -167,7 +171,8 @@ class AOTBSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("thankyou"))
 
         if _any_word_in(utterance, ["od", "začít", ]) and _any_word_in(utterance, ["začátku", "znov", ]) or \
-            _any_word_in(utterance, ["restart", ]) :
+            _any_word_in(utterance, ["restart", ]) or \
+            _all_words_in(utterance, ["nové", "spojení"]):
             cn.add(1.0, DialogueActItem("restart"))
 
         if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
