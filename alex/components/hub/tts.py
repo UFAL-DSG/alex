@@ -7,22 +7,17 @@ import multiprocessing
 import time
 import sys
 import traceback
-import select
 import os
 import string
 
 from datetime import datetime
-
-READ_ONLY = select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR
-
-
-import alex.utils.various as various
 
 from alex.components.hub.messages import Command, Frame, TTSText
 from alex.components.tts.common import get_tts_type, tts_factory
 
 from alex.utils.procname import set_proc_name
 from alex.utils.audio import save_wav
+import alex.utils.various as various
 
 
 class TTS(multiprocessing.Process):
@@ -35,20 +30,11 @@ class TTS(multiprocessing.Process):
     def __init__(self, cfg, commands, text_in, audio_out, close_event):
         multiprocessing.Process.__init__(self)
 
-        self.exit = False
-
         self.cfg = cfg
         self.commands = commands
         self.text_in = text_in
         self.audio_out = audio_out
         self.close_event = close_event
-
-        self.poll = select.poll()
-
-        self.fd_map = {}
-        for fd in [self.commands, self.text_in]:
-            self.fd_map[fd.fileno()] = fd
-            self.poll.register(fd, READ_ONLY)
 
         tts_type = get_tts_type(cfg)
         self.tts = tts_factory(tts_type, cfg)
@@ -128,57 +114,52 @@ class TTS(multiprocessing.Process):
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == 'stop':
-                    self.exit = True
+                    return True
 
                 if command.parsed['__name__'] == 'flush':
                     # discard all data in in input buffers
                     while self.text_in.poll():
                         data_in = self.text_in.recv()
 
+                    return False
+
                 if command.parsed['__name__'] == 'synthesize':
-                    self.synthesize(
-                        command.parsed['user_id'], command.parsed['text'])
+                    self.synthesize(command.parsed['user_id'], command.parsed['text'])
+
+                    return False
 
         return False
 
     def read_text_write_audio(self):
-        # read input audio
-        stack = []
-        while self.text_in.poll():
-            stack.append(self.text_in.recv())
+        # read only one TTS command so that the others can be flushed in it is requested
+        # between the processing of the TTS commands
+        # REMEMBER: processing of one TTS command can take a lot of time
 
-        data_tts = stack[-1]
-        if isinstance(data_tts, TTSText):
-            self.synthesize(None, data_tts.text)
-
-    def wait_for_message(self):
-        # block only for small faction of time
-        ready = self.poll.poll(self.cfg['Hub']['main_loop_sleep_time'])
-
-        # process each available message
-        for fd, event in ready:
-            fd_obj = self.fd_map[fd]
-
-            if fd_obj == self.text_in:
-                self.read_text_write_audio()
-            elif fd_obj == self.commands:
-                self.process_pending_commands()
+        if self.text_in.poll():
+            data_tts = self.text_in.recv()
+            if isinstance(data_tts, TTSText):
+                self.synthesize(None, data_tts.text)
 
     def run(self):
         try:
             self.command = None
             set_proc_name("alex_TTS")
 
-            while not self.exit:
+            while 1:
                 # Check the close event.
                 if self.close_event.is_set():
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                self.wait_for_message()
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
+
+                # process audio data
+                self.read_text_write_audio()
         except:
-            self.cfg['Logging']['system_logger'].exception('Uncaught exception in TTS process.')
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in the TTS process.')
             self.close_event.set()
             raise
 
