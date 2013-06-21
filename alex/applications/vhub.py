@@ -146,9 +146,9 @@ class VoipHub(Hub):
 
                             call_back_time = time.time() + self.cfg['VoipHub']['wait_time_before_calling_back']
                             call_back_uri = command.parsed['remote_uri']
-                            
-			    self.cfg['Analytics'].track_event('vhub', 'rejected_call', command.parsed['remote_uri'])
-                     
+
+                            self.cfg['Analytics'].track_event('vhub', 'rejected_call', command.parsed['remote_uri'])
+
                         if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                             self.cfg['Logging']['system_logger'].info(command)
 
@@ -274,7 +274,7 @@ class VoipHub(Hub):
                                 vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
                                 s_voice_activity = False
                                 s_last_voice_activity_time = time.time()
-                                
+
                             self.cfg['Analytics'].track_event('vad', 'speech_start')
 
                         if command.parsed['__name__'] == "speech_end":
