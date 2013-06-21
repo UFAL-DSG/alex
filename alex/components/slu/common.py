@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import autopath
 import inspect
+import sys
 
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.exception import SLUException
@@ -28,27 +29,35 @@ def load_data(cfg_tr):
         cfg_tr -- the subconfig residing under the 'training' key of this SLU
             type's config
 
-    Returns a tuple (utterances, das) of co-indexed dictionaries where
-    `utterances' has the training utterances (object Utterance) as values, and
-    `das' has their corresponding DAs (object DialogueAct) as its values.
+    Returns a tuple (obss, das) of co-indexed dictionaries where `obss' has the
+    training observations as values, and `das' has their corresponding DAs
+    (object DialogueAct) as its values.
 
     """
     from alex.components.asr.utterance import load_utterances
-    from alex.components.slu.da import load_das
-    # TODO Should be extended to handle other types of input features.
+
+    if 'das_loading_fun' in cfg_tr:
+        load_das = cfg_tr['das_loading_fun']
+    else:
+        from alex.components.slu.da import load_das
+
+    # TODO Extend to handle other types of observation types.
     utterances = load_utterances(cfg_tr['utts_fname'],
                                  limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['das_fname'],
-                   limit=cfg_tr.get('max_examples', None))
+    das = load_das(cfg_tr['das_fname'], limit=cfg_tr.get('max_examples', None))
+    obss = {'utt': utterances}
 
-    features = [utterances, das]
-    # Ensure all features use exactly the same set of keys.
+    # Ensure all observations use exactly the same set of keys.
     common_keys = reduce(set.intersection,
-                         (set(feats.viewkeys()) for feats in features))
-    features = [{key: val for (key, val) in feats.iteritems()
-                 if key in common_keys}
-                for feats in features]
-    return features
+                         (set(typed_obss.viewkeys())
+                          for typed_obss in obss.values()))
+    common_keys.intersection_update(das.viewkeys())
+    obss = {ot: {utt_id: obs for (utt_id, obs) in typed_obss.iteritems()
+                 if utt_id in common_keys}
+            for (ot, typed_obss) in obss.iteritems()}
+    das = {utt_id: da for (utt_id, da) in das.iteritems()
+           if utt_id in common_keys}
+    return obss, das
 
 
 # TODO Make the configuration structure simpler.  Blending type names with
@@ -160,7 +169,8 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                 if 'clser_type' in cfg_tr:
                     clser_kwargs['clser_type'] = cfg_tr['clser_type']
                 if 'features_type' in cfg_this_slu:
-                    clser_kwargs['features_type'] = cfg_this_slu['features_type']
+                    clser_kwargs['features_type'] = cfg_this_slu[
+                        'features_type']
                 if 'abstractions' in cfg_tr:
                     clser_kwargs['abstractions'] = cfg_tr['abstractions']
 
@@ -170,9 +180,8 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
         # If a model needs to be trained yet,
         if training:
             # Construct the inputs and the outputs for learning.
-            das, utterances = load_data(cfg_tr)
-            dai_clser.extract_features(das=das, utterances=utterances,
-                                       verbose=verbose)
+            obss, das = load_data(cfg_tr)
+            dai_clser.extract_features(das=das, obss=obss, verbose=verbose)
             dai_clser.prune_features(
                 min_feature_count=cfg_tr.get('min_feat_count', None),
                 min_conc_feature_count=cfg_tr.get('min_feat_count_conc', None),
