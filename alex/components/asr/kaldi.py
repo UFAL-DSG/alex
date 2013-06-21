@@ -62,7 +62,7 @@ class KaldiASR(object):
         :returns: instance of UtteranceNBList
 
         """
-        dnb = self.decoder.Decode()
+        dnb = self.decoder.decode()
         nb = UtteranceNBList()
         for prob, hyp in dnb:
             nb.add(prob, Utterance(hyp))
