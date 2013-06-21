@@ -40,9 +40,9 @@ DEFAULTS_SLU_TR = {
                        # 'trn_{0}'),
                    ('utts_fname', os.path.join('train_slu.txt'),
                        'trn_{0}'),
-                   # ('sem_fname', os.path.join('train_slu_expanded.sem'),
+                   # ('das_fname', os.path.join('train_slu_expanded.sem'),
                        # 'sem_{0}'), ),
-                   ('sem_fname', os.path.join('train_slu.sem'),
+                   ('das_fname', os.path.join('train_slu.sem'),
                        'sem_{0}'), ),
     'cl-seq'    : (('min_feat_count', 10, 'minf{0}'),
                    ('min_dai_count', 10, 'mind{0}'),
@@ -64,7 +64,7 @@ def load_data(cfg):
 
     utterances = load_utterances(cfg_tr['utts_fname'],
                                  limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['sem_fname'],
+    das = load_das(cfg_tr['das_fname'],
                    limit=cfg_tr.get('max_examples', None))
     # Load preprocessing data and routines.
     if cfg_this_slu.get('do_preprocessing', True):
@@ -81,7 +81,7 @@ def expand_trdata(cfg):
     slu_type = cfg['SLU'].get('type', 'cl-tracing')
     cfg_tr = cfg['SLU'][slu_type]['training']
     cfg_tr['utts_fname'] = TRN_FNAME
-    cfg_tr['sem_fname'] = SEM_FNAME
+    cfg_tr['das_fname'] = SEM_FNAME
 
     utterances, das, preprocessing, cldb = load_data(cfg)
     utterances2 = {}

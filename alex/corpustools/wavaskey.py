@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
 from __future__ import unicode_literals
 
+import codecs
 from itertools import islice
 
 
@@ -12,11 +14,11 @@ def load_wavaskey(fname, constructor, limit=None, encoding='UTF-8'):
 
     The input file is assumed to contain lines of the following form:
 
-        [whitespace..]<key>[whitespace..]=>[whitespace..]<obj_str>[whitespace..]
+        [[:space:]..]<key>[[:space:]..]=>[[:space:]..]<obj_str>[[:space:]..]
 
     or just (without keys):
 
-        [whitespace..]<obj_str>[whitespace..]
+        [[:space:]..]<obj_str>[[:space:]..]
 
     where <obj_str> is to be given as the only argument to the `constructor'
     when constructing the objects stored in the file.
@@ -39,7 +41,7 @@ def load_wavaskey(fname, constructor, limit=None, encoding='UTF-8'):
             if not line:
                 continue
 
-            parts = map(unicode.strip, line.split("=>"), 1)
+            parts = map(unicode.strip, line.split("=>", 1))
 
             # Distinguish the case with a key and without a key.
             if len(parts) == 2:

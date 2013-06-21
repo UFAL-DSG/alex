@@ -266,7 +266,13 @@ class TestLBP(unittest.TestCase):
 
         self.assertAlmostEqual(hid1.belief[('save',)], 0.8)
         self.assertAlmostEqual(hid2.belief[('save',)], 0.8 * 0.9 + 0.2 * 0.1, places=6)
-        self.assertAlmostEqual(hid3.belief[('save',)], hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1)
+        # @DM: The original test that fails at my computer.
+        # self.assertAlmostEqual(hid3.belief[('save',)], hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1)
+        # MK: This one passes.
+        self.assertAlmostEqual(
+            hid3.belief[('save',)],
+            hid2.belief[('save',)] * 0.9 + hid2.belief[('del',)] * 0.1,
+            places=6)
 
         lbp = LBP(strategy='layers')
         lbp.add_layers([

@@ -46,8 +46,9 @@ def split_by(text, splitter,
              opening_parentheses='',
              closing_parentheses='',
              quotes="'\""):
-    """Splits the input text at each occurrence of the splitter only if it is
-    not enclosed in parentheses.
+    """
+    Splits the input text at each occurrence of the splitter only if it is not
+    enclosed in parentheses.
 
     text - the input text string
     splitter - multi-character string which is used to determine the position
@@ -85,7 +86,7 @@ def split_by(text, splitter,
                 parentheses_counter[cur_char] + 1) % 2
         elif text[segment_end:].startswith(splitter):
             # Test that all parentheses are closed.
-            if all([count == 0 for count in parentheses_counter.values()]):
+            if not any(parentheses_counter.values()):
                 split_list.append(text[segment_start:segment_end].strip())
                 segment_end += len(splitter)
                 segment_start = segment_end

@@ -139,7 +139,8 @@ class SLUPreprocessing(object):
 
     # TODO Rename to normalise_utterance.
     def text_normalisation(self, utterance):
-        """Normalises the utterance (the output of an ASR).
+        """
+        Normalises the utterance (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
@@ -151,7 +152,8 @@ class SLUPreprocessing(object):
         return utterance
 
     def normalise_confnet(self, confnet):
-        """Normalises the confnet (the output of an ASR).
+        """
+        Normalises the confnet (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
@@ -161,6 +163,16 @@ class SLUPreprocessing(object):
         for mapping in self.text_normalization_mapping:
             confnet = confnet.replace(mapping[0], mapping[1])
         return confnet
+
+    def normalise(self, utt_hyp):
+        if isinstance(utt_hyp, Utterance):
+            return self.text_normalisation(utt_hyp)
+        elif isinstance(utt_hyp, UtteranceConfusionNetwork):
+            return self.normalise_confnet(utt_hyp)
+        else:
+            assert isinstance(utt_hyp, UtteranceNBList)
+            for utt_idx, hyp in enumerate(utt_hyp):
+                utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
 
     # TODO Update the docstring for the `all_options' argument.
     def values2category_labels_in_utterance(self, utterance,
@@ -342,7 +354,8 @@ class SLUPreprocessing(object):
 
     # TODO Test.
     def values2category_labels_in_confnet(self, confnet):
-        """Replaces strings matching surface forms in the label database with
+        """
+        Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
         Arguments:
@@ -387,6 +400,20 @@ class SLUPreprocessing(object):
 
         return confnet_cp, valform_for_cl
 
+    def values2catlabs(self, utt_hyp):
+        """TODO Document."""
+        # Do the substitution in the utterance hypothesis, and obtain the
+        # resulting mapping.
+        if isinstance(utt_hyp, Utterance):
+            return self.values2category_labels_in_utterance(utt_hyp)
+        # TODO isinstance(utt_hyp, AbstractedUtterance)
+        elif isinstance(utt_hyp, UtteranceNBList):
+            # XXX This might not work now.
+            return self.values2category_labels_in_uttnblist(utt_hyp)
+        else:
+            assert isinstance(utt_hyp, UtteranceConfusionNetwork)
+            return self.values2category_labels_in_confnet(utt_hyp)
+
     def values2category_labels_in_da(self, utt_hyp, da):
         """Replaces strings matching surface forms in the label database with
         their slot names plus index both in `utt_hyp' and `da' in
@@ -410,16 +437,7 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
-        # Do the substitution in the utterance hypothesis, and obtain the
-        # resulting mapping.
-        if isinstance(utt_hyp, Utterance):
-            utt_hyp, valform_for_cl = \
-                self.values2category_labels_in_utterance(utt_hyp)
-        else: # TODO isinstance(utt_hyp, AbstractedUtterance)
-            assert isinstance(utt_hyp, UtteranceNBList)
-            # XXX This might not work now.
-            utt_hyp, valform_for_cl = \
-                self.values2category_labels_in_uttnblist(utt_hyp)
+        utt_hyp, valform_for_cl = self.values2catlabs(utt_hyp)
         cl_for_value = {item[1][0]: item[0]
                         for item in valform_for_cl.iteritems()}
 
@@ -496,11 +514,14 @@ class SLUPreprocessing(object):
                 dai.category_label2value(category_labels)
         return nblist
 
-    def category_labels2values_in_confnet(self, confnet, category_labels=None):
-        """Reverts the effect of the values2category_labels_in_da()
-        function.
+    # Originally called category_labels2values_in_confnet, which caused
+    # confusion (since here we deal with DA confnets, as opposed to utterance
+    # confnets in other method).
+    def category_labels2values_in_dacn(self, confnet, category_labels=None):
+        """
+        Reverts the effect of the values2category_labels_in_da() method.
 
-        Returns the converted confusion network.
+        Returns the converted DA confusion network.
         """
         confnet = copy.deepcopy(confnet)
         for _, dai in confnet.cn:

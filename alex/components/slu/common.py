@@ -138,7 +138,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
             try:
                 cldb = CategoryLabelDatabase(cldb_fname)
             except:
-                msg = ('Could not load the CLDB from the filename specified:  '
+                msg = ('Could not load the CLDB from the filename specified: '
                        '{fname}.'.format(fname=cldb_fname))
                 raise SLUException(msg)
 
@@ -157,10 +157,12 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
         if training:
             cfg_tr = cfg_this_slu['training']
             if slu_type in ('cl-seq', 'cl-tracing'):
-                clser_kwargs['clser_type'] = cfg_tr.get('clser_type', None)
-                clser_kwargs['features_type'] = cfg_this_slu.get(
-                    'features_type', None)
-                clser_kwargs['abstractions'] = cfg_tr.get('abstractions', None)
+                if 'clser_type' in cfg_tr:
+                    clser_kwargs['clser_type'] = cfg_tr['clser_type']
+                if 'features_type' in cfg_this_slu:
+                    clser_kwargs['features_type'] = cfg_this_slu['features_type']
+                if 'abstractions' in cfg_tr:
+                    clser_kwargs['abstractions'] = cfg_tr['abstractions']
 
         dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg,
                                 **clser_kwargs)

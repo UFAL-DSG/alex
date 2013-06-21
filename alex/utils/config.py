@@ -112,6 +112,18 @@ class Config(object):
     #   - def check_requirements_are_met(self)
 
     def __init__(self, file_name=None, project_root=False, config={}):
+        """
+        Initialises a new Config object.
+
+        Arguments:
+            file_name -- path towards the configuration file
+            project_root -- whether the path is only relative wrt the project
+                root directory (i.e., the 'alex' directory)
+            config -- a ready-to-use config dictionary (if specified,
+                `file_name' should NOT be specified, otherwise the config from
+                `file_name' overwrites the one specified via `config'
+
+        """
         self.config = config
 
         if project_root:

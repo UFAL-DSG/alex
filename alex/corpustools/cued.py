@@ -34,7 +34,7 @@ def _build_find_kwargs(user_kwargs, **kwargs):
     return find_kwargs
 
 
-def find_matching(infname, pat, ignore_list_file=None, find_kwargs=dict()):
+def find_with_ignorelist(infname, pat, ignore_list_file=None, find_kwargs=dict()):
     """
     Finds specific files below the paths specified and returns their filenames.
 
@@ -125,7 +125,7 @@ def find_wavs(infname, ignore_list_file=None):
     Returns a set of paths to files satisfying the criteria.
 
     """
-    return find_matching(infname, '*.wav', ignore_list_file)
+    return find_with_ignorelist(infname, '*.wav', ignore_list_file)
 
 
 _log_fnames = ('user-transcription.norm.xml',
@@ -163,7 +163,7 @@ def find_logs(infname, ignore_list_file=None, verbose=False):
     Returns a set of paths to files satisfying the criteria.
 
     """
-    xml_paths = find_matching(infname, '*.xml', ignore_list_file)
+    xml_paths = find_with_ignorelist(infname, '*.xml', ignore_list_file)
     if verbose:
         print "XML files found:"
         for xml_path in xml_paths:

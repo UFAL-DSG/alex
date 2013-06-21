@@ -5,15 +5,15 @@
 
 from __future__ import unicode_literals
 
-import codecs
 from collections import namedtuple
 import copy
-from itertools import izip, islice, product
+from itertools import izip, product
 from operator import itemgetter, mul
 
 from alex.utils import text
 from alex.utils.text import Escaper
 from alex.components.slu.exception import SLUException
+from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
@@ -26,10 +26,16 @@ SENTENCE_END = u'</s>'
 
 
 def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
-    """Loads a dictionary of utterances from a given file. The file is assumed
-    to contain lines of the following form:
+    """
+    Loads a dictionary of utterances from a given file.
+
+    The file is assumed to contain lines of the following form:
 
     [whitespace..]<key>[whitespace..]=>[whitespace..]<utterance>[whitespace..]
+
+    or just (without keys):
+
+        [whitespace..]<utterance>[whitespace..]
 
     Arguments:
         utt_fname -- path towards the file to read the utterances from
@@ -39,24 +45,34 @@ def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
     Returns a dictionary with utterances (instances of Utterance) as values.
 
     """
-    with codecs.open(utt_fname, encoding=encoding) as utt_file:
-        utterances = {}
-        for line_id, line in enumerate(islice(utt_file, 0, limit)):
-            line = line.strip()
-            if not line:
-                continue
+    return load_wavaskey(utt_fname, Utterance, limit, encoding)
 
-            parts = line.split("=>")
 
-            if len(parts) == 2:
-                key = parts[0].strip()
-                utt = parts[1].strip()
-            else:
-                key = "%d" % line_id
-                utt = line
+def load_utt_confnets(fname, limit=None, encoding='UTF-8'):
+    """
+    Loads a dictionary of utterance confusion networks from a given file.
 
-            utterances[key] = Utterance(utt)
-    return utterances
+    The file is assumed to contain lines of the following form:
+
+        [whitespace..]<key>[whitespace..]=>[whitespace..]<utt_cn>[whitespace..]
+
+    or just (without keys):
+
+        [whitespace..]<utt_cn>[whitespace..]
+
+    where <utt_cn> is obtained as repr() of an UtteranceConfusionNetwork
+    object.
+
+    Arguments:
+        fname -- path towards the file to read the utterance confusion networks
+            from
+        limit -- limit on the number of confusion networks to read
+        encoding -- the file encoding
+
+    Returns a dictionary with confnets (instances of Utterance) as values.
+
+    """
+    return load_wavaskey(fname, limit, encoding, UtteranceConfusionNetwork)
 
 
 class UtteranceException(SLUException):
