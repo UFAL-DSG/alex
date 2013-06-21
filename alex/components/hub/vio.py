@@ -208,8 +208,13 @@ class CallCallback(pj.CallCallback):
 
                 if self.recorded_id:
                     pj.Lib.instance().recorder_destroy(self.recorded_id)
+                    self.recorded_id = None
+
                 if self.played_id:
                     pj.Lib.instance().recorder_destroy(self.played_id)
+                    self.played_id = None
+
+                # Send the callback.
                 self.voipio.on_call_disconnected(self.call.info().remote_uri)
         except:
             self.voipio.close_event.set()

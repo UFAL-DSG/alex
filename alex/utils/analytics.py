@@ -30,6 +30,9 @@ class Analytics(object):
             self.visitor.user_agent = self.caller_id
             self.visitor.unique_id = hash(caller_id) & 0x7fffffff
 
+#            print self.visitor.unique_id
+#            print self.visitor.__getstate__()
+
             self.session = Session()
 
     @async

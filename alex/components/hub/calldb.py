@@ -7,6 +7,8 @@ import fcntl
 import time
 import cPickle as pickle
 
+#FIXME: It should use sqlalchemy instead of the pickles.
+
 class CallDB(object):
     """Implements logging of all interesting call stats.
     It can be used for customization of the SDS, e.g. for novice or expert users.

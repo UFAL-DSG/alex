@@ -258,42 +258,46 @@ class AOTBHDCPolicy(DialoguePolicy):
 
     def say_directions(self, dialogue_state):
         """Given the state say current directions."""
-        if dialogue_state['route_alternative'] == "none":
-            dialogue_state['route_alternative'] = 0
+        try:
+            if dialogue_state['route_alternative'] == "none":
+                dialogue_state['route_alternative'] = 0
 
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+            route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
 
-        leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
+            leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
 
-        res = []
+            res = []
 
-        if len(dialogue_state.directions) > 1:
-            if dialogue_state['route_alternative'] == 0:
-                res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
-            res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
-
-
-        for step_ndx, step in enumerate(leg.steps):
-            if step.travel_mode == step.MODE_TRANSIT:
-                res.append(u"inform(vehicle=%s)" % step.vehicle)
-                res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
-                res.append(u"inform(enter_at=%s)" % step.departure_stop)
-                res.append(u"inform(headsign=%s)" % step.headsign)
-                res.append(u"inform(exit_at=%s)" % step.arrival_stop)
-                res.append(u"inform(transfer='true')")
-
-        res = res[:-1]
-
-        if len(res) == 0:
-            res.append(u'apology()')
-            res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
-            res.append(u"inform(to_stop='%s')" % dialogue_state['to_stop'])
-
-        res_da = DialogueAct(u"&".join(res))
+            if len(dialogue_state.directions) > 1:
+                if dialogue_state['route_alternative'] == 0:
+                    res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
+                res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
 
 
-        return res_da
+            for step_ndx, step in enumerate(leg.steps):
+                if step.travel_mode == step.MODE_TRANSIT:
+                    res.append(u"inform(vehicle=%s)" % step.vehicle)
+                    res.append(u"inform(line=%s)" % step.line_name)
+                    res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
+                    res.append(u"inform(enter_at=%s)" % step.departure_stop)
+                    res.append(u"inform(headsign=%s)" % step.headsign)
+                    res.append(u"inform(exit_at=%s)" % step.arrival_stop)
+                    res.append(u"inform(transfer='true')")
+
+            res = res[:-1]
+
+            if len(res) == 0:
+                res.append(u'apology()')
+                res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
+                res.append(u"inform(to_stop='%s')" % dialogue_state['to_stop'])
+
+            res_da = DialogueAct(u"&".join(res))
+
+
+            return res_da
+        except:
+            import ipdb
+            ipdb.set_trace()
 
     def get_default_time(self):
         """Return default value for time."""
