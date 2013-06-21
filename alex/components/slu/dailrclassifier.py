@@ -19,7 +19,7 @@ from sklearn.linear_model import LogisticRegression
 # TODO Rewrite using lazy imports.
 from alex.components.asr.utterance import UtteranceFeatures, \
     UtteranceNBListFeatures, UtteranceConfusionNetworkFeatures, UtteranceHyp
-from alex.components.slu.base import SLUInterface
+from alex.components.slu import base
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
     DialogueActNBListFeatures, merge_slu_confnets
@@ -40,7 +40,7 @@ def get_features_from_tree(tree):
             if 0 <= left < n_nodes and 0 <= right < n_nodes]
 
 
-class DAILogRegClassifier(SLUInterface):
+class DAILogRegClassifier(base.SLUInterface):
     """
     Implements learning of and decoding with dialogue act item classifiers
     based on logistic regression.
@@ -116,54 +116,6 @@ class DAILogRegClassifier(SLUInterface):
     # TODO Document changes made in slot value abstraction for DSTC.
     # TODO Document intercepts, coefs.
 
-    FeatureProps = namedtuple('ObsProps',
-                              ['obs_type', 'feat_class', 'is_abstracted'])
-    """properties of types of features this classifier can use
-
-    obs_type: name of the observation type from which this type of features
-              is extracted (a string)
-    feat_class: the class for this type of features
-    is_abstracted: whether this type of observation inherits from Abstracted
-
-    Note that names of abstracted observation types have to follow the format
-    'ab{concrete}' where {concrete} is the name of the non-abstracted type.
-
-    """
-    # ft_props :: feature type -> feature type properties
-    ft_props = {
-        'ngram': FeatureProps('utt', UtteranceFeatures, False),
-        'nbl_ngram': FeatureProps('utt_nbl', UtteranceNBListFeatures, False),
-        'cn_ngram': FeatureProps('utt_cn', UtteranceConfusionNetworkFeatures,
-                                 False),
-        'ab_ngram': FeatureProps('abutt', UtteranceFeatures, True),
-        'ab_nbl_ngram': FeatureProps('abutt_nbl', UtteranceNBListFeatures,
-                                     True),
-        'ab_cn_ngram': FeatureProps('abutt_cn',
-                                    UtteranceConfusionNetworkFeatures, True),
-        'prev_da': FeatureProps('prev_da', DialogueActFeatures, False),
-        # Following gets used when doing reranking.
-        'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False), }
-    ft_default_args = {
-        'ngram': ('ngram', 4, ),
-        'nbl_ngram': ('ngram', ),
-        'cn_ngram': ('ngram', 4, ),
-        'ab_ngram': ('ngram', 4, ),
-        'ab_nbl_ngram': ('ngram', ),
-        'ab_cn_ngram': ('ngram', 4, ),
-        'prev_da': tuple(),
-        'da_nbl': tuple(),
-    }
-    ft_default_kwargs = {
-        'ngram': {},
-        'nbl_ngram': {'size': 4},
-        'cn_ngram': {},
-        'ab_ngram': {},
-        'ab_nbl_ngram': {'size': 4},
-        'ab_cn_ngram': {},
-        'prev_da': {},
-        'da_nbl': {},
-    }
-
     # TODO Document.
     def __init__(self,
                  preprocessing=None,
@@ -198,9 +150,9 @@ class DAILogRegClassifier(SLUInterface):
             self.intercepts = dict()
             self.coefs = dict()
         self.features_type = features_type
-        self.ft_args = copy.deepcopy(self.ft_default_args)
+        self.ft_args = copy.deepcopy(base.ft_default_args)
         self.ft_args.update(ft_args)
-        self.ft_kwargs = copy.deepcopy(self.ft_default_kwargs)
+        self.ft_kwargs = copy.deepcopy(base.ft_default_kwargs)
         self.ft_kwargs.update(ft_kwargs)
 
         # TODO Deprecate.
@@ -246,7 +198,7 @@ class DAILogRegClassifier(SLUInterface):
         # concrete.
         return conc_idxs
 
-    def _extract_feats_from_one(self, obss, inst=None):
+    def _extract_feats_from_one(self, obss, inst=None, utt_id=None):
         """
         Extracts features for a single input, characterised by potentially many
         types of observations (the utterance, the previous dialogue act etc.).
@@ -261,10 +213,14 @@ class DAILogRegClassifier(SLUInterface):
                 case, features are extracted from all possible instantiations
                 of the observations.  In the last case, only the concrete
                 observations are used to extract features.
+            utt_id -- If specified, each `obss[ft]', `ft' being various feature
+                types, is expected to be a dictionary mapping utterance IDs to
+                their respective observation.  ID of the utterance for which
+                features should be extracted is then given in this argument.
 
         """
         # fs = self.features_size
-        ft_props = DAILogRegClassifier.ft_props
+        ft_props = base.ft_props
 
         # # Determine the actual class of `utterance'.
         # utt_features_cls = UtteranceFeatures
@@ -289,7 +245,10 @@ class DAILogRegClassifier(SLUInterface):
         for ft in self.features_type:
             this_ft_props = ft_props[ft]
             obs_type = this_ft_props.obs_type
-            obs = obss.get(obs_type, None)
+            if utt_id is None:
+                obs = obss.get(obs_type, None)
+            else:
+                obs = obss.get(obs_type, dict()).get(utt_id, None)
             # Handle the case of a missing observation.
             if obs is None:
                 if this_ft_props.is_abstracted:
@@ -409,14 +368,10 @@ class DAILogRegClassifier(SLUInterface):
         #     ('da_nbl' in self.features_type) * bool(da_nblists))
         self.n_feat_sets = sum(
             (ft in obss) *
-            (len(self.abstractions) if self.ft_props[ft].abstract else 1)
+            (len(self.abstractions) if base.ft_props[ft].is_abstracted else 1)
             for ft in self.features_type)
 
-        def obs_for_utt_id(utt_id):
-            return {obs_type: obss[obs_type].get(utt_id, None)
-                    for obs_type in obss}
-
-        return {utt_id: self._extract_feats_from_one(obs_for_utt_id(utt_id))
+        return {utt_id: self._extract_feats_from_one(obss, utt_id=utt_id)
                 for utt_id in self.utt_ids}
 
         # # XXX Why the asymmetry with self.utterances (and not utterances
@@ -489,7 +444,7 @@ class DAILogRegClassifier(SLUInterface):
                 'Cannot learn a classifier without any observations.')
 
         # Normalise the text and substitute category labels.
-        self.category_labels = {}
+        self.category_labels = dict()
         if self.preprocessing:
             abstractables = [obs_type
                              for obs_type in ('utt', 'utt_nbl', 'utt_cn')
@@ -506,6 +461,7 @@ class DAILogRegClassifier(SLUInterface):
                     if utt_hyp is None:
                         # (FIXME) This should rather be discarded right away.
                         continue
+                    self.category_labels[utt_id] = dict()
                     # Normalise the text.
                     self.obss[concrete_ot][utt_id] = utt_hyp = (
                         self.preprocessing.normalise(utt_hyp))
@@ -520,7 +476,7 @@ class DAILogRegClassifier(SLUInterface):
 
         # Generate utterance features.
         self.utterance_features = self._extract_feats_from_many(
-            self.obss, self.das, inst='all')
+            self.obss, inst='all')
         if verbose:
             print >>sys.stderr, "Done extracting features."
         if verbose >= 2:
@@ -878,7 +834,8 @@ class DAILogRegClassifier(SLUInterface):
                     # Get the output (regressand).
                     outputs_orig.append(int(dai in self.das[utt_id]))
                     # Get the input (regressor).
-                    utt_feats = self._extract_feats_from_one(self.obss[utt_id])
+                    utt_feats = self._extract_feats_from_one(
+                        self.obss, utt_id=utt_id)
                     new_feat_coords, new_feat_vals = (
                         utt_feats.get_feature_coords_vals(self.feature_idxs))
                     feat_coords[0].extend(repeat(n_rows, len(new_feat_coords)))
@@ -894,7 +851,7 @@ class DAILogRegClassifier(SLUInterface):
                         outputs_orig.append(int(inst_dai in self.das[utt_id]))
                         # Instantiate features for this type_=value assignment.
                         utt_feats = self._extract_feats_from_one(
-                            self.obss, inst=(type_, value))
+                            self.obss, inst=(type_, value), utt_id=utt_id)
                         # Extract the inputs.
                         new_feat_coords, new_feat_vals = (
                             utt_feats.get_feature_coords_vals(
@@ -1337,8 +1294,8 @@ class DAILogRegClassifier(SLUInterface):
                                    '{v}.'.format(v=version))
 
             # Use default ft_args, ft_kwargs (new in version 5).
-            self.ft_args = self.ft_default_args
-            self.ft_kwargs = self.ft_default_kwargs
+            self.ft_args = base.ft_default_args
+            self.ft_kwargs = base.ft_default_kwargs
 
         # Recast model parameters from an sklearn object as plain lists of
         # coefficients and intercept.
@@ -1495,8 +1452,8 @@ class DAILogRegClassifier(SLUInterface):
                                                       dai_val_proper_words))
 
             if abstractables:
-                insts = reduce(add, (compatible_insts(obs[abs_ot])
-                                     for abs_ot in abstractables))
+                insts = reduce(add, (compatible_insts(obs['ab' + concrete_ot])
+                                     for concrete_ot in abstractables))
             else:
                 insts = None
 

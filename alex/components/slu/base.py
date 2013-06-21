@@ -2,14 +2,67 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import copy
 from itertools import product
 
 from exception import DAILRException
 from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
-    UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
+    UtteranceConfusionNetwork, UtteranceHyp, UtteranceNBList, \
+    UtteranceFeatures, UtteranceNBListFeatures, \
+    UtteranceConfusionNetworkFeatures
+from alex.components.slu.da import DialogueActFeatures, \
+    DialogueActNBListFeatures
 from alex.utils.config import load_as_module
+
+
+FeatureProps = namedtuple('FeatureProps',
+                            ['obs_type', 'feat_class', 'is_abstracted'])
+"""properties of types of features this classifier can use
+
+obs_type: name of the observation type from which this type of features
+            is extracted (a string)
+feat_class: the class for this type of features
+is_abstracted: whether this type of observation inherits from Abstracted
+
+Note that names of abstracted observation types have to follow the format
+'ab{concrete}' where {concrete} is the name of the non-abstracted type.
+
+"""
+# ft_props :: feature type -> feature type properties
+ft_props = {
+    'ngram': FeatureProps('utt', UtteranceFeatures, False),
+    'nbl_ngram': FeatureProps('utt_nbl', UtteranceNBListFeatures, False),
+    'cn_ngram': FeatureProps('utt_cn', UtteranceConfusionNetworkFeatures,
+                                False),
+    'ab_ngram': FeatureProps('abutt', UtteranceFeatures, True),
+    'ab_nbl_ngram': FeatureProps('abutt_nbl', UtteranceNBListFeatures,
+                                    True),
+    'ab_cn_ngram': FeatureProps('abutt_cn',
+                                UtteranceConfusionNetworkFeatures, True),
+    'prev_da': FeatureProps('prev_da', DialogueActFeatures, False),
+    # Following gets used when doing reranking.
+    'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False), }
+ft_default_args = {
+    'ngram': ('ngram', 4, ),
+    'nbl_ngram': ('ngram', ),
+    'cn_ngram': ('ngram', 4, ),
+    'ab_ngram': ('ngram', 4, ),
+    'ab_nbl_ngram': ('ngram', ),
+    'ab_cn_ngram': ('ngram', 4, ),
+    'prev_da': tuple(),
+    'da_nbl': tuple(),
+}
+ft_default_kwargs = {
+    'ngram': {},
+    'nbl_ngram': {'size': 4},
+    'cn_ngram': {},
+    'ab_ngram': {},
+    'ab_nbl_ngram': {'size': 4},
+    'ab_cn_ngram': {},
+    'prev_da': {},
+    'da_nbl': {},
+}
 
 
 class CategoryLabelDatabase(object):
@@ -532,7 +585,7 @@ class SLUPreprocessing(object):
 # XXX This in fact is not an interface anymore (for it has a constructor).  It
 # had better be called AbstractSLU.
 class SLUInterface(object):
-    """\
+    """
     Defines a prototypical interface each SLU parser should provide.
 
     It should be able to parse:
