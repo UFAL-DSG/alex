@@ -58,7 +58,7 @@ class DM(multiprocessing.Process):
                     while self.slu_hypotheses_in.poll():
                         data_in = self.slu_hypotheses_in.recv()
 
-                    self.dm.new_dialogue()
+                    self.dm.end_dialogue()
 
                     return False
 
