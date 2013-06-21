@@ -20,7 +20,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     def __init__(self, cfg, ontology):
         super(DeterministicDiscriminativeDialogueState, self).__init__(cfg, ontology)
 
-        self.slots = defaultdict(lambda: "None")
+        self.slots = defaultdict(lambda: "none")
         self.turns = []
         self.turn_number = 0
 
@@ -64,7 +64,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         Nevertheless, remember the turn history.
         """
 
-        self.slots = defaultdict(lambda: "None")
+        self.slots = defaultdict(lambda: "none")
 
     def update(self, user_da, last_system_da):
         """Interface for the dialogue act update.
@@ -211,7 +211,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 if self.slots[dai.name] == dai.value:
                     # it must be changed since user does not want this value but we do not know for what to change it
                     # therefore it will be changed to None
-                    self.slots[dai.name] = "None"
+                    self.slots[dai.name] = "none"
                 else:
                     # the value of the slot is different. therefore it does not conflict with the provided information
                     pass
@@ -235,7 +235,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     if slot[3:] in self.slots:
                         requested_slots[slot[3:]] = self.slots[slot[3:]]
                     else:
-                        requested_slots[slot[3:]] = "None"
+                        requested_slots[slot[3:]] = "none"
 
         return requested_slots
 
@@ -244,7 +244,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         confirmed_slots = {}
 
         for slot in self.slots:
-            if slot.startswith("ch_") and self.slots[slot] != "None" and self.slots[slot] != "system-informed":
+            if slot.startswith("ch_") and self.slots[slot] != "none" and self.slots[slot] != "system-informed":
                 confirmed_slots[slot[3:]] = self.slots[slot]
 
         return confirmed_slots
@@ -270,7 +270,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             if [ 1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]:
                 continue
 
-            if self.slots[slot] != "None" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "None"):
+            if self.slots[slot] != "none" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "none"):
                 non_informed_slots[slot] = self.slots[slot]
 
         return non_informed_slots

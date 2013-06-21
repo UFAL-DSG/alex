@@ -58,7 +58,7 @@ class DM(multiprocessing.Process):
                     while self.slu_hypotheses_in.poll():
                         data_in = self.slu_hypotheses_in.recv()
 
-                    self.dm.new_dialogue()
+                    self.dm.end_dialogue()
 
                     return False
 
@@ -142,7 +142,7 @@ class DM(multiprocessing.Process):
                 # process the incoming SLU hypothesis
                 self.read_slu_hypotheses_write_dialogue_act()
         except:
-            self.cfg['Logging']['system_logger'].exception('Uncaught exception in DM process.')
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in the DM process.')
             self.close_event.set()
             raise
 

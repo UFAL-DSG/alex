@@ -27,7 +27,7 @@ class SessionLoggerException(AlexException):
 class SessionClosedException(AlexException):
     pass
 
-class SessionLogger:
+class SessionLogger(object):
     """ This is a multiprocessing safe logger. It should be used by the alex to
     log information according the SDC 2010 XML format.
 
@@ -221,7 +221,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
-    @catch_ioerror
+    # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_start(self, speaker, fname):
         """ Adds the optional recorded input/output element to the last
         "speaker" turn.
@@ -247,7 +247,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
-    @catch_ioerror
+    # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
         """

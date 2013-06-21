@@ -4,7 +4,6 @@
 if __name__ == "__main__":
     import autopath
 
-
 import unittest
 
 import alex.utils.text

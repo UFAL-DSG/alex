@@ -59,8 +59,7 @@ def load_wav(cfg, file_name):
 
     # resample audio if not compatible
     if sample_rate != cfg['Audio']['sample_rate']:
-        wav, state = audioop.ratecv(
-            wav, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
+        wav, state = audioop.ratecv(wav, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
 
     return wav
 
@@ -117,8 +116,7 @@ def save_flac(cfg, file_name, wav):
 
     try:
         save_wav(cfg, wav_file_name, wav)
-        subprocess.call("flac -f %s -o %s 2> /dev/null" % (
-            wav_file_name, file_name), shell=True)
+        subprocess.call("flac -f %s -o %s 2> /dev/null" % (wav_file_name, file_name), shell=True)
     finally:
         remove(wav_file_name)
 
@@ -146,8 +144,7 @@ def convert_mp3_to_wav(cfg, mp3_string):
 
     # convert to mono and resample
     wav_mono = audioop.tomono(wav, 2, 0.5, .5)
-    wav_resampled, state = audioop.ratecv(
-        wav_mono, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
+    wav_resampled, state = audioop.ratecv(wav_mono, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
 
     return wav_resampled
 

@@ -5,11 +5,12 @@
 
 """
 Implements useful classes for handling multiprocessing implementation of
-the alex.
+the Alex system.
 """
 
 import functools
 import multiprocessing
+import threading
 import fcntl
 import time
 import os
@@ -82,6 +83,34 @@ def file_unlock(lock_file):
     fcntl.lockf(lock_file, fcntl.LOCK_UN)
     lock_file.close()
 
+def async(func):
+    """4
+        A function decorator intended to make "func" run in a separate thread (asynchronously).
+        Returns the created Thread object
+
+        E.g.:
+        @run_async
+        def task1():
+            do_something
+
+        @run_async
+        def task2():
+            do_something_too
+
+        t1 = task1()
+        t2 = task2()
+        ...
+        t1.join()
+        t2.join()
+    """
+
+    @functools.wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = threading.Thread(target = func, args = args, kwargs = kwargs)
+        func_hl.start()
+        return func_hl
+
+    return async_func
 
 class InstanceID(object):
     """ This class provides unique ids to all instances of objects inheriting
@@ -106,13 +135,13 @@ class SystemLogger(object):
 
     lock = multiprocessing.RLock()
     levels = {
-        'DEBUG':            0,
-        'INFO':            10,
-        'WARNING':         20,
-        'CRITICAL':        30,
-        'EXCEPTION':       40,
-        'ERROR':           50,
-        'SYSTEM-LOG':      60,
+        'SYSTEM-LOG':       0,
+        'DEBUG':           10,
+        'INFO':            20,
+        'WARNING':         30,
+        'CRITICAL':        40,
+        'EXCEPTION':       50,
+        'ERROR':           60,
     }
 
     def __init__(self, output_dir, stdout_log_level='DEBUG', stdout=True,
@@ -127,8 +156,7 @@ class SystemLogger(object):
 
         # Create a buffer of size 1000 bytes in shared memory to hold
         # the name of the logging directory for current session.
-        self.current_session_log_dir_name = multiprocessing.Array(
-            'c', ' ' * 1000)
+        self.current_session_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
         self._session_started = False
 

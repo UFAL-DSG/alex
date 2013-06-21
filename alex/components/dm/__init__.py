@@ -29,7 +29,7 @@ class DialogueState(object):
         Nevertheless, remember the turn history.
         """
 
-        self.slots = defaultdict(lambda: "None")
+        self.slots = defaultdict(lambda: "none")
 
     def update(self, user_da, last_system_da):
         """Interface for the dialogue act update.
@@ -130,4 +130,3 @@ class DialogueManager(object):
             return f_token.read()
         else:
             raise Exception("Please configure token_url DM parameter in config.")
-

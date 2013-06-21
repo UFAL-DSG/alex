@@ -138,11 +138,16 @@ class VoipHub(Hub):
                             self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
                             self.cfg['Logging']['session_logger'].input_source("voip")
 
+                            self.cfg['Analytics'].start_session(command.parsed['remote_uri'])
+                            self.cfg['Analytics'].track_event('vhub', 'incoming_call', command.parsed['remote_uri'])
+
                         if command.parsed['__name__'] == "rejected_call":
                             self.cfg['Logging']['system_logger'].info(command)
 
                             call_back_time = time.time() + self.cfg['VoipHub']['wait_time_before_calling_back']
                             call_back_uri = command.parsed['remote_uri']
+
+                            self.cfg['Analytics'].track_event('vhub', 'rejected_call', command.parsed['remote_uri'])
 
                         if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                             self.cfg['Logging']['system_logger'].info(command)
@@ -164,8 +169,11 @@ class VoipHub(Hub):
                             m.append('')
                             self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
+                            self.cfg['Analytics'].track_event('vhub', 'rejected_call_from_blacklisted_uri', command.parsed['remote_uri'])
+
                         if command.parsed['__name__'] == "call_connecting":
                             self.cfg['Logging']['system_logger'].info(command)
+                            self.cfg['Analytics'].track_event('vhub', 'call_connecting', command.parsed['remote_uri'])
 
                         if command.parsed['__name__'] == "call_confirmed":
                             self.cfg['Logging']['system_logger'].info(command)
@@ -213,6 +221,7 @@ class VoipHub(Hub):
                             self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
                             call_db.track_confirmed_call(remote_uri)
+                            self.cfg['Analytics'].track_event('vhub', 'call_confirmed', command.parsed['remote_uri'])
 
                         if command.parsed['__name__'] == "call_disconnected":
                             self.cfg['Logging']['system_logger'].info(command)
@@ -237,6 +246,8 @@ class VoipHub(Hub):
                             remote_uri = command.parsed['remote_uri']
                             call_db.track_disconnected_call(remote_uri)
 
+                            self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
+
                         if command.parsed['__name__'] == "play_utterance_start":
                             self.cfg['Logging']['system_logger'].info(command)
                             s_voice_activity = True
@@ -257,15 +268,19 @@ class VoipHub(Hub):
                             u_voice_activity = True
 
                             if s_voice_activity:
+                                self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 
                                 vio_commands.send(Command('flush_out()', 'HUB', 'VIO'))
                                 s_voice_activity = False
                                 s_last_voice_activity_time = time.time()
 
+                            self.cfg['Analytics'].track_event('vad', 'speech_start')
+
                         if command.parsed['__name__'] == "speech_end":
                             u_voice_activity = False
                             u_last_voice_activity_time = time.time()
+                            self.cfg['Analytics'].track_event('vad', 'speech_stop')
 
                 if asr_commands.poll():
                     command = asr_commands.recv()
@@ -283,11 +298,13 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "hangup":
                             # prepare for ending the call
                             hangup = True
+                            self.cfg['Analytics'].track_event('vhub', 'system_hangup')
 
                         if command.parsed['__name__'] == "dm_da_generated":
                             # record the time of the last system generated dialogue act
                             s_last_dm_activity_time = time.time()
                             number_of_turns += 1
+                            self.cfg['Analytics'].track_event('dm', 'da_generated')
 
                         # if a dialogue act is generated, stop playing current TTS audio
                         # theoretically it is a good place because if the DM decides to be silent

@@ -51,45 +51,45 @@ class AOTBHDCPolicy(DialoguePolicy):
         elif len(self.das) == 0:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
 #       We do not have to reposnd to hello
 #        elif dialogue_state["lda"] == "hello":
 #            # NLG("Ahoj.")
 #            res_da = DialogueAct("hello()")
-#            dialogue_state["lda"] = "None"
+#            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "bye":
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "help":
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "thankyou":
             # NLG("Diky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "restart":
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "repeat":
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         elif dialogue_state["lda"] == "reqalts":
             # NLG("There is nothing else in the database.")
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
-            if dialogue_state['route_alternative'] == "None":
+            if dialogue_state['route_alternative'] == "none":
                 res_da = DialogueAct('request(from_stop)')
             else:
                 dialogue_state['route_alternative'] += 1
@@ -102,7 +102,7 @@ class AOTBHDCPolicy(DialoguePolicy):
             # inform about all requested slots
             res_da = DialogueAct()
             for slot in requested_slots:
-                if dialogue_state['route_alternative'] != "None":
+                if dialogue_state['route_alternative'] != "none":
                     if slot == "from_stop":
                         res_da.extend(self.get_from_stop(dialogue_state))
                     elif slot == "to_stop":
@@ -118,9 +118,9 @@ class AOTBHDCPolicy(DialoguePolicy):
                     else:
                         dai = DialogueActItem("inform", slot, requested_slots[slot])
                         res_da.append(dai)
-                        dialogue_state["rh_"+slot] = "None"
+                        dialogue_state["rh_"+slot] = "none"
 
-                dialogue_state["rh_"+slot] = "None"
+                dialogue_state["rh_"+slot] = "none"
 
         elif confirmed_slots:
             # inform about all slots being confirmed by the user
@@ -143,7 +143,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                     dai = DialogueActItem("inform", slot, dialogue_state[slot])
                     res_da.append(dai)
 
-                dialogue_state["ch_"+slot] = "None"
+                dialogue_state["ch_"+slot] = "none"
         else:
             res_da = DialogueAct()
 
@@ -158,36 +158,45 @@ class AOTBHDCPolicy(DialoguePolicy):
                 res_da.extend(iconf_da)
 
             req_da = DialogueAct()
-            if dialogue_state['from_stop'] == "None" or dialogue_state['to_stop'] == "None":
-                if dialogue_state['time'] == "None" and randbool(9):
+            if dialogue_state['from_stop'] == "none" or dialogue_state['to_stop'] == "none":
+                if dialogue_state['time'] == "none" and randbool(9):
                     req_da.extend(DialogueAct('request(time)'))
-                elif dialogue_state['from_centre'] == "None" and dialogue_state['to_centre'] == "None" and randbool(9):
+                elif dialogue_state['from_centre'] == "none" and dialogue_state['to_centre'] == "none" and randbool(9):
                     if randbool(2):
                         req_da.extend(DialogueAct('confirm(from_centre="true")'))
                     else:
                         req_da.extend(DialogueAct('confirm(to_centre="true")'))
-                elif dialogue_state['from_stop'] == "None" and dialogue_state['to_stop'] == "None" and randbool(3):
+                elif dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and randbool(3):
                     req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-                elif dialogue_state['from_stop'] == "None":
+                elif dialogue_state['from_stop'] == "none":
                     req_da.extend(DialogueAct("request(from_stop)"))
-                elif dialogue_state['to_stop'] == "None":
+                elif dialogue_state['to_stop'] == "none":
                     req_da.extend(DialogueAct('request(to_stop)'))
 
             res_da.extend(req_da)
 
             if len(req_da) == 0:
-                dir_da = self.get_directions(dialogue_state)
-                res_da.extend(dir_da)
+
+                if dialogue_state['from_stop'] == dialogue_state['to_stop']:
+                    apology_da = DialogueAct()
+                    apology_da.extend(DialogueAct(u'apology()'))
+                    apology_da.extend(DialogueAct(u'inform(stops_conflict="thesame")'))
+                    apology_da.extend(DialogueAct(u"inform(from_stop='%s')" % dialogue_state['from_stop']))
+                    apology_da.extend(DialogueAct(u"inform(to_stop='%s')" % dialogue_state['to_stop']))
+                    res_da.extend(apology_da)
+                else:
+                    dir_da = self.get_directions(dialogue_state)
+                    res_da.extend(dir_da)
 
         if res_da is None:
             res_da = DialogueAct("notunderstood()")
 
-            if dialogue_state['from_stop'] == "None":
+            if dialogue_state['from_stop'] == "none":
                 res_da.append(DialogueActItem("help", "from_stop"))
-            elif dialogue_state['from_stop'] == "None":
+            elif dialogue_state['from_stop'] == "none":
                 res.append(DialogueActItem("help", "to_stop"))
 
-            dialogue_state["lda"] = "None"
+            dialogue_state["lda"] = "none"
 
         self.last_system_dialogue_act = res_da
 
@@ -230,7 +239,7 @@ class AOTBHDCPolicy(DialoguePolicy):
     def get_directions(self, dialogue_state):
 
         time = dialogue_state['time']
-        if time == "None" or time == "now":
+        if time == "none" or time == "now":
             time = self.get_default_time()
         else:
             time_parsed = datetime.datetime.strptime(time, "%H:%M")
@@ -249,42 +258,46 @@ class AOTBHDCPolicy(DialoguePolicy):
 
     def say_directions(self, dialogue_state):
         """Given the state say current directions."""
-        if dialogue_state['route_alternative'] == "None":
-            dialogue_state['route_alternative'] = 0
+        try:
+            if dialogue_state['route_alternative'] == "none":
+                dialogue_state['route_alternative'] = 0
 
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+            route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
 
-        leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
+            leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
 
-        res = []
+            res = []
 
-        if len(dialogue_state.directions) > 1:
-            if dialogue_state['route_alternative'] == 0:
-                res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
-            res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
-
-
-        for step_ndx, step in enumerate(leg.steps):
-            if step.travel_mode == step.MODE_TRANSIT:
-                res.append(u"inform(vehicle=%s)" % step.vehicle)
-                res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
-                res.append(u"inform(enter_at=%s)" % step.departure_stop)
-                res.append(u"inform(headsign=%s)" % step.headsign)
-                res.append(u"inform(exit_at=%s)" % step.arrival_stop)
-                res.append(u"inform(transfer='true')")
-
-        res = res[:-1]
-
-        if len(res) == 0:
-            res.append(u'apology()')
-            res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
-            res.append(u"inform(to_stop='%s')" % dialogue_state['to_stop'])
-
-        res_da = DialogueAct(u"&".join(res))
+            if len(dialogue_state.directions) > 1:
+                if dialogue_state['route_alternative'] == 0:
+                    res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
+                res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
 
 
-        return res_da
+            for step_ndx, step in enumerate(leg.steps):
+                if step.travel_mode == step.MODE_TRANSIT:
+                    res.append(u"inform(vehicle=%s)" % step.vehicle)
+                    res.append(u"inform(line=%s)" % step.line_name)
+                    res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
+                    res.append(u"inform(enter_at=%s)" % step.departure_stop)
+                    res.append(u"inform(headsign=%s)" % step.headsign)
+                    res.append(u"inform(exit_at=%s)" % step.arrival_stop)
+                    res.append(u"inform(transfer='true')")
+
+            res = res[:-1]
+
+            if len(res) == 0:
+                res.append(u'apology()')
+                res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
+                res.append(u"inform(to_stop='%s')" % dialogue_state['to_stop'])
+
+            res_da = DialogueAct(u"&".join(res))
+
+
+            return res_da
+        except:
+            import ipdb
+            ipdb.set_trace()
 
     def get_default_time(self):
         """Return default value for time."""
