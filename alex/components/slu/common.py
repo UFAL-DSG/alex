@@ -7,8 +7,24 @@ import autopath
 import inspect
 import sys
 
-from alex.components.slu.base import SLUInterface
+from alex.components.asr.utterance import load_utterances
+from alex.components.slu.base import ft_props, SLUInterface
 from alex.components.slu.exception import SLUException
+
+
+# Methods for loading DAs and observations from files.
+_load_meths = {'utt': load_utterances,
+               'utt_nbl': NotImplemented,
+               'utt_cn': NotImplemented,
+               'prev_da': NotImplemented,
+               'da_nbl': NotImplemented}
+# Names of config keys whose values specify the input file for that kind of
+# observations.
+_infile_cfgname = {'utt': 'utts_fname',
+                   'utt_nbl': None,
+                   'utt_cn': None,
+                   'prev_da': None,
+                   'da_nbl': None}
 
 
 def get_slu_type(cfg):
@@ -21,31 +37,37 @@ def get_slu_type(cfg):
     return cfg['SLU']['type']
 
 
-def load_data(cfg_tr):
+def load_data(cfg_this_slu, training=False):
     """
     Loads training data for SLU.
 
     Arguments:
-        cfg_tr -- the subconfig residing under the 'training' key of this SLU
-            type's config
+        cfg_tr -- the subconfig for this SLU type
+        training -- is the SLU about to be trained (as opposed to being tested
+            or used in general)?  This implies `require_model == False'.
 
     Returns a tuple (obss, das) of co-indexed dictionaries where `obss' has the
     training observations as values, and `das' has their corresponding DAs
     (object DialogueAct) as its values.
 
     """
-    from alex.components.asr.utterance import load_utterances
+    cfg_trte = (cfg_this_slu['training'] if training
+                else cfg_this_slu['testing'])
+    max_examples = cfg_trte.get('max_examples', None)
 
-    if 'das_loading_fun' in cfg_tr:
-        load_das = cfg_tr['das_loading_fun']
+    # Find the right function for loading DAs and load them.
+    if 'das_loading_fun' in cfg_this_slu:
+        load_das = cfg_this_slu['das_loading_fun']
     else:
         from alex.components.slu.da import load_das
+    das = load_das(cfg_trte['das_fname'], limit=max_examples)
 
-    # TODO Extend to handle other types of observation types.
-    utterances = load_utterances(cfg_tr['utts_fname'],
-                                 limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['das_fname'], limit=cfg_tr.get('max_examples', None))
-    obss = {'utt': utterances}
+    # Find what kinds of observations will be needed and load them.
+    obs_types = set(ft_props[ft].obs_type
+                    for ft in cfg_this_slu['features_type'])
+    obss = {obs_type: _load_meths[obs_type](
+                cfg_trte[_infile_cfgname[obs_type]], limit=max_examples)
+            for obs_type in obs_types}
 
     # Ensure all observations use exactly the same set of keys.
     common_keys = reduce(set.intersection,
@@ -180,7 +202,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
         # If a model needs to be trained yet,
         if training:
             # Construct the inputs and the outputs for learning.
-            obss, das = load_data(cfg_tr)
+            obss, das = load_data(cfg_this_slu, training=training)
             dai_clser.extract_features(das=das, obss=obss, verbose=verbose)
             dai_clser.prune_features(
                 min_feature_count=cfg_tr.get('min_feat_count', None),
