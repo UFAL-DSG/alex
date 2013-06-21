@@ -98,6 +98,7 @@ class Factor(object):
         :type prob_table: dict
         """
         self.variables = variables
+        assert self.variables == sorted(self.variables)
         self.variable_values = variable_values
         self.prob_table = prob_table
 

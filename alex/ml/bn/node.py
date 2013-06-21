@@ -301,7 +301,6 @@ class DirichletFactorNode(FactorNode):
 
         # Normalize weights:
         sum_of_weights = w_0 + w_k.marginalize(self.parents)
-        sum_of_weights = sum_of_weights.marginalize(self.parents)
         w_0 /= sum_of_weights
         w_k /= sum_of_weights
 
