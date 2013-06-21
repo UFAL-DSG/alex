@@ -367,28 +367,31 @@ class TestLBP(unittest.TestCase):
 
     def test_ep_tight(self):
         theta = DirichletParameterNode('theta', DiscreteFactor(
-            ['I'],
+            ['X', 'ZDummy'],
             {
-                'I': ['same', 'diff'],
+                'X': ['same', 'diff'],
+                'ZDummy': ['dummy']
             },
             {
-                ('same',): 1,
-                ('diff',): 1,
+                ('same', 'dummy'): 1,
+                ('diff', 'dummy'): 1,
             }
         ))
 
         X = DiscreteVariableNode('X', ['same', 'diff'])
+        D = DiscreteVariableNode('ZDummy', ['dummy'])
         f = DirichletFactorNode('f')
 
-        X.observed({('same',): 0.9, ('diff',): 0.1})
+        X.observed({('same',): 0.51, ('diff',): 0.49})
 
         f.connect(theta)
         f.connect(X, parent=False)
+        f.connect(D)
 
         # Add nodes to lbp.
         lbp = LBP(strategy='tree')
         lbp.add_nodes([
-            f, X, theta
+            f, X, D, theta
         ])
 
         for i in range(50):

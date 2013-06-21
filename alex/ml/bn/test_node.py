@@ -305,3 +305,30 @@ class TestNode(unittest.TestCase):
         print alpha.alpha
         self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 2, places=5)
         self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
+
+    def test_dir_tight(self):
+        theta = DirichletParameterNode('theta', DiscreteFactor(
+            ['X', 'ZDummy'],
+            {
+                'X': ['same', 'diff'],
+                'ZDummy': ['dummy']
+            },
+            {
+                ('same', 'dummy'): 1,
+                ('diff', 'dummy'): 1,
+            }
+        ))
+
+        X = DiscreteVariableNode('X', ['same', 'diff'])
+        D = DiscreteVariableNode('ZDummy', ['dummy'])
+        f = DirichletFactorNode('f')
+
+        X.observed({('same',): 0.9, ('diff',): 0.1})
+
+        f.connect(theta)
+        f.connect(X, parent=False)
+        f.connect(D)
+
+        X.message_to(f)
+        D.message_to(f)
+        f.message_to(theta)
