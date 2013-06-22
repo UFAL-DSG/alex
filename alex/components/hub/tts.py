@@ -116,7 +116,7 @@ class TTS(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['TTS']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
@@ -130,6 +130,8 @@ class TTS(multiprocessing.Process):
                     while self.text_in.poll():
                         data_in = self.text_in.recv()
 
+                    self.commands.send(Command("flushed()", 'TTS', 'HUB'))
+                    
                     return False
 
                 if command.parsed['__name__'] == 'synthesize':

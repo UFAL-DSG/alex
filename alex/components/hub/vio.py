@@ -361,7 +361,7 @@ class VoipIO(multiprocessing.Process):
 
         """
 
-        if self.local_commands:
+        while self.local_commands:
             command = self.local_commands.popleft()
 
             if isinstance(command, Command):
@@ -376,8 +376,6 @@ class VoipIO(multiprocessing.Process):
                     return True
 
                 if command.parsed['__name__'] == 'flush':
-                    self.local_commands.clear()
-
                     # discard all data in play buffer
                     while self.audio_play.poll():
                         data_play = self.audio_play.recv()
@@ -385,6 +383,14 @@ class VoipIO(multiprocessing.Process):
                     self.local_audio_play.clear()
                     self.mem_player.flush()
                     self.audio_playing = False
+
+                    # flush the recorded data
+                    while self.mem_capture.get_read_available():
+                        data_rec = self.mem_capture.get_frame()
+                    #self.mem_capture.flush()
+                    self.audio_recording = False
+
+                    self.commands.send(Command("flushed()", 'VoipIO', 'HUB'))
 
                     return False
 
@@ -397,6 +403,8 @@ class VoipIO(multiprocessing.Process):
                     self.mem_player.flush()
                     self.audio_playing = False
 
+                    self.commands.send(Command("flushed_out()", 'VoipIO', 'HUB'))
+                    
                     return False
 
                 if command.parsed['__name__'] == 'make_call':
@@ -452,7 +460,7 @@ class VoipIO(multiprocessing.Process):
         It should be a non-blocking operation.
         """
 
-        while (self.local_audio_play and
+        if (self.local_audio_play and
                 (self.mem_player.get_write_available()
                  > self.cfg['Audio']['samples_per_frame'] * 2)):
             # send a frame from input to be played
@@ -487,7 +495,7 @@ class VoipIO(multiprocessing.Process):
                     except SessionLoggerException as ex:
                         self.cfg['Logging']['system_logger'].exception(ex)
 
-        while (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
+        if (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
             data_rec = self.mem_capture.get_frame()
 
