@@ -238,6 +238,7 @@ class SystemLogger(object):
         Before writing into a logging file, it locks the file.
 
         """
+        
         if self.stdout:
             # Log to stdout.
             if (SystemLogger.levels[lvl] >=
@@ -290,7 +291,7 @@ class SystemLogger(object):
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
-        self.log('EXCEPTION', message + '\n' + tb)
+        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb))
 
     @global_lock(lock)
     def error(self, message):

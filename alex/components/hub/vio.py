@@ -479,7 +479,8 @@ class VoipIO(multiprocessing.Process):
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
                     try:
-                        self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                        if data_play.parsed['log'] == "true":
+                            self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
                     except SessionLoggerException as ex:
                         self.cfg['Logging']['system_logger'].exception(ex)
 
@@ -491,7 +492,8 @@ class VoipIO(multiprocessing.Process):
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
                     try:
-                        self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                        if data_play.parsed['log'] == "true":
+                            self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
                     except SessionLoggerException as ex:
                         self.cfg['Logging']['system_logger'].exception(ex)
 

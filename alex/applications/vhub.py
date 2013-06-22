@@ -188,11 +188,16 @@ class VoipHub(Hub):
 
                             if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
                                     last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
-
-                                tts_commands.send(Command('synthesize(text="%s")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
                                 # prepare for ending the call
-                                hangup = True
+                                call_start = time.time()
+                                number_of_turns = 0
                                 s_voice_activity = True
+                                s_last_voice_activity_time = time.time()
+                                u_voice_activity = False
+                                u_last_voice_activity_time = 0
+                                hangup = True
+                                
+                                tts_commands.send(Command('synthesize(text="%s",log="false")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
                                 vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
                                   time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
                                 m.append('CALL REJECTED')
@@ -249,7 +254,7 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "speech_start":
                             u_voice_activity = True
 
-                            if s_voice_activity  and s_last_voice_activity_time + 0.02 < current_time: 
+                            if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time: 
                                 self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 
