@@ -143,20 +143,20 @@ class AOTBSLU(SLUInterface):
                     cn.add(1.0, DialogueActItem("inform", 'time', time_value))
 
     def parse_meta(self, utterance, cn):
-
         if _any_word_in(utterance, ["ahoj",  "nazdar", "zdar", ]) or \
             _all_words_in(utterance, ["dobrý",  "den" ]):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if _any_word_in(utterance, ["nashledano", "shledano", "shle", "nashle", "sbohem", "bohem", "zbohem", "zbohem", "konec", "hledanou", "naschledanou"]):
+        if _any_word_in(utterance, ["nashledanou", "shledanou", "shle", "nashle", "sbohem", "bohem", "zbohem", "zbohem", "konec", "hledanou", "naschledanou"]):
             cn.add(1.0, DialogueActItem("bye"))
 
         if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
             cn.add(1.0, DialogueActItem("reqalts"))
 
-        if _any_word_in(utterance, ["zopakovat",  "opakovat", "znov", "opakuj", "zopakuj" ]) or \
-            _phrase_in(utterance, ["ještě", "jedno"]):
-            cn.add(1.0, DialogueActItem("repeat"))
+        if not _any_word_in(utterance, ["spojení", "zastávka", "stanice", "možnost"]):
+            if _any_word_in(utterance, ["zopakovat",  "opakovat", "znov", "opakuj", "zopakuj" ]) or \
+                _phrase_in(utterance, ["ještě", "jedno"]):
+                cn.add(1.0, DialogueActItem("repeat"))
 
         if _any_word_in(utterance, ["nápověda",  "pomoc", "help"]) or \
             _all_words_in(utterance, ["co", "říct"]) or \
@@ -212,6 +212,28 @@ class AOTBSLU(SLUInterface):
         if _any_word_in(utterance, ["kolik", "jsou", "je"]) and \
             _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
+
+        if _any_word_in(utterance, ["spojení", "možnost", "cesta", "zpoždění", "stažení"]):
+            if _any_word_in(utterance, ["první", ]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
+
+            if _any_word_in(utterance, ["druhé",]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
+
+            if _any_word_in(utterance, ["třetí",]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "3"))
+
+            if _any_word_in(utterance, ["čtvrté", "čtvrtá"]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
+
+            if _any_word_in(utterance, ["poslední", "znovu", ]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
+
+            if _any_word_in(utterance, ["další", "jiné", "následující"]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+
+            if _any_word_in(utterance, ["předchozí", "před"]):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
     def parse_1_best(self, utterance, verbose=False):
         """Parse an utterance into a dialogue act.
