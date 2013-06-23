@@ -150,8 +150,9 @@ class AOTBSLU(SLUInterface):
         if _any_word_in(utterance, ["nashledanou", "shledanou", "shle", "nashle", "sbohem", "bohem", "zbohem", "zbohem", "konec", "hledanou", "naschledanou"]):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
-            cn.add(1.0, DialogueActItem("reqalts"))
+        if not _any_word_in(utterance, ["spojení", "zastávka", "stanice", "možnost"]):
+            if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
+                cn.add(1.0, DialogueActItem("reqalts"))
 
         if not _any_word_in(utterance, ["spojení", "zastávka", "stanice", "možnost"]):
             if _any_word_in(utterance, ["zopakovat",  "opakovat", "znov", "opakuj", "zopakuj" ]) or \
