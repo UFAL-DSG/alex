@@ -222,11 +222,11 @@ class SystemLogger(object):
         """ Format the message - pretty print
         """
         s = self.get_time_str()
-        s += '  %-10s : ' % multiprocessing.current_process().name
-        s += '%-10s ' % lvl
-        s += '\n'
+        s += u'  %-10s : ' % multiprocessing.current_process().name
+        s += u'%-10s ' % lvl
+        s += u'\n'
 
-        ss = '    ' + unicode(message)
+        ss = u'    ' + unicode(message)
         ss = re.sub(r'\n', '\n    ', ss)
 
         return s + ss + '\n'
@@ -291,7 +291,7 @@ class SystemLogger(object):
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
-        self.log('EXCEPTION', unicode(message) + '\n' + unicode(str(tb).encode('utf8')))
+        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb, 'utf8'))
 
     @global_lock(lock)
     def error(self, message):
