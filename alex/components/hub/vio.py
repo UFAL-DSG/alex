@@ -638,7 +638,7 @@ class VoipIO(multiprocessing.Process):
                     'Making call to SIP URI which is not SIP URI - ' + uri)
 
         except pj.Error, e:
-            print "Exception: " + str(e)
+            print "Exception: " + unicode(e)
             return None
 
     def transfer(self, uri):
@@ -650,7 +650,7 @@ class VoipIO(multiprocessing.Process):
                 self.cfg['Logging']['system_logger'].debug("Transferring the call to %s" % uri)
             return self.call.transfer(uri)
         except pj.Error, e:
-            print "Exception: " + str(e)
+            print "Exception: " + unicode(e)
             return None
 
     def hangup(self):
@@ -661,7 +661,7 @@ class VoipIO(multiprocessing.Process):
 
                 return self.call.hangup()
         except pj.Error, e:
-            print "Exception: " + str(e)
+            print "Exception: " + unicode(e)
             return None
 
     def on_incoming_call(self, remote_uri):
@@ -780,7 +780,7 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].info("Registration complete, status = %s (%s)" %
                                                       (self.acc.info().reg_status, self.acc.info().reg_reason))
 
-            my_sip_uri = "sip:" + self.transport.info().host + ":" + str(self.transport.info().port)
+            my_sip_uri = "sip:" + self.transport.info().host + ":" + unicode(self.transport.info().port)
 
             # Create memory player
             self.mem_player = pj.MemPlayer(pj.Lib.instance(), self.cfg['Audio']['sample_rate'])

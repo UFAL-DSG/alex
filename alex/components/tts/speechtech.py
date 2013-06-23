@@ -61,8 +61,7 @@ class SpeechtechTTS(TTSInterface):
             i = 20
             while i:
                 params = urllib.urlencode([('task_id', task_id)])
-                resp = urllib2.urlopen(
-                    '%s/query_status' % ROOT_URI, params).read().splitlines()
+                resp = urllib2.urlopen('%s/query_status' % ROOT_URI, params).read().splitlines()
                 code = int(resp[0])
                 #print 'Status is', code
                 if code == 3:

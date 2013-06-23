@@ -291,7 +291,7 @@ class SystemLogger(object):
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
-        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb))
+        self.log('EXCEPTION', unicode(message) + '\n' + unicode(str(tb).encode('utf8')))
 
     @global_lock(lock)
     def error(self, message):
