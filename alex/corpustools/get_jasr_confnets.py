@@ -147,7 +147,7 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                         traceback.print_exc()
                         print "get_jasr_confnets: Restarting Julius."
                         clean_up(jul, grep, errfile)
-                        jul = None
+                        jul, grep, errfile = start_julius(cfg, on_no_context)
                     else:
                         exception = None
 

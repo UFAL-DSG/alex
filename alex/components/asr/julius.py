@@ -193,7 +193,7 @@ class JuliusASR(object):
         # With this option, it does not generate segfaults.
         if self.debug:
             print 'Starting Julius as:', ' '.join(
-                jbin, '-debug', '-C', jconf_fname)
+                [jbin, '-debug', '-C', jconf_fname])
             print 'other Popen kwargs:', popen_kwargs
         self.julius_server = subprocess.Popen(
             [jbin, '-debug', '-C', jconf_fname], **popen_kwargs)
