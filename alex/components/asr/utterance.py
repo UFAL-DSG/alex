@@ -5,9 +5,6 @@
 
 from __future__ import unicode_literals
 
-# DEBUG
-_n_called = 0
-
 import copy
 from itertools import izip, product
 from operator import itemgetter, mul
@@ -550,8 +547,6 @@ class UtteranceNBList(ASRHypothesis, NBList):
         try:
             return NBList.add_other(self, Utterance('__other__'))
         except NBListException as ex:
-            # # DEBUG
-            # import ipdb; ipdb.set_trace()
             raise UtteranceNBListException(ex)
 
     # XXX It is now a class invariant that the n-best list is sorted.
@@ -807,9 +802,6 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             if widx >= 0:
                 yield (self._cn[widx][altidx][1], )
             else:
-                # DEBUG
-                # if len(self._long_links[-widx]) <= altidx:
-                    # import ipdb; ipdb.set_trace()
                 yield (self._long_links[-widx][altidx].hyp[1][0], )
 
     def join_typeval(self, type_, val):

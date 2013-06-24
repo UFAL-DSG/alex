@@ -461,10 +461,10 @@ class SLUPreprocessing(object):
                     print "(EE) " + unicode(ex)
                     traceback.print_exc()
                     # DEBUG
-                    import ipdb; ipdb.set_trace()
-                    confnet_cp = confnet_cp.replace(surface, (value, ))
-                    confnet_cp = confnet_cp.phrase2category_label(
-                        (value, ), (slot_upper, ))
+                    # import ipdb; ipdb.set_trace()
+                    # confnet_cp = confnet_cp.replace(surface, (value, ))
+                    # confnet_cp = confnet_cp.phrase2category_label(
+                        # (value, ), (slot_upper, ))
 
         return confnet_cp, valform_for_cl
 
