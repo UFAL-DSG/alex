@@ -89,7 +89,7 @@ def start_julius(cfg, callback, err_fname='julius.err'):
 
 
 def clean_up(jul, grep, errfile):
-    jul.kill_all_juliuses()
+    jul.kill_my_julius()
     grep.flush()
     grep.terminate()
     errfile.close()

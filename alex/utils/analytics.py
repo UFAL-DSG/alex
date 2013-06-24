@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+
+from __future__ import unicode_literals
 
 import traceback
 
@@ -7,18 +10,22 @@ from pyga.requests import Tracker, Page, Event, Session, Visitor
 
 from alex.utils.mproc import async
 
-class Analytics(object):
-    """ This is a wrapper aroung Google Analytics tracking code.
 
-    All interaction with GA should be asynchronous so that the main code is not delayed.
+class Analytics(object):
     """
-    def __init__(self, account_id = None, domain_name = None):
+    This is a wrapper for Google Analytics tracking code.
+
+    All interaction with GA should be asynchronous so that the main code is not
+    delayed.
+    """
+    def __init__(self, account_id=None, domain_name=None):
         self.account_id = account_id
         self.domain_name = domain_name
 
     def __repr__(self):
-        return "Analytics(account_id='{account_id}', domain_name='{domain_name}')".\
-            format(account_id=self.account_id, domain_name=self.domain_name)
+        return ("Analytics(account_id='{account_id}', "
+                "domain_name='{domain_name}')").format(
+                    account_id=self.account_id, domain_name=self.domain_name)
 
     def start_session(self, caller_id):
         self.caller_id = caller_id
@@ -39,9 +46,11 @@ class Analytics(object):
     def track_pageview(self, page):
         try:
             if self.account_id:
-                self.tracker.track_pageview(Page(page), self.session, self.visitor)
+                self.tracker.track_pageview(Page(page), self.session,
+                                            self.visitor)
         except:
-            print('Uncaught exception in Analytics process: \n' + traceback.format_exc())
+            print('Uncaught exception in Analytics process:\n'
+                  + traceback.format_exc())
 
     @async
     def track_event(self, category=None, action=None, label=None, value=None):
@@ -50,6 +59,8 @@ class Analytics(object):
                 if label is None:
                     label = self.caller_id
 
-                self.tracker.track_event(Event(category, action, label, value), self.session, self.visitor)
+                self.tracker.track_event(Event(category, action, label, value),
+                                         self.session, self.visitor)
         except:
-            print('Uncaught exception in Analytics process: \n' + traceback.format_exc())
+            print('Uncaught exception in Analytics process:\n'
+                  + traceback.format_exc())

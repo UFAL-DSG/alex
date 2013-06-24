@@ -211,9 +211,10 @@ class AOTBSLU(SLUInterface):
             _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
-    def parse_1_best(self, utterance, verbose=False):
-        """Parse an utterance into a dialogue act.
-        """
+    def parse_1_best(self, obs, verbose=False):
+        """Parse an utterance into a dialogue act."""
+        utterance = obs['utt']
+
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -245,39 +246,44 @@ class AOTBSLU(SLUInterface):
 
         return res_cn
 
-    def parse_nblist(self, utterance_list):
-        """Parse N-best list by parsing each item in the list and then merging
-        the results."""
-
-        if len(utterance_list) == 0:
-            return DialogueActConfusionNetwork()
-
-        confnet_hyps = []
-        for prob, utt in utterance_list:
-            if "__other__" == utt:
-                confnet = DialogueActConfusionNetwork()
-                confnet.add(1.0, DialogueActItem("other"))
-            else:
-                confnet = self.parse_1_best(utt)
-
-            confnet_hyps.append((prob, confnet))
-
-            # print prob, utt
-            # confnet.prune()
-            # confnet.sort()
-            # print confnet
-
-        confnet = merge_slu_confnets(confnet_hyps)
-        confnet.prune()
-        confnet.sort()
-
-        return confnet
-
-    def parse_confnet(self, confnet, verbose=False):
-        """Parse the confusion network by generating an N-best list and parsing
-        this N-best list."""
-
-        nblist = confnet.get_utterance_nblist(n=40)
-        sem = self.parse_nblist(nblist)
-
-        return sem
+    # def parse_nblist(self, obs):
+        # """
+        # Parses n-best list by parsing each item on the list and then merging
+        # the results.
+        # """
+#
+        # utterance_list = obs['utt_nbl']
+        # if len(utterance_list) == 0:
+            # return DialogueActConfusionNetwork()
+#
+        # confnet_hyps = []
+        # for prob, utt in utterance_list:
+            # if "__other__" == utt:
+                # confnet = DialogueActConfusionNetwork()
+                # confnet.add(1.0, DialogueActItem("other"))
+            # else:
+                # confnet = self.parse_1_best({'utt': utt})
+#
+            # confnet_hyps.append((prob, confnet))
+#
+            # # print prob, utt
+            # # confnet.prune()
+            # # confnet.sort()
+            # # print confnet
+#
+        # confnet = merge_slu_confnets(confnet_hyps)
+        # confnet.prune()
+        # confnet.sort()
+#
+        # return confnet
+#
+    # def parse_confnet(self, obs, verbose=False):
+        # """
+        # Parses the word confusion network by generating an n-best list and
+        # parsing this n-best list.
+        # """
+#
+        # confnet = obs['utt_cn']
+        # nblist = confnet.get_utterance_nblist(n=40)
+        # sem = self.parse_nblist({'utt_nbl': nblist})
+        # return sem

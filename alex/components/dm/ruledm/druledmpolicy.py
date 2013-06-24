@@ -125,7 +125,7 @@ class DRuleDS(RuleDS):
         return self.user_state.get(key, default)
 
 
-class DRuleDMPolicy:
+class DRuleDMPolicy(object):
     db_cls = lambda cfg: None
 
     def __init__(self, slots, db_cfg):

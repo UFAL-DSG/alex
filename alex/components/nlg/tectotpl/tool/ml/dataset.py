@@ -19,12 +19,12 @@ __date__ = "2012"
 
 
 class Attribute(object):
-    """\
+    """
     This represents an attribute of the data set.
     """
 
     def __init__(self, name, type_spec):
-        """\
+        """
         Initialize an attribute, given its ARFF specification.
         Sets the attribute type, list of labels and list of possible values.
         """
@@ -62,7 +62,7 @@ class Attribute(object):
             raise TypeError('Unsupported attribute type: ' + type_spec)
 
     def numeric_value(self, value):
-        """\
+        """
         Return a numeric representation of the given value.
         Raise a ValueError if the given value does not conform to the
         attribute type.
@@ -88,7 +88,7 @@ class Attribute(object):
             return self.values[value]
 
     def soft_numeric_value(self, value, add_values):
-        """\
+        """
         Same as numeric_value(), but will not raise exceptions for unknown
         numeric/string values. Will either add the value to the list or
         return a NaN (depending on the add_values setting).
@@ -117,7 +117,7 @@ class Attribute(object):
             return self.values[value]
 
     def value(self, numeric_val):
-        """\
+        """
         Given a numeric (int/float) value, returns the corresponding string
         value for string or nominal attributes, or the identical value for
         numeric attributes.
@@ -131,7 +131,7 @@ class Attribute(object):
         return self.labels[int(numeric_val)]
 
     def get_arff_type(self):
-        """\
+        """
         Return the ARFF type of the given attribute (numeric, string or
         list of values for nominal attributes).
         """
@@ -143,14 +143,14 @@ class Attribute(object):
             return self.type
 
     def values_set(self):
-        """\
+        """
         Return a set of all possible values for this attribute.
         """
         return set(self.labels)
 
     @property
     def num_values(self):
-        """\
+        """
         Return the number of distinct values found in this attribute.
         Returns -1 for numeric attributes where the number of values is
         not known.
@@ -161,13 +161,13 @@ class Attribute(object):
             return len(self.labels)
 
     def __repr__(self):
-        """\
+        """
         This is the same as __str__.
         """
         return self.__str__()
 
     def __str__(self):
-        """\
+        """
         String representation returns the attribute name and type.
         """
         return self.__class__.__name__ + ': ' + \
@@ -175,7 +175,7 @@ class Attribute(object):
 
 
 class DataSet(object):
-    """\
+    """
     ARFF relation data representation.
     """
 
@@ -192,7 +192,7 @@ class DataSet(object):
     SPEC_CHARS = r'[\n\r\'"\\\t%]'
 
     def __init__(self):
-        """\
+        """
         Just initialize the internal data structures (as empty).
         """
         self.relation_name = ''
@@ -204,13 +204,13 @@ class DataSet(object):
 
     @property
     def is_empty(self):
-        """\
+        """
         Return true if the data structures are empty.
         """
         return not self.relation_name and not self.data and not self.attribs
 
     def as_dict(self, mask_attrib=[], select_attrib=[]):
-        """\
+        """
         Return the data as a list of dictionaries, which is useful
         as an input to DictVectorizer.
 
@@ -237,7 +237,7 @@ class DataSet(object):
         return ret
 
     def as_bunch(self, target, mask_attrib=[], select_attrib=[]):
-        """\
+        """
         Return the data as a scikit-learn Bunch object. The target parameter
         specifies the class attribute.
         """
@@ -272,7 +272,7 @@ class DataSet(object):
                      target_names=self.attribs[target].labels)
 
     def load_from_arff(self, filename, encoding='UTF-8'):
-        """\
+        """
         Load an ARFF file/stream, filling the data structures.
         """
         # initialize
@@ -315,7 +315,7 @@ class DataSet(object):
                                 for idx, attr in enumerate(self.attribs)}
 
     def save_to_arff(self, filename, encoding='UTF-8'):
-        """\
+        """
         Save the data set to an ARFF file
         """
         # open the file
@@ -334,7 +334,7 @@ class DataSet(object):
             print >> fh, self.__get_arff_line(inst, weight)
 
     def load_from_matrix(self, attr_list, matrix):
-        """\
+        """
         Fill in values from a matrix.
         """
         # initialize
@@ -356,7 +356,7 @@ class DataSet(object):
             self.data = [matrix[line] for line in xrange(matrix.shape[0])]
 
     def load_from_vect(self, attrib, vect):
-        """\
+        """
         Fill in values from a vector of values and an attribute (allow adding
         values for nominal attributes).
         """
@@ -369,7 +369,7 @@ class DataSet(object):
         self.data = [[attrib.soft_numeric_value(val, True)] for val in vect]
 
     def load_from_dict(self, data, attrib_types={}):
-        """\
+        """
         Fill in values from a list of dictionaries (=instances).
         Attributes are assumed to be of string type unless specified
         otherwise in the attrib_types variable.
@@ -406,7 +406,7 @@ class DataSet(object):
             self.data.append(inst)
 
     def attrib_index(self, attrib_name):
-        """\
+        """
         Given an attribute name, return its number. Given a number, return
         precisely that number. Return -1 on failure.
         """
@@ -415,7 +415,7 @@ class DataSet(object):
         return self.attribs_by_name.get(attrib_name, -1)
 
     def get_attrib(self, attrib):
-        """\
+        """
         Given an attribute name or index, return the Attribute object.
         """
         if isinstance(attrib, basestring):
@@ -423,7 +423,7 @@ class DataSet(object):
         return self.attribs[attrib]
 
     def get_headers(self):
-        """\
+        """
         Return a copy of the headers of this data set (just attributes list,
         relation name and sparse/dense setting)
         """
@@ -436,7 +436,7 @@ class DataSet(object):
         return ret
 
     def attrib_as_vect(self, attrib, dtype=None):
-        """\
+        """
         Return the specified attribute (by index or name) as a list
         of values.
         If the data type parameter is left as default, the type of the returned
@@ -459,7 +459,7 @@ class DataSet(object):
             return [dtype(line[attrib]) for line in self.data]
 
     def rename_attrib(self, old_name, new_name):
-        """\
+        """
         Rename an attribute of this data set (find it by original name or
         by index).
         """
@@ -467,7 +467,7 @@ class DataSet(object):
         attr.name = new_name
 
     def separate_attrib(self, attribs):
-        """\
+        """
         Given a list of attributes, delete them from the data set
         and return them as a new separate data set.
         Accepts a list of names or indexes, or one name, or one index.
@@ -528,7 +528,7 @@ class DataSet(object):
         return separ
 
     def delete_attrib(self, attribs):
-        """\
+        """
         Given a list of attributes, delete them from the data set.
         Accepts a list of names or indexes, or one name, or one index.
         """
@@ -559,7 +559,7 @@ class DataSet(object):
                                 for idx, attr in enumerate(self.attribs)}
 
     def merge(self, other):
-        """\
+        """
         Merge two DataSet objects. The list of attributes will be concatenated.
         The two data sets must have the same number of instances and
         be either both sparse or both non-sparse.
@@ -587,7 +587,7 @@ class DataSet(object):
         self.relation_name += '_' + other.relation_name
 
     def append(self, other):
-        """\
+        """
         Append instances from one data set to another. Their attributes must
         be compatible (of the same types).
         """
@@ -600,7 +600,7 @@ class DataSet(object):
             self.inst_weights.extend(copy.deepcopy(other.inst_weights))
 
     def add_attrib(self, attrib, values=None):
-        """\
+        """
         Add a new attribute to the data set, with pre-filled values
         (or missing, if not set).
         """
@@ -616,7 +616,7 @@ class DataSet(object):
         self.merge(temp)
 
     def match_headers(self, other, add_values=False):
-        """\
+        """
         Force this data set to have equal headers as the other data set.
         This cares for different values of nominal/numeric attributes --
         (numeric values will be the same, values unknown in the other data
@@ -633,7 +633,7 @@ class DataSet(object):
         self.attribs = [copy.deepcopy(attr) for attr in other.attribs]
 
     def value(self, instance, attr_idx):
-        """\
+        """
         Return the value of the given instance and attribute.
         """
         if isinstance(attr_idx, basestring):
@@ -644,7 +644,7 @@ class DataSet(object):
         return attr.value(self.data[instance][attr_idx])
 
     def instance(self, index, dtype='dict', do_copy=True):
-        """\
+        """
         Return the given instance as a dictionary (or a list, if specified).
 
         If do_copy is set to False, do not create a copy of the list for
@@ -664,7 +664,7 @@ class DataSet(object):
         raise ValueError('Unsupported data type')
 
     def subset(self, *args, **kwargs):
-        """\
+        """
         Return a data set representing a subset of this data set's values.
 
         Args can be a slice or [start, ] stop [, stride] to create a slice.
@@ -707,7 +707,7 @@ class DataSet(object):
         return subset
 
     def filter(self, filter_func, keep_copy=True):
-        """\
+        """
         Filter the data set using a filtering function and return a
         filtered data set.
 
@@ -740,7 +740,7 @@ class DataSet(object):
         return filtered
 
     def split(self, split_func, keep_copy=True):
-        """\
+        """
         Split the data set using a splitting function and return a dictionary
         where keys are different return values of the splitting function and
         values are data sets containing instances which yield the respective
@@ -767,7 +767,7 @@ class DataSet(object):
         return ret
 
     def __parse_line(self, line, line_num):
-        """"\
+        """"
         Parse one ARFF data line (dense or sparse, return appropriate
         array).
         """
@@ -825,7 +825,7 @@ class DataSet(object):
             return values, weight
 
     def __get_attrib_list(self, attribs):
-        """\
+        """
         Convert the given list of names or indexes, or one name, or one index
         to a list and a set of indexes.
         """
@@ -841,7 +841,7 @@ class DataSet(object):
         return attribs, attribs_set
 
     def __check_headers(self, other):
-        """\
+        """
         Sanity check for appending / headers matching. Checks if the data sets
         have the same number of attributes and if the attributes are of the
         same type. Same values for numeric/string attributes are not required.
@@ -854,7 +854,7 @@ class DataSet(object):
                                  other_attr + ' must be of the same type!')
 
     def __convert_to_headers(self, inst, other, add_values):
-        """\
+        """
         Convert numeric values for an instance to match the string/nominal
         headers of the given data set. Returns a new instance (dense or
         sparse).
@@ -879,7 +879,7 @@ class DataSet(object):
                               for col, val in enumerate(vals)]
 
     def __get_numeric_value(self, attr_num, value, line_num):
-        """\
+        """
         Return the attribute value as a float,
         i.e. convert the string value to number for numeric attributes,
         look up the value number for nominal ones and keep track of possible
@@ -895,7 +895,7 @@ class DataSet(object):
             raise ValueError(e.message + ' on line ' + str(line_num))
 
     def __get_arff_line(self, inst, weight=1.0):
-        """\
+        """
         Return a sparse or a dense ARFF data line
         """
         if self.is_sparse:
@@ -911,7 +911,7 @@ class DataSet(object):
         return ret
 
     def __get_arff_val(self, attr_num, value):
-        """\
+        """
         Return an ARFF-output safe value.
         """
         # missing values
@@ -934,7 +934,7 @@ class DataSet(object):
             return value if not quote else "'" + value + "'"
 
     def __metadata_copy(self, add_to_name=''):
-        """\
+        """
         Returns a copy of this data set with no instances.
         Adds the specified string to the name if required.
         """
@@ -947,7 +947,7 @@ class DataSet(object):
         return my_copy
 
     def __get_mask_set(self, select_attrib, mask_attrib):
-        """\
+        """
         Given a list of specifically selected or specifically masked
         attributes, this returns the set of attributes to avoid.
         """
@@ -961,13 +961,13 @@ class DataSet(object):
         return mask_set | deselect_set
 
     def __len__(self):
-        """\
+        """
         Return the number of instances in this data set.
         """
         return len(self.data)
 
     def __getitem__(self, key):
-        """\
+        """
         This supports access to individual instances by index (will
         be returned as a dict), to individual attributes (returned as
         vector of values) or slicing and filtering (see subset() and
@@ -993,13 +993,13 @@ class DataSet(object):
         raise ValueError('Unsupported index type!')
 
     def __repr__(self):
-        """\
+        """
         This is the same as __str__.
         """
         return self.__str__()
 
     def __str__(self):
-        """\
+        """
         String representation returns the relation name, number of
         attributes and instances.
         """
@@ -1015,19 +1015,19 @@ class DataSet(object):
         return ret
 
     def __iter__(self):
-        """\
+        """
         Return an iterator over instances.
         """
         return DataSetIterator(self)
 
 
 class DataSetIterator(object):
-    """\
+    """
     An iterator over the instances of a data set.
     """
 
     def __init__(self, dataset):
-        """\
+        """
         Initialize pointing at the beginning.
         """
         self.dataset = dataset
@@ -1037,7 +1037,7 @@ class DataSetIterator(object):
         return self
 
     def next(self):
-        """\
+        """
         Move to the next instance.
         """
         try:

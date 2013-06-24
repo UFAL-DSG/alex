@@ -50,5 +50,9 @@ def load_wavaskey(fname, constructor, limit=None, encoding='UTF-8'):
                 key = unicode(line_idx)
                 utt_str = parts[0]
 
-            ret_dict[key] = constructor(utt_str)
+            try:
+                ret_dict[key] = constructor(utt_str)
+            except Exception as ex:
+                # TODO Probably should be logged.
+                pass
     return ret_dict

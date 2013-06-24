@@ -23,5 +23,5 @@ class TemplateClassifier(object):
     def readRules(self, file_name):
         pass
 
-    def parse(self, asrHyp):
+    def parse(self, asr_hyp):
         pass
