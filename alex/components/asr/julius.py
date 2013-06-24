@@ -31,7 +31,7 @@ class JuliusASRTimeoutException(ASRException):
 
 
 class JuliusASR(object):
-    """\
+    """
     Uses Julius ASR service to recognize recorded audio.
 
     The main function, `get_results`, returns the hypotheses as an n-best list
@@ -74,7 +74,7 @@ class JuliusASR(object):
                     self.kill_my_julius()
                     system_logger.debug("I just commited murder, Julius is "
                                         "dead!")
-                else:
+                elif self.cfg['ASR']['Julius']['killall']:
                     self.kill_all_juliuses()
                     system_logger.debug("I just killed ALL JULIŌS!")
 
@@ -91,22 +91,22 @@ class JuliusASR(object):
         except Exception as e:
             system_logger.debug("There was a problem with starting the "
                                 "Julius ASR server: {msg!s}".format(msg=e))
-            # DEBUG
-            import sys
-            sys.excepthook(*sys.exc_info())
+            if self.debug:
+                import sys
+                sys.excepthook(*sys.exc_info())
             # Always kill the Julius ASR server when there is a problem.
             if self.julius_server:
                 system_logger.debug("Killing the Julius ASR server!")
                 self.julius_server.kill()
 
-            system_logger.debug("Exiting!")
+            system_logger.debug("Exiting.")
             exit(0)
 
     def __del__(self):
         # FIXME We might want to rewrite this functionality as a context
         # manager. Cf.
         # http://stackoverflow.com/questions/865115/how-do-i-correctly-clean-up-a-python-object.
-        if not self.reuse_server:
+        if self.julius_server and not self.reuse_server:
             self.julius_server.terminate()
             time.sleep(1)
             self.julius_server.kill()
@@ -167,7 +167,7 @@ class JuliusASR(object):
             f_out.write(str(pid))
 
     def start_server(self, popen_kwargs=dict()):
-        jconf_fname = self.jconf_fname
+        jconf_fname = os.path.abspath(self.jconf_fname)
         self.logfile = open(self.log_fname, 'a+')
         jbin = self.jbin
 
@@ -191,6 +191,10 @@ class JuliusASR(object):
 
         # Start the server with the -debug option.
         # With this option, it does not generate segfaults.
+        if self.debug:
+            print 'Starting Julius as:', ' '.join(
+								[jbin, '-debug', '-C', jconf_fname])
+            print 'other Popen kwargs:', popen_kwargs
         self.julius_server = subprocess.Popen(
             [jbin, '-debug', '-C', jconf_fname], **popen_kwargs)
         # XXX If using shell in Popen, beware that Julius gets another
@@ -239,7 +243,7 @@ class JuliusASR(object):
         return cmd
 
     def read_server_message(self, timeout=0.3):
-        """\
+        """
         Reads a complete message from the Julius ASR server.
 
         A complete message is denoted by a period on a new line at the end of
@@ -292,7 +296,7 @@ class JuliusASR(object):
         return results
 
     def get_results(self, timeout=0.6):
-        """"\
+        """"
         Waits for the complete recognition results from the Julius ASR server.
 
         Timeout specifies how long it will wait for the end of message.
@@ -463,7 +467,7 @@ class JuliusASR(object):
         return nblist, cn
 
     def flush(self):
-        """\
+        """
         Sends a command to the Julius ASR to terminate recognition and get
         ready for new recognition.
 
@@ -480,7 +484,7 @@ class JuliusASR(object):
         return
 
     def rec_in(self, frame):
-        """\
+        """
         This defines asynchronous interface for speech recognition.
 
         Call this input function with audio data belonging into one speech
@@ -495,7 +499,7 @@ class JuliusASR(object):
         return
 
     def hyp_out(self):
-        """\
+        """
         This defines asynchronous interface for speech recognition.
 
         Returns recognizers hypotheses about the input speech audio and
