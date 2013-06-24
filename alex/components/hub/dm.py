@@ -44,7 +44,7 @@ class DM(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['DM']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
@@ -60,6 +60,8 @@ class DM(multiprocessing.Process):
 
                     self.dm.end_dialogue()
 
+                    self.commands.send(Command("flushed()", 'DM', 'HUB'))
+                    
                     return False
 
                 if command.parsed['__name__'] == 'new_dialogue':
@@ -81,6 +83,7 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                     self.dialogue_act_out.send(DMDA(da))
+                    
                     self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
 
                     return False
@@ -93,7 +96,7 @@ class DM(multiprocessing.Process):
 
     def read_slu_hypotheses_write_dialogue_act(self):
         # read SLU hypothesis
-        while self.slu_hypotheses_in.poll():
+        if self.slu_hypotheses_in.poll():
             # read SLU hypothesis
             data_slu = self.slu_hypotheses_in.recv()
 

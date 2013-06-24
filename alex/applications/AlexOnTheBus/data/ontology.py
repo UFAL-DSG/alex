@@ -10,6 +10,7 @@ ontology = {
         'time': set(['now', '7:00', ]), 
         'from_centre': set(['dontcare', 'dontknow', 'true', 'false']), 
         'to_centre': set(['dontcare', 'dontknow', 'true', 'false']), 
+        'alternative': set(['dontcare', 'first', 'second', 'third', 'forth', 'last', 'next', 'prev']), 
     },
         
     'slot_attributes': {
@@ -42,8 +43,13 @@ ontology = {
         ],
         'num_transfers': [
             'user_requests',
+            'system_informs',
         ],
-            
+
+        'alternative': [
+            'user_informs',
+        ],
+
         # not implemented yet
         'transfer_stops': [
             'user_requests',

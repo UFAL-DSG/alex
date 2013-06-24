@@ -69,7 +69,7 @@ class SLU(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['NLG']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
@@ -86,12 +86,14 @@ class SLU(multiprocessing.Process):
                     # the SLU components does not have to be flushed
                     # self.slu.flush()
 
+                    self.commands.send(Command("flushed()", 'SLU', 'HUB'))
+
                     return False
 
         return False
 
     def read_asr_hypotheses_write_slu_hypotheses(self):
-        while self.asr_hypotheses_in.poll():
+        if self.asr_hypotheses_in.poll():
             data_asr = self.asr_hypotheses_in.recv()
 
             if isinstance(data_asr, ASRHyp):

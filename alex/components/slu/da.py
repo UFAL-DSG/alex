@@ -425,8 +425,8 @@ class DialogueAct(object):
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
-                (isinstance(dai, str)
-                 and any(dai == str(my_dai) for my_dai in self._dais)))
+                (isinstance(dai, basestring)
+                 and any(dai == unicode(my_dai) for my_dai in self._dais)))
 
     def __cmp__(self, other):
         if isinstance(other, DialogueAct):
@@ -443,7 +443,7 @@ class DialogueAct(object):
             mydais_sorted = sorted(self._dais)
             self_sorted = DialogueAct()
             self_sorted._dais = mydais_sorted
-            self_str = str(self_sorted)
+            self_str = unicode(self_sorted)
             return (self_str >= other) - (other >= self_str)
         else:
             DialogueActException("Unsupported comparison type.")

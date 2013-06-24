@@ -92,7 +92,7 @@ class ASR(multiprocessing.Process):
         Returns True iff the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['ASR']['debug']:
                 self.system_logger.debug(command)
@@ -109,13 +109,15 @@ class ASR(multiprocessing.Process):
                     self.asr.flush()
                     self.recognition_on = False
 
+                    self.commands.send(Command("flushed()", 'ASR', 'HUB'))
+                    
                     return False
 
         return False
 
     def read_audio_write_asr_hypotheses(self):
         # Read input audio.
-        while self.audio_in.poll():
+        if self.audio_in.poll():
             # Read recorded audio.
             data_rec = self.audio_in.recv()
 

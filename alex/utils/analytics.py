@@ -49,8 +49,8 @@ class Analytics(object):
                 self.tracker.track_pageview(Page(page), self.session,
                                             self.visitor)
         except:
-            print('Uncaught exception in Analytics process:\n'
-                  + traceback.format_exc())
+            print ('Uncaught exception in Analytics process: \n'
+                   + unicode(traceback.format_exc(), 'utf8'))
 
     @async
     def track_event(self, category=None, action=None, label=None, value=None):
@@ -62,5 +62,5 @@ class Analytics(object):
                 self.tracker.track_event(Event(category, action, label, value),
                                          self.session, self.visitor)
         except:
-            print('Uncaught exception in Analytics process:\n'
-                  + traceback.format_exc())
+            print ('Uncaught exception in Analytics process: \n'
+                   + unicode(traceback.format_exc(), 'utf8'))

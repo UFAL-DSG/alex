@@ -112,6 +112,7 @@ def async(func):
 
     return async_func
 
+
 class InstanceID(object):
     """ This class provides unique ids to all instances of objects inheriting
     from this class.
@@ -119,12 +120,12 @@ class InstanceID(object):
     """
 
     lock = multiprocessing.Lock()
-    instance_id = 0
+    instance_id = multiprocessing.Value('i', 0)
 
     @global_lock(lock)
     def get_instance_id(self):
-        InstanceID.instance_id += 1
-        return InstanceID.instance_id
+        InstanceID.instance_id.value += 1
+        return InstanceID.instance_id.value
 
 
 class SystemLogger(object):
@@ -172,8 +173,7 @@ class SystemLogger(object):
         It is useful in constructing file and directory names.
 
         """
-        return '{dt}-{tz}'.format(
-            dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
+        return '{dt}-{tz}'.format(dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
             tz=time.tzname[time.localtime().tm_isdst])
 
     @global_lock(lock)
@@ -222,11 +222,11 @@ class SystemLogger(object):
         """ Format the message - pretty print
         """
         s = self.get_time_str()
-        s += '  %-10s : ' % multiprocessing.current_process().name
-        s += '%-10s ' % lvl
-        s += '\n'
+        s += u'  %-10s : ' % multiprocessing.current_process().name
+        s += u'%-10s ' % lvl
+        s += u'\n'
 
-        ss = '    ' + unicode(message)
+        ss = u'    ' + unicode(message)
         ss = re.sub(r'\n', '\n    ', ss)
 
         return s + ss + '\n'
@@ -238,6 +238,7 @@ class SystemLogger(object):
         Before writing into a logging file, it locks the file.
 
         """
+        
         if self.stdout:
             # Log to stdout.
             if (SystemLogger.levels[lvl] >=
@@ -290,7 +291,7 @@ class SystemLogger(object):
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
-        self.log('EXCEPTION', message + '\n' + tb)
+        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb, 'utf8'))
 
     @global_lock(lock)
     def error(self, message):

@@ -55,15 +55,13 @@ class SpeechtechTTS(TTSInterface):
             urllib2.install_opener(opener)
 
             params = urllib.urlencode([('text', text.encode('utf8')), ('engine', voice.encode('utf8'))])
-            task_id = urllib2.urlopen(
-                '%s/add_to_queue' % ROOT_URI, params).read().strip()
+            task_id = urllib2.urlopen('%s/add_to_queue' % ROOT_URI, params).read().strip()
 
             uri = None
             i = 20
             while i:
                 params = urllib.urlencode([('task_id', task_id)])
-                resp = urllib2.urlopen(
-                    '%s/query_status' % ROOT_URI, params).read().splitlines()
+                resp = urllib2.urlopen('%s/query_status' % ROOT_URI, params).read().splitlines()
                 code = int(resp[0])
                 #print 'Status is', code
                 if code == 3:
@@ -80,7 +78,7 @@ class SpeechtechTTS(TTSInterface):
                 mp3response = urllib2.urlopen(request)
 
                 return mp3response.read()
-        except urllib2.HTTPError:
+        except urllib2.HTTPError, urllib2.URLError:
             raise TTSException("SpeechTech TTS error.")
 
         raise TTSException("Time out: No data synthesized.")
@@ -100,7 +98,7 @@ class SpeechtechTTS(TTSInterface):
 
         except TTSException as e:
             m = e + "Text: %" % text
-            self.cfg['Logging']['system_logger'].warning(m)
+            self.cfg['Logging']['system_logger'].exception(m)
             return b""
 
         return wav

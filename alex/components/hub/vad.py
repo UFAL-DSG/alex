@@ -85,10 +85,10 @@ class VAD(multiprocessing.Process):
 
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
-            if self.cfg['VAD']['debug']:
-                self.system_logger.debug(command)
+            #if self.cfg['VAD']['debug']:
+            self.system_logger.debug(command)
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == 'stop':
@@ -110,6 +110,8 @@ class VAD(multiprocessing.Process):
                     # reset other state variables
                     self.last_vad = False
 
+                    self.commands.send(Command("flushed()", 'VAD', 'HUB'))
+                    
                     return False
 
         return False
@@ -141,7 +143,7 @@ class VAD(multiprocessing.Process):
 
     def read_write_audio(self):
         # read input audio
-        while self.audio_recorded_in.poll():
+        if self.audio_recorded_in.poll():
             # read recorded audio
             data_rec = self.audio_recorded_in.recv()
 
