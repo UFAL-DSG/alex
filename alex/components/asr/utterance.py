@@ -1150,7 +1150,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         idxs_start = []
         new_empty_idx = None
         for start_idx in xrange(start, end):
-            if immediate:
+            if immediate and start_idx != start:
                 if new_empty_idx:
                     idxs_start.append(new_empty_idx)
                 else:

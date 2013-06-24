@@ -1406,8 +1406,6 @@ class DAILogRegClassifier(base.SLUInterface):
         if 'utt' in obs and verbose:
             print 'Parsing utterance "{utt}".'.format(utt=obs['utt'])
 
-        # import ipdb; ipdb.set_trace()
-
         category_labels = dict()
         if self.preprocessing:
             abstractables = [obs_type
