@@ -5,6 +5,9 @@
 
 from __future__ import unicode_literals
 
+# DEBUG
+_n_called = 0
+
 import copy
 from itertools import izip, product
 from operator import itemgetter, mul
@@ -18,6 +21,7 @@ from alex.ml.hypothesis import Hypothesis, NBList, NBListException
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
 from alex.ml.features import *
+from alex.utils.various import flatten
 
 
 SENTENCE_START = u'<s>'
@@ -359,7 +363,8 @@ class AbstractedUtterance(Utterance, Abstracted):
         return self.replace(phrase, (combined_el, ))
 
     def replace(self, orig, replacement):
-        """Replaces the phrase given by `orig' by a new phrase, given by
+        """
+        Replaces the phrase given by `orig' by a new phrase, given by
         `replacement'.
 
         """
@@ -648,8 +653,9 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         #       long_link :: (end_idx, orig_probs, (prob, phrase))
         #   See the LongLink definition above.
         #
-        #   It is assumed that long links always comprise more than one word
-        #   and never contain empty words.
+        #   It is assumed that long links never contain empty words.
+        # FIXME Do not index long links just with -widx: they too can start at
+        # the zero-th index.
 
         # If constructing the confnet from its string representation:
         if rep is not None:
@@ -801,15 +807,18 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             if widx >= 0:
                 yield (self._cn[widx][altidx][1], )
             else:
-                yield (self._long_links[-widx][altidx].hyp[1], )
+                # DEBUG
+                # if len(self._long_links[-widx]) <= altidx:
+                    # import ipdb; ipdb.set_trace()
+                yield (self._long_links[-widx][altidx].hyp[1][0], )
 
     def join_typeval(self, type_, val):
         return (self.splitter.join((type_[0], ' '.join(val))), )
 
     def replace_typeval(self, combined, replacement):
-        replaced, repl_idxs = self._replace(combined, replacement)
+        replaced, old_idxs, new_idxs = self._replace(combined, replacement)
         replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
-                                if idx + (0, ) not in repl_idxs]
+                                if idx + (0, ) not in old_idxs]
         return replaced
 
     def iter_triples(self):
@@ -837,19 +846,23 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return self
 
     def replace(self, phrase, replacement):
-        replaced, repl_idxs = self._replace(phrase, replacement)
+        replaced, old_idxs, new_idxs = self._replace(phrase, replacement)
         return replaced
 
     def phrase2category_label(self, phrase, catlab):
-        """Replaces the phrase given by `phrase' by a new phrase, given by
+        """
+        Replaces the phrase given by `phrase' by a new phrase, given by
         `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
 
         """
         combined_el = self.splitter.join((' '.join(catlab),
                                           ' '.join(phrase)))
-        replaced, repl_idxs = self._replace(phrase, (combined_el, ))
-        if repl_idxs:
-            replaced._abstr_idxs.extend((idx[0], idx[1]) for idx in repl_idxs)
+        replaced, old_idxs, new_idxs = self._replace(phrase, (combined_el, ))
+        if old_idxs:
+            replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
+                                    if idx + (0, ) not in old_idxs]
+        if new_idxs:
+            replaced._abstr_idxs.extend((idx[0], idx[1]) for idx in new_idxs)
             replaced._abstr_idxs.sort()
         return replaced
 
@@ -912,12 +925,20 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             keep -- if set to True, the original phrase will be kept in the
                 confnet
 
+        Returns a tuple:
+            replaced -- the confusion network with the replacement done
+            old_idxs -- indices to words which have been removed by
+                the substitution
+            new_idxs -- indices to words of where `replacement' resides in
+                `replaced'.  Each index is a tuple (word index, alternative
+                index)...
+
         """
         # Initialise.
         replaced = self
-        repl_idxs = None
         # Try to find the first occurrence.
-        repl_idxs = list()
+        old_idxs = list()
+        new_idxs = list()
         idxs = self.get_phrase_idxs(phrase, start=0)
         if idxs:
             replaced = copy.deepcopy(self)
@@ -927,7 +948,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         while idxs:
             start_widx = abs(idxs[0][0])
             end_widx, end_aidx, end_lsidx = idxs[-1]
-            repl_idxs.extend(idxs)
+            old_idxs.extend(idxs)
 
             # Deletion:
             if len(replacement) == 0:
@@ -945,13 +966,15 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                             link = replaced._long_links[-widx][aidx]
                             link.hyp = (link.hyp[0], link.hyp[1][:lsidx])
                     do_normalise = update_wordset = True
-            # Substituting in-place:
+            # Substituting one word for one word:
             elif len(idxs) == len(replacement) == 1 and idxs[0][0] >= 0:
                 widx, aidx, lsidx = idxs[0]
                 repl_hyp = (replaced._cn[widx][aidx][0], replacement[0])
                 if keep:
+                    new_idxs.append((widx, len(replaced._cn[widx])))
                     replaced._cn[widx].append(repl_hyp)
                 else:
+                    new_idxs.append((widx, aidx))
                     replaced._cn[widx][aidx] = repl_hyp
                 update_wordset = True
             # Substituting just a part of a long link:
@@ -962,6 +985,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 if len(idxs) == 1:
                 # assert len(idxs) == 1  # Anything else would mean skipping
                                        # # some words.
+                    new_idxs.append((end_widx, end_aidx))  # XXX Like this??
                     link = replaced._long_links[-end_widx][end_aidx]
                     link.hyp = (link.hyp[0],
                                 link.hyp[1][:end_lsidx] + replacement)
@@ -970,8 +994,9 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             else:
                 # Compute the phrase probability.
                 orig_probs = [(replaced._cn[widx][aidx][0] if widx >= 0 else
-                               replaced._long_links[-widx][aidx].hyp[0])
+                               replaced._long_links[-widx][aidx].orig_probs)
                               for (widx, aidx, lsidx) in idxs]
+                orig_probs = flatten(orig_probs)
                 prob = reduce(mul, orig_probs, 1.)
                 # Construct the new hypothesis.
                 new_hyp = (prob, replacement)
@@ -990,6 +1015,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                             del replaced._cn[widx][aidx]
                         else:
                             del replaced._long_links[-widx][aidx]
+                new_idxs.append((-start_widx,
+                                 len(replaced._long_links[start_widx]) - 1))
                 do_normalise = update_wordset = True
 
             # Try to find another occurrence.
@@ -1005,7 +1032,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                      for link in links
                                      for word in link.hyp[1])
 
-        return replaced, repl_idxs
+        return replaced, old_idxs, new_idxs
 
     def _repair_deleted(self, widx):
         """
@@ -1103,7 +1130,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     def get_phrase_idxs(self, phrase, start=0, end=None,
                         start_in_midlinks=True, immediate=False):
         """
-        Returns indexes to words constituting the given phrase within this
+        Returns indices to words constituting the given phrase within this
         confnet.  It looks only for the first occurrence of the phrase in the
         interval specified.
 
@@ -1462,6 +1489,10 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         """
         # FIXME Yield with trailing sequences of empty words, too.
+        # global _n_called
+        # _n_called += 1
+        # if _n_called == 9115:
+            # import ipdb; ipdb.set_trace()
 
         # Find n-gram start indices that shall be iterated over.
         if start is not None:
@@ -1482,11 +1513,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     if hyp[1]:  # skip empty words
                         yield (hyp[0], [hyp[1]])
                 for link in self._long_links[start_idx]:
-                    if len(link.hyp[1]) == 1:
-                        # This should not happen...
-                        assert False
-                        yield link.hyp
-                    elif start is not None:
+                    if len(link.hyp[1]) == 1 or start is not None:
                         yield (link.hyp[0], [link.hyp[1][0]])
                     else:
                         # avg_prob = link.hyp[0] ** (1. / len(link.hyp[1]))

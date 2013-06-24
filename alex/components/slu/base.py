@@ -65,7 +65,7 @@ ft_default_kwargs = {
 }
 ft_order = ('ab_ngram', 'ngram',
             'ab_nbl_ngram', 'nbl_ngram',
-            'ab_cn_ngram', 'cn_ngram'
+            'ab_cn_ngram', 'cn_ngram',
             'prev_da', 'da_nbl')
 
 
@@ -460,6 +460,11 @@ class SLUPreprocessing(object):
                     import traceback
                     print "(EE) " + unicode(ex)
                     traceback.print_exc()
+                    # DEBUG
+                    import ipdb; ipdb.set_trace()
+                    confnet_cp = confnet_cp.replace(surface, (value, ))
+                    confnet_cp = confnet_cp.phrase2category_label(
+                        (value, ), (slot_upper, ))
 
         return confnet_cp, valform_for_cl
 

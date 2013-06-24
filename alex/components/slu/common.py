@@ -66,7 +66,8 @@ def load_data(cfg_this_slu, training=False):
 
     # Find what kinds of observations will be needed and load them.
     obs_types = set(ft_props[ft].obs_type
-                    for ft in cfg_this_slu['features_type'])
+                    for ft in cfg_this_slu['features_type']
+                    if not ft.startswith('ab_'))
     obss = {obs_type: _load_meths[obs_type](
                 cfg_trte[_infile_cfgname[obs_type]], limit=max_examples)
             for obs_type in obs_types}

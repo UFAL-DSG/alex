@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
+from __future__ import unicode_literals
+
 from collections import defaultdict, namedtuple
 import copy
 import cPickle as pickle
@@ -19,6 +21,8 @@ from sklearn.linear_model import LogisticRegression
 # TODO Rewrite using lazy imports.
 from alex.components.asr.utterance import UtteranceFeatures, \
     UtteranceNBListFeatures, UtteranceConfusionNetworkFeatures, UtteranceHyp
+# DEBUG
+from alex.components.asr.utterance import UtteranceConfusionNetwork
 from alex.components.slu import base
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
@@ -132,7 +136,7 @@ class DAILogRegClassifier(base.SLUInterface):
             abstractions: what abstractions to do with DAs:
                 'partial'  ... include DAs instantiated with do_abstract=False
                 'abstract' ... include DAs instantiated with do_abstract=True
-                (default: ('concrete', 'partial', 'abstract'))
+                (default: ('abstract', ))
             cfg: currently ignored (included after it was added to
                 SLUInterface constructor)
 
@@ -248,6 +252,11 @@ class DAILogRegClassifier(base.SLUInterface):
                 obs = obss.get(obs_type, None)
             else:
                 obs = obss.get(obs_type, dict()).get(utt_id, None)
+
+            # DEBUG
+            if (isinstance(obs, UtteranceConfusionNetwork)
+                    and any(obs._long_links)):
+                pass
             # Handle the case of a missing observation.
             if obs is None:
                 if this_ft_props.is_abstracted:
@@ -264,7 +273,7 @@ class DAILogRegClassifier(base.SLUInterface):
                     if inst == 'all':
                         for do_abstract in self._do_abstract_values:
                             feat_list = list()
-                            for instion in obs.all_instantiations:
+                            for instion in obs.all_instantiations():
                                 new_feats = feat_class(*this_ft_args,
                                                        **this_ft_kwargs)
                                 new_feats.parse(instion)
@@ -361,6 +370,8 @@ class DAILogRegClassifier(base.SLUInterface):
         return feats
 
     def _extract_feats_from_many(self, obss, inst=None):
+        # DEBUG
+        # import ipdb; ipdb.set_trace()
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +
@@ -370,27 +381,9 @@ class DAILogRegClassifier(base.SLUInterface):
             (len(self.abstractions) if base.ft_props[ft].is_abstracted else 1)
             for ft in self.features_type)
 
-        return {utt_id: self._extract_feats_from_one(obss, utt_id=utt_id)
+        return {utt_id: self._extract_feats_from_one(obss, inst=inst,
+                                                     utt_id=utt_id)
                 for utt_id in self.utt_ids}
-
-        # # XXX Why the asymmetry with self.utterances (and not utterances
-        # # passed in as an argument)?
-        # return {utt_id:
-        #         self._extract_feats_from_one(
-        #             utt_hyp=(self.utterances[utt_id]
-        #                      if self.utterances is not None else None),
-        #             abutt_hyp=(self.abutterances[utt_id]
-        #                        if self.abutterances is not None else None),
-        #             prev_da=(prev_das[utt_id]
-        #                      if prev_das is not None else None),
-        #             utt_nblist=(utt_nblists[utt_id]
-        #                         if utt_nblists is not None else None),
-        #             abutt_nblist=(abutt_nblists[utt_id]
-        #                           if abutt_nblists is not None else None),
-        #             da_nblist=(da_nblists[utt_id]
-        #                        if da_nblists is not None else None),
-        #             inst=inst)
-        #         for utt_id in self.utt_ids}
 
     def extract_features(self, obss, das, verbose=False):
         """
@@ -462,11 +455,6 @@ class DAILogRegClassifier(base.SLUInterface):
                         continue
                     self.category_labels[utt_id] = dict()
                     # Normalise the text.
-                    # DEBUG
-                    # if (concrete_ot == 'utt_cn' and
-                            # utt_id == 'jurcic-001-120925_224303_0000146_0000412.wav'):
-                        # pass
-                        # # import ipdb; ipdb.set_trace()
                     self.obss[concrete_ot][utt_id] = utt_hyp = (
                         self.preprocessing.normalise(utt_hyp))
                     # Substitute category labes.
@@ -1391,6 +1379,7 @@ class DAILogRegClassifier(base.SLUInterface):
 
 
         """
+
         # Precondition checking.
         if not hasattr(self, 'feature_idxs'):
             raise DAILRException('Attempted to use the SLU parser without '

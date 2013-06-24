@@ -42,7 +42,7 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
 
 
 def save_das(file_name, das):
-    with open(file_name, 'w+') as outfile:
+    with open(file_name, 'w') as outfile:
         for turn_key in sorted(das):
             outfile.write('{key} => {da}\n'.format(key=turn_key,
                                                    da=das[turn_key]))
