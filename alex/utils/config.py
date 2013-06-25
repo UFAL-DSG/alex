@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
+import codecs
 import collections
 import copy
 import cStringIO
@@ -27,14 +30,19 @@ def _expand_file_var(text, path):
     return text.replace('__file__', "'{p}'".format(p=path))
 
 
-def load_as_module(path, force=False):
-    """Loads a file pointed to by `path' as a Python module with minimal impact
-    on the global program environment.  The file name should end in '.py'.
+def load_as_module(path, force=False, encoding='UTF-8',
+                   text_transforms=list()):
+    """
+    Loads a file pointed to by `path' as a Python module with minimal impact on
+    the global program environment.  The file name should end in '.py'.
 
     Arguments:
         path -- path towards the file
         force -- whether to load the file even if its name does not end in
-                 '.py'
+            '.py'
+        encoding -- character encoding of the file
+        text_transforms -- collection of functions to be run on the original
+            file text
 
     Returns the loaded module object.
 
@@ -49,8 +57,13 @@ def load_as_module(path, force=False):
                 modname = basename[:-3]
                 if modname not in sys.modules:
                     happy = True
+            with codecs.open(path, 'rb', encoding=encoding) as orig_file:
+                text = orig_file.read()
+            text = _expand_file_var(text, path)
+            for transform in text_transforms:
+                text = transform(text)
             temp_file = os.fdopen(temp_fd, 'wb')
-            temp_file.write(_expand_file_var(open(path, 'rb').read(), path))
+            temp_file.write(text.encode(encoding))
             temp_file.close()
             path = temp_path
             do_delete_temp = True
@@ -76,21 +89,41 @@ class Config(object):
     in Alex. It is implemented using a dictionary so that any component can use
     arbitrarily structured configuration data.
 
-    When the configuration file is loaded, several automatic transformations
-    are applied:
+    Before the configuration file is loaded, it is transformed as follows:
 
-        1. '{cfg_abs_path}' as a substring of atomic attributes is replaced by
-            an absolute path of the configuration files.  This can be used to
-            make the configuration file independent of the location of programs
-            using the configuration file.
+        1. '{cfg_abs_path}' as a string anywhere in the file is replaced by an
+            absolute path of the configuration files.  This can be used to make
+            the configuration file independent of the location of programs
+            that use it.
 
     """
+    ### This was the earlier functionality, which I found a bit inflexible. MK
+    # When the configuration file is loaded, several automatic transformations
+    # are applied:
+    #
+    #     1. '{cfg_abs_path}' as a substring of atomic attributes is replaced by
+    #         an absolute path of the configuration files.  This can be used to
+    #         make the configuration file independent of the location of programs
+    #         using the configuration file.
+
     # TODO: Enable setting requirements on the configuration variables and
     # checking that they are met (i.e., 2 things:
     #   - requirements = property(get_reqs, set_reqs)
     #   - def check_requirements_are_met(self)
 
     def __init__(self, file_name=None, project_root=False, config={}):
+        """
+        Initialises a new Config object.
+
+        Arguments:
+            file_name -- path towards the configuration file
+            project_root -- whether the path is only relative wrt the project
+                root directory (i.e., the 'alex' directory)
+            config -- a ready-to-use config dictionary (if specified,
+                `file_name' should NOT be specified, otherwise the config from
+                `file_name' overwrites the one specified via `config'
+
+        """
         self.config = config
 
         if project_root:
@@ -147,16 +180,16 @@ class Config(object):
 
     def load(self, file_name):
         # pylint: disable-msg=E0602
-
         global config
-        # config = None
-        self.config = config = load_as_module(file_name, force=True).config
-        # execfile(file_name, globals())
-        # assert config is not None
-        # self.config = config
 
         cfg_abs_dirname = os.path.dirname(os.path.abspath(file_name))
-        self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
+
+        # self.config_replace('{cfg_abs_path}', cfg_abs_dirname)
+        expand_cap = lambda text: text.replace('{cfg_abs_path}',
+                                               cfg_abs_dirname)
+
+        self.config = config = load_as_module(
+            file_name, force=True, text_transforms=(expand_cap, )).config
 
         self.load_includes()
 
@@ -199,7 +232,7 @@ class Config(object):
         return config_dict
 
     def config_replace(self, p, s, d=None):
-        """\
+        """
         Replace a pattern p with string s in the whole config
         (recursively) or in a part of the config given in d.
 
@@ -214,7 +247,7 @@ class Config(object):
         return
 
     def unfold_lists(self, pattern, unfold_id_key=None, part=[]):
-        """\
+        """
         Unfold lists under keys matching the given pattern
         into several config objects, each containing one item.
         If pattern is None, all lists are expanded.

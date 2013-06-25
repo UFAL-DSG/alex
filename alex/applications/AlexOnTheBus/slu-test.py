@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
-import os.path
+if __name__ == "__main__":
+    import autopath
 
-import autopath
 
-
-from alex.components.asr.utterance import load_utterances
-from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
-from alex.components.slu.da import load_das, save_das, DialogueActHyp
+from alex.components.slu.base import CategoryLabelDatabase
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
-from alex.corpustools.semscore import score
 from alex.components.asr.utterance import Utterance
 
 from aotb_preprocessing import AOTBSLUPreprocessing
@@ -25,5 +22,6 @@ lr_classifier = DAILogRegClassifier(pp)
 lr_classifier.load_model('./slu-lr-trn.model')
 
 while 1:
-    u = Utterance(raw_input().decode('utf8'))
-    print lr_classifier.parse(u, verbose=2)
+    utt = Utterance(raw_input().decode('utf8'))
+    obs = {'utt': utt}
+    print lr_classifier.parse(obs, verbose=2)

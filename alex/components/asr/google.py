@@ -70,7 +70,7 @@ class GoogleASR():
             # convert wav to flac
             audio.save_flac(self.cfg, flac_file_name, wav)
             json_hypotheses = self.get_asr_hypotheses(flac_file_name)
-        except HTTPError:
+        except urllib2.HTTPError, urllib2.URLError:
             self.cfg['Logging']['system_logger'].exception('GoogleASR HTTP error.')
         
             json_hypotheses = [[{'confidence': 1.0, 'utterance': '_google_ _asr_ _exception_'},],]

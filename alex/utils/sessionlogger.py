@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008.
 
 import multiprocessing
 import fcntl
@@ -9,7 +11,6 @@ import os.path
 import re
 import xml.dom.minidom
 import socket
-import codecs
 
 from datetime import datetime
 
@@ -17,7 +18,10 @@ from alex.utils.mproc import global_lock
 from alex.utils.exception import AlexException
 from alex.utils.exdec import catch_ioerror
 
-import alex.utils.pdbonerror
+DEBUG = False
+# DEBUG = True
+if DEBUG:
+    import alex.utils.pdbonerror
 
 
 class SessionLoggerException(AlexException):
@@ -27,7 +31,8 @@ class SessionLoggerException(AlexException):
 class SessionClosedException(AlexException):
     pass
 
-class SessionLogger:
+
+class SessionLogger(object):
     """ This is a multiprocessing safe logger. It should be used by the alex to
     log information according the SDC 2010 XML format.
 
@@ -78,7 +83,8 @@ class SessionLogger:
         """
         self.session_dir_name.value = output_dir
 
-        f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
+        f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                 "w", 0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
@@ -137,7 +143,8 @@ class SessionLogger:
         modifying it.
 
         """
-        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
+        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                      "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
@@ -221,7 +228,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
-    @catch_ioerror
+    # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_start(self, speaker, fname):
         """ Adds the optional recorded input/output element to the last
         "speaker" turn.
@@ -247,7 +254,7 @@ class SessionLogger:
         self.close_session_xml(doc)
 
     @global_lock(lock)
-    @catch_ioerror
+    # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
         """
@@ -342,7 +349,8 @@ class SessionLogger:
                 da.appendChild(doc.createTextNode(unicode(text)))
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(
+                "Missing turn element for {spkr} speaker".format(spkr=speaker))
 
         self.close_session_xml(doc)
 
@@ -363,7 +371,9 @@ class SessionLogger:
                 da.setAttribute("starttime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for the %s speaker") % speaker)
+            raise SessionLoggerException(
+                ("Missing turn element for the {spkr} speaker".format(
+                    spkr=speaker)))
 
         self.rec_started_filename = fname
         self.close_session_xml(doc)
@@ -381,7 +391,9 @@ class SessionLogger:
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing rec element for the %s fname.") % fname)
+            raise SessionLoggerException(
+                ("Missing rec element for the {fname} fname.".format(
+                    fname=fname)))
 
         self.close_session_xml(doc)
 

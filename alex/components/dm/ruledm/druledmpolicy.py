@@ -1,9 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008.
+
 import re
 
 from iruleds import RuleDS
 
 from alex.components.slu.da import DialogueAct
-import alex.utils.pdbonerror
+
+DEBUG = False
+# DEBUG = True
+if DEBUG:
+    import alex.utils.pdbonerror
 
 
 # slot names and values
@@ -90,7 +99,8 @@ class DRuleDS(RuleDS):
 
     def __unicode__(self):
         """Pretty print to string the dialogue state."""
-        stateval = dict([(k, v) for k, v in self.user_state.items() if v is not None])
+        stateval = {key: val for (key, val) in self.user_state.items()
+                    if val is not None}
         vals = str(stateval)
         return vals
 
@@ -115,7 +125,7 @@ class DRuleDS(RuleDS):
         return self.user_state.get(key, default)
 
 
-class DRuleDMPolicy:
+class DRuleDMPolicy(object):
     db_cls = lambda cfg: None
 
     def __init__(self, slots, db_cfg):
@@ -235,7 +245,7 @@ class DRuleDMPolicy:
 
     def get_slots_to_say(self, state):
         keys = [key for key in state.user_state_request.keys()
-                if state.user_state_request[key] == False]
+                if state.user_state_request[key] is False]
 
         return keys
 
@@ -316,4 +326,3 @@ class DRuleDMPolicy:
             else:
                 # otherwise tell him something useful we prepared
                 return state, sink_da
-

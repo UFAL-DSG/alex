@@ -57,7 +57,7 @@ class FliteTTS(TTSInterface):
             wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
         except TTSException:
             m = e + "Text: %" % text
-            self.cfg['Logging']['system_logger'].warning(m)
+            self.cfg['Logging']['system_logger'].exception(m)
             return b""
 
         return wav

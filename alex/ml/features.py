@@ -191,6 +191,7 @@ class Features(object):
                     last_mbr = last_mbr[-1]
                 except Exception:
                     return feature
+        return feature
 
 
 # XXX JoinedFeatures are ignorant of features they are composed of.  It would
@@ -302,9 +303,9 @@ class Abstracted(object):
             return same_type  # an empty list
         # If self knows the instantiation asked for,
         if (type_, value) in same_type:
-            return ((type_, value), )
+            return [(type_, value)]
         # Else, instantiate with <other> as the value for `type_'.
-        return ((type_, self.other_val), )
+        return [(type_, self.other_val)]
 
     def get_generic(self):
         new_combined = self

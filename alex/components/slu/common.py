@@ -5,13 +5,32 @@
 from __future__ import unicode_literals
 import autopath
 import inspect
+import sys
 
-from alex.components.slu.base import SLUInterface
+from alex.components.asr.utterance import load_utterances, load_utt_confnets
+from alex.components.slu.base import ft_props, SLUInterface
 from alex.components.slu.exception import SLUException
 
 
+# Methods for loading DAs and observations from files.
+# _load_meths :: observation type -> load method
+_load_meths = {'utt': load_utterances,
+               'utt_nbl': NotImplemented,
+               'utt_cn': load_utt_confnets,
+               'prev_da': NotImplemented,
+               'da_nbl': NotImplemented}
+# Names of config keys whose values specify the input file for that kind of
+# observations.
+# _infile_cfgname :: observation type -> configuration name
+_infile_cfgname = {'utt': 'utts_fname',
+                   'utt_nbl': None,
+                   'utt_cn': 'uttcns_fname',
+                   'prev_da': None,
+                   'da_nbl': None}
+
+
 def get_slu_type(cfg):
-    """\
+    """
     Reads the SLU type from the configuration.  This should be either a string
     (currently 'slu-seq' and 'slu-tracing' are recognised), or a custom class
     implementing SLUInterface.
@@ -20,36 +39,59 @@ def get_slu_type(cfg):
     return cfg['SLU']['type']
 
 
-def load_data(cfg_tr):
-    """\
+def load_data(cfg_this_slu, training=False):
+    """
     Loads training data for SLU.
 
     Arguments:
-        cfg_tr -- the subconfig residing under the 'training' key of this SLU
-            type's config
+        cfg_tr -- the subconfig for this SLU type
+        training -- is the SLU about to be trained (as opposed to being tested
+            or used in general)?  This implies `require_model == False'.
 
-    Returns a tuple (utterances, das) of co-indexed dictionaries where
-    `utterances' has the training utterances (object Utterance) as values, and
-    `das' has their corresponding DAs (object DialogueAct) as its values.
+    Returns a tuple (obss, das) of co-indexed dictionaries where `obss' has the
+    training observations as values, and `das' has their corresponding DAs
+    (object DialogueAct) as its values.
 
     """
-    from alex.components.asr.utterance import load_utterances
-    from alex.components.slu.da import load_das
-    # TODO Should be extended to handle other types of input features.
-    utterances = load_utterances(cfg_tr['utts_fname'],
-                                 limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['sem_fname'],
-                   limit=cfg_tr.get('max_examples', None))
-    return utterances, das
+    cfg_trte = (cfg_this_slu['training'] if training
+                else cfg_this_slu['testing'])
+    max_examples = cfg_trte.get('max_examples', None)
+
+    # Find the right function for loading DAs and load them.
+    if 'das_loading_fun' in cfg_this_slu:
+        load_das = cfg_this_slu['das_loading_fun']
+    else:
+        from alex.components.slu.da import load_das
+    das = load_das(cfg_trte['das_fname'], limit=max_examples)
+
+    # Find what kinds of observations will be needed and load them.
+    obs_types = set(ft_props[ft].obs_type
+                    for ft in cfg_this_slu['features_type']
+                    if not ft.startswith('ab_'))
+    obss = {obs_type: _load_meths[obs_type](
+                cfg_trte[_infile_cfgname[obs_type]], limit=max_examples)
+            for obs_type in obs_types}
+
+    # Ensure all observations use exactly the same set of keys.
+    common_keys = reduce(set.intersection,
+                         (set(typed_obss.viewkeys())
+                          for typed_obss in obss.values()))
+    common_keys.intersection_update(das.viewkeys())
+    obss = {ot: {utt_id: obs for (utt_id, obs) in typed_obss.iteritems()
+                 if utt_id in common_keys}
+            for (ot, typed_obss) in obss.iteritems()}
+    das = {utt_id: da for (utt_id, da) in das.iteritems()
+           if utt_id in common_keys}
+    return obss, das
 
 
 # TODO Make the configuration structure simpler.  Blending type names with
 # types, putting things into different places in the configuration, that makes
 # it hard to use.
 
-def slu_factory(slu_type, cfg, require_model=False, training=False,
+def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                 verbose=True):
-    """\
+    """
     Creates an SLU parser.
 
     Arguments:
@@ -79,7 +121,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
     """
     # Preprocess the configuration a bit.
     cfg_slu = cfg['SLU']
-    slu_type = cfg_slu.get('type', 'cl-tracing')
+    if slu_type is None:
+        slu_type = cfg_slu.get('type', 'cl-tracing')
     is_custom_class = inspect.isclass(slu_type)
     if is_custom_class:
         if not issubclass(slu_type, SLUInterface):
@@ -129,7 +172,7 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
             try:
                 cldb = CategoryLabelDatabase(cldb_fname)
             except:
-                msg = ('Could not load the CLDB from the filename specified:  '
+                msg = ('Could not load the CLDB from the filename specified: '
                        '{fname}.'.format(fname=cldb_fname))
                 raise SLUException(msg)
 
@@ -148,9 +191,13 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
         if training:
             cfg_tr = cfg_this_slu['training']
             if slu_type in ('cl-seq', 'cl-tracing'):
-                clser_kwargs['clser_type'] = cfg_tr.get('clser_type', None)
-                clser_kwargs['features_type'] = cfg_this_slu.get('features_type', None)
-                clser_kwargs['abstractions'] = cfg_tr.get('abstractions', None)
+                if 'clser_type' in cfg_tr:
+                    clser_kwargs['clser_type'] = cfg_tr['clser_type']
+                if 'features_type' in cfg_this_slu:
+                    clser_kwargs['features_type'] = cfg_this_slu[
+                        'features_type']
+                if 'abstractions' in cfg_tr:
+                    clser_kwargs['abstractions'] = cfg_tr['abstractions']
 
         dai_clser = clser_class(preprocessing=preprocessing, cfg=cfg,
                                 **clser_kwargs)
@@ -158,9 +205,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
         # If a model needs to be trained yet,
         if training:
             # Construct the inputs and the outputs for learning.
-            das, utterances = load_data(cfg_tr)
-            dai_clser.extract_features(das=das, utterances=utterances,
-                                       verbose=verbose)
+            obss, das = load_data(cfg_this_slu, training=training)
+            dai_clser.extract_features(das=das, obss=obss, verbose=verbose)
             dai_clser.prune_features(
                 min_feature_count=cfg_tr.get('min_feat_count', None),
                 min_conc_feature_count=cfg_tr.get('min_feat_count_conc', None),
@@ -183,7 +229,8 @@ def slu_factory(slu_type, cfg, require_model=False, training=False,
                                      .format(fname=model_fname))
         else:
             # Try to load the model.
-            model_fname = cfg_this_slu.get('testing', dict()).get('model_fname', None)
+            model_fname = cfg_this_slu.get('testing', dict()
+                                           ).get('model_fname', None)
             try:
                 dai_clser.load_model(model_fname)
             except:

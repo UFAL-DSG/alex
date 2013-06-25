@@ -34,15 +34,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-      This program process CUED semantic annotations and converts them into UFAL semantic format.
-      A by product of the processing is a category database which contains a list of slots, their values, and
-      the alternative lexical representations. Currently the alternative value lexical representation are
-      trivially equal to the observed slot values.
+      This program process CUED semantic annotations and converts them into
+      UFAL semantic format.  A by product of the processing is a category
+      database which contains a list of slots, their values, and the
+      alternative lexical representations. Currently the alternative value
+      lexical representation are trivially equal to the observed slot values.
 
-      This automatically generated category database must be manually checked and corrected for
-      errors observed in the data.
+      This automatically generated category database must be manually checked
+      and corrected for errors observed in the data.
 
-      The database also contains a list of dialogue act types observed in the data.
+      The database also contains a list of dialogue act types observed in the
+      data.
 
       """)
 

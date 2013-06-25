@@ -12,7 +12,7 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList, \
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub import Hub
 from alex.components.slu.da import DialogueActConfusionNetwork
-from alex.components.slu.common import slu_factory, get_slu_type
+from alex.components.slu.common import slu_factory
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 from alex.utils.exception import TextHubException
 from alex.utils.config import Config
@@ -40,8 +40,7 @@ class TextHub(Hub):
         self.dm = None
         self.nlg = None
 
-        slu_type = get_slu_type(cfg)
-        self.slu = slu_factory(slu_type, cfg)
+        self.slu = slu_factory(cfg)
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
@@ -158,22 +157,23 @@ class TextHub(Hub):
         print '-' * term_width
         print
 
-    def process_utterance_hyp(self, utterance_hyp):
+    def process_utterance_hyp(self, obs):
         #self.output_usr_utt_nblist(utt_nblist)
-        das = self.slu.parse(utterance_hyp)
+        das = self.slu.parse(obs)
         self.output_usr_da(das)
 
         term_width = getTerminalSize()[1] or 120
         print '-' * term_width
         print
-        self.dm.da_in(das, utterance_hyp)
+        self.dm.da_in(das, obs.values()[0])
         #self.dm.da_in(das)
 
     def run(self):
         """Controls the dialogue manager."""
         try:
             cfg['Logging']['system_logger'].info(
-                """Enter the first user utterance.  You can enter multiple
+                """
+                Enter the first user utterance.  You can enter multiple
                 utterances to form an N-best list.  The probability for each
                 utterance must be provided before the utterance itself.  When
                 finished, the entry can be terminated by a period (".").
@@ -188,7 +188,7 @@ class TextHub(Hub):
             while True:
                 self.process_dm()
                 utt_nblist = self.input_usr_utt_nblist()
-                self.process_utterance_hyp(utt_nblist)
+                self.process_utterance_hyp({'utt_nbl': utt_nblist})
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
             raise
@@ -246,6 +246,6 @@ if __name__ == '__main__':
                     shub.process_dm()
                     ln = ln.decode('utf8').strip()
                     print "SCRIPT: %s" % ln
-                    shub.process_utterance_hyp(Utterance(ln))
+                    shub.process_utterance_hyp({'utt': Utterance(ln)})
 
     shub.run()

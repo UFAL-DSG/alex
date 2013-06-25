@@ -45,7 +45,7 @@ class NLG(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['NLG']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
@@ -62,12 +62,14 @@ class NLG(multiprocessing.Process):
                     # the NLG component does not have to be flushed
                     #self.nlg.flush()
 
+                    self.commands.send(Command("flushed()", 'NLG', 'HUB'))
+
                     return False
 
         return False
 
     def read_dialogue_act_write_text(self):
-        while self.dialogue_act_in.poll():
+        if self.dialogue_act_in.poll():
             data_da = self.dialogue_act_in.recv()
 
             if isinstance(data_da, DMDA):

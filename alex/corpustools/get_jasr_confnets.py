@@ -39,17 +39,13 @@ import traceback
 from alex.components.asr.exception import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
-from alex.corpustools.cued import find_matching
+from alex.corpustools.cued import find_with_ignorelist
 from alex.utils.audio import load_wav
 from alex.utils.config import Config
 from alex.utils.io import GrepFilter
 
 DEBUG = False
 # DEBUG = True
-FRAME_SIZE = 256  # size of an audio frame in bytes
-RT_RATIO = 0.0    # determines how long to give Julius before asking him for
-                  # results
-SLEEP_TIME = RT_RATIO * FRAME_SIZE / 32000.
 
 
 def get_wav_fnames(dirname, ignore_list_file=None):
@@ -67,9 +63,9 @@ def get_wav_fnames(dirname, ignore_list_file=None):
     find_kwargs = {'mindepth': 0,
                    'maxdepth': None,
                    'notrx': re.compile('^.*_all\\.wav$')}
-    wav_fnames = find_matching(dirname, '*.wav',
-                               ignore_list_file=ignore_list_file,
-                               find_kwargs=find_kwargs)
+    wav_fnames = find_with_ignorelist(dirname, '*.wav',
+                                      ignore_list_file=ignore_list_file,
+                                      find_kwargs=find_kwargs)
     return [(fname, basename(fname)) for fname in wav_fnames]
 
 
@@ -92,36 +88,55 @@ def start_julius(cfg, callback, err_fname='julius.err'):
     return jul, grep, errfile
 
 
+def clean_up(jul, grep, errfile):
+    jul.kill_my_julius()
+    grep.flush()
+    grep.terminate()
+    errfile.close()
+
+
 def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
     """
 
     Arguments:
         dirname -- the directory to search for WAVs
         outfname -- path towards the file to output to
-        jul -- an instance of the Julius wrapper
+        cfg -- a configuration dictionary (of the Config class)
         skip -- how many wavs to skip (default: 0)
+        ignore_list_file -- a file open for reading whose lines specify path
+            globs for logs that should be ignored, or None if no such file
+            should be used.  The format of this file is described in
+            some alex/corpustools scripts.
 
     """
+
+    # Fetch relevant config arguments.
+    frame_size = cfg['corpustools']['get_jasr_confnets']['frame_size']
+    rt_ratio = cfg['corpustools']['get_jasr_confnets']['rt_ratio']
+    sleep_time = rt_ratio * frame_size / 32000.
+
     wavs = sorted(get_wav_fnames(dirname, ignore_list_file), key=itemgetter(1))
 
-    # Start Julius.
-    jul, grep, errfile = start_julius(cfg, on_no_context)
-
+    jul = None
     try:
         with codecs.open(outfname, 'a+', encoding='UTF-8') as outfile:
             for wav_fname, wav_id in wavs[skip:]:
+                # Load the wav.
                 mywav = load_wav(cfg, wav_fname)
+                # Start Julius.
+                if jul is None:
+                    jul, grep, errfile = start_julius(cfg, on_no_context)
 
                 # Insist on feeding all the input data to Julius, regardless of
                 # how many times it crashes.
                 exception = 1
                 while exception:
                     try:
-                        for startidx in xrange(0, len(mywav), FRAME_SIZE):
+                        for startidx in xrange(0, len(mywav), frame_size):
                             jul.rec_in(Frame(
-                                mywav[startidx:startidx + FRAME_SIZE]))
-                            sleep(SLEEP_TIME)
-                        # sleep(RT_RATIO * len(mywav) / 32000.)
+                                mywav[startidx:startidx + frame_size]))
+                            sleep(sleep_time)
+                        # sleep(rt_ratio * len(mywav) / 32000.)
                     except socket.error as er:
                         # Julius crashing results in
                         # error: [Errno 104] Connection reset by peer
@@ -131,8 +146,7 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                         exception = er
                         traceback.print_exc()
                         print "get_jasr_confnets: Restarting Julius."
-                        jul.kill_all_juliuses()
-                        errfile.close()
+                        clean_up(jul, grep, errfile)
                         jul, grep, errfile = start_julius(cfg, on_no_context)
                     else:
                         exception = None
@@ -151,9 +165,8 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                     exception = er
                 if exception is not None:
                     traceback.print_exc()
-                    jul.kill_all_juliuses()
-                    errfile.close()
-                    jul, grep, errfile = start_julius(cfg, on_no_context)
+                    clean_up(jul, grep, errfile)
+                    jul = None
                     hyp = 'None'
                     exception = None
 
@@ -161,9 +174,8 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                 sys.stderr.write('.')
                 sys.stderr.flush()
     finally:
-        grep.flush()
-        grep.terminate()
-        errfile.close()
+        if jul is not None:
+            clean_up(jul, grep, errfile)
 
 
 if __name__ == "__main__":
@@ -194,6 +206,8 @@ if __name__ == "__main__":
         cfg.merge(next_cfg)
 
     try:
-        main(args.dirname, args.outfname, cfg, args.skip, args.ignore)
-    finally:
-        JuliusASR.kill_all_juliuses()
+        DEBUG = cfg['General']['debug']
+    except KeyError:
+        pass
+
+    main(args.dirname, args.outfname, cfg, args.skip, args.ignore)

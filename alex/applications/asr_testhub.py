@@ -17,7 +17,7 @@ from alex.utils.config import Config
 from alex.components.slu.da import DialogueActHyp
 
 
-class debugSLU:
+class debugSLU(object):
     def __init__(self, cfg):
         self.cfg = cfg
 
@@ -26,14 +26,16 @@ class debugSLU:
 
 
 class DummySLU(SLU):
-    '''The SLU component receives an ASR hypotheses and converts them into hypotheses about the meaning
-    of the input in the form of dialogue acts.
+    '''
+    The SLU component receives an ASR hypotheses and converts them into
+    hypotheses about the meaning of the input in the form of dialogue acts.
 
     This class is for debgging purposes only. No functionality implemented.
     '''
 
     def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
-        SLU.__init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out)
+        SLU.__init__(self, cfg, commands, asr_hypotheses_in,
+                     slu_hypotheses_out)
         self.slu = debugSLU(cfg)
 
 

@@ -39,8 +39,8 @@ class VoiceRssTTS(TTSInterface):
         try:
             wavresponse = urllib2.urlopen(request)
             return audio.convert_wav(self.cfg, wavresponse.read())
-        except Exception, e:
-            raise TTSException("TTS error: " + str(e))
+        except Exception as e:
+            raise TTSException("TTS error: " + unicode(e))
 
     def synthesize(self, text):
         """Synthesize the text and return it in a string

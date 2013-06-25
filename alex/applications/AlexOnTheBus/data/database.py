@@ -124,7 +124,7 @@ def spell_number(num):
 
 
 def add_time():
-    """\
+    """
     Basic approximation of all known explicit time expressions.
 
     Handles:
