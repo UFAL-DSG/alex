@@ -7,8 +7,10 @@ from collections import defaultdict
 from alex.components.dm import DialogueStateException, DialogueState
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
 
+
 class DeterministicDiscriminativeDialogueStateException(DialogueStateException):
     pass
+
 
 class DeterministicDiscriminativeDialogueState(DialogueState):
     """This is a trivial implementation of a dialogue state and its update.
@@ -31,8 +33,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s.append("")
         s.append("%s = %s" % ('lda', self.slots['lda']))
         
-        for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and \
-                     not sl.startswith('sh_') and not sl.startswith('rh_') and \
+        for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
+                     not sl.startswith('sh_') and not sl.startswith('rh_') and
                      not sl.startswith('lda')]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
@@ -82,15 +84,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         if isinstance(user_da, DialogueAct):
             # use da as it is
-            pass
+            da = user_da
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
             # get only the best dialogue act
 #            da = user_da.get_best_da()
             # in DSTS baselien like approach I will dais conf. score, so I will not have to pick the best hyp
             da = user_da.get_best_nonnull_da()
         else:
-            raise DDDStateException("Unsupported input for the dialogue manager.")
-
+            raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
 
         if self.cfg['DM']['basic']['debug']:
             self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
