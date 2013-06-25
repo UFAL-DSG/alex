@@ -67,7 +67,7 @@ class Factor(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, variables, variable_values, prob_table):
+    def __init__(self, variables, variable_values, prob_table, logarithmetic):
         """Create a new factor.
 
         Needs a list of variables, because assignments must be in the same
@@ -101,12 +101,34 @@ class Factor(object):
         assert self.variables == sorted(self.variables)
         self.variable_values = variable_values
         self.prob_table = prob_table
+        self.logarithmetic = logarithmetic
+
+        if logarithmetic:
+            self._add = np.logaddexp
+            self.sub = logsubexp
+            self.mul = np.add
+            self.div = np.subtract
+            self.pow = np.multiply
+            self.encode = to_log
+            self.decode = from_log
+            self.zero = np.log(ZERO)
+            self.sum = logsumexp
+        else:
+            self._add = np.add
+            self.sub = np.subtract
+            self.mul = np.multiply
+            self.div = np.divide
+            self.pow = np.power
+            self.encode = lambda x: x
+            self.decode = lambda x: x
+            self.zero = 0.0
+            self.sum = np.sum
 
 
 class DiscreteFactor(Factor):
     """Discrete factor representation with basic operations."""
 
-    def __init__(self, variables, variable_values, prob_table):
+    def __init__(self, variables, variable_values, prob_table, logarithmetic=False):
         """Create a discrete factor.
 
         Creates a discrete factor represented by a probability table.
@@ -122,7 +144,8 @@ class DiscreteFactor(Factor):
         """
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
-                                             prob_table)
+                                             prob_table,
+                                             logarithmetic)
         # Create translation table from variable values to indexes.
         self._create_translation_table()
 
@@ -151,7 +174,7 @@ class DiscreteFactor(Factor):
                     self._get_index_from_assignment(assignment)] = value
 
             # Convert values to log form.
-            to_log(self.factor_table, self.factor_table)
+            self.factor_table = self.encode(self.factor_table)
 
         # Save the factor table in case we'll modify it with observation.
         self.unobserved_factor_table = np.array(self.factor_table)
@@ -172,7 +195,7 @@ class DiscreteFactor(Factor):
         """
         for i, v in enumerate(self.factor_table):
             yield (self._get_assignment_from_index(i),
-                   from_log(v))
+                   self.decode(v))
 
     def __getitem__(self, assignment):
         """Return the value of a given assignment.
@@ -183,7 +206,7 @@ class DiscreteFactor(Factor):
         :rtype: float
         """
         index = self._get_index_from_assignment(assignment)
-        return from_log(self.factor_table[index])
+        return self.decode(self.factor_table[index])
 
     def __setitem__(self, assignment, value):
         """Set a value.
@@ -194,7 +217,7 @@ class DiscreteFactor(Factor):
         :type value: number
         """
         index = self._get_index_from_assignment(assignment)
-        self.factor_table[index] = to_log(value)
+        self.factor_table[index] = self.encode(value)
 
     def __pow__(self, n):
         """Raise every element of the factor to the power of n.
@@ -221,7 +244,8 @@ class DiscreteFactor(Factor):
         """
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              self.factor_table * n)
+                              self.pow(self.factor_table, n),
+                              self.logarithmetic)
 
     def __mul__(self, other):
         """Multiply two factors.
@@ -338,16 +362,17 @@ class DiscreteFactor(Factor):
         :rtype: DiscreteFactor
         """
         if np.isscalar(other):
-            new_factor_table = np.logaddexp(self.factor_table, to_log(other))
+            new_factor_table = self._add(self.factor_table, self.encode(other))
         else:
             if self.variables != other.variables:
                 raise Exception("Addition of factors with different variables not supported")
 
-            new_factor_table = np.logaddexp(self.factor_table, other.factor_table)
+            new_factor_table = self._add(self.factor_table, other.factor_table)
 
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              new_factor_table)
+                              new_factor_table,
+                              self.logarithmetic)
 
     def __sub__(self, other):
         """Subtract two factors.
@@ -381,16 +406,17 @@ class DiscreteFactor(Factor):
         :rtype: DiscreteFactor
         """
         if np.isscalar(other):
-            new_factor_table = logsubexp(self.factor_table, to_log(other))
+            new_factor_table = self.sub(self.factor_table, self.encode(other))
         else:
             if self.variables != other.variables:
                 raise Exception("Addition of factors with different variables not supported")
 
-            new_factor_table = logsubexp(self.factor_table, other.factor_table)
+            new_factor_table = self.sub(self.factor_table, other.factor_table)
 
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              new_factor_table)
+                              new_factor_table,
+                              self.logarithmetic)
 
     def marginalize(self, keep):
         """Marginalize all but specified variables.
@@ -428,7 +454,7 @@ class DiscreteFactor(Factor):
         new_cardinalities = {x: self.cardinalities[x] for x in keep}
         new_factor_length = self._factor_table_length(new_cardinalities)
         new_factor_table = np.empty(new_factor_length, np.float32)
-        new_factor_table[:] = np.log(ZERO)
+        new_factor_table[:] = self.zero
         # Strides for resulting variables in the new factor table.
         new_strides = self._compute_strides(keep,
                                             self.cardinalities,
@@ -439,8 +465,8 @@ class DiscreteFactor(Factor):
         # Iterate over every element in the old factor table and add them to
         # the correct element in the new factor table.
         for i in range(self.factor_length):
-            new_factor_table[index] = np.logaddexp(new_factor_table[index],
-                                                   self.factor_table[i])
+            new_factor_table[index] = self._add(new_factor_table[index],
+                                               self.factor_table[i])
 
             # Update the assignment and indexes.
             for var in keep:
@@ -458,7 +484,7 @@ class DiscreteFactor(Factor):
 
         # Return new factor with marginalized variables.
         new_variable_values = {v: self.variable_values[v] for v in keep}
-        return DiscreteFactor(keep, new_variable_values, new_factor_table)
+        return DiscreteFactor(keep, new_variable_values, new_factor_table, self.logarithmetic)
 
     def observed(self, assignment_dict):
         """Set observation.
@@ -494,10 +520,10 @@ class DiscreteFactor(Factor):
         """
         if assignment_dict is not None:
             # Clear the factor table.
-            self.factor_table[:] = np.log(ZERO)
+            self.factor_table[:] = self.zero
             for assignment, value in assignment_dict.iteritems():
                 self.factor_table[
-                    self._get_index_from_assignment(assignment)] = to_log(value)
+                    self._get_index_from_assignment(assignment)] = self.encode(value)
         else:
             self.factor_table[:] = self.unobserved_factor_table
 
@@ -533,17 +559,17 @@ class DiscreteFactor(Factor):
         :type parents: list
         """
         if parents is not None:
-            sums = defaultdict(lambda: np.log(ZERO))
+            sums = defaultdict(lambda: self.zero)
             assignments = {}
 
             for i, value in enumerate(self.factor_table):
                 assignments[i] = self._get_assignment_from_index(i, parents)
-                sums[assignments[i]] = np.logaddexp(sums[assignments[i]], value)
+                sums[assignments[i]] = self._add(sums[assignments[i]], value)
 
             for i in range(self.factor_length):
-                self.factor_table[i] -= sums[assignments[i]]
+                self.factor_table[i] = self.div(self.factor_table[i], sums[assignments[i]])
         else:
-            self.factor_table -= logsumexp(self.factor_table)
+            self.factor_table = self.div(self.factor_table, self.sum(self.factor_table))
 
     def rename_variables(self, mapping):
         for i in range(len(self.variables)):
@@ -578,9 +604,9 @@ class DiscreteFactor(Factor):
         """
         indxs = list(reversed(np.argsort(self.factor_table)))[:n]
         return [(self._get_assignment_from_index(i)[0],
-                 from_log(self.factor_table[i])) for i in indxs]
+                 self.decode(self.factor_table[i])) for i in indxs]
 
-    def pretty_print(self, width=79, precision=2):
+    def pretty_print(self, width=79, precision=10):
         """Create a readable representation of the factor.
 
         Creates a table with a column for each variable and value. Every row
@@ -610,7 +636,7 @@ class DiscreteFactor(Factor):
         for i in range(len(self.factor_table)):
             for assignment in self._get_assignment_from_index(i):
                 ret += format_str.format(assignment)
-            ret += value_str.format(from_log(self.factor_table[i])) + "\n"
+            ret += value_str.format(self.decode(self.factor_table[i])) + "\n"
 
         ret += width * "-" + "\n"
         return ret
@@ -675,7 +701,8 @@ class DiscreteFactor(Factor):
         """Multiply two factors with same variables."""
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              self.factor_table + other_factor.factor_table)
+                              self.mul(self.factor_table, other_factor.factor_table),
+                              self.logarithmetic)
 
     def _multiply_different(self, other_factor):
         """Multiply two factors with different variables."""
@@ -700,8 +727,8 @@ class DiscreteFactor(Factor):
 
         for i in range(new_factor_length):
             # Multiply values from input factors to get new factor.
-            new_factor_table[i] = (self.factor_table[index_self] +
-                                   other_factor.factor_table[index_other])
+            new_factor_table[i] = self.mul(self.factor_table[index_self],
+                                           other_factor.factor_table[index_other])
 
             # Update the assignment and indexes.
             for var in reversed_variables:
@@ -726,13 +753,15 @@ class DiscreteFactor(Factor):
 
         return DiscreteFactor(new_variables,
                               new_variable_values,
-                              new_factor_table)
+                              new_factor_table,
+                              self.logarithmetic)
 
     def _divide_same(self, other_factor):
         """Divide factor by other factor with same variables."""
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              self.factor_table - other_factor.factor_table)
+                              self.div(self.factor_table, other_factor.factor_table),
+                              self.logarithmetic)
 
     def _divide_different(self, other_factor):
         """Divide factor by other factor with less variables."""
@@ -742,8 +771,8 @@ class DiscreteFactor(Factor):
         reversed_variables = self.variables[::-1]
 
         for i in range(self.factor_length):
-            new_factor_table[i] = (self.factor_table[i] -
-                                   other_factor.factor_table[index_other])
+            new_factor_table[i] = self.div(self.factor_table[i],
+                                           other_factor.factor_table[index_other])
 
             for var in reversed_variables:
                 assignment[var] += 1
@@ -757,19 +786,21 @@ class DiscreteFactor(Factor):
 
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              new_factor_table)
+                              new_factor_table,
+                              self.logarithmetic)
 
     def sum_other(self):
-        factor_sum = logsumexp(self.factor_table)
-        new_factor_table = logsubexp(factor_sum, self.factor_table)
+        factor_sum = self.sum(self.factor_table)
+        new_factor_table = self.sub(factor_sum, self.factor_table)
         return DiscreteFactor(self.variables,
                               self.variable_values,
-                              new_factor_table)
+                              new_factor_table,
+                              self.logarithmetic)
 
     def add(self, n, assignment=None):
         if assignment is not None:
             index = self._get_index_from_assignment(assignment)
-            self.factor_table[index] = np.logaddexp(self.factor_table[index], to_log(n))
+            self.factor_table[index] = self._add(self.factor_table[index], self.encode(n))
         else:
             for i in range(self.factor_length):
-                self.factor_table[i] = np.logaddexp(self.factor_table[i], to_log(n))
+                self.factor_table[i] = self._add(self.factor_table[i], self.encode(n))

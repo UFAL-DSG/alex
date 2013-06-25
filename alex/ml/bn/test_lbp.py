@@ -375,14 +375,13 @@ class TestLBP(unittest.TestCase):
             {
                 ('same', 'dummy'): 1,
                 ('diff', 'dummy'): 1,
-            }
-        ))
+            }, logarithmetic=False))
 
-        X = DiscreteVariableNode('X', ['same', 'diff'])
-        D = DiscreteVariableNode('ZDummy', ['dummy'])
+        X = DiscreteVariableNode('X', ['same', 'diff'], logarithmetic=False)
+        D = DiscreteVariableNode('ZDummy', ['dummy'], logarithmetic=False)
         f = DirichletFactorNode('f')
 
-        X.observed({('same',): 0.51, ('diff',): 0.49})
+        X.observed({('same',): 0.50001, ('diff',): 0.49999})
 
         f.connect(theta)
         f.connect(X, parent=False)
@@ -396,6 +395,7 @@ class TestLBP(unittest.TestCase):
 
         for i in range(50):
             lbp.run()
-            print theta.alpha.pretty_print(precision=5)
+            #print theta.alpha.pretty_print(precision=5)
             lbp.init_messages()
+        print theta.alpha.pretty_print(precision=5)
         raise
