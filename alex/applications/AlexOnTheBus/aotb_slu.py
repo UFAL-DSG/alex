@@ -159,7 +159,7 @@ class AOTBSLU(SLUInterface):
                 _phrase_in(utterance, ["ještě", "jedno"]):
                 cn.add(1.0, DialogueActItem("repeat"))
 
-        if _any_word_in(utterance, ["nápověda",  "pomoc", "help"]) or \
+        if _any_word_in(utterance, ["nápověda",  "pomoc", "help", "nevím", "nevim"]) or \
             _all_words_in(utterance, ["co", "říct"]) or \
             _all_words_in(utterance, ["co", "zeptat"]):
             cn.add(1.0, DialogueActItem("help"))
