@@ -14,7 +14,7 @@ function submitFeedback() {
         var tokenValue = $("input[name='token']").val();
 
         // submit to voiphub
-        $.post("submit_new.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
+        $.post("submit.py",{token: tokenValue, xmlFeedback: xmlFeedbackContent},
             function(data) {
 
                 //alert("Submit voiphub data: " + data);
