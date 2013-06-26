@@ -85,5 +85,5 @@ class KaldiASR(object):
         :frame: @todo
         :returns: self - The instance of KaldiASR
         """
-        # self.rec_buffer.append(frame.payload)
+        self.decoder.rec_in(frame)
         return self
