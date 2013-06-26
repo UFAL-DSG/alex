@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
         help='additional configuration file')
-    parser.add_argument('-n', '--nhits', action="store", dest="nhits", default=1, nargs=1,
+    parser.add_argument('-n', '--nhits', action="store", dest="nhits", default=1, type=int,
         help='additional configuration file')
     args = parser.parse_args()
 
