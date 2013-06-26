@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        Delete all approved, rejected or expired hits at MTURK.
+        Approves all hits at MTURK.
 
         The program reads the default config in the resources directory
         ('../resources/private/mturk.cfg') and any additional config files passed as
@@ -36,24 +36,23 @@ if __name__ == '__main__':
         for c in args.configs:
             cfg.merge(c)
 
-    print "Delete approved, rejected, or expired HITs"
+    print "Approve all outstanding HITs"
 
     conn = MTurkConnection(aws_access_key_id = cfg['MTURK']['aws_access_key_id'],
                            aws_secret_access_key = cfg['MTURK']['aws_secret_access_key'],
                            host = cfg['MTURK']['host'])
 
-
-    for pnum in range(1, 350):
+    for pnum in range(1, 50):
         for hit in conn.get_reviewable_hits(page_size=100, page_number=pnum):
             print "HITId:", hit.HITId
 
-            hitStatus = defaultdict(int)
             for ass in conn.get_assignments(hit.HITId, status='Submitted', page_size=10, page_number=1):
                 #print "Dir ass:", dir(ass)
 
-                hitStatus[ass.AssignmentStatus] += 1
+                if ass.AssignmentStatus == 'Submitted':
+                    mturk.print_assignment(ass)
 
-            print hitStatus
-            if 'Submitted' not in hitStatus:
-                print 'Deleting hit:', hit.HITId
-                conn.dispose_hit(hit.HITId)
+                    print "-" * 100
+                    print "Approving the assignment"
+                    conn.approve_assignment(ass.AssignmentId)
+                    print "-" * 100

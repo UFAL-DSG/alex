@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 __author__ = "Filip Jurcicek"
@@ -38,4 +38,3 @@ if __name__ == "__main__":
             print "Valid"
         else:
             print "Invalid"
-

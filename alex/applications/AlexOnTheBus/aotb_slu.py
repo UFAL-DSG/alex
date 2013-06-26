@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # encoding: utf8
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
@@ -337,3 +337,4 @@ class AOTBSLU(SLUInterface):
         # nblist = confnet.get_utterance_nblist(n=40)
         # sem = self.parse_nblist({'utt_nbl': nblist})
         # return sem
+

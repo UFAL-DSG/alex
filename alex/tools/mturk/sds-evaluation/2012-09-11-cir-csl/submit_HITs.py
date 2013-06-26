@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os.path
@@ -47,4 +47,3 @@ for n in range(n_hits):
         title=title, description=description, keywords=keywords, reward=reward,
         duration=duration, approval_delay=approval_delay,
         qualifications=qualifications, response_groups=response_groups)
-
