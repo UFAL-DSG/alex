@@ -10,7 +10,7 @@ from boto.mturk.connection import MTurkConnection
 
 from alex.utils.config import Config
 
-import mturk
+import alex.tools.mturk.bin.mturk as mturk
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
