@@ -214,7 +214,7 @@ class AOTBSLU(SLUInterface):
             _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
-        if _any_word_in(utterance, ["spojení", "možnost", "cesta", "zpoždění", "stažení"]):
+        if _any_word_in(utterance, ["spoj", "spojení", "možnost", "cesta", "zpoždění", "stažení"]):
             if _any_word_in(utterance, ["první", ]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
@@ -227,7 +227,7 @@ class AOTBSLU(SLUInterface):
             if _any_word_in(utterance, ["čtvrté", "čtvrtá"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if _any_word_in(utterance, ["poslední", "znovu", ]):
+            if _any_word_in(utterance, ["poslední", "znovu", "opakovat", "zopakovat"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
             if _any_word_in(utterance, ["další", "jiné", "následující"]):
