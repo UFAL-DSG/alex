@@ -16,18 +16,11 @@ import subprocess
 import time
 import xml.dom.minidom
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import JuliusASRException, \
+        JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, Utterance, \
     UtteranceConfusionNetwork
 from alex.utils.various import get_text_from_xml_node
-
-
-class JuliusASRException(ASRException):
-    pass
-
-
-class JuliusASRTimeoutException(ASRException):
-    pass
 
 
 class JuliusASR(object):

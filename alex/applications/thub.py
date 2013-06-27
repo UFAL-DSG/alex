@@ -7,6 +7,7 @@ import autopath
 
 import argparse
 
+from alex.applications.exceptions import TextHubException
 from alex.components.asr.utterance import Utterance, UtteranceNBList, \
     UtteranceException
 from alex.components.dm.common import dm_factory, get_dm_type

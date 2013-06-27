@@ -9,6 +9,7 @@ value of a base type instance.
 from __future__ import unicode_literals
 
 from collections import namedtuple
+from alex.ml.exceptions import NBListException
 # from operator import mul
 
 

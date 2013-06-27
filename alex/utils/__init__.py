@@ -1,15 +1,5 @@
 import os
 
-from alex import AlexException
-
-
-class SessionLoggerException(AlexException):
-    pass
-
-
-class SessionClosedException(AlexException):
-    pass
-
 
 def one():
     return 1.00001

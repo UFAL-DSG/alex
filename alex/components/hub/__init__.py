@@ -3,11 +3,6 @@
 import sys
 import os.path
 
-from alex import AlexException
-
-
-class VoipIOException(AlexException):
-    pass
 
 from .hub import Hub
 

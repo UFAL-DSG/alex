@@ -14,7 +14,7 @@ from alex.utils.text import Escaper
 from alex.components.slu.exception import SLUException
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.hypothesis import Hypothesis, NBList
-from alex.ml import NBListException
+from alex.ml.exceptions import NBListException
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.

@@ -4,6 +4,7 @@ import autopath
 
 import argparse
 
+from alex.applications.exceptions import SemHubException
 from alex.components.hub import Hub
 from alex.components.slu.da import DialogueAct, DialogueActNBList, \
     DialogueActException, DialogueActItemException

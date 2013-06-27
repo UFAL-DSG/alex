@@ -4,16 +4,7 @@
 # XXX I suggest renaming this to a non-special module name.  It seems strange
 # to me for __init__ to actually define any normal classes or functions.  MK
 
-from alex import AlexException
 from alex.components.dm.ontology import Ontology
-
-
-class DMException(AlexException):
-    pass
-
-
-class DialogueStateException(AlexException):
-    pass
 
 
 class DialogueState(object):
@@ -78,10 +69,6 @@ class DialogueState(object):
         pass
 
 
-class DialoguePolicyException(AlexException):
-    pass
-
-
 class DialoguePolicy(object):
     """This is a base class policy. """
 
@@ -91,10 +78,6 @@ class DialoguePolicy(object):
 
     def get_da(self, dialogue_state):
         pass
-
-
-class DialogueManagerException(AlexException):
-    pass
 
 
 class DialogueManager(object):

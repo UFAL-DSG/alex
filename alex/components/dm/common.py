@@ -6,6 +6,7 @@
 from alex.components.dm import DialogueManager
 from alex.components.dm.ruledm.ufalruledm import UfalRuleDM
 from alex.components.dm.ruledm.ufalruledm import PUfalRuleDM
+from alex.components.dm.exceptions import DMException
 
 def get_dm_type(cfg):
     return cfg['DM']['type']

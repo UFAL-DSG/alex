@@ -11,13 +11,6 @@ __all__ = []
 if __name__ == "__main__":
     import autopath
 
-from alex import AlexException
-
-
-class ASRException(AlexException):
-    pass
-
-
 class ASRInterface(object):
     """
     This class basic interface which has to be provided by all ASR modules to

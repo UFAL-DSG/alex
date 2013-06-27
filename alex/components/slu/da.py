@@ -8,11 +8,11 @@ from collections import defaultdict
 import copy
 from operator import xor
 
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException, DialogueActItemException
+from alex.ml.exceptions import NBListException
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, ConfusionNetwork
-from alex.ml import NBListException
 from alex.utils.text import split_by
 
 
@@ -44,22 +44,6 @@ def save_das(file_name, das):
         for turn_key in sorted(das):
             outfile.write('{key} => {da}\n'.format(key=turn_key,
                                                    da=das[turn_key]))
-
-
-class DialogueActItemException(SLUException):
-    pass
-
-
-class DialogueActException(SLUException):
-    pass
-
-
-class DialogueActNBListException(SLUException):
-    pass
-
-
-class DialogueActConfusionNetworkException(SLUException):
-    pass
 
 
 class DialogueActItem(Abstracted):

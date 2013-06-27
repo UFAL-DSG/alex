@@ -3,7 +3,8 @@
 
 from __future__ import unicode_literals
 
-from .template import TemplateNLG, TectoTemplateNLG
+from components.nlg.exceptions import TemplateNLGException
+from components.nlg.template import TemplateNLG, TectoTemplateNLG
 
 def get_nlg_type(cfg):
     return cfg['NLG']['type']

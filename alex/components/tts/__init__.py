@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from alex import AlexException
-
-
-class TTSException(AlexException):
-    pass
-
 
 class TTSInterface(object):
     def __init__(self, cfg):

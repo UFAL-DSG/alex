@@ -10,6 +10,7 @@ import copy
 from alex.components.slu.da import DialogueAct
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
+from alex.components.nlg import TemplateNLGException
 
 
 class AbstractTemplateNLG(object):

@@ -16,6 +16,7 @@ from datetime import datetime
 
 from alex.utils.mproc import global_lock
 from alex.utils.exdec import catch_ioerror
+from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
 DEBUG = False
 # DEBUG = True
