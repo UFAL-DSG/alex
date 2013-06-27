@@ -14,6 +14,7 @@ from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
 from alex.components.slu.da import DialogueActItem, DialogueActFeatures, \
     DialogueActNBListFeatures, DialogueActConfusionNetwork, merge_slu_confnets
 from alex.utils.config import load_as_module
+from alex.components.slu.exceptions import SLUException
 
 
 FeatureProps = namedtuple('FeatureProps',
@@ -126,7 +127,6 @@ class CategoryLabelDatabase(object):
     def load(self, file_name):
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
-            from exception import SLUException
             raise SLUException("The category label database does not define "
                                "the `database' object!")
         self.database = db_mod.database
@@ -457,6 +457,7 @@ class SLUPreprocessing(object):
                     confnet_cp = confnet_cp.phrase2category_label(
                         (value, ), (slot_upper, ))
                 except Exception as ex:
+                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
                     import traceback
                     print "(EE) " + unicode(ex)
                     traceback.print_exc()
@@ -642,7 +643,6 @@ class SLUInterface(object):
 
     def parse_1_best(self, obs, *args, **kwargs):
         # TODO Document.
-        from exception import SLUException
         raise SLUException("Not implemented")
 
     def parse_nblist(self, obs, *args, **kwargs):

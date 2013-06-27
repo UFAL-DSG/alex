@@ -7,7 +7,8 @@ import urllib2
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
-from alex.components.tts import TTSException, TTSInterface
+from alex.components.tts import TTSInterface
+from alex.components.tts.exceptions import TTSException
 from alex.components.tts.preprocessing import TTSPreprocessing
 
 class VoiceRssTTS(TTSInterface):

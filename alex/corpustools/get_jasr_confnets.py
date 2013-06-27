@@ -36,7 +36,7 @@ import sys
 from time import sleep
 import traceback
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
 from alex.corpustools.cued import find_with_ignorelist

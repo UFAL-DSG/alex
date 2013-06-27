@@ -15,7 +15,7 @@ import codecs
 import os.path
 import random
 
-from alex.components.asr.utterance import load_utterances, Utterance
+from alex.components.asr.utterance import load_utterances
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import load_das, DialogueAct
 
@@ -175,10 +175,6 @@ if __name__ == "__main__":
     for name, default, _ in DEFAULTS_SLU_TR.get(slu_type, tuple()):
         if name not in cfg_tr:
             cfg_tr[name] = default
-
-    # Respect the debugging setting.
-    if cfg_slu.get('debug', False):
-        from alex.utils import pdbonerror
 
     # Build the filename for the model and save it to the config.
     if args.model_fname is None:

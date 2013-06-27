@@ -4,12 +4,9 @@
 from __future__ import unicode_literals
 from collections import defaultdict
 
-from alex.components.dm import DialogueStateException, DialogueState
+from alex.components.dm import DialogueState
+from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
-
-
-class DeterministicDiscriminativeDialogueStateException(DialogueStateException):
-    pass
 
 
 class DeterministicDiscriminativeDialogueState(DialogueState):
@@ -32,21 +29,21 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s.append("DDDState - Dialogue state content:")
         s.append("")
         s.append("%s = %s" % ('lda', self.slots['lda']))
-        
+
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                      not sl.startswith('sh_') and not sl.startswith('rh_') and
                      not sl.startswith('lda')]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
-        
+
         for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
-        
+
         for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
-        
+
         for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
             s.append("%s = %s" % (name, self.slots[name]))
 
@@ -59,7 +56,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
     def __setitem__(self, key, value):
         self.slots[key] = value
-    
+
     def restart(self):
         """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
 
@@ -88,10 +85,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
             # get only the best dialogue act
 #            da = user_da.get_best_da()
-            # in DSTS baselien like approach I will dais conf. score, so I will not have to pick the best hyp
+            # in DSTS baselien like approach I will dais conf. score, so I will not
+            # have to pick the best hyp
             da = user_da.get_best_nonnull_da()
         else:
-            raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
+            raise DeterministicDiscriminativeDialogueStateException(
+                "Unsupported input for the dialogue manager.")
 
         if self.cfg['DM']['basic']['debug']:
             self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
@@ -101,13 +100,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         # perform the context resolution
         user_da = self.context_resolution(da, last_system_da)
-        
+
         if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug(u'Context Resolution - Dialogue Act: %s' % user_da)
-            
+            self.cfg['Logging']['system_logger'].debug(
+                u'Context Resolution - Dialogue Act: %s' % user_da)
+
         # perform the state update
         self.state_update(user_da, last_system_da)
-        self.turn_number +=1
+        self.turn_number += 1
 
         # print the dialogue state if requested
         if self.cfg['DM']['basic']['debug']:
@@ -134,9 +134,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
     def context_resolution(self, user_da, last_system_da):
         """Resolves and converts meaning of some user dialogue acts given the context."""
-        
+
         new_user_da = DialogueAct()
-        
+
         if isinstance(last_system_da, DialogueAct):
             for system_dai in last_system_da:
                 for user_dai in user_da:
@@ -178,7 +178,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         new_user_da.append(new_user_dai)
 
         new_user_da.extend(user_da)
-        
+
         return new_user_da
 
     def state_update(self, user_da, last_system_da):
@@ -210,13 +210,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots[dai.name] = "false"
                 elif dai.value == "false":
                     self.slots[dai.name] = "true"
-                    
+
                 if self.slots[dai.name] == dai.value:
                     # it must be changed since user does not want this value but we do not know for what to change it
                     # therefore it will be changed to None
                     self.slots[dai.name] = "none"
                 else:
-                    # the value of the slot is different. therefore it does not conflict with the provided information
+                    # the value of the slot is different. therefore it does not conflict with
+                    # the provided information
                     pass
             elif dai.dat == "request":
                 self.slots["rh_" + dai.name] = "user-requested"
@@ -224,7 +225,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 self.slots["ch_" + dai.name] = dai.value
             elif dai.dat == "select":
                 self.slots["sh_" + dai.name] = dai.value
-            elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null", "other", 
+            elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
                              "repeat", "reqalts", "reqmore", "restart", "thankyou"]:
                 self.slots["lda"] = dai.dat
 
@@ -270,24 +271,24 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         for slot in self.slots:
             # ignore some slots
-            if any([ 1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]):
+            if any([1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]):
                 continue
 
-            if self.slots[slot] != "none" and ("rh_"+slot not in self.slots or self.slots["rh_"+slot] == "none"):
+            if self.slots[slot] != "none" and ("rh_" + slot not in self.slots or self.slots["rh_" + slot] == "none"):
                 non_informed_slots[slot] = self.slots[slot]
 
         return non_informed_slots
-     
-    def get_accepted_slots(self):   
+
+    def get_accepted_slots(self):
         """Returns all slots which has a probability of a non "none" vale larger then some threshold.
         """
         pass
-         
+
     def get_changed_slots(self):
-        """Returns all slots that has changed from the previous turn. Because the change is determined by change in 
-        probability for a particular value, the can be vary small changes. Therefore we will report only changes 
+        """Returns all slots that has changed from the previous turn. Because the change is determined by change in
+        probability for a particular value, the can be vary small changes. Therefore we will report only changes
         in accepted slots.
         """
-        
+
         # compare the accepted slots from the previous and the current turn
         pass

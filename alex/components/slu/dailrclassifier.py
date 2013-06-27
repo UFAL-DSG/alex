@@ -27,11 +27,9 @@ from alex.components.slu import base
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
     DialogueActNBListFeatures
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException, DAILRException
 from alex.ml.features import Features
 from alex.utils.various import crop_to_finite
-
-from exception import DAILRException
 
 
 def get_features_from_tree(tree):
@@ -371,7 +369,6 @@ class DAILogRegClassifier(base.SLUInterface):
 
     def _extract_feats_from_many(self, obss, inst=None):
         # DEBUG
-        # import ipdb; ipdb.set_trace()
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +

@@ -61,7 +61,6 @@ class TestDAILRClassifier(unittest.TestCase):
         # preprocessing = SLUPreprocessing(cldb)
         # slu = DAILRSLU.DAILogRegClassifier(preprocessing)
         # slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
-        # import ipdb; ipdb.set_trace()
         slu = slu_factory(cfg, require_model=True)
         slu_hyp = slu.parse({'utt_cn': asr_confnet})
         slu_hyp_best_da = slu_hyp.get_best_da().sort()

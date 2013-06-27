@@ -33,9 +33,9 @@ class DummySLU(SLU):
     This class is for debgging purposes only. No functionality implemented.
     '''
 
-    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
+    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out, close_event):
         SLU.__init__(self, cfg, commands, asr_hypotheses_in,
-                     slu_hypotheses_out)
+                     slu_hypotheses_out, close_event)
         self.slu = debugSLU(cfg)
 
 
@@ -78,10 +78,11 @@ class WebHub(Hub):
                                    asr_hypotheses_out, asr_child_hypotheses]
 
         # create the hub components
-        aio = WebIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play)
-        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out)
-        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-        slu = DummySLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
+        close_event = multiprocessing.Event()
+        aio = WebIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play, close_event)
+        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out, close_event)
+        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, close_event)
+        slu = DummySLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses, close_event)
 
         # start the hub components
         aio.start()

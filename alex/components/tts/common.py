@@ -5,7 +5,8 @@ import alex.components.tts.google as GTTS
 import alex.components.tts.flite as FTTS
 import alex.components.tts.speechtech as STTS
 import alex.components.tts.voicerss as VTTS
-from alex.components.tts import TTSInterface, TTSException
+from alex.components.tts import TTSInterface
+from alex.components.tts.exceptions import TTSException
 
 
 def get_tts_type(cfg):
