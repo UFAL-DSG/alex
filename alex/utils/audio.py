@@ -38,26 +38,25 @@ def load_wav(cfg, file_name):
 
     try:
         wf = wave.open(file_name, 'r')
+        if wf.getnchannels() != 1:
+            raise Exception('Input wave is not in mono')
+
+        if wf.getsampwidth() != 2:
+            raise Exception('Input wave is not in 16bit')
+
+        sample_rate = wf.getframerate()
+
+        # read all the samples
+        chunk = 1024
+        wav = b''
+        wavPart = wf.readframes(chunk)
+        while wavPart:
+            wav += str(wavPart)
+            wavPart = wf.readframes(chunk)
     except EOFError:
         raise Exception('Input wave is corrupted: End of file.')
-
-    if wf.getnchannels() != 1:
-        raise Exception('Input wave is not in mono')
-
-    if wf.getsampwidth() != 2:
-        raise Exception('Input wave is not in 16bit')
-
-    sample_rate = wf.getframerate()
-
-    # read all the samples
-    chunk = 1024
-    wav = b''
-    wavPart = wf.readframes(chunk)
-    while wavPart:
-        wav += str(wavPart)
-        wavPart = wf.readframes(chunk)
-
-    wf.close()
+    else:
+        wf.close()
 
     # resample audio if not compatible
     if sample_rate != cfg['Audio']['sample_rate']:
@@ -103,12 +102,16 @@ def save_wav(cfg, file_name, wav):
 
     """
 
-    with wave.open(file_name, 'wb') as wf:
+    try:
+        wf = wave.open(file_name, 'wb')
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(cfg['Audio']['sample_rate'])
         wf.writeframes(wav)
-
+    except wave.Error as e:
+        raise e
+    else:
+        wf.close()
     return
 
 

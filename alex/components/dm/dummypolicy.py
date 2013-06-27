@@ -6,12 +6,8 @@
 This is an example implementation of a dummy yet funny dialogue policy.
 """
 
-from alex.components.dm.exceptions import DialoguePolicyException, DialoguePolicy
+from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
-
-
-class DummyDialoguePolicyException(DialoguePolicyException):
-    pass
 
 
 class DummyDialoguePolicy(DialoguePolicy):

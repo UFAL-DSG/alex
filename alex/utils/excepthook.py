@@ -3,7 +3,7 @@
 Depending on the hook_type adds various hooks how to catch exceptions
 '''
 import sys
-from Alex import AlexException
+from alex.utils.exceptions import HookMultipleInstanceException
 
 
 def ipdb_hook(type, value, tb):
@@ -26,7 +26,7 @@ def log_hook(type, value, tb):
     msg = '''Error occured. Type: %s
             Value: %s
             Traceback%s''' % (str(type), str(value), str(tb))
-    ExceptionHook.log(msg)
+    log(msg)
 
 
 def log_and_ipdb_hook(type, value, tb):
@@ -34,18 +34,19 @@ def log_and_ipdb_hook(type, value, tb):
     ipdb_hook(type, value, tb)
 
 
+def log(msg):
+    if ExceptionHook.single is not None:
+        ExceptionHook.single._log(msg)
+
+
 class ExceptionHook(object):
     '''Singleton objects for registering various hooks for sys.exepthook.
     For registering hook use set_hook'''
     single = None
 
-    def log(msg):
-        if ExceptionHook.single is not None:
-            ExceptionHook.single._log(msg)
-
     def __init__(self, hook_type, logger=None):
         if ExceptionHook.single is not None:
-            raise AlexException("ExceptionHook is Singleton!")
+            raise HookMultipleInstanceException("ExceptionHook is Singleton!")
         self.set_hook(hook_type, logger)
         self.logger = logger
         ExceptionHook.single = self

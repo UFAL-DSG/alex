@@ -33,9 +33,9 @@ class DummySLU(SLU):
     This class is for debgging purposes only. No functionality implemented.
     '''
 
-    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out):
+    def __init__(self, cfg, commands, asr_hypotheses_in, slu_hypotheses_out, close_event):
         SLU.__init__(self, cfg, commands, asr_hypotheses_in,
-                     slu_hypotheses_out)
+                     slu_hypotheses_out, close_event)
         self.slu = debugSLU(cfg)
 
 

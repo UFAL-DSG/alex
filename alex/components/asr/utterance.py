@@ -11,7 +11,7 @@ from operator import itemgetter, mul
 
 from alex.utils import text
 from alex.utils.text import Escaper
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.hypothesis import Hypothesis, NBList
 from alex.ml.exceptions import NBListException

@@ -12,7 +12,7 @@ import wave
 from alex.components.asr.exceptions import ASRException
 from alex.components.hub.messages import Command, Frame
 from alex.utils.procname import set_proc_name
-from alex.utils import SessionClosedException
+from alex.utils.exceptions import SessionClosedException
 
 import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD

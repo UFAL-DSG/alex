@@ -7,3 +7,7 @@ class SessionLoggerException(AlexException):
 
 class SessionClosedException(AlexException):
     pass
+
+
+class HookMultipleInstanceException(AlexException):
+    pass

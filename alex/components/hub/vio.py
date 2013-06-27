@@ -16,7 +16,7 @@ from collections import deque, defaultdict
 
 from alex.components.hub.messages import Command, Frame
 from alex.utils.exceptions import SessionLoggerException
-from alex.hub.exceptions import VoipIOException
+from alex.components.hub.exceptions import VoipIOException
 from alex.utils.procname import set_proc_name
 
 # Logging callback

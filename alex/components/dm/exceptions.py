@@ -15,3 +15,11 @@ class DialoguePolicyException(AlexException):
 
 class DialogueManagerException(AlexException):
     pass
+
+
+class DeterministicDiscriminativeDialogueStateException(DialogueStateException):
+    pass
+
+
+class DummyDialoguePolicyException(DialoguePolicyException):
+    pass

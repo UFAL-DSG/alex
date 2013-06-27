@@ -27,11 +27,9 @@ from alex.components.slu import base
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
     DialogueActNBListFeatures
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException, DAILRException
 from alex.ml.features import Features
 from alex.utils.various import crop_to_finite
-
-from exception import DAILRException
 
 
 def get_features_from_tree(tree):
