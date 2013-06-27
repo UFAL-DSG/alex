@@ -73,7 +73,7 @@ class PDDiscrete(PDDiscreteBase):
         self._entropy = None
 
         if total_sum == 0:
-            import ipdb; ipdb.set_trace()
+            raise NotNormalisedError()  
 
         for key in self.distrib:
             self[key] /= total_sum
@@ -163,7 +163,7 @@ class PDDiscreteOther(PDDiscreteBase):
         if total_sum == 0:
             total_sum = 1.0
             if len(self.distrib) > 1 and redistrib == 0.0:
-                import ipdb; ipdb.set_trace()
+                raise NotNormalisedError()  
             elif redistrib > 0.0:
                 for key in self.distrib.keys():
                     self[key] += redistrib / len(self.distrib)

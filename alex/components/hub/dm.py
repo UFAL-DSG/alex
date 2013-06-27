@@ -6,7 +6,7 @@ import time
 
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub.messages import Command, SLUHyp, DMDA
-from alex.utils.exception import DMException
+from alex.components.dm import DMException
 from alex.utils.procname import set_proc_name
 
 

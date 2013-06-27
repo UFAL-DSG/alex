@@ -13,6 +13,10 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     return load_wavaskey(das_fname, CUEDDialogueAct, limit, encoding)
 
 
+class CuedDialogActError(SLUException):
+    pass
+
+
 class CUEDDialogueAct(DialogueAct):
     def parse(self, da_str):
         if self._dais:
@@ -26,7 +30,7 @@ class CUEDDialogueAct(DialogueAct):
         if dat == 'hello':
             self._dais.append(DialogueActItem(dat='hello'))
             dais_dat = 'inform'
-            import ipdb; ipdb.set_trace()
+            raise CuedDialogActError()
         else:
             dais_dat = dat
         self._dais.extend(DialogueActItem(dai='{dat}({slotval})'.format(

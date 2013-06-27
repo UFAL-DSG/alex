@@ -9,7 +9,7 @@ import os
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 
 from alex.components.hub.messages import Command, DMDA, TTSText
-from alex.utils.exception import DMException
+from alex.components.dm import DMException
 
 from alex.utils.procname import set_proc_name
 

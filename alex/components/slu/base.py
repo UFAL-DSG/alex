@@ -457,6 +457,7 @@ class SLUPreprocessing(object):
                     confnet_cp = confnet_cp.phrase2category_label(
                         (value, ), (slot_upper, ))
                 except Exception as ex:
+                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
                     import traceback
                     print "(EE) " + unicode(ex)
                     traceback.print_exc()

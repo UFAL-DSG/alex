@@ -8,6 +8,10 @@ from alex.utils.exception import AlexException
 from alex.components.dm.ontology import Ontology
 
 
+class DMException(AlexException):
+    pass
+
+
 class DialogueStateException(AlexException):
     pass
 

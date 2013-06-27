@@ -10,3 +10,11 @@ while directory and directory != 'alex':
     path, directory = os.path.split(path)
 if directory == 'alex':
     sys.path.append(path)
+
+
+class NLGException(AlexException):
+    pass
+
+
+class TemplateNLGException(NLGException):
+    pass

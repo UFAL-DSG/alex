@@ -8,7 +8,6 @@ import itertools
 import copy
 
 from alex.components.slu.da import DialogueAct
-from alex.utils.exception import TemplateNLGException
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 

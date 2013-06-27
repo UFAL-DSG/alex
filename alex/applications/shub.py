@@ -9,7 +9,6 @@ from alex.components.slu.da import DialogueAct, DialogueActNBList, \
     DialogueActException, DialogueActItemException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.utils.config import Config
-from alex.utils.exception import SemHubException
 
 
 class SemHub(Hub):

@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-from alex.utils.exception import SemHubException
-
 from .template import TemplateNLG, TectoTemplateNLG
 
 def get_nlg_type(cfg):
@@ -22,7 +20,7 @@ def nlg_factory(nlg_type, cfg):
         try:
             nlg = nlg_type(cfg)
         except NameError:
-            raise SemHubException('Unsupported NLG: %s' % nlg_type)
+            raise TemplateNLGException('Unsupported NLG: %s' % nlg_type)
 
     return nlg
 
