@@ -11,14 +11,8 @@ from __future__ import unicode_literals
 from collections import namedtuple
 # from operator import mul
 
-from alex.utils.exception import AlexException
-
 
 _HypWithEv = namedtuple('HypothesisWithEvidence', ['prob', 'fact', 'evidence'])
-
-
-class NBListException(AlexException):
-    pass
 
 
 class Hypothesis(object):

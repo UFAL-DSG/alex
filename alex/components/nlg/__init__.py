@@ -3,6 +3,7 @@
 
 import sys
 import os.path
+from alex import AlexException
 
 # Add the directory containing the alex package to python path
 path, directory = os.path.split(os.path.abspath(__file__))

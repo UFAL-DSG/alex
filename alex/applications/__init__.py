@@ -1,3 +1,4 @@
+from alex import AlexException
 
 
 class HubException(AlexException):
@@ -11,7 +12,6 @@ class SemHubException(HubException):
 class TextHubException(HubException):
     pass
 
+
 class VoipHubException(HubException):
     pass
-
-

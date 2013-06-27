@@ -15,21 +15,10 @@ import socket
 from datetime import datetime
 
 from alex.utils.mproc import global_lock
-from alex.utils.exception import AlexException
 from alex.utils.exdec import catch_ioerror
 
 DEBUG = False
 # DEBUG = True
-if DEBUG:
-    import alex.utils.pdbonerror
-
-
-class SessionLoggerException(AlexException):
-    pass
-
-
-class SessionClosedException(AlexException):
-    pass
 
 
 class SessionLogger(object):

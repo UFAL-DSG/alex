@@ -371,7 +371,6 @@ class DAILogRegClassifier(base.SLUInterface):
 
     def _extract_feats_from_many(self, obss, inst=None):
         # DEBUG
-        # import ipdb; ipdb.set_trace()
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +

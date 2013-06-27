@@ -4,7 +4,7 @@
 # XXX I suggest renaming this to a non-special module name.  It seems strange
 # to me for __init__ to actually define any normal classes or functions.  MK
 
-from alex.utils.exception import AlexException
+from alex import AlexException
 from alex.components.dm.ontology import Ontology
 
 

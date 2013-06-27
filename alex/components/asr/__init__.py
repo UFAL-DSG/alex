@@ -11,6 +11,12 @@ __all__ = []
 if __name__ == "__main__":
     import autopath
 
+from alex import AlexException
+
+
+class ASRException(AlexException):
+    pass
+
 
 class ASRInterface(object):
     """

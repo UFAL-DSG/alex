@@ -13,10 +13,6 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     return load_wavaskey(das_fname, CUEDDialogueAct, limit, encoding)
 
 
-class CuedDialogActError(SLUException):
-    pass
-
-
 class CUEDDialogueAct(DialogueAct):
     def parse(self, da_str):
         if self._dais:
