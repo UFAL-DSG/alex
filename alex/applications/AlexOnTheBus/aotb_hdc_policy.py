@@ -173,7 +173,10 @@ class AOTBHDCPolicy(DialoguePolicy):
                     res_da.append(DialogueActItem("negate"))
                     dai = DialogueActItem("deny", slot, dialogue_state["ch_"+slot])
                     res_da.append(dai)
-                    dai = DialogueActItem("inform", slot, dialogue_state[slot])
+
+                    if dialogue_state[slot] != "none":
+                        dai = DialogueActItem("inform", slot, dialogue_state[slot])
+
                     res_da.append(dai)
 
                 dialogue_state["ch_"+slot] = "none"
