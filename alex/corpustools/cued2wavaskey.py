@@ -85,8 +85,8 @@ def main(args):
                    '{{rec.audio}} => {{rec.{recname}}}\n'.format(
                        recname=_xmlname2recname[fldname]))
     # Print a final message.
-    print 'Done.  Output written to "{outdir}".'.format(
-        outdir=args.outdir + os.sep)
+    print 'Done.  Output written to "{outdir}{base}.*".'.format(
+        outdir=args.outdir + os.sep, base=args.out_basename)
 
 
 if __name__ == "__main__":
@@ -120,7 +120,7 @@ if __name__ == "__main__":
                             'automatically (default: "extracted")')
     arger.add_argument('-f', '--fields', nargs='+',
                        help='fields of the XML transcription file that '
-                            'should be extracted')
+                            'should be extracted (default: all of them)')
     arger.add_argument('-a', '--all', action='store_true',
                        help='ignore missing values for required fields '
                             '(i.e., process all turns)')
