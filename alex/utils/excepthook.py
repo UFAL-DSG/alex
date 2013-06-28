@@ -38,6 +38,12 @@ def log(msg):
     if ExceptionHook.single is not None:
         ExceptionHook.single._log(msg)
 
+def set_hook(hook_type=None, logger=None):
+    try:
+        ExceptionHook.single.set_hook(hook_type, logger)
+    except:
+        raise HookMultipleInstanceException('The singleton istance should be set at start up')
+        
 
 class ExceptionHook(object):
     '''Singleton objects for registering various hooks for sys.exepthook.

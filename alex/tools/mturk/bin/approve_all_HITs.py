@@ -5,6 +5,8 @@ import autopath
 import argparse
 
 from collections import defaultdict
+
+# FIXME Oplatek: Import bellow should be absolute path probably
 from boto.mturk.connection import MTurkConnection
 
 from alex.utils.config import Config
