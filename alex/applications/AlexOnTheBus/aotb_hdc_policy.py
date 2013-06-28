@@ -117,8 +117,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                         res_da.extend(self.get_directions(dialogue_state, "prev"))
 
                 else:
-                    (dialogue_state["route_alternative"]
-                        = int(dialogue_state["alternative"]) - 1)
+                    dialogue_state["route_alternative"] = int(dialogue_state["alternative"]) - 1
 
             else:
                 res_da.append(DialogueActItem("inform", "stops_conflict", "no_stop"))
