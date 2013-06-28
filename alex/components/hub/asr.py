@@ -9,12 +9,11 @@ if __name__ == "__main__":
 
 import multiprocessing
 import time
-import traceback
 
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, \
     UtteranceConfusionNetwork
@@ -110,7 +109,7 @@ class ASR(multiprocessing.Process):
                     self.recognition_on = False
 
                     self.commands.send(Command("flushed()", 'ASR', 'HUB'))
-                    
+
                     return False
 
         return False
@@ -132,7 +131,6 @@ class ASR(multiprocessing.Process):
                 elif data_rec.parsed['__name__'] == "speech_end":
                     dr_speech_start = "speech_end"
 
-                
                 # Check consistency of the input command.
                 if dr_speech_start:
                     if ((not self.recognition_on

@@ -50,7 +50,7 @@ def global_lock(lock):
     """This decorator makes the decorated function thread safe.
 
     Keyword arguments:
-        lock -- an global variable pointing to the object to lock on
+        lock -- a global variable pointing to the object to lock on
 
     """
     def decorator(user_function):
@@ -114,7 +114,8 @@ def async(func):
 
 
 class InstanceID(object):
-    """ This class provides unique ids to all instances of objects inheriting
+    """
+    This class provides unique ids to all instances of objects inheriting
     from this class.
 
     """
@@ -238,7 +239,7 @@ class SystemLogger(object):
         Before writing into a logging file, it locks the file.
 
         """
-        
+
         if self.stdout:
             # Log to stdout.
             if (SystemLogger.levels[lvl] >=

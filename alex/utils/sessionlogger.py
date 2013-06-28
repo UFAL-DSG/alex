@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is mostly PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008.
 
 import multiprocessing
 import fcntl
@@ -9,23 +11,16 @@ import os.path
 import re
 import xml.dom.minidom
 import socket
-import codecs
 
 from datetime import datetime
 
 from alex.utils.mproc import global_lock
-from alex.utils.exception import AlexException
 from alex.utils.exdec import catch_ioerror
+from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
-import alex.utils.pdbonerror
+DEBUG = False
+# DEBUG = True
 
-
-class SessionLoggerException(AlexException):
-    pass
-
-
-class SessionClosedException(AlexException):
-    pass
 
 class SessionLogger(object):
     """ This is a multiprocessing safe logger. It should be used by the alex to
@@ -78,7 +73,8 @@ class SessionLogger(object):
         """
         self.session_dir_name.value = output_dir
 
-        f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
+        f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                 "w", 0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
@@ -137,7 +133,8 @@ class SessionLogger(object):
         modifying it.
 
         """
-        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
+        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
+                      "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
@@ -342,7 +339,8 @@ class SessionLogger(object):
                 da.appendChild(doc.createTextNode(unicode(text)))
                 break
         else:
-            raise SessionLoggerException("Missing turn element for %s speaker" % speaker)
+            raise SessionLoggerException(
+                "Missing turn element for {spkr} speaker".format(spkr=speaker))
 
         self.close_session_xml(doc)
 
@@ -363,7 +361,9 @@ class SessionLogger(object):
                 da.setAttribute("starttime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for the %s speaker") % speaker)
+            raise SessionLoggerException(
+                ("Missing turn element for the {spkr} speaker".format(
+                    spkr=speaker)))
 
         self.rec_started_filename = fname
         self.close_session_xml(doc)
@@ -381,7 +381,9 @@ class SessionLogger(object):
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing rec element for the %s fname.") % fname)
+            raise SessionLoggerException(
+                ("Missing rec element for the {fname} fname.".format(
+                    fname=fname)))
 
         self.close_session_xml(doc)
 

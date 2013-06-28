@@ -107,7 +107,7 @@ function validateToken(str)
             document.getElementById("tokenvalid").style.padding="3px";
         }
     }
-    xmlhttp.open("GET","validate_token.py?token="+str,true);
+    xmlhttp.open("GET","validate-token.py?token="+str,true);
     xmlhttp.setRequestHeader("If-Modified-Since", "Thu, 1 Jan 1970 00:00:00 GMT");
     xmlhttp.setRequestHeader("Cache-Control", "no-cache");
     xmlhttp.send();

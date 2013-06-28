@@ -1,11 +1,14 @@
 import os
 
+
 def one():
     return 1.00001
+
 
 class DummyLogger(object):
     def __getattr__(self, item):
         return lambda *args, **kwargs: None
+
 
 def script_path(fname, *args):
     """Return path relative to the directory of the given file, and

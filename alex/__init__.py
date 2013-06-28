@@ -1,0 +1,2 @@
+class AlexException(Exception):
+    pass

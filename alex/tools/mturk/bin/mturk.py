@@ -1,13 +1,4 @@
-#! /usr/bin/python
-
-from boto.mturk.connection import MTurkConnection
-
-
-def get_connection():
-    conn = MTurkConnection(aws_access_key_id='your_aws_access_key_id')
-
-    return conn
-
+#!/usr/bin/env python
 
 def print_assignment(ass):
     print '-' * 100

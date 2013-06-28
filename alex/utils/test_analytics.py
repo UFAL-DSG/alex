@@ -11,7 +11,7 @@ import alex.utils.analytics as analytics
 class TestAnalytics(unittest.TestCase):
     def test_analytics(self):
         a = analytics.Analytics('UA-41905278-1', 'cuni.cz')
-        a.start_session()
+        a.start_session(-1)
         a.track_event('vhub', 'incomming_call')
         a.track_event('vhub', 'call_confirmed')
         a.track_event('vhub', 'call_disconected')

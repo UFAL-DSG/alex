@@ -23,6 +23,12 @@ class CUEDDialogueAct(DialogueAct):
         dat = da_str[:left_par_idx]
         dai_strs = split_by(da_str[left_par_idx + 1:-1], splitter=',',
                             quotes='"')
+        if dat == 'hello':
+            self._dais.append(DialogueActItem(dat='hello'))
+            dais_dat = 'inform'
+            raise CuedDialogActError()
+        else:
+            dais_dat = dat
         self._dais.extend(DialogueActItem(dai='{dat}({slotval})'.format(
-            dat=dat, slotval=dai_str)) for dai_str in dai_strs)
+            dat=dais_dat, slotval=dai_str)) for dai_str in dai_strs)
         self._dais_sorted = False

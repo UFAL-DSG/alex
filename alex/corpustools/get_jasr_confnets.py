@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # vim: set fileencoding=UTF-8 :
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 """
@@ -36,7 +36,7 @@ import sys
 from time import sleep
 import traceback
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
 from alex.corpustools.cued import find_with_ignorelist
@@ -89,7 +89,7 @@ def start_julius(cfg, callback, err_fname='julius.err'):
 
 
 def clean_up(jul, grep, errfile):
-    jul.kill_all_juliuses()
+    jul.kill_my_julius()
     grep.flush()
     grep.terminate()
     errfile.close()
@@ -147,7 +147,7 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                         traceback.print_exc()
                         print "get_jasr_confnets: Restarting Julius."
                         clean_up(jul, grep, errfile)
-                        jul = None
+                        jul, grep, errfile = start_julius(cfg, on_no_context)
                     else:
                         exception = None
 

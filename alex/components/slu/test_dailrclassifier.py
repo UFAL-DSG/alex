@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os.path
 import unittest
 
 if __name__ == "__main__":
     import autopath
-import __init__
 
 from alex.components.asr.utterance import UtteranceConfusionNetwork
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
+from alex.components.slu.common import slu_factory
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
 import alex.components.slu.dailrclassifier as DAILRSLU
@@ -18,13 +19,22 @@ from alex.utils.config import as_project_path
 CONFIG_DICT = {
   'SLU': {
     'debug': True,
-    'cldb': as_project_path("applications/CamInfoRest/data/database.py"),
-    'type': 'DAILogRegClassifier',
-    'DAILogRegClassifier': {
-        'model':
-        # as_project_path('applications/CamInfoRest/models/130412_minf60-minfc35-mind60-s1.0.slu_model.gz')
-        as_project_path('applications/CamInfoRest/models/130516_minf60-minfc35-mind60.slu_model.gz')
-    },
+    'type': 'cl-tracing',
+    'cl-tracing': {
+        'cldb_fname': as_project_path(os.path.join(
+            'applications', 'CamInfoRest', 'data', 'database.py')),
+        'do_preprocessing': True,
+        'testing': {
+            'model_fname': as_project_path(os.path.join(
+                'applications', 'CamInfoRest', 'models',
+                '130516_minf60-minfc35-mind60.slu_model.gz')),
+            'renormalise': True,   # Whether to normalise probabilities for
+                                   # alternative values for same slots.
+            'threshold': None,     # set to None to use the learned one
+            'vanilla': True,       # set to True if no output files should be
+                                   # written
+        }
+    }
   }
 }
 
@@ -47,11 +57,12 @@ class TestDAILRClassifier(unittest.TestCase):
         slu_best_da = DialogueAct("inform(=restaurant)&inform(food=chinese)")
 
         cfg = Config(config=CONFIG_DICT)
-        cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
-        preprocessing = SLUPreprocessing(cldb)
-        slu = DAILRSLU.DAILogRegClassifier(preprocessing)
-        slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
-        slu_hyp = slu.parse(asr_confnet)
+        # cldb = CategoryLabelDatabase(cfg['SLU']['cldb'])
+        # preprocessing = SLUPreprocessing(cldb)
+        # slu = DAILRSLU.DAILogRegClassifier(preprocessing)
+        # slu.load_model(cfg['SLU']['DAILogRegClassifier']['model'])
+        slu = slu_factory(cfg, require_model=True)
+        slu_hyp = slu.parse({'utt_cn': asr_confnet})
         slu_hyp_best_da = slu_hyp.get_best_da().sort()
 
         s = []

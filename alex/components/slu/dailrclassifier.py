@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
+from __future__ import unicode_literals
+
 from collections import defaultdict, namedtuple
 import copy
 import cPickle as pickle
@@ -19,15 +21,15 @@ from sklearn.linear_model import LogisticRegression
 # TODO Rewrite using lazy imports.
 from alex.components.asr.utterance import UtteranceFeatures, \
     UtteranceNBListFeatures, UtteranceConfusionNetworkFeatures, UtteranceHyp
+# DEBUG
+from alex.components.asr.utterance import UtteranceConfusionNetwork
 from alex.components.slu import base
 from alex.components.slu.da import DialogueActItem, \
     DialogueActConfusionNetwork, DialogueActFeatures, \
-    DialogueActNBListFeatures, merge_slu_confnets
-from alex.components.slu.exception import SLUException
+    DialogueActNBListFeatures
+from alex.components.slu.exceptions import SLUException, DAILRException
 from alex.ml.features import Features
 from alex.utils.various import crop_to_finite
-
-from exception import DAILRException
 
 
 def get_features_from_tree(tree):
@@ -120,20 +122,19 @@ class DAILogRegClassifier(base.SLUInterface):
     def __init__(self,
                  preprocessing=None,
                  clser_type='logistic',
-                 features_type='ngram',
+                 features_type=('ab_ngram', 'ngram'),
                  ft_args=dict(),
                  ft_kwargs=dict(),
                  # features_size=4,
-                 abstractions=('concrete', 'abstract'),
+                 abstractions=('abstract', ),
                  cfg=None):
         """TODO
 
         Arguments (partial listing):
             abstractions: what abstractions to do with DAs:
-                'concrete' ... include concrete DAs
                 'partial'  ... include DAs instantiated with do_abstract=False
                 'abstract' ... include DAs instantiated with do_abstract=True
-                (default: ('concrete', 'partial', 'abstract'))
+                (default: ('abstract', ))
             cfg: currently ignored (included after it was added to
                 SLUInterface constructor)
 
@@ -149,7 +150,7 @@ class DAILogRegClassifier(base.SLUInterface):
         if clser_type == 'logistic':
             self.intercepts = dict()
             self.coefs = dict()
-        self.features_type = features_type
+        self.features_type = base.sort_fts(features_type)
         self.ft_args = copy.deepcopy(base.ft_default_args)
         self.ft_args.update(ft_args)
         self.ft_kwargs = copy.deepcopy(base.ft_default_kwargs)
@@ -249,6 +250,11 @@ class DAILogRegClassifier(base.SLUInterface):
                 obs = obss.get(obs_type, None)
             else:
                 obs = obss.get(obs_type, dict()).get(utt_id, None)
+
+            # DEBUG
+            if (isinstance(obs, UtteranceConfusionNetwork)
+                    and any(obs._long_links)):
+                pass
             # Handle the case of a missing observation.
             if obs is None:
                 if this_ft_props.is_abstracted:
@@ -265,7 +271,7 @@ class DAILogRegClassifier(base.SLUInterface):
                     if inst == 'all':
                         for do_abstract in self._do_abstract_values:
                             feat_list = list()
-                            for instion in obs.all_instantiations:
+                            for instion in obs.all_instantiations():
                                 new_feats = feat_class(*this_ft_args,
                                                        **this_ft_kwargs)
                                 new_feats.parse(instion)
@@ -289,11 +295,11 @@ class DAILogRegClassifier(base.SLUInterface):
                             new_feats.parse(obs_inst)
                             feat_sets.append(new_feats)
 
-                    if 'concrete' in self.abstractions:
-                        new_feats = feat_class(*this_ft_args,
-                                               **this_ft_kwargs)
-                        new_feats.parse(obs)
-                        feat_sets.append(new_feats)
+                    # if 'concrete' in self.abstractions:
+                        # new_feats = feat_class(*this_ft_args,
+                                               # **this_ft_kwargs)
+                        # new_feats.parse(obs)
+                        # feat_sets.append(new_feats)
                 else:  # if this type of features does not allow abstraction,
                     new_feats = feat_class(*this_ft_args, **this_ft_kwargs)
                     new_feats.parse(obs)
@@ -362,6 +368,7 @@ class DAILogRegClassifier(base.SLUInterface):
         return feats
 
     def _extract_feats_from_many(self, obss, inst=None):
+        # DEBUG
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +
@@ -371,27 +378,9 @@ class DAILogRegClassifier(base.SLUInterface):
             (len(self.abstractions) if base.ft_props[ft].is_abstracted else 1)
             for ft in self.features_type)
 
-        return {utt_id: self._extract_feats_from_one(obss, utt_id=utt_id)
+        return {utt_id: self._extract_feats_from_one(obss, inst=inst,
+                                                     utt_id=utt_id)
                 for utt_id in self.utt_ids}
-
-        # # XXX Why the asymmetry with self.utterances (and not utterances
-        # # passed in as an argument)?
-        # return {utt_id:
-        #         self._extract_feats_from_one(
-        #             utt_hyp=(self.utterances[utt_id]
-        #                      if self.utterances is not None else None),
-        #             abutt_hyp=(self.abutterances[utt_id]
-        #                        if self.abutterances is not None else None),
-        #             prev_da=(prev_das[utt_id]
-        #                      if prev_das is not None else None),
-        #             utt_nblist=(utt_nblists[utt_id]
-        #                         if utt_nblists is not None else None),
-        #             abutt_nblist=(abutt_nblists[utt_id]
-        #                           if abutt_nblists is not None else None),
-        #             da_nblist=(da_nblists[utt_id]
-        #                        if da_nblists is not None else None),
-        #             inst=inst)
-        #         for utt_id in self.utt_ids}
 
     def extract_features(self, obss, das, verbose=False):
         """
@@ -1137,7 +1126,6 @@ class DAILogRegClassifier(base.SLUInterface):
             self.cls_thresholds[dai] = calib_data[split_idx][0]
 
         if verbose:
-            print
             print "Best error: {err}".format(err=best_error)
             print "Threshold: {thresh}".format(thresh=self.cls_thresholds[dai])
             print >>sys.stderr, "Done calibrating the prior."
@@ -1149,8 +1137,10 @@ class DAILogRegClassifier(base.SLUInterface):
             # as a set:
             # (the `[0]' selects the 0-th output variable, which is the only
             # one)
-            used_fidxs = reduce(set.union, (set(coefs.nonzero()[0])
-                                            for coefs in self.coefs.values()))
+            used_fidxs = reduce(set.union,
+                                (set(coefs.nonzero()[0])
+                                 for coefs in self.coefs.values()),
+                                set())
             # as an array:
             used_fidxs_ar = np.array(sorted(used_fidxs))
             # Map old feature indices onto new indices.
@@ -1297,6 +1287,15 @@ class DAILogRegClassifier(base.SLUInterface):
             self.ft_args = base.ft_default_args
             self.ft_kwargs = base.ft_default_kwargs
 
+            # 'ngram' was used to mean both 'ngram' and 'ab_ngram' in earlier
+            # versions (whenever 'do_preprocessing' was set).  Similar for
+            # other feature types.  Account for this.
+            cur_fts = set(self.features_type)
+            for abstractable in ('ngram', 'nbl_ngram', 'cn_ngram'):
+                if abstractable in cur_fts:
+                    cur_fts.add('ab_' + abstractable)
+            self.features_type = base.sort_fts(cur_fts)
+
         # Recast model parameters from an sklearn object as plain lists of
         # coefficients and intercept.
         if version not in '45' and self.clser_type == 'logistic':
@@ -1343,7 +1342,8 @@ class DAILogRegClassifier(base.SLUInterface):
             return self.trained_classifiers[dai].predict_proba(feat_vec)
 
     def parse_1_best(self, obs, ret_cl_map=False, include_other=True,
-                     prob_combine_meth='max', verbose=False):
+                     prob_combine_meth='max', verbose=False,
+                     *args, **kwargs):
         """
         TODO Update.
 
@@ -1376,6 +1376,7 @@ class DAILogRegClassifier(base.SLUInterface):
 
 
         """
+
         # Precondition checking.
         if not hasattr(self, 'feature_idxs'):
             raise DAILRException('Attempted to use the SLU parser without '
@@ -1383,6 +1384,7 @@ class DAILogRegClassifier(base.SLUInterface):
 
         obs = copy.deepcopy(obs)
 
+        # XXX Should be now handled by base.parse().
         if 'utt' in obs and isinstance(obs['utt'], UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             obs['utt'] = obs['utt'].utterance
@@ -1529,7 +1531,7 @@ class DAILogRegClassifier(base.SLUInterface):
             return confnet, category_labels
         return confnet
 
-    def parse_nblist(self, obs_list):
+    def parse_nblist(self, obs, *args, **kwargs):
         """
         Parse n-best list by parsing each item in the list and then merging the
         results.
@@ -1537,30 +1539,20 @@ class DAILogRegClassifier(base.SLUInterface):
         """
         # XXX!!! Temporary workaround. However, this would be the way to handle
         # different types of observations in the new SLU parser (version >= 5).
-        return self.parse_1_best(self, {'nbl_ngram': obs_list})
+        # return self.parse_1_best({'utt_nbl': obs})
+        known_ots = set(base.ft_props[ft].obs_type
+                        for ft in self.features_type)
+        if 'utt_nbl' in known_ots:
+            return self.parse_1_best(obs, *args, **kwargs)
+        else:
+            return super(DAILogRegClassifier, self).parse_nblist(obs)
 
-        if len(obs_list) == 0:
-            return DialogueActConfusionNetwork()
-
-        dacn_list = []
-        for prob, utt in obs_list:
-            if "__other__" == utt:
-                dacn = DialogueActConfusionNetwork()
-                dacn.add(1.0, DialogueActItem("other"))
-            else:
-                dacn = self.parse_1_best(utt)
-
-            dacn_list.append((prob, dacn))
-
-        dacn = merge_slu_confnets(dacn_list)
-        dacn.prune()
-        dacn.sort()
-
-        return dacn
-
-    def parse_confnet(self, confnet, include_other=True,
-                      prob_combine_meth='max', verbose=False):
+    def parse_confnet(self, obs, include_other=True,
+                      prob_combine_meth='max', verbose=False,
+                      *args, **kwargs):
         """
+        TODO Update.
+
         Parse the confusion network by generating an n-best list and parsing
         this n-best list.
 
@@ -1575,114 +1567,122 @@ class DAILogRegClassifier(base.SLUInterface):
         """
         # XXX!!! Temporary workaround. However, this would be the way to handle
         # different types of observations in the new SLU parser (version >= 5).
-        return self.parse_1_best(self, {'cn_ngram': confnet},
-                                 include_other=include_other,
-                                 prob_combine_meth=prob_combine_meth,
-                                 verbose=verbose)
+        known_ots = set(base.ft_props[ft].obs_type
+                        for ft in self.features_type)
+        if 'utt_cn' in known_ots:
+            return self.parse_1_best(obs, include_other=include_other,
+                                     prob_combine_meth=prob_combine_meth,
+                                     verbose=verbose)
+        else:
+            return super(DAILogRegClassifier, self).parse_confnet(
+                obs, include_other=include_other,
+                prob_combine_meth=prob_combine_meth, verbose=verbose)
 
-        # Precondition checking.
-        if not hasattr(self, 'feature_idxs'):
-            raise DAILRException('Attempted to use the SLU parser without '
-                                 'a model.')
-
-        if verbose:
-            print 'Parsing confnet "{cn}".'.format(cn=confnet)
-
-        if self.preprocessing:
-            confnet = self.preprocessing.normalise_confnet(confnet)
-            ab_confnet, catlabs = (
-                self.preprocessing.values2category_labels_in_confnet(confnet))
-        # else:
-            # catlabs = dict()
-
-        # Generate utterance features.
-        cn_feats = self._extract_feats_from_one(utt_hyp=confnet,
-                                                abutt_hyp=ab_confnet)
-        conc_feat_vec = (cn_feats.get_feature_vector(self.feature_idxs))
-
-        if verbose >= 2:
-            print 'Features: ', cn_feats
-
-        da_confnet = DialogueActConfusionNetwork()
-
-        # Try all classifiers we have trained, not only those represented in
-        # the input da_nblist (when classifying by DA n-best lists).
-        for dai in self.trained_classifiers:
-            if verbose:
-                print "Using classifier: ", dai
-
-            # TODO Pull out.
-            dai_dat = dai.dat
-            dai_slot = dai.name
-            dai_catlab = dai.value
-            dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
-                                else tuple())
-            if dai.is_generic:
-                compatible_insts = (lambda confnet:
-                                    confnet.insts_for_type(dai_catlab_words))
-            else:
-                try:
-                    dai_val_proper = next(iter(dai.orig_values))
-                except StopIteration:
-                    dai_val_proper = None
-                dai_val_proper_words = (tuple(dai_val_proper.split())
-                                        if dai_val_proper else tuple())
-                compatible_insts = (
-                    lambda confnet: confnet.insts_for_typeval(
-                        dai_catlab_words, dai_val_proper_words))
-
-            insts = compatible_insts(ab_confnet)
-
-            if insts:
-                for type_, value in insts:
-                    if not include_other and ' '.join(value) == dai.other_val:
-                        continue
-                    # Extract the inputs, instatiated for this type_=value
-                    # assignment.
-                    inst_feats = self._extract_feats_from_one(
-                        utt_hyp=confnet, abutt_hyp=ab_confnet,
-                        inst=(type_, value))
-                    feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
-
-                    try:
-                        dai_prob = self.predict_prob(dai, feat_vec)
-                        # dai_prob = (self.trained_classifiers[dai]
-                                    # .predict_proba(feat_vec))
-                    except Exception as ex:
-                        print '(EE) Parsing exception: ', str(ex)
-                        continue
-
-                    if verbose:
-                        print "Classification result: ", dai_prob
-
-                    inst_dai = DialogueActItem(dai_dat, dai_slot,
-                                               ' '.join(value))
-                    # TODO Parameterise with the merging method.
-                    da_confnet.add_merge(dai_prob, inst_dai,
-                                         combine=prob_combine_meth)
-                                         # overwriting=not dai.is_generic)
-            else:
-                if dai.is_generic or (not include_other
-                                      and dai.other_val in dai.unnorm_values):
-                    # Cannot evaluate an abstract classifier with no
-                    # instantiations for its slot on the input.
-                    continue
-                try:
-                    dai_prob = self.predict_prob(dai, conc_feat_vec)
-                    # dai_prob = (self.trained_classifiers[dai]
-                                # .predict_proba(conc_feat_vec))
-                except Exception as ex:
-                    print '(EE) Parsing exception: ', str(ex)
-                    continue
-
-                if verbose:
-                    print "Classification result: ", dai_prob
-
-                dai.category_label2value()
-                da_confnet.add_merge(dai_prob, dai,
-                                     combine=prob_combine_meth)
-
-        if verbose:
-            print "DA: ", da_confnet
-
-        return da_confnet
+        # confnet = obs['utt_cn']
+#
+        # # Precondition checking.
+        # if not hasattr(self, 'feature_idxs'):
+            # raise DAILRException('Attempted to use the SLU parser without '
+                                 # 'a model.')
+#
+        # if verbose:
+            # print 'Parsing confnet "{cn}".'.format(cn=confnet)
+#
+        # if self.preprocessing:
+            # confnet = self.preprocessing.normalise_confnet(confnet)
+            # ab_confnet, catlabs = (
+                # self.preprocessing.values2category_labels_in_confnet(confnet))
+        # # else:
+            # # catlabs = dict()
+#
+        # # Generate utterance features.
+        # cn_feats = self._extract_feats_from_one(utt_hyp=confnet,
+                                                # abutt_hyp=ab_confnet)
+        # conc_feat_vec = (cn_feats.get_feature_vector(self.feature_idxs))
+#
+        # if verbose >= 2:
+            # print 'Features: ', cn_feats
+#
+        # da_confnet = DialogueActConfusionNetwork()
+#
+        # # Try all classifiers we have trained, not only those represented in
+        # # the input da_nblist (when classifying by DA n-best lists).
+        # for dai in self.trained_classifiers:
+            # if verbose:
+                # print "Using classifier: ", dai
+#
+            # # TODO Pull out.
+            # dai_dat = dai.dat
+            # dai_slot = dai.name
+            # dai_catlab = dai.value
+            # dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
+                                # else tuple())
+            # if dai.is_generic:
+                # compatible_insts = (lambda confnet:
+                                    # confnet.insts_for_type(dai_catlab_words))
+            # else:
+                # try:
+                    # dai_val_proper = next(iter(dai.orig_values))
+                # except StopIteration:
+                    # dai_val_proper = None
+                # dai_val_proper_words = (tuple(dai_val_proper.split())
+                                        # if dai_val_proper else tuple())
+                # compatible_insts = (
+                    # lambda confnet: confnet.insts_for_typeval(
+                        # dai_catlab_words, dai_val_proper_words))
+#
+            # insts = compatible_insts(ab_confnet)
+#
+            # if insts:
+                # for type_, value in insts:
+                    # if not include_other and ' '.join(value) == dai.other_val:
+                        # continue
+                    # # Extract the inputs, instatiated for this type_=value
+                    # # assignment.
+                    # inst_feats = self._extract_feats_from_one(
+                        # utt_hyp=confnet, abutt_hyp=ab_confnet,
+                        # inst=(type_, value))
+                    # feat_vec = inst_feats.get_feature_vector(self.feature_idxs)
+#
+                    # try:
+                        # dai_prob = self.predict_prob(dai, feat_vec)
+                        # # dai_prob = (self.trained_classifiers[dai]
+                                    # # .predict_proba(feat_vec))
+                    # except Exception as ex:
+                        # print '(EE) Parsing exception: ', str(ex)
+                        # continue
+#
+                    # if verbose:
+                        # print "Classification result: ", dai_prob
+#
+                    # inst_dai = DialogueActItem(dai_dat, dai_slot,
+                                               # ' '.join(value))
+                    # # TODO Parameterise with the merging method.
+                    # da_confnet.add_merge(dai_prob, inst_dai,
+                                         # combine=prob_combine_meth)
+                                         # # overwriting=not dai.is_generic)
+            # else:
+                # if dai.is_generic or (not include_other
+                                      # and dai.other_val in dai.unnorm_values):
+                    # # Cannot evaluate an abstract classifier with no
+                    # # instantiations for its slot on the input.
+                    # continue
+                # try:
+                    # dai_prob = self.predict_prob(dai, conc_feat_vec)
+                    # # dai_prob = (self.trained_classifiers[dai]
+                                # # .predict_proba(conc_feat_vec))
+                # except Exception as ex:
+                    # print '(EE) Parsing exception: ', str(ex)
+                    # continue
+#
+                # if verbose:
+                    # print "Classification result: ", dai_prob
+#
+                # dai.category_label2value()
+                # da_confnet.add_merge(dai_prob, dai,
+                                     # combine=prob_combine_meth)
+#
+        # if verbose:
+            # print "DA: ", da_confnet
+#
+        # return da_confnet

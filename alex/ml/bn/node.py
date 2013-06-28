@@ -25,7 +25,8 @@ class Node(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, name, aliases={}):
+    def __init__(self, name, aliases=None):
+        if not aliases: aliases = {}
         self.name = name
         self.incoming_message = {}
         self.belief = None
@@ -87,10 +88,10 @@ class VariableNode(Node):
 class DiscreteVariableNode(VariableNode):
     """Node containing variable."""
 
-    def __init__(self, name, values):
+    def __init__(self, name, values, logarithmetic=False):
         super(DiscreteVariableNode, self).__init__(name)
         self.values = values
-        self.belief = constant_factor([name], {name: values}, len(values))
+        self.belief = constant_factor([name], {name: values}, len(values), logarithmetic)
         self.is_observed = False
 
     def message_to(self, node):
@@ -173,7 +174,8 @@ class DiscreteFactorNode(FactorNode):
 class DirichletParameterNode(VariableNode):
     """Node containing parameter."""
 
-    def __init__(self, name, alpha, aliases={}):
+    def __init__(self, name, alpha, aliases=None):
+        if not aliases: aliases = {}
         super(DirichletParameterNode, self).__init__(name, aliases)
         self.alpha = alpha
         self.outgoing_message = {}
@@ -216,7 +218,8 @@ class DirichletParameterNode(VariableNode):
 class DirichletFactorNode(FactorNode):
     """Node containing dirichlet factor."""
 
-    def __init__(self, name, aliases={}):
+    def __init__(self, name, aliases=None):
+        if not aliases: aliases = {}
         super(DirichletFactorNode, self).__init__(name, aliases)
         self.parents = []
         self.child = None
@@ -299,9 +302,11 @@ class DirichletFactorNode(FactorNode):
         # (1) w_k* is a product of w_k and expected x_k
         w_k = prod_cavity * expected_theta
 
+        print "w_k", w_k
+
         # Normalize weights:
         sum_of_weights = w_0 + w_k.marginalize(self.parents)
-        sum_of_weights = sum_of_weights.marginalize(self.parents)
+        print "sum_of_weights", sum_of_weights
         w_0 /= sum_of_weights
         w_k /= sum_of_weights
 
@@ -336,11 +341,14 @@ class DirichletFactorNode(FactorNode):
                     child_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
                     w_k_c[child_assignment] = value
 
+            print "w_k_c", w_k_c
             expected_value_k_weighted = w_k_c * expected_value_k
+            print "expected_value_k_weighted", expected_value_k_weighted
             expected_values.append(expected_value_k_weighted)
 
         # The resulting expected parameters are a sum of weighted expectations
         E_alpha = reduce(operator.add, expected_values)
+        print "E_alpha", E_alpha
 
         # Compute expected value of theta squared:
         alpha = self.incoming_parameter
@@ -372,6 +380,7 @@ class DirichletFactorNode(FactorNode):
 
         # The resulting expected parameters are a sum of weighted expectations
         E_alpha2 = reduce(operator.add, expected_values_squared)
+        print "E_alpha2", E_alpha2
 
         alpha_0 = defaultdict(list)
 
@@ -380,6 +389,8 @@ class DirichletFactorNode(FactorNode):
                 parent_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
                 alpha_0[parent_assignment].append((E_alpha[assignment] - E_alpha2[assignment]) /
                                                   (E_alpha2[assignment] - E_alpha[assignment]**2))
+
+        print "alpha_0", alpha_0
 
         new_alpha_0 = deepcopy(alpha).marginalize(self.parents)
         for assignment, _ in new_alpha_0:

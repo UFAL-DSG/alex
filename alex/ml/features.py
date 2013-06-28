@@ -191,6 +191,7 @@ class Features(object):
                     last_mbr = last_mbr[-1]
                 except Exception:
                     return feature
+        return feature
 
 
 # XXX JoinedFeatures are ignorant of features they are composed of.  It would

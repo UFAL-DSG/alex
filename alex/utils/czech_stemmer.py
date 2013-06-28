@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 ''' Czech stemmer
 Copyright © 2010 Luís Gomes <luismsgomes@gmail.com>.
 
@@ -34,7 +35,7 @@ def cz_stem(l, aggressive=False):
         return cz_stem_word(l)
     else:
         return [cz_stem(w) for w in l if w]
-    
+
 def _remove_case(word):
     if len(word) > 7 and word.endswith(u"atech"):
         return word[:-5]

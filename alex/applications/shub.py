@@ -4,12 +4,12 @@ import autopath
 
 import argparse
 
+from alex.applications.exceptions import SemHubException
 from alex.components.hub import Hub
-from alex.components.slu.da import DialogueAct, DialogueActNBList, \
-    DialogueActException, DialogueActItemException
+from alex.components.slu.da import DialogueAct, DialogueActNBList
+from alex.components.slu.exceptions import DialogueActException, DialogueActItemException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.utils.config import Config
-from alex.utils.exception import SemHubException
 
 
 class SemHub(Hub):
@@ -89,7 +89,7 @@ class SemHub(Hub):
         nblist.merge()
         nblist.scale()
         nblist.add_other()
-        
+
         return nblist
 
     def run(self):

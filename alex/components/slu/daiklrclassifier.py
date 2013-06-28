@@ -8,13 +8,8 @@ import numpy as np
 
 from sklearn.linear_model import LogisticRegression
 
-from exception import SLUException
 from da import DialogueActItem, DialogueAct
 from dailrclassifier import *
-
-
-class DAIKernelException(SLUException):
-    pass
 
 
 class DAIDotKernel(object):
@@ -164,13 +159,13 @@ class DAIKerLogRegClassifierLearning(object):
         # generate training data
         self.classifiers_training_data = defaultdict(list)
 
-        parsed_classfiers = {}
+        parsed_classifiers = {}
         for c in self.classifiers:
-            parsed_classfiers[c] = DialogueActItem()
-            parsed_classfiers[c].parse(c)
+            parsed_classifiers[c] = DialogueActItem()
+            parsed_classifiers[c].parse(c)
         for k in self.utterance_features_list:
             for c in self.classifiers:
-                if parsed_classfiers[c] in self.das[k]:
+                if parsed_classifiers[c] in self.das[k]:
                     self.classifiers_training_data[c].append(1.0)
                 else:
                     self.classifiers_training_data[c].append(0.0)
@@ -316,10 +311,12 @@ class DAIKerLogRegClassifier(object):
     def get_size(self):
         return len(self.utterance_features_list)
 
-    def parse(self, utterance, verbose=False):
-        """Parse utterance and generate the best interpretation in the form of
-        an dialogue act (an instance of DialogueAct.
+    def parse(self, obs, verbose=False):
         """
+        Parse utterance and generate the best interpretation in the form of an
+        dialogue act (an instance of DialogueAct).
+        """
+        utterance = obs['utt']
         if verbose:
             print utterance
 

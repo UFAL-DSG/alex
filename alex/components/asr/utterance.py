@@ -5,27 +5,28 @@
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import copy
 from itertools import izip, product
 from operator import itemgetter, mul
 
 from alex.utils import text
 from alex.utils.text import Escaper
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException
 from alex.corpustools.wavaskey import load_wavaskey
-from alex.ml.hypothesis import Hypothesis, NBList, NBListException
+from alex.ml.hypothesis import Hypothesis, NBList
+from alex.ml.exceptions import NBListException
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
 from alex.ml.features import *
+from alex.utils.various import flatten
 
 
-SENTENCE_START = u'<s>'
-SENTENCE_END = u'</s>'
+SENTENCE_START = '<s>'
+SENTENCE_END = '</s>'
 
 
-def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
+def load_utterances(fname, limit=None, encoding='UTF-8'):
     """
     Loads a dictionary of utterances from a given file.
 
@@ -38,14 +39,14 @@ def load_utterances(utt_fname, limit=None, encoding='UTF-8'):
         [whitespace..]<utterance>[whitespace..]
 
     Arguments:
-        utt_fname -- path towards the file to read the utterances from
+        fname -- path towards the file to read the utterances from
         limit -- limit on the number of utterances to read
         encoding -- the file encoding
 
     Returns a dictionary with utterances (instances of Utterance) as values.
 
     """
-    return load_wavaskey(utt_fname, Utterance, limit, encoding)
+    return load_wavaskey(fname, Utterance, limit, encoding)
 
 
 def load_utt_confnets(fname, limit=None, encoding='UTF-8'):
@@ -72,7 +73,7 @@ def load_utt_confnets(fname, limit=None, encoding='UTF-8'):
     Returns a dictionary with confnets (instances of Utterance) as values.
 
     """
-    return load_wavaskey(fname, limit, encoding, UtteranceConfusionNetwork)
+    return load_wavaskey(fname, UtteranceConfusionNetwork, limit, encoding)
 
 
 class UtteranceException(SLUException):
@@ -228,7 +229,7 @@ class Utterance(object):
         return -1
 
     def replace(self, orig, replacement, return_startidx=False):
-        """\
+        """
         Analogous to the `str.replace' method.  If the original phrase is not
         found in this utterance, this instance is returned.  If it is found,
         only the first match is replaced.
@@ -360,7 +361,8 @@ class AbstractedUtterance(Utterance, Abstracted):
         return self.replace(phrase, (combined_el, ))
 
     def replace(self, orig, replacement):
-        """Replaces the phrase given by `orig' by a new phrase, given by
+        """
+        Replaces the phrase given by `orig' by a new phrase, given by
         `replacement'.
 
         """
@@ -546,8 +548,6 @@ class UtteranceNBList(ASRHypothesis, NBList):
         try:
             return NBList.add_other(self, Utterance('__other__'))
         except NBListException as ex:
-            # # DEBUG
-            # import ipdb; ipdb.set_trace()
             raise UtteranceNBListException(ex)
 
     # XXX It is now a class invariant that the n-best list is sorted.
@@ -622,8 +622,36 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     repr_escer = Escaper(repr_spec_chars)
     str_escer = Escaper('"\\')  # Python string literal escaper
 
-    LongLink = namedtuple('LongLink', ['end', 'orig_probs', 'hyp'])
-    # TODO Document.
+    class LongLink(object):
+        # TODO Document.
+        attrs = ('end', 'orig_probs', 'hyp', 'normalise')
+        """
+        Represents a long link in a word confusion network.
+
+        Attributes:
+            end -- end index of the link (exclusive)
+            orig_probs -- list of probabilities associated with the ordinary
+                words this link corresponds to
+            hyp -- a (probability, phrase) tuple, the label of this link.
+                `phrase' itself is a sequence of words (list of strings).
+            normalise -- boolean; whether this link's probability should be
+                taken into account when normalising probabilities for
+                alternatives in the confnet
+
+        """
+
+        def __init__(self, end, orig_probs, hyp, normalise=False):
+            self.end = end
+            self.orig_probs = orig_probs
+            self.hyp = hyp
+            self.normalise = normalise
+
+        def __repr__(self):
+            return ('UtteranceConfusionNetwork.LongLink('
+                    + ', '.join('{attr}={val}'.format(attr=attr,
+                                                      val=getattr(self, attr))
+                                for attr in self.attrs)
+                    + ')')
 
     def __init__(self, rep=None):
         self._cn = list()
@@ -635,17 +663,27 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         #   index larger than (word_idx + 1), and is represented as follows:
         #       long_link :: (end_idx, orig_probs, (prob, phrase))
         #   See the LongLink definition above.
+        #
+        #   It is assumed that long links never contain empty words.
+        # FIXME Do not index long links just with -widx: they too can start at
+        # the zero-th index.
 
         # If constructing the confnet from its string representation:
         if rep is not None:
+            # First find whether the representation is yet wrapped in
+            # UtteranceConfusionNetwork("  ...  ")
+            # and get rid of it if that is the case.
+            if (rep.startswith('UtteranceConfusionNetwork("')
+                    and rep.endswith('")')):
+                rep = rep[len('UtteranceConfusionNetwork("'):-2]
+
             # Define some shortcuts.
             unesc = self.repr_escer.unescape
-            LongLink = UtteranceConfusionNetwork.LongLink
 
             # Find and parse the indices to abstracted words.
             aidxs_end = rep.find(')')
             self._abstr_idxs = ([int(idx_str) for idx_str in
-                                rep[1:aidxs_end].split(',')]
+                                 rep[1:aidxs_end].split(',')]
                                 if aidxs_end > 1 else list())
 
             # Find splitters in the rest of the string.
@@ -695,7 +733,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                        slice_end) + [slice_end]
                 ll_start = solidus_idx + 1
                 for ll_end in ll_ends:
-                    self._long_links[-1].append(eval(unesc(hyps[ll_start:ll_end])))
+                    self._long_links[-1].append(eval(unesc(
+                        hyps[ll_start:ll_end])))
                     ll_start = ll_end + 1
 
         ASRHypothesis.__init__(self)
@@ -729,7 +768,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             yield alts
 
     def __repr__(self):
-        """\
+        """
         The format is:
             ({abstr_idx},...)
             ({prob}:{word}),...
@@ -746,18 +785,21 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         escaped within each {word} and within {longlink_repr}.
 
         """
+        # XXX Why not
+        # return esc(repr(self._cn)) + '|' + esc(repr(self._long_links))
+        # ?
         # TODO If serialisation is to be used more widely, extend this approach
         # with collecting escaped representations of contents to every object
         # that would be serialised (including simple hypotheses, which are used
         # also here and dealt with explicitly).
         esc = self.repr_escer.escape
         ret = ('({idxs})'.format(idxs=u','.join(unicode(idx) for idx in
-                                               self._abstr_idxs)) +
+                                                self._abstr_idxs)) +
                ';'.join(','.join('({p!r}:{w})'.format(p=hyp[0], w=esc(hyp[1]))
                                  for hyp in alts)
                         + '|' +
                         ','.join(esc(repr(link))
-                            for link in self._long_links[start])
+                                 for link in self._long_links[start])
                         for (start, alts) in enumerate(self._cn)))
         return 'UtteranceConfusionNetwork("{rep}")'.format(
             rep=self.str_escer.escape(ret))
@@ -776,15 +818,16 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             if widx >= 0:
                 yield (self._cn[widx][altidx][1], )
             else:
-                yield (self._long_links[-widx][altidx].hyp[1], )
+                yield (self._long_links[-widx][altidx].hyp[1][0], )
 
     def join_typeval(self, type_, val):
         return (self.splitter.join((type_[0], ' '.join(val))), )
 
     def replace_typeval(self, combined, replacement):
-        replaced, repl_idxs = self._replace(combined, replacement)
+        replaced, old_idxs, new_idxs = self._replace(
+            combined, replacement, keep=False)
         replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
-                                if idx + (0, ) not in repl_idxs]
+                                if idx + (0, ) not in old_idxs]
         return replaced
 
     def iter_triples(self):
@@ -812,19 +855,24 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return self
 
     def replace(self, phrase, replacement):
-        replaced, repl_idxs = self._replace(phrase, replacement)
+        replaced, old_idxs, new_idxs = self._replace(
+            phrase, replacement, keep=False)
         return replaced
 
     def phrase2category_label(self, phrase, catlab):
-        """Replaces the phrase given by `phrase' by a new phrase, given by
+        """
+        Replaces the phrase given by `phrase' by a new phrase, given by
         `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
 
         """
-        combined_el = self.splitter.join((' '.join(catlab),
-                                          ' '.join(phrase)))
-        replaced, repl_idxs = self._replace(phrase, (combined_el, ))
-        if repl_idxs:
-            replaced._abstr_idxs.extend((idx[0], idx[1]) for idx in repl_idxs)
+        combined_el = self.splitter.join((' '.join(catlab), ' '.join(phrase)))
+        replaced, old_idxs, new_idxs = self._replace(
+            phrase, (combined_el, ), keep=True)
+        if old_idxs:
+            replaced._abstr_idxs = [idx for idx in replaced._abstr_idxs
+                                    if idx + (0, ) not in old_idxs]
+        if new_idxs:
+            replaced._abstr_idxs.extend((idx[0], idx[1]) for idx in new_idxs)
             replaced._abstr_idxs.sort()
         return replaced
 
@@ -887,12 +935,20 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             keep -- if set to True, the original phrase will be kept in the
                 confnet
 
+        Returns a tuple:
+            replaced -- the confusion network with the replacement done
+            old_idxs -- indices to words which have been removed by
+                the substitution
+            new_idxs -- indices to words of where `replacement' resides in
+                `replaced'.  Each index is a tuple (word index, alternative
+                index)...
+
         """
         # Initialise.
         replaced = self
-        repl_idxs = None
         # Try to find the first occurrence.
-        repl_idxs = list()
+        old_idxs = list()
+        new_idxs = list()
         idxs = self.get_phrase_idxs(phrase, start=0)
         if idxs:
             replaced = copy.deepcopy(self)
@@ -902,7 +958,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         while idxs:
             start_widx = abs(idxs[0][0])
             end_widx, end_aidx, end_lsidx = idxs[-1]
-            repl_idxs.extend(idxs)
+            old_idxs.extend(idxs)
 
             # Deletion:
             if len(replacement) == 0:
@@ -910,33 +966,44 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     for widx, aidx, lsidx in idxs:
                         if widx >= 0:
                             del replaced._cn[widx][aidx]
+                            # Avoid empty segments.
+                            replaced._repair_deleted(widx)
                         elif lsidx == 0:
                             del replaced._long_links[-widx][aidx]
+                            # Avoid empty segments.
+                            replaced._repair_deleted(widx)
                         else:
-                            del replaced._long_links[-widx][aidx][lsidx:]
+                            link = replaced._long_links[-widx][aidx]
+                            link.hyp = (link.hyp[0], link.hyp[1][:lsidx])
                     do_normalise = update_wordset = True
-            # Substituting in-place:
-            elif len(idxs) == len(replacement) == 1 and idxs[0][0] >= 0:
+            # Substituting one word for one word:
+            elif (not keep and len(idxs) == len(replacement) == 1
+                    and idxs[0][0] >= 0):
                 widx, aidx, lsidx = idxs[0]
+                new_idxs.append((widx, aidx))
                 repl_hyp = (replaced._cn[widx][aidx][0], replacement[0])
-                if keep:
-                    replaced._cn[widx].append(repl_hyp)
-                else:
-                    replaced._cn[widx][aidx] = repl_hyp
+                replaced._cn[widx][aidx] = repl_hyp
                 update_wordset = True
             # Substituting just a part of a long link:
             elif end_lsidx:
-                assert len(idxs) == 1  # Anything else would mean skipping
-                                       # some words.
-                replaced._long_links[-end_widx][end_aidx][end_lsidx:] = (
-                    replacement)
-                update_wordset = True
+                # FIXME This is probably wrong. get_phrase_idxs can find
+                # a phrase starting in the middle of a link and continuing
+                # after its end.
+                if len(idxs) == 1:
+                # assert len(idxs) == 1  # Anything else would mean skipping
+                                       # # some words.
+                    new_idxs.append((end_widx, end_aidx))  # XXX Like this??
+                    link = replaced._long_links[-end_widx][end_aidx]
+                    link.hyp = (link.hyp[0],
+                                link.hyp[1][:end_lsidx] + replacement)
+                    update_wordset = True
             # General case:
             else:
                 # Compute the phrase probability.
                 orig_probs = [(replaced._cn[widx][aidx][0] if widx >= 0 else
-                               replaced._long_links[-widx][aidx].hyp[0])
+                               replaced._long_links[-widx][aidx].orig_probs)
                               for (widx, aidx, lsidx) in idxs]
+                orig_probs = flatten(orig_probs)
                 prob = reduce(mul, orig_probs, 1.)
                 # Construct the new hypothesis.
                 new_hyp = (prob, replacement)
@@ -946,7 +1013,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 else:  # index to a long link
                     end = replaced._long_links[-end_widx][idxs[-1][1]].end
                 new_link = UtteranceConfusionNetwork.LongLink(
-                    end, orig_probs, new_hyp)
+                    end, orig_probs, new_hyp, normalise=not keep)
                 replaced._long_links[start_widx].append(new_link)
                 # Remove the old hypothesis.
                 if not keep:
@@ -955,6 +1022,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                             del replaced._cn[widx][aidx]
                         else:
                             del replaced._long_links[-widx][aidx]
+                new_idxs.append((-start_widx,
+                                 len(replaced._long_links[start_widx]) - 1))
                 do_normalise = update_wordset = True
 
             # Try to find another occurrence.
@@ -970,10 +1039,29 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                      for link in links
                                      for word in link.hyp[1])
 
-        return replaced, repl_idxs
+        return replaced, old_idxs, new_idxs
+
+    def _repair_deleted(self, widx):
+        """
+        Repairs the confnet in case the last alternative for widx was deleted.
+
+        Arguments:
+            widx -- index of the word in self._cn
+        """
+        # Check that the repair is needed.
+        if self._cn[widx]:
+            return
+        for l_widx in xrange(0, widx + 1):
+            for link in self._long_links[l_widx]:
+                # XXX > or >=? I think > is right but I am not sure.
+                if link.end > widx:
+                    # widx is overarched by this link, do nothing.
+                    return
+        # If repair is needed, just add en empty word here.
+        self._cn[widx].append((1., ''))
 
     def add(self, hyps):
-        """\
+        """
         Adds a new arc to the confnet with alternatives as specified.
 
         Arguments:
@@ -1047,9 +1135,9 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         # return prob
 
     def get_phrase_idxs(self, phrase, start=0, end=None,
-                        start_in_midlinks=True):
-        """\
-        Returns indexes to words constituting the given phrase within this
+                        start_in_midlinks=True, immediate=False):
+        """
+        Returns indices to words constituting the given phrase within this
         confnet.  It looks only for the first occurrence of the phrase in the
         interval specified.
 
@@ -1059,6 +1147,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             end: the index after which to stop searching
             start_in_midlinks: whether a phrase starting in the middle of
                 a long link should be considered too
+            immediate: whether the phrase has to start immediately at the start
+                index (intervening empty words are allowed)
 
         Returns:
             - an empty list in case that phrase was not found
@@ -1091,32 +1181,54 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             return []
 
         word = phrase[0]
+        idxs_start = []
+        new_empty_idx = None
         for start_idx in xrange(start, end):
+            if immediate and start_idx != start:
+                if new_empty_idx:
+                    idxs_start.append(new_empty_idx)
+                else:
+                    # This means that we read at least one non-zero word (i.e.,
+                    # there was no empty word between start and here).  Any
+                    # further matching phrases won't be immediate.
+                    break
+            new_empty_idx = None
             # Find matching hypotheses among the regular one-word arcs
-            # starting here.
+            # starting here.  Take empty words for matching, too.
             matching_hyps = [aidx_hyp for aidx_hyp
                              in enumerate(self._cn[start_idx])
-                             if aidx_hyp[1][1] == word]
+                             if aidx_hyp[1][1] in ('', word)]
             if matching_hyps:
-                if len(phrase) == 1:
-                    return [(start_idx, matching_hyps[0][0], 0)]
-                sub_find = self.get_phrase_idxs(phrase[1:], start_idx + 1, end,
-                                                start_in_midlinks=False)
-                if sub_find:
-                    return [(start_idx, matching_hyps[0][0], 0)] + sub_find
+                nonempty = [aidx_hyp for aidx_hyp in matching_hyps
+                            if aidx_hyp[1][1]]
+                if nonempty:
+                    if len(phrase) == 1:
+                        return idxs_start + [(start_idx, nonempty[0][0], 0)]
+                    sub_find = self.get_phrase_idxs(phrase[1:], start_idx + 1,
+                                                    end,
+                                                    start_in_midlinks=False,
+                                                    immediate=True)
+                    if sub_find:
+                        return idxs_start + [
+                            (start_idx, nonempty[0][0], 0)] + sub_find
+                else:
+                    new_empty_idx = (start_idx, matching_hyps[0][0], 0)
             # Find matching hypotheses among long links starting here.
             for l_idx, link in enumerate(self._long_links[start_idx]):
                 l_len = len(link.hyp[1])
                 if l_len == len(phrase):
                     if link.hyp[1] == phrase:
-                        return [(-start_idx, l_idx, 0)]
+                        return idxs_start + [(-start_idx, l_idx, 0)]
                 elif l_len < len(phrase):
                     if link.end <= end and link.hyp[1] == phrase[:l_len]:
                         sub_find = self.get_phrase_idxs(
                             phrase[l_len:], link.end, end,
-                            start_in_midlinks=False)
+                            start_in_midlinks=False,
+                            immediate=True)
                         if sub_find:
-                            return [(-start_idx, l_idx, 0)] + sub_find
+                            return idxs_start + [
+                                (-start_idx, l_idx, 0)] + sub_find
+                # XXX The option of ending in a mid-link is not accounted for.
 
         # Check whether the phrase could start in the middle of a long link.
         if start_in_midlinks:
@@ -1133,9 +1245,11 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     l_suffix = link_phr[link_start_idx:]
                     l_len = len(l_suffix)
                     if l_suffix == phrase[:l_len]:
+                        if l_len == len(phrase):
+                            return [(-start_idx, l_idx, link_start_idx)]
                         sub_find = self.get_phrase_idxs(
                             phrase[l_len:], link.end, end,
-                            start_in_midlinks=False)
+                            start_in_midlinks=False, immediate=True)
                         if sub_find:
                             return ([(-start_idx, l_idx, link_start_idx)]
                                     + sub_find)
@@ -1161,23 +1275,20 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         return worse_hyp
 
-    # FIXME Fix the typo.
-    def get_hyp_index_utterence(self, hyp_index):
+    def get_hyp_index_utterance(self, hyp_index):
         s = [alts[i][1] for i, alts in zip(hyp_index, self._cn)]
 
         return Utterance(' '.join(s))
 
     # FIXME Make this method aware of _long_links.
     def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
-        """Parses the confusion network and generates N-best hypotheses.
+        """Parses the confusion network and generates n best hypotheses.
 
         The result is a list of utterance hypotheses each with a with assigned
-        probability.  The list also include the utterance "__other__" for not
+        probability.  The list also includes the utterance "__other__" for not
         having the correct utterance in the list.
+
         """
-        # print "Confnet:"
-        # print self
-        # print
 
         open_hyp = []
         closed_hyp = {}
@@ -1210,7 +1321,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
         nblist = UtteranceNBList()
         for idx in closed_hyp:
-            nblist.add(closed_hyp[idx], self.get_hyp_index_utterence(idx))
+            nblist.add(closed_hyp[idx], self.get_hyp_index_utterance(idx))
 
         # print nblist
         # print
@@ -1218,12 +1329,12 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         nblist.merge()
         nblist.add_other()
 
-
         # print nblist
         # print
 
         return nblist
 
+    # TODO Implement!
     def merge(self):
         """Adds up probabilities for the same hypotheses.
 
@@ -1256,12 +1367,13 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         self._wordset = set(hyp[1] for alts in self._cn for hyp in alts)
 
     def normalise(self, end=None):
-        """\
+        """
         Makes sure that all probabilities add up to one.  There should be no
-        need of calling this from outside, since this invariant is ensured all
-        the time.
+        need of calling this from outside, since this invariant is ensured
+        between calls to this class' methods.
 
         """
+
         if end is None or end >= len(self._cn):
             cn_iter = self._cn
         else:
@@ -1271,30 +1383,47 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         for start_idx, alts in enumerate(cn_iter):
             # Move indices into long links one word forward.
             new_link_idxs = list()
-            for idx in link_idxs:
-                new_lidx = idx[2] + 1
-                if new_lidx < len(self._long_links[idx[0]][idx[1]].orig_probs):
-                    new_link_idxs.append((idx[0], idx[1], new_lidx))
+            for widx, aidx, lidx in link_idxs:
+                new_lidx = lidx + 1
+                if new_lidx < len(self._long_links[widx][aidx].orig_probs):
+                    new_link_idxs.append((widx, aidx, new_lidx))
+                else:
+                    # Update long links' overall hypothesis probs.
+                    link = self._long_links[widx][aidx]
+                    link.hyp = (reduce(mul, link.orig_probs, 1.), link.hyp[1])
             link_idxs = new_link_idxs
             # Add indices into long links that start here.
-            for aidx in xrange(len(self._long_links[start_idx])):
-                link_idxs.append((start_idx, aidx, 0))
-            tot = sum(hyp[0] for hyp in self._cn[start_idx])
+            for aidx, link in enumerate(self._long_links[start_idx]):
+                if link.normalise:
+                    link_idxs.append((start_idx, aidx, 0))
+
+            # Compute the total probability mass on this word index.
+            tot = sum(hyp[0] for hyp in alts)
             tot += sum(self._long_links[widx][aidx].orig_probs[lidx]
                        for (widx, aidx, lidx) in link_idxs)
-            normaliser = 1. / tot
-            self._cn[start_idx] = [(hyp[0] * normaliser, hyp[1])
-                                   for hyp in self._cn[start_idx]]
-            for widx, aidx, lidx in link_idxs:
-                self._long_links[widx][aidx].orig_probs[lidx] *= normaliser
+            try:
+                normaliser = 1. / tot
+            except ZeroDivisionError:
+                # import ipdb; ipdb.set_trace()
+                tot = len(self._cn[start_idx]) + len(link_idxs)
+                normaliser = 1. / tot  # not handling zero division here since
+                                       # it indicates something went really
+                                       # wrong
+                self._cn[start_idx] = [(normaliser, hyp[1]) for hyp in alts]
+                for widx, aidx, lidx in link_idxs:
+                    self._long_links[widx][aidx].orig_probs[lidx] = normaliser
+            else:
+                self._cn[start_idx] = [(hyp[0] * normaliser, hyp[1])
+                                       for hyp in alts]
+                for widx, aidx, lidx in link_idxs:
+                    self._long_links[widx][aidx].orig_probs[lidx] *= normaliser
 
-        # for alts in self._cn:
-        #     sum = 0.0
-        #     for p, w in alts:
-        #         sum += p
-        #
-        #     for i in range(len(alts)):
-        #         alts[i][0] /= sum
+        # Update long links' overall hypothesis probs.
+        for widx, aidx, lidx in link_idxs:
+            link = self._long_links[widx][aidx]
+            link.hyp = (reduce(mul, link.orig_probs, 1.), link.hyp[1])
+
+        return self
 
     def sort(self):
         """Sort the alternatives for each word according their probability."""
@@ -1354,7 +1483,8 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # XXX This method is not the most efficient possible.  It may call itself
     # recursively with the same arguments several times.
     def iter_ngrams(self, n, with_boundaries=False, start=None):
-        """Iterates n-gram hypotheses of the length specified.  This is the
+        """
+        Iterates n-gram hypotheses of the length specified.  This is the
         interface method.  It is aware of multi-word phrases ("long links")
         that were substituted into the confnet.
 
@@ -1364,6 +1494,12 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             start: at which word index the n-grams have to start (exactly)
 
         """
+        # FIXME Yield with trailing sequences of empty words, too.
+        # global _n_called
+        # _n_called += 1
+        # if _n_called == 9115:
+            # import ipdb; ipdb.set_trace()
+
         # Find n-gram start indices that shall be iterated over.
         if start is not None:
             if start < len(self._cn):
@@ -1380,11 +1516,10 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 yield (1., [SENTENCE_START])
             for start_idx in start_iter:
                 for hyp in self._cn[start_idx]:
-                    yield (hyp[0], [hyp[1]])
+                    if hyp[1]:  # skip empty words
+                        yield (hyp[0], [hyp[1]])
                 for link in self._long_links[start_idx]:
-                    if len(link.hyp[1]) == 1:
-                        yield link.hyp
-                    elif start is not None:
+                    if len(link.hyp[1]) == 1 or start is not None:
                         yield (link.hyp[0], [link.hyp[1][0]])
                     else:
                         # avg_prob = link.hyp[0] ** (1. / len(link.hyp[1]))
@@ -1400,12 +1535,30 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     yield (prob, [SENTENCE_START] + sub_ngram)
             # Handle the normal n-grams.
             for start_idx in start_iter:
-                here_hyps = self._cn[start_idx]
+                # here_hyps = self._cn[start_idx]
+                # Find words that occur at this start_idx, divide them into
+                # non-empty words and empty words.
+                here_nonempty_hyps = [(prob, word) for (prob, word) in
+                                      self._cn[start_idx] if word]
+                here_empty_hyp = [(prob, word) for (prob, word) in
+                                  self._cn[start_idx] if not word]
+                here_empty_hyp = (sum(prob for (prob, word) in here_empty_hyp),
+                                  '')
+                # Find hypotheses starting with the next index, one word
+                # shorter.
                 sub_hyps = self.iter_ngrams(n - 1, with_boundaries,
                                             start_idx + 1)
-                for ((prob, word), (sub_prob, sub_ngram)) in product(here_hyps,
-                                                                     sub_hyps):
+                for ((prob, word), (sub_prob, sub_ngram)) in product(
+                        here_nonempty_hyps, sub_hyps):
                     yield (sub_prob * prob, [word] + sub_ngram)
+                # Find hypotheses of the required length and combine them with
+                # this empty word if the empty word occurs here.
+                if here_empty_hyp[0]:
+                    sub_hyps = self.iter_ngrams(n, with_boundaries,
+                                                start_idx + 1)
+                    for (sub_prob, sub_ngram) in sub_hyps:
+                        yield (sub_prob * here_empty_hyp[0], sub_ngram)
+
                 # Handle long links.
                 for link in self._long_links[start_idx]:
                     l_phrase = link.hyp[1]
@@ -1482,13 +1635,15 @@ class UtteranceConfusionNetworkFeatures(Features):
 
     def parse(self, confnet):
         """Extracts the features from `confnet'."""
+        confnet = confnet.merge()
         if confnet.isempty():
             self.features['__empty__'] += 1.0
         elif self.type == 'ngram':
             # Compute shorter n-grams.
             for alts in confnet:
                 for prob, word in alts:
-                    self.features[(word, )] += prob
+                    if word:  # skip empty words
+                        self.features[(word, )] += prob
             if self.size >= 2:
                 for prob, ngram in confnet.iter_ngrams(
                         2, with_boundaries=True):

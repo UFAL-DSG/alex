@@ -3,16 +3,10 @@
 #
 # pylint: disable-msg=E1101
 
-import pyaudio
-import wave
 import time
-import random
 import multiprocessing
-import sys
 import os.path
 import os
-import struct
-import array
 import threading
 import re
 import pjsuaxt as pj
@@ -20,13 +14,9 @@ import pjsuaxt as pj
 from datetime import datetime
 from collections import deque, defaultdict
 
-import alex.utils.audio as audio
-import alex.utils.various as various
-import alex.utils.text as string
-
 from alex.components.hub.messages import Command, Frame
-from alex.utils.exception import VoipIOException
-from alex.utils.sessionlogger import SessionLoggerException
+from alex.utils.exceptions import SessionLoggerException
+from alex.components.hub.exceptions import VoipIOException
 from alex.utils.procname import set_proc_name
 
 # Logging callback

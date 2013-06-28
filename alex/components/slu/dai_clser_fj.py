@@ -263,18 +263,19 @@ class DAILogRegClassifier(SLUInterface):
     def get_size(self):
         return len(self.features_list)
 
-    def parse_1_best(self, utterance=None, ret_cl_map=False, verbose=False,
+    def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False,
                      *args, **kwargs):
-        """Parse `utterance' and generate the best interpretation in the form
-        of a dialogue act (an instance of DialogueAct).
+        """
+        Parse `utterance' and generate the best interpretation in the form of
+        a dialogue act (an instance of DialogueAct).
 
         The result is the dialogue act confusion network.
 
         """
+        utterance = obs.get('utt', None)
         if utterance is None:
             from exception import DAILRException
-            raise DAILRException("Need to get an utterance to parse (got "
-                                 "none, or None).")
+            raise DAILRException("Need to get an utterance to parse.")
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -328,10 +329,13 @@ class DAILogRegClassifier(SLUInterface):
         return da_confnet
 
 
-    def parse_nblist(self, utterance_list, *args, **kwargs):
-        """Parse N-best list by parsing each item in the list and then by
-        merging the results."""
+    def parse_nblist(self, obs, *args, **kwargs):
+        """
+        Parses n-best list by parsing each item on the list and then merging
+        the results.
+        """
 
+        utterance_list = obs['utt_nbl']
         if len(utterance_list) == 0:
             from exception import DAILRException
             raise DAILRException("Empty utterance N-best list.")
@@ -357,29 +361,14 @@ class DAILogRegClassifier(SLUInterface):
 
         return confnet
 
-    def parse_confnet(self, confnet, verbose=False, *args, **kwargs):
-        """Parse the confusion network by generating an N-best list and parsing
-        this N-best list."""
-
-        #TODO: We should implement a parser which uses features directly from
-        # confusion networks.
-
-        # print "Confnet"
-        # print confnet
-        # print
-
+    def parse_confnet(self, obs, verbose=False, *args, **kwargs):
+        """
+        Parses the word confusion network by generating an n-best list and
+        parsing this n-best list.
+        """
+        confnet = obs['utt_cn']
         nblist = confnet.get_utterance_nblist(n=40)
-
-        # print "NBList"
-        # print nblist
-        # print
-
         sem = self.parse_nblist(nblist)
-
-        # print "Semantics"
-        # print sem
-        # print
-
         return sem
 
 

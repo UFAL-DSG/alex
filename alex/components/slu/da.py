@@ -4,17 +4,15 @@
 
 from __future__ import unicode_literals
 
-import codecs
 from collections import defaultdict
 import copy
-from itertools import islice
 from operator import xor
 
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException, DialogueActItemException
+from alex.ml.exceptions import NBListException
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
-from alex.ml.hypothesis import Hypothesis, NBList, NBListException, \
-    ConfusionNetwork
+from alex.ml.hypothesis import Hypothesis, NBList, ConfusionNetwork
 from alex.utils.text import split_by
 
 
@@ -42,26 +40,10 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
 
 
 def save_das(file_name, das):
-    with open(file_name, 'w+') as outfile:
+    with open(file_name, 'w') as outfile:
         for turn_key in sorted(das):
             outfile.write('{key} => {da}\n'.format(key=turn_key,
                                                    da=das[turn_key]))
-
-
-class DialogueActItemException(SLUException):
-    pass
-
-
-class DialogueActException(SLUException):
-    pass
-
-
-class DialogueActNBListException(SLUException):
-    pass
-
-
-class DialogueActConfusionNetworkException(SLUException):
-    pass
 
 
 class DialogueActItem(Abstracted):
@@ -585,12 +567,8 @@ class DialogueActFeatures(Features):
         self.instantiable = dict()
         # Features representing the complete DA.
         for dai in da:
-            # DEBUG
-            try:
-                self.features[(dai.dat, )] += 1.
-            except AttributeError:
-                import ipdb
-                ipdb.set_trace()
+            # import ipdb; ipdb.set_trace() # DEBUG
+            self.features[(dai.dat, )] += 1.
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
                 if dai.value is not None:

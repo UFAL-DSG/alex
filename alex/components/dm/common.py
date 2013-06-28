@@ -3,10 +3,10 @@
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008/.
 
-from alex.utils.exception import SemHubException
 from alex.components.dm import DialogueManager
 from alex.components.dm.ruledm.ufalruledm import UfalRuleDM
 from alex.components.dm.ruledm.ufalruledm import PUfalRuleDM
+from alex.components.dm.exceptions import DMException
 
 def get_dm_type(cfg):
     return cfg['DM']['type']
@@ -25,7 +25,7 @@ def dm_factory(dm_type, cfg):
         try:
             dm = dm_type(cfg)
         except NameError:
-            raise SemHubException(
+            raise DMException(
             'Unsupported dialogue manager: %s' % dm_type)
 
     return dm

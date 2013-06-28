@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# XXX I suggest renaming this to a non-special module name.  It seems strange
+# to me for __init__ to actually define any normal classes or functions.  MK
 
-from alex.utils.exception import AlexException
 from alex.components.dm.ontology import Ontology
 
-class DialogueStateException(AlexException):
-    pass
 
 class DialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
@@ -24,7 +24,9 @@ class DialogueState(object):
         pass
 
     def restart(self):
-        """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
+        """
+        Reinitialises the dialogue state so that the dialogue manager can start
+        from scratch.
 
         Nevertheless, remember the turn history.
         """
@@ -46,21 +48,26 @@ class DialogueState(object):
         """
 
     def get_requested_slots(self):
-        """Return all slots which are currently being requested by the user along with the correct value."""
-        pass
-
-    def get_confirmed_slots(self):
-        """Return all slots which are currently being confirmed by the user along with the value being confirmed."""
-        pass
-
-    def get_non_informed_slots(self):
-        """Return all slots provided by the user and the system has not informed about them yet along with
-        the value of the slot.
+        """
+        Returns all slots which are currently being requested by the user along
+        with the correct value.
         """
         pass
 
-class DialoguePolicyException(AlexException):
-    pass
+    def get_confirmed_slots(self):
+        """
+        Returns all slots which are currently being confirmed by the user along
+        with the value being confirmed.
+        """
+        pass
+
+    def get_non_informed_slots(self):
+        """
+        Returns all slots provided by the user and the system has not informed
+        about them yet along with the value of the slot.
+        """
+        pass
+
 
 class DialoguePolicy(object):
     """This is a base class policy. """
@@ -73,38 +80,44 @@ class DialoguePolicy(object):
         pass
 
 
-class DialogueManagerException(AlexException):
-    pass
-
 class DialogueManager(object):
-    """This is a base class for a dialogue manager. The purpose of a dialogue manager is to accept input
-    in the form dialogue acts and respond again in the form of dialogue acts.
+    """
+    This is a base class for a dialogue manager. The purpose of a dialogue
+    manager is to accept input in the form dialogue acts and respond again in
+    the form of dialogue acts.
 
-    The dialogue manager should be accept multiple inputs without producing any output and producing
-    multiple outputs without any input.
+    The dialogue manager should be able to accept multiple inputs without
+    producing any output and be able to produce multiple outputs without any
+    input.
 
     """
 
     def __init__(self, cfg):
         self.cfg = cfg
-        
+
         self.ontology = Ontology(self.cfg['DM']['ontology'])
         self.dialogue_state_class = self.cfg['DM']['dialogue_state']['type']
         self.dialogue_policy_class = self.cfg['DM']['dialogue_policy']['type']
-        
+
         self.last_system_dialogue_act = None
-        
+
         self.new_dialogue()
 
     def new_dialogue(self):
-        """Initialise the dialogue manager and makes it ready for a new dialogue conversation."""
+        """
+        Initialises the dialogue manager and makes it ready for a new dialogue
+        conversation.
+        """
 
-        self.dialogue_state = self.dialogue_state_class(self.cfg, self.ontology)
+        self.dialogue_state = self.dialogue_state_class(self.cfg,
+                                                        self.ontology)
         self.policy = self.dialogue_policy_class(self.cfg, self.ontology)
         self.last_system_dialogue_act = None
 
     def da_in(self, da, utterance):
-        """Receives an input dialogue act or dialogue act list with probabilities or dialogue act confusion network.
+        """
+        Receives an input dialogue act or dialogue act list with probabilities
+        or dialogue act confusion network.
 
         When the dialogue act is received an update of the state is performed.
         """
@@ -124,9 +137,11 @@ class DialogueManager(object):
         import urllib2
 
         token_url = self.cfg['DM'].get('token_url')
-        curr_session = self.cfg['Logging']['session_logger'].session_dir_name.value
+        curr_session = (self.cfg['Logging']['session_logger']
+                        .session_dir_name.value)
         if token_url is not None:
             f_token = urllib2.urlopen(token_url.format(curr_session))
             return f_token.read()
         else:
-            raise Exception("Please configure token_url DM parameter in config.")
+            raise Exception(
+                "Please configure the 'token_url' DM parameter in config.")

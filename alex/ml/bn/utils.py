@@ -12,6 +12,9 @@ def constant_factory(value):
     return repeat(value).next
 
 
-def constant_factor(variables, variables_dict, length):
-    factor = DiscreteFactor(variables, variables_dict, to_log(np.ones(length)))
+def constant_factor(variables, variables_dict, length, logarithmetic=False):
+    if logarithmetic:
+        factor = DiscreteFactor(variables, variables_dict, to_log(np.ones(length)), logarithmetic)
+    else:
+        factor = DiscreteFactor(variables, variables_dict, np.ones(length), logarithmetic)
     return factor

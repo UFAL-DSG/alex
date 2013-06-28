@@ -7,22 +7,24 @@ import autopath
 import inspect
 import sys
 
-from alex.components.asr.utterance import load_utterances
+from alex.components.asr.utterance import load_utterances, load_utt_confnets
 from alex.components.slu.base import ft_props, SLUInterface
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException
 
 
 # Methods for loading DAs and observations from files.
+# _load_meths :: observation type -> load method
 _load_meths = {'utt': load_utterances,
                'utt_nbl': NotImplemented,
-               'utt_cn': NotImplemented,
+               'utt_cn': load_utt_confnets,
                'prev_da': NotImplemented,
                'da_nbl': NotImplemented}
 # Names of config keys whose values specify the input file for that kind of
 # observations.
+# _infile_cfgname :: observation type -> configuration name
 _infile_cfgname = {'utt': 'utts_fname',
                    'utt_nbl': None,
-                   'utt_cn': None,
+                   'utt_cn': 'uttcns_fname',
                    'prev_da': None,
                    'da_nbl': None}
 
@@ -64,7 +66,8 @@ def load_data(cfg_this_slu, training=False):
 
     # Find what kinds of observations will be needed and load them.
     obs_types = set(ft_props[ft].obs_type
-                    for ft in cfg_this_slu['features_type'])
+                    for ft in cfg_this_slu['features_type']
+                    if not ft.startswith('ab_'))
     obss = {obs_type: _load_meths[obs_type](
                 cfg_trte[_infile_cfgname[obs_type]], limit=max_examples)
             for obs_type in obs_types}

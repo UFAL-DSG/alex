@@ -5,15 +5,14 @@ from collections import deque
 from datetime import datetime
 import multiprocessing
 import os.path
-import sys
 import os
 import time
 import wave
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import ASRException
 from alex.components.hub.messages import Command, Frame
 from alex.utils.procname import set_proc_name
-from alex.utils.sessionlogger import SessionClosedException
+from alex.utils.exceptions import SessionClosedException
 
 import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD
@@ -111,7 +110,7 @@ class VAD(multiprocessing.Process):
                     self.last_vad = False
 
                     self.commands.send(Command("flushed()", 'VAD', 'HUB'))
-                    
+
                     return False
 
         return False
@@ -271,4 +270,3 @@ class VAD(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()
             raise
-

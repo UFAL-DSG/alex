@@ -4,7 +4,3 @@
 # from alex.components.slu.base import *
 #
 # __all__ = ['da', 'dailrclassifier', 'daiklrclassifier', 'templateclassifier']
-
-# XXX Why is this here?
-# it should not be here. FJ
-database = None

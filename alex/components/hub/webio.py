@@ -195,7 +195,7 @@ class WebIO(multiprocessing.Process):
                         try:
                             self.send_wav(filename, stream)
                         except:
-                            self.cfg['Logging']['session_logger'].exception(
+                            self.cfg['Logging']['system_logger'].exception(
                                 'Error processing file: ' + filename)
 
                 # process audio data
