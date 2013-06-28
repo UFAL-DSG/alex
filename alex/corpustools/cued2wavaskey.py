@@ -79,7 +79,8 @@ def main(args):
 
     for fldname in fields:
         print 'Saving {fld}s...'.format(fld=fldname)
-        outfname = 'extracted.{suf}'.format(suf=_suffixes[fldname])
+        outfname = '{base}.{suf}'.format(base=args.out_basename,
+                                         suf=_suffixes[fldname])
         write_data(args.outdir, outfname, recs,
                    '{{rec.audio}} => {{rec.{recname}}}\n'.format(
                        recname=_xmlname2recname[fldname]))
@@ -96,6 +97,7 @@ if __name__ == "__main__":
     a couple of fields from them for each turn (transcription, ASR 1-best,
     semantics transcription, SLU 1-best) and outputs them to separate files in
     the following format:
+
         {wav_filename} => {field}
 
     It scans for 'user-transcription.norm.xml' (or `user-transcription.xml'
@@ -111,6 +113,11 @@ if __name__ == "__main__":
     arger.add_argument('-o', '--outdir', default='./cued_data',
                        help='an output directory for files with audio and '
                             'their transcription (default: ./cued_data)')
+    arger.add_argument('-b', '--out-basename', metavar='NAME',
+                       default='extracted',
+                       help='output files will have names NAME.EXT; here you '
+                            'can specify the NAME used; EXT is chosen '
+                            'automatically (default: "extracted")')
     arger.add_argument('-f', '--fields', nargs='+',
                        help='fields of the XML transcription file that '
                             'should be extracted')
