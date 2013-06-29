@@ -3,13 +3,18 @@
 # vim: set fileencoding=UTF-8 :
 
 from __future__ import unicode_literals
+
 import autopath
+import copy
 import inspect
+import os
+import os.path
 import sys
 
 from alex.components.asr.utterance import load_utterances, load_utt_confnets
 from alex.components.slu.base import ft_props, SLUInterface
-from alex.components.slu.exceptions import SLUException
+from alex.components.slu.exceptions import SLUException, \
+    SLUConfigurationException
 
 
 # Methods for loading DAs and observations from files.
@@ -68,8 +73,8 @@ def load_data(cfg_this_slu, training=False):
     obs_types = set(ft_props[ft].obs_type
                     for ft in cfg_this_slu['features_type']
                     if not ft.startswith('ab_'))
-    obss = {obs_type: _load_meths[obs_type](
-                cfg_trte[_infile_cfgname[obs_type]], limit=max_examples)
+    obss = {obs_type: _load_meths[obs_type](cfg_trte[_infile_cfgname[obs_type]],
+                                            limit=max_examples)
             for obs_type in obs_types}
 
     # Ensure all observations use exactly the same set of keys.
@@ -244,3 +249,134 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                     raise SLUException(msg)
 
     return dai_clser
+
+
+class DefaultConfigurator(object):
+    DEFAULTS_SLU_TYPE = {'type': ('cl-tracing', 'ty_{0}')}
+    DEFAULTS_SLU = {
+        'cl-tracing': {'do_preprocessing': (True, 'noprep'),
+                       'features_type': (('ab_ngram', 'ngram', ), 'ft_{0}'), },
+        'cl-seq'    : {'do_preprocessing': (True, 'noprep'), },
+    }
+    DEFAULTS_SLU_TR = {
+        'cl-tracing': {'abstractions': (('concrete', 'abstract'), 'abs_{0}'),
+                       'max_examples': (None, 'top{0}'),
+                       'clser_type': ('logistic', '{0}'),
+                       'min_feat_count': (10, 'minf{0}'),
+                       'min_feat_count_conc': (5, 'minfc{0}'),
+                       'min_dai_count': (10, 'mind{0}'),
+                       'balance': (True, 'nobal'),
+                       'calibrate': (True, 'nocal'),
+                       'sparsification': (1., 's{0}'), },
+        'cl-seq'    : dict(),
+    }
+    for shared_key in ('max_examples', 'min_feat_count', 'min_dai_count',
+                       'sparsification'):
+        DEFAULTS_SLU_TR['cl-seq'][shared_key] = (
+            DEFAULTS_SLU_TR['cl-tracing'][shared_key])
+
+    def __init__(self, more_defaults=dict(), more_defaults_type=dict(),
+                 more_defaults_tr=dict()):
+        # Copy the class defaults.
+        self.def_slu_type = copy.deepcopy(self.DEFAULTS_SLU_TYPE)
+        self.def_slu = copy.deepcopy(self.DEFAULTS_SLU)
+        self.def_slu_tr = copy.deepcopy(self.DEFAULTS_SLU_TR)
+        # Update them with defaults supplied by the caller.
+        self.def_slu.update(more_defaults)
+        self.def_slu_type.update(more_defaults_type)
+        self.def_slu_tr.update(more_defaults_tr)
+        # Bookkeeping.
+        self.config = None
+
+    def build_config(self, cfg):
+        """Builds a sufficiently complete config for training an SLU model.
+
+        Where the provided config `cfg' does not specify a required value, the
+        default is substituted.
+
+        Arguments:
+            cfg -- the Config object to use in this training
+
+        Returns None.  The resulting Config is saved in `self.config'.
+        """
+        # Find actual configurations to be used.
+        self.config = cfg
+        cfg_slu = self.config.config.setdefault('SLU', dict())
+        slu_type = cfg_slu.setdefault('type', self.def_slu_type['type'][0])
+        try:
+            cfg_this_slu = cfg_slu[slu_type]
+        except KeyError:
+            cfg_this_slu = {name: default for (name, (default, _))
+                            in self.def_slu[slu_type].iteritems()}
+        cfg_tr_orig = cfg_this_slu.get('training', dict())
+        cfg_tr_defaults = {name: default for (name, (default, _))
+                           in self.def_slu_tr[slu_type].iteritems()}
+        cfg_tr = cfg_this_slu['training'] = cfg_tr_defaults
+        cfg_tr.update(cfg_tr_orig)
+        # Save shorthand variables pointing to config subdicts.
+        self.cfg_slu = cfg_slu
+        self.slu_type = slu_type
+        self.cfg_this_slu = cfg_this_slu
+        self.cfg_tr = cfg_tr
+
+    def set_model_name(self, model_fname):
+        model_fname = os.path.join(self.cfg_tr['models_dir'], model_fname)
+        self.cfg_tr['model_fname'] = model_fname
+        return model_fname
+
+
+class ParamModelNameBuilder(DefaultConfigurator):
+    """Class that can build model filename from configuration settings."""
+    from datetime import date
+
+    @classmethod
+    def clean_arg(cls, arg):
+        """Cleans an argument value for use in the model file name."""
+        if isinstance(arg, tuple) or isinstance(arg, list):
+            arg_str = ','.join(arg)
+        elif isinstance(arg, float):
+            arg_str = '{0:.1f}'.format(arg)
+        else:
+            arg_str = str(arg)
+        # Clean path arguments: take the basename.
+        arg_str = arg_str[arg_str.rfind(os.sep) + 1:]
+        # Shorten the argument and replace dashes.
+        return arg_str[-7:].replace('-', '_')
+
+    def build_name(self, cfg=None):
+        """Builds a name for the model to be trained.
+
+        Arguments:
+            cfg -- the Config object to use as configuration;  considered only
+                if `build_config' has not been called before for this object,
+                and in that case, it is required
+
+        Returns path (not necessarily an absolute path) to the model file.
+
+        """
+        # Ensure there is a valid config prepared.
+        if self.config is None:
+            if cfg is None:
+                raise SLUConfigurationException('No config specified.')
+            self.build_config(cfg)
+            assert self.config is not None
+        # Build the model name.
+        param_strs = list()
+        for cfg_dict, defaults in (
+                (self.cfg_slu, self.def_slu_type),
+                (self.cfg_this_slu, self.def_slu.get(self.slu_type, tuple())),
+                (self.cfg_tr, self.def_slu_tr.get(self.slu_type, tuple()))):
+            for name, (default, tpt) in sorted(defaults.iteritems()):
+                val = cfg_dict[name]
+                if val != default:
+                    param_strs.append(tpt.format(self.clean_arg(val)))
+        model_fname = '{d}_{params}.slu_model.gz'.format(
+            d=self.date.strftime(self.date.today(), '%y%m%d'),
+            params='-'.join(param_strs))
+        # Ensure the model directory exists.
+        if not os.path.isdir(self.cfg_tr['models_dir']):
+            os.makedirs(self.cfg_tr['models_dir'])
+        # Save the resulting name and return.
+        model_fname = os.path.join(self.cfg_tr['models_dir'], model_fname)
+        self.cfg_tr['model_fname'] = model_fname
+        return model_fname
