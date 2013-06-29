@@ -130,8 +130,9 @@ class InstanceID(object):
 
 
 class SystemLogger(object):
-    """ This is a multiprocessing-safe logger.  It should be used by all
-    components in Alex.
+    """
+    This is a multiprocessing-safe logger.  It should be used by all components
+    in Alex.
 
     """
 

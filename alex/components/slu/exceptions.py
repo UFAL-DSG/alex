@@ -5,6 +5,10 @@ class SLUException(AlexException):
     pass
 
 
+class SLUConfigurationException(SLUException):
+    pass
+
+
 class DAILRException(SLUException):
     pass
 
