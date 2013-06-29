@@ -1,11 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import sys
 import os
 from collections import defaultdict
 import itertools
 
 import autopath
-import alex.utils.pdbonerror
 
 from alex.utils.config import as_project_path
 from alex.components.nlg.tectotpl.core.run import Scenario
@@ -90,7 +89,6 @@ class ExpandStops(object):
                 #if i > 1000000:
                 #    break
                 #print i
-            #import ipdb; ipdb.set_trace()
             curr_save()
 
         # save morf dict

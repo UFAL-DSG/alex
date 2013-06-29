@@ -1,7 +1,12 @@
 import os
 
 def root():
-    """Find the root of the project and return it as string."""
+    """
+    Finds the root of the project and return it as string.
+
+    The root is the directory named alex.
+
+    """
 
     path, directory = os.path.split(os.path.abspath(__file__))
 

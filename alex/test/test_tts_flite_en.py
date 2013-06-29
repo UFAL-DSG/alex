@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-import __init__
+if __name__ == "__main__":
+    import autopath
 
-import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts.flite import FliteTTS
@@ -29,7 +30,7 @@ if __name__ == '__main__':
             }
         }
     }
-    cfg = Config('../resources/default.cfg')
+    cfg = Config.load_configs(log=False)
     cfg.update(c)
 
     tts = FliteTTS(cfg)

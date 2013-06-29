@@ -7,7 +7,8 @@ import subprocess
 import alex.utils.cache as cache
 import alex.utils.audio as audio
 
-from alex.components.tts import TTSException, TTSInterface
+from alex.components.tts import TTSInterface
+from alex.components.tts.exceptions import TTSException
 from alex.components.tts.preprocessing import TTSPreprocessing
 
 
@@ -57,7 +58,7 @@ class FliteTTS(TTSInterface):
             wav = self.get_tts_wav(self.cfg['TTS']['Flite']['voice'], text)
         except TTSException:
             m = e + "Text: %" % text
-            self.cfg['Logging']['system_logger'].warning(m)
+            self.cfg['Logging']['system_logger'].exception(m)
             return b""
 
         return wav

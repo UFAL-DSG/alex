@@ -30,7 +30,7 @@ class WebIO(multiprocessing.Process):
     (i.e. as if it was said through microphone).
     """
 
-    def __init__(self, cfg, commands, audio_record, audio_play):
+    def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         """ Initialize WebIO
 
         cfg - configuration dictionary
@@ -49,6 +49,7 @@ class WebIO(multiprocessing.Process):
         self.commands = commands
         self.audio_record = audio_record
         self.audio_play = audio_play
+        self.close_event = close_event
 
         self.web_queue = Queue.Queue()  # stack requests made from the web UI
 
@@ -153,47 +154,56 @@ class WebIO(multiprocessing.Process):
             self.audio_record.send(Frame(b"\x00\x00" * self.cfg['Audio']['samples_per_frame']))
 
     def run(self):
-        # caputre the dialogue
-        wf = wave.open(self.output_file_name, 'w')
-        wf.setnchannels(2)
-        wf.setsampwidth(2)
-        wf.setframerate(self.cfg['Audio']['sample_rate'])
+        try:
+            # caputre the dialogue
+            wf = wave.open(self.output_file_name, 'w')
+            wf.setnchannels(2)
+            wf.setsampwidth(2)
+            wf.setframerate(self.cfg['Audio']['sample_rate'])
 
-        # start webserver for the webinterface
-        httpd = self.get_webserver()
-        t = Thread(target=lambda *args: httpd.serve_forever())
-        t.start()
+            # start webserver for the webinterface
+            httpd = self.get_webserver()
+            t = Thread(target=lambda *args: httpd.serve_forever())
+            t.start()
 
-        # open audio pipe to the speakers
-        p = pyaudio.PyAudio()
-        # open stream
-        stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
-                        channels=1,
-                        rate=self.cfg['Audio']['sample_rate'],
-                        input=True,
-                        output=True,
-                        frames_per_buffer=self.cfg['Audio']['samples_per_frame'])
+            # open audio pipe to the speakers
+            p = pyaudio.PyAudio()
+            # open stream
+            stream = p.open(format=p.get_format_from_width(pyaudio.paInt32),
+                            channels=1,
+                            rate=self.cfg['Audio']['sample_rate'],
+                            input=True,
+                            output=True,
+                            frames_per_buffer=self.cfg['Audio']['samples_per_frame'])
 
-        # this is a play buffer for synchronization with recorded audio
-        play_buffer = []
+            # this is a play buffer for synchronization with recorded audio
+            play_buffer = []
 
-        # process incoming audio play and send requests
-        while 1:
-            # process all pending commands
-            if self.process_pending_commands(p, stream, wf):
-                return
+            # process incoming audio play and send requests
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            # process each web request
-            while not self.web_queue.empty():
-                for filename in self.web_queue.get():
-                    try:
-                        self.send_wav(filename, stream)
-                    except Exception:
-                        print 'Error processing file:', filename
-                        traceback.print_exc()
+                # process all pending commands
+                if self.process_pending_commands(p, stream, wf):
+                    return
 
-            # process audio data
-            self.read_write_audio(p, stream, wf, play_buffer)
+                # process each web request
+                while not self.web_queue.empty():
+                    for filename in self.web_queue.get():
+                        try:
+                            self.send_wav(filename, stream)
+                        except:
+                            self.cfg['Logging']['system_logger'].exception(
+                                'Error processing file: ' + filename)
+
+                # process audio data
+                self.read_write_audio(p, stream, wf, play_buffer)
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in VAD process.')
+            self.close_event.set()
+            raise
 
 
 class WebIOHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):

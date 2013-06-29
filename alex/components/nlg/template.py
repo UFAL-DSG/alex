@@ -8,9 +8,9 @@ import itertools
 import copy
 
 from alex.components.slu.da import DialogueAct
-from alex.utils.exception import TemplateNLGException
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
+from alex.components.nlg.exceptions import TemplateNLGException
 
 
 class AbstractTemplateNLG(object):
@@ -50,10 +50,10 @@ class AbstractTemplateNLG(object):
             self.gtemplates = {}
             for k, v in templates.iteritems():
                 da = DialogueAct(k)
-                #k.sort()
+                # k.sort()
                 self.templates[unicode(da)] = v
                 self.gtemplates[unicode(self.get_generic_da(da))] = (da, v)
-            
+
         except Exception as ex:
             raise TemplateNLGException('No templates loaded from %s -- %s!' %
                                        (file_name, ex))
@@ -67,11 +67,11 @@ class AbstractTemplateNLG(object):
         da = copy.deepcopy(da)
         # find matching slots & values
         for dai in da:
-            if dai.value and dai.value.startswith('{') :
+            if dai.value and dai.value.startswith('{'):
                 # there is match, make it generic
                 dai.value = "{%s}" % dai.name
         return da
-        
+
     def get_generic_da_given_svs(self, da, svs):
         """\
         Given a dialogue act and a list of slots and values, substitute
@@ -99,13 +99,13 @@ class AbstractTemplateNLG(object):
         if len(svs) == 0:
             rng = []
         elif len(svs) == 1:
-            rng = [1,]
+            rng = [1, ]
         elif len(svs) == 2:
             rng = [1, 2, ]
         elif len(svs) == 3:
             rng = [1, 2, 3, ]
         else:
-            rng = [1, 2, len(svs)-1, len(svs)]
+            rng = [1, 2, len(svs) - 1, len(svs)]
 
         for r in rng:
             for cmb in itertools.combinations(svs, r):
@@ -188,11 +188,11 @@ class AbstractTemplateNLG(object):
 
                 return u" ".join(tpl_rc_and).replace(u'  ', u' ')
             elif isinstance(tpl_rc_or, tuple):
-                raise TemplateNLGException("Unsupported generation type. "\
-                 "At this level, the template cannot be a tuple: template = %s" % unicode(tpl))
+                raise TemplateNLGException("Unsupported generation type. "
+                                           "At this level, the template cannot be a tuple: template = %s" % unicode(tpl))
         elif isinstance(tpl, list):
-            raise TemplateNLGException("Unsupported generation type. "\
-             "At this level, the template must cannot be a list: template = %s" % unicode(tpl))
+            raise TemplateNLGException("Unsupported generation type. "
+                                       "At this level, the template must cannot be a list: template = %s" % unicode(tpl))
         else:
             raise TemplateNLGException("Unsupported generation type.")
 
@@ -219,20 +219,20 @@ class AbstractTemplateNLG(object):
                 tpls, mda = self.match_generic_templates(da, svs)
                 tpl = self.random_select(tpls)
                 svs_mda = mda.get_slots_and_values()
-                
+
                 # update the format names from the generic template
                 svsx = []
                 for (so, vo), (sg, vg) in zip(svs, svs_mda):
-                    
+
                     if vg.startswith('{'):
                         svsx.append([vg[1:-1], vo])
                     else:
                         svsx.append([so, vo])
-                
+
                 self.last_utterance = self.fill_in_template(tpl, svsx)
             except TemplateNLGException:
                 composed_utt = []
-                
+
                 # try to find a template for each dialogue act item and concatenate them
                 try:
                     dai_tpl = []
@@ -252,9 +252,9 @@ class AbstractTemplateNLG(object):
                                 dai_utt = "#1"
 
                         composed_utt.append(dai_utt)
-                        
+
                     self.last_utterance = ' '.join(composed_utt)
-                    
+
                 except TemplateNLGException:
                     # nothing to do, I must backoff
                     self.last_utterance = self.backoff(da)
@@ -314,7 +314,7 @@ class TectoTemplateNLG(AbstractTemplateNLG):
         if not 'model' in mycfg or not 'scenario' in mycfg or \
                 not 'data_dir' in mycfg:
             raise TemplateNLGException('NLG scenario, data directory ' +
-                                            'and templates must be defined!')
+                                       'and templates must be defined!')
         # load templates
         self.load_templates(mycfg['model'])
         # load NLG system

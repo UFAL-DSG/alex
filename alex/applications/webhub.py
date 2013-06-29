@@ -18,6 +18,7 @@ from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
 from alex.utils.config import Config
 
+
 class WebHub(Hub):
     def __init__(self, cfg):
         self.cfg = cfg
@@ -65,7 +66,6 @@ class WebHub(Hub):
         # used to send commands to TTS
         tts_commands, tts_child_commands = multiprocessing.Pipe()
 
-
         command_connections = [aio_commands, vad_commands, asr_commands,
                                slu_commands, dm_commands, nlg_commands,
                                tts_commands]
@@ -78,15 +78,16 @@ class WebHub(Hub):
                                    dm_actions_out, dm_child_actions,
                                    nlg_text_out, nlg_child_text]
 
-
         # create the hub components
-        aio = WebIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play)
-        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out)
-        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-        slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
-        dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)
-        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text)
-        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, aio_play)
+        close_event = multiprocessing.Event()
+        aio = WebIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play, close_event)
+        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out, close_event)
+        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, close_event)
+        slu = SLU(
+            self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses, close_event)
+        dm = DM(self.cfg, dm_child_commands, slu_hypotheses_out, dm_child_actions, close_event)
+        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text, close_event)
+        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, aio_play, close_event)
 
         # start the hub components
         aio.start()
@@ -105,17 +106,18 @@ class WebHub(Hub):
         self.cfg['Logging']['system_logger'].session_start("@LOCAL_CALL")
         self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
 
-        self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
+        self.cfg['Logging']['session_logger'].session_start(
+            self.cfg['Logging']['system_logger'].get_session_dir_name())
         self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
-        self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
+        self.cfg['Logging']['session_logger'].header(
+            self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
         self.cfg['Logging']['session_logger'].input_source("aio")
-
 
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
             if call_back_time != -1 and call_back_time < time.time():
-                aio_commands.send(Command('make_call(destination="%s")' % \
+                aio_commands.send(Command('make_call(destination="%s")' %
                                           call_back_uri, 'HUB', 'AIO'))
                 call_back_time = -1
                 call_back_uri = None
@@ -154,7 +156,7 @@ class WebHub(Hub):
             if nlg_commands.poll():
                 command = nlg_commands.recv()
                 # TODO HACK
-                #self.cfg['Logging']['system_logger'].info(command)
+                # self.cfg['Logging']['system_logger'].info(command)
 
             if tts_commands.poll():
                 command = tts_commands.recv()
@@ -199,16 +201,12 @@ def main():
         Any additional config parameters overwrite their previous values.
       """)
 
-    parser.add_argument('-c', action="append", dest="configs",
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('resources/default.cfg', True)
+    cfg = Config.load_configs(args.configs)
 
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
     vhub = WebHub(cfg)

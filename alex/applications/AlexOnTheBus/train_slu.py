@@ -15,7 +15,7 @@ import codecs
 import os.path
 import random
 
-from alex.components.asr.utterance import load_utterances, Utterance
+from alex.components.asr.utterance import load_utterances
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import load_das, DialogueAct
 
@@ -40,9 +40,9 @@ DEFAULTS_SLU_TR = {
                        # 'trn_{0}'),
                    ('utts_fname', os.path.join('train_slu.txt'),
                        'trn_{0}'),
-                   # ('sem_fname', os.path.join('train_slu_expanded.sem'),
+                   # ('das_fname', os.path.join('train_slu_expanded.sem'),
                        # 'sem_{0}'), ),
-                   ('sem_fname', os.path.join('train_slu.sem'),
+                   ('das_fname', os.path.join('train_slu.sem'),
                        'sem_{0}'), ),
     'cl-seq'    : (('min_feat_count', 10, 'minf{0}'),
                    ('min_dai_count', 10, 'mind{0}'),
@@ -64,7 +64,7 @@ def load_data(cfg):
 
     utterances = load_utterances(cfg_tr['utts_fname'],
                                  limit=cfg_tr.get('max_examples', None))
-    das = load_das(cfg_tr['sem_fname'],
+    das = load_das(cfg_tr['das_fname'],
                    limit=cfg_tr.get('max_examples', None))
     # Load preprocessing data and routines.
     if cfg_this_slu.get('do_preprocessing', True):
@@ -81,7 +81,7 @@ def expand_trdata(cfg):
     slu_type = cfg['SLU'].get('type', 'cl-tracing')
     cfg_tr = cfg['SLU'][slu_type]['training']
     cfg_tr['utts_fname'] = TRN_FNAME
-    cfg_tr['sem_fname'] = SEM_FNAME
+    cfg_tr['das_fname'] = SEM_FNAME
 
     utterances, das, preprocessing, cldb = load_data(cfg)
     utterances2 = {}
@@ -130,11 +130,10 @@ def expand_trdata(cfg):
 
 
 def main(cfg):
-    from alex.components.slu.common import get_slu_type, slu_factory
-    slu_type = get_slu_type(cfg)
+    from alex.components.slu.common import slu_factory
     # The following also saves the model, provided a filename has been
     # specified in the config.
-    slu_factory(slu_type, cfg, training=True, verbose=True)
+    slu_factory(cfg, training=True, verbose=True)
 
 
 if __name__ == "__main__":
@@ -149,18 +148,15 @@ if __name__ == "__main__":
         description='Trains an SLU model from transcriptions')
     arger.add_argument('-o', '--model-fname', default=None)
     arger.add_argument('-n', '--dry-run', action='store_true')
-    arger.add_argument('-c', '--configs', action="store", nargs='+',
+    arger.add_argument('-c', '--configs', nargs='+',
                        help='configuration files')
     args = arger.parse_args()
 
     # Merge configuration files specified as arguments.
-    cfg = Config()
-    cfg_slu = cfg['SLU'] = dict()
-    if args.configs:
-        for other_cfg in args.configs:
-            cfg.merge(other_cfg)
+    cfg = Config.load_configs(args.configs)
 
     # If the configuration is apparently insufficient, fill in defaults.
+    cfg_slu = cfg.setdefault('SLU', dict())
     slu_type = cfg_slu.setdefault('type', 'cl-tracing')
 
     this_slu_defaults = dict((name, default) for (name, default, _)
@@ -176,10 +172,6 @@ if __name__ == "__main__":
     for name, default, _ in DEFAULTS_SLU_TR.get(slu_type, tuple()):
         if name not in cfg_tr:
             cfg_tr[name] = default
-
-    # Respect the debugging setting.
-    if cfg_slu.get('debug', False):
-        from alex.utils import pdbonerror
 
     # Build the filename for the model and save it to the config.
     if args.model_fname is None:

@@ -3,12 +3,13 @@
 
 from __future__ import unicode_literals
 
-from alex.utils.exception import SemHubException
+from alex.components.nlg.exceptions import TemplateNLGException
+from alex.components.nlg.template import TemplateNLG, TectoTemplateNLG
 
-from .template import TemplateNLG, TectoTemplateNLG
 
 def get_nlg_type(cfg):
     return cfg['NLG']['type']
+
 
 def nlg_factory(nlg_type, cfg):
     nlg = None
@@ -22,7 +23,6 @@ def nlg_factory(nlg_type, cfg):
         try:
             nlg = nlg_type(cfg)
         except NameError:
-            raise SemHubException('Unsupported NLG: %s' % nlg_type)
+            raise TemplateNLGException('Unsupported NLG: %s' % nlg_type)
 
     return nlg
-

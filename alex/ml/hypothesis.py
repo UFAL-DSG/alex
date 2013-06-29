@@ -9,16 +9,11 @@ value of a base type instance.
 from __future__ import unicode_literals
 
 from collections import namedtuple
+from alex.ml.exceptions import NBListException
 # from operator import mul
-
-from alex.utils.exception import AlexException
 
 
 _HypWithEv = namedtuple('HypothesisWithEvidence', ['prob', 'fact', 'evidence'])
-
-
-class NBListException(AlexException):
-    pass
 
 
 class Hypothesis(object):

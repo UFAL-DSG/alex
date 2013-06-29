@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+
+from __future__ import unicode_literals
 
 import argparse
 from collections import namedtuple
-import glob
 import os
 import os.path
 import random
 import xml.dom.minidom
+from xml.parsers.expat import ExpatError
 
 if __name__ == "__main__":
     import autopath
@@ -46,12 +49,53 @@ _field_requirements = {
 
 
 def _make_rec_filter(fields):
+    """Makes a filter function checking all required fields are present."""
     fld_filters = tuple(_field_requirements[fld] for fld in fields)
     return lambda rec: all(fld_filter(rec) for fld_filter in fld_filters)
 
 
+def _find_audio_for_turn(uturn, recs):
+    """
+    Finds the recording that belongs to a given user turn by comparing time
+    spans.
+
+    Arguments:
+        uturn -- the XML element "userturn" for which the corresponding
+            recording should be found
+        recs -- a list of XML elements "rec" in the whole log
+
+    Returns one of `recs' in case that at least one matches the user turn, else
+    None.
+
+    """
+    # Find recordings that were captured at the time the turn was starting.
+    recs_starttimes = [float(rec.getAttribute('starttime')) for rec in recs]
+    recs_endtimes = [float(rec.getAttribute('endtime')) for rec in recs]
+    uturn_starttime = float(uturn.getAttribute('starttime'))
+    matching_recs = [rec for (rec, start, end)
+                     in zip(recs, recs_starttimes, recs_endtimes)
+                     if start <= uturn_starttime < end]
+    # If multiple recordings were made (not sure whether this can happen too),
+    if len(matching_recs) > 1:
+        # Prefer those that belong to a user turn.
+        user_recs = [rec for rec in matching_recs
+                     if rec.parentNode.tagName == 'userturn']
+        if user_recs:
+            matching_recs = user_recs
+        # If we still have to choose from multiple recordings,
+        if len(matching_recs) > 1:
+            # Choose the longest one. (Any other suggestions?)
+            return max((float(rec.getAttribute('endtime'))
+                        - float(rec.getAttribute('starttime')),
+                        rec) for rec in matching_recs)[1]
+    if matching_recs:
+        return matching_recs[0]
+    return None
+
+
 def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
-                                do_exclude=True, known_words=None):
+                                do_exclude=True, known_words=None,
+                                robust=False):
     """
     Extracts transcriptions and their semantic annotation from a CUED call log
     file.
@@ -69,6 +113,13 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
             transcriptions that contain any of _excluded_characters.  What
             "excluded" means depends on whether the transcriptions are required
             by being specified in `fields'.
+        robust -- whether to assign recordings to turns robustly or trust where
+            they are in the log.  This could be useful for older CUED logs
+            where the elements sometimes escape to another <turn> than they
+            belong.  However, in cases where `robust' leads to finding the
+            correct recording for the user turn, the log is damaged at other
+            places too, and the resulting turn record would be misleading.
+            Therefore, we recommend leaving robust=False.
 
     Returns a list of TurnRecords.
 
@@ -84,18 +135,27 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
 
     # Load the file.
     doc = xml.dom.minidom.parse(fname)
-    els = doc.getElementsByTagName("userturn")
+    uturns = doc.getElementsByTagName("userturn")
+    if robust:
+        audios = [audio for audio in doc.getElementsByTagName("rec")
+                  if not audio.getAttribute('fname').endswith('_all.wav')]
 
     trns_sems = []
-    for el in els:
-        rec = TurnRecord(
-            transcription=el.getElementsByTagName("transcription"),
-            cued_da=el.getElementsByTagName("semitran"),
-            cued_dahyp=el.getElementsByTagName("semihyp"),
-            asrhyp=el.getElementsByTagName("asrhyp"),
-            audio=el.getElementsByTagName("rec")
-        )
+    for uturn in uturns:
+        transcription = uturn.getElementsByTagName("transcription")
+        cued_da = uturn.getElementsByTagName("semitran")
+        cued_dahyp = uturn.getElementsByTagName("semihyp")
+        asrhyp = uturn.getElementsByTagName("asrhyp")
+        audio = uturn.getElementsByTagName("rec")
+        # If there was something recognised but nothing recorded, if in the
+        # robust mode,
+        if asrhyp and not audio and robust:
+            # Look for the recording elsewhere.
+            audio = [_find_audio_for_turn(uturn, audios)]
 
+        # This is the first form of the turn record, containing lists of XML
+        # elements and suited only for internal use.
+        rec = TurnRecord(transcription, cued_da, cued_dahyp, asrhyp, audio)
         if not rec_filter(rec):
             # Skip this node, it contains a wrong number of elements of either
             # transcription, cued_da, cued_dahyp, asrhyp, or audio.
@@ -145,6 +205,7 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
             rec.cued_dahyp[0]) if rec.cued_dahyp else None
         audio = rec.audio[0].getAttribute(
             'fname').strip() if rec.audio else None
+        # Construct the resulting turn record.
         rec = TurnRecord(transcription, cued_da, cued_dahyp, asrhyp, audio)
 
         if verbose:
@@ -197,9 +258,14 @@ def extract_trns_sems(infname, verbose, fields=None, ignore_list_file=None,
     log_paths.sort()
     turn_recs = list()
     for log_path in log_paths:
-        turn_recs.extend(extract_trns_sems_from_file(
-            log_path, verbose, fields=fields, normalise=normalise,
-            do_exclude=do_exclude, known_words=known_words))
+        try:
+            turn_recs.extend(extract_trns_sems_from_file(
+                log_path, verbose, fields=fields, normalise=normalise,
+                do_exclude=do_exclude, known_words=known_words))
+        except ExpatError:
+            # This happens for empty XML files, or whenever the XML file cannot
+            # be parsed.
+            continue
     return turn_recs
 
 
@@ -227,7 +293,8 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
     This program extracts CUED semantic annotations from CUED call logs into
-    a format which can be later processed by the `cued-sem2ufal-sem.py' program.
+    a format which can be later processed by the `cued-sem2ufal-sem.py'
+    program.
 
     Note that no normalisation of the transcription or the recognised speech
     is performed.  Any normalisation of the input text should be done before

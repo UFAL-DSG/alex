@@ -9,12 +9,11 @@ if __name__ == "__main__":
 
 import multiprocessing
 import time
-import traceback
 
 import alex.components.asr.google as GASR
 import alex.components.asr.julius as JASR
 
-from alex.components.asr.exception import ASRException
+from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, \
     UtteranceConfusionNetwork
@@ -24,7 +23,7 @@ from alex.utils.procname import set_proc_name
 
 
 class ASR(multiprocessing.Process):
-    """\
+    """
     ASR recognizes input audio and returns an N-best list hypothesis or
     a confusion network.
 
@@ -42,8 +41,8 @@ class ASR(multiprocessing.Process):
 
     """
 
-    def __init__(self, cfg, commands, audio_in, asr_hypotheses_out):
-        """\
+    def __init__(self, cfg, commands, audio_in, asr_hypotheses_out, close_event):
+        """
         Initialises an ASR object according to the configuration (cfg['ASR']
         is the relevant section), and stores pipe ends to other processes.
 
@@ -64,6 +63,7 @@ class ASR(multiprocessing.Process):
         self.commands = commands
         self.audio_in = audio_in
         self.asr_hypotheses_out = asr_hypotheses_out
+        self.close_event = close_event
 
         self.asr = None
         if self.cfg['ASR']['type'] == 'Google':
@@ -91,7 +91,7 @@ class ASR(multiprocessing.Process):
         Returns True iff the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['ASR']['debug']:
                 self.system_logger.debug(command)
@@ -108,13 +108,15 @@ class ASR(multiprocessing.Process):
                     self.asr.flush()
                     self.recognition_on = False
 
+                    self.commands.send(Command("flushed()", 'ASR', 'HUB'))
+
                     return False
 
         return False
 
     def read_audio_write_asr_hypotheses(self):
         # Read input audio.
-        while self.audio_in.poll():
+        if self.audio_in.poll():
             # Read recorded audio.
             data_rec = self.audio_in.recv()
 
@@ -129,7 +131,6 @@ class ASR(multiprocessing.Process):
                 elif data_rec.parsed['__name__'] == "speech_end":
                     dr_speech_start = "speech_end"
 
-                
                 # Check consistency of the input command.
                 if dr_speech_start:
                     if ((not self.recognition_on
@@ -200,11 +201,15 @@ class ASR(multiprocessing.Process):
                 raise ASRException('Unsupported input.')
 
     def run(self):
-        self.recognition_on = False
-        set_proc_name("Alex_ASR")
+        try:
+            self.recognition_on = False
+            set_proc_name("Alex_ASR")
 
-        while 1:
-            try:
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
+
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
                 # Process all pending commands.
@@ -213,5 +218,7 @@ class ASR(multiprocessing.Process):
 
                 # Process audio data.
                 self.read_audio_write_asr_hypotheses()
-            except Exception:
-                traceback.print_exc()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in ASR process.')
+            self.close_event.set()
+            raise

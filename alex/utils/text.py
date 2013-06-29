@@ -21,7 +21,7 @@ def split_by_comma(text):
     splitList = []
 
     oldI = 0
-    for i in range(len(text)):
+    for i in xrange(len(text)):
         if text[i] == '(':
             parentheses += 1
         elif text[i] == ')':
@@ -32,7 +32,7 @@ def split_by_comma(text):
             if parentheses == 0:
                 if oldI == i:
                     raise ValueError(
-                        "Spited segment do not have to start with a comma.")
+                        "Split segment must not start with a comma.")
                 else:
                     splitList.append(text[oldI:i].strip())
                     oldI = i + 1
@@ -46,8 +46,9 @@ def split_by(text, splitter,
              opening_parentheses='',
              closing_parentheses='',
              quotes="'\""):
-    """Splits the input text at each occurrence of the splitter only if it is
-    not enclosed in parentheses.
+    """
+    Splits the input text at each occurrence of the splitter only if it is not
+    enclosed in parentheses.
 
     text - the input text string
     splitter - multi-character string which is used to determine the position
@@ -85,7 +86,7 @@ def split_by(text, splitter,
                 parentheses_counter[cur_char] + 1) % 2
         elif text[segment_end:].startswith(splitter):
             # Test that all parentheses are closed.
-            if all([count == 0 for count in parentheses_counter.values()]):
+            if not any(parentheses_counter.values()):
                 split_list.append(text[segment_start:segment_end].strip())
                 segment_end += len(splitter)
                 segment_start = segment_end
@@ -143,7 +144,7 @@ def parse_command(command):
 
 
 class Escaper(object):
-    """\
+    """
     Creates a customised escaper for strings.  The characters that need
     escaping, as well as the one used for escaping can be specified.
 
@@ -176,7 +177,7 @@ class Escaper(object):
 
     @staticmethod
     def re_literal_list(chars):
-        """\
+        """
         Builds a [] group for a regular expression that matches exactly the
         characters specified.
 
@@ -188,7 +189,7 @@ class Escaper(object):
 
     @staticmethod
     def re_literal(char):
-        """\
+        """
         Escapes the character so that when it is used in a regexp, it matches
         itself.
         """
@@ -199,13 +200,13 @@ class Escaper(object):
         return self.rx.sub(self.sub, text)
 
     def unescape(self, text):
-        """\
+        """
         Unescapes the text using the parameters defined in the constructor."""
         # TODO Test whether this picks disjunct matches (yes, it should).
         return self.unrx.sub(self.unsub, text)
 
     def annotate(self, esced):
-        """\
+        """
         Annotates each character of a text that has been escaped whether:
 
             Escaper.ESCAPER - it is the escape character
@@ -228,7 +229,7 @@ class Escaper(object):
 
 
 def escape_special_characters_shell(text, characters="'\""):
-    """\
+    """
     Simple function that tries to escape quotes.  Not guaranteed to produce
     the correct result!!  If that is needed, use the new `Escaper' class.
 

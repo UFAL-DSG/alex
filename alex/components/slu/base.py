@@ -1,15 +1,77 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+# This code is almost PEP8-compliant. See
+# http://www.python.org/dev/peps/pep-0008.
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import copy
 from itertools import product
 
-from exception import DAILRException
 from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
-    UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
+    UtteranceConfusionNetwork, UtteranceHyp, UtteranceNBList, \
+    UtteranceFeatures, UtteranceNBListFeatures, \
+    UtteranceConfusionNetworkFeatures
+from alex.components.slu.da import DialogueActItem, DialogueActFeatures, \
+    DialogueActNBListFeatures, DialogueActConfusionNetwork, merge_slu_confnets
 from alex.utils.config import load_as_module
+from alex.components.slu.exceptions import SLUException
+
+
+FeatureProps = namedtuple('FeatureProps',
+                          ['obs_type', 'feat_class', 'is_abstracted'])
+"""properties of types of features this classifier can use
+
+obs_type: name of the observation type from which this type of features
+            is extracted (a string)
+feat_class: the class for this type of features
+is_abstracted: whether this type of observation inherits from Abstracted
+
+Note that names of abstracted observation types have to follow the format
+'ab{concrete}' where {concrete} is the name of the non-abstracted type.
+
+"""
+# ft_props :: feature type -> feature type properties
+ft_props = {
+    'ngram': FeatureProps('utt', UtteranceFeatures, False),
+    'nbl_ngram': FeatureProps('utt_nbl', UtteranceNBListFeatures, False),
+    'cn_ngram': FeatureProps('utt_cn', UtteranceConfusionNetworkFeatures,
+                             False),
+    'ab_ngram': FeatureProps('abutt', UtteranceFeatures, True),
+    'ab_nbl_ngram': FeatureProps('abutt_nbl', UtteranceNBListFeatures,
+                                 True),
+    'ab_cn_ngram': FeatureProps('abutt_cn',
+                                UtteranceConfusionNetworkFeatures, True),
+    'prev_da': FeatureProps('prev_da', DialogueActFeatures, False),
+    # Following gets used when doing reranking.
+    'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False), }
+ft_default_args = {
+    'ngram': ('ngram', 4, ),
+    'nbl_ngram': ('ngram', ),
+    'cn_ngram': ('ngram', 4, ),
+    'ab_ngram': ('ngram', 4, ),
+    'ab_nbl_ngram': ('ngram', ),
+    'ab_cn_ngram': ('ngram', 4, ),
+    'prev_da': tuple(),
+    'da_nbl': tuple(),
+}
+ft_default_kwargs = {
+    'ngram': {},
+    'nbl_ngram': {'size': 4},
+    'cn_ngram': {},
+    'ab_ngram': {},
+    'ab_nbl_ngram': {'size': 4},
+    'ab_cn_ngram': {},
+    'prev_da': {},
+    'da_nbl': {},
+}
+ft_order = ('ab_ngram', 'ngram',
+            'ab_nbl_ngram', 'nbl_ngram',
+            'ab_cn_ngram', 'cn_ngram',
+            'prev_da', 'da_nbl')
+
+
+def sort_fts(fts):
+    return tuple(sorted(fts, key=ft_order.index))
 
 
 class CategoryLabelDatabase(object):
@@ -65,7 +127,6 @@ class CategoryLabelDatabase(object):
     def load(self, file_name):
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
-            from exception import SLUException
             raise SLUException("The category label database does not define "
                                "the `database' object!")
         self.database = db_mod.database
@@ -110,6 +171,15 @@ class SLUPreprocessing(object):
     normalisation patterns.
 
     """
+    text_normalization_mapping = [(['erm', ], []),
+                                  (['uhm', ], []),
+                                  (['um', ], []),
+                                  (["i'm", ], ['i', 'am']),
+                                  (['(sil)', ], []),
+                                  (['(%hesitation)', ], []),
+                                  (['(hesitation)', ], []),
+                                  ]
+
     def __init__(self, cldb, text_normalization=None):
         """Initialises a SLUPreprocessing object with particular preprocessing
         parameters.
@@ -127,19 +197,11 @@ class SLUPreprocessing(object):
 
         if text_normalization:
             self.text_normalization_mapping = text_normalization
-        else:
-            self.text_normalization_mapping = [(['erm', ], []),
-                                               (['uhm', ], []),
-                                               (['um', ], []),
-                                               (["i'm", ], ['i', 'am']),
-                                               (['(sil)', ], []),
-                                               (['(%hesitation)', ], []),
-                                               (['(hesitation)', ], [])
-                                               ]
 
     # TODO Rename to normalise_utterance.
     def text_normalisation(self, utterance):
-        """Normalises the utterance (the output of an ASR).
+        """
+        Normalises the utterance (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
@@ -151,7 +213,8 @@ class SLUPreprocessing(object):
         return utterance
 
     def normalise_confnet(self, confnet):
-        """Normalises the confnet (the output of an ASR).
+        """
+        Normalises the confnet (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
@@ -161,6 +224,16 @@ class SLUPreprocessing(object):
         for mapping in self.text_normalization_mapping:
             confnet = confnet.replace(mapping[0], mapping[1])
         return confnet
+
+    def normalise(self, utt_hyp):
+        if isinstance(utt_hyp, Utterance):
+            return self.text_normalisation(utt_hyp)
+        elif isinstance(utt_hyp, UtteranceConfusionNetwork):
+            return self.normalise_confnet(utt_hyp)
+        else:
+            assert isinstance(utt_hyp, UtteranceNBList)
+            for utt_idx, hyp in enumerate(utt_hyp):
+                utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
 
     # TODO Update the docstring for the `all_options' argument.
     def values2category_labels_in_utterance(self, utterance,
@@ -331,7 +404,7 @@ class SLUPreprocessing(object):
                     # use of replace and phrase2category_label.
                     new_utt = nblist_cp[hyp_idx][1].replace(surface, (value, ))
                     nblist_cp[hyp_idx][1] = (new_utt.phrase2category_label(
-                            (value, ), (category_label, )))
+                        (value, ), (category_label, )))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= tot_len:
@@ -342,7 +415,8 @@ class SLUPreprocessing(object):
 
     # TODO Test.
     def values2category_labels_in_confnet(self, confnet):
-        """Replaces strings matching surface forms in the label database with
+        """
+        Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
         Arguments:
@@ -383,14 +457,37 @@ class SLUPreprocessing(object):
                     confnet_cp = confnet_cp.phrase2category_label(
                         (value, ), (slot_upper, ))
                 except Exception as ex:
-                    print "(EE) " + ex
+                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
+                    import traceback
+                    print "(EE) " + unicode(ex)
+                    traceback.print_exc()
+                    # DEBUG
+                    # import ipdb; ipdb.set_trace()
+                    # confnet_cp = confnet_cp.replace(surface, (value, ))
+                    # confnet_cp = confnet_cp.phrase2category_label(
+                        # (value, ), (slot_upper, ))
 
         return confnet_cp, valform_for_cl
 
+    def values2catlabs(self, utt_hyp):
+        """TODO Document."""
+        # Do the substitution in the utterance hypothesis, and obtain the
+        # resulting mapping.
+        if isinstance(utt_hyp, Utterance):
+            return self.values2category_labels_in_utterance(utt_hyp)
+        # TODO isinstance(utt_hyp, AbstractedUtterance)
+        elif isinstance(utt_hyp, UtteranceNBList):
+            # XXX This might not work now.
+            return self.values2category_labels_in_uttnblist(utt_hyp)
+        else:
+            assert isinstance(utt_hyp, UtteranceConfusionNetwork)
+            return self.values2category_labels_in_confnet(utt_hyp)
+
     def values2category_labels_in_da(self, utt_hyp, da):
-        """Replaces strings matching surface forms in the label database with
-        their slot names plus index both in `utt_hyp' and `da' in
-        a consistent fashion.
+        """
+        Replaces strings matching surface forms in the label database with
+        their slot names plus index both in `utt_hyp' and `da' in a consistent
+        fashion.
 
         NOT IMPLEMENTED YET:
         Since multiple slots can have the same surface form, the return value,
@@ -410,16 +507,7 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
-        # Do the substitution in the utterance hypothesis, and obtain the
-        # resulting mapping.
-        if isinstance(utt_hyp, Utterance):
-            utt_hyp, valform_for_cl = \
-                self.values2category_labels_in_utterance(utt_hyp)
-        else: # TODO isinstance(utt_hyp, AbstractedUtterance)
-            assert isinstance(utt_hyp, UtteranceNBList)
-            # XXX This might not work now.
-            utt_hyp, valform_for_cl = \
-                self.values2category_labels_in_uttnblist(utt_hyp)
+        utt_hyp, valform_for_cl = self.values2catlabs(utt_hyp)
         cl_for_value = {item[1][0]: item[0]
                         for item in valform_for_cl.iteritems()}
 
@@ -467,8 +555,9 @@ class SLUPreprocessing(object):
         nblist_cp = copy.deepcopy(utt_nblist)
         for utterance in nblist_cp:
             for cl in category_labels:
-                # FIXME: Use a new method, category_label2phrase, which will know
-                # that the new value is not an abstraction for the original one.
+                # FIXME: Use a new method, category_label2phrase, which will
+                # know that the new value is not an abstraction for the
+                # original one.
                 utterance = utterance.phrase2category_label(
                     [cl, ], category_labels[cl][1])
         return nblist_cp
@@ -496,11 +585,14 @@ class SLUPreprocessing(object):
                 dai.category_label2value(category_labels)
         return nblist
 
-    def category_labels2values_in_confnet(self, confnet, category_labels=None):
-        """Reverts the effect of the values2category_labels_in_da()
-        function.
+    # Originally called category_labels2values_in_confnet, which caused
+    # confusion (since here we deal with DA confnets, as opposed to utterance
+    # confnets in other method).
+    def category_labels2values_in_dacn(self, confnet, category_labels=None):
+        """
+        Reverts the effect of the values2category_labels_in_da() method.
 
-        Returns the converted confusion network.
+        Returns the converted DA confusion network.
         """
         confnet = copy.deepcopy(confnet)
         for _, dai in confnet.cn:
@@ -511,7 +603,7 @@ class SLUPreprocessing(object):
 # XXX This in fact is not an interface anymore (for it has a constructor).  It
 # had better be called AbstractSLU.
 class SLUInterface(object):
-    """\
+    """
     Defines a prototypical interface each SLU parser should provide.
 
     It should be able to parse:
@@ -549,32 +641,108 @@ class SLUInterface(object):
     def save_model(self, *args, **kwargs):
         pass
 
-    def parse_1_best(self, utterance, *args, **kwargs):
-        from exception import SLUException
+    def parse_1_best(self, obs, *args, **kwargs):
+        # TODO Document.
         raise SLUException("Not implemented")
 
-    def parse_nblist(self, utterance_list):
-        from exception import SLUException
-        raise SLUException("Not implemented")
+    def parse_nblist(self, obs, *args, **kwargs):
+        """
+        Parses an observation featuring an utterance n-best list using the
+        parse_1_best method.
 
-    def parse_confnet(self, confnet):
-        from exception import SLUException
-        raise SLUException("Not implemented")
+        Arguments:
+            obs -- a dictionary of observations
+                :: observation type -> observed value
+                where observation type is one of values for `obs_type' used in
+                `ft_props', and observed value is the corresponding observed
+                value for the input
+            args -- further positional arguments that should be passed to the
+                `parse_1_best' method call
+            kwargs -- further keyword arguments that should be passed to the
+                `parse_1_best' method call
 
-    def parse(self, utterance, *args, **kw):
+        """
+        nblist = obs['utt_nbl']
+        if len(nblist) == 0:
+            return DialogueActConfusionNetwork()
+
+        obs_wo_nblist = copy.deepcopy(obs)
+        del obs_wo_nblist['utt_nbl']
+        dacn_list = []
+        for prob, utt in nblist:
+            if "__other__" == utt:
+                dacn = DialogueActConfusionNetwork()
+                dacn.add(1.0, DialogueActItem("other"))
+            else:
+                obs_wo_nblist['utt'] = utt
+                dacn = self.parse_1_best(obs_wo_nblist, *args, **kwargs)
+
+            dacn_list.append((prob, dacn))
+
+        dacn = merge_slu_confnets(dacn_list)
+        dacn.prune()
+        dacn.sort()
+
+        return dacn
+
+    def parse_confnet(self, obs, n=40, *args, **kwargs):
+        """
+        Parses an observation featuring a word confusion network using the
+        parse_nblist method.
+
+        Arguments:
+            obs -- a dictionary of observations
+                :: observation type -> observed value
+                where observation type is one of values for `obs_type' used in
+                `ft_props', and observed value is the corresponding observed
+                value for the input
+            n -- depth of the n-best list generated from the confusion network
+            args -- further positional arguments that should be passed to the
+                `parse_1_best' method call
+            kwargs -- further keyword arguments that should be passed to the
+                `parse_1_best' method call
+
+        """
+
+        # Separate the confnet from the observations.
+        confnet = obs['utt_cn']
+        obs_wo_cn = copy.deepcopy(obs)
+        del obs_wo_cn['utt_cn']
+
+        # Generate the n-best list from the confnet.
+        obs_wo_cn.setdefault('utt_nbl', confnet.get_utterance_nblist(n=n))
+        # Parse the n-best list.
+        return self.parse_nblist(obs_wo_cn, *args, **kwargs)
+
+    def parse(self, obs, *args, **kwargs):
         """Check what the input is and parse accordingly."""
 
-        if isinstance(utterance, Utterance):
-            return self.parse_1_best(utterance, *args, **kw)
+        # For backward compatibility, accept `obs' as a single observation
+        # type.
+        if not isinstance(obs, dict):
+            obs = {'asr_hyp': obs}
 
-        elif isinstance(utterance, UtteranceHyp):
-            return self.parse_1_best(utterance, *args, **kw)
+        # Process the generic ASR hypothesis (of unknown type).
+        if 'asr_hyp' in obs:
+            asr_hyp = obs['asr_hyp']
+            if isinstance(asr_hyp, Utterance):
+                obs.setdefault('utt', asr_hyp)
+            elif isinstance(asr_hyp, UtteranceHyp):
+                obs.setdefault('utt', asr_hyp.utterance)
+            elif isinstance(asr_hyp, UtteranceNBList):
+                obs.setdefault('utt_nbl', asr_hyp)
+            elif isinstance(asr_hyp, UtteranceConfusionNetwork):
+                obs.setdefault('utt_cn', asr_hyp)
+            del obs['asr_hyp']
 
-        elif isinstance(utterance, UtteranceNBList):
-            return self.parse_nblist(utterance, *args, **kw)
-
-        elif isinstance(utterance, UtteranceConfusionNetwork):
-            return self.parse_confnet(utterance, *args, **kw)
-
+        # Decide what method to use based on the most complex input
+        # representation.
+        # (TODO: Get rid of this scheme of using three different methods.)
+        if 'utt_cn' in obs:
+            return self.parse_confnet(obs, *args, **kwargs)
+        elif 'utt_nbl' in obs:
+            return self.parse_nblist(obs, *args, **kwargs)
         else:
-            raise DAILRException("Unsupported input in the SLU component.")
+            return self.parse_1_best(obs, *args, **kwargs)
+
+        # raise DAILRException("Unsupported input in the SLU component.")

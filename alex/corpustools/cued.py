@@ -8,6 +8,7 @@ This module is meant to collect functionality for handling call logs -- both
 working with the call log files in the filesystem, and parsing them.
 """
 
+import copy
 import glob
 import os
 import os.path
@@ -18,7 +19,22 @@ if __name__ == "__main__":
 from alex.utils.fs import find
 
 
-def find_matching(pat, infname, ignore_list_file=None):
+def _build_find_kwargs(user_kwargs, **kwargs):
+    """
+    Builds arguments for the `find' function, ensuring they are consistent.
+    """
+    find_kwargs = copy.copy(user_kwargs)
+    # Remove any positional arguments specified by name.
+    if 'dir_' in find_kwargs:
+        del find_kwargs['dir_']
+    if 'glob_' in find_kwargs:
+        del find_kwargs['glob_']
+    # Override user kwargs by ours.
+    find_kwargs.update(kwargs)
+    return find_kwargs
+
+
+def find_with_ignorelist(infname, pat, ignore_list_file=None, find_kwargs=dict()):
     """
     Finds specific files below the paths specified and returns their filenames.
 
@@ -30,6 +46,9 @@ def find_matching(pat, infname, ignore_list_file=None):
             determining the wav to include.
         ignore_list_file -- a file of absolute paths or globs (can be mixed)
             specifying wavs that should be excluded from the results
+        find_kwargs -- if provided, this dictionary is used as additional
+            keyword arguments for the function `utils.fs.find' for finding
+            positive examples of files (not the ignored ones)
 
     Returns a set of paths to files satisfying the criteria.
 
@@ -55,21 +74,25 @@ def find_matching(pat, infname, ignore_list_file=None):
     # First option: the infile is actually a directory.  Then, take all
     # matching files from below that directory.
     if os.path.isdir(infname):
-        file_paths = set(find(infname, pat, ignore_globs=ignore_globs,
-                              ignore_paths=ignore_paths))
+        find_kwargs = _build_find_kwargs(find_kwargs,
+                                         ignore_globs=ignore_globs,
+                                         ignore_paths=ignore_paths)
+        if 'mindepth' not in find_kwargs:
+            find_kwargs['mindepth'] = 1
+        file_paths = set(find(infname, pat, **find_kwargs))
     # Second option: the infile is a file listing all paths to check for
     # matching files.
     else:
         file_paths = set()
+        find_kwargs = _build_find_kwargs(find_kwargs, mindepth=1, maxdepth=1,
+                                         ignore_globs=ignore_globs,
+                                         ignore_paths=ignore_paths)
         with open(infname, 'r') as inlist:
             for line in inlist:
                 line = line.rstrip('\n')
                 # If the line contains directories:
                 if os.path.isdir(line):
-                    file_paths.update(find(line, pat,
-                                           mindepth=1, maxdepth=1,
-                                           ignore_globs=ignore_globs,
-                                           ignore_paths=ignore_paths))
+                    file_paths.update(find(line, pat, **find_kwargs))
                 # If it is not a directory name, treat the line as a file glob.
                 else:
                     new_paths = [os.path.abspath(f) for f in glob.glob(line)]
@@ -102,7 +125,7 @@ def find_wavs(infname, ignore_list_file=None):
     Returns a set of paths to files satisfying the criteria.
 
     """
-    return find_matching('*.wav', infname, ignore_list_file)
+    return find_with_ignorelist(infname, '*.wav', ignore_list_file)
 
 
 _log_fnames = ('user-transcription.norm.xml',
@@ -116,7 +139,7 @@ def _log_fname_key(xml_path_tup):
         return 42  # must be a number greater than len(_log_fnames)
 
 
-def find_logs(infname, ignore_list_file=None):
+def find_logs(infname, ignore_list_file=None, verbose=False):
     """
     Finds CUED logs below the paths specified and returns their filenames.
     The logs are determined as files matching one of the following patterns:
@@ -135,11 +158,16 @@ def find_logs(infname, ignore_list_file=None):
             determining the log to include.
         ignore_list_file -- a file of absolute paths or globs (can be mixed)
             specifying logs that should be excluded from the results
+        verbose -- print lots of output?
 
     Returns a set of paths to files satisfying the criteria.
 
     """
-    xml_paths = find_matching('*.xml', infname, ignore_list_file)
+    xml_paths = find_with_ignorelist(infname, '*.xml', ignore_list_file)
+    if verbose:
+        print "XML files found:"
+        for xml_path in xml_paths:
+            print "    {path}".format(path=xml_path)
     xml_path_tups = map(os.path.split, xml_paths)
     # sort | uniq the paths, taking uniq over their prefixes (call log dirs)
     # only.

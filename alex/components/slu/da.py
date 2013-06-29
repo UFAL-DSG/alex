@@ -4,24 +4,29 @@
 
 from __future__ import unicode_literals
 
-import codecs
 from collections import defaultdict
 import copy
-from itertools import islice
 from operator import xor
 
-from alex.components.slu.exception import SLUException
+from alex.components.slu.exceptions import SLUException, DialogueActItemException
+from alex.ml.exceptions import NBListException
+from alex.corpustools.wavaskey import load_wavaskey
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
-from alex.ml.hypothesis import Hypothesis, NBList, NBListException, \
-    ConfusionNetwork
+from alex.ml.hypothesis import Hypothesis, NBList, ConfusionNetwork
 from alex.utils.text import split_by
 
 
 def load_das(das_fname, limit=None, encoding='UTF-8'):
-    """Loads a dictionary of DAs from a given file. The file is assumed to
-    contain lines of the following form:
+    """
+    Loads a dictionary of DAs from a given file.
 
-    [whitespace..]<key>[whitespace..]=>[whitespace..]<DA>[whitespace..]
+    The file is assumed to contain lines of the following form:
+
+        [[:space:]..]<key>[[:space:]..]=>[[:space:]..]<DA>[[:space:]..]
+
+    or just (without keys):
+
+        [[:space:]..]<DA>[[:space:]..]
 
     Arguments:
         das_fname -- path towards the file to read the DAs from
@@ -31,48 +36,20 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     Returns a dictionary with DAs (instances of DialogueAct) as values.
 
     """
-    with codecs.open(das_fname, encoding=encoding) as das_file:
-        das = defaultdict(list)
-        for line_id, line in enumerate(islice(das_file, 0, limit)):
-            line = line.strip()
-            if not line:
-                continue
-            parts = line.split("=>", 2)
-            if len(parts) == 2:
-                key = parts[0].strip()
-                da_str = parts[1].strip()
-            else:
-                key = str(line_id)
-                da_str = parts[0].strip()
-            das[key] = DialogueAct(da_str)
-    return das
+    return load_wavaskey(das_fname, DialogueAct, limit, encoding)
 
 
 def save_das(file_name, das):
-    with open(file_name, 'w+') as outfile:
+    with open(file_name, 'w') as outfile:
         for turn_key in sorted(das):
             outfile.write('{key} => {da}\n'.format(key=turn_key,
                                                    da=das[turn_key]))
 
 
-class DialogueActItemException(SLUException):
-    pass
-
-
-class DialogueActException(SLUException):
-    pass
-
-
-class DialogueActNBListException(SLUException):
-    pass
-
-
-class DialogueActConfusionNetworkException(SLUException):
-    pass
-
-
 class DialogueActItem(Abstracted):
-    """Represents dialogue act item which is a component of a dialogue act.
+    """
+    Represents dialogue act item which is a component of a dialogue act.
+
     Each dialogue act item is composed of
 
         1) dialogue act type - e.g. inform, confirm, request, select, hello
@@ -88,10 +65,12 @@ class DialogueActItem(Abstracted):
     """
     splitter = ':'
 
-    # TODO Rename dai to dai_str for sake of clarity.
+    # TODO Rename dai to dai_str for sake of clarity.  Move it to the first
+    # position in the argument list, so that __init__ recovers a DAI object
+    # repr() would have stored (once __repr__ is implemented so).
     def __init__(self, dialogue_act_type=None, name=None, value=None,
                  dai=None, attrs=None):
-        """\
+        """
         Initialise the dialogue act item. Assigns the default values to
         dialogue act type (dat), slot name (name), and slot value (value).
 
@@ -136,22 +115,22 @@ class DialogueActItem(Abstracted):
         try:
             str_self = self._str
         except AttributeError:
-            return u''
+            return ''
         if str_self is None:
             try:
                 orig_val = next(iter(self._orig_values))
-                self._str = (u'{type_}({name}="{val}{spl}{orig}")'
+                self._str = ('{type_}({name}="{val}{spl}{orig}")'
                              .format(type_=self._dat,
-                                     name=self._name or u'',
+                                     name=self._name or '',
                                      val=self._value,
                                      spl=DialogueActItem.splitter,
                                      orig=orig_val))
             except StopIteration:
-                eq_val = (u'="{val}"'.format(val=self._value)
-                          if self._value else u'')
-                self._str = (u"{type_}({name}{eq_val})"
+                eq_val = ('="{val}"'.format(val=self._value)
+                          if self._value else '')
+                self._str = ("{type_}({name}{eq_val})"
                              .format(type_=self._dat,
-                                     name=self._name or u'',
+                                     name=self._name or '',
                                      eq_val=eq_val))
 
         return self._str
@@ -348,9 +327,9 @@ class DialogueActItem(Abstracted):
         else:
             return False
 
-    # TODO This should perhaps be a class method.
     def parse(self, dai_str):
-        """Parses the dialogue act item in text format into a structured form.
+        """
+        Parses the dialogue act item in text format into a structured form.
         """
         dai_str = dai_str.strip()
 
@@ -358,7 +337,7 @@ class DialogueActItem(Abstracted):
             first_par_idx = dai_str.index('(')
         except ValueError:
             raise DialogueActItemException(
-                u'Parsing error in: "{dai}". Missing opening parenthesis.'
+                'Parsing error in: "{dai}". Missing opening parenthesis.'
                 .format(dai=dai_str))
 
         self._dat = dai_str[:first_par_idx]
@@ -378,7 +357,7 @@ class DialogueActItem(Abstracted):
                     self._value = self._value[1:-1]
             else:
                 raise DialogueActItemException(
-                    u"Parsing error in: {dai_str}: {atval}".format(
+                    "Parsing error in: {dai_str}: {atval}".format(
                         dai_str=dai_str, atval=name_val))
 
         self._str = None
@@ -386,11 +365,13 @@ class DialogueActItem(Abstracted):
 
 
 class DialogueAct(object):
-    """Represents a dialogue act (DA), i.e., a set of dialogue act items
-    (DAIs).  The DAIs are stored in the `dais' attribute, sorted w.r.t. their
-    string representation.  This class is not responsible for discarding a DAI
-    which is repeated several times, so that you can obtain a DA that looks
-    like this:
+    """
+    Represents a dialogue act (DA), i.e., a set of dialogue act items (DAIs).
+
+    The DAIs are stored in the `dais' attribute, sorted w.r.t. their string
+    representation.  This class is not responsible for discarding a DAI which
+    is repeated several times, so that you can obtain a DA that looks like
+    this:
 
         inform(food="chinese")&inform(food="chinese")
 
@@ -422,12 +403,12 @@ class DialogueAct(object):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return u'&'.join(unicode(dai) for dai in self._dais)
+        return '&'.join(unicode(dai) for dai in self._dais)
 
     def __contains__(self, dai):
         return ((isinstance(dai, DialogueActItem) and dai in self._dais) or
-                (isinstance(dai, str)
-                 and any(dai == str(my_dai) for my_dai in self._dais)))
+                (isinstance(dai, basestring)
+                 and any(dai == unicode(my_dai) for my_dai in self._dais)))
 
     def __cmp__(self, other):
         if isinstance(other, DialogueAct):
@@ -444,7 +425,7 @@ class DialogueAct(object):
             mydais_sorted = sorted(self._dais)
             self_sorted = DialogueAct()
             self_sorted._dais = mydais_sorted
-            self_str = str(self_sorted)
+            self_str = unicode(self_sorted)
             return (self_str >= other) - (other >= self_str)
         else:
             DialogueActException("Unsupported comparison type.")
@@ -485,15 +466,17 @@ class DialogueAct(object):
         """
         return all(dai.dat == dat for dai in self._dais)
 
-    def parse(self, da):
-        """Parse the dialogue act in text format into the structured form.  If
-        any DAIs have been already defined for this DA, they will be
+    def parse(self, da_str):
+        """
+        Parses the dialogue act from text.
+
+        If any DAIs have been already defined for this DA, they will be
         overwritten.
 
         """
         if self._dais:
             del self._dais[:]
-        dais = split_by(da, splitter='&', opening_parentheses='(',
+        dais = split_by(da_str, splitter='&', opening_parentheses='(',
                         closing_parentheses=')', quotes='"')
         self._dais.extend(DialogueActItem(dai=dai) for dai in dais)
         self._dais_sorted = False
@@ -584,18 +567,14 @@ class DialogueActFeatures(Features):
         self.instantiable = dict()
         # Features representing the complete DA.
         for dai in da:
-            # DEBUG
-            try:
-                self.features[(dai.dat, )] += 1.
-            except AttributeError:
-                import ipdb
-                ipdb.set_trace()
+            # import ipdb; ipdb.set_trace() # DEBUG
+            self.features[(dai.dat, )] += 1.
             if dai.name is not None:
                 self.features[(dai.dat, dai.name)] += 1.
                 if dai.value is not None:
                     full_feat = AbstractedTuple2(
                         (dai.dat,
-                         u'{n}={v}'.format(n=dai.name, v=dai.value)))
+                         '{n}={v}'.format(n=dai.name, v=dai.value)))
                     self.features[full_feat] += 1.
                     self.generic[full_feat] = full_feat.get_generic()
                     self.instantiable[full_feat] = full_feat
@@ -786,7 +765,7 @@ class DialogueActNBListFeatures(Features):
 
 
 class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
-    """\
+    """
     Dialogue act item confusion network. This is a very simple implementation
     in which all dialogue act items are assumed to be independent.  Therefore,
     the network stores only posteriors for dialogue act items.
@@ -810,9 +789,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         # DAs in a DA confnet are in no particular order, so we sort them here.
         ret = []
         for prob, dai in sorted(self.cn, reverse=True):
-            ret.append(u"{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
+            ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
-        return u"\n".join(ret)
+        return "\n".join(ret)
 
     def __iter__(self):
         for dai_hyp in self.cn:
@@ -846,7 +825,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                       'harm': _combine_harm.__func__}
 
     def make_dict(self):
-        """\
+        """
         Creates a dictionary mapping a simplified tuple representation of a DAI
         to that DAI for DAIs present in this DA confnet.
 
@@ -1133,8 +1112,8 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         for p, dai in self.cn:
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(
-                    (u"The probability of the {dai!s} dialogue act item is " +
-                     u"larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+                    ("The probability of the {dai!s} dialogue act item is " +
+                     "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
 
     def normalise_by_slot(self):
         """Ensures that probabilities for alternative values for the same slot

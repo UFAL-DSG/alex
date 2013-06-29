@@ -17,9 +17,6 @@ def split_to_bins(A, S=4):
 
 def flatten(list_, ltypes=(list, tuple)):
     """Flatten nested list into a simple list."""
-    # Coerce the input sequence into a list for this function.
-    ltype = type(list_)
-    list_ = list(list_)
     # Iterate `list_' from the beginning.
     i = 0
     while i < len(list_):
@@ -31,13 +28,13 @@ def flatten(list_, ltypes=(list, tuple)):
                 list_.pop(i)
                 i -= 1
                 break
-            else: # if the list-like element is non-empty,
+            else:  # if the list-like element is non-empty,
                 # Catenate its elements to the main list at the current
                 # position.
                 list_[i:i + 1] = list_[i]
         i += 1
     # Coerce the main list into the original type and return.
-    return ltype(list_)
+    return list_
 
 
 def get_text_from_xml_node(node):

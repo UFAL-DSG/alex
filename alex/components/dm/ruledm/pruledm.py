@@ -671,9 +671,8 @@ def main():
     from alex.utils.config import Config
     from alex.utils.caminfodb import CamInfoDb
 
-
-    cfg = Config('resources/default.cfg', project_root=True)
-    cfg.merge('resources/lz.cfg', project_root=True)
+    # This implicitly loads also the default config.
+    cfg = Config.load_configs(['resources/lz.cfg'], project_root=True)
 
     db_cfg = cfg['DM']["PUfalRuleDM"]['db_cfg']  # database provider
     db = CamInfoDb(db_cfg)

@@ -5,6 +5,8 @@ import multiprocessing
 import collections
 import time
 
+from datetime import datetime
+
 from alex.utils.text import parse_command
 from alex.utils.mproc import InstanceID
 
@@ -16,10 +18,15 @@ class Message(InstanceID):
     """
     def __init__(self, source, target):
         self.id = self.get_instance_id()
-        self.time = time.time()
+        self.time = datetime.now()
         self.source = source
         self.target = target
 
+    def get_time_str(self):
+        """ Return current time in dashed ISO-like format.
+        """
+        return '{dt}-{tz}'.format(dt=self.time.strftime('%Y-%m-%d-%H-%M-%S.%f'),
+            tz=time.tzname[time.localtime().tm_isdst])
 
 class Command(Message):
     def __init__(self, command, source=None, target=None):
@@ -29,7 +36,7 @@ class Command(Message):
         self.parsed = collections.defaultdict(str, parse_command(self.command))
 
     def __str__(self):
-        return "From: %-10s To: %-10s Command: %s " % (self.source, self.target, self.command)
+        return "#%-6d Time: %s From: %-10s To: %-10s Command: %s " % (self.id, self.get_time_str(), self.source, self.target, self.command)
 
 
 class ASRHyp(Message):
@@ -39,7 +46,7 @@ class ASRHyp(Message):
         self.hyp = hyp
 
     def __str__(self):
-        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
+        return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.hyp)
 
 class SLUHyp(Message):
     def __init__(self, hyp, asr_hyp=None, source=None, target=None):
@@ -49,7 +56,7 @@ class SLUHyp(Message):
         self.asr_hyp = asr_hyp
 
     def __str__(self):
-        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.hyp)
+        return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.hyp)
 
 class DMDA(Message):
     def __init__(self, da, source=None, target=None):
@@ -58,7 +65,7 @@ class DMDA(Message):
         self.da = da
 
     def __str__(self):
-        return "From: %-10s To: %-10s Hyp: %s " % (self.source, self.target, self.da)
+        return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.da)
 
 class TTSText(Message):
     def __init__(self, text, source=None, target=None):
@@ -67,7 +74,7 @@ class TTSText(Message):
         self.text = text
 
     def __str__(self):
-        return "From: %-10s To: %-10s Text: %s " % (self.source, self.target, self.text)
+        return "#%-6d Time: %s From: %-10s To: %-10s Text: %s " % (self.id, self.get_time_str(), self.source, self.target, self.text)
 
 
 class Frame(Message):
@@ -77,7 +84,7 @@ class Frame(Message):
         self.payload = payload
 
     def __str__(self):
-        return "From: %-10s To: %-10s Len: %d " % (self.source, self.target, len(self.payload))
+        return "#%-6d Time: %s From: %-10s To: %-10s Len: %d " % (self.id, self.get_time_str(), self.source, self.target, len(self.payload))
 
     def __len__(self):
         return len(self.payload)

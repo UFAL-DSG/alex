@@ -3,13 +3,11 @@
 
 import multiprocessing
 import time
-import sys
-import os
 
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 
 from alex.components.hub.messages import Command, DMDA, TTSText
-from alex.utils.exception import DMException
+from alex.components.dm.exceptions import DMException
 
 from alex.utils.procname import set_proc_name
 
@@ -22,13 +20,14 @@ class NLG(multiprocessing.Process):
     communication.
     """
 
-    def __init__(self, cfg, commands, dialogue_act_in, text_out):
+    def __init__(self, cfg, commands, dialogue_act_in, text_out, close_event):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
         self.commands = commands
         self.dialogue_act_in = dialogue_act_in
         self.text_out = text_out
+        self.close_event = close_event
 
         nlg_type = get_nlg_type(cfg)
         self.nlg = nlg_factory(nlg_type, cfg)
@@ -44,7 +43,7 @@ class NLG(multiprocessing.Process):
         Return True if the process should terminate.
         """
 
-        if self.commands.poll():
+        while self.commands.poll():
             command = self.commands.recv()
             if self.cfg['NLG']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
@@ -61,12 +60,14 @@ class NLG(multiprocessing.Process):
                     # the NLG component does not have to be flushed
                     #self.nlg.flush()
 
+                    self.commands.send(Command("flushed()", 'NLG', 'HUB'))
+
                     return False
 
         return False
 
     def read_dialogue_act_write_text(self):
-        while self.dialogue_act_in.poll():
+        if self.dialogue_act_in.poll():
             data_da = self.dialogue_act_in.recv()
 
             if isinstance(data_da, DMDA):
@@ -81,26 +82,33 @@ class NLG(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-
                 self.cfg['Logging']['session_logger'].text("system", text)
 
                 self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
                 self.text_out.send(TTSText(text))
             elif isinstance(data_da, Command):
-                cfg['Logging']['system_logger'].info(data_da)
+                self.cfg['Logging']['system_logger'].info(data_da)
             else:
                 raise DMException('Unsupported input.')
 
     def run(self):
-        set_proc_name("alex_NLG")
-    
-        while 1:
-            time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+        try:
+            set_proc_name("alex_NLG")
 
-            # process all pending commands
-            if self.process_pending_commands():
-                return
+            while 1:
+                # Check the close event.
+                if self.close_event.is_set():
+                    return
 
-            # process the incoming DM dialogue acts
-            self.read_dialogue_act_write_text()
-    
+                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+
+                # process all pending commands
+                if self.process_pending_commands():
+                    return
+
+                # process the incoming DM dialogue acts
+                self.read_dialogue_act_write_text()
+        except:
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in NLG process.')
+            self.close_event.set()
+            raise

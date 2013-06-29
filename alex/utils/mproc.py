@@ -5,11 +5,12 @@
 
 """
 Implements useful classes for handling multiprocessing implementation of
-the alex.
+the Alex system.
 """
 
 import functools
 import multiprocessing
+import threading
 import fcntl
 import time
 import os
@@ -49,7 +50,7 @@ def global_lock(lock):
     """This decorator makes the decorated function thread safe.
 
     Keyword arguments:
-        lock -- an global variable pointing to the object to lock on
+        lock -- a global variable pointing to the object to lock on
 
     """
     def decorator(user_function):
@@ -82,41 +83,72 @@ def file_unlock(lock_file):
     fcntl.lockf(lock_file, fcntl.LOCK_UN)
     lock_file.close()
 
+def async(func):
+    """4
+        A function decorator intended to make "func" run in a separate thread (asynchronously).
+        Returns the created Thread object
+
+        E.g.:
+        @run_async
+        def task1():
+            do_something
+
+        @run_async
+        def task2():
+            do_something_too
+
+        t1 = task1()
+        t2 = task2()
+        ...
+        t1.join()
+        t2.join()
+    """
+
+    @functools.wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = threading.Thread(target = func, args = args, kwargs = kwargs)
+        func_hl.start()
+        return func_hl
+
+    return async_func
+
 
 class InstanceID(object):
-    """ This class provides unique ids to all instances of objects inheriting
+    """
+    This class provides unique ids to all instances of objects inheriting
     from this class.
 
     """
 
     lock = multiprocessing.Lock()
-    instance_id = 0
+    instance_id = multiprocessing.Value('i', 0)
 
     @global_lock(lock)
     def get_instance_id(self):
-        InstanceID.instance_id += 1
-        return InstanceID.instance_id
+        InstanceID.instance_id.value += 1
+        return InstanceID.instance_id.value
 
 
 class SystemLogger(object):
-    """ This is a multiprocessing-safe logger.  It should be used by all
-    components in Alex.
+    """
+    This is a multiprocessing-safe logger.  It should be used by all components
+    in Alex.
 
     """
 
     lock = multiprocessing.RLock()
     levels = {
-        'DEBUG':            0,
-        'INFO':            10,
-        'WARNING':         20,
-        'CRITICAL':        30,
-        'EXCEPTION':       40,
-        'ERROR':           50,
-        'SYSTEM-LOG':      60,
+        'SYSTEM-LOG':       0,
+        'DEBUG':           10,
+        'INFO':            20,
+        'WARNING':         30,
+        'CRITICAL':        40,
+        'EXCEPTION':       50,
+        'ERROR':           60,
     }
 
-    def __init__(self, output_dir, stdout_log_level='INFO', stdout=True,
-                 file_log_level='INFO'):
+    def __init__(self, output_dir, stdout_log_level='DEBUG', stdout=True,
+                 file_log_level='DEBUG'):
         self.stdout_log_level = stdout_log_level
         self.stdout = stdout
         self.file_log_level = file_log_level
@@ -127,8 +159,7 @@ class SystemLogger(object):
 
         # Create a buffer of size 1000 bytes in shared memory to hold
         # the name of the logging directory for current session.
-        self.current_session_log_dir_name = multiprocessing.Array(
-            'c', ' ' * 1000)
+        self.current_session_log_dir_name = multiprocessing.Array('c', ' ' * 1000)
         self.current_session_log_dir_name.value = ''
         self._session_started = False
 
@@ -144,8 +175,7 @@ class SystemLogger(object):
         It is useful in constructing file and directory names.
 
         """
-        return '{dt}-{tz}'.format(
-            dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
+        return '{dt}-{tz}'.format(dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
             tz=time.tzname[time.localtime().tm_isdst])
 
     @global_lock(lock)
@@ -194,11 +224,11 @@ class SystemLogger(object):
         """ Format the message - pretty print
         """
         s = self.get_time_str()
-        s += '  %-10s : ' % multiprocessing.current_process().name
-        s += '%-10s ' % lvl
-        s += '\n'
+        s += u'  %-10s : ' % multiprocessing.current_process().name
+        s += u'%-10s ' % lvl
+        s += u'\n'
 
-        ss = '    ' + unicode(message)
+        ss = u'    ' + unicode(message)
         ss = re.sub(r'\n', '\n    ', ss)
 
         return s + ss + '\n'
@@ -210,6 +240,7 @@ class SystemLogger(object):
         Before writing into a logging file, it locks the file.
 
         """
+
         if self.stdout:
             # Log to stdout.
             if (SystemLogger.levels[lvl] >=
@@ -262,7 +293,7 @@ class SystemLogger(object):
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
-        self.log('EXCEPTION', message + '\n' + tb)
+        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb, 'utf8'))
 
     @global_lock(lock)
     def error(self, message):

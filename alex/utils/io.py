@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from multiprocessing import Process
+from select import select
 from time import sleep
 
 DEBUG = False
@@ -23,7 +24,7 @@ class GrepFilter(Process):
         self.closed = False
 
     def add_listener(self, regex, callback):
-        """\
+        """
         Adds a listener to the output strings.
 
         Arguments:
@@ -62,9 +63,12 @@ class GrepFilter(Process):
 
     def flush(self, force=True):
         flushing = False
-        # while self.stdin.poll():
-            # indata = self.stdin.recv()
+        indata = ''
         while True:
+            ready_inputs, _, _ = select((self.stdin, ), tuple(), tuple(), 0)
+            if not ready_inputs:
+                break
+
             indata = self.stdin.read()
             if not indata:
                 break

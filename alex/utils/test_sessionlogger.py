@@ -25,7 +25,7 @@ CONFIG_DICT = {
 
 class TestSessionLogger(unittest.TestCase):
     def test_session_logger(self):
-        cfg = Config(config=CONFIG_DICT)
+        cfg = Config.load_configs(config=CONFIG_DICT, use_default=False)
 
         sl = SessionLogger()
 

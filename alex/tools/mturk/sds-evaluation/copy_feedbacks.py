@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 
 import glob
 import argparse
@@ -71,7 +71,7 @@ if __name__ == '__main__':
                 target = get_text_from_xml_node(els[0])
 
                 if verbose:
-                    print "Target: ", target
+                    print "Target:", target
 
                 cmd = "pscp -p -pw %s %s %s@%s:%s" % (
                     password, f, user, server, target)
