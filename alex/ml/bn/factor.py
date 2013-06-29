@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 
-"""Factor representation for computing with discrete variables."""
+'''
+This module implements a factor class, which can be used to do computations
+with probability distributions.
+'''
 
 import numpy as np
 import operator
@@ -77,18 +80,19 @@ class Factor(object):
         this can be tricky, when there is only one variable.
 
         Example:
-        >>> f = Factor(
-        ...     ['A', 'B'],
-        ...     {
-        ...         'A': ['a1', 'a2'],
-        ...         'B': ['b1', 'b2'],
-        ...     },
-        ...     {
-        ...         ('a1', 'b1'): 0.8,
-        ...         ('a2', 'b1'): 0.2,
-        ...         ('a1', 'b2'): 0.7,
-        ...         ('a2', 'b2'): 0.3,
-        ...     })
+
+            >>> f = Factor(
+            ...     ['A', 'B'],
+            ...     {
+            ...         'A': ['a1', 'a2'],
+            ...         'B': ['b1', 'b2'],
+            ...     },
+            ...     {
+            ...         ('a1', 'b1'): 0.8,
+            ...         ('a2', 'b1'): 0.2,
+            ...         ('a1', 'b2'): 0.7,
+            ...         ('a2', 'b2'): 0.3,
+            ...     })
 
         :param variables: Variables which this factor contains.
         :type variables: list
@@ -140,7 +144,7 @@ class DiscreteFactor(Factor):
         :param variable_values: For each variable a list of possible values.
         :type variable_values: dict
         :param prob_table: Probabilities of every combination of variables.
-        :type prob_table: numpy.ndarray() or dict
+        :type prob_table: :class:`numpy.ndarray` or dict
         """
         super(DiscreteFactor, self).__init__(variables,
                                              variable_values,
@@ -189,7 +193,7 @@ class DiscreteFactor(Factor):
         Each element is a tuple, where the first element is the assignment
         and the second element is the probability of this assignment.
 
-        Example of an element is `(("a", "b", "c"), 0.8)`.
+        Example of an element is ``(("a", "b", "c"), 0.8)``.
 
         :rtype: (tuple, float)
         """
@@ -223,24 +227,25 @@ class DiscreteFactor(Factor):
         """Raise every element of the factor to the power of n.
 
         Example:
-        >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                    {
-        ...                         ('a1',): 0.8,
-        ...                         ('a2',): 0.2
-        ...                    })
-        >>> result = a**2
-        >>> print result.pretty_print(width=30)
-        ------------------------------
-               A            Value
-        ------------------------------
-              a1             0.64
-              a2             0.04
-        ------------------------------
+
+            >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                    {
+            ...                         ('a1',): 0.8,
+            ...                         ('a2',): 0.2
+            ...                    })
+            >>> result = a**2
+            >>> print result.pretty_print(width=30)
+            ------------------------------
+                   A            Value
+            ------------------------------
+                  a1             0.64
+                  a2             0.04
+            ------------------------------
 
         :param n: The power.
         :type n: number
         :returns: New factor raised to the power of n.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
         """
         return DiscreteFactor(self.variables,
                               self.variable_values,
@@ -276,9 +281,9 @@ class DiscreteFactor(Factor):
         ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor
+        :type other: :class:`DiscreteFactor`
         :returns: The result of multiplication.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
         """
         if self.variables == other.variables:
             return self._multiply_same(other)
@@ -290,37 +295,38 @@ class DiscreteFactor(Factor):
 
         These two factors don't have to have the same variables. However, the
         second factor must be a subset of the first one. This means that every
-        variable in denominator must be also in dividend.
+        variable in the denominator must also be in the dividend.
 
         Example:
-        >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                    {
-        ...                         ('a1',): 0.8,
-        ...                         ('a2',): 0.2
-        ...                    })
-        >>> f = DiscreteFactor(['A', 'B'],
-        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
-        ...                    {
-        ...                         ('a1', 'b1'): 0.8,
-        ...                         ('a2', 'b1'): 0.2,
-        ...                         ('a1', 'b2'): 0.3,
-        ...                         ('a2', 'b2'): 0.7
-        ...                    })
-        >>> result = f / a
-        >>> print result.pretty_print(width=30, precision=3)
-        ------------------------------
-            A         B       Value
-        ------------------------------
-            a1        b1       1.0
-            a1        b2       0.375
-            a2        b1       1.0
-            a2        b2       3.5
-        ------------------------------
+
+            >>> a = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                    {
+            ...                         ('a1',): 0.8,
+            ...                         ('a2',): 0.2
+            ...                    })
+            >>> f = DiscreteFactor(['A', 'B'],
+            ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+            ...                    {
+            ...                         ('a1', 'b1'): 0.8,
+            ...                         ('a2', 'b1'): 0.2,
+            ...                         ('a1', 'b2'): 0.3,
+            ...                         ('a2', 'b2'): 0.7
+            ...                    })
+            >>> result = f / a
+            >>> print result.pretty_print(width=30, precision=3)
+            ------------------------------
+                A         B       Value
+            ------------------------------
+                a1        b1       1.0
+                a1        b2       0.375
+                a2        b1       1.0
+                a2        b2       3.5
+            ------------------------------
 
         :param other: Denominator.
-        :type other: DiscreteFactor
+        :type other: :class:`DiscreteFactor`
         :returns: The result of the division.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
         """
         if not set(self.variables).issuperset(set(other.variables)):
             raise ValueError(
@@ -334,32 +340,33 @@ class DiscreteFactor(Factor):
     def __add__(self, other):
         """Add two factors together.
 
-        Add two factors together. They must have the same variables.
+        They must have the same variables.
 
         Example:
-        >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                     {
-        ...                          ('a1',): 0.8,
-        ...                          ('a2',): 0.2
-        ...                     })
-        >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                     {
-        ...                          ('a1',): 0.1,
-        ...                          ('a2',): 0.5
-        ...                     })
-        >>> result = a1 + a2
-        >>> print result.pretty_print(width=30)
-        ------------------------------
-               A            Value
-        ------------------------------
-              a1             0.9
-              a2             0.7
-        ------------------------------
+
+            >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                     {
+            ...                          ('a1',): 0.8,
+            ...                          ('a2',): 0.2
+            ...                     })
+            >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                     {
+            ...                          ('a1',): 0.1,
+            ...                          ('a2',): 0.5
+            ...                     })
+            >>> result = a1 + a2
+            >>> print result.pretty_print(width=30)
+            ------------------------------
+                   A            Value
+            ------------------------------
+                  a1             0.9
+                  a2             0.7
+            ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor or float
+        :type other: :class:`DiscreteFactor` or float
         :returns: The result of the addition.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
         """
         if np.isscalar(other):
             new_factor_table = self._add(self.factor_table, self.encode(other))
@@ -381,29 +388,30 @@ class DiscreteFactor(Factor):
         If both are factors, then they must have the same variables.
 
         Example:
-        >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                     {
-        ...                          ('a1',): 0.8,
-        ...                          ('a2',): 0.2
-        ...                     })
-        >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
-        ...                     {
-        ...                          ('a1',): 0.1,
-        ...                          ('a2',): 0.5
-        ...                     })
-        >>> result = a1 + a2
-        >>> print result.pretty_print(width=30)
-        ------------------------------
-               A            Value
-        ------------------------------
-              a1             0.9
-              a2             0.7
-        ------------------------------
+
+            >>> a1 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                     {
+            ...                          ('a1',): 0.8,
+            ...                          ('a2',): 0.2
+            ...                     })
+            >>> a2 = DiscreteFactor(['A'], {'A': ['a1', 'a2']},
+            ...                     {
+            ...                          ('a1',): 0.1,
+            ...                          ('a2',): 0.5
+            ...                     })
+            >>> result = a1 + a2
+            >>> print result.pretty_print(width=30)
+            ------------------------------
+                   A            Value
+            ------------------------------
+                  a1             0.9
+                  a2             0.7
+            ------------------------------
 
         :param other: The other factor.
-        :type other: DiscreteFactor or float
+        :type other: :class:`DiscreteFactor` or float
         :returns: The result of the subtraction.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
         """
         if np.isscalar(other):
             new_factor_table = self.sub(self.factor_table, self.encode(other))
@@ -421,31 +429,32 @@ class DiscreteFactor(Factor):
     def marginalize(self, keep):
         """Marginalize all but specified variables.
 
-        Marginalizing means summing out values which are not in keep. The
-        result is a new factor, which contains only variables from keep.
+        Marginalizing means summing out values which are not in `keep`. The
+        result is a new factor, which contains only variables from `keep`.
 
         Example:
-        >>> f = DiscreteFactor(['A', 'B'],
-        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
-        ...                    {
-        ...                         ('a1', 'b1'): 0.8,
-        ...                         ('a2', 'b1'): 0.2,
-        ...                         ('a1', 'b2'): 0.3,
-        ...                         ('a2', 'b2'): 0.7
-        ...                    })
-        >>> result = f.marginalize(['A'])
-        >>> print result.pretty_print(width=30)
-        ------------------------------
-               A            Value
-        ------------------------------
-              a1             1.1
-              a2             0.9
-        ------------------------------
+
+            >>> f = DiscreteFactor(['A', 'B'],
+            ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+            ...                    {
+            ...                         ('a1', 'b1'): 0.8,
+            ...                         ('a2', 'b1'): 0.2,
+            ...                         ('a1', 'b2'): 0.3,
+            ...                         ('a2', 'b2'): 0.7
+            ...                    })
+            >>> result = f.marginalize(['A'])
+            >>> print result.pretty_print(width=30)
+            ------------------------------
+                   A            Value
+            ------------------------------
+                  a1             1.1
+                  a2             0.9
+            ------------------------------
 
         :param keep: Variables which should be left in marginalized factor.
         :type keep: list of str
         :returns: Marginalized factor.
-        :rtype: DiscreteFactor
+        :rtype: :class:`DiscreteFactor`
 
         """
         # Assignment counter
@@ -490,30 +499,31 @@ class DiscreteFactor(Factor):
         """Set observation.
 
         Example:
-        >>> f = DiscreteFactor(
-        ...     ['X'],
-        ...     {
-        ...         'X': ['x0', 'x1'],
-        ...     },
-        ...     {
-        ...         ('x0',): 0.5,
-        ...         ('x1',): 0.5,
-        ...     })
-        >>> print f.pretty_print(width=30, precision=3)
-        ------------------------------
-               X            Value
-        ------------------------------
-              x0             0.5
-              x1             0.5
-        ------------------------------
-        >>> f.observed({('x0',): 0.8, ('x1',): 0.2})
-        >>> print f.pretty_print(width=30, precision=3)
-        ------------------------------
-               X            Value
-        ------------------------------
-              x0             0.8
-              x1             0.2
-        ------------------------------
+
+            >>> f = DiscreteFactor(
+            ...     ['X'],
+            ...     {
+            ...         'X': ['x0', 'x1'],
+            ...     },
+            ...     {
+            ...         ('x0',): 0.5,
+            ...         ('x1',): 0.5,
+            ...     })
+            >>> print f.pretty_print(width=30, precision=3)
+            ------------------------------
+                   X            Value
+            ------------------------------
+                  x0             0.5
+                  x1             0.5
+            ------------------------------
+            >>> f.observed({('x0',): 0.8, ('x1',): 0.2})
+            >>> print f.pretty_print(width=30, precision=3)
+            ------------------------------
+                   X            Value
+            ------------------------------
+                  x0             0.8
+                  x1             0.2
+            ------------------------------
 
         :param assignment_dict: Observed values for different assignments of values or None.
         :type assignment_dict: dict or None
@@ -536,24 +546,25 @@ class DiscreteFactor(Factor):
         parents, are normalized.
 
         Example:
-        >>> f = DiscreteFactor(['A', 'B'],
-        ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
-        ...                    {
-        ...                         ('a1', 'b1'): 3,
-        ...                         ('a1', 'b2'): 1,
-        ...                         ('a2', 'b1'): 1,
-        ...                         ('a2', 'b2'): 1,
-        ...                    })
-        >>> f.normalize(parents=['B'])
-        >>> print f.pretty_print(width=30)
-        ------------------------------
-            A         B       Value
-        ------------------------------
-            a1        b1       0.75
-            a1        b2       0.5
-            a2        b1       0.25
-            a2        b2       0.5
-        ------------------------------
+
+            >>> f = DiscreteFactor(['A', 'B'],
+            ...                    {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+            ...                    {
+            ...                         ('a1', 'b1'): 3,
+            ...                         ('a1', 'b2'): 1,
+            ...                         ('a2', 'b1'): 1,
+            ...                         ('a2', 'b2'): 1,
+            ...                    })
+            >>> f.normalize(parents=['B'])
+            >>> print f.pretty_print(width=30)
+            ------------------------------
+                A         B       Value
+            ------------------------------
+                a1        b1       0.75
+                a1        b2       0.5
+                a2        b1       0.25
+                a2        b2       0.5
+            ------------------------------
 
         :param parents: Parents of the factor.
         :type parents: list
