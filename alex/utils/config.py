@@ -212,7 +212,7 @@ class Config(object):
         cfg_fnames = list(reversed(config_flist))
         if use_default:
             cfg_fnames.append(as_project_path(cls.DEFAULT_CFG_PPATH))
-        cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
+            cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
 
         # Construct the entire config dictionary.
         if not cfg_fnames:
@@ -227,21 +227,6 @@ class Config(object):
             indent = ' ' * len('config = ')
             cfg_str = unicode(cfg).replace('\n', '\n' + indent)
             cfg['Logging']['system_logger'].info('config = ' + cfg_str)
-
-        # Process all options that require special treatment.
-        #
-        # excepthook
-        try:
-            cfg_excepthook = cfg['Logging']['excepthook']
-        except KeyError:
-            pass
-        else:
-            # If an excepthook was specified,
-            if cfg_excepthook is not None:
-                # Instantiate it.
-                from alex.utils.excepthook import ExceptionHook
-                ExceptionHook(hook_type=cfg_excepthook['type'],
-                              logger=cfg_excepthook.get('logger', None))
 
         return cfg
 
