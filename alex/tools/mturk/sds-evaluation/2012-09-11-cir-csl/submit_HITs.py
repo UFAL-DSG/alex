@@ -13,7 +13,7 @@ from collections import defaultdict
 
 import alex.tools.mturk.bin.mturk as mturk
 
-from alex.utils.config import Config
+from alex.utils.config import as_project_path, Config
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -30,16 +30,14 @@ if __name__ == '__main__':
         mainly information that you do not want to share.
       """)
 
-    parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configuration file')
-    parser.add_argument('-n', '--nhits', action="store", dest="nhits", default=1, type=int,
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
+    parser.add_argument('-n', '--nhits', default=1, type=int,
+                        help='number of HITs')
     args = parser.parse_args()
 
-    cfg = Config('../../../../resources/private/mturk.cfg')
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
+    mturk_cfg_fname = as_project_path('resources/private/mturk.cfg')
+    cfg = Config.load_configs([mturk_cfg_fname] + args.configs, log=False)
 
     conn = MTurkConnection(aws_access_key_id = cfg['MTURK']['aws_access_key_id'],
                            aws_secret_access_key = cfg['MTURK']['aws_secret_access_key'],

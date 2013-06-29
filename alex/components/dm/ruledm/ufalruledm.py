@@ -35,7 +35,8 @@ class PUfalRuleDM(PRuleDM):
 
 def main():
     import autopath
-    cfg = Config('resources/default-lz.cfg', True)
+    cfg = Config.load_configs(['resources/default-lz.cfg'],
+                              use_default=False, project_root=True)
     #cfg = {'DM': {'UfalRuleDM':
     # {'ontology':"/xdisk/devel/vystadial/alex/applications/" + \
     #             "CamInfoRest/ontology.cfg",

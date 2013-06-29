@@ -9,7 +9,7 @@ from collections import defaultdict
 # FIXME Oplatek: Import bellow should be absolute path probably
 from boto.mturk.connection import MTurkConnection
 
-from alex.utils.config import Config
+from alex.utils.config import as_project_path, Config
 
 import alex.tools.mturk.bin.mturk as mturk
 
@@ -28,14 +28,12 @@ if __name__ == '__main__':
         mainly information that you do not want to share.
       """)
 
-    parser.add_argument('-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('../../../resources/private/mturk.cfg')
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
+    mturk_cfg_fname = as_project_path('resources/private/mturk.cfg')
+    cfg = Config.load_configs([mturk_cfg_fname] + args.configs, log=False)
 
     print "Approve all outstanding HITs"
 

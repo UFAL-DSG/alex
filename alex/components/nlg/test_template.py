@@ -22,9 +22,13 @@ CONFIG_DICT = {
 }
 
 class TestTemplateNLG(unittest.TestCase):
+    def setUp(self):
+        self.cfg = Config.load_configs(config=CONFIG_DICT, use_default=False,
+                                       log=False)
+
     def test_template_nlg(self):
 
-        cfg = Config(config=CONFIG_DICT)
+        cfg = self.cfg
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(task="find")&inform(pricerange="cheap")')
@@ -47,7 +51,8 @@ class TestTemplateNLG(unittest.TestCase):
         self.assertEqual(unicode(correct_text), unicode(generated_text))
 
     def test_template_nlg_r(self):
-        cfg = Config(config=CONFIG_DICT)
+
+        cfg = self.cfg
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(pricerange="cheap")&inform(task="find")')

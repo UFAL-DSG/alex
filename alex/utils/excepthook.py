@@ -50,12 +50,14 @@ def set_hook(hook_type=None, logger=None):
     try:
         ExceptionHook.single.set_hook(hook_type, logger)
     except:
-        raise HookMultipleInstanceException('The singleton istance should be set at start up')
+        raise HookMultipleInstanceException('The singleton instance should be set at startup')
 
 
 class ExceptionHook(object):
-    '''Singleton objects for registering various hooks for sys.exepthook.
-    For registering hook use set_hook'''
+    '''
+    Singleton objects for registering various hooks for sys.exepthook.
+    For registering a hook, use set_hook.
+    '''
     single = None
 
     def __init__(self, hook_type, logger=None):
@@ -73,6 +75,7 @@ class ExceptionHook(object):
 
     def set_hook(self, hook_type=None, logger=None):
         '''Choose an exception hook from predefined functions.
+
         hook_type: specify the name of the hook method
         '''
         self.logger = logger

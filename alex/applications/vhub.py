@@ -127,13 +127,13 @@ class VoipHub(Hub):
                 if vio_commands.poll():
                     command = vio_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
-                        
+
                     if isinstance(command, Command):
-                            
+
                         if command.parsed['__name__'] == "incoming_call":
                             self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
                             self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
-                            
+
                             self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
                             self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
                             self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
@@ -196,7 +196,7 @@ class VoipHub(Hub):
                                 u_voice_activity = False
                                 u_last_voice_activity_time = 0
                                 hangup = True
-                                
+
                                 tts_commands.send(Command('synthesize(text="%s",log="false")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
                                 vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
                                   time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
@@ -254,7 +254,7 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "speech_start":
                             u_voice_activity = True
 
-                            if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time: 
+                            if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time:
                                 self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 
@@ -274,7 +274,7 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "flushed":
                             # flush asr, when flushed, slu will be flushed
                             asr_commands.send(Command('flush()', 'HUB', 'ASR'))
-                            
+
                 if asr_commands.poll():
                     command = asr_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -293,7 +293,7 @@ class VoipHub(Hub):
                             # flush dm, when flushed, nlg will be flushed
                             dm_commands.send(Command('flush()', 'HUB', 'DM'))
                             dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
-                            
+
                 if dm_commands.poll():
                     command = dm_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -316,7 +316,7 @@ class VoipHub(Hub):
                         # however, if it decides to say something, it is for the implementation
                         # late to flush old audio. If implemented better, it could work.
                         # As of now, audio is flushed when speech is detected using VAD
-                        
+
                         if command.parsed['__name__'] == "flushed":
                             # flush nlg, when flushed, tts will be flushed
                             nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
@@ -324,7 +324,7 @@ class VoipHub(Hub):
                 if nlg_commands.poll():
                     command = nlg_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
-                    
+
                     if isinstance(command, Command):
                         if command.parsed['__name__'] == "flushed":
                             # flush tts, when flushed, vio will be flushed
@@ -401,17 +401,11 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="append", dest="configs", default=None,
-        help='additional configure file')
+    parser.add_argument('-c', '--configs', nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('resources/default.cfg', True)
-
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + unicode(cfg))
+    cfg = Config.load_configs(args.configs)
 
     #########################################################################
     #########################################################################

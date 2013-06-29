@@ -148,18 +148,15 @@ if __name__ == "__main__":
         description='Trains an SLU model from transcriptions')
     arger.add_argument('-o', '--model-fname', default=None)
     arger.add_argument('-n', '--dry-run', action='store_true')
-    arger.add_argument('-c', '--configs', action="store", nargs='+',
+    arger.add_argument('-c', '--configs', nargs='+',
                        help='configuration files')
     args = arger.parse_args()
 
     # Merge configuration files specified as arguments.
-    cfg = Config()
-    cfg_slu = cfg['SLU'] = dict()
-    if args.configs:
-        for other_cfg in args.configs:
-            cfg.merge(other_cfg)
+    cfg = Config.load_configs(args.configs)
 
     # If the configuration is apparently insufficient, fill in defaults.
+    cfg_slu = cfg.setdefault('SLU', dict())
     slu_type = cfg_slu.setdefault('type', 'cl-tracing')
 
     this_slu_defaults = dict((name, default) for (name, default, _)

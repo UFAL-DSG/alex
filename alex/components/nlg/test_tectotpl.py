@@ -57,7 +57,8 @@ class TestTectoTemplateNLG(unittest.TestCase):
 
     def test_tecto_template_nlg(self):
         # initialize
-        cfg = Config(config=CONFIG_DICT)
+        cfg = Config.load_configs(config=CONFIG_DICT, use_default=False,
+                                  log=False)
         nlg = TectoTemplateNLG(cfg)
         # test all cases
         for da, correct_text in zip(DAS, TEXTS):

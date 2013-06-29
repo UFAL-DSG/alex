@@ -201,9 +201,7 @@ if __name__ == "__main__":
                             'source code.')
     args = arger.parse_args()
 
-    cfg = Config()
-    for next_cfg in args.configs:
-        cfg.merge(next_cfg)
+    cfg = Config.load_configs(args.configs, log=False)
 
     try:
         DEBUG = cfg['General']['debug']

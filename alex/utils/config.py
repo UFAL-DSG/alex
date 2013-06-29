@@ -97,6 +97,7 @@ class Config(object):
             that use it.
 
     """
+    DEFAULT_CFG_PPATH = os.path.join('resources', 'default.cfg')
     ### This was the earlier functionality, which I found a bit inflexible. MK
     # When the configuration file is loaded, several automatic transformations
     # are applied:
@@ -164,16 +165,90 @@ class Config(object):
 
         to prevent password logging.
         """
-        sio = cStringIO.StringIO()
-        pprint.pprint(self.config, sio, indent=2, width=120)
-        cfg = sio.getvalue()
+        cfg_str = pprint.pformat(self.config, indent=2, width=120)
+        cfg_str = re.sub(r".*password.*",
+                         "# this line was removed since it included a password",
+                         cfg_str)
+        return cfg_str
 
-        cfg = re.sub(r".*password.*", "# this line was removed since it included a password", cfg)
+    @classmethod
+    def _remove_repeated(cls, sequence):
+        """Removes any repeated occurrences of items in `sequence'."""
+        new = list()
+        for item in sequence:
+            if item not in new:
+                new.append(item)
+        return new
+
+    @classmethod
+    def load_configs(cls, config_flist=list(), use_default=True, log=True,
+                     *init_args, **init_kwargs):
+        """
+        Loads and merges configs from paths listed in `config_flist'.  Use this
+        method instead of direct loading configs, as it takes care of not only
+        merging them but also processing some options in a special way.
+
+        Arguments:
+            config_flist -- list of paths to config files to load and merge;
+                order matters (default: [])
+            use_default -- whether to insert the default config
+                ($ALEX/resources/default.cfg) at the beginning of
+                `config_flist' (default: True)
+            log -- whether to log the resulting config using the system logger
+                (default: True)
+            init_args -- additional positional arguments will be passed to
+                constructors for each config
+            init_kwargs -- additional keyword arguments will be passed to
+                constructors for each config
+
+        """
+
+        # Interpret arguments.
+        if config_flist is None:
+            config_flist = list()
+
+        # Insert the default config if asked to, remove duplicate entries
+        # (retain the last one).
+        cfg_fnames = list(reversed(config_flist))
+        if use_default:
+            cfg_fnames.append(as_project_path(cls.DEFAULT_CFG_PPATH))
+        cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
+
+        # Construct the entire config dictionary.
+        if not cfg_fnames:
+            cfg = Config(*init_args, **init_kwargs)
+        else:
+            cfg = Config(cfg_fnames[0], *init_args, **init_kwargs)
+            for next_cfg_fname in cfg_fnames[1:]:
+                cfg.merge(next_cfg_fname)
+
+        # Print out the resulting config if asked to.
+        if log:
+            indent = ' ' * len('config = ')
+            cfg_str = unicode(cfg).replace('\n', '\n' + indent)
+            cfg['Logging']['system_logger'].info('config = ' + cfg_str)
+
+        # Process all options that require special treatment.
+        #
+        # excepthook
+        try:
+            cfg_excepthook = cfg['Logging']['excepthook']
+        except KeyError:
+            pass
+        else:
+            # If an excepthook was specified,
+            if cfg_excepthook is not None:
+                # Instantiate it.
+                from alex.utils.excepthook import ExceptionHook
+                ExceptionHook(hook_type=cfg_excepthook['type'],
+                              logger=cfg_excepthook.get('logger', None))
 
         return cfg
 
     def contains(self, *path):
-        """Check if configuration contains given keys (= path in config tree)."""
+        """
+        Check if configuration contains given keys (= path in config tree).
+        """
         curr = self.config
         for path_part in path:
             if path_part in curr:
