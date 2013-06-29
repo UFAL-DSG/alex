@@ -57,7 +57,7 @@ class ExceptionHook(object):
         By creating and object you just setting
         hook_type and logger.
         The object can be used to store settings for excepthook.
-        a = ExceptionHook('log') # now it logs
+        a = ExceptionHook('log',logger=YourLogger) # now it logs
         b = ExceptionHook('ipdb')  # now it uses ipdb
         a.apply() # now it logs again
         '''
