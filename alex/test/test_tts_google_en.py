@@ -29,7 +29,7 @@ if __name__ == '__main__':
             }
         }
     }
-    cfg = Config('../resources/default.cfg')
+    cfg = Config.load_configs(log=False)
     cfg.update(c)
 
     tts = GoogleTTS(cfg)

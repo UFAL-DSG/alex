@@ -11,13 +11,6 @@ from __future__ import unicode_literals
 
 import codecs
 from collections import Counter
-import glob
-
-INDIR = "."
-
-
-def find_files(dirname):
-    return glob.glob('*.uttcn')
 
 
 def find_best_cn(cns):
@@ -50,6 +43,7 @@ def merge_files(fnames, outfname):
                 best_cn = cn[0]
             outfile.write('{key} => {val}\n'.format(key=key, val=best_cn))
 
+
 if __name__ == "__main__":
     import sys
-    merge_files(find_files(INDIR), sys.argv[1])
+    merge_files(sys.argv[1:-1], sys.argv[-1])

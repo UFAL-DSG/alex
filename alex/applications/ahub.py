@@ -209,16 +209,12 @@ def main():
         Any additional config parameters overwrite their previous values.
       """)
 
-    parser.add_argument('-c', action="append", dest="configs",
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs="+",
+                        help='additional configuration file')
     args = parser.parse_args()
 
-    cfg = Config('resources/default.cfg', True)
+    cfg = Config.load_configs(args.configs)
 
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
     vhub = AudioHub(cfg)
