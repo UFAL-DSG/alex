@@ -121,14 +121,14 @@ class Factor(object):
             self.pow = np.power
             self.encode = lambda x: x
             self.decode = lambda x: x
-            self.zero = 0.0
+            self.zero = ZERO
             self.sum = np.sum
 
 
 class DiscreteFactor(Factor):
     """Discrete factor representation with basic operations."""
 
-    def __init__(self, variables, variable_values, prob_table, logarithmetic=False):
+    def __init__(self, variables, variable_values, prob_table, logarithmetic=True):
         """Create a discrete factor.
 
         Creates a discrete factor represented by a probability table.
