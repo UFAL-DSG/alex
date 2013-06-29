@@ -84,6 +84,9 @@ class ExceptionHook(object):
     def __unicode__(self):
         return self.__str__()
 
+    def __repr__(self):
+        return '%s(%s)' % (self.__class__.__name__, self.__str__())
+
     @classmethod
     def _log(cls, msg):
         if cls.logger is not None:
