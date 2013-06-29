@@ -152,7 +152,12 @@ class Config(object):
             yield i
 
     def __str__(self):
-        """Converts the the config into a pretty print string.
+        import warnings
+        warnings.warn('Use unicode() instead of str().', DeprecationWarning)
+        return unicode(self).decode('UTF-8', 'ignore')
+
+    def __unicode__(self):
+        """Returns the config as a pretty-printed string.
 
         It removes all lines which include word:
             - password

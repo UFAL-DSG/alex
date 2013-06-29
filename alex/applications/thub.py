@@ -3,6 +3,8 @@
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008/.
 
+from __future__ import unicode_literals
+
 import autopath
 
 import argparse
@@ -215,9 +217,8 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="append", dest="configs", default=None,
-        help='additional configure file')
+    parser.add_argument('-c', '--configs', nargs='+', default=None,
+                        help='additional configure file')
     parser.add_argument(
         '-s', action="append", dest="scripts", default=None,
         help='automated scripts')
@@ -228,7 +229,7 @@ if __name__ == '__main__':
     if args.configs:
         for c in args.configs:
             cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
+    cfg['Logging']['system_logger'].info('config = ' + unicode(cfg))
 
     #########################################################################
     #########################################################################

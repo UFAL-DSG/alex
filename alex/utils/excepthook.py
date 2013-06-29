@@ -22,10 +22,17 @@ def ipdb_hook(type, value, tb):
         ipdb.post_mortem(tb)  # more “modern”
 
 
-def log_hook(type, value, tb):
-    msg = '''Error occured. Type: %s
-            Value: %s
-            Traceback%s''' % (str(type), str(value), str(tb))
+def log_hook(type_, value, tb):
+    import traceback
+    indent = ' ' * 8
+    tb_lines = traceback.format_tb(tb)
+    tb_msg = ''.join(tb_lines).replace('\n', '\n' + indent)
+    msg = '''
+    Error occured.
+      Type: {type}
+      Value: {value}
+      Traceback:
+        {traceback}'''.format(type=type_, value=value, traceback=tb_msg)
     log(msg)
 
 
@@ -38,12 +45,13 @@ def log(msg):
     if ExceptionHook.single is not None:
         ExceptionHook.single._log(msg)
 
+
 def set_hook(hook_type=None, logger=None):
     try:
         ExceptionHook.single.set_hook(hook_type, logger)
     except:
         raise HookMultipleInstanceException('The singleton istance should be set at start up')
-        
+
 
 class ExceptionHook(object):
     '''Singleton objects for registering various hooks for sys.exepthook.
@@ -52,7 +60,8 @@ class ExceptionHook(object):
 
     def __init__(self, hook_type, logger=None):
         if ExceptionHook.single is not None:
-            raise HookMultipleInstanceException("ExceptionHook is Singleton!")
+            raise HookMultipleInstanceException(
+                "One instance of ExceptionHook has already been created!")
         self.set_hook(hook_type, logger)
         self.logger = logger
         ExceptionHook.single = self
