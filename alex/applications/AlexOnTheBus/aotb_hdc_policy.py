@@ -197,20 +197,26 @@ class AOTBHDCPolicy(DialoguePolicy):
                 res_da.extend(iconf_da)
 
             req_da = DialogueAct()
-            if dialogue_state['from_stop'] == "none" or dialogue_state['to_stop'] == "none":
-                if dialogue_state['time'] == "none" and randbool(4):
-                    req_da.extend(DialogueAct('request(time)'))
-                elif dialogue_state['from_centre'] == "none" and dialogue_state['to_centre'] == "none" and randbool(9):
-                    if randbool(2):
-                        req_da.extend(DialogueAct('confirm(from_centre="true")'))
-                    else:
-                        req_da.extend(DialogueAct('confirm(to_centre="true")'))
-                elif dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and randbool(3):
-                    req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-                elif dialogue_state['from_stop'] == "none":
-                    req_da.extend(DialogueAct("request(from_stop)"))
-                elif dialogue_state['to_stop'] == "none":
-                    req_da.extend(DialogueAct('request(to_stop)'))
+
+            # check all state variables and the output one request dialogue act
+            # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
+            if dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
+                dialogue_state['time'] == "none" and \
+                randbool(10):
+                req_da.extend(DialogueAct('request(time)'))
+            elif dialogue_state['from_stop'] == "none" and dialogue_state['from_centre'] == "none" and \
+                randbool(9):
+                req_da.extend(DialogueAct('confirm(from_centre="true")'))
+            elif dialogue_state['to_stop'] == "none" and dialogue_state['to_centre'] == "none" and \
+                randbool(8):
+                req_da.extend(DialogueAct('confirm(to_centre="true")'))
+            elif dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
+                randbool(3):
+                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+            elif dialogue_state['from_stop'] == "none":
+                req_da.extend(DialogueAct("request(from_stop)"))
+            elif dialogue_state['to_stop'] == "none":
+                req_da.extend(DialogueAct('request(to_stop)'))
 
             res_da.extend(req_da)
 
@@ -332,22 +338,30 @@ class AOTBHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         # if we do not understand the input then provide the context sensitive help
-        if randbool(10):
-            res_da.append(DialogueActItem("help", "inform", "hangup"))
-        elif randbool(9):
-            res_da.append(DialogueActItem("help", "request", "help"))
-        elif randbool(8):
-            res_da.append(DialogueActItem("help", "inform", "time"))
-        elif randbool(7):
-            res_da.append(DialogueActItem("help", "repeat"))
-        elif dialogue_state['from_stop'] == "none":
-            res_da.append(DialogueActItem("help", "inform", "from_stop"))
-        elif dialogue_state['to_stop'] == "none":
-            res_da.append(DialogueActItem("help", "inform", "to_stop"))
-        elif dialogue_state['route_alternative'] != "none":
+        if dialogue_state['route_alternative'] == "none":
+            # before something is offered
+            if randbool(10):
+                res_da.append(DialogueActItem("help", "inform", "hangup"))
+            elif randbool(9):
+                res_da.append(DialogueActItem("help", "request", "help"))
+            elif randbool(8):
+                res_da.append(DialogueActItem("help", "inform", "time"))
+            elif randbool(7):
+                res_da.append(DialogueActItem("help", "repeat"))
+            elif dialogue_state['from_stop'] == "none":
+                res_da.append(DialogueActItem("help", "inform", "from_stop"))
+            elif dialogue_state['to_stop'] == "none":
+                res_da.append(DialogueActItem("help", "inform", "to_stop"))
+        else:
             # we already offered a connection
-            if randbool(5):
-                res_da.append(DialogueActItem("help", "inform", "next"))
+            if randbool(4):
+                res_da.append(DialogueActItem("help", "inform", "alternative_last"))
+            elif randbool(7):
+                res_da.append(DialogueActItem("help", "inform", "alternative_next"))
+            elif randbool(6):
+                res_da.append(DialogueActItem("help", "inform", "alternative_prev"))
+            elif randbool(5):
+                res_da.append(DialogueActItem("help", "inform", "alternative_abs"))
             elif randbool(4):
                 res_da.append(DialogueActItem("help", "request", "from_stop"))
             elif randbool(3):

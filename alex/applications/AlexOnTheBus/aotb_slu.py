@@ -157,9 +157,9 @@ class AOTBSLU(SLUInterface):
                           "hledanou", "naschledanou"])):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if (_any_word_in(utterance,
-                         ["jiný", "jiné", "jiná", "další", "dál", "jiného"])):
-            cn.add(1.0, DialogueActItem("reqalts"))
+        if not _any_word_in(utterance, ["spojení", "zastávka", "stanice", "možnost"]):
+            if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
+                cn.add(1.0, DialogueActItem("reqalts"))
 
         if not (_any_word_in(utterance,
                              ["spojení", "zastávka", "stanice", "možnost"])):
@@ -169,9 +169,9 @@ class AOTBSLU(SLUInterface):
                     or _phrase_in(utterance, ["ještě", "jedno"])):
                 cn.add(1.0, DialogueActItem("repeat"))
 
-        if (_any_word_in(utterance, ["nápověda",  "pomoc", "help"]) or
-                _all_words_in(utterance, ["co", "říct"]) or
-                _all_words_in(utterance, ["co", "zeptat"])):
+        if _any_word_in(utterance, ["nápověda",  "pomoc", "help", "nevím", "nevim"]) or \
+            _all_words_in(utterance, ["co", "říct"]) or \
+            _all_words_in(utterance, ["co", "zeptat"]):
             cn.add(1.0, DialogueActItem("help"))
 
         if _any_word_in(utterance, ["ano",  "jo", "jasně"]):
@@ -190,51 +190,43 @@ class AOTBSLU(SLUInterface):
                 or _all_words_in(utterance, ["nové", "spojení"]))):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if (_phrase_in(utterance, ["z", "centra"])
-                and not _any_word_in(utterance, ["ne", "nejed", "nechci"])):
-            cn.add(1.0, DialogueActItem('inform', 'from_centre', 'true'))
+        if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','from_centre','true'))
 
-        if (_phrase_in(utterance, ["do", "centra"])
-                and not _any_word_in(utterance, ["ne", "nejed", "nechci"])):
-            cn.add(1.0, DialogueActItem('inform', 'to_centre', 'true'))
+        if _phrase_in(utterance, ["do", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','to_centre','true'))
 
-        if (_phrase_in(utterance, ["z", "centra"])
-                and _any_word_in(utterance, ["ne", "nejed", "nechci"])):
-            cn.add(1.0, DialogueActItem('inform', 'from_centre', 'false'))
+        if _phrase_in(utterance, ["z", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','from_centre','false'))
 
-        if (_phrase_in(utterance, ["do", "centra"])
-                and _any_word_in(utterance, ["ne", "nejed", "nechci"])):
-            cn.add(1.0, DialogueActItem('inform', 'to_centre', 'false'))
+        if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','to_centre','false'))
 
-        if (_all_words_in(utterance, ["od", "to", "jede"]) or
-                _all_words_in(utterance, ["z", "jake", "jede"]) or
-                _all_words_in(utterance, ["z", "jaké", "jede"]) or
-                _all_words_in(utterance, ["jaká", "výchozí", ]) or
-                _all_words_in(utterance, ["kde", "začátek", ]) or
-                _all_words_in(utterance, ["odkud", "to", "jede"]) or
-                _all_words_in(utterance, ["odkud", "pojede"]) or
-                _all_words_in(utterance, ["od", "kud", "pojede"])):
-            cn.add(1.0, DialogueActItem('request', 'from_stop'))
+        if _all_words_in(utterance, ["od", "to", "jede"]) or \
+            _all_words_in(utterance, ["z", "jake", "jede"]) or \
+            _all_words_in(utterance, ["z", "jaké", "jede"]) or \
+            _all_words_in(utterance, ["jaká", "výchozí", ]) or \
+            _all_words_in(utterance, ["kde", "začátek", ]) or \
+            _all_words_in(utterance, ["odkud", "to", "jede"]) or \
+            _all_words_in(utterance, ["odkud", "pojede"]) or \
+            _all_words_in(utterance, ["od", "kud", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','from_stop'))
 
-        if (_all_words_in(utterance, ["kam", "to", "jede"]) or
-                _all_words_in(utterance, ["do", "jake", "jede"]) or
-                _all_words_in(utterance, ["do", "jaké", "jede"]) or
-                _all_words_in(utterance, ["co", "cíl", ]) or
-                _all_words_in(utterance, ["jaká", "cílová", ]) or
-                _all_words_in(utterance, ["kde", "konečná", ]) or
-                _all_words_in(utterance, ["kde", "konečná", ]) or
-                _all_words_in(utterance, ["kam", "pojede"])):
-            cn.add(1.0, DialogueActItem('request', 'to_stop'))
+        if _all_words_in(utterance, ["kam", "to", "jede"]) or \
+            _all_words_in(utterance, ["do", "jake", "jede"]) or \
+            _all_words_in(utterance, ["do", "jaké", "jede"]) or \
+            _all_words_in(utterance, ["co", "cíl", ]) or \
+            _all_words_in(utterance, ["jaká", "cílová", ]) or \
+            _all_words_in(utterance, ["kde", "konečná", ]) or \
+            _all_words_in(utterance, ["kde", "konečná", ]) or \
+            _all_words_in(utterance, ["kam", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if (_any_word_in(utterance, ["kolik", "jsou", "je"]) and
-                _any_word_in(utterance,
-                             ["přestupů", "přestupu", "přestupy", "stupňů",
-                              "přestup", "přestupku", "přestupky",
-                              "přestupků"])):
-            cn.add(1.0, DialogueActItem('request', 'num_transfers'))
+        if _any_word_in(utterance, ["kolik", "jsou", "je"]) and \
+            _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
+            cn.add(1.0, DialogueActItem('request','num_transfers'))
 
-        if (_any_word_in(utterance, ["spojení", "možnost", "cesta", "zpoždění",
-                                     "stažení"])):
+        if _any_word_in(utterance, ["spoj", "spojení", "možnost", "cesta", "zpoždění", "stažení"]):
             if _any_word_in(utterance, ["první", ]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
@@ -247,7 +239,7 @@ class AOTBSLU(SLUInterface):
             if _any_word_in(utterance, ["čtvrté", "čtvrtá"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if _any_word_in(utterance, ["poslední", "znovu", ]):
+            if _any_word_in(utterance, ["poslední", "znovu", "opakovat", "zopakovat"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
             if _any_word_in(utterance, ["další", "jiné", "následující"]):
