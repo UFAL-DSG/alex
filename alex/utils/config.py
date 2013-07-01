@@ -16,6 +16,7 @@ import sys
 import tempfile
 
 import alex.utils.env as env
+from alex.utils.exceptions import ConfigException
 
 config = None
 
@@ -288,6 +289,9 @@ class Config(object):
         """
         if config_dict is None:
             config_dict = self.config
+        if not isinstance(config_dict, collections.Mapping):
+            raise ConfigException('Assigning a suboption to a config option '
+                                  'originally atomic.')
         for key, val in new_config.iteritems():
             if isinstance(val, collections.Mapping):
                 subdict = self.update(val, config_dict.get(key, {}))
