@@ -33,7 +33,7 @@ def main(args):
     # Do the classification.
     random_ot_obss = obss.values()[0]
     with codecs.open(args.outfname, 'w', encoding='UTF-8') as outfile:
-        for utt_key in random_ot_obss.iterkeys():
+        for utt_idx, utt_key in enumerate(sorted(random_ot_obss.iterkeys())):
             turn_obs = {ot: obss[ot].get(utt_key, None) for ot in obss}
 
             # FIXME Another method than parse_1_best should perhaps be called.
@@ -57,6 +57,8 @@ def main(args):
             outfile.write('{key} => {da}\n'.format(key=utt_key,
                                                    da=unicode(dah.da)))
             if args.verbose:
+                if utt_idx % 1000 == 0:
+                    sys.stderr.write(utt_idx)
                 sys.stderr.write('.')
                 sys.stderr.flush()
 
