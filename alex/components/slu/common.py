@@ -47,7 +47,7 @@ def get_slu_type(cfg):
     return cfg['SLU']['type']
 
 
-def load_data(cfg_this_slu, training=False):
+def load_data(cfg_this_slu, training=False, with_das=True):
     """
     Loads training data for SLU.
 
@@ -55,6 +55,8 @@ def load_data(cfg_this_slu, training=False):
         cfg_tr -- the subconfig for this SLU type
         training -- is the SLU about to be trained (as opposed to being tested
             or used in general)?  This implies `require_model == False'.
+        with_das -- load also DAs?  If set to False, the second item in the
+            return tuple will be None.
 
     Returns a tuple (obss, das) of co-indexed dictionaries where `obss' has the
     training observations as values, and `das' has their corresponding DAs
@@ -67,13 +69,16 @@ def load_data(cfg_this_slu, training=False):
 
     # Find the right function for loading DAs and load them.
     # TODO Enable this kind of cascading elsewhere too.
-    if 'das_loading_fun' in cfg_trte:
-        load_das = cfg_trte['das_loading_fun']
-    elif 'das_loading_fun' in cfg_this_slu:
-        load_das = cfg_this_slu['das_loading_fun']
+    if with_das:
+        if 'das_loading_fun' in cfg_trte:
+            load_das = cfg_trte['das_loading_fun']
+        elif 'das_loading_fun' in cfg_this_slu:
+            load_das = cfg_this_slu['das_loading_fun']
+        else:
+            from alex.components.slu.da import load_das
+        das = load_das(cfg_trte['das_fname'], limit=max_examples)
     else:
-        from alex.components.slu.da import load_das
-    das = load_das(cfg_trte['das_fname'], limit=max_examples)
+        das = None
 
     # Find what kinds of observations will be needed and load them.
     obs_types = set(ft_props[ft].obs_type
@@ -89,12 +94,13 @@ def load_data(cfg_this_slu, training=False):
                           for typed_obss in obss.values()))
     # FIXME: Impose the max_examples limit only after doing intersection (using
     # _load_meths as generators).
-    common_keys.intersection_update(das.viewkeys())
+    if with_das:
+        common_keys.intersection_update(das.viewkeys())
+        das = {utt_id: da for (utt_id, da) in das.iteritems()
+               if utt_id in common_keys}
     obss = {ot: {utt_id: obs for (utt_id, obs) in typed_obss.iteritems()
                  if utt_id in common_keys}
             for (ot, typed_obss) in obss.iteritems()}
-    das = {utt_id: da for (utt_id, da) in das.iteritems()
-           if utt_id in common_keys}
     return obss, das
 
 
@@ -366,7 +372,7 @@ def test(cfgor):
     import gzip
     with gzip.open(out_fname, 'w') as outfile:
         sep = '=' * 41 + '\n'
-        for utt_key in das.keys():
+        for utt_key in das.iterkeys():
             turn_obs = {ot: obss[ot].get(utt_key, None) for ot in obss}
 
             # FIXME Another method than parse_1_best should perhaps be called.
@@ -390,8 +396,8 @@ def test(cfgor):
 
             # Decode, print the logprob rather than prob.
             dah = da_confnet.get_best_da_hyp(use_log=True,
-                                            threshold=cls_threshold,
-                                            thresholds=cls_thresholds)
+                                             threshold=cls_threshold,
+                                             thresholds=cls_thresholds)
             parsed_das[utt_key] = dah.da
 
             outfile.write('\n')
