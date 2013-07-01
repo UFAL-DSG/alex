@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 def main(args):
     import codecs
-    import os.path
     import sys
 
     from alex.components.slu.common import load_data, slu_factory, \
@@ -58,7 +57,7 @@ def main(args):
                                                    da=unicode(dah.da)))
             if args.verbose:
                 if utt_idx % 1000 == 0:
-                    sys.stderr.write(utt_idx)
+                    sys.stderr.write(str(utt_idx))
                 sys.stderr.write('.')
                 sys.stderr.flush()
 
