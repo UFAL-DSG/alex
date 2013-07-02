@@ -52,8 +52,10 @@ if __name__ == '__main__':
     vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()
     # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
-    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
+    close_event = multiprocessing.Event()
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, close_event)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out, close_event)
 
     command_connections = [vio_commands, vad_commands]
 

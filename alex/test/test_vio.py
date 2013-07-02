@@ -51,7 +51,9 @@ if __name__ == '__main__':
     non_command_connections = (vio_record, vio_child_record,
                                vio_play, vio_child_play, )
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
+    close_event = multiprocessing.Event()
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, close_event)
 
     vio.start()
 
