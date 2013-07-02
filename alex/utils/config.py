@@ -213,7 +213,7 @@ class Config(object):
         cfg_fnames = list(reversed(config_flist))
         if use_default:
             cfg_fnames.append(as_project_path(cls.DEFAULT_CFG_PPATH))
-            cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
+        cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
 
         # Construct the entire config dictionary.
         if not cfg_fnames:
