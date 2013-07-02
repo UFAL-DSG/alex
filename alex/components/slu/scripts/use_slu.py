@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8
+# This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008/.
 
 from __future__ import unicode_literals
 
@@ -7,6 +8,11 @@ from __future__ import unicode_literals
 def main(args):
     import codecs
     import sys
+
+    try:
+        import autopath
+    except ImportError:
+        pass
 
     from alex.components.slu.common import load_data, slu_factory, \
         DefaultConfigurator
