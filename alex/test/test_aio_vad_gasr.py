@@ -67,9 +67,11 @@ if __name__ == '__main__':
     asr_commands, asr_child_commands = multiprocessing.Pipe()  # used to send commands to ASR
     asr_hypotheses_out, asr_child_hypotheses = multiprocessing.Pipe()  # used to read ASR hypotheses
 
-    aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play)
-    vad = VAD(cfg, vad_child_commands, aio_record, vad_child_audio_out)
-    asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
+    close_event = multiprocessing.Event()
+
+    aio = AudioIO(cfg, aio_child_commands, aio_child_record, aio_child_play, close_event)
+    vad = VAD(cfg, vad_child_commands, aio_record, vad_child_audio_out, close_event)
+    asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, close_event)
 
     command_connections = [aio_commands, vad_commands, asr_commands]
 

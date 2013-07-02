@@ -5,7 +5,7 @@
 
 import unittest
 
-from alex.ml.bn.factor import DiscreteFactor
+from alex.ml.bn.factor import Factor
 from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 
 
@@ -23,7 +23,7 @@ class TestNode(unittest.TestCase):
         # Create network.
         hid = DiscreteVariableNode("hid", ["save", "del"])
         obs = DiscreteVariableNode("obs", ["osave", "odel"])
-        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", Factor(
             ['hid', 'obs'],
             {
                 "hid": ["save", "del"],
@@ -70,7 +70,7 @@ class TestNode(unittest.TestCase):
     def test_observed_complex(self):
         s1 = DiscreteVariableNode('s1', ['a', 'b'])
         s2 = DiscreteVariableNode('s2', ['a', 'b'])
-        f = DiscreteFactorNode('f', DiscreteFactor(
+        f = DiscreteFactorNode('f', Factor(
             ['s1', 's2'],
             {
                 's1': ['a', 'b'],
@@ -107,7 +107,7 @@ class TestNode(unittest.TestCase):
         self.assertClose(s2.belief[('a',)], 0.7)
 
     def test_parameter_simple(self):
-        alpha = DirichletParameterNode('theta', DiscreteFactor(
+        alpha = DirichletParameterNode('theta', Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -145,7 +145,7 @@ class TestNode(unittest.TestCase):
         print alpha.alpha
 
     def test_parameter(self):
-        alpha = DirichletParameterNode('theta', DiscreteFactor(
+        alpha = DirichletParameterNode('theta', Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -195,7 +195,7 @@ class TestNode(unittest.TestCase):
         #self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_2')], 1.0325065031960947)
 
     def test_two_factors_one_theta(self):
-        alpha = DirichletParameterNode('theta', DiscreteFactor(
+        alpha = DirichletParameterNode('theta', Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -250,7 +250,7 @@ class TestNode(unittest.TestCase):
         self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
 
     def test_two_factors_one_theta2(self):
-        alpha = DirichletParameterNode('theta', DiscreteFactor(
+        alpha = DirichletParameterNode('theta', Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -307,7 +307,7 @@ class TestNode(unittest.TestCase):
         self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
 
     def test_dir_tight(self):
-        theta = DirichletParameterNode('theta', DiscreteFactor(
+        theta = DirichletParameterNode('theta', Factor(
             ['X', 'ZDummy'],
             {
                 'X': ['same', 'diff'],

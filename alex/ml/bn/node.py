@@ -88,11 +88,12 @@ class VariableNode(Node):
 class DiscreteVariableNode(VariableNode):
     """Node containing variable."""
 
-    def __init__(self, name, values, logarithmetic=False):
+    def __init__(self, name, values, logarithmetic=True):
         super(DiscreteVariableNode, self).__init__(name)
         self.values = values
         self.belief = constant_factor([name], {name: values}, len(values), logarithmetic)
         self.is_observed = False
+        self.logarithmetic = logarithmetic
 
     def message_to(self, node):
         if self.is_observed:
@@ -122,7 +123,8 @@ class DiscreteVariableNode(VariableNode):
         self.incoming_message[node.name] = constant_factor(
             [self.name],
             {self.name: self.values},
-            len(self.values))
+            len(self.values),
+            self.logarithmetic)
 
     def most_probable(self, n=None):
         self.normalize()
@@ -133,7 +135,8 @@ class DiscreteVariableNode(VariableNode):
             self.incoming_message[name] = constant_factor(
                 [self.name],
                 {self.name: self.values},
-                len(self.values))
+                len(self.values),
+                self.logarithmetic)
 
 
 class DiscreteFactorNode(FactorNode):
@@ -161,14 +164,16 @@ class DiscreteFactorNode(FactorNode):
         self.incoming_message[node.name] = constant_factor(
             [node.name],
             {node.name: node.values},
-            len(node.values))
+            len(node.values),
+            self.factor.logarithmetic)
 
     def init_messages(self):
         for (name, node) in self.neighbors.iteritems():
             self.incoming_message[name] = constant_factor(
                 [name],
                 {name: node.values},
-                len(node.values))
+                len(node.values),
+                self.factor.logarithmetic)
 
 
 class DirichletParameterNode(VariableNode):
@@ -194,7 +199,8 @@ class DirichletParameterNode(VariableNode):
         self.neighbors[node.name] = node
         self.incoming_message[node.name] = constant_factor(self.alpha.variables,
                                                            self.alpha.variable_values,
-                                                           self.alpha.factor_length)
+                                                           self.alpha.factor_length,
+                                                           self.alpha.logarithmetic)
         self.outgoing_message[node.name] = self.alpha - self.incoming_message[node.name] + 1
 
     def update(self):
@@ -207,7 +213,8 @@ class DirichletParameterNode(VariableNode):
         for (name, node) in self.neighbors.iteritems():
             self.incoming_message[name] = constant_factor(self.alpha.variables,
                                                           self.alpha.variable_values,
-                                                          self.alpha.factor_length)
+                                                          self.alpha.factor_length,
+                                                          self.alpha.logarithmetic)
 
             self.outgoing_message[name] = self.alpha + 1 - self.incoming_message[node.name]
 
@@ -302,11 +309,8 @@ class DirichletFactorNode(FactorNode):
         # (1) w_k* is a product of w_k and expected x_k
         w_k = prod_cavity * expected_theta
 
-        print "w_k", w_k
-
         # Normalize weights:
         sum_of_weights = w_0 + w_k.marginalize(self.parents)
-        print "sum_of_weights", sum_of_weights
         w_0 /= sum_of_weights
         w_k /= sum_of_weights
 
@@ -317,7 +321,7 @@ class DirichletFactorNode(FactorNode):
         # of alpha with one observation of k.
         # (2.1) Compute sum of alpha with plus 1.
         sum_of_alphas_1 = self.incoming_parameter.marginalize(self.parents)
-        sum_of_alphas_1.add(1)
+        sum_of_alphas_1 += 1
         # (2.2) Find index of a child variable, so we can check its
         # assignment
         index_of_child = self.incoming_parameter.variables.index(self.child.name)
@@ -330,7 +334,7 @@ class DirichletFactorNode(FactorNode):
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
-                    alpha_k.add(1, assignment)
+                    alpha_k[assignment] += 1
 
             # (2.5) Compute expected value.
             expected_value_k = alpha_k / sum_of_alphas_1
@@ -341,14 +345,11 @@ class DirichletFactorNode(FactorNode):
                     child_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
                     w_k_c[child_assignment] = value
 
-            print "w_k_c", w_k_c
             expected_value_k_weighted = w_k_c * expected_value_k
-            print "expected_value_k_weighted", expected_value_k_weighted
             expected_values.append(expected_value_k_weighted)
 
         # The resulting expected parameters are a sum of weighted expectations
         E_alpha = reduce(operator.add, expected_values)
-        print "E_alpha", E_alpha
 
         # Compute expected value of theta squared:
         alpha = self.incoming_parameter
@@ -365,7 +366,7 @@ class DirichletFactorNode(FactorNode):
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
-                    alpha_k.add(1, assignment)
+                    alpha_k[assignment] += 1
             # (2.5) Compute expected value.
             expected_value_k_squared = alpha_k * (alpha_k + 1) / (sum_of_alphas_1 * sum_of_alphas_2)
             # (2.6) Multiply expected value by weight and save.
@@ -380,7 +381,6 @@ class DirichletFactorNode(FactorNode):
 
         # The resulting expected parameters are a sum of weighted expectations
         E_alpha2 = reduce(operator.add, expected_values_squared)
-        print "E_alpha2", E_alpha2
 
         alpha_0 = defaultdict(list)
 
@@ -389,8 +389,6 @@ class DirichletFactorNode(FactorNode):
                 parent_assignment = assignment[:index_of_child] + assignment[index_of_child+1:]
                 alpha_0[parent_assignment].append((E_alpha[assignment] - E_alpha2[assignment]) /
                                                   (E_alpha2[assignment] - E_alpha[assignment]**2))
-
-        print "alpha_0", alpha_0
 
         new_alpha_0 = deepcopy(alpha).marginalize(self.parents)
         for assignment, _ in new_alpha_0:

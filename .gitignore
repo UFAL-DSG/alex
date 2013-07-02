@@ -17,3 +17,5 @@ mak_*
 /notes.txt
 /dok/
 session.xml
+.idea
+_build

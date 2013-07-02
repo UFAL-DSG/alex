@@ -19,7 +19,7 @@ Contents
    :maxdepth: 1
 
    install
-   SDS
+   alex
 
 
 Indices and tables
