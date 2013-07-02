@@ -3,7 +3,7 @@
 
 import unittest
 
-from alex.ml.bn.factor import DiscreteFactor
+from alex.ml.bn.factor import Factor
 from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 from alex.ml.bn.lbp import LBP
 
@@ -14,7 +14,7 @@ class TestLBP(unittest.TestCase):
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
-        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", Factor(
             ['hid1', 'obs1'],
             {
                 "hid1": ["save", "del"],
@@ -29,7 +29,7 @@ class TestLBP(unittest.TestCase):
 
         hid2 = DiscreteVariableNode("hid2", ["save", "del"])
         obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
-        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
+        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", Factor(
             ['hid2', 'obs2'],
             {
                 "hid2": ["save", "del"],
@@ -42,7 +42,7 @@ class TestLBP(unittest.TestCase):
                 ("del", "odel"): 0.8,
             }))
 
-        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", Factor(
             ['hid1', 'hid2'],
             {
                 "hid1": ["save", "del"],
@@ -98,7 +98,7 @@ class TestLBP(unittest.TestCase):
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
-        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", Factor(
             ['hid1', 'obs1'],
             {
                 "hid1": ["save", "del"],
@@ -108,7 +108,7 @@ class TestLBP(unittest.TestCase):
 
         hid2 = DiscreteVariableNode("hid2", ["save", "del"])
         obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
-        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
+        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", Factor(
             ['hid2', 'obs2'],
             {
                 "hid2": ["save", "del"],
@@ -116,7 +116,7 @@ class TestLBP(unittest.TestCase):
             },
             f_h_o))
 
-        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", Factor(
             ['hid1', 'hid2'],
             {
                 "hid1": ["save", "del"],
@@ -126,7 +126,7 @@ class TestLBP(unittest.TestCase):
 
         hid3 = DiscreteVariableNode("hid3", ["save", "del"])
         obs3 = DiscreteVariableNode("obs3", ["osave", "odel"])
-        fact_h3_o3 = DiscreteFactorNode("fact_h3_o3", DiscreteFactor(
+        fact_h3_o3 = DiscreteFactorNode("fact_h3_o3", Factor(
             ['hid3', 'obs3'],
             {
                 "hid3": ["save", "del"],
@@ -134,7 +134,7 @@ class TestLBP(unittest.TestCase):
             },
             f_h_o))
 
-        fact_h2_h3 = DiscreteFactorNode("fact_h2_h3", DiscreteFactor(
+        fact_h2_h3 = DiscreteFactorNode("fact_h2_h3", Factor(
             ['hid2', 'hid3'],
             {
                 "hid2": ["save", "del"],
@@ -192,7 +192,7 @@ class TestLBP(unittest.TestCase):
         # Create nodes.
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
-        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", DiscreteFactor(
+        fact_h1_o1 = DiscreteFactorNode("fact_h1_o1", Factor(
             ['hid1', 'obs1'],
             {
                 "hid1": ["save", "del"],
@@ -202,7 +202,7 @@ class TestLBP(unittest.TestCase):
 
         hid2 = DiscreteVariableNode("hid2", ["save", "del"])
         obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
-        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", DiscreteFactor(
+        fact_h2_o2 = DiscreteFactorNode("fact_h2_o2", Factor(
             ['hid2', 'obs2'],
             {
                 "hid2": ["save", "del"],
@@ -210,7 +210,7 @@ class TestLBP(unittest.TestCase):
             },
             f_h_o))
 
-        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", Factor(
             ['hid1', 'hid2'],
             {
                 "hid1": ["save", "del"],
@@ -220,7 +220,7 @@ class TestLBP(unittest.TestCase):
 
         hid3 = DiscreteVariableNode("hid3", ["save", "del"])
         obs3 = DiscreteVariableNode("obs3", ["osave", "odel"])
-        fact_h3_o3 = DiscreteFactorNode("fact_h3_o3", DiscreteFactor(
+        fact_h3_o3 = DiscreteFactorNode("fact_h3_o3", Factor(
             ['hid3', 'obs3'],
             {
                 "hid3": ["save", "del"],
@@ -228,7 +228,7 @@ class TestLBP(unittest.TestCase):
             },
             f_h_o))
 
-        fact_h2_h3 = DiscreteFactorNode("fact_h2_h3", DiscreteFactor(
+        fact_h2_h3 = DiscreteFactorNode("fact_h2_h3", Factor(
             ['hid2', 'hid3'],
             {
                 "hid2": ["save", "del"],
@@ -297,7 +297,7 @@ class TestLBP(unittest.TestCase):
         hid1 = DiscreteVariableNode("hid1", ["save", "del"])
         obs1 = DiscreteVariableNode("obs1", ["osave", "odel"])
         fact_h1_o1 = DirichletFactorNode("fact_h1_o1")
-        theta_h1_o1 = DirichletParameterNode('theta_h1_o1', DiscreteFactor(
+        theta_h1_o1 = DirichletParameterNode('theta_h1_o1', Factor(
             ['hid1', 'obs1'],
             {
                 "hid1": ["save", "del"],
@@ -313,7 +313,7 @@ class TestLBP(unittest.TestCase):
         hid2 = DiscreteVariableNode("hid2", ["save", "del"])
         obs2 = DiscreteVariableNode("obs2", ["osave", "odel"])
         fact_h2_o2 = DirichletFactorNode("fact_h2_o2")
-        theta_h2_o2 = DirichletParameterNode('theta_h2_o2', DiscreteFactor(
+        theta_h2_o2 = DirichletParameterNode('theta_h2_o2', Factor(
             ['hid2', 'obs2'],
             {
                 "hid2": ["save", "del"],
@@ -326,7 +326,7 @@ class TestLBP(unittest.TestCase):
                 ("del", "odel"): 1,
             }))
 
-        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", DiscreteFactor(
+        fact_h1_h2 = DiscreteFactorNode("fact_h1_h2", Factor(
             ['hid1', 'hid2'],
             {
                 "hid1": ["save", "del"],
@@ -372,7 +372,7 @@ class TestLBP(unittest.TestCase):
             lbp.init_messages()
 
     def test_ep_tight(self):
-        theta = DirichletParameterNode('theta', DiscreteFactor(
+        theta = DirichletParameterNode('theta', Factor(
             ['X', 'ZDummy'],
             {
                 'X': ['same', 'diff'],
