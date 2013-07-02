@@ -29,8 +29,8 @@ class TestJuliusConfnetDecoding(unittest.TestCase):
 
     def setUp(self):
         cfg = Config.load_configs()
-        cfg.config['ASR']['Julius']['msg_timeout'] = 10.
-        cfg.config['ASR']['Julius']['timeout'] = 10.
+        cfg.config['ASR']['Julius']['msg_timeout'] = 5.
+        cfg.config['ASR']['Julius']['timeout'] = 5.
         cfg.config['corpustools']['get_jasr_confnets']['rt_ratio'] = 0.
         self.cfg = cfg
 
