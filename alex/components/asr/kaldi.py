@@ -62,7 +62,7 @@ class KaldiASR(object):
         :returns: instance of UtteranceNBList
 
         """
-        dnb = self.decoder.Decode()
+        dnb = self.decoder.decode()
         nb = UtteranceNBList()
         for prob, hyp in dnb:
             nb.add(prob, Utterance(hyp))
@@ -85,5 +85,5 @@ class KaldiASR(object):
         :frame: @todo
         :returns: self - The instance of KaldiASR
         """
-        # self.rec_buffer.append(frame.payload)
+        self.decoder.rec_in(frame.payload)
         return self
