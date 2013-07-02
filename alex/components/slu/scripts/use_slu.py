@@ -62,10 +62,13 @@ def main(args):
             outfile.write('{key} => {da}\n'.format(key=utt_key,
                                                    da=unicode(dah.da)))
             if args.verbose:
-                if utt_idx % 1000 == 0:
+                if utt_idx % 100 == 0:
                     sys.stderr.write(str(utt_idx))
                 sys.stderr.write('.')
                 sys.stderr.flush()
+    if args.verbose:
+        sys.stderr.write(str(utt_idx))
+        sys.stderr.flush()
 
 
 if __name__ == "__main__":

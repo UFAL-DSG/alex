@@ -508,7 +508,7 @@ class DefaultConfigurator(object):
         'cl-seq'    : {'do_preprocessing': (True, 'noprep'), },
     }
     DEFAULTS_SLU_TR = {
-        'cl-tracing': {'abstractions': (('concrete', 'abstract'), 'abs_{0}'),
+        'cl-tracing': {'abstractions': (('abstract', ), 'abs_{0}'),
                        'max_examples': (None, 'top{0}'),
                        'clser_type': ('logistic', '{0}'),
                        'min_feat_count': (10, 'minf{0}'),
@@ -661,6 +661,8 @@ class ParamModelNameBuilder(DefaultConfigurator):
     """Class that can build model filename from configuration settings."""
     from datetime import date
 
+    _lock_tpt = os.path.join('{dir_}', '{base}.lock')
+
     @classmethod
     def clean_arg(cls, arg):
         """Cleans an argument value for use in the model file name."""
@@ -675,12 +677,18 @@ class ParamModelNameBuilder(DefaultConfigurator):
         # Shorten the argument and replace dashes.
         return arg_str[-7:].replace('-', '_')
 
-    def build_name(self, existing=False):
+    @classmethod
+    def _lock_exists(cls, dirname, basename):
+        return os.path.exists(cls._lock_tpt.format(dir_=dirname,
+                                                   base=basename))
+
+    def build_name(self, existing=False, lock=True):
         """Builds a name for the model to be trained.
 
         Arguments:
             existing -- whether to look for an existing model, or rather avoid
                 clashes (default: False -- avoid clashes)
+            lock -- whether to create a lock for the created filename
 
         Returns path (not necessarily an absolute path) to the model file.
 
@@ -696,18 +704,22 @@ class ParamModelNameBuilder(DefaultConfigurator):
                 val = cfg_dict[name]
                 if val != default:
                     param_strs.append(tpt.format(self.clean_arg(val)))
-        model_fname = '{d}_{params}.slu_model.gz'.format(
+        model_bname = '{d}_{params}.slu_model.gz'.format(
             d=self.date.strftime(self.date.today(), '%y%m%d'),
             params='-'.join(param_strs))
+        model_dir = self.cfg_tr['models_dir']
         # Ensure the model directory exists.
-        if not os.path.isdir(self.cfg_tr['models_dir']):
-            os.makedirs(self.cfg_tr['models_dir'])
-        # Save the resulting name and return.
-        model_fname = os.path.join(self.cfg_tr['models_dir'], model_fname)
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir)
+        # Ensure the model name is free to use.
+        model_fname = os.path.join(model_dir, model_bname)
         model_num = 0
-        while os.path.exists(model_fname):
+        while (os.path.exists(model_fname)
+               or (lock and self._lock_exists(model_dir, model_bname))):
             model_num += 1
-            model_fname = '{base}.{num}.slu_model.gz'.format(
-                base=model_fname[:-len('.slu_model.gz')], num=model_num)
+            model_bname = '{base}.{num}.slu_model.gz'.format(
+                base=model_bname[:-len('.slu_model.gz')], num=model_num)
+            model_fname = os.path.join(model_dir, model_bname)
+        # Save the resulting name and return.
         self.cfg_tr['model_fname'] = model_fname
         return model_fname

@@ -133,11 +133,11 @@ if __name__ == '__main__':
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
                     cfg['Logging']['session_logger'].input_source("voip")
 

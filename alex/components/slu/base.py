@@ -538,6 +538,8 @@ class SLUPreprocessing(object):
 
         Returns the original utterance.
         """
+        # FIXME This causes an error in the copy library. Try running
+        # test/test_category_labels_substitution.py
         utterance = copy.deepcopy(utterance)
         for cl in category_labels:
             # FIXME: Use a new method, category_label2phrase, which will know

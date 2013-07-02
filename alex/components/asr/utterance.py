@@ -318,6 +318,16 @@ class AbstractedUtterance(Utterance, Abstracted):
         else:
             return 1
 
+    def __deepcopy__(self, memo):
+        """Ensures smooth deep copy of this object.
+
+        (The default copy.deepcopy mechanism has been observed to fail.)
+
+        """
+        new = AbstractedUtterance(' '.join(self._utterance))
+        new._abstr_idxs = self._abstr_idxs[:]
+        return new
+
     def __hash__(self):
         return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
 
