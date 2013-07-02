@@ -508,7 +508,7 @@ class DefaultConfigurator(object):
         'cl-seq'    : {'do_preprocessing': (True, 'noprep'), },
     }
     DEFAULTS_SLU_TR = {
-        'cl-tracing': {'abstractions': (('concrete', 'abstract'), 'abs_{0}'),
+        'cl-tracing': {'abstractions': (('abstract', ), 'abs_{0}'),
                        'max_examples': (None, 'top{0}'),
                        'clser_type': ('logistic', '{0}'),
                        'min_feat_count': (10, 'minf{0}'),
