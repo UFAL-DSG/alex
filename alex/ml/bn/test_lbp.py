@@ -404,4 +404,3 @@ class TestLBP(unittest.TestCase):
             #print theta.alpha.pretty_print(precision=5)
             lbp.init_messages()
         print theta.alpha.pretty_print(precision=5)
-        raise
