@@ -712,13 +712,14 @@ class ParamModelNameBuilder(DefaultConfigurator):
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir)
         # Ensure the model name is free to use.
+        bname_base = model_bname[:-len('.slu_model.gz')]
         model_fname = os.path.join(model_dir, model_bname)
         model_num = 0
         while (os.path.exists(model_fname)
                or (lock and self._lock_exists(model_dir, model_bname))):
             model_num += 1
-            model_bname = '{base}.{num}.slu_model.gz'.format(
-                base=model_bname[:-len('.slu_model.gz')], num=model_num)
+            model_bname = '{base}.{num}.slu_model.gz'.format(base=bname_base,
+                                                             num=model_num)
             model_fname = os.path.join(model_dir, model_bname)
         # Save the resulting name and return.
         self.cfg_tr['model_fname'] = model_fname
