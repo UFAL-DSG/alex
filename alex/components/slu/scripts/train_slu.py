@@ -15,6 +15,7 @@ if __name__ == "__main__":
     from alex.components.slu.common import ParamModelNameBuilder, slu_factory
     from alex.utils.config import Config
     from alex.utils.excepthook import ExceptionHook
+    from alex.utils.filelock import FileLock
 
     arger = argparse.ArgumentParser(description='Trains an SLU model.')
     arger.add_argument('-o', '--model-fname', default=None)
@@ -36,19 +37,21 @@ if __name__ == "__main__":
         # a by-product).
         model_path = name_builder.build_name()
 
-    if not args.dry_run and not name_builder.cfg_tr.get('vanilla', False):
-        cfgdump_path = model_path[:model_path.find('slu_model')] + 'config'
-        with codecs.open(cfgdump_path, 'w', encoding='UTF-8') as cfgdump_file:
-            cfgdump_file.write(unicode(name_builder.config))
+    with FileLock(model_path):
+        if not args.dry_run and not name_builder.cfg_tr.get('vanilla', False):
+            cfg_path = '{dir_base}.config'.format(
+                dir_base=model_path[:model_path.find('.slu_model')])
+            with codecs.open(cfg_path, 'w', encoding='UTF-8') as cfg_file:
+                cfg_file.write(unicode(name_builder.config))
 
-    print >>sys.stderr, ('Going to write the model to "{path}".'
-                         .format(path=model_path))
+        print >>sys.stderr, ('Going to write the model to "{path}".'
+                            .format(path=model_path))
 
-    # Respect the debugging setting.
-    if cfg['SLU'].get('debug', False):
-        ExceptionHook.set_hook('ipdb')
+        # Respect the debugging setting.
+        if cfg['SLU'].get('debug', False):
+            ExceptionHook.set_hook('ipdb')
 
-    if not args.dry_run:
-        # The following also saves the model, provided a filename has been
-        # specified in the config.
-        slu_factory(cfg, training=True, verbose=True)
+        if not args.dry_run:
+            # The following also saves the model, provided a filename has been
+            # specified in the config.
+            slu_factory(cfg, training=True, verbose=True)
