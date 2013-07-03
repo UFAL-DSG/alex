@@ -76,6 +76,38 @@ def load_utt_confnets(fname, limit=None, encoding='UTF-8'):
     return load_wavaskey(fname, UtteranceConfusionNetwork, limit, encoding)
 
 
+def load_utt_nblists(fname, limit=None, n=40, encoding='UTF-8'):
+    """
+    Loads a dictionary of utterance n-best lists from a file with confnets.
+
+    The n-best lists are obtained simply from the confnets.
+
+    The file is assumed to contain lines of the following form:
+
+        [whitespace..]<key>[whitespace..]=>[whitespace..]<utt_cn>[whitespace..]
+
+    or just (without keys):
+
+        [whitespace..]<utt_cn>[whitespace..]
+
+    where <utt_cn> is obtained as repr() of an UtteranceConfusionNetwork
+    object.
+
+    Arguments:
+        fname -- path towards the file to read the utterance confusion networks
+            from
+        limit -- limit on the number of n-best lists to read
+        n -- depth of n-best lists
+        encoding -- the file encoding
+
+    Returns a dictionary with n-best lists (instances of UtteranceNBList) as
+    values.
+
+    """
+    cn_dict = load_utt_confnets(fname, limit, encoding)
+    return {key: cn.get_utterance_nblist(n=n) for (key, cn) in cn_dict}
+
+
 class UtteranceException(SLUException):
     pass
 

@@ -355,7 +355,8 @@ class SLUPreprocessing(object):
         return utterance_cp, valform_for_cl
 
     def values2category_labels_in_uttnblist(self, utt_nblist):
-        """Replaces strings matching surface forms in the label database with
+        """
+        Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
         Arguments:
