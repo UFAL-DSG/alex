@@ -184,7 +184,10 @@ if __name__ == "__main__":
         description=('Finds WAVs in the directory specified and decodes them '
                      'as confnets.'))
     arger.add_argument('dirname',
-                       help='directory name where to search for WAVs')
+                       help='directory name where to search for WAVs;  in '
+                            'fact, it can be path towards a file listing '
+                            'paths to the files in question or path globs or '
+                            'paths to their immediate parent directories')
     arger.add_argument('outfname', help='path towards the output file')
     arger.add_argument('-c', '--configs', nargs='+',
                        help='configuration files',
