@@ -12,7 +12,8 @@ import os
 import os.path
 import sys
 
-from alex.components.asr.utterance import load_utterances, load_utt_confnets
+from alex.components.asr.utterance import load_utterances, load_utt_confnets, \
+    load_utt_nblists
 from alex.components.slu.base import ft_props, SLUInterface
 from alex.components.slu.exceptions import SLUException
 
