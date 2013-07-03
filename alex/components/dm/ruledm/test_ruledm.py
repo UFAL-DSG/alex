@@ -66,23 +66,26 @@ class TestRuleDM(unittest.TestCase):
         class TRuleDM(RuleDM):
             policy_cls = TRuleDMPolicy
 
-        dm = TRuleDM(
-            {'DM' :
-             {'TRuleDM' :
-              {
-                  'ontology': ontology_file,
-                  'db_cfg': db_file,
-                  'provide_code': False,
-                  'code_submit_url': None
-               }
-              }
-             ,
-            'Logging':
-            {
+        dm = TRuleDM({
+            'DM': {
+                'ontology': ontology_file,
+                'TRuleDM': {
+                    'db_cfg': db_file,
+                    'provide_code': False,
+                    'code_submit_url': None
+                },
+                'dialogue_state': {
+                    'type': DRuleDS,
+                },
+                'dialogue_policy': {
+                    'type': TRuleDMPolicy,
+                },
+            },
+            'Logging': {
                 'system_logger': DummyLogger()
             }
-            }
-            )
+        })
+
         turn_init = dm.da_out()
         self.assertEquals(turn_init.has_dat("hello"), True)
         turn_init = dm.da_out()

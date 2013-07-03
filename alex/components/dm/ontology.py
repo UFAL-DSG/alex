@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from alex.utils.config import load_as_module
 from alex.utils.cache import lru_cache
 
-class OntologyException(object):
+class OntologyException(Exception):
     pass
     
 class Ontology(object):

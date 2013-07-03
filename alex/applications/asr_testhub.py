@@ -169,7 +169,7 @@ def main():
 
     cfg = Config.load_configs(args.configs)
 
-    cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
+    cfg['Logging']['system_logger'].info("asr_testhub\n" + "=" * 120)
 
     vhub = WebHub(cfg)
     vhub.run()

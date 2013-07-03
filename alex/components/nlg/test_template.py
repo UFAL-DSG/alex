@@ -31,7 +31,7 @@ class TestTemplateNLG(unittest.TestCase):
         cfg = self.cfg
         nlg = TemplateNLG(cfg)
 
-        da = DialogueAct('affirm()&inform(task="find")&inform(pricerange="cheap")')
+        da = DialogueAct('affirm()&inform(task="find")&inform(pricerange="cheap")').sort()
         correct_text = u"Ok, you are looking for something in the cheap price range."
         generated_text = nlg.generate(da)
 
@@ -55,7 +55,7 @@ class TestTemplateNLG(unittest.TestCase):
         cfg = self.cfg
         nlg = TemplateNLG(cfg)
 
-        da = DialogueAct('affirm()&inform(pricerange="cheap")&inform(task="find")')
+        da = DialogueAct('affirm()&inform(pricerange="cheap")&inform(task="find")').sort()
         correct_text = "Ok, you are looking for something in the cheap price range."
         generated_text = nlg.generate(da)
 

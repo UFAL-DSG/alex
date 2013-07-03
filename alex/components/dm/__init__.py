@@ -5,6 +5,7 @@
 # to me for __init__ to actually define any normal classes or functions.  MK
 
 from alex.components.dm.ontology import Ontology
+from collections import defaultdict
 
 
 class DialogueState(object):
