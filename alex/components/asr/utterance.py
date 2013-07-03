@@ -754,17 +754,18 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 slice_hyps = list()
                 hyp_start = (slice_start if slice_start == 0
                              else slice_start + 1)
-                for hyp_end in hyp_ends:
-                    colon_idx = crippled_hyps.find(':', hyp_start + 1,
-                                                   hyp_end - 1)
-                    assert crippled_hyps[hyp_start] == '('
-                    assert crippled_hyps[colon_idx] == ':'
-                    assert crippled_hyps[hyp_end - 1] == ')'
-                    prob = float(hyps[hyp_start + 1:colon_idx])
-                    word = unesc(hyps[colon_idx + 1:hyp_end - 1])
-                    slice_hyps.append((prob, word))
-                    self._wordset.add(word)
-                    hyp_start = hyp_end + 1
+                if hyp_start < hyp_ends[0]:
+                    for hyp_end in hyp_ends:
+                        colon_idx = crippled_hyps.find(':', hyp_start + 1,
+                                                       hyp_end - 1)
+                        assert crippled_hyps[hyp_start] == '('
+                        assert crippled_hyps[colon_idx] == ':'
+                        assert crippled_hyps[hyp_end - 1] == ')'
+                        prob = float(hyps[hyp_start + 1:colon_idx])
+                        word = unesc(hyps[colon_idx + 1:hyp_end - 1])
+                        slice_hyps.append((prob, word))
+                        self._wordset.add(word)
+                        hyp_start = hyp_end + 1
                 self._cn.append(slice_hyps)
 
                 # Handle long links.
@@ -775,8 +776,9 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                                        slice_end) + [slice_end]
                 ll_start = solidus_idx + 1
                 for ll_end in ll_ends:
-                    self._long_links[-1].append(eval(unesc(
-                        hyps[ll_start:ll_end])))
+                    link = eval(unesc(hyps[ll_start:ll_end]))
+                    self._long_links[-1].append(link)
+                    self._wordset.update(link.hyp[1])
                     ll_start = ll_end + 1
 
         ASRHypothesis.__init__(self)
@@ -986,6 +988,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 index)...
 
         """
+
         # Initialise.
         replaced = self
         # Try to find the first occurrence.
