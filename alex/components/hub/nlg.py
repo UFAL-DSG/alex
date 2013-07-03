@@ -71,21 +71,37 @@ class NLG(multiprocessing.Process):
             data_da = self.dialogue_act_in.recv()
 
             if isinstance(data_da, DMDA):
-                text = self.nlg.generate(data_da.da)
+                if data_da.da != "silence()":
+                    text = self.nlg.generate(data_da.da)
 
-                if self.cfg['NLG']['debug']:
-                    s = []
-                    s.append("NLG Output")
-                    s.append("-"*60)
-                    s.append(text)
-                    s.append("")
-                    s = '\n'.join(s)
-                    self.cfg['Logging']['system_logger'].debug(s)
+                    if self.cfg['NLG']['debug']:
+                        s = []
+                        s.append("NLG Output")
+                        s.append("-"*60)
+                        s.append(text)
+                        s.append("")
+                        s = '\n'.join(s)
+                        self.cfg['Logging']['system_logger'].debug(s)
 
-                self.cfg['Logging']['session_logger'].text("system", text)
+                    self.cfg['Logging']['session_logger'].text("system", text)
 
-                self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
-                self.text_out.send(TTSText(text))
+                    self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+                    self.text_out.send(TTSText(text))
+                else:
+                    # the input dialogue is silence. Therefore, do not generate eny output.
+                    if self.cfg['NLG']['debug']:
+                        s = []
+                        s.append("NLG Output")
+                        s.append("-"*60)
+                        s.append("DM sent 'silence()' therefore generating nothing")
+                        s.append("")
+                        s = '\n'.join(s)
+                        self.cfg['Logging']['system_logger'].debug(s)
+
+                    self.cfg['Logging']['session_logger'].text("system", "__silence__")
+
+                    self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+
             elif isinstance(data_da, Command):
                 self.cfg['Logging']['system_logger'].info(data_da)
             else:

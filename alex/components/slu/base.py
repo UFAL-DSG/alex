@@ -673,6 +673,9 @@ class SLUInterface(object):
             if "__other__" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("other"))
+            elif "__silence__" == utt:
+                dacn = DialogueActConfusionNetwork()
+                dacn.add(1.0, DialogueActItem("silence"))
             else:
                 obs_wo_nblist['utt'] = utt
                 dacn = self.parse_1_best(obs_wo_nblist, *args, **kwargs)

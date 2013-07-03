@@ -114,7 +114,7 @@ class DialogueManager(object):
         self.policy = self.dialogue_policy_class(self.cfg, self.ontology)
         self.last_system_dialogue_act = None
 
-    def da_in(self, da, utterance):
+    def da_in(self, da, utterance = None):
         """
         Receives an input dialogue act or dialogue act list with probabilities
         or dialogue act confusion network.

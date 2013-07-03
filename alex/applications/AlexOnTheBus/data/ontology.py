@@ -15,6 +15,7 @@ ontology = {
     },
 
     'slot_attributes': {
+        'silence_time': [],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',

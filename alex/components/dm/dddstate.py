@@ -28,11 +28,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("DDDState - Dialogue state content:")
         s.append("")
-        s.append("%s = %s" % ('lda', self.slots['lda']))
+        s.append("%s = %s" % ("ludait", self.slots["ludait"]))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                      not sl.startswith('sh_') and not sl.startswith('rh_') and
-                     not sl.startswith('lda')]:
+                     not sl.startswith("ludait")]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
 
@@ -79,13 +79,22 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         """
 
+        if last_system_da == "silence()":
+            # use the last non-silence dialogue act
+            # if the system said nothing the last time, lets assume that the user acts in the context of the previous
+            # dialogue act
+            last_system_da = self.last_system_da
+        else:
+            # save the last non-silence dialogue act
+            self.last_system_da = last_system_da
+
         if isinstance(user_da, DialogueAct):
             # use da as it is
             da = user_da
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
             # get only the best dialogue act
 #            da = user_da.get_best_da()
-            # in DSTS baselien like approach I will dais conf. score, so I will not
+            # in DSTC baseline like approach I will dais conf. score, so I will not
             # have to pick the best hyp
             da = user_da.get_best_nonnull_da()
         else:
@@ -227,7 +236,13 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 self.slots["sh_" + dai.name] = dai.value
             elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
                              "repeat", "reqalts", "reqmore", "restart", "thankyou"]:
-                self.slots["lda"] = dai.dat
+                self.slots["ludait"] = dai.dat
+            elif dai.dat == "silence":
+                self.slots["ludait"] = dai.dat
+                if dai.name == "time":
+                    self.slots['silence_time'] = float(dai.value)
+                else:
+                    self.slots['silence_time'] = 0.0
 
     def get_requested_slots(self):
         """Return all slots which are currently being requested by the user along with the correct value."""
@@ -271,7 +286,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         for slot in self.slots:
             # ignore some slots
-            if any([1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]):
+            if any([1.0 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
                 continue
 
             if self.slots[slot] != "none" and ("rh_" + slot not in self.slots or self.slots["rh_" + slot] == "none"):

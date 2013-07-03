@@ -75,6 +75,9 @@ class TextHub(Hub):
         else:
             utt = l
 
+        utt = utt.strip()
+        if utt == "":
+            utt = "__silence__"
         try:
             utt = Utterance(utt)
         except UtteranceException:

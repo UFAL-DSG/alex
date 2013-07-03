@@ -249,7 +249,7 @@ class AbstractTemplateNLG(object):
                                 dai_tpl = self.random_select(tpls)
                                 dai_utt = self.fill_in_template(dai_tpl, svsx)
                             except TemplateNLGException:
-                                dai_utt = "#1"
+                                dai_utt = unicode(dai)
 
                         composed_utt.append(dai_utt)
 

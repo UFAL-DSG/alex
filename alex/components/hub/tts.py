@@ -70,14 +70,27 @@ class TTS(multiprocessing.Process):
 
         return segments
 
-    def remove_final_silence(self, wav):
-        for i, x in enumerate(reversed(wav)):
+    def remove_start_and_final_silence(self, wav):
+        for i, x in enumerate(wav):
             if ord(x) != 0:
                 break
 
-        return wav[:-int(i*self.cfg['TTS']['final_silence_removal_proportion']) - 1]
+        for j, x in enumerate(reversed(wav)):
+            if ord(x) != 0:
+                break
+
+        return wav[2*int(i/2):-2*int(j/2)]
+
+    def gen_silence(self):
+        length = int(self.cfg['TTS']['in_between_segments_silence']*self.cfg['Audio']['sample_rate'])*2
+
+        return b'\0x00'*length
 
     def synthesize(self, user_id, text, log="true"):
+        if text == "__silence__" or text == "silence()":
+            # just let the TTS generate an empty wav
+            text == ""
+
         wav = []
         fname, bn = self.get_wav_name()
 
@@ -87,10 +100,13 @@ class TTS(multiprocessing.Process):
 
         segments = self.parse_into_segments(text)
 
-        for segment_text in segments:
+        for i, segment_text in enumerate(segments):
             segment_wav = self.tts.synthesize(segment_text)
-            segment_wav = self.remove_final_silence(segment_wav)
+            segment_wav = self.remove_start_and_final_silence(segment_wav)
             wav.append(segment_wav)
+            if i <  len(segments) - 1:
+                # add silence only for non-final segments
+                wav.append(self.gen_silence())
 
             segment_wav = various.split_to_bins(segment_wav, 2 * self.cfg['Audio']['samples_per_frame'])
 

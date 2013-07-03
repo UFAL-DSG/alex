@@ -4,8 +4,9 @@
 import multiprocessing
 import time
 
-from alex.components.dm.common import dm_factory, get_dm_type
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, SLUHyp, DMDA
+from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.dm.exceptions import DMException
 from alex.utils.procname import set_proc_name
 
@@ -28,6 +29,8 @@ class DM(multiprocessing.Process):
         self.slu_hypotheses_in = slu_hypotheses_in
         self.dialogue_act_out = dialogue_act_out
         self.close_event = close_event
+        self.last_user_da_time = time.time()
+        self.last_user_diff_time = time.time()
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
@@ -92,6 +95,37 @@ class DM(multiprocessing.Process):
                     self.dm.end_dialogue()
                     return False
 
+                if command.parsed['__name__'] == 'timeout':
+                    # check whether there is a looong silence
+                    # if yes then inform the DM
+
+                    silence_time = command.parsed['silence_time']
+                    cn = DialogueActConfusionNetwork()
+                    cn.add(1.0, DialogueActItem('silence','time', silence_time))
+
+                    self.dm.da_in(cn)
+                    da = self.dm.da_out()
+
+                    if self.cfg['DM']['debug']:
+                        s = []
+                        s.append("DM Output")
+                        s.append("-"*60)
+                        s.append(unicode(da))
+                        s.append("")
+                        s = '\n'.join(s)
+                        self.cfg['Logging']['system_logger'].debug(s)
+
+                    self.cfg['Logging']['session_logger'].turn("system")
+                    self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+
+                    self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
+                    self.dialogue_act_out.send(DMDA(da))
+
+                    if da.has_dat("bye"):
+                        self.commands.send(Command('hangup()', 'DM', 'HUB'))
+
+                    return False
+
         return False
 
     def read_slu_hypotheses_write_dialogue_act(self):
@@ -101,6 +135,11 @@ class DM(multiprocessing.Process):
             data_slu = self.slu_hypotheses_in.recv()
 
             if isinstance(data_slu, SLUHyp):
+                # reset measuring of the user silence
+                self.last_user_da_time = time.time()
+                self.last_user_diff_time = time.time()
+
+                # process the input DA
                 self.dm.da_in(data_slu.hyp, utterance=data_slu.asr_hyp)
                 da = self.dm.da_out()
 

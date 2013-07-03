@@ -106,6 +106,9 @@ class VoipHub(Hub):
 
             s_last_dm_activity_time = 0
 
+            u_last_input_timeout = 0
+
+            call_connected = False
             hangup = False
 
             call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
@@ -189,12 +192,15 @@ class VoipHub(Hub):
                             if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
                                     last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
                                 # prepare for ending the call
+                                call_connected = True
+
                                 call_start = time.time()
                                 number_of_turns = 0
                                 s_voice_activity = True
                                 s_last_voice_activity_time = time.time()
                                 u_voice_activity = False
                                 u_last_voice_activity_time = 0
+                                u_last_input_timeout = time.time()
                                 hangup = True
 
                                 tts_commands.send(Command('synthesize(text="%s",log="false")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
@@ -203,6 +209,8 @@ class VoipHub(Hub):
                                 m.append('CALL REJECTED')
                             else:
                                 # init the system
+                                call_connected = True
+
                                 call_start = time.time()
                                 number_of_turns = 0
 
@@ -210,7 +218,8 @@ class VoipHub(Hub):
                                 s_last_voice_activity_time = 0
                                 u_voice_activity = False
                                 u_last_voice_activity_time = 0
-                                hungup = False
+                                u_last_input_timeout = time.time()
+                                hangup = False
 
                                 dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
                                 m.append('CALL ACCEPTED')
@@ -231,6 +240,8 @@ class VoipHub(Hub):
 
                             remote_uri = command.parsed['remote_uri']
                             call_db.track_disconnected_call(remote_uri)
+
+                            call_connected = False
 
                             self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
 
@@ -341,15 +352,28 @@ class VoipHub(Hub):
 
                 current_time = time.time()
 
+                s_diff = current_time - s_last_voice_activity_time
+                u_diff = current_time - u_last_voice_activity_time
+
+                if call_connected and \
+                    not s_voice_activity and not u_voice_activity and \
+                    s_diff > self.cfg['DM']['input_timeout'] and \
+                    u_diff > self.cfg['DM']['input_timeout'] and \
+                    current_time - u_last_input_timeout> self.cfg['DM']['input_timeout']:
+
+                    u_last_input_timeout = time.time()
+                    dm_commands.send(Command('timeout(silence_time="%0.3f")' % min(s_diff, u_diff), 'HUB', 'DM'))
+
                 if hangup and s_last_dm_activity_time + 2.0 < current_time and \
                     s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
-                    # we are ready to hangup only when all voice activity finished,
+                    # we are ready to hangup only when all voice activity is finished
                     hangup = False
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
-                # hard hangup due to the hard limits
                 if number_of_turns != -1 and current_time - call_start > self.cfg['VoipHub']['hard_time_limit'] or \
                     number_of_turns > self.cfg['VoipHub']['hard_turn_limit']:
+                    # hard hangup due to the hard limits
+                    call_start = 0
                     number_of_turns = -1
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
@@ -407,8 +431,6 @@ if __name__ == '__main__':
 
     cfg = Config.load_configs(args.configs)
 
-    #########################################################################
-    #########################################################################
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
     vhub = VoipHub(cfg)
