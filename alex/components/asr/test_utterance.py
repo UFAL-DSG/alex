@@ -456,8 +456,8 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
     def test_idx_zero(self):
         # Construct a confnet that will contain a long link starting at index
         # zero.
-        cn_repr = ('UtteranceConfusionNetwork("()|UtteranceConfusionNetwork'
-                   '.LongLink\\\\(end=3\\\\, '
+        cn_repr = ('UtteranceConfusionNetwork("[]|'
+                   'LongLink\\\\(end=3\\\\, '
                    'orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]\\\\, '
                    'hyp=\\\\(0.995\\\\, \\\\(u\'pub food\'\\\\,\\\\)\\\\)'
                    '\\\\, normalise=True\\\\)'
@@ -465,14 +465,26 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
                    '|;(0.982:need),(0.018:)|;(0.998:),(0.002:in)'
                    '|;(0.99:),(0.01:a)|;(0.983:i),(0.017:)|")')
         cn = eval(cn_repr)
-        # import pprint
-        # pprint.pprint(replaced._cn)
-        # pprint.pprint(replaced._long_links)
         self.assertEquals(repr(cn), cn_repr)
 
         # Substitute for that long link.
         # import ipdb; ipdb.set_trace()
         replaced = cn.phrase2category_label(('pub food', ), ('FOOD', ))
+        rep_repr = ('UtteranceConfusionNetwork("[Index(is_long_link=True, '
+                    'word_idx=0, alt_idx=1, link_widx=None)]|LongLink\\\\('
+                    'end=3\\\\, orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]'
+                    '\\\\, hyp=\\\\(0.995\\\\, \\\\(u\'pub food\'\\\\,\\\\)'
+                    '\\\\)\\\\, normalise=True\\\\),LongLink\\\\(end=3\\\\, '
+                    'orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]\\\\, hyp='
+                    '\\\\(0.995\\\\, \\\\(u\'FOOD=pub food\'\\\\,\\\\)\\\\)'
+                    '\\\\, normalise=False\\\\);(0.005:it)|;|;(0.989:a),'
+                    '(0.011:)|;(0.989:),(0.011:cheap)|;(0.982:need),(0.018:)|;'
+                    '(0.998:),(0.002:in)|;(0.99:),(0.01:a)|;(0.983:i),(0.017:)'
+                    '|")')
+        self.assertEquals(repr(replaced), rep_repr)
+        # import pprint
+        # pprint.pprint(replaced._cn)
+        # pprint.pprint(replaced._long_links)
 
 
 if __name__ == '__main__':
