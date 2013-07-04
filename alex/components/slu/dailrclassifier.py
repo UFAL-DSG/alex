@@ -107,6 +107,7 @@ class DAILogRegClassifier(base.SLUInterface):
             'nbl_ngram': n-grams on utterance n-best lists
             'cn_ngram': n-grams on utterance confusion networks
             'ab_ngram': n-grams on abstracted utterances (with substitutions)
+            'ab_nbl_ngram': n-grams on abstracted utterance n-best lists
             'ab_cn_ngram': n-grams on abstracted utterance confusion networks
             'prev_da': features of the DA preceding to the one to be classified
             'da_nbl': features of a DA n-best list (output from SLU,
