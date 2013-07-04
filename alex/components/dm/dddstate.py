@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 from collections import defaultdict
 
-from alex.components.dm import DialogueState
+from alex.components.dm.base import DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
 
