@@ -453,20 +453,11 @@ class SLUPreprocessing(object):
                 # original <surface> sequence of tokens.  This is done
                 # crudely using two subsequent substitutions, so the
                 # original <surface> gets forgotten.
-                try:
-                    confnet_cp = confnet_cp.replace(surface, (value, ))
-                    confnet_cp = confnet_cp.phrase2category_label(
-                        (value, ), (slot_upper, ))
-                except Exception as ex:
-                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
-                    import traceback
-                    print "(EE) " + unicode(ex)
-                    traceback.print_exc()
-                    # DEBUG
-                    # import ipdb; ipdb.set_trace()
-                    # confnet_cp = confnet_cp.replace(surface, (value, ))
-                    # confnet_cp = confnet_cp.phrase2category_label(
-                        # (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
+                confnet_cp = confnet_cp.replace(surface, (value, ))
+                confnet_cp = confnet_cp.phrase2category_label(
+                    (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
 
         return confnet_cp, valform_for_cl
 
