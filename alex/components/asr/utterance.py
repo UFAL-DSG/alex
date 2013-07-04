@@ -519,11 +519,12 @@ class UtteranceFeatures(Features):
             raise NotImplementedError(
                 "Features can be extracted only from an empty utterance or "
                 "for the `ngrams' feature type.")
-        # FIXME: This is a debugging behaviour. Condition on DEBUG or `verbose'
-        # etc. or raise it as an exception.
+
+        # This should never happen.
         if len(self.features) == 0:
-            print u'(EE) Utterance with no features: "{utt}"'.format(
-                utt=utterance.utterance)
+            raise UtteranceException(
+                'No features extracted from the utterance:\n{utt}'.format(
+                    utt=utterance.utterance))
 
 
 class UtteranceHyp(ASRHypothesis):
@@ -960,7 +961,9 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
 
     # Other methods.
     def isempty(self):
-        return not self._cn and not any(self._long_links)
+        return ((not self._cn or not any(hyp[1] for alts in self._cn
+                                         for hyp in alts))
+                and not any(self._long_links))
 
     def _get_origprob(self, index):
         if index.is_long_link:

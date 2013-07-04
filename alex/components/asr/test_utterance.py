@@ -10,7 +10,8 @@ import __init__
 if __name__ == "__main__":
     import autopath
 from alex.components.asr.utterance import SENTENCE_START, SENTENCE_END, \
-    Utterance, UtteranceNBList, UtteranceConfusionNetwork
+    Utterance, UtteranceNBList, UtteranceConfusionNetwork, \
+    UtteranceConfusionNetworkFeatures
 
 
 class TestUtterance(unittest.TestCase):
@@ -485,6 +486,22 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         # import pprint
         # pprint.pprint(replaced._cn)
         # pprint.pprint(replaced._long_links)
+
+
+class TestUttCNFeats(unittest.TestCase):
+    """Basic test for utterance confnet features."""
+
+    def test_empty_features(self):
+        empty_feats_items = [('__empty__', 1.0)]
+        cn = UtteranceConfusionNetwork()
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
+        cn.add([(.9, '')])
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
+        cn.add([(1., '')])
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
 
 
 if __name__ == '__main__':
