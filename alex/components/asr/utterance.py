@@ -105,7 +105,8 @@ def load_utt_nblists(fname, limit=None, n=40, encoding='UTF-8'):
 
     """
     cn_dict = load_utt_confnets(fname, limit, encoding)
-    return {key: cn.get_utterance_nblist(n=n) for (key, cn) in cn_dict}
+    return {key: cn.get_utterance_nblist(n=n)
+            for (key, cn) in cn_dict.iteritems()}
 
 
 class UtteranceException(SLUException):
