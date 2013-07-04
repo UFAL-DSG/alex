@@ -85,9 +85,7 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['session_logger'].turn("system")
                     self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
-                    self.dialogue_act_out.send(DMDA(da))
-                    
-                    self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
+                    self.commands.send(DMDA(da, 'DM', 'HUB'))
 
                     return False
 
@@ -118,8 +116,7 @@ class DM(multiprocessing.Process):
                     self.cfg['Logging']['session_logger'].turn("system")
                     self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
-                    self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
-                    self.dialogue_act_out.send(DMDA(da))
+                    self.commands.send(DMDA(da, 'DM', 'HUB'))
 
                     if da.has_dat("bye"):
                         self.commands.send(Command('hangup()', 'DM', 'HUB'))
@@ -155,8 +152,9 @@ class DM(multiprocessing.Process):
                 self.cfg['Logging']['session_logger'].turn("system")
                 self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
-                self.commands.send(Command('dm_da_generated()', 'DM', 'HUB'))
-                self.dialogue_act_out.send(DMDA(da))
+                # do not communicate directly with the NLG, let the HUB decide
+                # to do work. The generation of the output must by synchronised with the input.
+                self.commands.send(DMDA(da, 'DM', 'HUB'))
 
                 if da.has_dat("bye"):
                     self.commands.send(Command('hangup()', 'DM', 'HUB'))
