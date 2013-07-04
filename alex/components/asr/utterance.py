@@ -395,8 +395,9 @@ class AbstractedUtterance(Utterance, Abstracted):
             yield (combined_el, ), tuple(value.split(' ')), (type_, )
 
     def phrase2category_label(self, phrase, catlab):
-        """Replaces the phrase given by `phrase' by a new phrase, given by
-        `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
+        """
+        Replaces the phrase `phrase' by a new phrase, `catlab'.  Assumes
+        `catlab' is an abstraction for `phrase'.
 
         """
         combined_el = self.splitter.join((' '.join(catlab),
@@ -404,11 +405,7 @@ class AbstractedUtterance(Utterance, Abstracted):
         return self.replace(phrase, (combined_el, ))
 
     def replace(self, orig, replacement):
-        """
-        Replaces the phrase given by `orig' by a new phrase, given by
-        `replacement'.
-
-        """
+        """Replaces the phrase `orig' by another phrase, `replacement'."""
         replaced, startidx = Utterance.replace(self, orig, replacement,
                                                return_startidx=True)
         # XXX This won't work nicely with concrete features, where the
@@ -544,7 +541,7 @@ class UtteranceHyp(ASRHypothesis):
         return self.utterance
 
 
-class UtteranceNBList(ASRHypothesis, NBList):
+class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
     """Provides functionality of n-best lists for utterances.
 
     When updating the n-best list, one should do the following.
@@ -557,8 +554,22 @@ class UtteranceNBList(ASRHypothesis, NBList):
                 most probable to the least probable ones
 
     """
+
+    other_val = AbstractedUtterance.other_val
+
+    Index = namedtuple('Index', ['hyp_idx', 'word_idx'])
+    """unique index into the n-best list.
+
+    Attributes:
+        hyp_idx -- index of the hypothesis within self.n_best
+        word_idx -- index of the word within the utterance
+
+    """
+
     def __init__(self):
+        self._abstr_idxs = list()  # sorted in increasing order
         NBList.__init__(self)
+        Abstracted.__init__(self)
 
     def get_best_utterance(self):
         """Returns the most probable utterance.
@@ -579,7 +590,8 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return NBList.normalise(self)
 
     def normalise(self):
-        """The N-best list is extended to include the "__other__" utterance to
+        """
+        The N-best list is extended to include the "__other__" utterance to
         represent those utterance hypotheses which are not included in the
         N-best list.
 
@@ -590,7 +602,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
 
     def add_other(self):
         try:
-            return NBList.add_other(self, Utterance('__other__'))
+            return NBList.add_other(self, AbstractedUtterance('__other__'))
         except NBListException as ex:
             raise UtteranceNBListException(ex)
 
@@ -599,6 +611,59 @@ class UtteranceNBList(ASRHypothesis, NBList):
         """DEPRECATED, going to be removed."""
         return self
         # self.n_best.sort(reverse=True)
+
+    # Abstracted implementation.
+    @classmethod
+    def make_other(cls, type_):
+        return AbstractedUtterance.make_other(type_)
+
+    def join_typeval(self, type_, val):
+        return (self.splitter.join((type_[0], ' '.join(val))), )
+
+    def iter_typeval(self):
+        for index in self._abstr_idxs:
+            yield (self.n_best[index.hyp_idx][index.word_idx], )
+
+    def iter_triples(self):
+        for combined_el, in self.iter_typeval():
+            split = combined_el.split(self.splitter, 2)
+            try:
+                type_, value = split
+            except ValueError:
+                value = ''
+                type_ = split[0] if combined_el else ''
+            # XXX Change the order of return values to combined_el, type_,
+            # value.
+            yield (combined_el, ), tuple(value.split(' ')), (type_, )
+
+    def phrase2category_label(self, phrase, catlab):
+        """
+        Replaces the phrase `phrase' by a new phrase, `catlab'.  Assumes
+        `catlab' is an abstraction for `phrase'.
+
+        """
+        combined_el = self.splitter.join((' '.join(catlab),
+                                          ' '.join(phrase)))
+        return self.replace(phrase, (combined_el, ))
+
+    # NOTE that all replacements done in UtteranceNBList are now treated as
+    # replacements for category labels!
+    def replace(self, orig, replacement):
+        """
+        Replaces the phrase `orig' by `replacement' in all the utterances.
+        """
+
+        Index = UtteranceNBList.Index
+        new_abstr_idxs = list()
+        for hyp_idx, (prob, utt) in enumerate(self.n_best):
+            replaced = utt.replace(orig, replacement)
+            self.n_best[hyp_idx] = replaced
+            new_abstr_idxs.extend(Index(hyp_idx, word_idx)
+                                  for word_idx in replaced._abstr_idxs)
+        self._abstr_idxs = new_abstr_idxs
+
+# Helper methods for the Abstracted class.
+UtteranceNBList.replace_typeval = UtteranceNBList.replace
 
 
 class UtteranceNBListFeatures(Features):
@@ -1219,17 +1284,12 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return (prob, Utterance(utterance))
 
     # FIXME Make this method aware of _long_links.
-    def get_prob(self, hyp_index):
-        """Returns a probability of the given hypothesis."""
+    def path_prob(self, path):
+        """Returns a probability of the given index path."""
         return reduce(mul,
                       (alts[altidx][0]
-                       for (altidx, alts) in izip(hyp_index, self._cn)),
+                       for (altidx, alts) in izip(path, self._cn)),
                       1.)
-        # prob = 1.0
-        # for i, alts in izip(hyp_index, self._cn):
-        #     prob *= alts[i][0]
-        #
-        # return prob
 
     # def get_phrase_prob(self, start, phrase):
         # """Returns the probability of a phrase starting at the index `start'.
@@ -1396,79 +1456,72 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # TODO Test.
     # TODO Implement the option to keep the original value, just adding the
     # replacement by its side.
-    def get_next_worse_candidates(self, hyp_index):
-        """Returns such hypotheses that will have lower probability. It assumes
-        that the confusion network is sorted."""
-        worse_hyp = []
+    def next_worse_paths(self, path):
+        """
+        Returns such hypotheses that will have lower probability.  Assumes
+        the confusion network is sorted.
 
-        for i in range(len(hyp_index)):
-            wh = list(hyp_index)
-            wh[i] += 1
-            if wh[i] >= len(self._cn[i]):
-                # this generate inadmissible word hypothesis
-                continue
+        """
 
-            worse_hyp.append(tuple(wh))
+        worse_hyps = []
+        for word_idx in xrange(len(path)):
+            if path[word_idx] + 1 < len(self._cn[word_idx]):
+                worse_hyp = list(path)
+                worse_hyp[word_idx] += 1
+                worse_hyps.append(tuple(worse_hyp))
+        return worse_hyps
 
-        return worse_hyp
-
-    def get_hyp_index_utterance(self, hyp_index):
+    def path2utterance(self, hyp_index):
         s = [alts[i][1] for i, alts in zip(hyp_index, self._cn)]
 
         return Utterance(' '.join(s))
 
     # FIXME Make this method aware of _long_links.
     def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
-        """Parses the confusion network and generates n best hypotheses.
+        """
+        Outputs the n best hypothesis represented by this confnet.
 
-        The result is a list of utterance hypotheses each with a with assigned
-        probability.  The list also includes the utterance "__other__" for not
-        having the correct utterance in the list.
+        Arguments:
+            n -- size of the n-best list
+            expand_upto_total_prob_mass -- not used
+
+        Returns an instance of UtteranceNBList.
 
         """
 
-        open_hyp = []
-        closed_hyp = {}
+        # Construct the path for the best hypothesis.
+        best_path = tuple([0] * len(self._cn))
+        open_hyps = [(self.path_prob(best_path), best_path)]
+        closed_hyps = {}
 
-        # create index for the best hypothesis
-        best_hyp = tuple([0] * len(self._cn))
-        best_prob = self.get_prob(best_hyp)
-        open_hyp.append((best_prob, best_hyp))
+        # Find the n best paths and their hypotheses.
+        while open_hyps and len(closed_hyps) < n:
+            cur_prob, cur_path = open_hyps.pop()
+            # Process only hypotheses not processed so far.
+            if cur_path not in closed_hyps:
+                # Save the best next path.
+                closed_hyps[cur_path] = cur_prob
+                # Sort its next worse paths into open_hyps.
+                open_hyps.extend(
+                    (self.path_prob(next_path), next_path)
+                    for next_path in self.next_worse_paths(cur_path))
+                open_hyps.sort()
 
-        i = 0
-        while open_hyp and i < n:
-            i += 1
+        # If __other__ will be added, drop the last generated hypothesis to
+        # make the resulting n-best list have the required size.
+        if len(closed_hyps) == n and sum(closed_hyps.itervalues()) < 1.:
+            del closed_hyps[cur_path]
 
-            current_prob, current_hyp_index = open_hyp.pop(0)
-
-            if current_hyp_index not in closed_hyp:
-                # process only those hypotheses which were not processed so far
-
-                closed_hyp[current_hyp_index] = current_prob
-
-                # print "current_prob, current_hyp_index:", current_prob,
-                # current_hyp_index
-
-                for hyp_index in self.get_next_worse_candidates(
-                        current_hyp_index):
-                    prob = self.get_prob(hyp_index)
-                    open_hyp.append((prob, hyp_index))
-
-                open_hyp.sort(reverse=True)
-
+        # Construct the n-best list.
         nblist = UtteranceNBList()
-        for idx in closed_hyp:
-            nblist.add(closed_hyp[idx], self.get_hyp_index_utterance(idx))
-
-        # print nblist
-        # print
-
+        for path, prob in closed_hyps.iteritems():
+            abutt = AbstractedUtterance.from_utterance(
+                self.path2utterance(path))
+            nblist.add(prob, abutt)
         nblist.merge()
         nblist.add_other()
 
-        # print nblist
-        # print
-
+        # Return.
         return nblist
 
     # TODO Implement!
