@@ -443,7 +443,7 @@ class DAILogRegClassifier(base.SLUInterface):
                 raise DAILRException(
                     'Cannot do preprocessing without observed utterance '
                     'hypotheses (transcriptions, n-best lists or confusion '
-                    'networks.')
+                    'networks).')
             for concrete_ot in abstractables:
                 abs_ot = 'ab' + concrete_ot
                 self.obss[abs_ot] = dict()

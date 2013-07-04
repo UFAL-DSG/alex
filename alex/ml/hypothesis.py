@@ -23,7 +23,7 @@ class Hypothesis(object):
     """
     @classmethod
     def from_fact(cls, fact):
-        """\
+        """
         Constructs a deterministic hypothesis that asserts the given `fact'.
         """
         raise NotImplementedError("abstract method")
@@ -79,7 +79,7 @@ class NBList(Hypothesis):
         return self.n_best[0][1]
 
     def add(self, probability, fact):
-        """\
+        """
         Finds the last hypothesis with a lower probability and inserts the
         new item before that one.  Optimised for adding objects from the
         highest probability ones to the lowest probability ones.
@@ -166,7 +166,7 @@ class NBList(Hypothesis):
 
 # UNDER CONSTRUCTION
 class ConfusionNetwork(Hypothesis):
-    """\
+    """
     Confusion network.  In this representation, each fact breaks down into
     a sequence of elemntary acts.
 
@@ -200,7 +200,7 @@ class ConfusionNetwork(Hypothesis):
 
     @classmethod
     def from_fact(cls, fact):
-        """\
+        """
         Constructs a deterministic confusion network that asserts the given
         `fact'.  Note that `fact' has to be an iterable of elementary acts.
 

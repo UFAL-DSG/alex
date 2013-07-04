@@ -1479,7 +1479,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # FIXME Make this method aware of _long_links.
     def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
         """
-        Outputs the n best hypothesis represented by this confnet.
+        Outputs the n best hypotheses represented by this confnet.
 
         Arguments:
             n -- size of the n-best list
