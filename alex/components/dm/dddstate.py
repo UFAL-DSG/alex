@@ -169,19 +169,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         new_user_dai = DialogueActItem("inform", system_dai.name, user_dai.value)
 
                     elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "affirm" and system_dai.name.startswith("has_"):
+                            user_dai.dat == "affirm" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
                     elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "negate" and system_dai.name.startswith("has_"):
-                        new_user_dai = DialogueActItem("inform", system_dai.name, "false")
-
-                    elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "affirm" and system_dai.name.endswith("_allowed"):
-                        new_user_dai = DialogueActItem("inform", system_dai.name, "true")
-
-                    elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "negate" and system_dai.name.endswith("_allowed"):
+                            user_dai.dat == "negate" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
                     if new_user_dai:
@@ -216,9 +208,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots[dai.name] = dai.value
             elif dai.dat == "deny":
                 # handle true and false values because we know their opposite values
-                if dai.value == "true":
+                if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
                     self.slots[dai.name] = "false"
-                elif dai.value == "false":
+                elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
                     self.slots[dai.name] = "true"
 
                 if self.slots[dai.name] == dai.value:
