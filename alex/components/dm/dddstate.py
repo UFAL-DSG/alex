@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 from collections import defaultdict
+from copy import deepcopy
 
 from alex.components.dm.base import DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
@@ -105,7 +106,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
 
         # store the input
-        self.turns.append([da, last_system_da])
+        self.turns.append([da, last_system_da, deepcopy(self.slots)])
 
         # perform the context resolution
         user_da = self.context_resolution(da, last_system_da)
