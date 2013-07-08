@@ -53,7 +53,7 @@ class AOTBHDCPolicy(DialoguePolicy):
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
 
-#       We do not have to reposnd to hello
+#       We do not have to respond to hello
 #        elif dialogue_state["ludait"] == "hello":
 #            # NLG("Ahoj.")
 #            res_da = DialogueAct("hello()")
