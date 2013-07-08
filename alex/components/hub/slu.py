@@ -98,6 +98,7 @@ class SLU(multiprocessing.Process):
 
             if isinstance(data_asr, ASRHyp):
                 slu_hyp = self.slu.parse(data_asr.hyp)
+                fname = data_asr.fname
 
                 if self.cfg['SLU']['debug']:
                     s = []
@@ -113,11 +114,10 @@ class SLU(multiprocessing.Process):
                 else:
                     confnet = None
 
-                self.cfg['Logging']['session_logger'].slu("user", slu_hyp.get_da_nblist(), confnet=confnet)
+                self.cfg['Logging']['session_logger'].slu("user", fname, slu_hyp.get_da_nblist(), confnet=confnet)
 
-                self.commands.send(Command('slu_parsed()', 'SLU', 'HUB'))
-                self.slu_hypotheses_out.send(
-                    SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))
+                self.commands.send(Command('slu_parsed(fname="%s")' % fname, 'SLU', 'HUB'))
+                self.slu_hypotheses_out.send(SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))
 
             elif isinstance(data_asr, Command):
                 self.cfg['Logging']['system_logger'].info(data_asr)

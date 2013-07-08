@@ -18,10 +18,6 @@ from alex.utils.mproc import global_lock
 from alex.utils.exdec import catch_ioerror
 from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
-DEBUG = False
-# DEBUG = True
-
-
 class SessionLogger(object):
     """ This is a multiprocessing safe logger. It should be used by the alex to
     log information according the SDC 2010 XML format.
@@ -389,9 +385,18 @@ class SessionLogger(object):
 
         self.rec_started_filename = None
 
+    def include_rec(self, turn, fname):
+        recs = turn.getElementsByTagName("rec")
+
+        for rec in recs:
+            if rec.getAttribute("fname") == fname:
+                return True
+
+        return False
+
     @global_lock(lock)
     @catch_ioerror
-    def asr(self, speaker, nblist, confnet=None):
+    def asr(self, speaker, fname, nblist, confnet=None):
         """ Adds the ASR nblist to the last speaker turn.
 
         alex Extension: It can also store the confusion network representation.
@@ -400,7 +405,7 @@ class SessionLogger(object):
         els = doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
+            if els[i].getAttribute("speaker") == speaker and self.include_rec(els[i], fname):
                 asr = els[i].appendChild(doc.createElement("asr"))
 
                 for p, h in nblist:
@@ -422,14 +427,13 @@ class SessionLogger(object):
 
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
     @global_lock(lock)
     @catch_ioerror
-    def slu(self, speaker, nblist, confnet=None):
+    def slu(self, speaker, fname, nblist, confnet=None):
         """ Adds the slu nbest list to the last speaker turn.
 
         alex Extension: It can also store the confusion network representation.
@@ -440,7 +444,7 @@ class SessionLogger(object):
         els = doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
+            if els[i].getAttribute("speaker") == speaker and self.include_rec(els[i], fname):
                 asr = els[i].appendChild(doc.createElement("slu"))
 
                 for p, h in nblist:
@@ -465,8 +469,7 @@ class SessionLogger(object):
 
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 

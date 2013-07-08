@@ -43,16 +43,17 @@ class Command(Message):
         return "#%-6d Time: %s From: %-10s To: %-10s Command: %s " % (self.id, self.get_time_str(), self.source, self.target, self.command)
 
 class ASRHyp(Message):
-    def __init__(self, hyp, source=None, target=None):
+    def __init__(self, hyp, source=None, target=None, fname = None):
         Message.__init__(self, source, target)
 
         self.hyp = hyp
+        self.fname = fname
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-            return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.hyp)
+            return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s fname: %s" % (self.id, self.get_time_str(), self.source, self.target, self.hyp, self.fname)
 
 class SLUHyp(Message):
     def __init__(self, hyp, asr_hyp=None, source=None, target=None):
