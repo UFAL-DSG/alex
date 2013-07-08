@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
-# XXX I suggest renaming this to a non-special module name.  It seems strange
-# to me for __init__ to actually define any normal classes or functions.  MK
+
+from collections import defaultdict
 
 from alex.components.dm.ontology import Ontology
 
@@ -20,7 +19,14 @@ class DialogueState(object):
         self.ontology = ontology
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         """Get the content of the dialogue state in a human readable form."""
+        pass
+
+    def log_state(self):
+        """Log the state using the the session logger."""
         pass
 
     def restart(self):
@@ -33,7 +39,7 @@ class DialogueState(object):
 
         self.slots = defaultdict(lambda: "none")
 
-    def update(self, user_da, last_system_da):
+    def update(self, user_da, system_da):
         """Interface for the dialogue act update.
 
         It can process dialogue act, dialogue act N best lists, or dialogue act
@@ -43,7 +49,7 @@ class DialogueState(object):
         :type user_da: :class:`~alex.components.slu.da.DialogueAct`,
             :class:`~alex.components.slu.da.DialogueActNBList` or
             :class:`~alex.components.slu.da.DialogueActConfusionNetwork`
-        :param last_system_da: Last system dialogue act.
+        :param system_da: Last system dialogue act.
 
         """
 
@@ -109,12 +115,11 @@ class DialogueManager(object):
         conversation.
         """
 
-        self.dialogue_state = self.dialogue_state_class(self.cfg,
-                                                        self.ontology)
+        self.dialogue_state = self.dialogue_state_class(self.cfg, self.ontology)
         self.policy = self.dialogue_policy_class(self.cfg, self.ontology)
         self.last_system_dialogue_act = None
 
-    def da_in(self, da, utterance = None):
+    def da_in(self, da, utterance=None):
         """
         Receives an input dialogue act or dialogue act list with probabilities
         or dialogue act confusion network.
@@ -125,6 +130,7 @@ class DialogueManager(object):
 
     def da_out(self):
         """Produces output dialogue act."""
+
         self.last_system_dialogue_act = self.policy.get_da(self.dialogue_state)
 
         return self.last_system_dialogue_act
@@ -133,12 +139,18 @@ class DialogueManager(object):
         """Ends the dialogue and post-process the data."""
         pass
 
+    def log_state(self):
+        """Log the state of the dialogue state.
+
+        :return: none
+        """
+        self.dialogue_state.log_state()
+
     def get_token(self):
         import urllib2
 
         token_url = self.cfg['DM'].get('token_url')
-        curr_session = (self.cfg['Logging']['session_logger']
-                        .session_dir_name.value)
+        curr_session = self.cfg['Logging']['session_logger'].session_dir_name.value
         if token_url is not None:
             f_token = urllib2.urlopen(token_url.format(curr_session))
             return f_token.read()

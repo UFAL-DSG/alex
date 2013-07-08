@@ -70,6 +70,9 @@ class DM(multiprocessing.Process):
                 if command.parsed['__name__'] == 'new_dialogue':
                     self.dm.new_dialogue()
 
+                    self.cfg['Logging']['session_logger'].turn("system")
+                    self.dm.log_state()
+
                     # I should generate the first DM output
                     da = self.dm.da_out()
 
@@ -82,7 +85,6 @@ class DM(multiprocessing.Process):
                         s = '\n'.join(s)
                         self.cfg['Logging']['system_logger'].debug(s)
 
-                    self.cfg['Logging']['session_logger'].turn("system")
                     self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                     self.commands.send(DMDA(da, 'DM', 'HUB'))
@@ -138,6 +140,10 @@ class DM(multiprocessing.Process):
 
                 # process the input DA
                 self.dm.da_in(data_slu.hyp, utterance=data_slu.asr_hyp)
+
+                self.cfg['Logging']['session_logger'].turn("system")
+                self.dm.log_state()
+
                 da = self.dm.da_out()
 
                 if self.cfg['DM']['debug']:
@@ -149,7 +155,6 @@ class DM(multiprocessing.Process):
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                self.cfg['Logging']['session_logger'].turn("system")
                 self.cfg['Logging']['session_logger'].dialogue_act("system", da)
 
                 # do not communicate directly with the NLG, let the HUB decide

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import multiprocessing
+from __future__ import unicode_literals
+
 import collections
 import time
 
@@ -33,11 +34,13 @@ class Command(Message):
         Message.__init__(self, source, target)
 
         self.command = command
-        self.parsed = collections.defaultdict(str, parse_command(self.command))
+        self.parsed = collections.defaultdict(unicode, parse_command(self.command))
 
     def __str__(self):
-        return "#%-6d Time: %s From: %-10s To: %-10s Command: %s " % (self.id, self.get_time_str(), self.source, self.target, self.command)
+        return unicode(self).encode('ascii', 'replace')
 
+    def __unicode__(self):
+        return "#%-6d Time: %s From: %-10s To: %-10s Command: %s " % (self.id, self.get_time_str(), self.source, self.target, self.command)
 
 class ASRHyp(Message):
     def __init__(self, hyp, source=None, target=None):
@@ -46,7 +49,10 @@ class ASRHyp(Message):
         self.hyp = hyp
 
     def __str__(self):
-        return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.hyp)
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+            return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.hyp)
 
 class SLUHyp(Message):
     def __init__(self, hyp, asr_hyp=None, source=None, target=None):
@@ -74,7 +80,10 @@ class TTSText(Message):
         self.text = text
 
     def __str__(self):
-        return "#%-6d Time: %s From: %-10s To: %-10s Text: %s " % (self.id, self.get_time_str(), self.source, self.target, self.text)
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+            return "#%-6d Time: %s From: %-10s To: %-10s Text: %s " % (self.id, self.get_time_str(), self.source, self.target, self.text)
 
 
 class Frame(Message):
@@ -84,7 +93,10 @@ class Frame(Message):
         self.payload = payload
 
     def __str__(self):
-        return "#%-6d Time: %s From: %-10s To: %-10s Len: %d " % (self.id, self.get_time_str(), self.source, self.target, len(self.payload))
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+            return "#%-6d Time: %s From: %-10s To: %-10s Len: %d " % (self.id, self.get_time_str(), self.source, self.target, len(self.payload))
 
     def __len__(self):
         return len(self.payload)

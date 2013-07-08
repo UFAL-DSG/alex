@@ -521,8 +521,32 @@ class SessionLogger(object):
         """ Adds the dialogue state to the log.
 
         This is an alex extension.
+
+        The dstate has the following structure:
+         [state1, state2, ...]
+
+        where state* has the following structure
+        [ (slot_name1, slot_value1), (slot_name2, slot_value2), ...)
+
         """
-        raise SessionLoggerException("Not implemented")
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length - 1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                for state in dstate:
+                    ds = els[i].appendChild(doc.createElement("dialogue_state"))
+
+                    for slot_name, slot_value in state:
+                        sl = ds.appendChild(doc.createElement("slot"))
+                        sl.setAttribute("name", "%s" % slot_name)
+                        sl.appendChild(doc.createTextNode(unicode(slot_value)))
+
+                break
+        else:
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+
+        self.close_session_xml(doc)
 
     @global_lock(lock)
     @catch_ioerror
