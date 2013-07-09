@@ -329,7 +329,7 @@ class VoipHub(Hub):
                                 s_voice_activity = False
                                 s_last_voice_activity_time = time.time()
 
-                            nlg_commands.send(DMDA(command.da, 'DM', 'HUB'))
+                            nlg_commands.send(DMDA(command.da, 'HUB', 'NLG'))
 
                 if nlg_commands.poll():
                     command = nlg_commands.recv()
