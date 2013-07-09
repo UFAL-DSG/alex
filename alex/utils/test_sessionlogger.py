@@ -70,7 +70,7 @@ class TestSessionLogger(unittest.TestCase):
 
             asr_nblist = asr_confnet.get_utterance_nblist()
 
-            sl.asr("user", asr_nblist, asr_confnet)
+            sl.asr("user", "user1.wav", asr_nblist, asr_confnet)
 
             slu_confnet = DialogueActConfusionNetwork()
             slu_confnet.add(0.7, DialogueActItem('hello'))
@@ -83,7 +83,7 @@ class TestSessionLogger(unittest.TestCase):
 
             slu_nblist = slu_confnet.get_da_nblist()
 
-            sl.slu("user", slu_nblist, slu_confnet)
+            sl.slu("user", "user1.wav", slu_nblist, slu_confnet)
 
             sl.turn("system")
             sl.dialogue_act("system", "thankyou()")
