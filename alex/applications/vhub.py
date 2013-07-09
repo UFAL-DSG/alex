@@ -111,6 +111,8 @@ class VoipHub(Hub):
             call_connected = False
             hangup = False
 
+            outstanding_nlg_da = None
+
             call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
             call_db.log()
 
@@ -257,6 +259,13 @@ class VoipHub(Hub):
                             # flush vad, when flushed, asr will be flushed
                             vad_commands.send(Command('flush()', 'HUB', 'VAD'))
 
+                        if command.parsed['__name__'] == "flushed_out":
+                            # process the outstanding DA if necessary
+                            if outstanding_nlg_da:
+                                nlg_commands.send(DMDA(outstanding_nlg_da, 'HUB', 'NLG'))
+                                outstanding_nlg_da = None
+
+
                 if vad_commands.poll():
                     command = vad_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -329,7 +338,11 @@ class VoipHub(Hub):
                                 s_voice_activity = False
                                 s_last_voice_activity_time = time.time()
 
-                            nlg_commands.send(DMDA(command.da, 'HUB', 'NLG'))
+                                # the DA will be send when all the following components are flushed
+                                outstanding_nlg_da = command.da
+
+                            else:
+                                nlg_commands.send(DMDA(command.da, "HUB", "NLG"))
 
                 if nlg_commands.poll():
                     command = nlg_commands.recv()
