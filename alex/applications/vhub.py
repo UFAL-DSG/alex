@@ -437,8 +437,7 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument('-c', '--configs', nargs='+',
-                        help='additional configuration files')
+    parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
     args = parser.parse_args()
 
     cfg = Config.load_configs(args.configs)
