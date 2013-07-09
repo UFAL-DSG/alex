@@ -75,7 +75,7 @@ class DMDA(Message):
         self.da = da
 
     def __str__(self):
-        return "#%-6d Time: %s From: %-10s To: %-10s Hyp: %s " % (self.id, self.get_time_str(), self.source, self.target, self.da)
+        return "#%-6d Time: %s From: %-10s To: %-10s DA: %s " % (self.id, self.get_time_str(), self.source, self.target, self.da)
 
 class TTSText(Message):
     def __init__(self, text, source=None, target=None):
