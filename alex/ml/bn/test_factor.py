@@ -9,17 +9,97 @@ import operator
 
 import numpy as np
 
-from alex.ml.bn.factor import DiscreteFactor, to_log, from_log, logsubexp
+from alex.ml.bn.factor import Factor, to_log, from_log, logsubexp
 
 
 class TestFactor(unittest.TestCase):
 
-    def assertClose(self, first, second, epsilon=0.000001):
-        delta = abs(first - second)
-        self.assertLess(delta, epsilon)
+    def test_apply_op_different(self):
+        f = Factor(['A'], {'A': ['a1', 'a2']}, {('a1',): 0.8, ('a2',): 0.2}, logarithmetic=False)
+        g = Factor(['A', 'B'],
+                   {'A': ['a1', 'a2'], 'B': ['b1', 'b2']},
+                   {
+                       ('a1', 'b1'): 0.5,
+                       ('a1', 'b2'): 0.6,
+                       ('a2', 'b1'): 0.5,
+                       ('a2', 'b2'): 0.4,
+                   }, logarithmetic=False)
+
+        h = f._apply_op_different(g, np.multiply)
+        self.assertAlmostEqual(h[('a1', 'b1')], 0.4)
+        self.assertAlmostEqual(h[('a2', 'b1')], 0.1)
+
+        h = f._apply_op_different(g, np.add)
+        self.assertAlmostEqual(h[('a1', 'b1')], 1.3)
+        self.assertAlmostEqual(h[('a2', 'b1')], 0.7)
+
+        h = f._apply_op_different(g, np.divide)
+        self.assertAlmostEqual(h[('a1', 'b1')], 1.6)
+        self.assertAlmostEqual(h[('a2', 'b1')], 0.4)
+
+        h = f._apply_op_different(g, np.subtract)
+        self.assertAlmostEqual(h[('a1', 'b1')], 0.3)
+        self.assertAlmostEqual(h[('a2', 'b1')], -0.3)
+
+        h = f._apply_op_different(g, np.power)
+        self.assertAlmostEqual(h[('a1', 'b1')], 0.894427191)
+        self.assertAlmostEqual(h[('a2', 'b1')], 0.447213595)
+
+    def test_apply_op_same(self):
+        f = Factor(['A'], {'A': ['a1', 'a2']}, {('a1',): 0.8, ('a2',): 0.2}, logarithmetic=False)
+        g = Factor(['A'],
+                   {'A': ['a1', 'a2']},
+                   {
+                       ('a1',): 0.5,
+                       ('a2',): 0.5,
+                   }, logarithmetic=False)
+
+        h = f._apply_op_same(g, np.multiply)
+        self.assertAlmostEqual(h[('a1',)], 0.4)
+        self.assertAlmostEqual(h[('a2',)], 0.1)
+
+        h = f._apply_op_same(g, np.add)
+        self.assertAlmostEqual(h[('a1',)], 1.3)
+        self.assertAlmostEqual(h[('a2',)], 0.7)
+
+        h = f._apply_op_same(g, np.divide)
+        self.assertAlmostEqual(h[('a1',)], 1.6)
+        self.assertAlmostEqual(h[('a2',)], 0.4)
+
+        h = f._apply_op_same(g, np.subtract)
+        self.assertAlmostEqual(h[('a1',)], 0.3)
+        self.assertAlmostEqual(h[('a2',)], -0.3)
+
+        h = f._apply_op_same(g, np.power)
+        self.assertAlmostEqual(h[('a1',)], 0.894427191)
+        self.assertAlmostEqual(h[('a2',)], 0.447213595)
+
+    def test_apply_op_scalar(self):
+        f = Factor(['A'], {'A': ['a1', 'a2']}, {('a1',): 0.8, ('a2',): 0.2}, logarithmetic=False)
+        g = 0.5
+
+        h = f._apply_op_scalar(g, np.multiply)
+        self.assertAlmostEqual(h[('a1',)], 0.4)
+        self.assertAlmostEqual(h[('a2',)], 0.1)
+
+        h = f._apply_op_scalar(g, np.add)
+        self.assertAlmostEqual(h[('a1',)], 1.3)
+        self.assertAlmostEqual(h[('a2',)], 0.7)
+
+        h = f._apply_op_scalar(g, np.divide)
+        self.assertAlmostEqual(h[('a1',)], 1.6)
+        self.assertAlmostEqual(h[('a2',)], 0.4)
+
+        h = f._apply_op_scalar(g, np.subtract)
+        self.assertAlmostEqual(h[('a1',)], 0.3)
+        self.assertAlmostEqual(h[('a2',)], -0.3)
+
+        h = f._apply_op_scalar(g, np.power)
+        self.assertAlmostEqual(h[('a1',)], 0.894427191)
+        self.assertAlmostEqual(h[('a2',)], 0.447213595)
 
     def test_setitem(self):
-        f = DiscreteFactor(
+        f = Factor(
             ['X'],
             {
                 'X': [0, 1],
@@ -35,7 +115,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f[(0,)], 0.6)
 
     def test_strides(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -60,7 +140,7 @@ class TestFactor(unittest.TestCase):
         self.assertEquals(factor.strides, {"A": 6, "B": 2, "C": 1})
 
     def test_observations(self):
-        f = DiscreteFactor(
+        f = Factor(
             ['X'],
             {
                 'X': [0, 1],
@@ -81,7 +161,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f[(1,)], 0.2)
 
     def test_get_index_from_assignment(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -107,7 +187,7 @@ class TestFactor(unittest.TestCase):
         self.assertEquals(factor._get_index_from_assignment((1, 0, 1)), 7)
 
     def test_get_assignment_from_index(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -137,7 +217,7 @@ class TestFactor(unittest.TestCase):
             (1, 2, 0))
 
     def test_marginalize(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -160,14 +240,14 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
         factor_a = factor.marginalize(["A"])
-        self.assertClose(factor_a[(0,)], 0.2)
-        self.assertClose(factor_a[(1,)], 0.8)
+        self.assertAlmostEqual(factor_a[(0,)], 0.2)
+        self.assertAlmostEqual(factor_a[(1,)], 0.8)
 
         factor_ac = factor.marginalize(["A", "C"])
-        self.assertClose(factor_ac[(0, 0)], 0.09)
+        self.assertAlmostEqual(factor_ac[(0, 0)], 0.09)
 
     def test_multiplication(self):
-        f1 = DiscreteFactor(
+        f1 = Factor(
             ['A', 'B'],
             {
                 'A': ['a', 'b'],
@@ -182,7 +262,7 @@ class TestFactor(unittest.TestCase):
                 ('b', 2): 0.05,
             })
 
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B', 'C'],
             {
                 'B': [0, 1, 2],
@@ -198,12 +278,12 @@ class TestFactor(unittest.TestCase):
             })
         f3 = f1 * f2
         self.assertEqual(f3.variables, ['A', 'B', 'C'])
-        self.assertClose(f3[('a', 0, 0)], f1[('a', 0)] * f2[(0, 0)])
-        self.assertClose(f3[('b', 1, 0)], f1[('b', 1)] * f2[(1, 0)])
-        self.assertClose(f3[('b', 2, 1)], f1[('b', 2)] * f2[(2, 1)])
+        self.assertAlmostEqual(f3[('a', 0, 0)], f1[('a', 0)] * f2[(0, 0)])
+        self.assertAlmostEqual(f3[('b', 1, 0)], f1[('b', 1)] * f2[(1, 0)])
+        self.assertAlmostEqual(f3[('b', 2, 1)], f1[('b', 2)] * f2[(2, 1)])
 
     def test_multiplication_different_values(self):
-        f1 = DiscreteFactor(
+        f1 = Factor(
             ['A'],
             {
                 'A': ['a1', 'a2']
@@ -214,7 +294,7 @@ class TestFactor(unittest.TestCase):
             }
         )
 
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B'],
             {
                 'B': ['b1', 'b2']
@@ -230,7 +310,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f3[('a1', 'b1')], 0.64)
 
     def test_fast_mul(self):
-        f1 = DiscreteFactor(
+        f1 = Factor(
             ['A', 'B'],
             {
                 'A': ['a', 'b'],
@@ -246,11 +326,11 @@ class TestFactor(unittest.TestCase):
             })
 
         f2 = f1 * f1
-        self.assertClose(f2[('a', 2)], 0.04)
-        self.assertClose(f2[('b', 1)], 0.0625)
+        self.assertAlmostEqual(f2[('a', 2)], 0.04)
+        self.assertAlmostEqual(f2[('b', 1)], 0.0625)
 
     def test_fast_mul_correct(self):
-        f1 = DiscreteFactor(
+        f1 = Factor(
             ['B'],
             {
                 'B': [0, 1, 2]
@@ -261,7 +341,7 @@ class TestFactor(unittest.TestCase):
                 (2,): 0.55,
             })
 
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B'],
             {
                 'B': [0, 1]
@@ -274,7 +354,7 @@ class TestFactor(unittest.TestCase):
         self.assertRaises(ValueError, lambda: f2 * f1)
 
     def test_division(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -297,7 +377,7 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
 
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B', 'C'],
             {
                 'B': [0, 1, 2],
@@ -313,12 +393,12 @@ class TestFactor(unittest.TestCase):
             })
 
         f3 = factor / f2
-        self.assertClose(f3[(0, 0, 0)], 0.1)
-        self.assertClose(f3[(1, 0, 1)], 7 / 15.0)
-        self.assertClose(f3[(1, 2, 0)], 0.4)
+        self.assertAlmostEqual(f3[(0, 0, 0)], 0.1)
+        self.assertAlmostEqual(f3[(1, 0, 1)], 7 / 15.0)
+        self.assertAlmostEqual(f3[(1, 2, 0)], 0.4)
 
     def test_fast_div(self):
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B', 'C'],
             {
                 'B': [0, 1, 2],
@@ -334,11 +414,11 @@ class TestFactor(unittest.TestCase):
             })
 
         f3 = f2 / f2
-        self.assertClose(f3[0, 0], 1)
-        self.assertClose(f3[1, 1], 1)
+        self.assertAlmostEqual(f3[0, 0], 1)
+        self.assertAlmostEqual(f3[1, 1], 1)
 
     def test_mul_div(self):
-        factor = DiscreteFactor(
+        factor = Factor(
             ['A', 'B', 'C'],
             {
                 "A": [0, 1],
@@ -361,7 +441,7 @@ class TestFactor(unittest.TestCase):
                 (1, 2, 1): 0.4,
             })
 
-        f2 = DiscreteFactor(
+        f2 = Factor(
             ['B', 'C'],
             {
                 'B': [0, 1, 2],
@@ -380,10 +460,10 @@ class TestFactor(unittest.TestCase):
         f4 = f3 / f2
         for i in range(f4.factor_length):
             assignment = f4._get_assignment_from_index(i)
-            self.assertClose(f4[assignment], factor[assignment])
+            self.assertAlmostEqual(f4[assignment], factor[assignment])
 
     def test_parents_normalize(self):
-        f = DiscreteFactor(
+        f = Factor(
             ['A', 'B'],
             {
                 'A': ['a1', 'a2'],
@@ -400,7 +480,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f[('a1', 'b1')], 0.5)
 
     def test_power(self):
-        f = DiscreteFactor(
+        f = Factor(
             ['A', 'B'],
             {
                 'A': ['a1', 'a2'],
@@ -417,12 +497,8 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f[('a1', 'b1')], 0.3)
         self.assertAlmostEqual(f1[('a1', 'b1')], 0.09)
 
-        f2 = f ** np.array([2, 2, 3, 2])
-        self.assertAlmostEqual(f2[('a1', 'b1')], 0.09)
-        self.assertAlmostEqual(f2[('a2', 'b1')], 0.343)
-
     def test_rename(self):
-        f = DiscreteFactor(
+        f = Factor(
             ['A', 'B'],
             {
                 'A': ['a1', 'a2'],
@@ -438,7 +514,7 @@ class TestFactor(unittest.TestCase):
         f.rename_variables({'A': 'Z'})
         self.assertAlmostEqual(f[('a1', 'b1')], 0.3)
 
-        f1 = DiscreteFactor(
+        f1 = Factor(
             ['Z'],
             {
                 'Z': ['a1', 'a2'],
@@ -453,7 +529,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f2[('b1', 'a2')], 0.35)
 
     def test_add(self):
-        X0 = DiscreteFactor(
+        X0 = Factor(
             ['X0'],
             {
                 'X0': ['x0_0', 'x0_1']
@@ -485,7 +561,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(result[2], 2)
 
     def test_sum_other(self):
-        alpha = DiscreteFactor(
+        alpha = Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -506,7 +582,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(f[('x0_1', 'x1_1')], 11, places=5)
 
     def test_expected_value_squared(self):
-        alpha = DiscreteFactor(
+        alpha = Factor(
             ['X0', 'X1'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -527,7 +603,7 @@ class TestFactor(unittest.TestCase):
         self.assertAlmostEqual(expected_value_squared[('x0_1', 'x1_1')], 1.0/3)
 
     def test_alphas(self):
-        alpha = DiscreteFactor(
+        alpha = Factor(
             ['X0', 'X1', 'X2', 'X3'],
             {
                 'X0': ['x0_0', 'x0_1'],
@@ -554,7 +630,7 @@ class TestFactor(unittest.TestCase):
                 ('x0_1', 'x1_1', 'x2_1', 'x3_1'): 1,
             })
 
-        X0 = DiscreteFactor(
+        X0 = Factor(
             ['X0'],
             {
                 'X0': ['x0_0', 'x0_1']
@@ -564,7 +640,7 @@ class TestFactor(unittest.TestCase):
                 ('x0_1',): 0,
             })
 
-        X1 = DiscreteFactor(
+        X1 = Factor(
             ['X1'],
             {
                 'X1': ['x1_0', 'x1_1']
@@ -574,7 +650,7 @@ class TestFactor(unittest.TestCase):
                 ('x1_1',): 1,
             })
 
-        X2 = DiscreteFactor(
+        X2 = Factor(
             ['X2'],
             {
                 'X2': ['x2_0', 'x2_1']
@@ -584,7 +660,7 @@ class TestFactor(unittest.TestCase):
                 ('x2_1',): 0,
             })
 
-        X3 = DiscreteFactor(
+        X3 = Factor(
             ['X3'],
             {
                 'X3': ['x3_0', 'x3_1']
@@ -654,7 +730,7 @@ class TestFactor(unittest.TestCase):
         expected_value_0 = alpha / sum_of_alphas
 
         sum_of_alphas_plus_1 = alpha.marginalize(['X1', 'X2', 'X3'])
-        sum_of_alphas_plus_1.add(1)
+        sum_of_alphas_plus_1 += 1
 
         expected_values = [w0 * expected_value_0]
         self.assertAlmostEqual(expected_values[0][('x0_0', 'x1_0', 'x2_0', 'x3_0')], 5.0/12)
@@ -665,7 +741,7 @@ class TestFactor(unittest.TestCase):
             for i, item in enumerate(new_alpha):
                 (assignment, value) = item
                 if assignment[0] == k:
-                    new_alpha.add(1, assignment)
+                    new_alpha[assignment] += 1
             expected_value_k = new_alpha / sum_of_alphas_plus_1
             expected_values.append(w_k * expected_value * expected_value_k)
 

@@ -35,7 +35,7 @@ class TestSessionLogger(unittest.TestCase):
             if not os.path.isdir(sess_dir):
                 os.mkdir(sess_dir)
             sl.session_start(sess_dir)
-            sl.config('config = ' + str(cfg))
+            sl.config('config = ' + unicode(cfg))
             sl.header(cfg['Logging']["system_name"], cfg['Logging']["version"])
             sl.input_source("voip")
 

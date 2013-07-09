@@ -135,7 +135,7 @@ if __name__ == "__main__":
                        type=argparse.FileType('r'),
                        metavar='FILE',
                        help='Path towards a file listing globs of CUED '
-                            'call log files that should be ignored.\n'
+                            'call log directoriess that should be ignored.\n'
                             'The globs are interpreted wrt. the current '
                             'working directory. For an example, see the '
                             'source code.')

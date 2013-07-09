@@ -46,17 +46,17 @@ class RuleDM(DialogueManager):
         cls_name = self.__class__.__name__
 
         # load configuration
-        ontology = cfg['DM'][cls_name]['ontology']  # data ontology
+        ontology = cfg['DM']['ontology']  # data ontology
         db_cfg = cfg['DM'][cls_name]['db_cfg']  # database provider
 
         # for evaluation - loads a code from a url and say it to the user
         self.provide_code = cfg['DM'][cls_name]['provide_code']
         self.code_submit_url = cfg['DM'][cls_name]['code_submit_url']
 
-        self.ontology = imp.load_source('ontology', ontology)
+        self.ontology = imp.load_source('ontology', ontology).ontology
 
         self.dstate = self.create_ds()
-        self.policy = self.policy_cls(self.ontology.slots.keys(),
+        self.policy = self.policy_cls(self.ontology['slots'].keys(),
                                       db_cfg)
         self.last_usr_da = None
         self.da_history = []
@@ -141,7 +141,7 @@ class RuleDM(DialogueManager):
 
     def create_ds(self):
         """Create new dialogue state."""
-        res = self.dstate_cls(self.ontology.slots.keys())
+        res = self.dstate_cls(self.ontology['slots'].keys())
         return res
 
     def da_in(self, in_da):

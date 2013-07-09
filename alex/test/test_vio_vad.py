@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import autopath
 
 import multiprocessing
@@ -52,8 +54,10 @@ if __name__ == '__main__':
     vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()
     # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
-    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
+    close_event = multiprocessing.Event()
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, close_event)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out, close_event)
 
     command_connections = [vio_commands, vad_commands]
 
@@ -102,11 +106,11 @@ if __name__ == '__main__':
                     wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
 
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
                     cfg['Logging']['session_logger'].input_source("voip")
 

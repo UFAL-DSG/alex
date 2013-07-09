@@ -10,7 +10,8 @@ import __init__
 if __name__ == "__main__":
     import autopath
 from alex.components.asr.utterance import SENTENCE_START, SENTENCE_END, \
-    Utterance, UtteranceNBList, UtteranceConfusionNetwork
+    Utterance, UtteranceNBList, UtteranceConfusionNetwork, \
+    UtteranceConfusionNetworkFeatures
 
 
 class TestUtterance(unittest.TestCase):
@@ -452,6 +453,55 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         ]
         act_bigrams = list(hyp[1] for hyp in replaced2.iter_ngrams(2, True))
         self.assertItemsEqual(bigrams, act_bigrams)
+
+    def test_idx_zero(self):
+        # Construct a confnet that will contain a long link starting at index
+        # zero.
+        cn_repr = ('UtteranceConfusionNetwork("[]|'
+                   'LongLink\\\\(end=3\\\\, '
+                   'orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]\\\\, '
+                   'hyp=\\\\(0.995\\\\, \\\\(u\'pub food\'\\\\,\\\\)\\\\)'
+                   '\\\\, normalise=True\\\\)'
+                   ';(0.005:it)|;|;(0.989:a),(0.011:)|;(0.989:),(0.011:cheap)'
+                   '|;(0.982:need),(0.018:)|;(0.998:),(0.002:in)'
+                   '|;(0.99:),(0.01:a)|;(0.983:i),(0.017:)|")')
+        cn = eval(cn_repr)
+        self.assertEquals(repr(cn), cn_repr)
+
+        # Substitute for that long link.
+        # import ipdb; ipdb.set_trace()
+        replaced = cn.phrase2category_label(('pub food', ), ('FOOD', ))
+        rep_repr = ('UtteranceConfusionNetwork("[Index(is_long_link=True, '
+                    'word_idx=0, alt_idx=1, link_widx=None)]|LongLink\\\\('
+                    'end=3\\\\, orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]'
+                    '\\\\, hyp=\\\\(0.995\\\\, \\\\(u\'pub food\'\\\\,\\\\)'
+                    '\\\\)\\\\, normalise=True\\\\),LongLink\\\\(end=3\\\\, '
+                    'orig_probs=\\\\[1.0\\\\, 0.995\\\\, 1.0\\\\]\\\\, hyp='
+                    '\\\\(0.995\\\\, \\\\(u\'FOOD=pub food\'\\\\,\\\\)\\\\)'
+                    '\\\\, normalise=False\\\\);(0.005:it)|;|;(0.989:a),'
+                    '(0.011:)|;(0.989:),(0.011:cheap)|;(0.982:need),(0.018:)|;'
+                    '(0.998:),(0.002:in)|;(0.99:),(0.01:a)|;(0.983:i),(0.017:)'
+                    '|")')
+        self.assertEquals(repr(replaced), rep_repr)
+        # import pprint
+        # pprint.pprint(replaced._cn)
+        # pprint.pprint(replaced._long_links)
+
+
+class TestUttCNFeats(unittest.TestCase):
+    """Basic test for utterance confnet features."""
+
+    def test_empty_features(self):
+        empty_feats_items = [('__empty__', 1.0)]
+        cn = UtteranceConfusionNetwork()
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
+        cn.add([(.9, '')])
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
+        cn.add([(1., '')])
+        feats = UtteranceConfusionNetworkFeatures(confnet=cn)
+        self.assertEqual(feats.features.items(), empty_feats_items)
 
 
 if __name__ == '__main__':

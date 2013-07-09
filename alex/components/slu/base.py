@@ -355,7 +355,8 @@ class SLUPreprocessing(object):
         return utterance_cp, valform_for_cl
 
     def values2category_labels_in_uttnblist(self, utt_nblist):
-        """Replaces strings matching surface forms in the label database with
+        """
+        Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
         Arguments:
@@ -452,20 +453,11 @@ class SLUPreprocessing(object):
                 # original <surface> sequence of tokens.  This is done
                 # crudely using two subsequent substitutions, so the
                 # original <surface> gets forgotten.
-                try:
-                    confnet_cp = confnet_cp.replace(surface, (value, ))
-                    confnet_cp = confnet_cp.phrase2category_label(
-                        (value, ), (slot_upper, ))
-                except Exception as ex:
-                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
-                    import traceback
-                    print "(EE) " + unicode(ex)
-                    traceback.print_exc()
-                    # DEBUG
-                    # import ipdb; ipdb.set_trace()
-                    # confnet_cp = confnet_cp.replace(surface, (value, ))
-                    # confnet_cp = confnet_cp.phrase2category_label(
-                        # (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
+                confnet_cp = confnet_cp.replace(surface, (value, ))
+                confnet_cp = confnet_cp.phrase2category_label(
+                    (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
 
         return confnet_cp, valform_for_cl
 
@@ -538,6 +530,8 @@ class SLUPreprocessing(object):
 
         Returns the original utterance.
         """
+        # FIXME This causes an error in the copy library. Try running
+        # test/test_category_labels_substitution.py
         utterance = copy.deepcopy(utterance)
         for cl in category_labels:
             # FIXME: Use a new method, category_label2phrase, which will know

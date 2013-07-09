@@ -207,7 +207,7 @@ def main():
 
     cfg = Config.load_configs(args.configs)
 
-    cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
+    cfg['Logging']['system_logger'].info("Webhub Hub\n" + "=" * 120)
 
     vhub = WebHub(cfg)
     vhub.run()

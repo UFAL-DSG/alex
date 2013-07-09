@@ -321,7 +321,7 @@ class DirichletFactorNode(FactorNode):
         # of alpha with one observation of k.
         # (2.1) Compute sum of alpha with plus 1.
         sum_of_alphas_1 = self.incoming_parameter.marginalize(self.parents)
-        sum_of_alphas_1.add(1)
+        sum_of_alphas_1 += 1
         # (2.2) Find index of a child variable, so we can check its
         # assignment
         index_of_child = self.incoming_parameter.variables.index(self.child.name)
@@ -334,7 +334,7 @@ class DirichletFactorNode(FactorNode):
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
-                    alpha_k.add(1, assignment)
+                    alpha_k[assignment] += 1
 
             # (2.5) Compute expected value.
             expected_value_k = alpha_k / sum_of_alphas_1
@@ -366,7 +366,7 @@ class DirichletFactorNode(FactorNode):
             for i, item in enumerate(alpha_k):
                 assignment, value = item
                 if assignment[index_of_child] == k:
-                    alpha_k.add(1, assignment)
+                    alpha_k[assignment] += 1
             # (2.5) Compute expected value.
             expected_value_k_squared = alpha_k * (alpha_k + 1) / (sum_of_alphas_1 * sum_of_alphas_2)
             # (2.6) Multiply expected value by weight and save.
