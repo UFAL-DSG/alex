@@ -75,6 +75,9 @@ class TextHub(Hub):
         else:
             utt = l
 
+        utt = utt.strip()
+        if utt == "":
+            utt = "__silence__"
         try:
             utt = Utterance(utt)
         except UtteranceException:
@@ -144,11 +147,16 @@ class TextHub(Hub):
 
     def process_dm(self):
         # new turn
+        self.cfg['Logging']['session_logger'].turn("system")
+        self.dm.log_state()
+
         term_width = getTerminalSize()[1] or 120
         print "=" * term_width
         print
         sys_da = self.dm.da_out()
         self.output_sys_da(sys_da)
+
+        self.cfg['Logging']['session_logger'].dialogue_act("system", sys_da)
 
         sys_utt = self.nlg.generate(sys_da)
         self.output_sys_utt(sys_utt)
@@ -162,11 +170,13 @@ class TextHub(Hub):
         das = self.slu.parse(obs)
         self.output_usr_da(das)
 
+        self.cfg['Logging']['session_logger'].turn("user")
+        self.cfg['Logging']['session_logger'].slu("user", das)
+
         term_width = getTerminalSize()[1] or 120
         print '-' * term_width
         print
         self.dm.da_in(das, obs.values()[0])
-        #self.dm.da_in(das)
 
     def run(self):
         """Controls the dialogue manager."""
@@ -230,6 +240,14 @@ if __name__ == '__main__':
     #########################################################################
     term_width = getTerminalSize()[1] or 120
     cfg['Logging']['system_logger'].info("Text Hub\n" + "=" * (term_width - 4))
+
+    cfg['Logging']['system_logger'].session_start("localhost")
+    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+
+    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
+    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+    cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
+    cfg['Logging']['session_logger'].input_source("text")
 
     shub = TextHub(cfg)
 

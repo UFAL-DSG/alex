@@ -3,7 +3,7 @@
 # This code is mostly PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008/.
 
-from alex.components.dm import DialogueManager
+from alex.components.dm.base import DialogueManager
 from alex.components.dm.ruledm.ufalruledm import UfalRuleDM
 from alex.components.dm.ruledm.ufalruledm import PUfalRuleDM
 from alex.components.dm.exceptions import DMException

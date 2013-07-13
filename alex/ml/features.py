@@ -253,6 +253,7 @@ class Abstracted(object):
         return self.splitter.join((type_, val))
 
     def replace_typeval(self, combined, replacement):
+        # TODO Document.
         raise NotImplementedError("This is an abstract method.")
 
     @classmethod

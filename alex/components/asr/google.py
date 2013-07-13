@@ -60,7 +60,7 @@ class GoogleASR():
 
         Remember that GoogleASR works only with complete wave files.
 
-        Returns an n-best list of hypotheses
+        Returns an n-best list of hypotheses.
         """
 
         #making a file temp for manipulation
@@ -73,23 +73,28 @@ class GoogleASR():
         except urllib2.HTTPError, urllib2.URLError:
             self.cfg['Logging']['system_logger'].exception('GoogleASR HTTP error.')
         
-            json_hypotheses = [[{'confidence': 1.0, 'utterance': '_google_ _asr_ _exception_'},],]
+            json_hypotheses = [[{'confidence': 1.0, 'utterance': '__google__ __asr__ __exception__'},],]
         finally:
             remove(flac_file_name)
 
         try:
             hyp = json.loads(json_hypotheses)
 
+            # print "###", hyp
+
             nblist = UtteranceNBList()
-            n = len(hyp['hypotheses'])
-            for i, h in enumerate(hyp['hypotheses']):
-                if i == 0:
-                    nblist.add(h['confidence'], Utterance(h['utterance']))
-                    conf1 = hyp['hypotheses'][0]['confidence']
-                else:
-                    # guess the confX score
-                    nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['utterance']))
-                
+
+            if hyp['status'] == 0:
+                n = len(hyp['hypotheses'])
+                for i, h in enumerate(hyp['hypotheses']):
+                    if i == 0:
+                        nblist.add(h['confidence'], Utterance(h['utterance']))
+                        conf1 = hyp['hypotheses'][0]['confidence']
+                    else:
+                        # guess the confX score
+                        nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['utterance']))
+            elif hyp['status'] == 5:
+                nblist.add(1.0, '__silence__')
         except:
             nblist = UtteranceNBList()
 

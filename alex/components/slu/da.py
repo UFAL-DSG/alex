@@ -648,6 +648,15 @@ class DialogueActNBList(SLUHypothesis, NBList):
         """
         return self.n_best[0][1]
 
+    def get_best_nonnull_da(self):
+        """Return the best dialogue act (with the highest probability)."""
+
+        for p, da in self.n_best:
+            if da[0].dat != "null":
+                return da
+
+        return self.get_best_da()
+
     # TODO Replace with NBList.normalise.
     def scale(self):
         """Scales the n-best list to sum to one."""

@@ -76,13 +76,13 @@ class ExceptionHook(object):
         return self
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         return '''
         ExceptionHook
           Hook Type: {type}
           Hook Logger: {logger}'''.format(type=self.hook_type, logger=self.logger)
-
-    def __unicode__(self):
-        return self.__str__()
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, self.__str__())

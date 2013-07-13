@@ -31,6 +31,7 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
             (['ku'], ['k']),
             (['ze'], ['z']),
             (['se'], ['s']),
+            (['barandov'], ['barrandov']),
         ]
 
     def text_normalisation(self, utterance):

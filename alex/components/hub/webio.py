@@ -14,7 +14,6 @@ import urlparse
 import Queue
 import BaseHTTPServer
 from threading import Thread
-import traceback
 
 from alex.utils.audio import load_wav
 import alex.utils.various as various
@@ -217,14 +216,16 @@ class WebIOHttpHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         print >> self.wfile  # blank line after headers
 
+        # create context
+        context = {}
+        context['port'] = str(self.server.server_port)
+
         # parse get arguments
         _, qs = self.get_qs()
         if 'play' in qs:  # if user requested to play something, tell DM
             self.server.comm_queue.put(qs['play'])
         dirname = qs.get('dir', [None])[0]
 
-        # create context
-        context = {}
         if dirname is not None:
             context['recs'] = self.get_recordings(dirname)  # root dir for listing
         else:

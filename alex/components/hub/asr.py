@@ -125,11 +125,14 @@ class ASR(multiprocessing.Process):
                     self.asr.rec_in(data_rec)
             elif isinstance(data_rec, Command):
                 dr_speech_start = False
+                fname = None
 
                 if data_rec.parsed['__name__'] == "speech_start":
                     dr_speech_start = "speech_start"
+                    fname = data_rec.parsed['fname']
                 elif data_rec.parsed['__name__'] == "speech_end":
                     dr_speech_start = "speech_end"
+                    fname = data_rec.parsed['fname']
 
                 # Check consistency of the input command.
                 if dr_speech_start:
@@ -146,17 +149,17 @@ class ASR(multiprocessing.Process):
                         self.system_logger.exception(msg)
 
                 if dr_speech_start == "speech_start":
-                    self.commands.send(Command("asr_start()", 'ASR', 'HUB'))
+                    self.commands.send(Command('asr_start(fname="%s")' % fname, 'ASR', 'HUB'))
                     self.recognition_on = True
 
                     if self.cfg['ASR']['debug']:
-                        self.system_logger.debug('ASR: speech_start()')
+                        self.system_logger.debug('ASR: speech_start(fname="%s")' % fname)
 
                 elif dr_speech_start == "speech_end":
                     self.recognition_on = False
 
                     if self.cfg['ASR']['debug']:
-                        self.system_logger.debug('ASR: speech_end()')
+                        self.system_logger.debug('ASR: speech_end(fname="%s")' % fname)
 
                     try:
                         asr_hyp = self.asr.hyp_out()
@@ -182,21 +185,19 @@ class ASR(multiprocessing.Process):
                             self.system_logger.debug(msg)
 
                         asr_hyp = UtteranceConfusionNetwork()
-                        asr_hyp.add([[1.0, "sil"], ])
+                        asr_hyp.add([[1.0, "__silence__"], ])
 
                     # The ASR component can return either NBList or a confusion
                     # network.
                     if isinstance(asr_hyp, UtteranceNBList):
-                        self.session_logger.asr("user", asr_hyp, None)
+                        self.session_logger.asr("user", fname, asr_hyp, None)
                     elif isinstance(asr_hyp, UtteranceConfusionNetwork):
-                        self.session_logger.asr("user",
-                                                asr_hyp.get_utterance_nblist(),
-                                                asr_hyp)
+                        self.session_logger.asr("user", fname, asr_hyp.get_utterance_nblist(), asr_hyp)
                     else:
-                        self.session_logger.asr("user", [(-1, asr_hyp)], None)
+                        self.session_logger.asr("user", fname, [(-1, asr_hyp)], None)
 
-                    self.commands.send(Command("asr_end()", 'ASR', 'HUB'))
-                    self.asr_hypotheses_out.send(ASRHyp(asr_hyp))
+                    self.commands.send(Command('asr_end(fname="%s")' % fname, 'ASR', 'HUB'))
+                    self.asr_hypotheses_out.send(ASRHyp(asr_hyp, fname = fname))
             else:
                 raise ASRException('Unsupported input.')
 

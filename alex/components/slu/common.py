@@ -12,7 +12,8 @@ import os
 import os.path
 import sys
 
-from alex.components.asr.utterance import load_utterances, load_utt_confnets
+from alex.components.asr.utterance import load_utterances, load_utt_confnets, \
+    load_utt_nblists
 from alex.components.slu.base import ft_props, SLUInterface
 from alex.components.slu.exceptions import SLUException
 
@@ -20,7 +21,7 @@ from alex.components.slu.exceptions import SLUException
 # Methods for loading DAs and observations from files.
 # _load_meths :: observation type -> load method
 _load_meths = {'utt': load_utterances,
-               'utt_nbl': NotImplemented,
+               'utt_nbl': load_utt_nblists,
                'utt_cn': load_utt_confnets,
                'prev_da': NotImplemented,
                'da_nbl': NotImplemented}
@@ -28,7 +29,7 @@ _load_meths = {'utt': load_utterances,
 # observations.
 # _infile_cfgname :: observation type -> configuration name
 _infile_cfgname = {'utt': 'utts_fname',
-                   'utt_nbl': None,
+                   'utt_nbl': 'uttcns_fname',
                    'utt_cn': 'uttcns_fname',
                    'prev_da': None,
                    'da_nbl': None}

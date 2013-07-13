@@ -355,7 +355,8 @@ class SLUPreprocessing(object):
         return utterance_cp, valform_for_cl
 
     def values2category_labels_in_uttnblist(self, utt_nblist):
-        """Replaces strings matching surface forms in the label database with
+        """
+        Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
         Arguments:
@@ -452,20 +453,11 @@ class SLUPreprocessing(object):
                 # original <surface> sequence of tokens.  This is done
                 # crudely using two subsequent substitutions, so the
                 # original <surface> gets forgotten.
-                try:
-                    confnet_cp = confnet_cp.replace(surface, (value, ))
-                    confnet_cp = confnet_cp.phrase2category_label(
-                        (value, ), (slot_upper, ))
-                except Exception as ex:
-                    # FIXME from ONDRA: try to use default.cfg -> exepthook settings
-                    import traceback
-                    print "(EE) " + unicode(ex)
-                    traceback.print_exc()
-                    # DEBUG
-                    # import ipdb; ipdb.set_trace()
-                    # confnet_cp = confnet_cp.replace(surface, (value, ))
-                    # confnet_cp = confnet_cp.phrase2category_label(
-                        # (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
+                confnet_cp = confnet_cp.replace(surface, (value, ))
+                confnet_cp = confnet_cp.phrase2category_label(
+                    (value, ), (slot_upper, ))
+                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
 
         return confnet_cp, valform_for_cl
 
@@ -675,6 +667,9 @@ class SLUInterface(object):
             if "__other__" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("other"))
+            elif "__silence__" == utt:
+                dacn = DialogueActConfusionNetwork()
+                dacn.add(1.0, DialogueActItem("silence"))
             else:
                 obs_wo_nblist['utt'] = utt
                 dacn = self.parse_1_best(obs_wo_nblist, *args, **kwargs)

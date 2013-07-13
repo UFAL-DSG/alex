@@ -8,41 +8,43 @@ ontology = {
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'time': set(['now', '7:00', ]),
-        'from_centre': set(['dontcare', 'dontknow', 'true', 'false']),
-        'to_centre': set(['dontcare', 'dontknow', 'true', 'false']),
-        'alternative': set(['dontcare', 'first', 'second', 'third', 'forth',
-                            'last', 'next', 'prev']),
+        'from_centre': set(['dontcare', 'dontknow', 'true', 'false', ]),
+        'to_centre': set(['dontcare', 'dontknow', 'true', 'false', ]),
+        'alternative': set(['dontcare', 'first', 'second', 'third', 'forth', 'last', 'next', 'prev', ]),
     },
 
     'slot_attributes': {
+        'silence_time': [],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
-            'system_iconfirms', 'system_selects'
+            'system_iconfirms', 'system_selects',
         ],
         'to_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
-            'system_iconfirms', 'system_selects'
+            'system_iconfirms', 'system_selects',
         ],
         'time': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
-            'system_confirms', 'system_iconfirms', 'system_selects'
+            'system_confirms', 'system_iconfirms', 'system_selects',
         ],
 
         'from_centre': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
-            'system_confirms', 'system_iconfirms', 'system_selects'
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'binary',
         ],
         'to_centre': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
-            'system_confirms', 'system_iconfirms', 'system_selects'
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'binary',
         ],
         'num_transfers': [
             'user_requests',

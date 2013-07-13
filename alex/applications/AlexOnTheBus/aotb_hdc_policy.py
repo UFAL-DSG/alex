@@ -53,33 +53,42 @@ class AOTBHDCPolicy(DialoguePolicy):
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
 
-#       We do not have to reposnd to hello
-#        elif dialogue_state["lda"] == "hello":
+#       We do not have to respond to hello
+#        elif dialogue_state["ludait"] == "hello":
 #            # NLG("Ahoj.")
 #            res_da = DialogueAct("hello()")
 
-        elif dialogue_state["lda"] == "bye":
+        elif dialogue_state["ludait"] == "silence":
+            # NLG("")
+            silence_time = dialogue_state['silence_time']
+
+            if silence_time > self.cfg['DM']['basic']['silence_timeout']:
+                res_da = DialogueAct('inform(silence_timeout="true")')
+            else:
+                res_da = DialogueAct("silence()")
+
+        elif dialogue_state["ludait"] == "bye":
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
 
-        elif dialogue_state["lda"] == "help":
+        elif dialogue_state["ludait"] == "help":
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
 
-        elif dialogue_state["lda"] == "thankyou":
+        elif dialogue_state["ludait"] == "thankyou":
             # NLG("Diky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
 
-        elif dialogue_state["lda"] == "restart":
+        elif dialogue_state["ludait"] == "restart":
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
 
-        elif dialogue_state["lda"] == "repeat":
+        elif dialogue_state["ludait"] == "repeat":
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
 
-        elif dialogue_state["lda"] == "reqalts":
+        elif dialogue_state["ludait"] == "reqalts":
             # NLG("There is nothing else in the database.")
             # NLG("The next connection is ...")
 
@@ -179,7 +188,7 @@ class AOTBHDCPolicy(DialoguePolicy):
 
                 dialogue_state["ch_" + slot] = "none"
 
-        elif dialogue_state["lda"] == "other":
+        elif dialogue_state["ludait"] == "other":
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
 
@@ -234,7 +243,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                     dir_da = self.get_directions(dialogue_state)
                     res_da.extend(dir_da)
 
-        dialogue_state["lda"] = "none"
+        dialogue_state["ludait"] = "none"
 
         self.last_system_dialogue_act = res_da
 
@@ -243,6 +252,10 @@ class AOTBHDCPolicy(DialoguePolicy):
         return self.last_system_dialogue_act
 
     def get_from_stop(self, dialogue_state):
+        """Generates a dialogue act informing about the origin stop of the last recommended connection.
+
+        :rtype : DilogueAct
+        """
         route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()

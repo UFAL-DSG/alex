@@ -3,8 +3,9 @@
 
 from __future__ import unicode_literals
 from collections import defaultdict
+from copy import deepcopy
 
-from alex.components.dm import DialogueState
+from alex.components.dm.base import DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
 
@@ -23,16 +24,16 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         self.turns = []
         self.turn_number = 0
 
-    def __str__(self):
+    def __unicode__(self):
         """Get the content of the dialogue state in a human readable form."""
         s = []
         s.append("DDDState - Dialogue state content:")
         s.append("")
-        s.append("%s = %s" % ('lda', self.slots['lda']))
+        s.append("%s = %s" % ("ludait", self.slots["ludait"]))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
-                     not sl.startswith('sh_') and not sl.startswith('rh_') and
-                     not sl.startswith('lda')]:
+                not sl.startswith('sh_') and not sl.startswith('rh_') and
+                not sl.startswith("ludait")]:
             s.append("%s = %s" % (name, self.slots[name]))
         s.append("")
 
@@ -57,6 +58,29 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     def __setitem__(self, key, value):
         self.slots[key] = value
 
+    def log_state(self):
+        """Log the state using the the session logger."""
+
+        state = []
+
+        state.append(("ludait", self.slots["ludait"]))
+
+        for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
+                not sl.startswith('sh_') and not sl.startswith('rh_') and
+                not sl.startswith("ludait")]:
+            state.append((name, self.slots[name]))
+
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
+            state.append((name, self.slots[name]))
+
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
+            state.append((name, self.slots[name]))
+
+        for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
+            state.append((name, self.slots[name]))
+
+        self.cfg['Logging']['session_logger'].dialogue_state("system", [state, ])
+
     def restart(self):
         """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
 
@@ -65,7 +89,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         self.slots = defaultdict(lambda: "none")
 
-    def update(self, user_da, last_system_da):
+    def update(self, user_da, system_da):
         """Interface for the dialogue act update.
 
         It can process dialogue act, dialogue act N best lists, or dialogue act
@@ -75,17 +99,26 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         :type user_da: :class:`~alex.components.slu.da.DialogueAct`,
             :class:`~alex.components.slu.da.DialogueActNBList` or
             :class:`~alex.components.slu.da.DialogueActConfusionNetwork`
-        :param last_system_da: Last system dialogue act.
+        :param system_da: Last system dialogue act.
 
         """
+
+        if system_da == "silence()":
+            # use the last non-silence dialogue act
+            # if the system said nothing the last time, lets assume that the user acts in the context of the previous
+            # dialogue act
+            system_da = self.last_system_da
+        else:
+            # save the last non-silence dialogue act
+            self.last_system_da = system_da
 
         if isinstance(user_da, DialogueAct):
             # use da as it is
             da = user_da
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
-            # get only the best dialogue act
-#            da = user_da.get_best_da()
-            # in DSTS baselien like approach I will dais conf. score, so I will not
+        # get only the best dialogue act
+        #            da = user_da.get_best_da()
+            # in DSTC baseline like approach I will dais conf. score, so I will not
             # have to pick the best hyp
             da = user_da.get_best_nonnull_da()
         else:
@@ -96,17 +129,16 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
 
         # store the input
-        self.turns.append([da, last_system_da])
+        self.turns.append([da, system_da, deepcopy(self.slots)])
 
         # perform the context resolution
-        user_da = self.context_resolution(da, last_system_da)
+        user_da = self.context_resolution(da, system_da)
 
         if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug(
-                u'Context Resolution - Dialogue Act: %s' % user_da)
+            self.cfg['Logging']['system_logger'].debug(u'Context Resolution - Dialogue Act: %s' % user_da)
 
         # perform the state update
-        self.state_update(user_da, last_system_da)
+        self.state_update(user_da, system_da)
         self.turn_number += 1
 
         # print the dialogue state if requested
@@ -116,11 +148,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             requested_slots = self.get_requested_slots()
             confirmed_slots = self.get_confirmed_slots()
             non_informed_slots = self.get_non_informed_slots()
-#            accepted_slots = self.get_accepted_slots()
-#            changed_slots = self.get_changed_slots()
+            # accepted_slots = self.get_accepted_slots()
+            # changed_slots = self.get_changed_slots()
 
             s = []
-            s.append('DDDState')
+            s.append('DDDState - Dialogue state update')
             s.append("")
             s.append("Requested slots:")
             s.append(unicode(requested_slots))
@@ -132,13 +164,13 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
             self.cfg['Logging']['system_logger'].debug(s)
 
-    def context_resolution(self, user_da, last_system_da):
+    def context_resolution(self, user_da, system_da):
         """Resolves and converts meaning of some user dialogue acts given the context."""
 
         new_user_da = DialogueAct()
 
-        if isinstance(last_system_da, DialogueAct):
-            for system_dai in last_system_da:
+        if isinstance(system_da, DialogueAct):
+            for system_dai in system_da:
                 for user_dai in user_da:
                     new_user_dai = None
 
@@ -149,29 +181,21 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         new_user_dai = DialogueActItem("deny", system_dai.name, system_dai.value)
 
                     elif system_dai.dat == "request" and user_dai.dat == "inform" and \
-                            system_dai.name != "" and user_dai.name == "" and \
-                            user_dai.value == "dontcare":
+                                    system_dai.name != "" and user_dai.name == "" and \
+                                    user_dai.value == "dontcare":
                         new_user_dai = DialogueActItem("inform", system_dai.name, system_dai.value)
 
                     elif system_dai.dat == "request" and user_dai.dat == "inform" and \
-                            system_dai.name != "" and user_dai.name == "" and \
+                                    system_dai.name != "" and user_dai.name == "" and \
                             self.ontology.slot_has_value(system_dai.name, user_dai.value):
                         new_user_dai = DialogueActItem("inform", system_dai.name, user_dai.value)
 
                     elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "affirm" and system_dai.name.startswith("has_"):
+                                    user_dai.dat == "affirm" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
 
                     elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "negate" and system_dai.name.startswith("has_"):
-                        new_user_dai = DialogueActItem("inform", system_dai.name, "false")
-
-                    elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "affirm" and system_dai.name.endswith("_allowed"):
-                        new_user_dai = DialogueActItem("inform", system_dai.name, "true")
-
-                    elif system_dai.dat == "request" and system_dai.name != "" and \
-                            user_dai.dat == "negate" and system_dai.name.endswith("_allowed"):
+                                    user_dai.dat == "negate" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
                     if new_user_dai:
@@ -181,12 +205,16 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         return new_user_da
 
-    def state_update(self, user_da, last_system_da):
+    def state_update(self, user_da, system_da):
         """Records the information provided by the system and/or by the user."""
 
+        # since there is a state update, the silence_time from the last from the user voice activity is 0.0
+        # unless this update fired just to inform about the silence time. This case is taken care of later.
+        self.slots['silence_time'] = 0.0
+
         # first process the system dialogue act since it was produce "earlier"
-        if isinstance(last_system_da, DialogueAct):
-            for dai in last_system_da:
+        if isinstance(system_da, DialogueAct):
+            for dai in system_da:
                 if dai.dat == "inform":
                     # set that the system already informed about the slot
                     self.slots["rh_" + dai.name] = "system-informed"
@@ -206,9 +234,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots[dai.name] = dai.value
             elif dai.dat == "deny":
                 # handle true and false values because we know their opposite values
-                if dai.value == "true":
+                if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
                     self.slots[dai.name] = "false"
-                elif dai.value == "false":
+                elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
                     self.slots[dai.name] = "true"
 
                 if self.slots[dai.name] == dai.value:
@@ -227,7 +255,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 self.slots["sh_" + dai.name] = dai.value
             elif dai.dat in ["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
                              "repeat", "reqalts", "reqmore", "restart", "thankyou"]:
-                self.slots["lda"] = dai.dat
+                self.slots["ludait"] = dai.dat
+            elif dai.dat == "silence":
+                self.slots["ludait"] = dai.dat
+                if dai.name == "time":
+                    self.slots['silence_time'] = float(dai.value)
 
     def get_requested_slots(self):
         """Return all slots which are currently being requested by the user along with the correct value."""
@@ -271,7 +303,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         for slot in self.slots:
             # ignore some slots
-            if any([1.0 for x in ['rh_', 'ch_', 'sh_', 'lda'] if slot.startswith(x)]):
+            if any([1.0 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
                 continue
 
             if self.slots[slot] != "none" and ("rh_" + slot not in self.slots or self.slots["rh_" + slot] == "none"):
