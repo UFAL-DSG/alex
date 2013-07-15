@@ -2,4 +2,4 @@
 
 cd ..
 
-./vhub.py -c ./AlexOnTheBus/aotb.cfg -c ./AlexOnTheBus/aotb_live.cfg -c ../resources/private/ext-800899998b1.cfg
+./vhub.py -c ./AlexOnTheBus/aotb.cfg ./AlexOnTheBus/aotb_live.cfg ../resources/private/ext-800899998b1.cfg

@@ -5,7 +5,7 @@
 from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
 try:
-    from kaldi_decoders import NbListDecoder, ConfNetDecoder
+    from pykaldi.decoders.kaldi_decoders import NbListDecoder, ConfNetDecoder
 except ImportError as e:
     raise KaldiSetupException('%s\nTry setting PYTHONPATH' % e.message)
 

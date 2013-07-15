@@ -15,6 +15,9 @@ class CUEDSlot:
         return
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         s = self.name
         if self.value:
             s += self.equal + '"' + self.value + '"'
@@ -58,6 +61,9 @@ class CUEDDialogueAct:
         return
 
     def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
         s = self.dialogue_act_type
         try:
             s += '\n' + '\n'.join(self.slots)
