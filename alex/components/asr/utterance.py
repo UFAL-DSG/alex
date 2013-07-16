@@ -445,7 +445,6 @@ class AbstractedUtterance(Utterance, Abstracted):
             # inserted into its place.
             if abstraction and not inserted_new:
                 ab_replaced._abstr_idxs.append(startidx)
-            self._abstr_idxs = ab_replaced._abstr_idxs
         return ab_replaced
 
 # Helper methods for the Abstracted class.
@@ -662,8 +661,6 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
                                           ' '.join(phrase)))
         return self.replace(phrase, (combined_el, ), abstraction=True)
 
-    # NOTE that all replacements done in UtteranceNBList are now treated as
-    # replacements for category labels!
     def replace(self, orig, replacement, abstraction=False):
         """
         Replaces the phrase `orig' by `replacement' in all the utterances.
@@ -677,15 +674,14 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
         """
 
         Index = UtteranceNBList.Index
-        # XXX The following is a quickfix, might not be the right thing to do.
-        new_abstr_idxs = self._abstr_idxs[:]
+        replaced = UtteranceNBList()
+        new_abstr_idxs = list()
         for hyp_idx, (prob, utt) in enumerate(self.n_best):
-            replaced = utt.replace(orig, replacement, abstraction=abstraction)
-            self.n_best[hyp_idx][1] = replaced
-            new_abstr_idxs.extend(Index(hyp_idx, word_idx)
-                                  for word_idx in replaced._abstr_idxs)
-        self._abstr_idxs = new_abstr_idxs
-        return self
+            rep_utt = utt.replace(orig, replacement, abstraction=abstraction)
+            replaced.n_best.append([prob, rep_utt])
+            replaced._abstr_idxs.extend(Index(hyp_idx, word_idx)
+                                        for word_idx in rep_utt._abstr_idxs)
+        return replaced
 
 # Helper methods for the Abstracted class.
 UtteranceNBList.replace_typeval = UtteranceNBList.replace

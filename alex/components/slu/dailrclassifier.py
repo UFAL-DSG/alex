@@ -422,18 +422,8 @@ class DAILogRegClassifier(base.SLUInterface):
                 set.union,
                 (set(typed_obss.viewkeys())
                  for typed_obss in obss.viewvalues()))
-        # self.utterances = utterances
-        # self.utt_nblists = utt_nblists
-        # if utterances:
-        #     self.utt_ids = utterances.keys()
-        # elif utt_nblists:
-        #     self.utt_ids = utt_nblists.keys()
-        # elif da_nblists:
-        #     self.utt_ids = da_nblists.keys()
         else:
             raise DAILRException(
-                # 'Cannot learn a classifier without utterances and without '
-                # 'ASR or SLU hypotheses.')
                 'Cannot learn a classifier without any observations.')
 
         # Normalise the text and substitute category labels.
@@ -799,7 +789,7 @@ class DAILogRegClassifier(base.SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
-                # # DEBUG
+                # DEBUG
                 # import ipdb; ipdb.set_trace()
                 # self.obss['abutt_nbl'].values()[0].insts_for_type(('AREA',))
 
