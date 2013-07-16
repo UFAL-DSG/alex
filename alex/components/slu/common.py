@@ -64,6 +64,7 @@ def load_data(cfg_this_slu, training=False, with_das=True):
     (object DialogueAct) as its values.
 
     """
+
     cfg_trte = (cfg_this_slu['training'] if training
                 else cfg_this_slu['testing'])
     max_examples = cfg_trte.get('max_examples', None)
@@ -725,3 +726,4 @@ class ParamModelNameBuilder(DefaultConfigurator):
         # Save the resulting name and return.
         self.cfg_tr['model_fname'] = model_fname
         return model_fname
+

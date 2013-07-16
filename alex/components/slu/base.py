@@ -306,6 +306,7 @@ class SLUPreprocessing(object):
                     value = vals[0]
                     # Do the substitution.
                     valform_for_cl[slot_upper] = (value, surface)
+                    value_sameas_surf = (value, ) == surface
                     # Assumes the surface strings don't overlap.
                     # FIXME: Perhaps replace all instead of just the first one.
                     # XXX Temporary solution: we want the new utterance to
@@ -313,13 +314,15 @@ class SLUPreprocessing(object):
                     # original <surface> sequence of tokens.  This is done
                     # crudely using two subsequent substitutions, so the
                     # original <surface> gets forgotten.
-                    utterance_cp = utterance_cp.replace((value, ),
-                                                        ('__HIDDEN__', ))
+                    if not value_sameas_surf:
+                        utterance_cp = utterance_cp.replace((value, ),
+                                                            ('__HIDDEN__', ))
                     utterance_cp = utterance_cp.replace(surface, (value, ))
                     utterance_cp = utterance_cp.phrase2category_label(
                         (value, ), (slot_upper, ))
-                    utterance_cp = utterance_cp.replace(('__HIDDEN__', ),
-                                                        (value, ))
+                    if not value_sameas_surf:
+                        utterance_cp = utterance_cp.replace(('__HIDDEN__', ),
+                                                            (value, ))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -376,6 +379,7 @@ class SLUPreprocessing(object):
         tot_len = sum(len(hyp[1]) for hyp in nblist_cp)  # total number of
                                        # words in utterances on the n-best list
         substituted_len = 0       # number of words substituted
+
         for surface, upnames_vals in self.cldb.form_upnames_vals:
             # NOTE it is ensured the longest matches will always be used in
             # preference to shorter matches, due to the iterated values being
@@ -393,18 +397,33 @@ class SLUPreprocessing(object):
                 value = vals[0]
                 # Do the substitution.
                 valform_for_cl[slot_upper] = (value, surface)
+                value_sameas_surf = (value, ) == surface
+
+                # # Assumes the surface strings don't overlap.
+                # # FIXME: Perhaps replace all instead of just the first one.
+                # for hyp_idx in hyps_with_surface:
+                #     # XXX Temporary solution.  See above for comments on the
+                #     # use of replace and phrase2category_label.
+                #     new_utt = nblist_cp[hyp_idx][1]
+                #     if not value_sameas_surf:
+                #         new_utt = new_utt.replace((value, ), ('__HIDDEN__', ))
+                #     new_utt = new_utt.replace(surface, (value, ))
+                #     new_utt = new_utt.phrase2category_label((value, ),
+                #                                             (slot_upper, ))
+                #     if not value_sameas_surf:
+                #         new_utt = new_utt.replace(('__HIDDEN__', ), (value, ))
+                #     nblist_cp[hyp_idx][1] = new_utt
+
                 # Assumes the surface strings don't overlap.
-                # FIXME: Perhaps replace all instead of just the first one.
-                for hyp_idx in hyps_with_surface:
-                    # XXX Temporary solution.  See above for comments on the
-                    # use of replace and phrase2category_label.
-                    new_utt = nblist_cp[hyp_idx][1].replace((value, ),
-                                                            ('__HIDDEN__', ))
-                    new_utt = nblist_cp[hyp_idx][1].replace(surface, (value, ))
-                    nblist_cp[hyp_idx][1] = (new_utt.phrase2category_label(
-                        (value, ), (slot_upper, )))
-                    new_utt = nblist_cp[hyp_idx][1].replace(('__HIDDEN__', ),
-                                                            (value, ))
+                # XXX Temporary solution.  See above for comments on the use of
+                # replace and phrase2category_label.
+                if not value_sameas_surf:
+                    nblist_cp = nblist_cp.replace((value, ), ('__HIDDEN__', ))
+                nblist_cp = nblist_cp.replace(surface, (value, ))
+                nblist_cp = nblist_cp.phrase2category_label((value, ),
+                                                            (slot_upper, ))
+                if not value_sameas_surf:
+                    nblist_cp = nblist_cp.replace(('__HIDDEN__', ), (value, ))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= tot_len:
@@ -446,6 +465,7 @@ class SLUPreprocessing(object):
                 value = vals[0]
                 # Do the substitution.
                 valform_for_cl[slot_upper] = (value, surface)
+                value_sameas_surf = (value, ) == surface
                 # Assumes the surface strings don't overlap.
                 # FIXME: Perhaps replace all instead of just the first one.
                 # XXX Temporary solution: we want the new confnet to
@@ -453,11 +473,15 @@ class SLUPreprocessing(object):
                 # original <surface> sequence of tokens.  This is done
                 # crudely using two subsequent substitutions, so the
                 # original <surface> gets forgotten.
-                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
+                if not value_sameas_surf:
+                    confnet_cp = confnet_cp.replace((value, ),
+                                                    ('__HIDDEN__', ))
                 confnet_cp = confnet_cp.replace(surface, (value, ))
                 confnet_cp = confnet_cp.phrase2category_label(
                     (value, ), (slot_upper, ))
-                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
+                if not value_sameas_surf:
+                    confnet_cp = confnet_cp.replace(('__HIDDEN__', ),
+                                                    (value, ))
 
         return confnet_cp, valform_for_cl
 

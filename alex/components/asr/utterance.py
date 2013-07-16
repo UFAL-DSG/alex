@@ -621,8 +621,12 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
         return (self.splitter.join((type_[0], ' '.join(val))), )
 
     def iter_typeval(self):
+        returned = set()
         for index in self._abstr_idxs:
-            yield (self.n_best[index.hyp_idx][index.word_idx], )
+            typeval = (self.n_best[index.hyp_idx][1][index.word_idx], )
+            if typeval not in returned:
+                yield typeval
+                returned.add(typeval)
 
     def iter_triples(self):
         for combined_el, in self.iter_typeval():
@@ -634,6 +638,7 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
                 type_ = split[0] if combined_el else ''
             # XXX Change the order of return values to combined_el, type_,
             # value.
+            assert type_.isupper()
             yield (combined_el, ), tuple(value.split(' ')), (type_, )
 
     def phrase2category_label(self, phrase, catlab):
@@ -654,13 +659,15 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
         """
 
         Index = UtteranceNBList.Index
-        new_abstr_idxs = list()
+        # XXX The following is a quickfix, might not be the right thing to do.
+        new_abstr_idxs = self._abstr_idxs[:]
         for hyp_idx, (prob, utt) in enumerate(self.n_best):
             replaced = utt.replace(orig, replacement)
-            self.n_best[hyp_idx] = replaced
+            self.n_best[hyp_idx][1] = replaced
             new_abstr_idxs.extend(Index(hyp_idx, word_idx)
                                   for word_idx in replaced._abstr_idxs)
         self._abstr_idxs = new_abstr_idxs
+        return self
 
 # Helper methods for the Abstracted class.
 UtteranceNBList.replace_typeval = UtteranceNBList.replace

@@ -366,16 +366,18 @@ class DAILogRegClassifier(base.SLUInterface):
             raise DAILRException(
                 'Cannot handle this type of features: "{ft}".'
                 .format(ft=self.features_type))
+
         return feats
 
     def _extract_feats_from_many(self, obss, inst=None):
         # DEBUG
+        import ipdb; ipdb.set_trace()
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +
         #     ('da_nbl' in self.features_type) * bool(da_nblists))
         self.n_feat_sets = sum(
-            (ft in obss) *
+            (base.ft_props[ft].obs_type in obss) *
             (len(self.abstractions) if base.ft_props[ft].is_abstracted else 1)
             for ft in self.features_type)
 
@@ -411,6 +413,7 @@ class DAILogRegClassifier(base.SLUInterface):
         The dictionary arguments are expected to all have the same set of keys.
 
         """
+
         # Save the input observations and the outputs.
         self.das = das
         if obss:
@@ -796,6 +799,10 @@ class DAILogRegClassifier(base.SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
+                # # DEBUG
+                # import ipdb; ipdb.set_trace()
+                # self.obss['abutt_nbl'].values()[0].insts_for_type(('AREA',))
+
                 compatible_insts = (lambda utt:
                                     utt.insts_for_type(dai_catlab_words))
             else:
