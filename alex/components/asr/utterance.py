@@ -402,10 +402,18 @@ class AbstractedUtterance(Utterance, Abstracted):
         """
         combined_el = self.splitter.join((' '.join(catlab),
                                           ' '.join(phrase)))
-        return self.replace(phrase, (combined_el, ))
+        return self.replace(phrase, (combined_el, ), abstraction=True)
 
-    def replace(self, orig, replacement):
-        """Replaces the phrase `orig' by another phrase, `replacement'."""
+    def replace(self, orig, replacement, abstraction=False):
+        """Replaces the phrase `orig' by another phrase, `replacement'.
+
+        Arguments:
+            orig -- the phrase to be replaced (a tuple of words)
+            replacement -- the replacement (a tuple of words)
+            abstraction -- whether this replacement represents abstraction
+                (substitution of a phrase by a category label)
+
+        """
         replaced, startidx = Utterance.replace(self, orig, replacement,
                                                return_startidx=True)
         # XXX This won't work nicely with concrete features, where the
@@ -424,7 +432,7 @@ class AbstractedUtterance(Utterance, Abstracted):
                 if idx >= startidx:
                     # Make sure the index of the newly replaced phrase is
                     # inserted into its place.
-                    if not inserted_new:
+                    if abstraction and not inserted_new:
                         ab_replaced._abstr_idxs.append(startidx)
                         inserted_new = True
                     # Unless that word was replaced away itself,
@@ -435,7 +443,7 @@ class AbstractedUtterance(Utterance, Abstracted):
                     ab_replaced._abstr_idxs.append(idx)
             # Make sure the index of the newly replaced phrase has been
             # inserted into its place.
-            if not inserted_new:
+            if abstraction and not inserted_new:
                 ab_replaced._abstr_idxs.append(startidx)
             self._abstr_idxs = ab_replaced._abstr_idxs
         return ab_replaced
@@ -571,6 +579,9 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
         NBList.__init__(self)
         Abstracted.__init__(self)
 
+    def __contains__(self, phrase):
+        return any(phrase in utt for prob, utt in self.n_best)
+
     def get_best_utterance(self):
         """Returns the most probable utterance.
 
@@ -638,7 +649,7 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
                 type_ = split[0] if combined_el else ''
             # XXX Change the order of return values to combined_el, type_,
             # value.
-            assert type_.isupper()
+            # assert type_.isupper()
             yield (combined_el, ), tuple(value.split(' ')), (type_, )
 
     def phrase2category_label(self, phrase, catlab):
@@ -649,20 +660,27 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
         """
         combined_el = self.splitter.join((' '.join(catlab),
                                           ' '.join(phrase)))
-        return self.replace(phrase, (combined_el, ))
+        return self.replace(phrase, (combined_el, ), abstraction=True)
 
     # NOTE that all replacements done in UtteranceNBList are now treated as
     # replacements for category labels!
-    def replace(self, orig, replacement):
+    def replace(self, orig, replacement, abstraction=False):
         """
         Replaces the phrase `orig' by `replacement' in all the utterances.
+
+        Arguments:
+            orig -- the phrase to be replaced (a tuple of words)
+            replacement -- the replacement (a tuple of words)
+            abstraction -- whether this replacement represents abstraction
+                (substitution of a phrase by a category label)
+
         """
 
         Index = UtteranceNBList.Index
         # XXX The following is a quickfix, might not be the right thing to do.
         new_abstr_idxs = self._abstr_idxs[:]
         for hyp_idx, (prob, utt) in enumerate(self.n_best):
-            replaced = utt.replace(orig, replacement)
+            replaced = utt.replace(orig, replacement, abstraction=abstraction)
             self.n_best[hyp_idx][1] = replaced
             new_abstr_idxs.extend(Index(hyp_idx, word_idx)
                                   for word_idx in replaced._abstr_idxs)

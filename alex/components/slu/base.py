@@ -317,7 +317,7 @@ class SLUPreprocessing(object):
                     if not value_sameas_surf:
                         utterance_cp = utterance_cp.replace((value, ),
                                                             ('__HIDDEN__', ))
-                    utterance_cp = utterance_cp.replace(surface, (value, ))
+                        utterance_cp = utterance_cp.replace(surface, (value, ))
                     utterance_cp = utterance_cp.phrase2category_label(
                         (value, ), (slot_upper, ))
                     if not value_sameas_surf:
@@ -376,21 +376,14 @@ class SLUPreprocessing(object):
 
         # FIXME This iterative matching will get slow with larger surface ->
         # slot_value mappings.
-        tot_len = sum(len(hyp[1]) for hyp in nblist_cp)  # total number of
-                                       # words in utterances on the n-best list
-        substituted_len = 0       # number of words substituted
-
         for surface, upnames_vals in self.cldb.form_upnames_vals:
             # NOTE it is ensured the longest matches will always be used in
             # preference to shorter matches, due to the iterated values being
             # sorted by `surface' length from the longest to the shortest.
 
-            # FIXME Access to single hyps is implemented in methods of
-            # UttNBList.  Use it!
-            hyps_with_surface = [hyp_idx for (hyp_idx, hyp) in
-                                 enumerate(nblist_cp) if surface in hyp[1]]
-            if hyps_with_surface:
-                substituted_len += len(surface) * len(hyps_with_surface)
+            # hyps_with_surface = [hyp_idx for (hyp_idx, hyp) in
+            #                      enumerate(nblist_cp) if surface in hyp[1]]
+            if surface in nblist_cp:
                 # Choose a random category from the known ones.
                 slot_upper, vals = upnames_vals.iteritems().next()
                 # Choose a random value from the known ones.
@@ -399,36 +392,16 @@ class SLUPreprocessing(object):
                 valform_for_cl[slot_upper] = (value, surface)
                 value_sameas_surf = (value, ) == surface
 
-                # # Assumes the surface strings don't overlap.
-                # # FIXME: Perhaps replace all instead of just the first one.
-                # for hyp_idx in hyps_with_surface:
-                #     # XXX Temporary solution.  See above for comments on the
-                #     # use of replace and phrase2category_label.
-                #     new_utt = nblist_cp[hyp_idx][1]
-                #     if not value_sameas_surf:
-                #         new_utt = new_utt.replace((value, ), ('__HIDDEN__', ))
-                #     new_utt = new_utt.replace(surface, (value, ))
-                #     new_utt = new_utt.phrase2category_label((value, ),
-                #                                             (slot_upper, ))
-                #     if not value_sameas_surf:
-                #         new_utt = new_utt.replace(('__HIDDEN__', ), (value, ))
-                #     nblist_cp[hyp_idx][1] = new_utt
-
                 # Assumes the surface strings don't overlap.
                 # XXX Temporary solution.  See above for comments on the use of
                 # replace and phrase2category_label.
                 if not value_sameas_surf:
                     nblist_cp = nblist_cp.replace((value, ), ('__HIDDEN__', ))
-                nblist_cp = nblist_cp.replace(surface, (value, ))
+                    nblist_cp = nblist_cp.replace(surface, (value, ))
                 nblist_cp = nblist_cp.phrase2category_label((value, ),
                                                             (slot_upper, ))
                 if not value_sameas_surf:
                     nblist_cp = nblist_cp.replace(('__HIDDEN__', ), (value, ))
-
-                # If nothing is left to replace, stop iterating the database.
-                if substituted_len >= tot_len:
-                    assert substituted_len == tot_len
-                    break
 
         return nblist_cp, valform_for_cl
 
@@ -476,7 +449,7 @@ class SLUPreprocessing(object):
                 if not value_sameas_surf:
                     confnet_cp = confnet_cp.replace((value, ),
                                                     ('__HIDDEN__', ))
-                confnet_cp = confnet_cp.replace(surface, (value, ))
+                    confnet_cp = confnet_cp.replace(surface, (value, ))
                 confnet_cp = confnet_cp.phrase2category_label(
                     (value, ), (slot_upper, ))
                 if not value_sameas_surf:
@@ -498,6 +471,7 @@ class SLUPreprocessing(object):
         else:
             assert isinstance(utt_hyp, UtteranceConfusionNetwork)
             return self.values2category_labels_in_confnet(utt_hyp)
+
 
     def values2category_labels_in_da(self, utt_hyp, da):
         """
