@@ -51,8 +51,8 @@ class DAILogRegClassifier(SLUInterface):
         self._input_matrix = None
         self._outputs = None
 
-    def extract_features(self, das, utterances, verbose=False):
-        self.utterances = utterances
+    def extract_features(self, obss, das, verbose=False):
+        self.utterances = obss['utt']
         self.das = das
 
         self.utterances_list = self.utterances.keys()
@@ -370,8 +370,3 @@ class DAILogRegClassifier(SLUInterface):
         nblist = confnet.get_utterance_nblist(n=40)
         sem = self.parse_nblist(nblist)
         return sem
-
-
-class DAILogRegClassifierLearning(DAILogRegClassifier):
-    """Retained for backward compatibility."""
-    pass

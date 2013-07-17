@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 """
-The original FJ's implementation of SLU common classes.
+The original FJ's implementation of SLU base classes.
 """
 
 from collections import defaultdict
 import copy
 
-from exception import DAILRException
-from alex.components.asr.utterance \
-    import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
 from alex.utils.config import load_as_module
 
 
@@ -213,49 +210,3 @@ class SLUPreprocessing(object):
         confnet.cn = new_cn
 
         return confnet
-
-
-class SLUInterface(object):
-    """\
-    Defines a prototypical interface each SLU parser should provide.
-
-    It should be able to parse:
-      1) an utterance hypothesis (an instance of UtteranceHyp)
-          - output: an instance of SLUHypothesis
-
-      2) an n-best list of utterances (an instance of UtteranceNBList)
-          - output: an instance of SLUHypothesis
-
-      3) a confusion network (an instance of UtteranceConfusionNetwork)
-          - output: an instance of SLUHypothesis
-    """
-
-    def parse_1_best(self, utterance, *args, **kwargs):
-        from exception import SLUException
-        raise SLUException("Not implemented")
-
-    def parse_nblist(self, utterance_list):
-        from exception import SLUException
-        raise SLUException("Not implemented")
-
-    def parse_confnet(self, confnet):
-        from exception import SLUException
-        raise SLUException("Not implemented")
-
-    def parse(self, utterance, *args, **kw):
-        """Check what the input is and parse accordingly."""
-
-        if isinstance(utterance, Utterance):
-            return self.parse_1_best(utterance, *args, **kw)
-
-        elif isinstance(utterance, UtteranceHyp):
-            return self.parse_1_best(utterance, *args, **kw)
-
-        elif isinstance(utterance, UtteranceNBList):
-            return self.parse_nblist(utterance, *args, **kw)
-
-        elif isinstance(utterance, UtteranceConfusionNetwork):
-            return self.parse_confnet(utterance, *args, **kw)
-
-        else:
-            raise DAILRException("Unsupported input in the SLU component.")

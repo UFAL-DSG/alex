@@ -1916,8 +1916,7 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
 # TODO Write tests.class UtteranceConfusionNetworkFeatures(Features):
 class UtteranceConfusionNetworkFeatures(Features):
     """Represents features extracted from an utterance hypothesis in the form
-    of a confusion network.  These are simply a probabilistic generalisation of
-    simple utterance features.  Only n-gram (incl. skip n-gram) features are
+    of a confusion network.  Only n-gram (incl. skip n-gram) features are
     currently implemented.
 
     """
