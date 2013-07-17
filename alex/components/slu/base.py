@@ -306,23 +306,9 @@ class SLUPreprocessing(object):
                     value = vals[0]
                     # Do the substitution.
                     valform_for_cl[slot_upper] = (value, surface)
-                    value_sameas_surf = (value, ) == surface
-                    # Assumes the surface strings don't overlap.
-                    # FIXME: Perhaps replace all instead of just the first one.
-                    # XXX Temporary solution: we want the new utterance to
-                    # contain the <category>=<value> token instead of the
-                    # original <surface> sequence of tokens.  This is done
-                    # crudely using two subsequent substitutions, so the
-                    # original <surface> gets forgotten.
-                    if not value_sameas_surf:
-                        utterance_cp = utterance_cp.replace((value, ),
-                                                            ('__HIDDEN__', ))
-                        utterance_cp = utterance_cp.replace(surface, (value, ))
-                    utterance_cp = utterance_cp.phrase2category_label(
-                        (value, ), (slot_upper, ))
-                    if not value_sameas_surf:
-                        utterance_cp = utterance_cp.replace(('__HIDDEN__', ),
-                                                            (value, ))
+                    utterance_cp = utterance_cp.phrase2cl_val(surface,
+                                                              slot_upper,
+                                                              value)
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -371,7 +357,6 @@ class SLUPreprocessing(object):
         """
 
         nblist_cp = copy.deepcopy(utt_nblist)
-
         valform_for_cl = {}
 
         # FIXME This iterative matching will get slow with larger surface ->
@@ -380,9 +365,6 @@ class SLUPreprocessing(object):
             # NOTE it is ensured the longest matches will always be used in
             # preference to shorter matches, due to the iterated values being
             # sorted by `surface' length from the longest to the shortest.
-
-            # hyps_with_surface = [hyp_idx for (hyp_idx, hyp) in
-            #                      enumerate(nblist_cp) if surface in hyp[1]]
             if surface in nblist_cp:
                 # Choose a random category from the known ones.
                 slot_upper, vals = upnames_vals.iteritems().next()
@@ -390,18 +372,7 @@ class SLUPreprocessing(object):
                 value = vals[0]
                 # Do the substitution.
                 valform_for_cl[slot_upper] = (value, surface)
-                value_sameas_surf = (value, ) == surface
-
-                # Assumes the surface strings don't overlap.
-                # XXX Temporary solution.  See above for comments on the use of
-                # replace and phrase2category_label.
-                if not value_sameas_surf:
-                    nblist_cp = nblist_cp.replace((value, ), ('__HIDDEN__', ))
-                    nblist_cp = nblist_cp.replace(surface, (value, ))
-                nblist_cp = nblist_cp.phrase2category_label((value, ),
-                                                            (slot_upper, ))
-                if not value_sameas_surf:
-                    nblist_cp = nblist_cp.replace(('__HIDDEN__', ), (value, ))
+                nblist_cp = nblist_cp.phrase2cl_val(surface, slot_upper, value)
 
         return nblist_cp, valform_for_cl
 
@@ -438,24 +409,8 @@ class SLUPreprocessing(object):
                 value = vals[0]
                 # Do the substitution.
                 valform_for_cl[slot_upper] = (value, surface)
-                value_sameas_surf = (value, ) == surface
-                # Assumes the surface strings don't overlap.
-                # FIXME: Perhaps replace all instead of just the first one.
-                # XXX Temporary solution: we want the new confnet to
-                # contain the <category>=<value> token instead of the
-                # original <surface> sequence of tokens.  This is done
-                # crudely using two subsequent substitutions, so the
-                # original <surface> gets forgotten.
-                if not value_sameas_surf:
-                    confnet_cp = confnet_cp.replace((value, ),
-                                                    ('__HIDDEN__', ))
-                    confnet_cp = confnet_cp.replace(surface, (value, ))
-                confnet_cp = confnet_cp.phrase2category_label(
-                    (value, ), (slot_upper, ))
-                if not value_sameas_surf:
-                    confnet_cp = confnet_cp.replace(('__HIDDEN__', ),
-                                                    (value, ))
-
+                confnet_cp = confnet_cp.phrase2cl_val(surface, slot_upper,
+                                                      value)
         return confnet_cp, valform_for_cl
 
     def values2catlabs(self, utt_hyp):

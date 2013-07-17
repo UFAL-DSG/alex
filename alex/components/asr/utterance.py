@@ -127,6 +127,68 @@ class ASRHypothesis(Hypothesis):
     pass
 
 
+class AbstractedASRHypothesis(ASRHypothesis, Abstracted):
+    """Base class for ASR hypotheses supporting category label replacement.
+    """
+
+    tmp_phrase = ('__HIDDEN__', )
+
+    def __init__(self):
+        Abstracted.__init__(self)
+
+    def replace(self, phrase, replacement):
+        """
+        Replaces the phrase `phrase' by another phrase, `replacement'.
+
+        Returns self or a new object of the same type with the replacement
+        done.
+        """
+        raise NotImplementedError('This is an abstract method.')
+
+    def phrase2category_label(self, phrase, catlab):
+        """
+        Replaces the phrase `phrase' by a new phrase, `catlab'.
+
+        Assumes `catlab' is an abstraction for `phrase'.
+        """
+        raise NotImplementedError('This is an abstract method.')
+
+    def phrase2cl_val(self, phrase, catlab, value):
+        """
+        Marks a phrase as an instantiation of a concept with the given value.
+
+        The phrase `phrase', if present in self, is substituted with a special
+        symbol denoting that there is an expression of the type `catlab' with
+        the semantic value `value'.
+
+        Arguments:
+            phrase -- the phrase to be extracted from (tuple of words)
+            catlab --
+
+        """
+
+        # Massage the arguments a bit.
+        catlab = (catlab, )
+        value = (value, )
+
+        value_sameas_surf = (value == phrase)
+        # Assumes the surface strings don't overlap.
+        # FIXME: Perhaps replace all instead of just the first one.
+        #
+        # We want the new confnet to contain the <category>=<value> token
+        # instead of the original <surface> sequence of tokens.  This is done
+        # crudely using two subsequent substitutions, so the original <surface>
+        # gets forgotten.
+        replaced = self
+        if not value_sameas_surf:
+            replaced = replaced.replace(value, self.tmp_phrase)
+            replaced = replaced.replace(phrase, value)
+        replaced = replaced.phrase2category_label(value, catlab)
+        if not value_sameas_surf:
+            replaced = replaced.replace(self.tmp_phrase, value)
+        return replaced
+
+
 class Utterance(object):
     # TODO: Since Utterance basically represents a (is-a) list, it should
     # inherit from the builtin `list', I reckon. This might be a bit tricky,
@@ -335,13 +397,13 @@ class Utterance(object):
 # TODO Document.
 # TODO Extend to AbstractedLattice.
 # TODO Write tests.
-class AbstractedUtterance(Utterance, Abstracted):
+class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
     other_val = ('[OTHER]', )
 
     def __init__(self, surface):
         self._abstr_idxs = list()  # sorted in an increasing order
         Utterance.__init__(self, surface)
-        Abstracted.__init__(self)
+        AbstractedASRHypothesis.__init__(self)
 
     def __cmp__(self, other):
         if isinstance(other, AbstractedUtterance):
@@ -533,7 +595,7 @@ class UtteranceFeatures(Features):
 
 
 class UtteranceHyp(ASRHypothesis):
-    """Provide an interface for 1-best hypothesis from the ASR component."""
+    """Provides an interface for 1-best hypothesis from the ASR component."""
     def __init__(self, prob=None, utterance=None):
         self.prob = prob
         self.utterance = utterance
@@ -548,7 +610,7 @@ class UtteranceHyp(ASRHypothesis):
         return self.utterance
 
 
-class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
+class UtteranceNBList(NBList, AbstractedASRHypothesis):
     """Provides functionality of n-best lists for utterances.
 
     When updating the n-best list, one should do the following.
@@ -576,7 +638,7 @@ class UtteranceNBList(ASRHypothesis, NBList, Abstracted):
     def __init__(self):
         self._abstr_idxs = list()  # sorted in increasing order
         NBList.__init__(self)
-        Abstracted.__init__(self)
+        AbstractedASRHypothesis.__init__(self)
 
     def __contains__(self, phrase):
         return any(phrase in utt for prob, utt in self.n_best)
@@ -733,7 +795,7 @@ class UtteranceNBListFeatures(Features):
 # defined, try providing input from ASR in the form of the
 # AbstractedConfusionNetwork, extracting features from its instantiations and
 # subsequently processing these as usual.
-class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
+class UtteranceConfusionNetwork(AbstractedASRHypothesis):
     """Word confusion network
 
     Attributes:
@@ -806,8 +868,6 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         self._wordset = set()
         self._abstr_idxs = list()  # :: [ Index ]
                                    # sorted in increasing order
-        # self._abstr_idxs = list()  # :: [ (word idx, alt idx) ]
-                                   # # sorted in the increasing order
         self._long_links = list()  # :: [word_idx-> [ long_link ]]
         #   where long_link describes a link in the confnet from word_idx to an
         #   index larger than (word_idx + 1), and is represented as follows:
@@ -889,8 +949,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                     self._wordset.update(link.hyp[1])
                     ll_start = ll_end + 1
 
-        ASRHypothesis.__init__(self)
-        Abstracted.__init__(self)
+        AbstractedASRHypothesis.__init__(self)
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -1046,7 +1105,6 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
             replaced._abstr_idxs.sort()
         return replaced
 
-    # Other methods.
     def isempty(self):
         return ((not self._cn or not any(hyp[1] for alts in self._cn
                                          for hyp in alts))
