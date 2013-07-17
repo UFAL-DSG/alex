@@ -627,7 +627,8 @@ class DefaultConfigurator(object):
 
         # - Build the testing dictionary by merging `cfg' into the defaults.
         cfg_te_orig = cfg_this_slu.get('testing', dict())
-        cfg_te = cfg_this_slu['testing'] = copy.deepcopy(self.def_slu_te)
+        cfg_te = cfg_this_slu['testing'] = copy.deepcopy(
+            self.def_slu_te[slu_type])
         cfg_te.update(cfg_te_orig)
 
         # Save shorthand variables pointing to config subdicts.
