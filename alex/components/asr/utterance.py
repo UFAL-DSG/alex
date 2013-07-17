@@ -1080,8 +1080,18 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
         return self
 
     def replace(self, phrase, replacement):
-        replaced, old_idxs, new_idxs = self._replace(
-            phrase, replacement, keep=False)
+        """Replaces all occurrences of `phrase' in self by `replacement'.
+
+        Arguments:
+            phrase -- the phrase to replace (tuple of words)
+            replacement -- the replacement phrase (tuple of words)
+
+        Returns self in case no replacement was done, else a new instance that
+        contains the replacements.
+
+        """
+        replaced, old_idxs, new_idxs = self._replace(phrase, replacement,
+                                                     keep=False)
         return replaced
 
     def phrase2category_label(self, phrase, catlab):
@@ -1232,10 +1242,23 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
             elif (not keep and len(idxs) == len(replacement) == 1
                     and not start_idx.is_long_link):
                 new_idxs.append(start_idx)
-                repl_hyp = (replaced._cn[start_idx.word_idx]
-                                        [start_idx.alt_idx][0],
-                            replacement[0])
-                replaced._cn[start_idx.word_idx][start_idx.alt_idx] = repl_hyp
+                # shorthands
+                alts = replaced._cn[start_idx.word_idx]
+                orig_prob = (replaced._cn[start_idx.word_idx]
+                                         [start_idx.alt_idx][0])
+                # Check whether this word has already been at this position.
+                if any(cur_hyp[1] == replacement[0] for cur_hyp in alts):
+                    # Find the current hypothesis.
+                    for alt_idx, (prob, word) in enumerate(alts):
+                        if (word == replacement[0]
+                                and alt_idx != start_idx.alt_idx):
+                            alts[alt_idx] = (prob + orig_prob, word)
+                            del alts[start_idx.alt_idx]
+                            alts.sort(key=itemgetter(0), reverse=True)
+                            break
+                # If this word has not been present,
+                else:
+                    alts[start_idx.alt_idx] = (orig_prob, replacement[0])
                 update_wordset = True
             # Substituting just a part of a long link:
             elif end_idx.link_widx > 0:
@@ -1246,10 +1269,9 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
                 # assert len(idxs) == 1  # Anything else would mean skipping
                                        # # some words.
                     # XXX Like this below??
-                    new_idxs.append((end_idx.word_idx,
-                                     end_idx.alt_idx))
-                    link = replaced._long_links(
-                        [end_idx.word_idx][end_idx.alt_idx])
+                    new_idxs.append((end_idx.word_idx, end_idx.alt_idx))
+                    link = (replaced._long_links[end_idx.word_idx]
+                                                [end_idx.alt_idx])
                     link.hyp = (link.hyp[0],
                                 link.hyp[1][:end_idx.link_widx] + replacement)
                     update_wordset = True
@@ -1603,12 +1625,34 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
         # Return.
         return nblist
 
-    # TODO Implement!
     def merge(self):
         """Adds up probabilities for the same hypotheses.
 
-        TODO: not implemented yet
         """
+
+        # Iterate over word splices.
+        for word_idx, alts in enumerate(self._cn):
+            alt_words = list()
+            todelete = list()
+            # Iterate over alternatives.
+            for aidx, (prob, word) in enumerate(alts):
+                # Try find the same word among preceding alternatives.
+                try:
+                    prev_aidx = alt_words.index(word)
+                except ValueError:
+                    pass
+                else:
+                    # If the word has been in earlier alternatives,
+                    # Add its probabilities.
+                    alts[prev_aidx][0] += prob
+                    # Register the later alternative for deletion.
+                    todelete.append(aidx)
+                alt_words.append(word)
+
+            # Delete alternatives registered for deletion.
+            for aidx in reversed(todelete):
+                del alts[aidx]
+
         return self
 
     def prune(self, prune_prob=0.001):
