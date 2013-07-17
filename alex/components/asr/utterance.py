@@ -1644,7 +1644,10 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
                 else:
                     # If the word has been in earlier alternatives,
                     # Add its probabilities.
-                    alts[prev_aidx][0] += prob
+                    #  FIXME: Hypotheses should be modifiable (lists), not
+                    #  tuples.  Then the following would work.
+                    #  alts[prev_aidx][0] += prob
+                    alts[prev_aidx] = [alts[prev_aidx][0] + prob, word]
                     # Register the later alternative for deletion.
                     todelete.append(aidx)
                 alt_words.append(word)
