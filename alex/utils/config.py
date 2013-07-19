@@ -143,8 +143,18 @@ class Config(object):
     def __len__(self):
         return len(self.config)
 
-    def __getitem__(self, i):
-        return self.config[i]
+    def __getitem__(self, key):
+        if isinstance(key, basestring):
+            return self.config[key]
+        else:
+            subconfig = self.config
+            for key_part in key:
+                try:
+                    subconfig = subconfig[key_part]
+                except:
+                    raise KeyError('Missing config key: {key}.'.format(
+                        key=':'.join(key)))
+            return subconfig
 
     def __setitem__(self, key, val):
         self.config[key] = val
@@ -182,6 +192,32 @@ class Config(object):
         return new
 
     @classmethod
+    def build_config_list(cls, config_flist, use_default):
+        """
+        Builds the config file list by inserting the default config to the
+        provided list of config files if asked to, and removing duplicates.
+
+        Arguments:
+            config_flist -- the unprocessed list of config filenames
+            use_default -- whether to insert the default config at the
+                beginning
+
+        """
+
+        # Interpret arguments.
+        if config_flist is None:
+            config_flist = list()
+
+        # Insert the default config if asked to, remove duplicate entries
+        # (retain the last one).
+        cfg_fnames = list(reversed(config_flist))
+        if use_default:
+            cfg_fnames.append(as_project_path(cls.DEFAULT_CFG_PPATH))
+        cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
+        return cfg_fnames
+
+
+    @classmethod
     def load_configs(cls, config_flist=list(), use_default=True, log=True,
                      *init_args, **init_kwargs):
         """
@@ -204,18 +240,8 @@ class Config(object):
 
         """
 
-        # Interpret arguments.
-        if config_flist is None:
-            config_flist = list()
-
-        # Insert the default config if asked to, remove duplicate entries
-        # (retain the last one).
-        cfg_fnames = list(reversed(config_flist))
-        if use_default:
-            cfg_fnames.append(as_project_path(cls.DEFAULT_CFG_PPATH))
-        cfg_fnames = list(reversed(cls._remove_repeated(cfg_fnames)))
-
         # Construct the entire config dictionary.
+        cfg_fnames = cls.build_config_list(config_flist, use_default)
         if not cfg_fnames:
             cfg = Config(*init_args, **init_kwargs)
         else:
