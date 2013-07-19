@@ -96,7 +96,7 @@ class DAILogRegClassifier(SLUInterface):
                 self.remove_features.append(feat)
 
         if verbose:
-            print "Number of features occurring less then %d times: %d" % (
+            print "Number of features occurring less than %d times: %d" % (
                 min_feature_count, len(self.remove_features))
 
         self.remove_features = set(self.remove_features)

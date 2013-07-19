@@ -352,6 +352,9 @@ def test(cfgor):
     # Shorthands.
     model_fname = cfgor.cfg_te['model_fname']
     model_fbase = model_fname[:model_fname.index('.slu_model')]
+    output_dir = cfgor.cfg_te.get('output_dir', None)
+    if output_dir is not None:
+        model_fbase = os.path.join(output_dir, os.path.basename(model_fbase))
     dai_clser = slu_factory(cfgor.config, require_model=True)
 
     # Initialisation.
@@ -691,7 +694,8 @@ class ParamModelNameBuilder(DefaultConfigurator):
         Arguments:
             existing -- whether to look for an existing model, or rather avoid
                 clashes (default: False -- avoid clashes)
-            lock -- whether to create a lock for the created filename
+            lock -- whether to create a lock for the created filename and
+                respect locks created by others
 
         Returns path (not necessarily an absolute path) to the model file.
 
@@ -727,4 +731,3 @@ class ParamModelNameBuilder(DefaultConfigurator):
         # Save the resulting name and return.
         self.cfg_tr['model_fname'] = model_fname
         return model_fname
-
