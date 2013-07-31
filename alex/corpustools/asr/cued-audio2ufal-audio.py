@@ -306,9 +306,8 @@ if __name__ == '__main__':
     arger.add_argument('outdir', action="store",
                        help='an output directory for files with audio and '
                             'their transcription')
-    arger.add_argument('-v',
+    arger.add_argument('-v', '--verbose',
                        action="store_true",
-                       dest="verbose",
                        help='set verbose output')
     arger.add_argument('-d', '--dictionary',
                        type=argparse.FileType('r'),

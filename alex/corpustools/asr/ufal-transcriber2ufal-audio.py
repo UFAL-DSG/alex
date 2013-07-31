@@ -120,6 +120,8 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with codecs.open(trs_fname, 'w+', encoding='UTF-8') as trs_file:
         trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
@@ -294,9 +296,8 @@ if __name__ == '__main__':
                         action="store_true",
                         help='only normalise transcriptions, ignore audio '
                              'files')
-    parser.add_argument('-v',
+    parser.add_argument('-v', '--verbose',
                         action="store_true",
-                        dest="verbose",
                         help='set verbose output')
     parser.add_argument('-w', '--word-list',
                         default='word_list',
