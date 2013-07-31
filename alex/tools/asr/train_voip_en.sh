@@ -102,7 +102,7 @@ date
 #  TESTING  #
 #############
 
-# Evaluate how we did on the zerogram language model.
+# Evaluate how we did with the zerogram language model.
 # Cannot decode zerogram language model with cross word triphone context
 echo "Decoding zerogram language model"
 $TRAIN_SCRIPTS/eval_test_no_lat.sh hmm38 ro"$RO"_tb"$TB"_prune350_zerogram_08 350.0 $IP $SFZ $WORK_DIR/wdnet_zerogram $WORK_DIR/dict_test_sp_sil wit &
@@ -117,7 +117,7 @@ wait
 
 date
 
-# Evaluate how we did on the bigram language model if it is available.
+# Evaluate how we did with the bigram language model if it is available.
 if [ -f $WORK_DIR/wdnet_bigram ]
 then
   echo "Decoding bigram language model"
@@ -134,7 +134,7 @@ fi
 
 date
 
-# Evaluate how we did on the trigram language model if it is available.
+# Evaluate how we did with the trigram language model if it is available.
 if [ -f $WORK_DIR/arpa_trigram ]
 then
   echo "Decoding trigram language model"
