@@ -49,6 +49,8 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with open(trs_fname, 'w') as trs_file:
         trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
