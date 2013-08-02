@@ -26,19 +26,14 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('../resources/default.cfg')
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
+    cfg = Config.load_configs(args.configs)
 
     session_logger = cfg['Logging']['session_logger']
     system_logger = cfg['Logging']['system_logger']
-    system_logger.info('config = {cfg!s}'.format(cfg=cfg))
 
     #########################################################################
     #########################################################################
@@ -52,8 +47,9 @@ if __name__ == '__main__':
     aio_commands, aio_child_commands = multiprocessing.Pipe()  # used to send aio_commands
     audio_record, child_audio_record = multiprocessing.Pipe()  # I read from this connection recorded audio
     audio_play, child_audio_play = multiprocessing.Pipe()      # I write in audio to be played
+    close_event = multiprocessing.Event()
 
-    aio = AudioIO(cfg, aio_child_commands, child_audio_record, child_audio_play)
+    aio = AudioIO(cfg, aio_child_commands, child_audio_record, child_audio_play, close_event)
 
     aio.start()
 

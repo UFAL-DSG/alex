@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import autopath
 
 import multiprocessing
@@ -30,21 +32,15 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('../resources/default.cfg')
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
+    cfg = Config.load_configs(args.configs)
 
     # set using Google ASR and Google TTS
     cfg['ASR']['type'] = 'Julius'
     cfg['TTS']['type'] = 'Flite'
-
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
 
     #########################################################################
     #########################################################################
@@ -89,10 +85,12 @@ if __name__ == '__main__':
                                asr_hypotheses_out, asr_child_hypotheses,
                                tts_text_in, tts_child_text_in)
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
-    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
-    asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-    tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play)
+    close_event = multiprocessing.Event()
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, close_event)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out, close_event)
+    asr = ASR(cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, close_event)
+    tts = TTS(cfg, tts_child_commands, tts_child_text_in, vio_play, close_event)
 
     vio.start()
     vad.start()
@@ -136,11 +134,11 @@ if __name__ == '__main__':
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
                     cfg['Logging']['session_logger'].input_source("voip")
 

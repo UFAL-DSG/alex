@@ -18,10 +18,6 @@ from alex.utils.mproc import global_lock
 from alex.utils.exdec import catch_ioerror
 from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
-DEBUG = False
-# DEBUG = True
-
-
 class SessionLogger(object):
     """ This is a multiprocessing safe logger. It should be used by the alex to
     log information according the SDC 2010 XML format.
@@ -389,9 +385,18 @@ class SessionLogger(object):
 
         self.rec_started_filename = None
 
+    def include_rec(self, turn, fname):
+        recs = turn.getElementsByTagName("rec")
+
+        for rec in recs:
+            if rec.getAttribute("fname") == fname:
+                return True
+
+        return False
+
     @global_lock(lock)
     @catch_ioerror
-    def asr(self, speaker, nblist, confnet=None):
+    def asr(self, speaker, fname, nblist, confnet=None):
         """ Adds the ASR nblist to the last speaker turn.
 
         alex Extension: It can also store the confusion network representation.
@@ -400,7 +405,7 @@ class SessionLogger(object):
         els = doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
+            if els[i].getAttribute("speaker") == speaker and self.include_rec(els[i], fname):
                 asr = els[i].appendChild(doc.createElement("asr"))
 
                 for p, h in nblist:
@@ -422,14 +427,13 @@ class SessionLogger(object):
 
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
     @global_lock(lock)
     @catch_ioerror
-    def slu(self, speaker, nblist, confnet=None):
+    def slu(self, speaker, fname, nblist, confnet=None):
         """ Adds the slu nbest list to the last speaker turn.
 
         alex Extension: It can also store the confusion network representation.
@@ -440,7 +444,7 @@ class SessionLogger(object):
         els = doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
+            if els[i].getAttribute("speaker") == speaker and self.include_rec(els[i], fname):
                 asr = els[i].appendChild(doc.createElement("slu"))
 
                 for p, h in nblist:
@@ -465,8 +469,7 @@ class SessionLogger(object):
 
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -521,8 +524,32 @@ class SessionLogger(object):
         """ Adds the dialogue state to the log.
 
         This is an alex extension.
+
+        The dstate has the following structure:
+         [state1, state2, ...]
+
+        where state* has the following structure
+        [ (slot_name1, slot_value1), (slot_name2, slot_value2), ...)
+
         """
-        raise SessionLoggerException("Not implemented")
+        doc = self.open_session_xml()
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length - 1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                for state in dstate:
+                    ds = els[i].appendChild(doc.createElement("dialogue_state"))
+
+                    for slot_name, slot_value in state:
+                        sl = ds.appendChild(doc.createElement("slot"))
+                        sl.setAttribute("name", "%s" % slot_name)
+                        sl.appendChild(doc.createTextNode(unicode(slot_value)))
+
+                break
+        else:
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+
+        self.close_session_xml(doc)
 
     @global_lock(lock)
     @catch_ioerror

@@ -1,13 +1,24 @@
-parameters:
-<ul>
-    <li>dir -- path to directory with wav recordings</li>
-</ul>
-
 {% if recs %}
+
 <h1>Recordings</h1>
 <ul>
 {% for rec in recs %}
 <li><a href="?dir={{ dir }}&play={{ rec }}">{{ rec }}</a></li>
 {% endfor %}
 </ul>
+
 {% endif %}
+
+parameters:
+<ul>
+    <li> Nothing -- display this help </li>
+    <li>dir -- path to directory with wav recordings</li>
+    <li>play -- path to file you want to play</li>
+</ul>
+Example how to use parameters for localhost:
+<ul>
+    <li><a href="http://localhost:{{ port }}">http://localhost:{{ port }}</a> </li>
+    <li><a href="http://localhost:{{ port }}/?dir=source_wavs">http://localhost:{{ port }}/?dir=source_wavs</a> </li>
+    <li><a href="http://localhost:{{ port }}/?play=source_wavs/test.wav">http://localhost:{{ port }}/?play=source_wavs/test.wav</a> </li>
+</ul>
+

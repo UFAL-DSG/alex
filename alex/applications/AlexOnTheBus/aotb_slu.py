@@ -48,6 +48,11 @@ class AOTBSLU(SLUInterface):
         super(AOTBSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
+        """ Detects stops in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
         preps_from = set(["z", "za", "ze", "od", "začátek", "začáteční",
                           "počáteční", "počátek", "výchozí", "start"])
         preps_to = set(["k", "do", "konec", "na", "konečná", "koncová",
@@ -124,6 +129,11 @@ class AOTBSLU(SLUInterface):
                     cn.add(0.499, DialogueActItem(dat, "", stop_name))
 
     def parse_time(self, abutterance, cn):
+        """Detects the time in th input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
         preps_in = set(["v", "čas"])
 
         u = abutterance
@@ -139,8 +149,7 @@ class AOTBSLU(SLUInterface):
                         time = True
 
                 if N == 1:
-                    # if there is only one word in the utterance then can be
-                    # time
+                    # if there is only one word in the utterance then suppose that it is time
                     time = True
 
                 if time:
@@ -263,9 +272,8 @@ class AOTBSLU(SLUInterface):
             # the text normalisation performs stemming
             utterance = self.preprocessing.text_normalisation(utterance)
 
-            abutterance, category_labels = (
-                self.preprocessing
-                .values2category_labels_in_utterance(utterance))
+            abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
+
             if verbose:
                 print 'After preprocessing: "{utt}".'.format(utt=abutterance)
                 print category_labels
@@ -284,46 +292,3 @@ class AOTBSLU(SLUInterface):
             res_cn.add(1.0, DialogueActItem("other"))
 
         return res_cn
-
-    # def parse_nblist(self, obs):
-        # """
-        # Parses n-best list by parsing each item on the list and then merging
-        # the results.
-        # """
-#
-        # utterance_list = obs['utt_nbl']
-        # if len(utterance_list) == 0:
-            # return DialogueActConfusionNetwork()
-#
-        # confnet_hyps = []
-        # for prob, utt in utterance_list:
-            # if "__other__" == utt:
-                # confnet = DialogueActConfusionNetwork()
-                # confnet.add(1.0, DialogueActItem("other"))
-            # else:
-                # confnet = self.parse_1_best({'utt': utt})
-#
-            # confnet_hyps.append((prob, confnet))
-#
-            # # print prob, utt
-            # # confnet.prune()
-            # # confnet.sort()
-            # # print confnet
-#
-        # confnet = merge_slu_confnets(confnet_hyps)
-        # confnet.prune()
-        # confnet.sort()
-#
-        # return confnet
-#
-    # def parse_confnet(self, obs, verbose=False):
-        # """
-        # Parses the word confusion network by generating an n-best list and
-        # parsing this n-best list.
-        # """
-#
-        # confnet = obs['utt_cn']
-        # nblist = confnet.get_utterance_nblist(n=40)
-        # sem = self.parse_nblist({'utt_nbl': nblist})
-        # return sem
-

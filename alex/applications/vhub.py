@@ -15,7 +15,7 @@ from alex.components.hub.slu import SLU
 from alex.components.hub.dm import DM
 from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command
+from alex.components.hub.messages import Command, DMDA
 from alex.components.hub.calldb import CallDB
 from alex.utils.config import Config
 
@@ -106,7 +106,12 @@ class VoipHub(Hub):
 
             s_last_dm_activity_time = 0
 
+            u_last_input_timeout = 0
+
+            call_connected = False
             hangup = False
+
+            outstanding_nlg_da = None
 
             call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
             call_db.log()
@@ -127,13 +132,13 @@ class VoipHub(Hub):
                 if vio_commands.poll():
                     command = vio_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
-                        
+
                     if isinstance(command, Command):
-                            
+
                         if command.parsed['__name__'] == "incoming_call":
                             self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
                             self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
-                            
+
                             self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
                             self.cfg['Logging']['session_logger'].config('config = ' + str(self.cfg))
                             self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
@@ -189,20 +194,25 @@ class VoipHub(Hub):
                             if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
                                     last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
                                 # prepare for ending the call
+                                call_connected = True
+
                                 call_start = time.time()
                                 number_of_turns = 0
                                 s_voice_activity = True
                                 s_last_voice_activity_time = time.time()
                                 u_voice_activity = False
                                 u_last_voice_activity_time = 0
+                                u_last_input_timeout = time.time()
                                 hangup = True
-                                
+
                                 tts_commands.send(Command('synthesize(text="%s",log="false")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
                                 vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
                                   time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
                                 m.append('CALL REJECTED')
                             else:
                                 # init the system
+                                call_connected = True
+
                                 call_start = time.time()
                                 number_of_turns = 0
 
@@ -210,7 +220,8 @@ class VoipHub(Hub):
                                 s_last_voice_activity_time = 0
                                 u_voice_activity = False
                                 u_last_voice_activity_time = 0
-                                hungup = False
+                                u_last_input_timeout = time.time()
+                                hangup = False
 
                                 dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
                                 m.append('CALL ACCEPTED')
@@ -232,6 +243,8 @@ class VoipHub(Hub):
                             remote_uri = command.parsed['remote_uri']
                             call_db.track_disconnected_call(remote_uri)
 
+                            call_connected = False
+
                             self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
 
                         if command.parsed['__name__'] == "play_utterance_start":
@@ -246,6 +259,13 @@ class VoipHub(Hub):
                             # flush vad, when flushed, asr will be flushed
                             vad_commands.send(Command('flush()', 'HUB', 'VAD'))
 
+                        if command.parsed['__name__'] == "flushed_out":
+                            # process the outstanding DA if necessary
+                            if outstanding_nlg_da:
+                                nlg_commands.send(DMDA(outstanding_nlg_da, 'HUB', 'NLG'))
+                                outstanding_nlg_da = None
+
+
                 if vad_commands.poll():
                     command = vad_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -253,16 +273,6 @@ class VoipHub(Hub):
                     if isinstance(command, Command):
                         if command.parsed['__name__'] == "speech_start":
                             u_voice_activity = True
-
-                            if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time: 
-                                self.cfg['Analytics'].track_event('vad', 'barge_in')
-                                self.cfg['Logging']['session_logger'].barge_in("system")
-
-                                # when a user barge in into the output, all the output pipe line
-                                # must be flushed
-                                nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
-                                s_voice_activity = False
-                                s_last_voice_activity_time = time.time()
 
                             self.cfg['Analytics'].track_event('vad', 'speech_start')
 
@@ -274,7 +284,7 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "flushed":
                             # flush asr, when flushed, slu will be flushed
                             asr_commands.send(Command('flush()', 'HUB', 'ASR'))
-                            
+
                 if asr_commands.poll():
                     command = asr_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -293,7 +303,7 @@ class VoipHub(Hub):
                             # flush dm, when flushed, nlg will be flushed
                             dm_commands.send(Command('flush()', 'HUB', 'DM'))
                             dm_commands.send(Command('end_dialogue()', 'HUB', 'DM'))
-                            
+
                 if dm_commands.poll():
                     command = dm_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
@@ -304,27 +314,40 @@ class VoipHub(Hub):
                             hangup = True
                             self.cfg['Analytics'].track_event('vhub', 'system_hangup')
 
-                        if command.parsed['__name__'] == "dm_da_generated":
-                            # record the time of the last system generated dialogue act
-                            s_last_dm_activity_time = time.time()
-                            number_of_turns += 1
-                            self.cfg['Analytics'].track_event('dm', 'da_generated')
-
-                        # if a dialogue act is generated, stop playing current TTS audio
-                        # theoretically it is a good place because if the DM decides to be silent
-                        # the TTS can continue
-                        # however, if it decides to say something, it is for the implementation
-                        # late to flush old audio. If implemented better, it could work.
-                        # As of now, audio is flushed when speech is detected using VAD
-                        
                         if command.parsed['__name__'] == "flushed":
                             # flush nlg, when flushed, tts will be flushed
                             nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
 
+                    elif isinstance(command, DMDA):
+                        # record the time of the last system generated dialogue act
+                        s_last_dm_activity_time = time.time()
+                        number_of_turns += 1
+                        self.cfg['Analytics'].track_event('dm', 'da_generated')
+
+                        if command.da != "silence()":
+                            # if the DM generated non-silence dialogue act, then continue in processing it
+
+                            if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time:
+                                # if the system is still talking then flush teh output
+                                self.cfg['Analytics'].track_event('vad', 'barge_in')
+                                self.cfg['Logging']['session_logger'].barge_in("system")
+
+                                # when a user barge in into the output, all the output pipe line
+                                # must be flushed
+                                nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
+                                s_voice_activity = False
+                                s_last_voice_activity_time = time.time()
+
+                                # the DA will be send when all the following components are flushed
+                                outstanding_nlg_da = command.da
+
+                            else:
+                                nlg_commands.send(DMDA(command.da, "HUB", "NLG"))
+
                 if nlg_commands.poll():
                     command = nlg_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
-                    
+
                     if isinstance(command, Command):
                         if command.parsed['__name__'] == "flushed":
                             # flush tts, when flushed, vio will be flushed
@@ -341,15 +364,28 @@ class VoipHub(Hub):
 
                 current_time = time.time()
 
+                s_diff = current_time - s_last_voice_activity_time
+                u_diff = current_time - u_last_voice_activity_time
+
+                if call_connected and \
+                    not s_voice_activity and not u_voice_activity and \
+                    s_diff > self.cfg['DM']['input_timeout'] and \
+                    u_diff > self.cfg['DM']['input_timeout'] and \
+                    current_time - u_last_input_timeout> self.cfg['DM']['input_timeout']:
+
+                    u_last_input_timeout = time.time()
+                    dm_commands.send(Command('timeout(silence_time="%0.3f")' % min(s_diff, u_diff), 'HUB', 'DM'))
+
                 if hangup and s_last_dm_activity_time + 2.0 < current_time and \
                     s_voice_activity == False and s_last_voice_activity_time + 2.0 < current_time:
-                    # we are ready to hangup only when all voice activity finished,
+                    # we are ready to hangup only when all voice activity is finished
                     hangup = False
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
-                # hard hangup due to the hard limits
                 if number_of_turns != -1 and current_time - call_start > self.cfg['VoipHub']['hard_time_limit'] or \
                     number_of_turns > self.cfg['VoipHub']['hard_turn_limit']:
+                    # hard hangup due to the hard limits
+                    call_start = 0
                     number_of_turns = -1
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
@@ -401,20 +437,11 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="append", dest="configs", default=None,
-        help='additional configure file')
+    parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('resources/default.cfg', True)
+    cfg = Config.load_configs(args.configs)
 
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + unicode(cfg))
-
-    #########################################################################
-    #########################################################################
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
     vhub = VoipHub(cfg)

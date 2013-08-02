@@ -24,8 +24,8 @@ logger = None
 
 
 def log_cb(level, str, len):
-    logger.info(str)
-
+    if logger:
+        logger.info(str)
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.

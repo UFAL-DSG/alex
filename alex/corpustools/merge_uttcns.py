@@ -19,7 +19,7 @@ def find_best_cn(cns):
     if non_none_cns:
         # Restrict the choice to those confnets that occur most often.
         counts = Counter(non_none_cns)
-        most_common, highest_count = counts.most_common(1)
+        most_common, highest_count = counts.most_common(1)[0]
         non_none_cns = [cn for (cn, count) in counts.iteritems()
                         if count == highest_count]
         # Choose the longest confnet (measured by its representation).
@@ -40,7 +40,7 @@ def merge_files(fnames, outfname):
             if len(cns) > 1:
                 best_cn = find_best_cn(cns)
             else:
-                best_cn = cn[0]
+                best_cn = cns[0]
             outfile.write('{key} => {val}\n'.format(key=key, val=best_cn))
 
 

@@ -34,28 +34,28 @@ class DummyDialoguePolicy(DialoguePolicy):
         if len(self.das) == 0:
             # NLG("Thank you for calling. How may I help you?")
             self.last_system_dialogue_act = DialogueAct("hello()&thankyou()")
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
-        elif dialogue_state.slots["lda"] == "bye":
+        elif dialogue_state.slots["ludait"] == "bye":
             # NLG("Goodbye.")
             self.last_system_dialogue_act = DialogueAct("bye()")
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
-        elif dialogue_state.slots["lda"] == "restart":
+        elif dialogue_state.slots["ludait"] == "restart":
             # NLG("Let's start again from scratch. How may I help you?")
             dialogue_state.restart()
             self.last_system_dialogue_act = DialogueAct("restart()&hello()")
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
-        elif dialogue_state.slots["lda"] == "repeat":
+        elif dialogue_state.slots["ludait"] == "repeat":
             # NLG - use the last dialogue act
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
-        elif dialogue_state.slots["lda"] == "reqalts":
+        elif dialogue_state.slots["ludait"] == "reqalts":
             # NLG("There is nothing else in the database.")
             self.last_system_dialogue_act = DialogueAct(
                 "deny(alternatives=true")
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
         elif requested_slots:
             # inform about all requested slots
@@ -99,7 +99,7 @@ class DummyDialoguePolicy(DialoguePolicy):
         else:
             # NLG("Can I help you with anything else?")
             self.last_system_dialogue_act = DialogueAct("reqmore()")
-            dialogue_state.slots["lda"] = "none"
+            dialogue_state.slots["ludait"] = "none"
 
         # record the system dialogue acts
         self.das.append(self.last_system_dialogue_act)

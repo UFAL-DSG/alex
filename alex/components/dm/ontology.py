@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 from alex.utils.config import load_as_module
 from alex.utils.cache import lru_cache
 
-class OntologyException(object):
+class OntologyException(Exception):
     pass
     
 class Ontology(object):
@@ -32,7 +32,13 @@ class Ontology(object):
         """ Check whether the slot and the value are compatible.
         """
         return value in self.ontology['slots'][name]
-    
+
+    def slot_is_binary(self, name):
+        """ Check whether the slot and the value are compatible.
+        :param name: name of the slot being checked
+        """
+        return 'binary' in self.ontology['slot_attributes'][name]
+
     @lru_cache(maxsize=10)    
     def slots_system_requests(self):
         """ Return all slots the system can request.

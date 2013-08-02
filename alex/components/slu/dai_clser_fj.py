@@ -51,8 +51,8 @@ class DAILogRegClassifier(SLUInterface):
         self._input_matrix = None
         self._outputs = None
 
-    def extract_features(self, das, utterances, verbose=False):
-        self.utterances = utterances
+    def extract_features(self, obss, das, verbose=False):
+        self.utterances = obss['utt']
         self.das = das
 
         self.utterances_list = self.utterances.keys()
@@ -96,7 +96,7 @@ class DAILogRegClassifier(SLUInterface):
                 self.remove_features.append(feat)
 
         if verbose:
-            print "Number of features occurring less then %d times: %d" % (
+            print "Number of features occurring less than %d times: %d" % (
                 min_feature_count, len(self.remove_features))
 
         self.remove_features = set(self.remove_features)
@@ -370,8 +370,3 @@ class DAILogRegClassifier(SLUInterface):
         nblist = confnet.get_utterance_nblist(n=40)
         sem = self.parse_nblist(nblist)
         return sem
-
-
-class DAILogRegClassifierLearning(DAILogRegClassifier):
-    """Retained for backward compatibility."""
-    pass

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import argparse
 import codecs
 import collections
@@ -36,18 +38,21 @@ all odd dialogue turns should be ignored.
 
 """
 
-_subst = [('<SILENCE>', ' _SIL_ '),
-          ('<INHALE>', ' _INHALE_ '),
-          ('<NOISE>', ' _NOISE_ '),
-          ('<COUGH>', ' _EHM_HMM_ '),
-          ('<MOUTH>', ' _EHM_HMM_ '),
-          ('<LAUGH>', ' _LAUGH_ '),
-          ('<EHM A>', ' _EHM_HMM_ '),
-          ('<EHM N>', ' _EHM_HMM_ '),
-          ('<EHM >', ' _EHM_HMM_ '),
+_subst = [('<SILENCE>', '_SIL_'),
+          ('<INHALE>', '_INHALE_'),
+          ('<NOISE>', '_NOISE_'),
+          ('<COUGH>', '_EHM_HMM_'),
+          ('<MOUTH>', '_EHM_HMM_'),
+          ('<LAUGH>', '_LAUGH_'),
+          ('<EHM A>', '_EHM_HMM_'),
+          ('<EHM N>', '_EHM_HMM_'),
+          ('<EHM *>', '_EHM_HMM_'),
+          (ur'\([^(]*\(([^)]*)\)\)', '\\2'),  # (written form (pronounced))
+            # NOTE '\\2' is used instead of '\\1' since '\\1' will refer to the
+            # preceding 0 or 1 characters when `_subst' is used next
           ('JESLTI', 'JESTLI'),
           (u'NMŮŽU', u'NEMŮŽU'),
-          ('6E', ' '),
+          ('6E', ' '),   # XXX What is this??
           ]
 for idx, tup in enumerate(_subst):
     pat, sub = tup
@@ -71,8 +76,7 @@ def normalise_trs(text):
     text = _more_spaces.sub(' ', text).strip()
     for word in _hesitation:
         text = word.sub('(HESITATION)', text)
-    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
-    # return text.translate(None, '*+~')
+    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargein
     for char in '*+~':
         text = text.replace(char, '')
     return text
@@ -105,7 +109,7 @@ def cut_wavs(src, tgt, start, end):
     it to `tgt'.
 
     """
-    existed = os.path.exists(trs_fname)
+    existed = os.path.exists(tgt)
     cmd = ("sox", "--ignore-length", src, tgt,
            "trim", str(start), str(end - start))
     print " ".join(cmd)
@@ -120,8 +124,11 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with codecs.open(trs_fname, 'w+', encoding='UTF-8') as trs_file:
-        trs_file.write(trs.encode('ascii', 'ignore'))
+        trs_file.write(trs)
+        # trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
 
 
@@ -167,12 +174,12 @@ def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
         if verbose:
             print " #f: {tgt}; # s: {start}; # e: {end}; t: {trs}".format(
                 tgt=os.path.basename(tgt_wav_fname), start=starttime,
-                end=endtime, trs=transcription.encode('UTF-8'))
+                end=endtime, trs=transcription)
 
         # Normalise
         transcription = normalise_trs(transcription)
         if verbose:
-            print "  after normalisation:", transcription.encode('UTF-8')
+            print "  after normalisation:", transcription
         if exclude(transcription):
             if verbose:
                 print "  ...excluded"
@@ -257,6 +264,9 @@ def convert(args):
 
 if __name__ == '__main__':
     wc = collections.Counter()  # word counter
+
+    import sys
+
     import autopath
     from alex.utils.fs import find
     from alex.utils.ui import getTerminalSize
@@ -294,9 +304,8 @@ if __name__ == '__main__':
                         action="store_true",
                         help='only normalise transcriptions, ignore audio '
                              'files')
-    parser.add_argument('-v',
+    parser.add_argument('-v', '--verbose',
                         action="store_true",
-                        dest="verbose",
                         help='set verbose output')
     parser.add_argument('-w', '--word-list',
                         default='word_list',
@@ -306,6 +315,12 @@ if __name__ == '__main__':
                              'one word per line.')
 
     args = parser.parse_args()
+
+    # Ensure we can print unicode.
+    if not sys.stdout.isatty():
+        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+    if not sys.stderr.isatty():
+        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
 
     # Do the copying.
     n_overwrites, n_missing_wav, n_missing_trs = convert(args)

@@ -12,8 +12,8 @@ from alex.components.slu.da import DialogueAct
 DEBUG = False
 # DEBUG = True
 if DEBUG:
-    from alex.utils.pdbonerror import set_hook
-    set_hook("ipdb")
+    from alex.utils.pdbonerror import ExceptionHook
+    ExceptionHook.set_hook("ipdb")
 
 
 # slot names and values

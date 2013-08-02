@@ -138,17 +138,11 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configure file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('../resources/default.cfg')
-
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
+    cfg = Config.load_configs(args.configs)
 
     #########################################################################
     #########################################################################

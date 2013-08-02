@@ -78,15 +78,16 @@ class AudioHub(Hub):
                                    dm_actions_out, dm_child_actions,
                                    nlg_text_out, nlg_child_text]
 
+        close_event = multiprocessing.Event()
 
         # create the hub components
-        aio = AudioIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play)
-        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out)
-        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses)
-        slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses)
-        dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions)
-        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text)
-        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, aio_play)
+        aio = AudioIO(self.cfg, aio_child_commands, aio_child_record, aio_child_play, close_event)
+        vad = VAD(self.cfg, vad_child_commands, aio_record, vad_child_audio_out, close_event)
+        asr = ASR(self.cfg, asr_child_commands, vad_audio_out, asr_child_hypotheses, close_event)
+        slu = SLU(self.cfg, slu_child_commands, asr_hypotheses_out, slu_child_hypotheses, close_event)
+        dm  =  DM(self.cfg,  dm_child_commands, slu_hypotheses_out, dm_child_actions, close_event)
+        nlg = NLG(self.cfg, nlg_child_commands, dm_actions_out, nlg_child_text, close_event)
+        tts = TTS(self.cfg, tts_child_commands, nlg_text_out, aio_play, close_event)
 
         # start the hub components
         aio.start()
@@ -209,16 +210,12 @@ def main():
         Any additional config parameters overwrite their previous values.
       """)
 
-    parser.add_argument('-c', action="append", dest="configs",
-        help='additional configuration file')
+    parser.add_argument('-c', "--configs", nargs="+",
+                        help='additional configuration file')
     args = parser.parse_args()
 
-    cfg = Config('resources/default.cfg', True)
+    cfg = Config.load_configs(args.configs)
 
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
     vhub = AudioHub(cfg)

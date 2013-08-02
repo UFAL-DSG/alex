@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import autopath
 
 import multiprocessing
@@ -26,16 +28,11 @@ if __name__ == '__main__':
 
       """)
 
-    parser.add_argument(
-        '-c', action="store", dest="configs", default=None, nargs='+',
-        help='additional configure file')
+    parser.add_argument('-c', "--configs", nargs='+',
+                        help='additional configuration files')
     args = parser.parse_args()
 
-    cfg = Config('../resources/default.cfg')
-    if args.configs:
-        for c in args.configs:
-            cfg.merge(c)
-    cfg['Logging']['system_logger'].info('config = ' + str(cfg))
+    cfg = Config.load_configs(args.configs)
 
     #########################################################################
     #########################################################################
@@ -57,8 +54,10 @@ if __name__ == '__main__':
     vad_audio_out, vad_child_audio_out = multiprocessing.Pipe()
     # used to read output audio from VAD
 
-    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play)
-    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out)
+    close_event = multiprocessing.Event()
+
+    vio = VoipIO(cfg, vio_child_commands, vio_child_record, vio_child_play, close_event)
+    vad = VAD(cfg, vad_child_commands, vio_record, vad_child_audio_out, close_event)
 
     command_connections = [vio_commands, vad_commands]
 
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     count = 0
     max_count = 50000
     wav = None
-    
+
     while count < max_count:
         time.sleep(cfg['Hub']['main_loop_sleep_time'])
         count += 1
@@ -96,7 +95,7 @@ if __name__ == '__main__':
                 if data_vad.parsed['__name__'] == 'speech_end':
                     print 'VAD:', 'Speech end'
 
-        # read all messages 
+        # read all messages
         if vio_commands.poll():
             command = vio_commands.recv()
 
@@ -105,25 +104,25 @@ if __name__ == '__main__':
                     wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
                     # split audio into frames
                     wav = various.split_to_bins(wav, 2 * cfg['Audio']['samples_per_frame'])
-                
+
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+                    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
                     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-                    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+                    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
-                    cfg['Logging']['session_logger'].input_source("voip")                
-                
+                    cfg['Logging']['session_logger'].input_source("voip")
+
                 elif command.parsed['__name__'] == "call_disconnected":
                     cfg['Logging']['system_logger'].info(command)
 
                     vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
-                    
+
                     cfg['Logging']['system_logger'].session_end()
-                    cfg['Logging']['session_logger'].session_end()                    
-                   
-        
+                    cfg['Logging']['session_logger'].session_end()
+
+
         if vad_commands.poll():
             command = vad_commands.recv()
             cfg['Logging']['system_logger'].info(command)
@@ -144,7 +143,7 @@ if __name__ == '__main__':
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
     vad_commands.send(Command('stop()', 'HUB', 'VAD'))
-    
+
     # clean connections
     for c in command_connections:
         while c.poll():
@@ -153,7 +152,7 @@ if __name__ == '__main__':
     for c in non_command_connections:
         while c.poll():
             c.recv()
-                
+
     # wait for processes to stop
     vio.join()
     system_logger.debug('VIO stopped.')

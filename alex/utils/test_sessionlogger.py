@@ -25,7 +25,7 @@ CONFIG_DICT = {
 
 class TestSessionLogger(unittest.TestCase):
     def test_session_logger(self):
-        cfg = Config(config=CONFIG_DICT)
+        cfg = Config.load_configs(config=CONFIG_DICT, use_default=False)
 
         sl = SessionLogger()
 
@@ -35,7 +35,7 @@ class TestSessionLogger(unittest.TestCase):
             if not os.path.isdir(sess_dir):
                 os.mkdir(sess_dir)
             sl.session_start(sess_dir)
-            sl.config('config = ' + str(cfg))
+            sl.config('config = ' + unicode(cfg))
             sl.header(cfg['Logging']["system_name"], cfg['Logging']["version"])
             sl.input_source("voip")
 
@@ -70,7 +70,7 @@ class TestSessionLogger(unittest.TestCase):
 
             asr_nblist = asr_confnet.get_utterance_nblist()
 
-            sl.asr("user", asr_nblist, asr_confnet)
+            sl.asr("user", "user1.wav", asr_nblist, asr_confnet)
 
             slu_confnet = DialogueActConfusionNetwork()
             slu_confnet.add(0.7, DialogueActItem('hello'))
@@ -83,7 +83,7 @@ class TestSessionLogger(unittest.TestCase):
 
             slu_nblist = slu_confnet.get_da_nblist()
 
-            sl.slu("user", slu_nblist, slu_confnet)
+            sl.slu("user", "user1.wav", slu_nblist, slu_confnet)
 
             sl.turn("system")
             sl.dialogue_act("system", "thankyou()")

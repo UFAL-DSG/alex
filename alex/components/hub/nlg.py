@@ -32,6 +32,38 @@ class NLG(multiprocessing.Process):
         nlg_type = get_nlg_type(cfg)
         self.nlg = nlg_factory(nlg_type, cfg)
 
+    def process_da(self, da):
+        if da != "silence()":
+            text = self.nlg.generate(da)
+
+            if self.cfg['NLG']['debug']:
+                s = []
+                s.append("NLG Output")
+                s.append("-"*60)
+                s.append(text)
+                s.append("")
+                s = '\n'.join(s)
+                self.cfg['Logging']['system_logger'].debug(s)
+
+            self.cfg['Logging']['session_logger'].text("system", text)
+
+            self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+            self.text_out.send(TTSText(text))
+        else:
+            # the input dialogue is silence. Therefore, do not generate eny output.
+            if self.cfg['NLG']['debug']:
+                s = []
+                s.append("NLG Output")
+                s.append("-"*60)
+                s.append("DM sent 'silence()' therefore generating nothing")
+                s.append("")
+                s = '\n'.join(s)
+                self.cfg['Logging']['system_logger'].debug(s)
+
+            self.cfg['Logging']['session_logger'].text("system", "__silence__")
+
+            self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+
     def process_pending_commands(self):
         """Process all pending commands.
 
@@ -63,6 +95,8 @@ class NLG(multiprocessing.Process):
                     self.commands.send(Command("flushed()", 'NLG', 'HUB'))
 
                     return False
+            elif isinstance(command, DMDA):
+                self.process_da(command.da)
 
         return False
 
@@ -71,21 +105,7 @@ class NLG(multiprocessing.Process):
             data_da = self.dialogue_act_in.recv()
 
             if isinstance(data_da, DMDA):
-                text = self.nlg.generate(data_da.da)
-
-                if self.cfg['NLG']['debug']:
-                    s = []
-                    s.append("NLG Output")
-                    s.append("-"*60)
-                    s.append(text)
-                    s.append("")
-                    s = '\n'.join(s)
-                    self.cfg['Logging']['system_logger'].debug(s)
-
-                self.cfg['Logging']['session_logger'].text("system", text)
-
-                self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
-                self.text_out.send(TTSText(text))
+                self.process_da(data_da.da)
             elif isinstance(data_da, Command):
                 self.cfg['Logging']['system_logger'].info(data_da)
             else:

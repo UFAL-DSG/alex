@@ -22,17 +22,15 @@ from alex.utils.config import Config
 import get_jasr_confnets
 
 _script_dir = os.path.dirname(os.path.abspath(__file__))
-_default_cfg_fname = os.path.join(_script_dir, '..', 'resources',
-                                  'default.cfg')
 
 
 class TestJuliusConfnetDecoding(unittest.TestCase):
     data_fname = os.path.join(_script_dir, '.test_data')
 
     def setUp(self):
-        cfg = Config(_default_cfg_fname)
-        cfg.config['ASR']['Julius']['msg_timeout'] = 10.
-        cfg.config['ASR']['Julius']['timeout'] = 10.
+        cfg = Config.load_configs()
+        cfg.config['ASR']['Julius']['msg_timeout'] = 5.
+        cfg.config['ASR']['Julius']['timeout'] = 5.
         cfg.config['corpustools']['get_jasr_confnets']['rt_ratio'] = 0.
         self.cfg = cfg
 
