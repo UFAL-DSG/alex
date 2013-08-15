@@ -50,6 +50,7 @@ _subst = [('<SILENCE>', '_SIL_'),
           (ur'\([^(]*\(([^)]*)\)\)', '\\2'),  # (written form (pronounced))
             # NOTE '\\2' is used instead of '\\1' since '\\1' will refer to the
             # preceding 0 or 1 characters when `_subst' is used next
+          ('\\^', ''),
           ('JESLTI', 'JESTLI'),
           (u'NMŮŽU', u'NEMŮŽU'),
           ('6E', ' '),   # XXX What is this??
