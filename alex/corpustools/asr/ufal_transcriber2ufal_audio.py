@@ -324,6 +324,15 @@ if __name__ == '__main__':
         sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
 
     # Do the copying.
+    if args.verbose:
+        escape_value = (lambda value: unicode(value).replace('\\', '\\\\')
+                        .replace('"', '\\"'))
+        print '*' * (getTerminalSize()[1] or 120)
+        print "The program was called with these arguments:"
+        print "\n".join('  {key}: "{value}"'.format(key=key,
+                                                    value=escape_value(value))
+                        for key, value in args._get_kwargs())
+        print '*' * (getTerminalSize()[1] or 120)
     n_overwrites, n_missing_wav, n_missing_trs = convert(args)
 
     # Report.
