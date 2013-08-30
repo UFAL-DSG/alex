@@ -1,5 +1,5 @@
 #!/bin/bash
-# These are used by the HTK training recipe for English using data from CamInfo
+# These are used by the HTK training recipe for English
 #
 # Using the bash shell, you can source it ( `. XXX` )
 # from the training script.
