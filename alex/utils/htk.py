@@ -110,7 +110,10 @@ class Features:
 
 
 class MLF:
-    """Read HTK MLF files."""
+    """Read HTK MLF files.
+
+    Def: segment is a sequence of frames with the same label.
+    """
 
     def __init__(self, file_name=None, max_files=None):
         self.mlf = {}
@@ -192,7 +195,7 @@ class MLF:
                     self.mlf[f][i][2] = repl
 
     def merge(self):
-        """Merge consequtive equivalent segments."""
+        """Merge the consecutive segments with the same label into one segment."""
         for f in self.mlf:
             transcription = []
             prev_w = None
@@ -271,8 +274,8 @@ class MLFFeaturesAlignedArray:
     """Creates array like object from multiple mlf files and corresponding audio data.
     For each aligned frame it returns a feature vector and its label.
 
-    If a filter is set to some value, then only frames with the label equal to the filer will be returned.
-    In this case, the label is returned when iterating through the array.
+    If a filter is set to a particular value, then only frames with the label equal to the filer will be returned.
+    In this case, the label is not returned when iterating through the array.
 
     """
     def __init__(self, filter=None):
@@ -335,15 +338,15 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
     """This is an extension of MLFFeaturesAlignedArray which computes the features on the fly from
     the input wav files.
 
-    It uses our own implementation of the MFCC computation so that it does not give the same results
+    It uses our own implementation of the MFCC computation. As a result it does not give the same results
     as the HTK HCopy.
 
     """
     def __init__(self, windowsize=250000, targetrate=100000, filter=None, usec0=False):
-        """Initialise the MFCC frontend.
+        """Initialise the MFCC front-end.
 
         windowsize - defines the length of the window (frame) in the HTK's 100ns units
-        targetrate - defines the period with wich new coefficents should be generated (again in 100ns units)
+        targetrate - defines the period with which new coefficients should be generated (again in 100ns units)
         """
         MLFFeaturesAlignedArray.__init__(self, filter)
 
