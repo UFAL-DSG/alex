@@ -234,6 +234,7 @@ class SLUPreprocessing(object):
             assert isinstance(utt_hyp, UtteranceNBList)
             for utt_idx, hyp in enumerate(utt_hyp):
                 utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
+            return utt_hyp
 
     # TODO Update the docstring for the `all_options' argument.
     def values2category_labels_in_utterance(self, utterance,
@@ -258,10 +259,9 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
-        # utterance_cp = copy.deepcopy(utterance)
+
         utterance_cp = AbstractedUtterance.from_utterance(utterance)
 
-        category_label_counter = defaultdict(int)
         valform_for_cl = {}
         if all_options:
             matched_phrases = {}
@@ -304,25 +304,11 @@ class SLUPreprocessing(object):
                     slot_upper, vals = upnames_vals.iteritems().next()
                     # Choose a random value from the known ones.
                     value = vals[0]
-                    # Generate the category label.
-                    # category_label = '{cat}-{idx}'.format(
-                    # TODO Clean.
-                    category_label = '{cat}'.format(
-                        cat=slot_upper,
-                        idx=category_label_counter[slot_upper])
-                    category_label_counter[slot_upper] += 1
                     # Do the substitution.
-                    valform_for_cl[category_label] = (value, surface)
-                    # Assumes the surface strings don't overlap.
-                    # FIXME: Perhaps replace all instead of just the first one.
-                    # XXX Temporary solution: we want the new utterance to
-                    # contain the <category>=<value> token instead of the
-                    # original <surface> sequence of tokens.  This is done
-                    # crudely using two subsequent substitutions, so the
-                    # original <surface> gets forgotten.
-                    utterance_cp = utterance_cp.replace(surface, (value, ))
-                    utterance_cp = utterance_cp.phrase2category_label(
-                        (value, ), (category_label, ))
+                    valform_for_cl[slot_upper] = (value, surface)
+                    utterance_cp = utterance_cp.phrase2cl_val(surface,
+                                                              slot_upper,
+                                                              value)
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -369,48 +355,24 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
-        nblist_cp = copy.deepcopy(utt_nblist)
 
-        category_label_counter = defaultdict(int)
+        nblist_cp = copy.deepcopy(utt_nblist)
         valform_for_cl = {}
 
         # FIXME This iterative matching will get slow with larger surface ->
         # slot_value mappings.
-        tot_len = sum(len(hyp[1]) for hyp in nblist_cp)  # total number of
-                                       # words in utterances on the n-best list
-        substituted_len = 0       # number of words substituted
         for surface, upnames_vals in self.cldb.form_upnames_vals:
             # NOTE it is ensured the longest matches will always be used in
             # preference to shorter matches, due to the iterated values being
             # sorted by `surface' length from the longest to the shortest.
-            hyps_with_surface = [hyp_idx for (hyp_idx, hyp) in
-                                 enumerate(nblist_cp) if surface in hyp[1]]
-            if hyps_with_surface:
-                substituted_len += len(surface) * len(hyps_with_surface)
+            if surface in nblist_cp:
                 # Choose a random category from the known ones.
                 slot_upper, vals = upnames_vals.iteritems().next()
                 # Choose a random value from the known ones.
                 value = vals[0]
-                # Generate the category label.
-                category_label = '{cat}-{idx}'.format(
-                    cat=slot_upper,
-                    idx=category_label_counter[slot_upper])
-                category_label_counter[slot_upper] += 1
                 # Do the substitution.
-                valform_for_cl[category_label] = (value, surface)
-                # Assumes the surface strings don't overlap.
-                # FIXME: Perhaps replace all instead of just the first one.
-                for hyp_idx in hyps_with_surface:
-                    # XXX Temporary solution.  See above for comments on the
-                    # use of replace and phrase2category_label.
-                    new_utt = nblist_cp[hyp_idx][1].replace(surface, (value, ))
-                    nblist_cp[hyp_idx][1] = (new_utt.phrase2category_label(
-                        (value, ), (category_label, )))
-
-                # If nothing is left to replace, stop iterating the database.
-                if substituted_len >= tot_len:
-                    assert substituted_len == tot_len
-                    break
+                valform_for_cl[slot_upper] = (value, surface)
+                nblist_cp = nblist_cp.phrase2cl_val(surface, slot_upper, value)
 
         return nblist_cp, valform_for_cl
 
@@ -430,6 +392,7 @@ class SLUPreprocessing(object):
                 value, surface form).
 
         """
+
         confnet_cp = copy.deepcopy(confnet)
         valform_for_cl = {}
 
@@ -446,19 +409,8 @@ class SLUPreprocessing(object):
                 value = vals[0]
                 # Do the substitution.
                 valform_for_cl[slot_upper] = (value, surface)
-                # Assumes the surface strings don't overlap.
-                # FIXME: Perhaps replace all instead of just the first one.
-                # XXX Temporary solution: we want the new confnet to
-                # contain the <category>=<value> token instead of the
-                # original <surface> sequence of tokens.  This is done
-                # crudely using two subsequent substitutions, so the
-                # original <surface> gets forgotten.
-                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
-                confnet_cp = confnet_cp.replace(surface, (value, ))
-                confnet_cp = confnet_cp.phrase2category_label(
-                    (value, ), (slot_upper, ))
-                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
-
+                confnet_cp = confnet_cp.phrase2cl_val(surface, slot_upper,
+                                                      value)
         return confnet_cp, valform_for_cl
 
     def values2catlabs(self, utt_hyp):
@@ -474,6 +426,7 @@ class SLUPreprocessing(object):
         else:
             assert isinstance(utt_hyp, UtteranceConfusionNetwork)
             return self.values2category_labels_in_confnet(utt_hyp)
+
 
     def values2category_labels_in_da(self, utt_hyp, da):
         """

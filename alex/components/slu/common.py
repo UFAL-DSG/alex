@@ -64,6 +64,7 @@ def load_data(cfg_this_slu, training=False, with_das=True):
     (object DialogueAct) as its values.
 
     """
+
     cfg_trte = (cfg_this_slu['training'] if training
                 else cfg_this_slu['testing'])
     max_examples = cfg_trte.get('max_examples', None)
@@ -351,6 +352,9 @@ def test(cfgor):
     # Shorthands.
     model_fname = cfgor.cfg_te['model_fname']
     model_fbase = model_fname[:model_fname.index('.slu_model')]
+    output_dir = cfgor.cfg_te.get('output_dir', None)
+    if output_dir is not None:
+        model_fbase = os.path.join(output_dir, os.path.basename(model_fbase))
     dai_clser = slu_factory(cfgor.config, require_model=True)
 
     # Initialisation.
@@ -626,7 +630,8 @@ class DefaultConfigurator(object):
 
         # - Build the testing dictionary by merging `cfg' into the defaults.
         cfg_te_orig = cfg_this_slu.get('testing', dict())
-        cfg_te = cfg_this_slu['testing'] = copy.deepcopy(self.def_slu_te)
+        cfg_te = cfg_this_slu['testing'] = copy.deepcopy(
+            self.def_slu_te[slu_type])
         cfg_te.update(cfg_te_orig)
 
         # Save shorthand variables pointing to config subdicts.
@@ -689,7 +694,8 @@ class ParamModelNameBuilder(DefaultConfigurator):
         Arguments:
             existing -- whether to look for an existing model, or rather avoid
                 clashes (default: False -- avoid clashes)
-            lock -- whether to create a lock for the created filename
+            lock -- whether to create a lock for the created filename and
+                respect locks created by others
 
         Returns path (not necessarily an absolute path) to the model file.
 

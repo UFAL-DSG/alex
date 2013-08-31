@@ -9,43 +9,41 @@ import os.path
 
 # Read arguments.
 #{{{
-pattern1, pattern2, pattern3, pattern4 = None, None, None, None
+pats = list()
+
+# Read the command line arguments.
+try:
+    dctn = sys.argv[1]
+    pats = sys.argv[2:]
+except IndexError:
+    pass
+
 
 try:
     dctn = sys.argv[1]
     mlfn = sys.argv[2]
     scpn = sys.argv[3]
     outdir = sys.argv[4]
-    pattern1 = sys.argv[5]
-    pattern2 = sys.argv[6]
-    pattern3 = sys.argv[7]
-    pattern4 = sys.argv[8]
-except IndexError, e:
+    pats = sys.argv[5:]
+except IndexError:
     pass
 
-fns = glob.glob(pattern1)
-if pattern2:
-    fns.extend(glob.glob(pattern2))
-if pattern3:
-    fns.extend(glob.glob(pattern3))
-if pattern4:
-    fns.extend(glob.glob(pattern4))
+# Collect all filenames from the globs passed in as arguments.
+fns = list()
+for pat in pats:
+    fns.extend(glob.iglob(pat))
 
-
-dict_test = True
+# Load the dictionary.
+dct = set()
 try:
-    dct = {}
-    # Load the dictionary.
-    dctf = open(dctn, 'r')
-    for line in dctf:
-        words = line.strip().split()
-        if len(words) > 0:
-            dct[words[0]] = 1
-    dctf.close()
-except IOError, e:
-    print e
-    dict_test = False
-    print "No dictionary will be used to remove any transcriptions."
+    with open(dctn, 'r') as dctf:
+        for line in dctf:
+            line = line.split()
+            if line:
+                dct.add(line[0])
+except IOError as er:
+    print "No dictionary will be used to remove transcriptions."
+    pass
 #}}}
 
 # Initialise buffer-like variables for the output.
@@ -59,22 +57,18 @@ scp_lines = []
 #{{{
 for fn in fns:
     with open(fn, 'r') as f:
-        lines = f.readlines()
-        lines = ' '.join(lines)
-
-        words = lines.strip().split()
-
+        words = f.read().split()
         # If a dictionary has been specified,
-        if dict_test:
+        if dct:
             # check that all words are present there.
             missing_word = False
-            for w in words:
-                if w not in dct:
+            for word in words:
+                if word not in dct:
                     missing_word = True
                     break
             # Bail out on the first word in `f' missing from the dictionary.
             if missing_word:
-                print "Missing word in: ", fn, "word: ", w
+                print "Missing word in: ", fn, "word: ", word
                 print "  - ", words
                 continue
 
@@ -83,8 +77,8 @@ for fn in fns:
         scp_lines.append(new_fn.replace('.wav.trn', '.mfc'))
 
         mlf_lines.append('"{0}"'.format(new_fn.replace('.wav.trn', '.lab')))
-        for w in words:
-            mlf_lines.append(w)
+        for word in words:
+            mlf_lines.append(word)
         mlf_lines.append('.')
 #}}}
 
