@@ -49,5 +49,4 @@ class VoiceRssTTS(TTSInterface):
 
         text = self.preprocessing.process(text)
         wav = self.get_tts_wav(self.cfg['TTS']['VoiceRss']['language'], text)
-        wav = audio.change_tempo(self.cfg, self.cfg['TTS']['VoiceRss']['tempo'], wav)
         return wav

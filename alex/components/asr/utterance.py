@@ -127,68 +127,6 @@ class ASRHypothesis(Hypothesis):
     pass
 
 
-class AbstractedASRHypothesis(ASRHypothesis, Abstracted):
-    """Base class for ASR hypotheses supporting category label replacement.
-    """
-
-    tmp_phrase = ('__HIDDEN__', )
-
-    def __init__(self):
-        Abstracted.__init__(self)
-
-    def replace(self, phrase, replacement):
-        """
-        Replaces the phrase `phrase' by another phrase, `replacement'.
-
-        Returns self or a new object of the same type with the replacement
-        done.
-        """
-        raise NotImplementedError('This is an abstract method.')
-
-    def phrase2category_label(self, phrase, catlab):
-        """
-        Replaces the phrase `phrase' by a new phrase, `catlab'.
-
-        Assumes `catlab' is an abstraction for `phrase'.
-        """
-        raise NotImplementedError('This is an abstract method.')
-
-    def phrase2cl_val(self, phrase, catlab, value):
-        """
-        Marks a phrase as an instantiation of a concept with the given value.
-
-        The phrase `phrase', if present in self, is substituted with a special
-        symbol denoting that there is an expression of the type `catlab' with
-        the semantic value `value'.
-
-        Arguments:
-            phrase -- the phrase to be extracted from (tuple of words)
-            catlab --
-
-        """
-
-        # Massage the arguments a bit.
-        catlab = (catlab, )
-        value = (value, )
-
-        value_sameas_surf = (value == phrase)
-        # Assumes the surface strings don't overlap.
-        # FIXME: Perhaps replace all instead of just the first one.
-        #
-        # We want the new confnet to contain the <category>=<value> token
-        # instead of the original <surface> sequence of tokens.  This is done
-        # crudely using two subsequent substitutions, so the original <surface>
-        # gets forgotten.
-        replaced = self
-        if not value_sameas_surf:
-            replaced = replaced.replace(value, self.tmp_phrase)
-            replaced = replaced.replace(phrase, value)
-        replaced = replaced.phrase2category_label(value, catlab)
-        if not value_sameas_surf:
-            replaced = replaced.replace(self.tmp_phrase, value)
-        return replaced
-
-
 class Utterance(object):
     # TODO: Since Utterance basically represents a (is-a) list, it should
     # inherit from the builtin `list', I reckon. This might be a bit tricky,
@@ -397,13 +335,13 @@ class Utterance(object):
 # TODO Document.
 # TODO Extend to AbstractedLattice.
 # TODO Write tests.
-class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
+class AbstractedUtterance(Utterance, Abstracted):
     other_val = ('[OTHER]', )
 
     def __init__(self, surface):
         self._abstr_idxs = list()  # sorted in an increasing order
         Utterance.__init__(self, surface)
-        AbstractedASRHypothesis.__init__(self)
+        Abstracted.__init__(self)
 
     def __cmp__(self, other):
         if isinstance(other, AbstractedUtterance):
@@ -457,23 +395,18 @@ class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
             yield (combined_el, ), tuple(value.split(' ')), (type_, )
 
     def phrase2category_label(self, phrase, catlab):
-        """
-        Replaces the phrase `phrase' by a new phrase, `catlab'.  Assumes
-        `catlab' is an abstraction for `phrase'.
+        """Replaces the phrase given by `phrase' by a new phrase, given by
+        `catlab'.  Assumes `catlab' is an abstraction for `phrase'.
 
         """
         combined_el = self.splitter.join((' '.join(catlab),
                                           ' '.join(phrase)))
-        return self.replace(phrase, (combined_el, ), abstraction=True)
+        return self.replace(phrase, (combined_el, ))
 
-    def replace(self, orig, replacement, abstraction=False):
-        """Replaces the phrase `orig' by another phrase, `replacement'.
-
-        Arguments:
-            orig -- the phrase to be replaced (a tuple of words)
-            replacement -- the replacement (a tuple of words)
-            abstraction -- whether this replacement represents abstraction
-                (substitution of a phrase by a category label)
+    def replace(self, orig, replacement):
+        """
+        Replaces the phrase given by `orig' by a new phrase, given by
+        `replacement'.
 
         """
         replaced, startidx = Utterance.replace(self, orig, replacement,
@@ -494,7 +427,7 @@ class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
                 if idx >= startidx:
                     # Make sure the index of the newly replaced phrase is
                     # inserted into its place.
-                    if abstraction and not inserted_new:
+                    if not inserted_new:
                         ab_replaced._abstr_idxs.append(startidx)
                         inserted_new = True
                     # Unless that word was replaced away itself,
@@ -505,8 +438,9 @@ class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
                     ab_replaced._abstr_idxs.append(idx)
             # Make sure the index of the newly replaced phrase has been
             # inserted into its place.
-            if abstraction and not inserted_new:
+            if not inserted_new:
                 ab_replaced._abstr_idxs.append(startidx)
+            self._abstr_idxs = ab_replaced._abstr_idxs
         return ab_replaced
 
 # Helper methods for the Abstracted class.
@@ -595,7 +529,7 @@ class UtteranceFeatures(Features):
 
 
 class UtteranceHyp(ASRHypothesis):
-    """Provides an interface for 1-best hypothesis from the ASR component."""
+    """Provide an interface for 1-best hypothesis from the ASR component."""
     def __init__(self, prob=None, utterance=None):
         self.prob = prob
         self.utterance = utterance
@@ -610,7 +544,7 @@ class UtteranceHyp(ASRHypothesis):
         return self.utterance
 
 
-class UtteranceNBList(NBList, AbstractedASRHypothesis):
+class UtteranceNBList(ASRHypothesis, NBList):
     """Provides functionality of n-best lists for utterances.
 
     When updating the n-best list, one should do the following.
@@ -623,25 +557,8 @@ class UtteranceNBList(NBList, AbstractedASRHypothesis):
                 most probable to the least probable ones
 
     """
-
-    other_val = AbstractedUtterance.other_val
-
-    Index = namedtuple('Index', ['hyp_idx', 'word_idx'])
-    """unique index into the n-best list.
-
-    Attributes:
-        hyp_idx -- index of the hypothesis within self.n_best
-        word_idx -- index of the word within the utterance
-
-    """
-
     def __init__(self):
-        self._abstr_idxs = list()  # sorted in increasing order
         NBList.__init__(self)
-        AbstractedASRHypothesis.__init__(self)
-
-    def __contains__(self, phrase):
-        return any(phrase in utt for prob, utt in self.n_best)
 
     def get_best_utterance(self):
         """Returns the most probable utterance.
@@ -662,8 +579,7 @@ class UtteranceNBList(NBList, AbstractedASRHypothesis):
         return NBList.normalise(self)
 
     def normalise(self):
-        """
-        The N-best list is extended to include the "__other__" utterance to
+        """The N-best list is extended to include the "__other__" utterance to
         represent those utterance hypotheses which are not included in the
         N-best list.
 
@@ -674,7 +590,7 @@ class UtteranceNBList(NBList, AbstractedASRHypothesis):
 
     def add_other(self):
         try:
-            return NBList.add_other(self, AbstractedUtterance('__other__'))
+            return NBList.add_other(self, Utterance('__other__'))
         except NBListException as ex:
             raise UtteranceNBListException(ex)
 
@@ -683,70 +599,6 @@ class UtteranceNBList(NBList, AbstractedASRHypothesis):
         """DEPRECATED, going to be removed."""
         return self
         # self.n_best.sort(reverse=True)
-
-    # Abstracted implementation.
-    @classmethod
-    def make_other(cls, type_):
-        return AbstractedUtterance.make_other(type_)
-
-    def join_typeval(self, type_, val):
-        return (self.splitter.join((type_[0], ' '.join(val))), )
-
-    def iter_typeval(self):
-        returned = set()
-        for index in self._abstr_idxs:
-            typeval = (self.n_best[index.hyp_idx][1][index.word_idx], )
-            if typeval not in returned:
-                yield typeval
-                returned.add(typeval)
-
-    def iter_triples(self):
-        for combined_el, in self.iter_typeval():
-            split = combined_el.split(self.splitter, 2)
-            try:
-                type_, value = split
-            except ValueError:
-                value = ''
-                type_ = split[0] if combined_el else ''
-            # XXX Change the order of return values to combined_el, type_,
-            # value.
-            # assert type_.isupper()
-            yield (combined_el, ), tuple(value.split(' ')), (type_, )
-
-    def phrase2category_label(self, phrase, catlab):
-        """
-        Replaces the phrase `phrase' by a new phrase, `catlab'.  Assumes
-        `catlab' is an abstraction for `phrase'.
-
-        """
-        combined_el = self.splitter.join((' '.join(catlab),
-                                          ' '.join(phrase)))
-        return self.replace(phrase, (combined_el, ), abstraction=True)
-
-    def replace(self, orig, replacement, abstraction=False):
-        """
-        Replaces the phrase `orig' by `replacement' in all the utterances.
-
-        Arguments:
-            orig -- the phrase to be replaced (a tuple of words)
-            replacement -- the replacement (a tuple of words)
-            abstraction -- whether this replacement represents abstraction
-                (substitution of a phrase by a category label)
-
-        """
-
-        Index = UtteranceNBList.Index
-        replaced = UtteranceNBList()
-        new_abstr_idxs = list()
-        for hyp_idx, (prob, utt) in enumerate(self.n_best):
-            rep_utt = utt.replace(orig, replacement, abstraction=abstraction)
-            replaced.n_best.append([prob, rep_utt])
-            replaced._abstr_idxs.extend(Index(hyp_idx, word_idx)
-                                        for word_idx in rep_utt._abstr_idxs)
-        return replaced
-
-# Helper methods for the Abstracted class.
-UtteranceNBList.replace_typeval = UtteranceNBList.replace
 
 
 class UtteranceNBListFeatures(Features):
@@ -795,7 +647,7 @@ class UtteranceNBListFeatures(Features):
 # defined, try providing input from ASR in the form of the
 # AbstractedConfusionNetwork, extracting features from its instantiations and
 # subsequently processing these as usual.
-class UtteranceConfusionNetwork(AbstractedASRHypothesis):
+class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     """Word confusion network
 
     Attributes:
@@ -868,6 +720,8 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
         self._wordset = set()
         self._abstr_idxs = list()  # :: [ Index ]
                                    # sorted in increasing order
+        # self._abstr_idxs = list()  # :: [ (word idx, alt idx) ]
+                                   # # sorted in the increasing order
         self._long_links = list()  # :: [word_idx-> [ long_link ]]
         #   where long_link describes a link in the confnet from word_idx to an
         #   index larger than (word_idx + 1), and is represented as follows:
@@ -949,7 +803,8 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
                     self._wordset.update(link.hyp[1])
                     ll_start = ll_end + 1
 
-        AbstractedASRHypothesis.__init__(self)
+        ASRHypothesis.__init__(self)
+        Abstracted.__init__(self)
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -1080,18 +935,8 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
         return self
 
     def replace(self, phrase, replacement):
-        """Replaces all occurrences of `phrase' in self by `replacement'.
-
-        Arguments:
-            phrase -- the phrase to replace (tuple of words)
-            replacement -- the replacement phrase (tuple of words)
-
-        Returns self in case no replacement was done, else a new instance that
-        contains the replacements.
-
-        """
-        replaced, old_idxs, new_idxs = self._replace(phrase, replacement,
-                                                     keep=False)
+        replaced, old_idxs, new_idxs = self._replace(
+            phrase, replacement, keep=False)
         return replaced
 
     def phrase2category_label(self, phrase, catlab):
@@ -1115,6 +960,7 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
             replaced._abstr_idxs.sort()
         return replaced
 
+    # Other methods.
     def isempty(self):
         return ((not self._cn or not any(hyp[1] for alts in self._cn
                                          for hyp in alts))
@@ -1242,23 +1088,10 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
             elif (not keep and len(idxs) == len(replacement) == 1
                     and not start_idx.is_long_link):
                 new_idxs.append(start_idx)
-                # shorthands
-                alts = replaced._cn[start_idx.word_idx]
-                orig_prob = (replaced._cn[start_idx.word_idx]
-                                         [start_idx.alt_idx][0])
-                # Check whether this word has already been at this position.
-                if any(cur_hyp[1] == replacement[0] for cur_hyp in alts):
-                    # Find the current hypothesis.
-                    for alt_idx, (prob, word) in enumerate(alts):
-                        if (word == replacement[0]
-                                and alt_idx != start_idx.alt_idx):
-                            alts[alt_idx] = (prob + orig_prob, word)
-                            del alts[start_idx.alt_idx]
-                            alts.sort(key=itemgetter(0), reverse=True)
-                            break
-                # If this word has not been present,
-                else:
-                    alts[start_idx.alt_idx] = (orig_prob, replacement[0])
+                repl_hyp = (replaced._cn[start_idx.word_idx]
+                                        [start_idx.alt_idx][0],
+                            replacement[0])
+                replaced._cn[start_idx.word_idx][start_idx.alt_idx] = repl_hyp
                 update_wordset = True
             # Substituting just a part of a long link:
             elif end_idx.link_widx > 0:
@@ -1269,9 +1102,10 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
                 # assert len(idxs) == 1  # Anything else would mean skipping
                                        # # some words.
                     # XXX Like this below??
-                    new_idxs.append((end_idx.word_idx, end_idx.alt_idx))
-                    link = (replaced._long_links[end_idx.word_idx]
-                                                [end_idx.alt_idx])
+                    new_idxs.append((end_idx.word_idx,
+                                     end_idx.alt_idx))
+                    link = replaced._long_links(
+                        [end_idx.word_idx][end_idx.alt_idx])
                     link.hyp = (link.hyp[0],
                                 link.hyp[1][:end_idx.link_widx] + replacement)
                     update_wordset = True
@@ -1385,12 +1219,17 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
         return (prob, Utterance(utterance))
 
     # FIXME Make this method aware of _long_links.
-    def path_prob(self, path):
-        """Returns a probability of the given index path."""
+    def get_prob(self, hyp_index):
+        """Returns a probability of the given hypothesis."""
         return reduce(mul,
                       (alts[altidx][0]
-                       for (altidx, alts) in izip(path, self._cn)),
+                       for (altidx, alts) in izip(hyp_index, self._cn)),
                       1.)
+        # prob = 1.0
+        # for i, alts in izip(hyp_index, self._cn):
+        #     prob *= alts[i][0]
+        #
+        # return prob
 
     # def get_phrase_prob(self, start, phrase):
         # """Returns the probability of a phrase starting at the index `start'.
@@ -1557,105 +1396,87 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
     # TODO Test.
     # TODO Implement the option to keep the original value, just adding the
     # replacement by its side.
-    def next_worse_paths(self, path):
-        """
-        Returns such hypotheses that will have lower probability.  Assumes
-        the confusion network is sorted.
+    def get_next_worse_candidates(self, hyp_index):
+        """Returns such hypotheses that will have lower probability. It assumes
+        that the confusion network is sorted."""
+        worse_hyp = []
 
-        """
+        for i in range(len(hyp_index)):
+            wh = list(hyp_index)
+            wh[i] += 1
+            if wh[i] >= len(self._cn[i]):
+                # this generate inadmissible word hypothesis
+                continue
 
-        worse_hyps = []
-        for word_idx in xrange(len(path)):
-            if path[word_idx] + 1 < len(self._cn[word_idx]):
-                worse_hyp = list(path)
-                worse_hyp[word_idx] += 1
-                worse_hyps.append(tuple(worse_hyp))
-        return worse_hyps
+            worse_hyp.append(tuple(wh))
 
-    def path2utterance(self, hyp_index):
+        return worse_hyp
+
+    def get_hyp_index_utterance(self, hyp_index):
         s = [alts[i][1] for i, alts in zip(hyp_index, self._cn)]
 
         return Utterance(' '.join(s))
 
     # FIXME Make this method aware of _long_links.
     def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
-        """
-        Outputs the n best hypotheses represented by this confnet.
+        """Parses the confusion network and generates n best hypotheses.
 
-        Arguments:
-            n -- size of the n-best list
-            expand_upto_total_prob_mass -- not used
-
-        Returns an instance of UtteranceNBList.
+        The result is a list of utterance hypotheses each with a with assigned
+        probability.  The list also includes the utterance "__other__" for not
+        having the correct utterance in the list.
 
         """
 
-        # Construct the path for the best hypothesis.
-        best_path = tuple([0] * len(self._cn))
-        open_hyps = [(self.path_prob(best_path), best_path)]
-        closed_hyps = {}
+        open_hyp = []
+        closed_hyp = {}
 
-        # Find the n best paths and their hypotheses.
-        while open_hyps and len(closed_hyps) < n:
-            cur_prob, cur_path = open_hyps.pop()
-            # Process only hypotheses not processed so far.
-            if cur_path not in closed_hyps:
-                # Save the best next path.
-                closed_hyps[cur_path] = cur_prob
-                # Sort its next worse paths into open_hyps.
-                open_hyps.extend(
-                    (self.path_prob(next_path), next_path)
-                    for next_path in self.next_worse_paths(cur_path))
-                open_hyps.sort()
+        # create index for the best hypothesis
+        best_hyp = tuple([0] * len(self._cn))
+        best_prob = self.get_prob(best_hyp)
+        open_hyp.append((best_prob, best_hyp))
 
-        # If __other__ will be added, drop the last generated hypothesis to
-        # make the resulting n-best list have the required size.
-        if len(closed_hyps) == n and sum(closed_hyps.itervalues()) < 1.:
-            del closed_hyps[cur_path]
+        i = 0
+        while open_hyp and i < n:
+            i += 1
 
-        # Construct the n-best list.
+            current_prob, current_hyp_index = open_hyp.pop(0)
+
+            if current_hyp_index not in closed_hyp:
+                # process only those hypotheses which were not processed so far
+
+                closed_hyp[current_hyp_index] = current_prob
+
+                # print "current_prob, current_hyp_index:", current_prob,
+                # current_hyp_index
+
+                for hyp_index in self.get_next_worse_candidates(
+                        current_hyp_index):
+                    prob = self.get_prob(hyp_index)
+                    open_hyp.append((prob, hyp_index))
+
+                open_hyp.sort(reverse=True)
+
         nblist = UtteranceNBList()
-        for path, prob in closed_hyps.iteritems():
-            abutt = AbstractedUtterance.from_utterance(
-                self.path2utterance(path))
-            nblist.add(prob, abutt)
+        for idx in closed_hyp:
+            nblist.add(closed_hyp[idx], self.get_hyp_index_utterance(idx))
+
+        # print nblist
+        # print
+
         nblist.merge()
         nblist.add_other()
 
-        # Return.
+        # print nblist
+        # print
+
         return nblist
 
+    # TODO Implement!
     def merge(self):
         """Adds up probabilities for the same hypotheses.
 
+        TODO: not implemented yet
         """
-
-        # Iterate over word splices.
-        for word_idx, alts in enumerate(self._cn):
-            alt_words = list()
-            todelete = list()
-            # Iterate over alternatives.
-            for aidx, (prob, word) in enumerate(alts):
-                # Try find the same word among preceding alternatives.
-                try:
-                    prev_aidx = alt_words.index(word)
-                except ValueError:
-                    pass
-                else:
-                    # If the word has been in earlier alternatives,
-                    # Add its probabilities.
-                    #  FIXME: Hypotheses should be modifiable (lists), not
-                    #  tuples.  Then the following would work.
-                    #  alts[prev_aidx][0] += prob
-                    alts[prev_aidx] = [alts[prev_aidx][0] + prob, word]
-                    # Register the later alternative for deletion.
-                    todelete.append(aidx)
-                alt_words.append(word)
-
-            # Delete alternatives registered for deletion.
-            for aidx in reversed(todelete):
-                del alts[aidx]
-
         return self
 
     def prune(self, prune_prob=0.001):
@@ -1916,7 +1737,8 @@ class UtteranceConfusionNetwork(AbstractedASRHypothesis):
 # TODO Write tests.class UtteranceConfusionNetworkFeatures(Features):
 class UtteranceConfusionNetworkFeatures(Features):
     """Represents features extracted from an utterance hypothesis in the form
-    of a confusion network.  Only n-gram (incl. skip n-gram) features are
+    of a confusion network.  These are simply a probabilistic generalisation of
+    simple utterance features.  Only n-gram (incl. skip n-gram) features are
     currently implemented.
 
     """

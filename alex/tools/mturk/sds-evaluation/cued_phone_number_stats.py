@@ -118,8 +118,6 @@ print "-" * 80
 
 pth = "./*/voip-*"
 calls = glob.glob(pth)
-pth = "./*/*/voip-*"
-calls.extend(glob.glob(pth))
 
 phones = collections.defaultdict(list)
 workerId = {}

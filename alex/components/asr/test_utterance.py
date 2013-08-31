@@ -92,7 +92,6 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         correct_nblist.add(A1*B1*C3, Utterance("A1 B1 C3"))
         correct_nblist.add(A1*B3*C2, Utterance("A1 B3 C2"))
         correct_nblist.add(A1*B2*C3, Utterance("A1 B2 C3"))
-        correct_nblist.add(A3*B1*C1, Utterance("A3 B1 C1"))
         correct_nblist.merge()
         correct_nblist.add_other()
 

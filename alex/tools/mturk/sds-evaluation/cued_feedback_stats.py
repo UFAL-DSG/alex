@@ -11,9 +11,6 @@ import xml.dom.minidom
 import numpy as np
 import math
 
-from collections import defaultdict
-from scipy.stats import wilcoxon, ttest_rel
-
 verbose = True
 verbose = False
 
@@ -299,31 +296,6 @@ def perSystemAnalysis(feedbacks):
         print
 
 
-    diffs = defaultdict(list)
-     
-    for phone in sorted(phones):
-        perPhoneFeedbacks = FeedbackFilter(feedbacks).has('phone', phone)
-
-        for system in sorted(systems):
-            perSystemFeedbacks = perPhoneFeedbacks.has('system', system)
-
-            if len(perSystemFeedbacks):
-                success, failure, ratio, ci = getSuccessStats(perSystemFeedbacks)
-                diffs[system].append(ratio)
-            else:
-                diffs[system].append(0.5)
-
-    
-    syss = list(sorted(systems))
-    
-    print "Wilcoxon signed-rank test for systems:", syss
-    T, p = wilcoxon(diffs[syss[0]], diffs[syss[1]])
-    print "    P(success rate for S1 <> S2) =", p
-
-    print "Paired related T-test for systems:", syss
-    T, p = ttest_rel(diffs[syss[0]], diffs[syss[1]])
-    print "    P(success rate for S1 <> S2) =", p
-        
 def perPhoneAnalysis(feedbacks):
     phones = FeedbackFilter(feedbacks).getSet('phone')
     workers = FeedbackFilter(feedbacks).getSet('worker')
@@ -388,7 +360,7 @@ systems = FeedbackFilter(feedbacks).getSet('system')
 perSystemAnalysis(feedbacks)
 perPhoneAnalysis(feedbacks)
 
-minCalls = 4
+minCalls = 3
 exludePhones = []
 for phone in phones:
     perPhone = FeedbackFilter(feedbacks).has('phone', phone)
@@ -406,7 +378,7 @@ exludePhones.append("anonymous")
 filteredFeedbacks = FeedbackFilter(feedbacks).hasnot('phone', exludePhones)
 
 print "*" * 80
-print "Filtered stats: minimum 4 calls for at least 2 systems each per user"
+print "Filtered stats: minimum 3 calls for at least 2 systems each per user"
 print "*" * 80
 perSystemAnalysis(filteredFeedbacks.feedbacks)
 perPhoneAnalysis(filteredFeedbacks.feedbacks)

@@ -121,6 +121,9 @@ class Factor(object):
         self.variables = variables
         self.variable_values = variable_values
 
+        if self.variables != sorted(self.variables):
+            raise FactorError('Variables should be sorted.')
+
         self.logarithmetic = logarithmetic
         if logarithmetic:
             self._add = np.logaddexp

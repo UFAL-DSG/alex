@@ -95,7 +95,6 @@ class SpeechtechTTS(TTSInterface):
 
                 mp3 = self.get_tts_mp3(self.cfg['TTS']['SpeechTech']['voice'], text)
                 wav = audio.convert_mp3_to_wav(self.cfg, mp3)
-                wav = audio.change_tempo(self.cfg, self.cfg['TTS']['SpeechTech']['tempo'], wav)
 
 #               if self.cfg['TTS']['debug']:
 #                   m = "TTS cache hits %d and misses %d " % (self.get_tts_mp3.hits, self.get_tts_mp3.misses)

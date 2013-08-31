@@ -366,18 +366,16 @@ class DAILogRegClassifier(base.SLUInterface):
             raise DAILRException(
                 'Cannot handle this type of features: "{ft}".'
                 .format(ft=self.features_type))
-
         return feats
 
     def _extract_feats_from_many(self, obss, inst=None):
         # DEBUG
-        # import ipdb; ipdb.set_trace()
         # self.n_feat_sets = (
         #     ('ngram' in self.features_type) * len(self.abstractions) +
         #     ('utt_nbl' in self.features_type) * len(self.abstractions) +
         #     ('da_nbl' in self.features_type) * bool(da_nblists))
         self.n_feat_sets = sum(
-            (base.ft_props[ft].obs_type in obss) *
+            (ft in obss) *
             (len(self.abstractions) if base.ft_props[ft].is_abstracted else 1)
             for ft in self.features_type)
 
@@ -413,7 +411,6 @@ class DAILogRegClassifier(base.SLUInterface):
         The dictionary arguments are expected to all have the same set of keys.
 
         """
-
         # Save the input observations and the outputs.
         self.das = das
         if obss:
@@ -422,8 +419,18 @@ class DAILogRegClassifier(base.SLUInterface):
                 set.union,
                 (set(typed_obss.viewkeys())
                  for typed_obss in obss.viewvalues()))
+        # self.utterances = utterances
+        # self.utt_nblists = utt_nblists
+        # if utterances:
+        #     self.utt_ids = utterances.keys()
+        # elif utt_nblists:
+        #     self.utt_ids = utt_nblists.keys()
+        # elif da_nblists:
+        #     self.utt_ids = da_nblists.keys()
         else:
             raise DAILRException(
+                # 'Cannot learn a classifier without utterances and without '
+                # 'ASR or SLU hypotheses.')
                 'Cannot learn a classifier without any observations.')
 
         # Normalise the text and substitute category labels.
@@ -436,7 +443,7 @@ class DAILogRegClassifier(base.SLUInterface):
                 raise DAILRException(
                     'Cannot do preprocessing without observed utterance '
                     'hypotheses (transcriptions, n-best lists or confusion '
-                    'networks).')
+                    'networks.')
             for concrete_ot in abstractables:
                 abs_ot = 'ab' + concrete_ot
                 self.obss[abs_ot] = dict()
@@ -789,10 +796,6 @@ class DAILogRegClassifier(base.SLUInterface):
             dai_catlab_words = (tuple(dai_catlab.split()) if dai_catlab
                                 else tuple())
             if dai.is_generic:
-                # DEBUG
-                # import ipdb; ipdb.set_trace()
-                # self.obss['abutt_nbl'].values()[0].insts_for_type(('AREA',))
-
                 compatible_insts = (lambda utt:
                                     utt.insts_for_type(dai_catlab_words))
             else:

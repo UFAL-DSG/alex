@@ -49,8 +49,6 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
-    if not trs.endswith('\n'):
-        trs += '\n'
     with open(trs_fname, 'w') as trs_file:
         trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
@@ -306,8 +304,9 @@ if __name__ == '__main__':
     arger.add_argument('outdir', action="store",
                        help='an output directory for files with audio and '
                             'their transcription')
-    arger.add_argument('-v', '--verbose',
+    arger.add_argument('-v',
                        action="store_true",
+                       dest="verbose",
                        help='set verbose output')
     arger.add_argument('-d', '--dictionary',
                        type=argparse.FileType('r'),
