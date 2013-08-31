@@ -82,9 +82,7 @@ def convert_wav(cfg, wav):
     # transform the temporary file using SoX (can't do this in memory :-()
     tmp2fh, tmp2path = mkstemp()
     sox_in = pysox.CSoxStream(tmp1path)
-    sox_out = pysox.CSoxStream(tmp2path, 'w',
-                               pysox.CSignalInfo(sample_rate, 1, 16),
-                               fileType='wav')
+    sox_out = pysox.CSoxStream(tmp2path, 'w', pysox.CSignalInfo(sample_rate, 1, 16), fileType='wav')
     sox_chain = pysox.CEffectsChain(sox_in, sox_out)
     sox_chain.add_effect(pysox.CEffect("rate", [str(sample_rate)]))
     sox_chain.flow_effects()
@@ -93,6 +91,27 @@ def convert_wav(cfg, wav):
     # read the transformation results back to the buffer
     return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
+def change_tempo(cfg, tempo, wav):
+    """
+    Change tempo of an input WAV byte buffer.
+    """
+    sample_rate = cfg['Audio']['sample_rate']
+
+    # write the buffer to a temporary file
+    tmp1fh, tmp1path = mkstemp()
+    save_wav(cfg, tmp1path, wav)
+
+    # transform the temporary file using SoX (can't do this in memory :-()
+    tmp2fh, tmp2path = mkstemp()
+    sox_in = pysox.CSoxStream(tmp1path)
+    sox_out = pysox.CSoxStream(tmp2path, 'w', pysox.CSignalInfo(sample_rate, 1, 16), fileType='wav')
+    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect("tempo", [str(tempo)]))
+    sox_chain.flow_effects()
+    sox_out.close()
+
+    # read the transformation results back to the buffer
+    return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
 def save_wav(cfg, file_name, wav):
     """
@@ -118,14 +137,12 @@ def save_wav(cfg, file_name, wav):
 def save_flac(cfg, file_name, wav):
     """ Writes content of a audio string into a FLAC file. """
 
-    handle, wav_file_name = mkstemp('TmpSpeechFile.wav')
+    handle, wav_file_name = mkstemp('TmpSpeechFlacFile.wav')
     devnull = open(os.devnull, 'w')
 
     try:
         save_wav(cfg, wav_file_name, wav)
-        subprocess.call(
-            ['flac', '-f', wav_file_name, '-o', file_name],
-            stderr=devnull)
+        subprocess.call(['flac', '-f', wav_file_name, '-o', file_name], stderr=devnull)
     finally:
         remove(wav_file_name)
 
@@ -154,8 +171,7 @@ def convert_mp3_to_wav(cfg, mp3_string):
 
     # convert to mono and resample
     wav_mono = audioop.tomono(wav, 2, 0.5, .5)
-    wav_resampled, state = audioop.ratecv(wav_mono, 2, 1, sample_rate,
-                                          cfg['Audio']['sample_rate'], None)
+    wav_resampled, state = audioop.ratecv(wav_mono, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
 
     return wav_resampled
 
