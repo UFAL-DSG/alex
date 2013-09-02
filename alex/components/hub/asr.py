@@ -196,31 +196,6 @@ class ASR(multiprocessing.Process):
                     else:
                         self.session_logger.asr("user", fname, [(-1, asr_hyp)], None)
 
-                    # # DEBUG
-                    # import pprint
-                    # self.system_logger.debug("type(asr_hyp):")
-                    # self.system_logger.debug(pprint.pformat(type(asr_hyp)))
-                    # self.system_logger.debug("asr_hyp.__dict__:")
-                    # self.system_logger.debug(pprint.pformat(asr_hyp.__dict__))
-                    # self.system_logger.debug("unicode(hyp) for prob, hyp in asr_hyp:")
-                    # self.system_logger.debug(
-                    #     '\n'.join(unicode(hyp) for prob, hyp in asr_hyp))
-                    # self.system_logger.debug("hyp.__dict__:")
-                    # for prob, hyp in asr_hyp:
-                    #     self.system_logger.debug(pprint.pformat(hyp.__dict__))
-                    # self.system_logger.debug(pprint.pformat(
-                    #     asr_hyp[-1][1].instantiable.keys()[0].__dict__))
-                    # self.system_logger.debug(pprint.pformat(
-                    #     asr_hyp[-1][1].instantiable.values()[0].__dict__))
-                    # self.system_logger.debug("hash(asr_hyp[-1][1]):")
-                    # self.system_logger.debug(pprint.pformat(hash(asr_hyp[-1][1])))
-                    # self.system_logger.debug("hash(asr_hyp):")
-                    # self.system_logger.debug(pprint.pformat(hash(asr_hyp)))
-                    # self.system_logger.debug("hash(ASRHyp(asr_hyp, fname=fname)):")
-                    # self.system_logger.debug(pprint.pformat(
-                    #     hash(ASRHyp(asr_hyp, fname=fname))))
-                    # asr_hyp[-1][1].instantiable.clear()
-
                     self.commands.send(Command('asr_end(fname="%s")' % fname, 'ASR', 'HUB'))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp, fname=fname))
             else:
