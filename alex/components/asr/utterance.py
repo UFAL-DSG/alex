@@ -424,7 +424,10 @@ class AbstractedUtterance(Utterance, AbstractedASRHypothesis):
         return new
 
     def __hash__(self):
-        return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
+        try:
+            return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
+        except AttributeError:
+            return hash((('__other__', ), tuple()))
 
     @classmethod
     def from_utterance(cls, utterance):
