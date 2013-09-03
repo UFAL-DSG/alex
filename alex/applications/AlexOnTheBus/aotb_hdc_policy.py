@@ -129,7 +129,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                     dialogue_state["route_alternative"] = int(dialogue_state["alternative"]) - 1
 
             else:
-                res_da.append(DialogueActItem("inform", "stops_conflict", "no_stop"))
+                res_da.append(DialogueActItem("inform", "stops_conflict", "no_stops"))
 
             dialogue_state["alternative"] = "none"
 
@@ -146,7 +146,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                         res_da.extend(self.get_num_transfers(dialogue_state))
                 else:
                     if slot == "from_stop" or slot == "to_stop" or slot == "num_transfers":
-                        dai = DialogueActItem("inform", "stops_conflict", "no_stop")
+                        dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                         res_da.append(dai)
 
                         if dialogue_state['from_stop'] == "none":
