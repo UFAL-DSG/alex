@@ -15,11 +15,17 @@ import __init__
 
 from alex.utils.htk import *
 
-max_files = 100#000
-max_frames_per_segment = 100#000
-trim_segments = 30
-n_iter = 10
+max_files = 100#0000
+max_frames_per_segment = 50#50
+trim_segments = 0 #30
+n_iter = 10000
 n_minibatch = 500
+lsize = 128
+sigmoid = True
+fast = True
+n_last_frames = 20
+
+alpha = 0.99
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -41,38 +47,68 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
 
 
 def train_nn():
-    vta = MLFMFCCOnlineAlignedArray(usec0=False)
+    vta = MLFMFCCOnlineAlignedArray(usec0=False, n_last_frames=n_last_frames)
     vta.append_mlf(mlf_sil)
     vta.append_trn(train_data_sil)
     vta.append_mlf(mlf_speech)
     vta.append_trn(train_data_speech)
 
-    vta = list(vta)[::2]
+    #vta = list(vta)[::2]
+    mfcc = vta.__iter__().next()
 
-    net = buildNetwork(36,5,5,2, hiddenclass=TanhLayer, outclass=SoftmaxLayer)
+    print "MFCC length:", len(mfcc[0])
+    input_size = len(mfcc[0])
 
-    i = 1
-    ds = SupervisedDataSet(36, 2)
-    for frame, label in vta:
-        if (i % n_minibatch) != 0:
-            if label == "sil":
-                ds.addSample(frame, (1,0))
+    if sigmoid:
+        net = buildNetwork(input_size,lsize,lsize,lsize,lsize,2, hiddenclass=SigmoidLayer, outclass=SoftmaxLayer,
+                           bias = True, fast = fast)
+    else:
+        net = buildNetwork(input_size,lsize,lsize,lsize,lsize,2, hiddenclass=TanhLayer, outclass=SoftmaxLayer,
+                           bias = True, fast = fast)
+
+    cgavg = 0.0
+    for nn in range(n_iter):
+        i = 1
+        m = 0
+        ds = SupervisedDataSet(input_size, 2)
+        for frame, label in vta:
+            #print frame
+            if (i % n_minibatch) != 0:
+                if label == "sil":
+                    ds.addSample(frame, (1,0))
+                else:
+                    ds.addSample(frame, (0,1))
             else:
-                ds.addSample(frame, (0,1))
-        else:
-            #trainer = BackpropTrainer(net, ds)
-            trainer = RPropMinusTrainer(net, dataset = ds)
-            for n in range(1):
+                m += 1
+                a = net.activateOnDataset(ds)
+
+                n = 0
+                c = 0
+                gg = 0
+                for g, p in zip(ds, a):
+                    #print g[1][0], p[0]
+                    n += 1
+                    c += 1 if ((g[1][0] > 0.5) and (p[0] > 0.5)) or ((g[1][0] <= 0.5) and (p[0] <= 0.5)) else 0
+                    gg += 1 if g[1][0] < 0.5 else 0
+
+                cgavg = alpha*cgavg + (1-alpha)*float(c)/n*100
+                print
+                print "max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames"
+                print max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
+                print "N-iter: %d Mini-batch: %d" % (nn, m)
+                print "Geometric predictive accuracy:  %0.2f" % cgavg
+                print "Mini-batch predictive accuracy: %0.2f" % (float(c)/n*100)
+                print "Mini-batch sil bias: %0.2f" % (float(gg)/n*100)
+
+                trainer = BackpropTrainer(net, ds)
                 print trainer.train()
 
-            print net.activateOnDataset(ds)
 
-            ds = SupervisedDataSet(36, 2)
+                ds = SupervisedDataSet(input_size, 2)
 
-        i += 1
+            i += 1
 
-
-
+##################################################
 
 train_data_sil = 'data_vad_sil/data/*.wav'
 train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
