@@ -12,7 +12,7 @@ from alex.utils.czech_stemmer import cz_stem
 
 
 class AOTBSLUPreprocessing(SLUPreprocessing):
-    """\
+    """
     Extends SLUPreprocessing for some transformations specific for Czech:
         - devocalisation of prepositions
         - stemming.
@@ -24,7 +24,7 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
         # normalising English, not Czech.
         # not really, the implicit mapping is just an example.
         # In fact, it could be moved into a default config.
-        
+
         self.text_normalization_mapping += [
             (['ve'], ['v']),
             (['ke'], ['k']),
