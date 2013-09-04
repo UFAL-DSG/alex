@@ -77,7 +77,7 @@ class TTS(multiprocessing.Process):
         :return: wave audio signal without the silence at  the beginning and the end
         """
 
-        if len(wav) >0
+        if len(wav) > 0:
             for i, x in enumerate(wav):
                 if ord(x) != 0:
                     break
