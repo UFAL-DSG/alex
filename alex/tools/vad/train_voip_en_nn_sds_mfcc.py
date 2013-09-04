@@ -25,7 +25,7 @@ sigmoid = True
 fast = True
 n_last_frames = 20
 
-alpha = 0.99
+alpha = 0.995
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
