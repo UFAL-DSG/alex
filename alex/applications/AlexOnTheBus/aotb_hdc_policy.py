@@ -127,6 +127,7 @@ class AOTBHDCPolicy(DialoguePolicy):
 
                 else:
                     dialogue_state["route_alternative"] = int(dialogue_state["alternative"]) - 1
+                    res_da.extend(self.get_directions(dialogue_state))
 
             else:
                 res_da.append(DialogueActItem("inform", "stops_conflict", "no_stops"))
@@ -229,8 +230,11 @@ class AOTBHDCPolicy(DialoguePolicy):
 
             res_da.extend(req_da)
 
+            print "X0"
             if len(req_da) == 0:
+                print "X1"
                 if dialogue_state['from_stop'] == dialogue_state['to_stop']:
+                    print "X3"
                     apology_da = DialogueAct()
                     apology_da.extend(DialogueAct(u'apology()'))
                     apology_da.extend(DialogueAct(u'inform(stops_conflict="thesame")'))
@@ -240,6 +244,7 @@ class AOTBHDCPolicy(DialoguePolicy):
                         DialogueAct(u"inform(to_stop='%s')" % dialogue_state['to_stop']))
                     res_da.extend(apology_da)
                 else:
+                    print "X4"
                     dir_da = self.get_directions(dialogue_state)
                     res_da.extend(dir_da)
 
