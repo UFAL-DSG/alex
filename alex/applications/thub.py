@@ -171,7 +171,7 @@ class TextHub(Hub):
         self.output_usr_da(das)
 
         self.cfg['Logging']['session_logger'].turn("user")
-        self.cfg['Logging']['session_logger'].slu("user", das)
+        self.cfg['Logging']['session_logger'].slu("user", "*", das)
 
         term_width = getTerminalSize()[1] or 120
         print '-' * term_width

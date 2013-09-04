@@ -388,6 +388,9 @@ class SessionLogger(object):
         self.rec_started_filename = None
 
     def include_rec(self, turn, fname):
+        if fname == "*":
+            return True
+
         recs = turn.getElementsByTagName("rec")
 
         for rec in recs:
