@@ -71,17 +71,31 @@ class TTS(multiprocessing.Process):
         return segments
 
     def remove_start_and_final_silence(self, wav):
-        for i, x in enumerate(wav):
-            if ord(x) != 0:
-                break
+        """ Removes silence at the beginning and the end of the provided wave audio signal.
 
-        for j, x in enumerate(reversed(wav)):
-            if ord(x) != 0:
-                break
+        :param wav: input wave audio signal
+        :return: wave audio signal without the silence at  the beginning and the end
+        """
 
-        return wav[2*int(i/2):-2*int(j/2)]
+        if len(wav) >0
+            for i, x in enumerate(wav):
+                if ord(x) != 0:
+                    break
+
+            for j, x in enumerate(reversed(wav)):
+                if ord(x) != 0:
+                    break
+
+            return wav[2*int(i/2):-2*int(j/2)]
+        else:
+            return wav
 
     def gen_silence(self):
+        """ Generates the silence wave audio signal with the length given by the global TTS config.
+
+        :return: a silence wave audio signal
+        """
+
         length = int(self.cfg['TTS']['in_between_segments_silence']*self.cfg['Audio']['sample_rate'])*2
 
         return b'\0x00'*length
