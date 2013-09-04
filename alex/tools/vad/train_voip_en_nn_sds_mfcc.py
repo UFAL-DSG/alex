@@ -23,7 +23,7 @@ n_minibatch = 500
 lsize = 128
 sigmoid = True
 fast = True
-n_last_frames = 20
+n_last_frames = 0
 
 alpha = 0.995
 
@@ -67,6 +67,7 @@ def train_nn():
                            bias = True, fast = fast)
 
     cgavg = 0.0
+    ggavg = 0.0
     for nn in range(n_iter):
         i = 1
         m = 0
@@ -92,12 +93,19 @@ def train_nn():
                     gg += 1 if g[1][0] < 0.5 else 0
 
                 cgavg = alpha*cgavg + (1-alpha)*float(c)/n*100
+                ggavg = alpha*ggavg + (1-alpha)*float(gg)/n*100
+
+                print
+                print "-"*120
                 print
                 print "max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames"
                 print max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
                 print "N-iter: %d Mini-batch: %d" % (nn, m)
+                print
                 print "Geometric predictive accuracy:  %0.2f" % cgavg
                 print "Mini-batch predictive accuracy: %0.2f" % (float(c)/n*100)
+                print
+                print "Geometric Mini-batch sil bias: %0.2f" % (float(ggavg)/n*100)
                 print "Mini-batch sil bias: %0.2f" % (float(gg)/n*100)
 
                 trainer = BackpropTrainer(net, ds)
