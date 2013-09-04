@@ -414,9 +414,9 @@ class SessionLogger(object):
                 asr = els[el_idx].appendChild(doc.createElement("asr"))
 
                 for prob, hyp in nblist:
-                    hyp = asr.appendChild(doc.createElement("hypothesis"))
-                    hyp.setAttribute("p", "{0:.3f}".format(prob))
-                    hyp.appendChild(doc.createTextNode(unicode(hyp)))
+                    hyp_el = asr.appendChild(doc.createElement("hypothesis"))
+                    hyp_el.setAttribute("p", "{0:.3f}".format(prob))
+                    hyp_el.appendChild(doc.createTextNode(unicode(hyp)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
