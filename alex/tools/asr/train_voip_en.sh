@@ -97,6 +97,9 @@ $TRAIN_SCRIPTS/train_mixup.sh
 
 date
 
+# Re-align the training data with the best triphone models.
+echo "Aligning with triphones..."
+$TRAIN_SCRIPTS/realign.sh hmm63 tiedlist
 
 #############
 #  TESTING  #
@@ -151,14 +154,10 @@ fi
 
 date
 
+echo "End of training"
+
 # TODO We might want to take the best model and export it, not necessarily 
 # the last trained one.
-
-# Re-align the training data with the best triphone models.
-echo "Aligning with triphones..."
-$TRAIN_SCRIPTS/realign.sh hmm63 tiedlist
-
-echo "End of training"
 
 date
 $TRAIN_SCRIPTS/export_models.sh hmm63 text

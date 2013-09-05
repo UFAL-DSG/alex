@@ -88,6 +88,11 @@ $TRAIN_SCRIPTS/train_mixup.sh
 
 date
 
+# Re-align the training data with the best triphone models
+echo "Aligning with triphones ..."
+$TRAIN_SCRIPTS/realign.sh hmm58 tiedlist
+
+
 # Evaluate how we did on zerogram language model
 # Cannot decode zerogram language model with cross word triphone context
 echo "Decoding zerogram language model"
