@@ -3,8 +3,8 @@
 
 import numpy as np
 import datetime
-import itertools
-from multiprocessing import *
+
+from collections import deque
 
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, SigmoidLayer, SoftmaxLayer
@@ -18,12 +18,13 @@ from alex.utils.htk import *
 max_files = 100#0000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
-n_iter = 10000
-n_minibatch = 500
-lsize = 128
+n_max_epoch = 10000
+n_max_frames_per_minibatch = 500
+n_hidden_units = 128
 sigmoid = True
-fast = True
+arac = True
 n_last_frames = 0
+n_crossvalid_minibatches = max_files / 20
 
 alpha = 0.995
 
@@ -46,135 +47,137 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     return mlf_sil
 
 
+def get_accuracy(ds, a):
+    """ Compute accuracy of predictions from the activation of the last NN layer, and the sil prior probability.
+
+    :param ds: the training dataset
+    :param a: activation from the NN using the ds datasat
+    """
+    n = 0
+    acc = 0
+    sil = 0
+    for g, p in zip(ds, a):
+        #print g[1][0], p[0]
+        n += 1.0
+        acc += 1.0 if ((g[1][0] > 0.5) and (p[0] > 0.5)) or ((g[1][0] <= 0.5) and (p[0] <= 0.5)) else 0.0
+        sil += 1.0 if g[1][0] < 0.5 else 0.0
+
+    return acc/n*100, sil/n*100
+
+def running_avg(avg, n, value):
+    return (float(avg)*n + float(value))/ (n+1)
+
 def train_nn():
     vta = MLFMFCCOnlineAlignedArray(usec0=False, n_last_frames=n_last_frames)
-    vta.append_mlf(mlf_sil)
-    vta.append_trn(train_data_sil)
+    # vta.append_mlf(mlf_sil)
+    # vta.append_trn(train_data_sil)
     vta.append_mlf(mlf_speech)
     vta.append_trn(train_data_speech)
 
-    #vta = list(vta)[::2]
     mfcc = vta.__iter__().next()
 
     print "MFCC length:", len(mfcc[0])
     input_size = len(mfcc[0])
 
     if sigmoid:
-        net = buildNetwork(input_size,lsize,lsize,lsize,lsize,2, hiddenclass=SigmoidLayer, outclass=SoftmaxLayer,
-                           bias = True, fast = fast)
+        net = buildNetwork(input_size,n_hidden_units,n_hidden_units,n_hidden_units,n_hidden_units,2, hiddenclass=SigmoidLayer, outclass=SoftmaxLayer,
+                           bias = True, fast = arac)
     else:
-        net = buildNetwork(input_size,lsize,lsize,lsize,lsize,2, hiddenclass=TanhLayer, outclass=SoftmaxLayer,
-                           bias = True, fast = fast)
+        net = buildNetwork(input_size,n_hidden_units,n_hidden_units,n_hidden_units,n_hidden_units,2, hiddenclass=TanhLayer, outclass=SoftmaxLayer,
+                           bias = True, fast = arac)
 
-    cgavg = 0.0
-    ggavg = 0.0
-    for nn in range(n_iter):
+    dc_acc = deque(maxlen=20)
+    dt_acc = deque(maxlen=20)
+
+    for epoch in range(n_max_epoch):
         i = 1
         m = 0
         ds = SupervisedDataSet(input_size, 2)
+
+        c_acc = 0.0
+        c_sil = 0.0
+        t_acc = 0.0
+        t_sil = 0.0
+
         for frame, label in vta:
             #print frame
-            if (i % n_minibatch) != 0:
+            if (i % n_max_frames_per_minibatch) != 0:
                 if label == "sil":
                     ds.addSample(frame, (1,0))
                 else:
                     ds.addSample(frame, (0,1))
             else:
-                m += 1
                 a = net.activateOnDataset(ds)
-
-                n = 0
-                c = 0
-                gg = 0
-                for g, p in zip(ds, a):
-                    #print g[1][0], p[0]
-                    n += 1
-                    c += 1 if ((g[1][0] > 0.5) and (p[0] > 0.5)) or ((g[1][0] <= 0.5) and (p[0] <= 0.5)) else 0
-                    gg += 1 if g[1][0] < 0.5 else 0
-
-                cgavg = alpha*cgavg + (1-alpha)*float(c)/n*100
-                ggavg = alpha*ggavg + (1-alpha)*float(gg)/n*100
+                acc, sil = get_accuracy(ds, a)
 
                 print
                 print "-"*120
-                print
-                print "max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames"
-                print max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-                print "N-iter: %d Mini-batch: %d" % (nn, m)
-                print
-                print "Geometric predictive accuracy:  %0.2f" % cgavg
-                print "Mini-batch predictive accuracy: %0.2f" % (float(c)/n*100)
-                print
-                print "Geometric Mini-batch sil bias: %0.2f" % (float(ggavg)/n*100)
-                print "Mini-batch sil bias: %0.2f" % (float(gg)/n*100)
+                if m < n_crossvalid_minibatches:
+                    print "Cross-validation"
 
-                trainer = BackpropTrainer(net, ds)
-                print trainer.train()
+                    c_acc = running_avg(c_acc, m, acc)
+                    c_sil = running_avg(c_sil, m, sil)
+
+                else:
+                    print "Training"
+                    t_acc = running_avg(t_acc, m, acc)
+                    t_sil = running_avg(t_sil, m, sil)
+
+                    trainer = BackpropTrainer(net, ds)
+                    trainer.train()
+
+                m += 1
+
+
+                print
+                print "max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches"
+                print max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches
+                print "Epoch: %d Mini-batch: %d" % (epoch, m)
+                print
+                print "Cross-validation stats"
+                print "------------------------"
+                print "Epoch predictive accuracy:  %0.2f" % c_acc
+                print "Last epoch accs:", ["%.2f" % x for x in dc_acc]
+                print "Epoch sil bias: %0.2f" % c_sil
+                print
+                print "Training stats"
+                print "------------------------"
+                print "Epoch predictive accuracy:  %0.2f" % t_acc
+                print "Last epoch accs:", ["%.2f" % x for x in dt_acc]
+                print "Epoch sil bias: %0.2f" % t_sil
+
+                print
+                print "Minibatch stats"
+                print "------------------------"
+                print "Mini-batch predictive accuracy: %0.2f" % acc
+                print "Mini-batch sil bias: %0.2f" % sil
 
 
                 ds = SupervisedDataSet(input_size, 2)
 
             i += 1
 
+        dc_acc.append(c_acc)
+        dt_acc.append(t_acc)
+
+
 ##################################################
 
-train_data_sil = 'data_vad_sil/data/*.wav'
-train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
+#train_data_sil = 'data_vad_sil/data/*.wav'
+#train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
 train_data_speech = 'data_voip_en/train/*.wav'
 train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
+#mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
 mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
 
 print datetime.datetime.now()
-print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+# print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+# print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
 print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
 print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
 
 train_nn()
 
-
-#print '-' * 120
-#print 'VAD GMM test'
-#print datetime.datetime.now()
-#print '-' * 120
-#gmm_speech = GMM(n_features=0)
-#gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
-#gmm_sil = GMM(n_features=0)
-#gmm_sil.load_model('model_voip_en/vad_sil_sds_mfcc.gmm')
-#
-#vta = MLFMFCCOnlineAlignedArray(usec0=False)
-#vta.append_mlf(mlf_sil)
-#vta.append_trn(train_data_sil)
-#vta.append_mlf(mlf_speech)
-#vta.append_trn(train_data_speech)
-#
-#vta = list(vta)[1::2]
-#
-#print "Length of test data:", len(vta)
-#print datetime.datetime.now()
-#
-#accuracy = 0.0
-#n = 0
-#for frame, label in vta:
-#    log_prob_speech = gmm_speech.score(frame)
-#    log_prob_sil = gmm_sil.score(frame)
-#
-#    ratio = log_prob_speech - log_prob_sil
-#    if ratio >= 0:
-#        rec_label = 'speech'
-#    else:
-#        rec_label = 'sil'
-#
-#    if rec_label == label:
-#        accuracy += 1.0
-#
-#    n += 1
-#
-#accuracy = accuracy * 100.0 / n
-#
-#print "VAD accuracy : %0.3f%% " % accuracy
-#print datetime.datetime.now()

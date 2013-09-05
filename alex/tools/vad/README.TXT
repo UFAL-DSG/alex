@@ -84,6 +84,28 @@ Mini-batch predictive accuracy: 80.96
 Mini-batch sil bias: 52.71
 0.020856322779
 
+----
+
+max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
+100 50 0 10000 500 128 True True 0
+N-iter: 2222 Mini-batch: 32
+Geometric predictive accuracy:  99.84
+Mini-batch predictive accuracy: 100.00
+Mini-batch sil bias: 57.31
+
+max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
+100 50 0 10000 500 128 True True 10
+N-iter: 1702 Mini-batch: 5
+Geometric predictive accuracy:  99.50
+Mini-batch predictive accuracy: 100.00
+Mini-batch sil bias: 59.32
+
+max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
+100 50 0 10000 500 128 True True 20
+N-iter: 1431 Mini-batch: 44
+Geometric predictive accuracy:  99.48
+Mini-batch predictive accuracy: 100.00
+Mini-batch sil bias: 57.52
 
 ====================================================
 sigmoid vs. tanh activation of hidden layers
