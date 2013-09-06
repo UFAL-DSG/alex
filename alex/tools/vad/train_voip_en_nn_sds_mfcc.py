@@ -15,7 +15,7 @@ import __init__
 
 from alex.utils.htk import *
 
-n_max_frames = 5000000
+n_max_frames = 10000
 max_files = 100000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
