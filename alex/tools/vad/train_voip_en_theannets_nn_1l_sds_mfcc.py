@@ -14,7 +14,7 @@ import theanets
 
 lmj.cli.enable_default_logging()
 
-n_max_frames = 1000000
+n_max_frames = 100000
 max_files = 1000000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
@@ -78,17 +78,16 @@ def train_nn():
 
 
     e = theanets.Experiment(theanets.Classifier,
-#                            layers=(input_size, n_hidden_units, 2),
-                            layers=(input_size, n_hidden_units, n_hidden_units, n_hidden_units, n_hidden_units, 2),
+                            layers=(input_size, n_hidden_units, 2),
+#                            layers=(input_size, n_hidden_units, n_hidden_units, n_hidden_units, n_hidden_units, 2),
     #                        activation = 'tanh',
     #                        learning_rate=0.001,
     #                        learning_rate_decay=0.1,
     #                        momentum=0.1,
     #                        patience=10000,
                             optimize="hf",
-                            num_updates=30,
+                            num_updates=20,
                             validate=1,
-                            initial_lambda=0.1,
     #                        tied_weights=True,
                             batch_size=500,
                             )
