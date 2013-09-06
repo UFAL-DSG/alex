@@ -15,7 +15,7 @@ import __init__
 
 from alex.utils.htk import *
 
-n_max_frames = 5000000
+n_max_frames = 10000
 max_files = 100000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
@@ -24,7 +24,7 @@ n_max_frames_per_minibatch = 500
 n_hidden_units = 128
 sigmoid = True
 arac = True
-n_last_frames = 10
+n_last_frames = 0
 n_crossvalid_minibatches = int((0.20 * n_max_frames ) / n_max_frames_per_minibatch )  # cca 20% of all training data
 bprop = True
 
@@ -60,7 +60,7 @@ def get_accuracy(ds, a):
         #print g[1][0], p[0]
         n += 1.0
         acc += 1.0 if ((g[1][0] > 0.5) and (p[0] > 0.5)) or ((g[1][0] <= 0.5) and (p[0] <= 0.5)) else 0.0
-        sil += 1.0 if g[1][0] < 0.5 else 0.0
+        sil += 1.0 if g[1][0] > 0.5 else 0.0
 
     return acc/n*100, sil/n*100
 
@@ -94,10 +94,11 @@ def train_nn():
     vta_new = []
     i = 0
     for frame, label in vta:
-	if i % (n_max_frames / 10) == 0:
-	    print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
-	if i > n_max_frames:
-	    break
+        if i % (n_max_frames / 10) == 0:
+            print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
+
+        if i > n_max_frames:
+            break
         i += 1
 
         vta_new.append((frame, label))
