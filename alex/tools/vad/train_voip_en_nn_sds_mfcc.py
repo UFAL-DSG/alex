@@ -15,7 +15,8 @@ import __init__
 
 from alex.utils.htk import *
 
-max_files = 100#0000
+n_max_frames = 5000000
+max_files = 100000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
 n_max_epoch = 10000
@@ -23,10 +24,9 @@ n_max_frames_per_minibatch = 500
 n_hidden_units = 128
 sigmoid = True
 arac = True
-n_last_frames = 0
-n_crossvalid_minibatches = max_files / 20
-
-alpha = 0.995
+n_last_frames = 10
+n_crossvalid_minibatches = int((0.20 * n_max_frames ) / n_max_frames_per_minibatch )  # cca 20% of all training data
+bprop = True
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -89,6 +89,20 @@ def train_nn():
     dc_acc = deque(maxlen=20)
     dt_acc = deque(maxlen=20)
 
+
+    print "Generating the MFCC features"
+    vta_new = []
+    i = 0
+    for frame, label in vta:
+	if i % (n_max_frames / 10) == 0:
+	    print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
+	if i > n_max_frames:
+	    break
+        i += 1
+
+        vta_new.append((frame, label))
+    vta = vta_new
+
     for epoch in range(n_max_epoch):
         i = 1
         m = 0
@@ -120,18 +134,23 @@ def train_nn():
 
                 else:
                     print "Training"
-                    t_acc = running_avg(t_acc, m, acc)
-                    t_sil = running_avg(t_sil, m, sil)
+                    t_acc = running_avg(t_acc, m - n_crossvalid_minibatches, acc)
+                    t_sil = running_avg(t_sil, m - n_crossvalid_minibatches, sil)
 
-                    trainer = BackpropTrainer(net, ds)
+                    if bprop:
+                        trainer = BackpropTrainer(net, dataset = ds)
+                    else:
+                        trainer = RPropMinusTrainer(net, dataset = ds)
+	
                     trainer.train()
 
                 m += 1
 
 
                 print
-                print "max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches"
-                print max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches
+                print "n_max_frames, max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches, bprop"
+                print n_max_frames, max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_max_frames_per_minibatch, n_hidden_units, sigmoid, arac, n_last_frames, n_crossvalid_minibatches, bprop
+
                 print "Epoch: %d Mini-batch: %d" % (epoch, m)
                 print
                 print "Cross-validation stats"
