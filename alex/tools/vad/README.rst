@@ -1,3 +1,6 @@
+Introduction
+============
+
 The frontend for VAD should not include energy (C0) coefficient since then the VAD would depend on the volume
 of the audio and whispered speech would not be detected.
 
@@ -6,11 +9,11 @@ It looks like that the English VAD works well even for Czech.
 
 Experiments and the notes:
 
-Testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
+ - testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
    and the train data is the remaining 80% of the original train data.
 
-Evaluation of GMM vad
-=========================
+Evaluation of GMM VAD
+=====================
 
 1) 64 mixtures, data 10k examples,
     test data accuracy (first 2k examples): 80.4 %
@@ -61,5 +64,15 @@ Evaluation of NN VAD
 
 6) theanets, 4 hidden layers, 128, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 87.70 %
+    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 5000k examples, test data accuracy (first 1000k examples): X %
+
+7) theanets, 4 hidden layers, 128, units, 10 last frames, hf-optimiser
+    data 100k examples, test data accuracy (first 20k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 5000k examples, test data accuracy (first 1000k examples): X %
+
+6) theanets, 4 hidden layers, 256, units, 1 last frame, hf-optimiser
+    data 100k examples, test data accuracy (first 20k examples): X %
     data 1000k examples, test data accuracy (first 200k examples): X %
     data 5000k examples, test data accuracy (first 1000k examples): X %

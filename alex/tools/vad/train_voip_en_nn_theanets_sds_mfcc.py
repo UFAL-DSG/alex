@@ -14,7 +14,7 @@ from alex.utils.htk import *
 
 lmj.cli.enable_default_logging()
 
-n_max_frames = 5000000
+n_max_frames = 100000
 max_files = 1000000
 max_frames_per_segment = 50
 trim_segments = 0
