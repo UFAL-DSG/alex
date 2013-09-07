@@ -21,7 +21,7 @@ trim_segments = 0 #30
 n_max_epoch = 10000
 n_hidden_units = 128
 n_last_frames = 0
-n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20% of all training data
+n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20 % of all training data
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
