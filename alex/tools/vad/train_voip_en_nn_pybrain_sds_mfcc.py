@@ -5,20 +5,19 @@ import numpy as np
 import datetime
 
 from collections import deque
-
 from pybrain.tools.shortcuts import buildNetwork
 from pybrain.structure import TanhLayer, SigmoidLayer, SoftmaxLayer
 from pybrain.datasets import SupervisedDataSet
 from pybrain.supervised.trainers import BackpropTrainer, RPropMinusTrainer
 
-import __init__
+import autopath
 
 from alex.utils.htk import *
 
 n_max_frames = 10000
 max_files = 100000
-max_frames_per_segment = 50#50
-trim_segments = 0 #30
+max_frames_per_segment = 50
+trim_segments = 0
 n_max_epoch = 10000
 n_max_frames_per_minibatch = 500
 n_hidden_units = 128

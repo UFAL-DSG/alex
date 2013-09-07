@@ -22,7 +22,7 @@ prob_speech_up = 0.5  # 0.3
 prob_speech_stay = 0.5  # 0.1
 
 max_files = 100000
-max_frames_per_segment = 50  # 0
+max_frames_per_segment = 50
 trim_segments = 0
 
 train_data_sil = 'data_vad_sil/data/*.wav'

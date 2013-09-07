@@ -3,21 +3,21 @@
 
 import numpy as np
 import datetime
+import lmj.cli
+import theanets
 
 from collections import deque
 
 import autopath
 
 from alex.utils.htk import *
-import lmj.cli
-import theanets
 
 lmj.cli.enable_default_logging()
 
 n_max_frames = 5000000
 max_files = 1000000
-max_frames_per_segment = 50#50
-trim_segments = 0 #30
+max_frames_per_segment = 50
+trim_segments = 0
 n_max_epoch = 10000
 n_hidden_units = 128
 n_last_frames = 0

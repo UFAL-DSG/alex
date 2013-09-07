@@ -5,15 +5,14 @@ import numpy as np
 import datetime
 
 from sklearn import *
-from multiprocessing import *
 
-import __init__
+import autopath
 
 from alex.utils.htk import *
 
-max_files = 10000  # 4000
-max_frames_per_segment = 100  # 000
-trim_segments = 30
+max_files = 10000
+max_frames_per_segment = 50 
+trim_segments = 0
 nu = 0.1
 gamma = .0005
 

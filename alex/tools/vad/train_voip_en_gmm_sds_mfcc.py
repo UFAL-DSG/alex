@@ -9,8 +9,6 @@ from multiprocessing import *
 import autopath
 
 from alex.ml.gmm import GMM
-
-#from alex.components.vad import GMMVAD
 from alex.utils.htk import *
 
 n_max_frames = 1000000
