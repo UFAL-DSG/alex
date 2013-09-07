@@ -9,13 +9,13 @@ Experiments and the notes:
 Testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
    and the train data is the remaining 80% of the original train data.
 
-Evaluation GMM vad
+Evaluation of GMM vad
 =========================
 
 1) 64 mixtures, data 10k examples,
     test data accuracy (first 2k examples): 80.4 %
 2) 64 mixtures, data 100k examples,
-    test data accuracy (first 2k examples): 85.5 %
+    test data accuracy (first 20k examples): 85.5 %
 2) 64 mixtures, data 1000k examples,
     test data accuracy (first 200k examples): xxx %
 

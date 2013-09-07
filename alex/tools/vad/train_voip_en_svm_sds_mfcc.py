@@ -11,7 +11,7 @@ import autopath
 from alex.utils.htk import *
 
 max_files = 10000
-max_frames_per_segment = 50 
+max_frames_per_segment = 50
 trim_segments = 0
 nu = 0.1
 gamma = .0005
