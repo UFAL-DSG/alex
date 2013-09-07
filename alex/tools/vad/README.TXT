@@ -4,129 +4,62 @@ of the audio and whispered speech would not be detected.
 It looks like that the English VAD works well even for Czech.
 
 
-LOG:
+Experiments and the notes:
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid
-100 50 30 100 200 128 True
-N-iter: 99 Mini-batch: 44
-Geometric predictive accuracy:  93.99
-Mini-batch predictive accuracy: 95.48
-Mini-batch sil bias: 61.81
-0.00593064279886
+Testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
+   and the train data is the remaining 80% of the original train data.
 
+Evaluation GMM vad
+=========================
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid
-1000 50 30 100 200 128 True
-N-iter: 99 Mini-batch: 394
-Geometric predictive accuracy:  91.63
-Mini-batch predictive accuracy: 94.97
-Mini-batch sil bias: 78.89
-0.00594423718174
+1) 64 mixtures, data 10k examples,
+    test data accuracy (first 2k examples): 80.4 %
+2) 64 mixtures, data 100k examples,
+    test data accuracy (first 2k examples): 85.5 %
+2) 64 mixtures, data 1000k examples,
+    test data accuracy (first 200k examples): xxx %
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast
-1000 50 30 100 200 256 True True
-N-iter: 99 Mini-batch: 394
-Geometric predictive accuracy:  91.08
-Mini-batch predictive accuracy: 93.47
-Mini-batch sil bias: 78.89
-0.00398181393784
+Evaluation of NN VAD
+====================
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast
-10000 50 30 100 200 256 True True
-N-iter: 39 Mini-batch: 231
-Geometric predictive accuracy:  89.24
-Mini-batch predictive accuracy: 96.98
-Mini-batch sil bias: 41.21
+1) So far, I did not get better results using more than 1 frame. Tested only with pybrain.
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast
-10000 100 0 100 200 128 True True
-N-iter: 9 Mini-batch: 9960
-Geometric predictive accuracy:  86.27
-Mini-batch predictive accuracy: 93.97
-Mini-batch sil bias: 29.15
-0.0150409989838
+2) When comparing 4 hidden layers, and 1 hidden layer,
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-10000 50 0 100 200 128 True True 10
-N-iter: 15 Mini-batch: 4936
-Geometric predictive accuracy:  86.72
-Mini-batch predictive accuracy: 69.35
-Mini-batch sil bias: 58.29
-0.0302727383979
+ - 1 layer VAD is better by 3 % on 100k examples,
+ - 1 layer system is about 1 % worse on 1000k and more examples
 
--------------------------
+3) pybrain, 4 hidden layers, 128 units, 1 last frame
+    data 100k examples, test data accuracy (first 20k examples): 82.4 %
+    data 1000k examples, test data accuracy (first 200k examples): 87.5 %
+    data 5000k examples, test data accuracy (first 1000k examples): 87.5 %
+    iterations: 1273, 124, 24
 
-====================================================
-0 vs. 10 vs 20 last frames.
-====================================================
+4) pybrain, 4 hidden layers, 128 units, 10 last frames
+    data 100k examples, test data accuracy (first 20k examples): 82.0 %
+    data 1000k examples, test data accuracy (first 200k examples): 86.5 %
+    data 5000k examples, test data accuracy (first 1000k examples): 83.5 %
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 100 500 128 True True 0
-N-iter: 99 Mini-batch: 56
-Geometric predictive accuracy:  88.30
-Mini-batch predictive accuracy: 79.76
-Mini-batch sil bias: 52.71
-0.0235109696268
+    the training was not probably finished, though I did not have high hopes that I would get better results
+    iterations: 550, 55, 10
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 100 500 128 True True 10
-N-iter: 99 Mini-batch: 56
-Geometric predictive accuracy:  88.19
-Mini-batch predictive accuracy: 71.74
-Mini-batch sil bias: 52.71
-0.0213343366988
+5) pybrain, 4 hidden layers, 128 units, 1 last frame
+    data 100k examples, test data accuracy (first 20k examples): 85.4 %
+    data 1000k examples, test data accuracy (first 200k examples): 84.5 - 87.5 %
+    data 5000k examples, test data accuracy (first 1000k examples): 86.5 %
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 100 500 128 True True 20
-N-iter: 99 Mini-batch: 56
-Geometric predictive accuracy:  88.29
-Mini-batch predictive accuracy: 80.96
-Mini-batch sil bias: 52.71
-0.020856322779
+    the training was not probably finished, though I did not have high hopes that I would get better results
+    iterations: 811, 81, 14
 
-----
+5) pybrain, 4 hidden layers, 128 units, 10 last frames
+    data 100k examples, test data accuracy (first 20k examples): 82.0 %
+    data 1000k examples, test data accuracy (first 200k examples): 83.5 - 84.5 %
+    data 5000k examples, test data accuracy (first 1000k examples): 82.5 - 83.5%
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 10000 500 128 True True 0
-N-iter: 2222 Mini-batch: 32
-Geometric predictive accuracy:  99.84
-Mini-batch predictive accuracy: 100.00
-Mini-batch sil bias: 57.31
+    the training was not probably finished, though I did not have high hopes that I would get better results
+    iterations:  559, 52, 8
 
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 10000 500 128 True True 10
-N-iter: 1702 Mini-batch: 5
-Geometric predictive accuracy:  99.50
-Mini-batch predictive accuracy: 100.00
-Mini-batch sil bias: 59.32
-
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 10000 500 128 True True 20
-N-iter: 1431 Mini-batch: 44
-Geometric predictive accuracy:  99.48
-Mini-batch predictive accuracy: 100.00
-Mini-batch sil bias: 57.52
-
-====================================================
-sigmoid vs. tanh activation of hidden layers
-====================================================
-
-tanh appears to significantly worse than sigmoid activation function
-
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 100 500 128 True True 0
-N-iter: 17 Mini-batch: 9
-Geometric predictive accuracy:  79.63
-Mini-batch predictive accuracy: 85.97
-Mini-batch sil bias: 62.93
-0.0513498365603
-
-
-max_files, max_frames_per_segment, trim_segments, n_iter, n_minibatch, lsize, sigmoid, fast, n_last_frames
-100 50 0 100 500 128 False True 0
-N-iter: 12 Mini-batch: 20
-Geometric predictive accuracy:  67.90
-Mini-batch predictive accuracy: 82.36
-
-====================================================
-====================================================
+6) theanets, 4 hidden layers, 128, units, 1 last frame, hf-optimiser
+    data 100k examples, test data accuracy (first 20k examples): 87.70 %
+    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 5000k examples, test data accuracy (first 1000k examples): X %

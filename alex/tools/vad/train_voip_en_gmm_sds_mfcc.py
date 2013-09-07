@@ -14,11 +14,14 @@ from alex.ml.gmm import GMM
 #from alex.components.vad import GMMVAD
 from alex.utils.htk import *
 
+n_max_frames = 1000000
+n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20% of all training data
+
 max_files = 100000
-max_frames_per_segment = 100000
-trim_segments = 30
+max_frames_per_segment = 50
+trim_segments = 0
 n_iter = 10
-n_mixies = 256  # 64 # 32 # 16
+n_mixies = 64 # 32 # 16
 
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
@@ -66,14 +69,9 @@ def mixup(gmm, vta, name):
     print "-" * 120
 
 
-def train_gmm(name):
-    vta = MLFMFCCOnlineAlignedArray(filter=name, usec0=False)
-    vta.append_mlf(mlf_sil)
-    vta.append_trn(train_data_sil)
-    vta.append_mlf(mlf_speech)
-    vta.append_trn(train_data_speech)
+def train_gmm(name, vta):
 
-    vta = list(vta)[::2]
+    vta = [frame for frame, label in vta if label == name]
 
     gmm = GMM(n_features=36, n_components=1, n_iter=n_iter)
     gmm.fit(vta)
@@ -90,20 +88,41 @@ train_data_speech = 'data_voip_en/train/*.wav'
 train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
 mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
-mlf_speech = load_mlf(
-    train_data_speech_aligned, max_files, max_frames_per_segment)
+mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
 
 print datetime.datetime.now()
-print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
-print "The length of sil segments in speech:    ", mlf_speech.count_length(
-    'sil')
-print "The length of speech segments in speech: ", mlf_speech.count_length(
-    'speech')
+# print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+# print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
+print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
+
+vta = MLFMFCCOnlineAlignedArray(usec0=False)
+# vta.append_mlf(mlf_sil)
+# vta.append_trn(train_data_sil)
+vta.append_mlf(mlf_speech)
+vta.append_trn(train_data_speech)
+
+print "Generating the MFCC features"
+train = []
+test = []
+i = 0
+for frame, label in vta:
+    if i % (n_max_frames / 10) == 0:
+        print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
+
+    if i > n_max_frames:
+        break
 
 
-p_speech = Process(target=train_gmm, args=('speech',))
-p_sil = Process(target=train_gmm, args=('sil', ))
+    if i < n_crossvalid_frames:
+        test.append((frame, label))
+    else:
+        train.append((frame, label))
+
+    i += 1
+
+p_speech = Process(target=train_gmm, args=('speech',train))
+p_sil = Process(target=train_gmm, args=('sil', train))
 p_speech.start()
 p_sil.start()
 
@@ -127,13 +146,8 @@ gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
 gmm_sil = GMM(n_features=0)
 gmm_sil.load_model('model_voip_en/vad_sil_sds_mfcc.gmm')
 
-vta = MLFMFCCOnlineAlignedArray(usec0=False)
-vta.append_mlf(mlf_sil)
-vta.append_trn(train_data_sil)
-vta.append_mlf(mlf_speech)
-vta.append_trn(train_data_speech)
 
-vta = list(vta)[1::2]
+vta = test
 
 print "Length of test data:", len(vta)
 print datetime.datetime.now()
