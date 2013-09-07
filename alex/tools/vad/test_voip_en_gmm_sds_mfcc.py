@@ -4,13 +4,10 @@
 import numpy as np
 import datetime
 
-from multiprocessing import *
 from scipy.misc import logsumexp
 from collections import deque
 
-if __name__ == "__main__":
-    import autopath
-import __init__
+import autopath
 
 from alex.ml.gmm import GMM
 from alex.utils.htk import *

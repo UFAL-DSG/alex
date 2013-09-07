@@ -6,22 +6,22 @@ import datetime
 
 from collections import deque
 
-import __init__
+import autopath
 
 from alex.utils.htk import *
 import lmj.cli
-import theano
-import hf
+import theanets
 
-n_max_frames = 100
+lmj.cli.enable_default_logging()
+
+n_max_frames = 5000000
 max_files = 1000000
 max_frames_per_segment = 50#50
 trim_segments = 0 #30
 n_max_epoch = 10000
-n_max_frames_per_minibatch = 500
 n_hidden_units = 128
 n_last_frames = 0
-n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20% of all training data
+n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20 % of all training data
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -46,7 +46,7 @@ def get_accuracy(ds, a):
     """ Compute accuracy of predictions from the activation of the last NN layer, and the sil prior probability.
 
     :param ds: the training dataset
-    :param a: activation from the NN using the ds dataset
+    :param a: activation from the NN using the ds datasat
     """
     n = 0.0
     acc = 0.0
@@ -77,6 +77,22 @@ def train_nn():
     input_size = len(mfcc[0])
 
 
+    e = theanets.Experiment(theanets.Classifier,
+#                            layers=(input_size, n_hidden_units, 2),
+                            layers=(input_size, n_hidden_units, n_hidden_units, n_hidden_units, n_hidden_units, 2),
+    #                        activation = 'tanh',
+    #                        learning_rate=0.001,
+    #                        learning_rate_decay=0.1,
+    #                        momentum=0.1,
+    #                        patience=10000,
+                            optimize="hf",
+                            num_updates=30,
+                            validate=1,
+                            initial_lambda=0.1,
+    #                        tied_weights=True,
+                            batch_size=500,
+                            )
+
     print "Generating the cross-validation and train MFCC features"
     crossvalid_x = []
     crossvalid_y = []
@@ -105,37 +121,18 @@ def train_nn():
 
         i += 1
 
-
     crossvalid = [np.array(crossvalid_x), np.array(crossvalid_y).astype('int32')]
     train = [np.array(train_x), np.array(train_y).astype('int32')]
 
-    print "Constructing the NN"
-
-    num_updates=30
-    initial_lambda=0.1
-
-    layers=(input_size, n_hidden_units, n_hidden_units, n_hidden_units, n_hidden_units, 1)
-    p, inputs, s, costs, y = hf.feed_forward(layers)
-
-    predict = theano.function([inputs[0]], y)
-    costs = theano.function(inputs, costs)
-    print costs(crossvalid_x, crossvalid_y)
-
-
-    print "Preparing the datasets"
-    gradient_dataset = hf.SequenceDataset(train, batch_size=None, number_batches=len(train_x)/n_max_frames_per_minibatch)
-    cg_dataset = hf.SequenceDataset(train, batch_size=None, number_batches=len(train_x)/n_max_frames_per_minibatch)
-    valid_dataset = hf.SequenceDataset(crossvalid, batch_size=None, number_batches=len(crossvalid_x)/n_max_frames_per_minibatch)
+    # print crossvalid
 
     dc_acc = deque(maxlen=20)
     dt_acc = deque(maxlen=20)
 
-    print "Start"
-
     for epoch in range(n_max_epoch):
-        predictions_y = predict(crossvalid_x)
+        predictions_y = e.network.predict(crossvalid_x)
         c_acc, c_sil = get_accuracy(crossvalid_y, predictions_y)
-        predictions_y = predict(train_x)
+        predictions_y = e.network.predict(train_x)
         t_acc, t_sil = get_accuracy(train_y, predictions_y)
 
         print
@@ -155,7 +152,7 @@ def train_nn():
         print "Last epoch accs:", ["%.2f" % x for x in dt_acc]
         print "Epoch sil bias: %0.2f" % t_sil
 
-        hf.hf_optimizer(p, inputs, s, costs).train(gradient_dataset, cg_dataset, initial_lambda=initial_lambda, preconditioner=True, validation=valid_dataset)
+        e.run(train, crossvalid)
 
         dc_acc.append(c_acc)
         dt_acc.append(t_acc)

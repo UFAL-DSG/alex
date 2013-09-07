@@ -3,11 +3,10 @@
 
 import numpy as np
 import datetime
-import itertools
 
 from multiprocessing import *
 
-import __init__
+import autopath
 
 from alex.ml.gmm import GMM
 
