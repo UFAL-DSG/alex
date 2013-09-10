@@ -98,7 +98,7 @@ class SpeechtechTTS(TTSInterface):
 #                self.cfg['Logging']['system_logger'].debug(m)
 
         except TTSException as e:
-            m = e + "Text: %" % text
+            m = e + "Text: %s" % text
             self.cfg['Logging']['system_logger'].exception(m)
             return b""
 
