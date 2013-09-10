@@ -32,6 +32,9 @@ hidden_units = 128
 last_frames = 0
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=False
+preconditioner=True
+hidden_dropouts=0.0
+weight_l2=0.0
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -87,18 +90,14 @@ def train_nn(mlf_speech, train_data_speech):
     input_size = len(mfcc[0])
 
     e = theanets.Experiment(theanets.Classifier,
-#                            layers=(input_size, hidden_units, 2),
                             layers=(input_size, hidden_units, hidden_units, hidden_units, hidden_units, 2),
-    #                        activation = 'tanh',
-    #                        learning_rate=0.001,
-    #                        learning_rate_decay=0.1,
-    #                        momentum=0.1,
-    #                        patience=10000,
                             optimize="hf",
                             num_updates=30,
                             validate=1,
                             initial_lambda=0.1,
-    #                        tied_weights=True,
+                            preconditioner=preconditioner,
+                            hidden_dropouts=hidden_dropouts,
+                            weight_l2=weight_l2,
                             batch_size=500,
                             )
 
@@ -145,8 +144,8 @@ def train_nn(mlf_speech, train_data_speech):
         t_acc, t_sil = get_accuracy(train_y, predictions_y)
 
         print
-        print "max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0"
-        print max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
+        print "max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, preconditioner, hidden_dropouts, weight_l2"
+        print max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, preconditioner, hidden_dropouts, weight_l2
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -177,6 +176,7 @@ def train_nn(mlf_speech, train_data_speech):
 
 def main():
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, usec0
+    global preconditioner, hidden_dropouts, weight_l2
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -199,6 +199,12 @@ def main():
                         help='number of last frames: default %d' % last_frames)
     parser.add_argument('--usec0', action="store", default=usec0, type=bool,
                         help='use c0 in mfcc: default %d' % usec0)
+    parser.add_argument('--preconditioner', action="store", default=preconditioner, type=bool,
+                        help='use preconditioner for HF optimization: default %d' % preconditioner)
+    parser.add_argument('--hidden_dropouts', action="store", default=hidden_dropouts, type=float,
+                        help='proportion of hidden_dropouts: default %d' % hidden_dropouts)
+    parser.add_argument('--weight_l2', action="store", default=weight_l2, type=float,
+                        help='use weight L2 regularisation: default %d' % weight_l2)
 
     args = parser.parse_args()
     sys.argv = []
@@ -212,6 +218,9 @@ def main():
     last_frames = args.last_frames
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
     usec0 = args.usec0
+    preconditioner = args.preconditioner
+    hidden_dropouts = args.hidden_dropouts
+    weight_l2 = args.weight_l2
 
     #train_data_sil = 'data_vad_sil/data/*.wav'
     #train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
