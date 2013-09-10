@@ -19,11 +19,6 @@ lmj.cli.enable_default_logging()
 
 """ This script trains NN for VAD.
 
-Missing evaluations:
- - test some form of regularisation: L1, L2, dropouts, ...
- - test HF preconditioner
- - test MFCC with C0
-
 """
 
 # the default values, these may be overwritten by teh script parameters

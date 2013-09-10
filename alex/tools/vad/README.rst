@@ -12,6 +12,13 @@ Experiments and the notes:
  - testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
    and the train data is the remaining 80% of the original train data.
 
+Missing test
+============
+ - test some form of regularisation: L1, L2, dropouts, ...
+ - test HF preconditioner
+ - test MFCC with C0  (on a small test it can give up to 2% absolute improvement)
+
+
 Evaluation of GMM VAD
 =====================
 

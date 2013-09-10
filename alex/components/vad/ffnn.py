@@ -60,12 +60,9 @@ class FFNNVAD():
             frame = self.audio_recorded_in[:self.cfg['VAD']['ffnn']['framesize']]
             self.audio_recorded_in = self.audio_recorded_in[self.cfg['VAD']['ffnn']['frameshift']:]
 
-            print len(frame)
             mfcc = self.front_end.param(frame)
 
-            print mfcc.shape
-
-            prob_speech, prob_sil = self.ffnn.predict(mfcc)
+            prob_sil, prob_speech = self.ffnn.predict(mfcc)
 
             self.log_probs_speech.append(log(prob_speech))
             self.log_probs_sil.append(log(prob_sil))
