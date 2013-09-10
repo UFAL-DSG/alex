@@ -1,1 +1,0 @@
-ufal_transcriber2ufal_audio.py

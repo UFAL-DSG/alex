@@ -64,5 +64,6 @@ class GoogleTTS(TTSInterface):
                                text,
                                self.cfg['TTS']['Google'].get('rate', 1.0))
         wav = audio.convert_mp3_to_wav(self.cfg, mp3)
+        wav = audio.change_tempo(self.cfg, self.cfg['TTS']['Google']['tempo'], wav)
 
         return wav

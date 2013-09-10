@@ -18,9 +18,11 @@ from alex.utils.mproc import global_lock
 from alex.utils.exdec import catch_ioerror
 from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
+
 class SessionLogger(object):
-    """ This is a multiprocessing safe logger. It should be used by the alex to
-    log information according the SDC 2010 XML format.
+    """
+    This is a multiprocessing-safe logger. It should be used by the alex to log
+    information according the SDC 2010 XML format.
 
     Date and times should also include time zone.
 
@@ -386,6 +388,9 @@ class SessionLogger(object):
         self.rec_started_filename = None
 
     def include_rec(self, turn, fname):
+        if fname == "*":
+            return True
+
         recs = turn.getElementsByTagName("rec")
 
         for rec in recs:
@@ -404,14 +409,14 @@ class SessionLogger(object):
         doc = self.open_session_xml()
         els = doc.getElementsByTagName("turn")
 
-        for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker and self.include_rec(els[i], fname):
-                asr = els[i].appendChild(doc.createElement("asr"))
+        for el_idx in range(els.length - 1, -1, -1):
+            if els[el_idx].getAttribute("speaker") == speaker and self.include_rec(els[el_idx], fname):
+                asr = els[el_idx].appendChild(doc.createElement("asr"))
 
-                for p, h in nblist:
-                    hyp = asr.appendChild(doc.createElement("hypothesis"))
-                    hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(unicode(h)))
+                for prob, hyp in nblist:
+                    hyp_el = asr.appendChild(doc.createElement("hypothesis"))
+                    hyp_el.setAttribute("p", "{0:.3f}".format(prob))
+                    hyp_el.appendChild(doc.createTextNode(unicode(hyp)))
 
                 if confnet:
                     cn = asr.appendChild(doc.createElement("confnet"))
@@ -420,10 +425,10 @@ class SessionLogger(object):
                         was = cn.appendChild(
                             doc.createElement("word_alternatives"))
 
-                        for p, w in alts:
+                        for prob, word in alts:
                             wa = was.appendChild(doc.createElement("word"))
-                            wa.setAttribute("p", "%.3f" % p)
-                            wa.appendChild(doc.createTextNode(unicode(w)))
+                            wa.setAttribute("p", "{0:.3f}".format(prob))
+                            wa.appendChild(doc.createTextNode(unicode(word)))
 
                 break
         else:

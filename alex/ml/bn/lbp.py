@@ -56,7 +56,7 @@ class LBP(BP):
         if self.strategy == 'tree':
             for node in self.nodes:
                 node.wait_for_n = set(
-                    x for x in node.neighbors.values() if x in self.nodes)
+                    x for x in node.neighbors.values() if x in nodes)
                 node.backward_send_to = []
 
     def clear_nodes(self):
@@ -99,13 +99,6 @@ class LBP(BP):
     def init_messages(self):
         for node in self.nodes:
             node.init_messages()
-
-        # Create a tree structure for tree strategy.
-        if self.strategy == 'tree':
-            for node in self.nodes:
-                node.wait_for_n = set(
-                    x for x in node.neighbors.values() if x in self.nodes)
-                node.backward_send_to = []
 
     def _normalize_nodes(self):
         for node in self.nodes:

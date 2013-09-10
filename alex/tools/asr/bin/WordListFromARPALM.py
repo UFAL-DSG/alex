@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import glob
 import sys
+import collections
+import os.path
 
 try:
     lm = sys.argv[1]
-except IndexError:
-    print "An ARPA n-gram language model needed."
+except IndexError, e:
+    print "An ARPA N-gram language model needed"
     exit()
 
-# Load the dictionary.
-with open(lm, 'r') as f:
-    gram = 0
-    for line in f:
-        if "1-grams:" in line:
-            gram = 1
-        if "2-grams:" in line:
-            gram = 2
+# load dictionary
+f = open(lm, 'r')
+gram = 0
+for l in f:
+    l = l.strip()
 
-        line = line.split()
+    if "1-grams:" in l:
+        gram = 1
+    if "2-grams:" in l:
+        gram = 2
 
-        if gram == 1 and len(line) > 1:
-            print line[1]
+    l = l.split()
+
+    if gram == 1 and len(l) > 1:
+        print l[1]

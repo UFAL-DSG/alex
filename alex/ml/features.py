@@ -250,17 +250,10 @@ class Abstracted(object):
         self.is_generic = False
 
     def join_typeval(self, type_, val):
-        """Joins the abstraction type and value into one symbol."""
         return self.splitter.join((type_, val))
 
     def replace_typeval(self, combined, replacement):
-        """Replaces a combined type-value symbol with another symbol.
-
-        Arguments:
-            combined -- joined type-value symbol
-            replacement -- symbol to replace `combined'
-
-        """
+        # TODO Document.
         raise NotImplementedError("This is an abstract method.")
 
     @classmethod
@@ -269,8 +262,7 @@ class Abstracted(object):
 
 
     def iter_typeval(self):
-        """
-        Iterates the abstracted items in self, yielding combined
+        """Iterates the abstracted items in self, yielding combined
         representations of the type and value of each such token.  An abstract
         method of this class.
 
