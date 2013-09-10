@@ -41,6 +41,7 @@ class GMMVAD():
                 self.cfg['VAD']['gmm']['zmeansource'], self.cfg['VAD']['gmm']['usepower'],
                 self.cfg['VAD']['gmm']['usec0'], self.cfg['VAD']['gmm']['usecmn'],
                 self.cfg['VAD']['gmm']['usedelta'], self.cfg['VAD']['gmm']['useacc'],
+                self.cfg['VAD']['gmm']['n_last_frames'],
                 self.cfg['VAD']['gmm']['lofreq'], self.cfg['VAD']['gmm']['hifreq'])
         else:
             raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['gmm']['frontend'], ))
@@ -69,8 +70,7 @@ class GMMVAD():
 
             log_prob_speech_avg = 0.0
             for log_prob_speech, log_prob_sil in zip(self.log_probs_speech, self.log_probs_sil):
-                log_prob_speech_avg += log_prob_speech - \
-                    logsumexp([log_prob_speech, log_prob_sil])
+                log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
             log_prob_speech_avg /= len(self.log_probs_speech)
 
             prob_speech_avg = np.exp(log_prob_speech_avg)

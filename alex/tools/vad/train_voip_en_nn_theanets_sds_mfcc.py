@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import argparse
+import sys
 import numpy as np
 import datetime
 import lmj.cli
@@ -11,17 +13,30 @@ from collections import deque
 import autopath
 
 from alex.utils.htk import *
+from alex.ml import ffnn
 
 lmj.cli.enable_default_logging()
 
-n_max_frames = 100000
+""" This script trains NN for VAD.
+
+Missing evaluations:
+ - test some form of regularisation: L1, L2, dropouts, ...
+ - test HF preconditioner
+ - test MFCC with C0
+
+"""
+
+# the default values, these may be overwritten by teh script parameters
+
+max_frames = 100000
 max_files = 1000000
 max_frames_per_segment = 50
 trim_segments = 0
-n_max_epoch = 10000
-n_hidden_units = 128
-n_last_frames = 0
-n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20 % of all training data
+max_epoch = 3
+hidden_units = 128
+last_frames = 0
+crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
+usec0=False
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -64,8 +79,8 @@ def get_accuracy(ds, a):
 
     return acc/n*100, sil/n*100
 
-def train_nn():
-    vta = MLFMFCCOnlineAlignedArray(usec0=False, n_last_frames=n_last_frames)
+def train_nn(mlf_speech, train_data_speech):
+    vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=last_frames)
     # vta.append_mlf(mlf_sil)
     # vta.append_trn(train_data_sil)
     vta.append_mlf(mlf_speech)
@@ -76,10 +91,9 @@ def train_nn():
     print "MFCC length:", len(mfcc[0])
     input_size = len(mfcc[0])
 
-
     e = theanets.Experiment(theanets.Classifier,
-#                            layers=(input_size, n_hidden_units, 2),
-                            layers=(input_size, n_hidden_units, n_hidden_units, n_hidden_units, n_hidden_units, 2),
+#                            layers=(input_size, hidden_units, 2),
+                            layers=(input_size, hidden_units, hidden_units, hidden_units, hidden_units, 2),
     #                        activation = 'tanh',
     #                        learning_rate=0.001,
     #                        learning_rate_decay=0.1,
@@ -100,13 +114,13 @@ def train_nn():
     train_y = []
     i = 0
     for frame, label in vta:
-        if i % (n_max_frames / 10) == 0:
-            print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
+        if i % (max_frames / 10) == 0:
+            print "Already processed: %.2f%% of data" % (100.0*i/max_frames)
 
-        if i > n_max_frames:
+        if i > max_frames:
             break
 
-        if i < n_crossvalid_frames:
+        if i < crossvalid_frames:
             crossvalid_x.append(frame)
             if label == "sil":
                 crossvalid_y.append(0)
@@ -129,15 +143,15 @@ def train_nn():
     dc_acc = deque(maxlen=20)
     dt_acc = deque(maxlen=20)
 
-    for epoch in range(n_max_epoch):
+    for epoch in range(max_epoch):
         predictions_y = e.network.predict(crossvalid_x)
         c_acc, c_sil = get_accuracy(crossvalid_y, predictions_y)
         predictions_y = e.network.predict(train_x)
         t_acc, t_sil = get_accuracy(train_y, predictions_y)
 
         print
-        print "n_max_frames, max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_hidden_units, n_last_frames, n_crossvalid_frames"
-        print n_max_frames, max_files, max_frames_per_segment, trim_segments, n_max_epoch, n_hidden_units, n_last_frames, n_crossvalid_frames
+        print "max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0"
+        print max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -157,24 +171,70 @@ def train_nn():
         dc_acc.append(c_acc)
         dt_acc.append(t_acc)
 
+        nn = ffnn.FFNN()
+        for w, b in zip(e.network.weights, e.network.biases):
+             nn.add_layer(w.get_value(), b.get_value())
+        nn.save(file_name = "model_voip_en/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%b.nn" % \
+                            (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0))
+
 
 ##################################################
 
-#train_data_sil = 'data_vad_sil/data/*.wav'
-#train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
+def main():
+    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, usec0
 
-train_data_speech = 'data_voip_en/train/*.wav'
-train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""This program trains neural network VAD models using the theanets library.
+      """)
 
-#mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
-mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
+    parser.add_argument('--max_frames', action="store", default=max_frames, type=int,
+                        help='a number of frames used in training including the frames for the cross validation: default %d' % max_frames)
+    parser.add_argument('--max_files', action="store", default=max_files, type=int,
+                        help='a number of files from the MLF files used in training: default %d' % max_files)
+    parser.add_argument('--max_frames_per_segment', action="store", default=max_frames_per_segment, type=int,
+                        help='a maximum number of frames per segment (segment is a sequence of frames with the same label): default %d' % max_frames_per_segment)
+    parser.add_argument('--trim_segments', action="store", default=trim_segments, type=int,
+                        help='number of frames that are trimmed for beginning and the end of each segment: default %d' % trim_segments)
+    parser.add_argument('--max_epoch', action="store", default=max_epoch, type=int,
+                        help='number of training epochs: default %d' % max_epoch)
+    parser.add_argument('--hidden_units', action="store", default=hidden_units, type=int,
+                        help='number of hidden units: default %d' % hidden_units)
+    parser.add_argument('--last_frames', action="store", default=last_frames, type=int,
+                        help='number of last frames: default %d' % last_frames)
+    parser.add_argument('--usec0', action="store", default=usec0, type=bool,
+                        help='use c0 in mfcc: default %d' % usec0)
 
-print datetime.datetime.now()
-# print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-# print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
-print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
-print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
+    args = parser.parse_args()
+    sys.argv = []
+
+    max_frames = args.max_frames
+    max_files = args.max_files
+    max_frames_per_segment = args.max_frames_per_segment
+    trim_segments = args.trim_segments
+    max_epoch = args.max_epoch
+    hidden_units = args.hidden_units
+    last_frames = args.last_frames
+    crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
+    usec0 = args.usec0
+
+    #train_data_sil = 'data_vad_sil/data/*.wav'
+    #train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
+
+    train_data_speech = 'data_voip_en/train/*.wav'
+    train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
+
+    #mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
+    mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
+
+    print datetime.datetime.now()
+    # print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+    # print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+    print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
+    print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
+
+    train_nn(mlf_speech, train_data_speech)
 
 
-train_nn()
-
+if __name__ == "__main__":
+    main()

@@ -11,7 +11,7 @@ import autopath
 from alex.ml.gmm import GMM
 from alex.utils.htk import *
 
-n_max_frames = 1000000
+n_max_frames = 5000000
 n_crossvalid_frames = int((0.20 * n_max_frames ))  # cca 20% of all training data
 
 max_files = 100000

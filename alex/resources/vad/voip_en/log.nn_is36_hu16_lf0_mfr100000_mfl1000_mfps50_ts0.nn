@@ -1,0 +1,188 @@
+(2.7)jurcicek@loki:nn_sill_detection:/mnt/h/jurcicek/vystadial-git-dev/alex/tools/vad$ ./train_voip_en_nn_theanets_sds_mfcc.py --max_files 1000 --hidden_units 16
+2013-09-10 14:15:19.616852
+The length of sil segments in speech:     147091
+The length of speech segments in speech:  110331
+I 2013-09-10 14:15:19 MainProcess theanets.main:43 runtime arguments:
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --activation = logistic
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --batch_size = 500
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --cg_batches = None
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --decode = 1
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --global_backtracking = False
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --gradient_clip = 100000.0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --hidden_dropouts = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --hidden_l1 = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --hidden_l2 = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --hidden_noise = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --initial_lambda = 0.1
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --input_dropouts = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --input_noise = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --layers = (3, 16, 16, 16, 16, 2)
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --learning_rate = 0.01
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --learning_rate_decay = 0.25
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --min_improvement = 0.01
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --momentum = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --no_learn_biases = False
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --num_updates = 30
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --optimize = hf
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --patience = 15
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --pool_damping = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --pool_dropouts = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --pool_error_start = 3
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --pool_noise = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --preconditioner = False
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --save_progress = None
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --tied_weights = False
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --train_batches = None
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --valid_batches = None
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --validate = 1
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --weight_l1 = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:45 --weight_l2 = 0
+I 2013-09-10 14:15:19 MainProcess theanets.main:101 activation: logistic
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:168 weights for layer 0: 3 x 16
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:168 weights for layer 1: 16 x 16
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:168 weights for layer 2: 16 x 16
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:168 weights for layer 3: 16 x 16
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:168 weights for layer out_3: 16 x 2
+I 2013-09-10 14:15:19 MainProcess theanets.feedforward:137 914 total network parameters
+MFCC length: 36
+I 2013-09-10 14:15:27 MainProcess theanets.main:43 runtime arguments:
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --activation = logistic
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --batch_size = 500
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --cg_batches = None
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --decode = 1
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --global_backtracking = False
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --gradient_clip = 100000.0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --hidden_dropouts = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --hidden_l1 = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --hidden_l2 = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --hidden_noise = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --initial_lambda = 0.1
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --input_dropouts = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --input_noise = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --layers = (36, 16, 16, 16, 16, 2)
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --learning_rate = 0.01
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --learning_rate_decay = 0.25
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --min_improvement = 0.01
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --momentum = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --no_learn_biases = False
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --num_updates = 30
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --optimize = hf
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --patience = 15
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --pool_damping = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --pool_dropouts = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --pool_error_start = 3
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --pool_noise = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --preconditioner = False
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --save_progress = None
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --tied_weights = False
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --train_batches = None
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --valid_batches = None
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --validate = 1
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --weight_l1 = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:45 --weight_l2 = 0
+I 2013-09-10 14:15:27 MainProcess theanets.main:101 activation: logistic
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:168 weights for layer 0: 36 x 16
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:168 weights for layer 1: 16 x 16
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:168 weights for layer 2: 16 x 16
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:168 weights for layer 3: 16 x 16
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:168 weights for layer out_3: 16 x 2
+I 2013-09-10 14:15:27 MainProcess theanets.feedforward:137 1442 total network parameters
+Generating the cross-validation and train MFCC features
+Already processed: 0.00% of data
+Already processed: 10.00% of data
+Already processed: 20.00% of data
+Already processed: 30.00% of data
+Already processed: 40.00% of data
+Already processed: 50.00% of data
+Already processed: 60.00% of data
+Already processed: 70.00% of data
+Already processed: 80.00% of data
+Already processed: 90.00% of data
+Already processed: 100.00% of data
+
+max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames
+100000 1000 50 0 3 16 0 20000
+Epoch: 0
+
+Cross-validation stats
+------------------------
+Epoch predictive accuracy:  41.20
+Last epoch accs: []
+Epoch sil bias: 58.80
+
+Training stats
+------------------------
+Epoch predictive accuracy:  42.84
+Last epoch accs: []
+Epoch sil bias: 57.16
+I 2013-09-10 14:17:23 MainProcess theanets.dataset:89 data train: 161 mini-batches of (500, 36), (500,)
+I 2013-09-10 14:17:23 MainProcess theanets.dataset:89 data cg: 161 mini-batches of (500, 36), (500,)
+I 2013-09-10 14:17:23 MainProcess theanets.dataset:89 data valid: 40 mini-batches of (500, 36), (500,)
+update 1/30, cost= [ 0.89619953  0.56809938  0.          0.          0.          0.        ] lambda=0.10000, [CG iter 11, phi=-0.13590, cost=0.70869] backtracked 11/11 validation= [ 0.71215266  0.58805     0.          0.          0.          0.        ] *NEW BEST
+update 2/30, cost= [ 0.70869487  0.56809938  0.          0.          0.          0.        ] lambda=0.06667, [CG iter 11, phi=-0.02351, cost=0.68380] backtracked 11/11 validation= [ 0.67886237  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 3/30, cost= [ 0.68379859  0.43190062  0.          0.          0.          0.        ] lambda=0.04444, [CG iter 12, phi=-0.00016, cost=0.68356] backtracked 11/12 validation= [ 0.67808596  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 4/30, cost= [ 0.68355608  0.43190062  0.          0.          0.          0.        ] lambda=0.02963, [CG iter 12, phi=-0.00013, cost=0.68329] backtracked 11/12 validation= [ 0.67780004  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 5/30, cost= [ 0.68328709  0.43190062  0.          0.          0.          0.        ] lambda=0.01975, [CG iter 12, phi=-0.00025, cost=0.68269] backtracked 11/12 validation= [ 0.67718193  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 6/30, cost= [ 0.68269377  0.43190062  0.          0.          0.          0.        ] lambda=0.01317, [CG iter 12, phi=-0.00071, cost=0.68073] backtracked 11/12 validation= [ 0.67510382  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 7/30, cost= [ 0.68073475  0.43190062  0.          0.          0.          0.        ] lambda=0.00878, [CG iter 12, phi=-0.00344, cost=0.66803] backtracked 11/12 validation= [ 0.66134919  0.41195     0.          0.          0.          0.        ] *NEW BEST
+update 8/30, cost= [ 0.66802924  0.43190062  0.          0.          0.          0.        ] lambda=0.00585, [CG iter 12, phi=-0.03388, cost=0.54016] backtracked 11/12 validation= [ 0.52102628  0.2216      0.          0.          0.          0.        ] *NEW BEST
+update 9/30, cost= [ 0.54015856  0.23391304  0.          0.          0.          0.        ] lambda=0.00390, [CG iter 23, phi=-0.05324, cost=0.48276] backtracked 18/23 validation= [ 0.47390765  0.20335     0.          0.          0.          0.        ] *NEW BEST
+update 10/30, cost= [ 0.48275864  0.21137888  0.          0.          0.          0.        ] lambda=0.00260, [CG iter 31, phi=-0.03048, cost=0.44604] backtracked 31/31 validation= [ 0.46015798  0.17895     0.          0.          0.          0.        ] *NEW BEST
+update 11/30, cost= [ 0.44603757  0.17754037  0.          0.          0.          0.        ] lambda=0.00173, [CG iter 37, phi=-0.05606, cost=0.37319] backtracked 24/37 validation= [ 0.39397353  0.16085     0.          0.          0.          0.        ] *NEW BEST
+update 12/30, cost= [ 0.37236456  0.15160248  0.          0.          0.          0.        ] lambda=0.00116, [CG iter 57, phi=-0.03495, cost=0.34379] backtracked 24/57 validation= [ 0.37007246  0.14805     0.          0.          0.          0.        ] *NEW BEST
+update 13/30, cost= [ 0.33761661  0.13606211  0.          0.          0.          0.        ] lambda=0.00077, [CG iter 75, phi=-0.01699, cost=0.31698] backtracked 52/75 validation= [ 0.35837573  0.14025     0.          0.          0.          0.        ] *NEW BEST
+update 14/30, cost= [ 0.31692942  0.12649689  0.          0.          0.          0.        ] lambda=0.00051, [CG iter 81, phi=-0.00978, cost=0.30505] backtracked 67/81 validation= [ 0.35779256  0.1398      0.          0.          0.          0.        ] *NEW BEST
+update 15/30, cost= [ 0.3050513   0.12157764  0.          0.          0.          0.        ] lambda=0.00034, [CG iter 106, phi=-0.00721, cost=0.29909] backtracked 67/106 validation= [ 0.34924323  0.1377      0.          0.          0.          0.        ] *NEW BEST
+update 16/30, cost= [ 0.2983987   0.11760248  0.          0.          0.          0.        ] lambda=0.00023, [CG iter 135, phi=-0.00631, cost=0.29595] backtracked 52/135 validation= [ 0.34630962  0.135       0.          0.          0.          0.        ] *NEW BEST
+update 17/30, cost= [ 0.2943599   0.11546584  0.          0.          0.          0.        ] lambda=0.00023, [CG iter 134, phi=-0.00575, cost=0.29383] backtracked 113/134 validation= [ 0.35004479  0.13585     0.          0.          0.          0.        ]
+update 18/30, cost= [ 0.29383456  0.11513043  0.          0.          0.          0.        ] lambda=0.00034, [CG iter 134, phi=-0.00914, cost=0.28783] backtracked 113/134 validation= [ 0.34167123  0.13225     0.          0.          0.          0.        ] *NEW BEST
+update 19/30, cost= [ 0.28783198  0.11403727  0.          0.          0.          0.        ] lambda=0.00034, [CG iter 159, phi=-0.00466, cost=0.28564] backtracked 113/159 validation= [ 0.33981157  0.1319      0.          0.          0.          0.        ] *NEW BEST
+update 20/30, cost= [ 0.28550699  0.11204969  0.          0.          0.          0.        ] lambda=0.00034, [CG iter 114, phi=-0.00385, cost=0.28307]^CInterrupted by user.
+
+max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames
+100000 1000 50 0 3 16 0 20000
+Epoch: 1
+
+Cross-validation stats
+------------------------
+Epoch predictive accuracy:  86.81
+Last epoch accs: ['41.20']
+Epoch sil bias: 58.80
+
+Training stats
+------------------------
+Epoch predictive accuracy:  88.73
+Last epoch accs: ['42.84']
+Epoch sil bias: 57.16
+update 1/30, cost= [ 0.28550699  0.11204969  0.          0.          0.          0.        ] lambda=0.10000, [CG iter 39, phi=-0.00205, cost=0.28350] backtracked 31/39 validation= [ 0.33625803  0.1307      0.          0.          0.          0.        ] *NEW BEST
+update 2/30, cost= [ 0.28349698  0.11150311  0.          0.          0.          0.        ] lambda=0.06667, [CG iter 36, phi=-0.00029, cost=0.28310] backtracked 31/36 validation= [ 0.33544524  0.1297      0.          0.          0.          0.        ] *NEW BEST
+update 3/30, cost= [ 0.28309938  0.11129193  0.          0.          0.          0.        ] lambda=0.04444, [CG iter 36, phi=-0.00017, cost=0.28282] backtracked 31/36 validation= [ 0.33507235  0.12875     0.          0.          0.          0.        ] *NEW BEST
+update 4/30, cost= [ 0.28282225  0.11074534  0.          0.          0.          0.        ] lambda=0.02963, [CG iter 37, phi=-0.00014, cost=0.28257] backtracked 31/37 validation= [ 0.33465325  0.12885     0.          0.          0.          0.        ] *NEW BEST
+update 5/30, cost= [ 0.28257201  0.11055901  0.          0.          0.          0.        ] lambda=0.01975, [CG iter 22, phi=-0.00014, cost=0.28235]^CInterrupted by user.
+
+
+(2.7)jurcicek@loki:nn_sill_detection:/mnt/h/jurcicek/vystadial-git-dev/alex/tools/vad$ ./test_voip_en_nn_sds_mfcc.py
+2013-09-10 14:51:17.469587
+The length of sil segments in speech:     3672468
+The length of speech segments in speech:  2674881
+------------------------------------------------------------------------------------------------------------------------
+VAD FFNN test
+2013-09-10 14:51:17.567957
+------------------------------------------------------------------------------------------------------------------------
+Generating the MFCC features
+Already processed: 0.00% of data
+Already processed: 10.00% of data
+Already processed: 20.00% of data
+Already processed: 30.00% of data
+Already processed: 40.00% of data
+Already processed: 50.00% of data
+Already processed: 60.00% of data
+Already processed: 70.00% of data
+Already processed: 80.00% of data
+Already processed: 90.00% of data
+Already processed: 100.00% of data
+Length of test data: 20001
+2013-09-10 14:51:38.228498
+VAD accuracy model_voip_en/vad_sds_mfcc_is36_hu16_lf0_mfr100000_mfl1000_mfps50_ts0.nn: 88.686%
+
+
