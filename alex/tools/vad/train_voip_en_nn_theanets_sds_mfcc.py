@@ -31,10 +31,10 @@ max_epoch = 3
 hidden_units = 128
 last_frames = 0
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
-usec0=False
-preconditioner=True
-hidden_dropouts=0.0
-weight_l2=0.0
+usec0=0
+preconditioner=0
+hidden_dropouts=0
+weight_l2=0
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
@@ -95,7 +95,7 @@ def train_nn(mlf_speech, train_data_speech):
                             num_updates=30,
                             validate=1,
                             initial_lambda=0.1,
-                            preconditioner=preconditioner,
+                            preconditioner=True if preconditioner else False,
                             hidden_dropouts=hidden_dropouts,
                             weight_l2=weight_l2,
                             batch_size=500,
@@ -137,7 +137,9 @@ def train_nn(mlf_speech, train_data_speech):
     dc_acc = deque(maxlen=20)
     dt_acc = deque(maxlen=20)
 
-    for epoch in range(max_epoch):
+    epoch = 0
+    while True:
+        
         predictions_y = e.network.predict(crossvalid_x)
         c_acc, c_sil = get_accuracy(crossvalid_y, predictions_y)
         predictions_y = e.network.predict(train_x)
@@ -160,6 +162,10 @@ def train_nn(mlf_speech, train_data_speech):
         print "Last epoch accs:", ["%.2f" % x for x in dt_acc]
         print "Epoch sil bias: %0.2f" % t_sil
 
+        if epoch == max_epoch:
+            break
+        epoch += 1
+            
         e.run(train, crossvalid)
 
         dc_acc.append(c_acc)
@@ -168,7 +174,7 @@ def train_nn(mlf_speech, train_data_speech):
         nn = ffnn.FFNN()
         for w, b in zip(e.network.weights, e.network.biases):
              nn.add_layer(w.get_value(), b.get_value())
-        nn.save(file_name = "model_voip_en/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%b.nn" % \
+        nn.save(file_name = "model_voip_en/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nn" % \
                             (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0))
 
 
@@ -197,9 +203,9 @@ def main():
                         help='number of hidden units: default %d' % hidden_units)
     parser.add_argument('--last_frames', action="store", default=last_frames, type=int,
                         help='number of last frames: default %d' % last_frames)
-    parser.add_argument('--usec0', action="store", default=usec0, type=bool,
+    parser.add_argument('--usec0', action="store", default=usec0, type=int,
                         help='use c0 in mfcc: default %d' % usec0)
-    parser.add_argument('--preconditioner', action="store", default=preconditioner, type=bool,
+    parser.add_argument('--preconditioner', action="store", default=preconditioner, type=int,
                         help='use preconditioner for HF optimization: default %d' % preconditioner)
     parser.add_argument('--hidden_dropouts', action="store", default=hidden_dropouts, type=float,
                         help='proportion of hidden_dropouts: default %d' % hidden_dropouts)
