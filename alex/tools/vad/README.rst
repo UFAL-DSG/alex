@@ -1,23 +1,33 @@
 Introduction
 ============
 
-The frontend for VAD should not include energy (C0) coefficient since then the VAD would depend on the volume
-of the audio and whispered speech would not be detected.
+It looks like that the English VAD works well even for Czech. However, language independent VAD should be trained
+ on all available languages.
 
-It looks like that the English VAD works well even for Czech.
-
-
-Experiments and the notes:
+Experiments and the notes for NN VAD:
+-------------------------------------
 
  - testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
    and the train data is the remaining 80% of the original train data.
 
+ - dropouts in hidden layers does not work with the HF optimiser
+ 
+ - HF preconditioner does not impact the performance of training, it converges without it so enabling it does not help
+ 
+ - L2 regularisation must be very small less then 0.001 for network with 55k parameters
+
+ - test MFCC with C0  (on a small training data 100k - it can give up to 2% absolute improvement)
+
+ - training on last 10 frames gives only 0.5 % absolute improvement (5 % relative error reduction) on the training data 1M,
+     on less data it is worse by 4 % absolute
+   - maybe on more then 10M training data it would help more
+
+Using theano-nets
+-----------------
+To train the neural nets please download and install: https://github.com/lmjohns3/theano-nets.git or git@github.com:lmjohns3/theano-nets.git
+
 Missing test
 ============
- - test some form of regularisation: L1, L2, dropouts, ...
- - test HF preconditioner
- - test MFCC with C0  (on a small test it can give up to 2% absolute improvement)
-
 
 Evaluation of GMM VAD
 =====================
@@ -30,7 +40,6 @@ Evaluation of GMM VAD
     test data accuracy (first 200k examples): 85.7 %
 4) 64 mixtures, data 5000k examples,
     test data accuracy (first 2000k examples): X %
-
 
 Evaluation of NN VAD
 ====================
@@ -75,22 +84,19 @@ Evaluation of NN VAD
 6) theanets, 4 hidden layers, 128, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 87.7 %
     data 1000k examples, test data accuracy (first 200k examples): 89.5 %
-    data 5000k examples, test data accuracy (first 1000k examples): X %
+    data 5000k examples, test data accuracy (first 1000k examples): 89.5 % # iter 18/30
 
 7) theanets, 4 hidden layers, 128, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 82.5 - 84.0 %
-    data 1000k examples, test data accuracy (first 200k examples): 89.5 % iter 21/30
-    data 5000k examples, test data accuracy (first 1000k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 89.5 % # iter 26/30 - from 21/30 not improving
 
 8) theanets, 4 hidden layers, 256, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 87.4 %
-    data 1000k examples, test data accuracy (first 200k examples): 89.1 % # iter 18/30
-    data 5000k examples, test data accuracy (first 1000k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 89.4 % # iter 21/30
 
 9) theanets, 4 hidden layers, 256, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 85.0 %
-    data 1000k examples, test data accuracy (first 200k examples): 88.4 % # iter 14/30
-    data 5000k examples, test data accuracy (first 1000k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 88.9 % # iter 18/30
 
 10) theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 88.0 %
@@ -99,15 +105,15 @@ Evaluation of NN VAD
 
 11) theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 84.4 %
-    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 89.8 % # iter 24/30
     data 5000k examples, test data accuracy (first 1000k examples): X %
 
 12) theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 88.7 %
-    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 89.6 %
     data 5000k examples, test data accuracy (first 1000k examples): X %
 
 13) theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 86.7 %
-    data 1000k examples, test data accuracy (first 200k examples): X %
+    data 1000k examples, test data accuracy (first 200k examples): 89.9 %
     data 5000k examples, test data accuracy (first 1000k examples): X %
