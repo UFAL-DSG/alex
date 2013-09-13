@@ -22,9 +22,19 @@ Experiments and the notes for NN VAD:
      on less data it is worse by 4 % absolute
    - maybe on more then 10M training data it would help more
 
+ - experiment N. 16 is the best
+   NN 32 hidden units, 1M training examples, 1 last frame, using C0
+
 Using theano-nets
 -----------------
 To train the neural nets please download and install: https://github.com/lmjohns3/theano-nets.git or git@github.com:lmjohns3/theano-nets.git
+
+
+TODO
+----
+
+Rename model_voip_en to model_voip since the models should be / are language independent.
+
 
 Missing test
 ============
@@ -101,19 +111,35 @@ Evaluation of NN VAD
 10) theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 88.0 %
     data 1000k examples, test data accuracy (first 200k examples): 89.5 %
-    data 5000k examples, test data accuracy (first 1000k examples): X %
 
 11) theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 84.4 %
     data 1000k examples, test data accuracy (first 200k examples): 89.8 % # iter 24/30
-    data 5000k examples, test data accuracy (first 1000k examples): X %
 
-12) theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser
+12) theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser, USING C0
+    data 100k examples, test data accuracy (first 20k examples): 88.0 %
+    data 1000k examples, test data accuracy (first 200k examples): X %
+
+13) theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser, USING C0
+    data 100k examples, test data accuracy (first 20k examples): 88.9 %
+    data 1000k examples, test data accuracy (first 200k examples): X
+
+14) theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 88.7 %
     data 1000k examples, test data accuracy (first 200k examples): 89.6 %
     data 5000k examples, test data accuracy (first 1000k examples): X %
 
-13) theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser
+15) theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser
     data 100k examples, test data accuracy (first 20k examples): 86.7 %
     data 1000k examples, test data accuracy (first 200k examples): 89.9 %
+    data 5000k examples, test data accuracy (first 1000k examples): X %
+
+16) theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser, USING C0
+    data 100k examples, test data accuracy (first 20k examples): 90.9 %
+    data 1000k examples, test data accuracy (first 200k examples): 91.3 %
+    data 5000k examples, test data accuracy (first 1000k examples): X %
+
+17) theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser, USING C0
+    data 100k examples, test data accuracy (first 20k examples): 90.6 %
+    data 1000k examples, test data accuracy (first 200k examples): 91.1 %
     data 5000k examples, test data accuracy (first 1000k examples): X %
