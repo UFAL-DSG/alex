@@ -181,7 +181,7 @@ def train_nn(mlf_speech, train_data_speech):
 ##################################################
 
 def main():
-    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, usec0
+    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
     global preconditioner, hidden_dropouts, weight_l2
 
     parser = argparse.ArgumentParser(
