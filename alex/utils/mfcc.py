@@ -25,8 +25,8 @@ class MFCCFrontEnd:
     def __init__(self, sourcerate=16000, framesize=512,
                  usehamming=True, preemcoef=0.97,
                  numchans=26, ceplifter=22, numceps=12,
-                 enormalise=True, zmeansource=True, usepower=True, usec0=True, usecmn=True,
-                 usedelta=True, useacc=True,
+                 enormalise=True, zmeansource=True, usepower=True, usec0=True, usecmn=False,
+                 usedelta=True, useacc=True, n_last_frames = 0,
                  lofreq=125, hifreq=3800):
         self.sourcerate = sourcerate
         self.framesize = framesize
@@ -47,8 +47,9 @@ class MFCCFrontEnd:
 
         self.prior = 0.0
 
-        self.mfcc_queue = deque(maxlen=4)
-        self.mfcc_delta_queue = deque(maxlen=4)
+        self.n_last_frames = n_last_frames
+        self.mfcc_queue = deque(maxlen=4 + n_last_frames)
+        self.mfcc_delta_queue = deque(maxlen=4 + n_last_frames)
 
         self.init_hamming()
         self.init_mel_filter_bank()
@@ -159,6 +160,9 @@ class MFCCFrontEnd:
 
         # compute delta and acceleration coefficients if requested
         self.mfcc_queue.append(mfcc)
+
+#        print len(self.mfcc_queue)
+
         if self.usedelta:
 #      print "LMQ", len(self.mfcc_queue)
             if len(self.mfcc_queue) >= 2:
@@ -185,5 +189,11 @@ class MFCCFrontEnd:
             mfcc = np.append(mfcc, delta)
         if self.useacc:
             mfcc = np.append(mfcc, acc)
+
+        for i in range(self.n_last_frames):
+            if len(self.mfcc_queue) > i + 1 :
+                mfcc = np.append(mfcc, self.mfcc_queue[-1-i-1])
+            else:
+                mfcc = np.append(mfcc, np.zeros_like(self.mfcc_queue[-1]))
 
         return mfcc

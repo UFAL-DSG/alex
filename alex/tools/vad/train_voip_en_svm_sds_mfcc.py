@@ -5,15 +5,14 @@ import numpy as np
 import datetime
 
 from sklearn import *
-from multiprocessing import *
 
-import __init__
+import autopath
 
 from alex.utils.htk import *
 
-max_files = 10000  # 4000
-max_frames_per_segment = 100  # 000
-trim_segments = 30
+max_files = 10000
+max_frames_per_segment = 50
+trim_segments = 0
 nu = 0.1
 gamma = .0005
 
@@ -85,7 +84,7 @@ svc_vad = svm.NuSVC(cache_size=1000, nu=nu, gamma=gamma, kernel='rbf')
 svc_vad.fit(X_1, y_1)
 print "#support vectors", svc_vad.n_support_
 
-save_svc(svc_vad, 'model_voip_en/vad_sds_mfcc.svc')
+save_svc(svc_vad, 'model_voip/vad_sds_mfcc.svc')
 
 print '-' * 120
 print 'VAD GMM test'

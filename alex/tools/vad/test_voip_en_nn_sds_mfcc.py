@@ -3,23 +3,20 @@
 
 import numpy as np
 import datetime
+import glob
 
 from scipy.misc import logsumexp
 from collections import deque
 
 import autopath
 
-from alex.ml.gmm import GMM
+from alex.ml.ffnn import FFNN
 from alex.utils.htk import *
 
 train_data = 'data_voip_en/train/*.wav'
 train_data_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
 n_max_frames = 200000
-
-filter_length = 1  # 5
-prob_speech_up = 0.5  # 0.3
-prob_speech_stay = 0.5  # 0.1
 
 max_files = 100000
 max_frames_per_segment = 50
@@ -64,13 +61,18 @@ print "The length of speech segments in speech: ", mlf_speech.count_length('spee
 
 
 print '-' * 120
-print 'VAD GMM test'
+print 'VAD FFNN test'
 print datetime.datetime.now()
 print '-' * 120
-gmm_speech = GMM(n_features=0)
-gmm_speech.load_model('model_voip/vad_speech_sds_mfcc.gmm')
-gmm_sil = GMM(n_features=0)
-gmm_sil.load_model('model_voip/vad_sil_sds_mfcc.gmm')
+
+nnfn = []
+nns = []
+for fn in glob.glob('model_voip/*.nn'):
+    nn = FFNN()
+    nn.load(fn)
+    nns.append(nn)
+
+    nnfn.append(fn)
 
 vta = MLFMFCCOnlineAlignedArray(usec0=False)
 # vta.append_mlf(mlf_sil)
@@ -95,45 +97,19 @@ vta = vta_new
 print "Length of test data:", len(vta)
 print datetime.datetime.now()
 
-accuracy = 0.0
+nn_acc = [0.0,]*len(nns)
 n = 0
-log_probs_speech = deque(maxlen=filter_length)
-log_probs_sil = deque(maxlen=filter_length)
-
-prev_rec_label = 'sil'
 
 for frame, label in vta:
-    log_prob_speech = gmm_speech.score(frame)
-    log_prob_sil = gmm_sil.score(frame)
+    for i, nn in enumerate(nns):
+        p = nn.predict(frame)
 
-    log_probs_speech.append(log_prob_speech)
-    log_probs_sil.append(log_prob_sil)
-
-    log_prob_speech_avg = 0.0
-    for log_prob_speech, log_prob_sil in zip(log_probs_speech, log_probs_sil):
-        log_prob_speech_avg += log_prob_speech - logsumexp([log_prob_speech, log_prob_sil])
-    log_prob_speech_avg /= float(filter_length)
-
-    if prev_rec_label == 'sil':
-        if log_prob_speech_avg >= np.log(prob_speech_up):
-            rec_label = 'speech'
-        else:
-            rec_label = 'sil'
-    elif prev_rec_label == 'speech':
-        if log_prob_speech_avg >= np.log(prob_speech_stay):
-            rec_label = 'speech'
-        else:
-            rec_label = 'sil'
-
-    prev_rec_label = rec_label
-#  print rec_label
-
-    if rec_label == label:
-        accuracy += 1.0
+        if (p[0] > 0.5 and label == 'sil') or (p[0] < 0.5 and label != 'sil'):
+            nn_acc[i] += 1
 
     n += 1
 
-accuracy = accuracy * 100.0 / n
+for i, nn in enumerate(nns):
+    print "VAD accuracy %s: %0.3f%% " % (nnfn[i], nn_acc[i]*100.0/n)
 
-print "VAD accuracy : %0.3f%% " % accuracy
 print datetime.datetime.now()

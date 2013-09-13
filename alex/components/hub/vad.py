@@ -16,6 +16,7 @@ from alex.utils.exceptions import SessionClosedException
 
 import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD
+import alex.components.vad.ffnn as NNVAD
 
 
 class VAD(multiprocessing.Process):
@@ -57,6 +58,8 @@ class VAD(multiprocessing.Process):
             self.vad = PVAD.PowerVAD(cfg)
         elif self.cfg['VAD']['type'] == 'gmm':
             self.vad = GVAD.GMMVAD(cfg)
+        elif self.cfg['VAD']['type'] == 'ffnn':
+            self.vad = NNVAD.FFNNVAD(cfg)
         else:
             raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
@@ -167,10 +170,8 @@ class VAD(multiprocessing.Process):
                         self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
-                                                    'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name),
-                                                    'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
 
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug('Output file name: %s' % self.output_file_name)
@@ -188,10 +189,8 @@ class VAD(multiprocessing.Process):
                         self.session_logger.rec_end(os.path.basename(self.output_file_name))
 
                         # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
-                                                    'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name),
-                                                   'VAD', 'HUB'))
+                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
+                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
                         # Close the current wave file.
                         if self.wf:
                             self.wf.close()
@@ -230,8 +229,7 @@ class VAD(multiprocessing.Process):
                             # FIXME: It should be a different one. It is not
                             # the session file that is closed, but the wave
                             # file.
-                            raise SessionClosedException("The output wave "
-                                "file has already been closed.")
+                            raise SessionClosedException("The output wave file has already been closed.")
                         self.wf.writeframes(bytearray(data_rec))
 
     def run(self):
