@@ -9,6 +9,7 @@ import sys
 import traceback
 import os
 import string
+import struct
 
 from datetime import datetime
 
@@ -96,9 +97,9 @@ class TTS(multiprocessing.Process):
         :return: a silence wave audio signal
         """
 
-        length = int(self.cfg['TTS']['in_between_segments_silence']*self.cfg['Audio']['sample_rate'])*2
+        length = int(self.cfg['TTS']['in_between_segments_silence']*self.cfg['Audio']['sample_rate'])
 
-        return b'\0x00'*length
+        return struct.pack('h',0)*length
 
     def synthesize(self, user_id, text, log="true"):
         if text == "__silence__" or text == "silence()":
@@ -117,10 +118,11 @@ class TTS(multiprocessing.Process):
         for i, segment_text in enumerate(segments):
             segment_wav = self.tts.synthesize(segment_text)
             segment_wav = self.remove_start_and_final_silence(segment_wav)
-            wav.append(segment_wav)
             if i <  len(segments) - 1:
                 # add silence only for non-final segments
-                wav.append(self.gen_silence())
+                segment_wav += self.gen_silence()
+
+            wav.append(segment_wav)
 
             segment_wav = various.split_to_bins(segment_wav, 2 * self.cfg['Audio']['samples_per_frame'])
 
