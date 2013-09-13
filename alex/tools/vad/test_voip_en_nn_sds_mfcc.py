@@ -67,7 +67,7 @@ print '-' * 120
 
 nnfn = []
 nns = []
-for fn in glob.glob('model_voip_en/*.nn'):
+for fn in glob.glob('model_voip/*.nn'):
     nn = FFNN()
     nn.load(fn)
     nns.append(nn)

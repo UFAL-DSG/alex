@@ -68,9 +68,9 @@ print 'VAD GMM test'
 print datetime.datetime.now()
 print '-' * 120
 gmm_speech = GMM(n_features=0)
-gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
+gmm_speech.load_model('model_voip/vad_speech_sds_mfcc.gmm')
 gmm_sil = GMM(n_features=0)
-gmm_sil.load_model('model_voip_en/vad_sil_sds_mfcc.gmm')
+gmm_sil.load_model('model_voip/vad_sil_sds_mfcc.gmm')
 
 vta = MLFMFCCOnlineAlignedArray(usec0=False)
 # vta.append_mlf(mlf_sil)

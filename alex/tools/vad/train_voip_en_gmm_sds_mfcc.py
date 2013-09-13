@@ -74,7 +74,7 @@ def train_gmm(name, vta):
     gmm.fit(vta)
     while len(gmm.weights) < n_mixies:
         mixup(gmm, vta, name)
-    gmm.save_model('model_voip_en/vad_%s_sds_mfcc.gmm' % name)
+    gmm.save_model('model_voip/vad_%s_sds_mfcc.gmm' % name)
     return
 
 
@@ -139,9 +139,9 @@ print 'VAD GMM test'
 print datetime.datetime.now()
 print '-' * 120
 gmm_speech = GMM(n_features=0)
-gmm_speech.load_model('model_voip_en/vad_speech_sds_mfcc.gmm')
+gmm_speech.load_model('model_voip/vad_speech_sds_mfcc.gmm')
 gmm_sil = GMM(n_features=0)
-gmm_sil.load_model('model_voip_en/vad_sil_sds_mfcc.gmm')
+gmm_sil.load_model('model_voip/vad_sil_sds_mfcc.gmm')
 
 
 vta = test

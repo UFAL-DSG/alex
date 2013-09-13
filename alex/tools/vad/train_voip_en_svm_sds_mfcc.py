@@ -84,7 +84,7 @@ svc_vad = svm.NuSVC(cache_size=1000, nu=nu, gamma=gamma, kernel='rbf')
 svc_vad.fit(X_1, y_1)
 print "#support vectors", svc_vad.n_support_
 
-save_svc(svc_vad, 'model_voip_en/vad_sds_mfcc.svc')
+save_svc(svc_vad, 'model_voip/vad_sds_mfcc.svc')
 
 print '-' * 120
 print 'VAD GMM test'

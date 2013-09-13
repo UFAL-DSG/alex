@@ -4,6 +4,8 @@ Introduction
 It looks like that the English VAD works well even for Czech. However, language independent VAD should be trained
  on all available languages.
 
+The goal is to train a robust multi-language VAD.
+
 Experiments and the notes for NN VAD:
 -------------------------------------
 
@@ -28,12 +30,6 @@ Experiments and the notes for NN VAD:
 Using theano-nets
 -----------------
 To train the neural nets please download and install: https://github.com/lmjohns3/theano-nets.git or git@github.com:lmjohns3/theano-nets.git
-
-
-TODO
-----
-
-Rename model_voip_en to model_voip since the models should be / are language independent.
 
 
 Missing test

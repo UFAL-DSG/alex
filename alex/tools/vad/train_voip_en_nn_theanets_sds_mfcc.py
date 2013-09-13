@@ -174,7 +174,7 @@ def train_nn(mlf_speech, train_data_speech):
         nn = ffnn.FFNN()
         for w, b in zip(e.network.weights, e.network.biases):
              nn.add_layer(w.get_value(), b.get_value())
-        nn.save(file_name = "model_voip_en/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nn" % \
+        nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nn" % \
                             (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0))
 
 
