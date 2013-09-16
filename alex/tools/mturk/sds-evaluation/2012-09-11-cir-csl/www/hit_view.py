@@ -57,14 +57,14 @@ def getTask():
         node = tasks[i]
         goal = getTextFromNode(node.getElementsByTagName("goal")[0])
         task = getTextFromNode(node.getElementsByTagName("text")[0])
-    except Exception, e:
+    except Exception as e:
         print e
 
         goal = "inform(food=French);request(name,phone)"
         task = "You are thinking of having some French food later, so you want" +\
                "to get the name and phone number of a suitable restaurant."
 
-    goal = goal.replace('"', '\\"')
+        goal = goal.replace('"', '\\"')
     return goal, task
 
 

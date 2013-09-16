@@ -675,8 +675,8 @@ class DialogueActNBList(SLUHypothesis, NBList):
     def add_other(self):
         try:
             return NBList.add_other(self, DialogueAct('other()'))
-        except NBListException as ex:
-            raise DialogueActNBListException(ex)
+        except NBListException as e:
+            raise DialogueActNBListException(e)
 
     def merge(self):
         """Adds up probabilities for the same hypotheses.  Takes care to keep

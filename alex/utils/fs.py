@@ -114,9 +114,9 @@ def _find_ignorefunc(dir_, glob_, mindepth, maxdepth, ignore_globs=list(),
     if os.path.isdir(dir_):
         try:
             children = os.listdir(dir_)
-        except OSError as er:
+        except OSError as e:
             import sys
-            print >>sys.stderr, er
+            print >>sys.stderr, e
             matched = set()
             return matched, visited
     else:

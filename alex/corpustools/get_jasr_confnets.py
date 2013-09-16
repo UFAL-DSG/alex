@@ -137,13 +137,13 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                                 mywav[startidx:startidx + frame_size]))
                             sleep(sleep_time)
                         # sleep(rt_ratio * len(mywav) / 32000.)
-                    except socket.error as er:
+                    except socket.error as e:
                         # Julius crashing results in
                         # error: [Errno 104] Connection reset by peer
                         # Catch only that one.
-                        if er.errno != 104:
-                            raise er
-                        exception = er
+                        if e.errno != 104:
+                            raise e
+                        exception = e
                         traceback.print_exc()
                         print "get_jasr_confnets: Restarting Julius."
                         clean_up(jul, grep, errfile)
@@ -154,15 +154,15 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
                 exception = None
                 try:
                     hyp = jul.hyp_out()
-                except ASRException as ex:
-                    exception = ex
-                except socket.error as er:
+                except ASRException as e:
+                    exception = e
+                except socket.error as e:
                     # Julius crashing results in
                     # error: [Errno 104] Connection reset by peer
                     # Catch only that one.
-                    if er.errno != 104:
-                        raise er
-                    exception = er
+                    if e.errno != 104:
+                        raise e
+                    exception = e
                 if exception is not None:
                     traceback.print_exc()
                     clean_up(jul, grep, errfile)

@@ -111,7 +111,7 @@ if __name__ == '__main__':
                     " (%s)" % p.get_host_api_info_by_index(k[1])['name']
             print "\t%s: %s" % (name, value)
         print "\t--------------------------------"
-    except IOError, e:
+    except IOError as e:
         print "No Input devices: %s" % e[0]
 
     try:
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                     " (%s)" % p.get_host_api_info_by_index(k[1])['name']
             print "\t%s: %s" % (name, value)
         print "\t--------------------------------"
-    except IOError, e:
+    except IOError as e:
         print "No Output devices: %s" % e[0]
 
     p.terminate()

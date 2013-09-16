@@ -253,17 +253,16 @@ class VAD(multiprocessing.Process):
                 # Process audio data.
                 try:
                     self.read_write_audio()
-                except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'
-                                                    .format(ex=ex))
+                except SessionClosedException as e:
+                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
                 # FIXME: Make the following test work.
                 # # Wait until a session has started.
                 # if self.session_logger.is_open:
                 # Process audio data.
                 try:
                     self.read_write_audio()
-                except SessionClosedException as ex:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=ex))
+                except SessionClosedException as e:
+                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()

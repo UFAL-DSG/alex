@@ -20,7 +20,7 @@ try:
     pattern2 = sys.argv[6]
     pattern3 = sys.argv[7]
     pattern4 = sys.argv[8]
-except IndexError, e:
+except IndexError as e:
     pass
 
 fns = glob.glob(pattern1)
@@ -42,7 +42,7 @@ try:
         if len(words) > 0:
             dct[words[0]] = 1
     dctf.close()
-except IOError, e:
+except IOError as e:
     print e
     dict_test = False
     print "No dictionary will be used to remove any transcriptions."

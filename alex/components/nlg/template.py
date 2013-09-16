@@ -54,9 +54,8 @@ class AbstractTemplateNLG(object):
                 self.templates[unicode(da)] = v
                 self.gtemplates[unicode(self.get_generic_da(da))] = (da, v)
 
-        except Exception as ex:
-            raise TemplateNLGException('No templates loaded from %s -- %s!' %
-                                       (file_name, ex))
+        except Exception as e:
+            raise TemplateNLGException('No templates loaded from %s -- %s!' % (file_name, e))
 
     def get_generic_da(self, da):
         """\

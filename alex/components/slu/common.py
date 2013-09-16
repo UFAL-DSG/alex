@@ -253,7 +253,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                                            ).get('model_fname', None)
             try:
                 dai_clser.load_model(model_fname)
-            except Exception as ex:
+            except Exception as e:
                 if require_model:
                     msg = 'Could not load SLU model.'
                     if model_fname is None:
@@ -262,8 +262,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
                         msg += '  Tried to load it from "{fname}".'.format(
                             fname=model_fname)
                         msg += ('  The original exception was: {cls}{args}: '
-                                '"{ex}".').format(cls=ex.__class__.__name__,
-                                                  args=ex.args, ex=ex)
+                                '"{ex}".').format(cls=ex.__class__.__name__, args=e.args, ex=e)
                     raise SLUException(msg)
 
     return dai_clser

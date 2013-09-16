@@ -891,7 +891,7 @@ class DataSet(object):
         attr = self.attribs[attr_num]
         try:
             return attr.numeric_value(value)
-        except ValueError, e:
+        except ValueError as e:
             raise ValueError(e.message + ' on line ' + str(line_num))
 
     def __get_arff_line(self, inst, weight=1.0):
