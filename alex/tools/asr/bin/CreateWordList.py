@@ -29,7 +29,7 @@ try:
             dct[l[0]] = 1
 
     dctf.close()
-except IOError, e:
+except IOError as e:
     dict_test = False
 
 fns = glob.glob(pattern1)

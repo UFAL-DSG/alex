@@ -192,7 +192,7 @@ def make_call(acc, uri):
     try:
         print "Making call to", uri
         return acc.make_call(uri, cb=MyCallCallback())
-    except pj.Error, e:
+    except pj.Error as e:
         print "Exception: " + str(e)
         return None
 
@@ -249,7 +249,7 @@ try:
     lib.destroy()
     lib = None
 
-except pj.Error, e:
+except pj.Error as e:
     print "Exception: " + str(e)
     lib.destroy()
     lib = None

@@ -594,8 +594,8 @@ class UtteranceNBList(ASRHypothesis, NBList):
     def add_other(self):
         try:
             return NBList.add_other(self, Utterance('__other__'))
-        except NBListException as ex:
-            raise UtteranceNBListException(ex)
+        except NBListException as e:
+            raise UtteranceNBListException(e)
 
     # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):

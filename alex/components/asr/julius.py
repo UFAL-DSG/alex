@@ -253,7 +253,7 @@ class JuliusASR(object):
                 if self.debug >= 2:
                     print "receiving"
                 results += self.s_socket.recv(1)
-            except socket.error as ex:
+            except socket.error as e:
                 # errno = ex.errno
                 # FIXME: We would like to determine (by the errno) what
                 # happened.  If the server dies, there will be a deadlock.
@@ -261,7 +261,7 @@ class JuliusASR(object):
                 # not provide the necessary information.
                 if not results:
                     if self.debug:
-                        print "ERROR: ", ex
+                        print "ERROR: ", e
                         print "results: ", results
                     # There are no data waiting for us.
                     return None

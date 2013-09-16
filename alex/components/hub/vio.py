@@ -471,8 +471,8 @@ class VoipIO(multiprocessing.Process):
                     try:
                         if data_play.parsed['log'] == "true":
                             self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
-                    except SessionLoggerException as ex:
-                        self.cfg['Logging']['system_logger'].exception(ex)
+                    except SessionLoggerException as e:
+                        self.cfg['Logging']['system_logger'].exception(e)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
                     self.audio_playing = False
@@ -484,8 +484,8 @@ class VoipIO(multiprocessing.Process):
                     try:
                         if data_play.parsed['log'] == "true":
                             self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
-                    except SessionLoggerException as ex:
-                        self.cfg['Logging']['system_logger'].exception(ex)
+                    except SessionLoggerException as e:
+                        self.cfg['Logging']['system_logger'].exception(e)
 
         if (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
@@ -627,7 +627,7 @@ class VoipIO(multiprocessing.Process):
                 raise VoipIOException(
                     'Making call to SIP URI which is not SIP URI - ' + uri)
 
-        except pj.Error, e:
+        except pj.Error as e:
             print "Exception: " + unicode(e)
             return None
 
@@ -639,7 +639,7 @@ class VoipIO(multiprocessing.Process):
             if self.cfg['VoipIO']['debug']:
                 self.cfg['Logging']['system_logger'].debug("Transferring the call to %s" % uri)
             return self.call.transfer(uri)
-        except pj.Error, e:
+        except pj.Error as e:
             print "Exception: " + unicode(e)
             return None
 
@@ -650,7 +650,7 @@ class VoipIO(multiprocessing.Process):
                     self.cfg['Logging']['system_logger'].debug("Hangup the call")
 
                 return self.call.hangup()
-        except pj.Error, e:
+        except pj.Error as e:
             print "Exception: " + unicode(e)
             return None
 

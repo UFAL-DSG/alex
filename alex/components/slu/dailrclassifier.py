@@ -1476,8 +1476,8 @@ class DAILogRegClassifier(base.SLUInterface):
 
                     try:
                         dai_prob = self.predict_prob(dai, feat_vec)
-                    except Exception as ex:
-                        print '(EE) Parsing exception: ', ex
+                    except Exception as e:
+                        print '(EE) Parsing exception: ', e
                         continue
 
                     if verbose:
@@ -1500,8 +1500,8 @@ class DAILogRegClassifier(base.SLUInterface):
                     continue
                 try:
                     dai_prob = self.predict_prob(dai, conc_feat_vec)
-                except Exception as ex:
-                    print '(EE) Parsing exception: ', ex
+                except Exception as e:
+                    print '(EE) Parsing exception: ', e
                     continue
 
                 if verbose:

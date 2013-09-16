@@ -8,7 +8,7 @@ import os.path
 
 try:
     lm = sys.argv[1]
-except IndexError, e:
+except IndexError as e:
     print "An ARPA N-gram language model needed"
     exit()
 
