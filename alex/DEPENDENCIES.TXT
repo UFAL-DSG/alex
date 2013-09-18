@@ -13,7 +13,7 @@ the 2.7 version.
 
 Ask the root on the computer to run:
 
-sudo apt-get install gfortran libatlas-base-dev portaudio19-dev flac speex sox mplayer libsqlite3-dev python-numpy python-scipy python-wxgtk2.8 python-matplotlib python-sklearn python-Levenshtein python-pymad python-pysqlite2
+sudo apt-get install gfortran libatlas-base-dev portaudio19-dev flac speex sox mplayer libsqlite3-dev python-wxgtk2.8
 
 To get latest versions of some python packages, I recommend to run these commands:
 
@@ -30,6 +30,7 @@ sudo pip install --upgrade python-Levenshtein
 sudo pip install --upgrade boto
 sudo pip install --upgrade pysox
 sudo pip install --upgrade jinja2
+sudo easy_install wget
 sudo easy_install pymad
 sudo easy_install ipdb
 
