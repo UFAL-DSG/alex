@@ -179,7 +179,7 @@ def preprocess_stops_line(line, expanded_format=False):
         val = line
         names = [line]
 
-    # Do some basic preprocessing.
+    # Do some basic pre-processing.
     # Expand abbreviations.
     for regex, subs in _substs:
         if any(map(regex.search, names)):
@@ -216,11 +216,9 @@ def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
     is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME),
-                     encoding='utf-8') as stops_file:
+    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
         for line in stops_file:
-            stop_val, stop_names = preprocess_stops_line(
-                line, expanded_format=is_expanded)
+            stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
             for synonym in stop_names:
                 db_add('stop', stop_val, synonym)
 
@@ -232,8 +230,7 @@ def stem():
 
     for _, vals in database.iteritems():
         for value in vals.keys():
-            vals[value] = [" ".join(cz_stem(word) for word in surface.split())
-                           for surface in vals[value]]
+            vals[value] = [" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]]
 
 
 ########################################################################
@@ -241,5 +238,15 @@ def stem():
 ########################################################################
 add_time()
 add_stops()
+
+# save the database vocabulary - all the surface forms
+with codecs.open('database_surface_forms.txt','w','UTF-8') as f:
+    for k in database:
+        for v in database[k]:
+            for l in database[k][v]:
+                f.write(l)
+                f.write('\n')
+
 # FIXME: This is not the best place to do stemming.
 stem()
+
