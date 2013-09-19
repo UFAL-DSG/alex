@@ -2,13 +2,32 @@ Alex installation
 =================
 
 This document describes how to install all dependencies needed to use Alex.
-
 The Alex project is developed in Python and tested with version 2.7.
 It may be necessary to have exactly this version of Python for the project
 to work correctly.
 
+Local installation of Python 2.7 and dependencies
+-------------------------------------------------
+
 If you do not have the root access to the machine then you then you can use https://github.com/akheron/multipy to install
-the 2.7 version of Python and consequently to install all Python dependencies localy.
+the 2.7 version of Python and consequently to install all Python dependencies locally.
+
+You can use the following script
+
+.. code-block:: bash
+
+  $ multipy install 2.7
+
+to download, compile, and install python 2.7 into ~/multipy directory.
+
+To enable this local version, you have to call from your shell command line
+
+.. code-block:: bash
+
+  $ source ~/multipy/pythons/2.7/bin/activate
+
+You can also add the previous line into .bashrc to activate your local 
+version of Python every time you start a bash console.
 
 Ubuntu 12.04
 ============
@@ -122,9 +141,9 @@ Optimised ATLAS and LAPACK libraries
 ====================================
 
 If you need optimised ATLAS and LAPACK libraries then you have to compile them on your own.
-Then modify config for numpy. Optimised ATLAS and LAPACK can compute matrix multiplication on all cpu cores available.
+Then modify config for numpy. Optimised ATLAS and LAPACK can compute matrix multiplication on all CPU cores available.
 
-To build your own optimised ATLAS and LAPACK librararies:
+To build your own optimised ATLAS and LAPACK libraries:
     - get latest LAPACK
     - get latest ATLAS
     - compile lapack
