@@ -45,6 +45,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 html:
+	python ./manual_rsts.py
 	$(SPHINXAPIDOC) -o $(RST) ../alex
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo

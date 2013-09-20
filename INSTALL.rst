@@ -1,5 +1,7 @@
-Installation
-=================
+Installation of Alex and the dependencies
+=========================================
+
+.. contents::
 
 This document describes how to install all dependencies needed to use Alex.
 The Alex project is developed in Python and tested with version 2.7.
@@ -8,7 +10,6 @@ to work correctly.
 
 Local installation of Python 2.7 and dependencies
 -------------------------------------------------
-
 If you do not have the root access to the machine then you then you can use https://github.com/akheron/multipy to install
 the 2.7 version of Python and consequently to install all Python dependencies locally.
 
@@ -31,7 +32,6 @@ version of Python every time you start a bash console.
 
 Ubuntu 12.04
 ------------
-
 Ask the root on the computer to run:
 
 .. code-block:: bash
@@ -67,19 +67,18 @@ Source compiled packages
 
 pyAudio
 ~~~~~~~
-Get a special version of pyAudio from https://github.com/bastibe/PyAudio (bastibe-PyAudio-2a08fa7)
+Get a special version of ``pyAudio`` from https://github.com/bastibe/PyAudio (bastibe-PyAudio-2a08fa7).
 This version supports non-blocking audio.
 
 .. code-block:: bash
 
-    $ git clone https://github.com/bastibe/PyAudio 
+    $ git clone https://github.com/bastibe/PyAudio.git
     $ cd PyAudio
     $ python ./setup.py install
 
 flite
 ~~~~~
-- get the lates flite
-- build flite
+Get the latest ``flite`` and build it by following the these commands:
 
 .. code-block:: bash
 
@@ -89,22 +88,23 @@ flite
     $ ./configure
     $ make
 
-- put ``flite-1.4-release/bin/flite`` into you search path. E.g. link the flite program to your bin directory
+Copy the ``flite-1.4-release/bin/flite`` file into you search path. E.g. link the ``flite`` program to your
+bin directory.
 
 HTK
 ~~~~
-- get the latest HTK (3.4.1 tested) from http://htk.eng.cam.ac.uk/download.shtml
-- build and install the HTK
+Get the latest HTK (3.4.1 tested) from http://htk.eng.cam.ac.uk/download.shtml . Build and install the HTK following
+the HTK's instructions.
 
 SRILM
 ~~~~~
-- get the latest SRILM (1.6 tested) from http://www.speech.sri.com/projects/srilm/
-- build and install the SRILM
+Get the latest SRILM (1.6 tested) from http://www.speech.sri.com/projects/srilm/ . Build and install the SRILM following
+their instructions.
 
 pjsip
 ~~~~~
 Get the supported pjsip 2.1 from our fork at GitHub.
-To install pjsip, follow the next instructions:
+To install ``pjsip``, follow these instructions:
 
 .. code-block:: bash
 
@@ -122,12 +122,12 @@ then
     $ cd pjsip-apps/src/python/
     $ python setup-pjsuaxt.py install
 
-this will install the extended pjsuaxt library.
+This will install the ``pjsuaxt`` library.
 
 Julius
 ~~~~~~
 Get the supported Open Julius ASR decoder (4.2.3 tested) from our fork at GitHub.
-To install openjulius, follow the following instructions:
+To install ``openjulius``, follow the following instructions:
 
 .. code-block:: bash
 
@@ -139,7 +139,6 @@ To install openjulius, follow the following instructions:
 
 Optimised ATLAS and LAPACK libraries
 ------------------------------------
-
 If you need optimised ATLAS and LAPACK libraries then you have to compile them on your own.
 Then modify config for numpy. Optimised ATLAS and LAPACK can compute matrix multiplication on all CPU cores available.
 

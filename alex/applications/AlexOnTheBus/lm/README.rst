@@ -1,4 +1,7 @@
-TODO
-====
+Building the language model for the Prague Public Transport telephone service
+=============================================================================
 
-Use the surface forms from the database expand in-domain vocabulary.
+
+TODOs
+-----
+- Use the surface forms from the database to expand in-domain vocabulary.
