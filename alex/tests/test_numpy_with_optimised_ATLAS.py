@@ -9,7 +9,7 @@ print
 import numpy
 #numpy.test()   #this should run with no errors (skipped tests and known-fails are ok)
 
-size = 8000
+size = 80
 
 if id(numpy.dot) == id(numpy.core.multiarray.dot):
     # A way to know if you use fast blas/lapack or not. However, it wont tell you whetehr it is generric ATLAS or machine optimised version.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Vystadial documentation build configuration file, created by
+# Alex documentation build configuration file, created by
 # sphinx-quickstart on Mon Nov 19 18:33:30 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -25,7 +25,8 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
+              'sphinx.ext.coverage', 'sphinx.ext.graphviz', 'sphinx.ext.todo', ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,8 +41,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Vystadial'
-copyright = u'2012, DSG'
+project = u'Alex Dialogue Systems Framework'
+copyright = u'2012-2013, UFAL-DSG, MFF, CUNI, CZ and other contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -164,7 +165,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Vystadialdoc'
+htmlhelp_basename = 'Alexdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,8 +184,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Vystadial.tex', u'Vystadial Documentation',
-   u'DSG', 'manual'),
+  ('index', 'Alex.tex', u'Alex Dialogue Systems Framework Documentation',
+   u'2012-2013, UFAL-DSG, MFF, CUNI, CZ and other contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -213,8 +214,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'vystadial', u'Vystadial Documentation',
-     [u'DSG'], 1)
+    ('index', 'alex', u'Alex Dialogue Systems Framework Documentation',
+     [u'2012-2013, UFAL-DSG, MFF, CUNI, CZ and other contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,8 +228,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'Vystadial', u'Vystadial Documentation',
-   u'DSG', 'Vystadial', 'One line description of project.',
+  ('index', 'Alex', u'Alex Documentation',
+   u'2012-2013, UFAL-DSG, MFF, CUNI, CZ and other contributors', 'Alex', 'One line description of project.',
    'Miscellaneous'),
 ]
 
