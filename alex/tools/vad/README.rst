@@ -107,46 +107,46 @@ This is a list of evaluation notes and experiments:
 #. theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser
 
    - data 100k examples, test data accuracy (first 20k examples): 88.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.5 %
+   - data 1000k examples, test data accuracy (first 200k examples): 89.8 %
 
 #. theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser
 
    - data 100k examples, test data accuracy (first 20k examples): 84.4 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.8 % # iter 24/30
+   - data 1000k examples, test data accuracy (first 200k examples): 89.9 %
 
 #. theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser, USING C0
 
    - data 100k examples, test data accuracy (first 20k examples): 88.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): X %
+   - data 1000k examples, test data accuracy (first 200k examples): 91.4 %
 
 #. theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser, USING C0
 
    - data 100k examples, test data accuracy (first 20k examples): 88.9 %
-   - data 1000k examples, test data accuracy (first 200k examples): X
+   - data 1000k examples, test data accuracy (first 200k examples): 91.8 %
 
 #. theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser
 
    - data 100k examples, test data accuracy (first 20k examples): 88.7 %
    - data 1000k examples, test data accuracy (first 200k examples): 89.6 %
-   - data 5000k examples, test data accuracy (first 1000k examples): X %
+   - data 5000k examples, test data accuracy (first 1000k examples): 89.6 %
 
 #. theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser
 
    - data 100k examples, test data accuracy (first 20k examples): 86.7 %
    - data 1000k examples, test data accuracy (first 200k examples): 89.9 %
-   - data 5000k examples, test data accuracy (first 1000k examples): X %
+   - data 5000k examples, test data accuracy (first 1000k examples): 90.1 %
 
 #. theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser, USING C0
 
    - data 100k examples, test data accuracy (first 20k examples): 90.9 %
    - data 1000k examples, test data accuracy (first 200k examples): 91.3 %
-   - data 5000k examples, test data accuracy (first 1000k examples): X %
+   - data 5000k examples, test data accuracy (first 1000k examples): 91.4 %
 
 #. theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser, USING C0
 
    - data 100k examples, test data accuracy (first 20k examples): 90.6 %
    - data 1000k examples, test data accuracy (first 200k examples): 91.1 %
-   - data 5000k examples, test data accuracy (first 1000k examples): X %
+   - data 5000k examples, test data accuracy (first 1000k examples): 91.7 %
 
 Evaluation of the GMM VAD
 -------------------------
