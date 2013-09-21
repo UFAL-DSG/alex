@@ -21,7 +21,7 @@ h2. FJ &ndash; Classic cross
 *CROSS setting*: cross (cross-word combinations included)
 
 
-h3. Zerograms (or unigrams??)
+h3. Zerograms
 
 <pre>
     ┌────────┬───────────────────────────────────────────┐

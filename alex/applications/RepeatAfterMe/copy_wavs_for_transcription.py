@@ -10,7 +10,7 @@ import shutil
 from glob import glob
 
 if __name__ == '__main__':
-    new_dir = 'VYSTADIAL-RAM'
+    new_dir = 'RAM-WAVs'
     new_dir += '-' + datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
 
     os.mkdir(new_dir)

@@ -1,5 +1,5 @@
-Building the language model for the Prague Public Transport telephone service
-=============================================================================
+Building the language model for the Public Transport Info telephone service (Czech)
+===================================================================================
 
 
 TODOs

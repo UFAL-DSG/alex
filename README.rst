@@ -1,36 +1,136 @@
-Brief introduction
-===============================
+Introduction into Alex Dialogue Systems Framework
+=================================================
 
-.. contents::
-
+Description
+-----------------
 The Alex Dialogue Systems Framework is named after the famous parrot Alex: http://en.wikipedia.org/wiki/Alex_(parrot)
 
 This framework is being developed by the dialogue systems group at UFAL - http://ufal.mff.cuni.cz/ -
-(the Institute of Formal and Applied Linguistics), Faculty of Mathematics and Physics, Charles University in Prague,
+the Institute of Formal and Applied Linguistics, Faculty of Mathematics and Physics, Charles University in Prague,
 Czech Republic. The purpose of this work is to facilitate research into and development of spoken dialogue systems.
 
 The main goals are:
 
-* provide baseline components need for a building spoken dialogue systems (SDSs)
-* provide example implementations of SDSs for several domains
-* provide tools for processing dialogue system interactions logs, e.g. for audio transcription, semantic annotations,
+- provide baseline components need for a building spoken dialogue systems (SDSs)
+- provide example implementations of SDSs for several domains
+- provide tools for processing dialogue system interactions logs, e.g. for audio transcription, semantic annotation,
   or SDSs evaluation
 
-License
--------
-This code is released under the APACHE 2.0 license unless the code says otherwise and its license does not allow re-licensing.
-The full wording of the APACHE 2.0 license can be found in the LICENSE-APACHE-2.0.TXT.
+Implemented features:
+
+- VOIP using ``PJSIP 2.1`` with some modifications
+- ASR using ``OpenJulius`` and ``GoogleASR``
+- VAD using Gaussian Mixure Models and Feed-Forward Neural Networks
+- SLU using a set of logistic regression classifiers for dialogue act items
+- DM using deterministic one best dialogue state tracking and handcrafted policies
+- NLG using template based generation possibly with efficient inflection into the correct surface form for
+   morphologically rich languages
+- TTS using ``flite``, ``VoiceRSS`` and ``SpeechTech``
+- evaluation of dialogue systems using Amazon Mechanical Turk crowdsourcing platform
+- transcription and semantic annotation of collected audio using Crowdflower crowdsourcing platform
+- building acoustic models using the HTK and KALDI
+- example dialogue domains:
+
+  - PTIcs: :doc:`alex.applications.AlexOnTheBus.README`
+
+Missing features:
+
+- there is no user simulator for any of the supported domains
+- as a result there is no trainable dialogue policies
 
 Installation
 ------------
-Please follow the installation instructions provided in :doc:`INSTALL`.
+Please follow the instructions provided in :doc:`INSTALL`.
 
 Coding style
 ------------
 This project follows the coding convention defined in PEP8. However, do not
 automatically reformat the length of the lines. The *right* length of a line
 is for every person different!
- 
+
+Development process
+-------------------
+Anyone can contribute to the project as long as he or she agrees to the publishing his contributions under the APACHE 2.0
+license.
+
+If you are a core member of the development team, please do not make changes directly in the master branch. Please,
+make a topic branch and when you believe that your changes are completed and properly tested, update your branch from
+master, and again *re-test the code*. Testing involves:
+
+- evaluating the projects unittest using nose
+- testing all interactive tests in the ``alex/test`` directory
+- testing that the example dialogue domains are working properly. E.g.
+
+  - running PTIcs: :doc:`alex.applications.AlexOnTheBus.README`
+  - running RAMcs: :doc:`alex.applications.RepeatAfterMe.README`
+
+If you are **not** a core member of the development team, please **fork** the project. Then make a topic branch make all
+changes in the topic branch. Then follow the instructions above, that is:
+
+- evaluate unit and interactive tests, test the implemented domains that they still work with your changes
+- then merge any changes upstream in the master master branch
+- again do the evaluation and testing
+- if everything is ok, send us a push request.
+
+Documentation
+-------------
+The documentation for this project fot this project is generated using Sphinx and its ``autodoc`` extension. Please document
+all your code as much as possible using the conventions which can parsed by Sphinx. Also provide README style
+documentation describing the complete packages, applications, or preparation of data and models. This documentation can
+be and should be placed near the code and/or application to which it is the most
+relevant. For formatting the text, use reStructured (reSt) *wiki like* syntax. The advantage of reSt is that it fairly
+readable in source format and it can nicely rendered into HTML or PDF using Spinx. Documents with the ``rst`` extension
+are automatically detected, included into the documentation, and an index page for these documents is created.
+
+Each document should start with every descriptive title, e.g.:
+
+::
+
+  Description of building domain specific language model for the PTI domain
+  =========================================================================
+
+Then the text should be sectioned further, e.g.:
+
+::
+
+  Introduction
+  ------------
+
+  Evaluation
+  -----------
+
+  Notes
+  -----
+
+More information on  ow to write documentation is available at
+
+- `Quick cheatsheet for ReST and Sphinx <http://matplotlib.org/sampledoc/cheatsheet.html>`_
+- `More thorough documentation with code examples <http://packages.python.org/an_example_pypi_project/sphinx.html>`_
+
+
+To compile and see the documentation, you can:
+
+.. code-block:: bash
+
+  $ cd doc
+  $ make html
+
+The open in your browser file ``doc/_build/html/index.html``.
+
+If you need to completely rebuild the documentation, then run:
+
+.. code-block:: bash
+
+  $ make clean
+  $ make html
+
+You can build also a PDF file using the ``make latexpdf`` command.
+
+License
+-------
+This code is released under the APACHE 2.0 license unless the code says otherwise and its license does not allow re-licensing.
+The full wording of the APACHE 2.0 license can be found in the LICENSE-APACHE-2.0.TXT.
+
 List of contributors
 --------------------
 If you contributed to this project, you are encouraged to add yourself here ;-)
