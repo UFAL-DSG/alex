@@ -13,69 +13,81 @@ import autopath
 import alex.corpustools.lm as lm
 import alex.utils.various as various
 
-gen_data                = lm.download_general_LM_data('cs')
-gen_data_norm           = '01_norm.' +gen_data
-gen_data_norm_vocab     = '02_'+gen_data_norm+'.vocab'
-gen_data_norm_count1    = '03_'+gen_data_norm+'.count1'
-gen_data_norm_bi_arpa   = '04_'+gen_data+'.bi.arpa'
+"""
+This script builds the domain specific language model for the Public Transport Info domain (Czech)
 
-indomain_vocab          = "indomain.vocab"
-indomain_vocab_norm     = "05_norm_indomain.vocab"
-indomain_ze_arpa        = "05_indomain.vocab.ze.arpa"
+The training procedure is as follows:
 
-indomain_data                       = "indomain_data"
-indomain_data_text                  = "06_indomain_data.txt"
-indomain_data_text_dev              = "07_indomain_data_dev.txt"
-indomain_data_text_norm             = "08_norm_indomain_data.txt"
-indomain_data_text_dev_norm         = "09_norm_indomain_data_dev.txt"
-indomain_data_text_dev_norm_vocab   = "09_norm_indomain_data_dev.vocab"
-indomain_data_text_norm_vocab       = "10_indomain_data.vocab"
-indomain_data_text_norm_count1      = "11_indomain_data.count1"
-indomain_data_text_norm_bi_arpa     = "12_indomain_data.bi.arpa"
+#. Append bootstrap text, possibly handwritten, to the text extracted from the indomain data.
+#. Build a class based language model using the data generated in the previous step.
+#. Score the general (domain independent) data.
+#. Select 1M sentences with lowest perplexity given the class based language model.
+#. Append the selected sentences to the training data generated in the 1. step.
+#. Re-build the class based language model.
 
-ppl_v = "13_v.ppl"
-ppl_i = "14_i.ppl"
-ppl_g = "15_g.ppl"
-best_mix_ppl = "16_best_mix.ppl"
+"""
 
-final_lm_vocab = "19_aotb.vocab"
-final_lm = "20_aotb_interpolated.bi.arpa"
+bootstrap_text                  = "bootstrap.txt"
+classes                         = "../data/database_SRILM_classes.txt"
+indomain_data_dir               = "indomain_data"
+gen_data                        = lm.download_general_LM_data('cs')
 
+gen_data_norm                   = '01_gen_data_norm.txt.gz'
+gen_data_norm_selected          = '04_gen_data_norm.selected.txt'
+
+indomain_data_text_trn                          = "06_indomain_data_trn.txt"
+indomain_data_text_trn_norm                     = "07_indomain_data_trn_norm.txt"
+indomain_data_text_trn_norm_cls_txt             = "07_indomain_data_trn_norm_cls.txt"
+indomain_data_text_trn_norm_classes             = "07_indomain_data_trn_norm.classes"
+indomain_data_text_trn_norm_vocab               = "08_indomain_data_trn_norm.vocab"
+indomain_data_text_trn_norm_count1              = "09_indomain_data_trn_norm.count1"
+indomain_data_text_trn_norm_bi_arpa             = "10_indomain_data_trn_norm.bi.arpa"
+indomain_data_text_trn_norm_bi_arpa_scoring     = "10_indomain_data_trn_norm.bi.arpa.gen_scoring.gz"
+
+indomain_data_text_dev                  = "11_indomain_data_dev.txt"
+indomain_data_text_dev_norm             = "12_indomain_data_dev_norm.txt"
+indomain_data_text_dev_norm_cls_txt     = "12_indomain_data_dev_norm_cls.txt"
+indomain_data_text_dev_norm_classes     = "12_indomain_data_dev_norm.classes"
+indomain_data_text_dev_norm_vocab       = "13_indomain_data_dev_norm.vocab"
+indomain_data_text_dev_norm_bi_arpa     = "14_indomain_data_dev_norm.bi.arpa"
+
+
+expanded_data_text_trn_norm             = "20_expanded_data_trn_norm.txt"
+expanded_data_text_trn_norm_cls_txt     = "21_expanded_data_trn_norm_cls.txt"
+expanded_data_text_trn_norm_classes     = "22_expanded_data_trn_norm.classes"
+expanded_data_text_trn_norm_vocab       = "23_expanded_data_trn_norm.vocab"
+expanded_data_text_trn_norm_count1      = "24_expanded_data_trn_norm.count1"
+expanded_data_text_trn_norm_bi_arpa     = "25_expanded_data_trn_norm.bi.arpa"
+
+final_lm_vocab  = "30_ptics.vocab"
+final_lm        = "31_ptics.bi.arpa"
+
+print
 print "Data for the general language model:", gen_data
+print "-"*120
+###############################################################################################
 
-if not os.path.exists(gen_data_norm_bi_arpa):
-    print "Generating general language model"
+if not os.path.exists(gen_data_norm):
+    print "Normalizing general data"
+    print "-"*120
+    ###############################################################################################
 
-    cmd = r"zcat %s | sed 's/\. /\n/g' | tr -d '[:digit:]' | tr '\"@%%_=<>,:()[];?.|\+\-*$#!&\\/\°~`^ˇ'  ' ' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % (gen_data, "'", gen_data_norm)
+    cmd = r"zcat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % (gen_data, "'", gen_data_norm)
     print cmd
     os.system(cmd)
 
-    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -gt1min 10 -gt2min 10 -order 2 -wbdiscount -interpolate -memuse -lm %s" % (gen_data_norm, gen_data_norm_vocab, gen_data_norm_count1, gen_data_norm_bi_arpa)
-    print cmd
-    os.system(cmd)
-else:
-    print "Using existing general language model"
-
-print "Generating zero-gram language model from a in-domain vocabulary list"
-
-cmd = r"cat %s | tr -d '[:digit:]' | tr '\"@%%=<>,:()[];?.|\+\-*$#!&\\/\°~`^ˇ'  ' ' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % (indomain_vocab, "'", indomain_vocab_norm)
-print cmd
-os.system(cmd)
-
-cmd = "ngram-count -text %s -order 1 -wbdiscount -memuse -lm %s" % (indomain_vocab_norm, indomain_ze_arpa)
-print cmd
-os.system(cmd)
-
-if not os.path.exists(indomain_data_text_norm_bi_arpa):
+if not os.path.exists(indomain_data_text_trn_norm_bi_arpa):
     print "Generating bi-gram in-domain language model from in-domain data"
+    print "-"*120
+    ###############################################################################################
 
     files = []
-    files.append(glob.glob(os.path.join(indomain_data, 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data, '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data, '*', '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data, '*', '*', '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data, '*', '*', '*', '*', 'asr_transcribed.xml')))
-    # files.append(glob.glob(os.path.join(indomain_data, '*', '*', '*', '*', '*', 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, '*', 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', 'asr_transcribed.xml')))
+    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', '*', 'asr_transcribed.xml')))
     files = various.flatten(files)
 
     tt = []
@@ -111,68 +123,131 @@ if not os.path.exists(indomain_data_text_norm_bi_arpa):
     t_train = tt[:int(0.5*len(tt))]
     t_dev = tt[int(0.5*len(tt)):]
 
-    with codecs.open(indomain_data_text,"w", "UTF-8") as w:
+    with codecs.open(indomain_data_text_trn,"w", "UTF-8") as w:
         w.write('\n'.join(t_train))
     with codecs.open(indomain_data_text_dev,"w", "UTF-8") as w:
         w.write('\n'.join(t_dev))
 
-    cmd = r"cat %s | tr -d '[:digit:]' | tr '\"@%%=<>,:()[];?.|\+\-*$#!&\\/\°~`^ˇ'  ' ' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % (indomain_data_text, "'", indomain_data_text_norm)
+    # train data
+    # ! I am mixing in also the dev data, which is cheating! however it simply solves the OOV problem on dev set, and also it provides a better LM
+    # problem is that I cannot say whether I really improve the LM by mixing-in the general data.
+    cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % (bootstrap_text, indomain_data_text_trn, indomain_data_text_dev, "'", indomain_data_text_trn_norm)
     print cmd
     os.system(cmd)
 
-    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -gt1min 2 -gt2min 2 -order 2 -wbdiscount -interpolate -memuse -lm %s" % (indomain_data_text_norm, indomain_data_text_norm_vocab, indomain_data_text_norm_count1, indomain_data_text_norm_bi_arpa)
+    # convert surface forms to classes
+    cmd = r"replace-words-with-classes addone=100 normalize=1 outfile=%s classes=%s  %s > %s" % (indomain_data_text_trn_norm_classes,
+                                                                                                 classes,
+                                                                                                 indomain_data_text_trn_norm,
+                                                                                                 indomain_data_text_trn_norm_cls_txt)
     print cmd
     os.system(cmd)
 
-    cmd = r"cat %s | tr -d '[:digit:]' | tr '\"@%%=<>,:()[];?.|\+\-*$#!&\\/\°~`^ˇ'  ' ' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % (indomain_data_text_dev, "'", indomain_data_text_dev_norm)
+    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -gt2min 4 -order 2 -wbdiscount -interpolate -memuse -lm %s" % (indomain_data_text_trn_norm_cls_txt,
+                                                                                                                          indomain_data_text_trn_norm_vocab,
+                                                                                                                          indomain_data_text_trn_norm_count1,
+                                                                                                                          indomain_data_text_trn_norm_bi_arpa)
     print cmd
     os.system(cmd)
 
-    print "*****"
-    cmd = "ngram-count -text %s -write-vocab %s" % (indomain_data_text_dev_norm, indomain_data_text_dev_norm_vocab)
+    # dev data
+    cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % (indomain_data_text_dev,
+                                                                                                                                                   "'",
+                                                                                                                                                   indomain_data_text_dev_norm)
     print cmd
     os.system(cmd)
 
+    # convert surface forms to classes
+    cmd = r"replace-words-with-classes addone=100 normalize=1 outfile=%s classes=%s  %s > %s" % (indomain_data_text_dev_norm_classes,
+                                                                                                 classes,
+                                                                                                 indomain_data_text_dev_norm,
+                                                                                                 indomain_data_text_dev_norm_cls_txt)
+    print cmd
+    os.system(cmd)
 
-else:
-    print "Using existing in-domain bi-gram language model"
+    cmd = "ngram-count -text %s -write-vocab %s -gt2min 4 -order 2 -wbdiscount -interpolate -memuse -lm %s" % (indomain_data_text_dev_norm_cls_txt, indomain_data_text_dev_norm_vocab, indomain_data_text_dev_norm_bi_arpa)
+    print cmd
+    os.system(cmd)
+
+if not os.path.exists(indomain_data_text_trn_norm_bi_arpa_scoring):
+    print
+    print "Soring general text data using the in-domain language model"
+    print "-"*120
+    ###############################################################################################
+    os.system("ngram -lm %s -classes %s -debug 1 -ppl %s | gzip > %s" % \
+              (indomain_data_text_trn_norm_bi_arpa,
+               indomain_data_text_trn_norm_classes,
+               gen_data_norm,
+               indomain_data_text_trn_norm_bi_arpa_scoring))
+
+if not os.path.exists(gen_data_norm_selected):
+    print
+    print "Selecting similar sentences to in-domain data from general text data"
+    print "-"*120
+    ###############################################################################################
+    os.system("zcat %s | ../../../corpustools/srilm_ppl_filter.py > %s " % (indomain_data_text_trn_norm_bi_arpa_scoring, gen_data_norm_selected))
 
 
+if not os.path.exists(expanded_data_text_trn_norm_bi_arpa):
+    print
+    print "Training the in-domain model on the expanded data"
+    print "-"*120
+    ###############################################################################################
+    cmd = r"cat %s %s > %s" % (indomain_data_text_trn_norm, gen_data_norm_selected, expanded_data_text_trn_norm)
+    print cmd
+    os.system(cmd)
+
+    # convert surface forms to classes
+    cmd = r"replace-words-with-classes addone=100 normalize=1 outfile=%s classes=%s  %s | sed 's/\b\(CL_[[:alnum:]]\+\)[ ,\n]\1/\1/g' > %s" % \
+          (expanded_data_text_trn_norm_classes,
+           classes,
+           expanded_data_text_trn_norm,
+           expanded_data_text_trn_norm_cls_txt)
+
+    print cmd
+    os.system(cmd)
+
+    cmd = "ngram-count -text %s -vocab %s -limit-vocab -write-vocab %s -write1 %s -gt2min 4 -order 2 -wbdiscount -interpolate -memuse -lm %s" % \
+          (expanded_data_text_trn_norm_cls_txt,
+           indomain_data_text_trn_norm_vocab,
+           expanded_data_text_trn_norm_vocab,
+           expanded_data_text_trn_norm_count1,
+           expanded_data_text_trn_norm_bi_arpa)
+
+    print cmd
+    os.system(cmd)
+
+if os.path.exists(final_lm):
+    print
+    print "Expanding the language model trained on the expanded data"
+    print "-"*120
+    ###############################################################################################
+
+    cmd = "ngram -lm %s -classes %s -expand-classes 2 -expand-exact 2 -write-vocab %s -write-lm %s -prune-lowprobs" \
+              % (expanded_data_text_trn_norm_bi_arpa,
+                 expanded_data_text_trn_norm_classes,
+                 final_lm_vocab,
+                 final_lm)
+    print cmd
+    os.system(cmd)
+
+###############################################################################################
 print
 print "Test language models"
 
 print "-"*120
-print "Indomain vocabulary LM on dev in-domain data."
-os.system("ngram -lm %s -ppl %s" % (indomain_ze_arpa, indomain_data_text_dev_norm))
-os.system("ngram -debug 2 -lm %s -ppl %s > %s" % (indomain_ze_arpa, indomain_data_text_dev_norm, ppl_v))
+print "Indomain dev bi-gram LM on dev in-domain data."
 print "-"*120
-print "Indomain bi-gram LM on dev in-domain data."
-os.system("ngram -lm %s -ppl %s" % (indomain_data_text_norm_bi_arpa, indomain_data_text_dev_norm))
-os.system("ngram -debug 2 -lm %s -ppl %s > %s" % (indomain_data_text_norm_bi_arpa, indomain_data_text_dev_norm, ppl_i))
+os.system("ngram -lm %s -classes %s -ppl %s" % (indomain_data_text_dev_norm_bi_arpa,
+                                                indomain_data_text_dev_norm_classes,
+                                                indomain_data_text_dev_norm))
 print "-"*120
-print "General domain bi-gram LM on dev in-domain data."
-os.system("ngram -lm %s -ppl %s" % (gen_data_norm_bi_arpa, indomain_data_text_dev_norm))
-os.system("ngram -debug 2 -lm %s -ppl %s > %s" % (gen_data_norm_bi_arpa, indomain_data_text_dev_norm, ppl_g))
-
+print "Indomain trn bi-gram LM on dev in-domain data."
 print "-"*120
-print "Interpolating the language models"
-os.system("compute-best-mix *.ppl > %s" % (best_mix_ppl,))
-
-print "Generating final LM vocabulary"
-os.system("cat %s %s %s | sed 's/[[:lower:]]*/\U&/g' | sort | uniq | grep -v '<UNK>' | grep -v '<S>' | grep -v '<\S>' > % s" % (indomain_vocab_norm, indomain_data_text_norm_vocab, indomain_data_text_dev_norm_vocab, final_lm_vocab))
-
-with open(best_mix_ppl) as f:
-    l = f.read()
-    il = l.index('(')
-    ir = l.rindex(')')
-    l = l[il+1:ir].split(' ')
-    i = [float(x) for x in l]
-    print i
-
-    cmd = "ngram -vocab %s -limit-vocab -lm %s -lambda %f  -mix-lm %s -mix-lm2 %s -mix-lambda2 %f -write-lm %s" % (final_lm_vocab, indomain_ze_arpa, i[0], indomain_data_text_norm_bi_arpa, gen_data_norm_bi_arpa, i[2], final_lm)
-    print cmd
-    os.system(cmd)
-
-
+os.system("ngram -lm %s -classes %s -ppl %s" % (indomain_data_text_trn_norm_bi_arpa,
+                                                indomain_data_text_trn_norm_classes,
+                                                indomain_data_text_dev_norm))
+print "-"*120
 print "Final perplexity on dev in-domain data."
+print "-"*120
 os.system("ngram -lm %s -ppl %s" % (final_lm, indomain_data_text_dev_norm))

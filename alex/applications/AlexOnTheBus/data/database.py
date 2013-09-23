@@ -56,7 +56,7 @@ STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
     ('\\bn\\.Vlt\\.', ['nad Vltavou']),
-    ('žel\\.st\\.', ['železniční stanice']),  # FIXME Noone would say this.
+    ('žel\\.st\\.', ['železniční stanice']),  # FIXME None would say this.
                                               # Factorise.
     ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
     ('žel\\.zast\\.', ['železniční zastávka']),
@@ -94,7 +94,7 @@ def db_add(slot, value, surface):
     surface = surface.strip()
     if len(value) == 0 or len(surface) == 0:
         return
-    database[slot].setdefault(value, list()).append(surface)
+    database[slot].setdefault(value, set()).add(surface)
 
 
 def spell_number(num):
@@ -207,7 +207,7 @@ def preprocess_stops_line(line, expanded_format=False):
                     new_words.append(word)
             names.append(' '.join(new_words))
     # Remove extra spaces, lowercase.
-    names = [' '.join(name.split()).lower() for name in names]
+    names = [' '.join(name.replace(',' , ' ').replace('-' , ' ').replace('(' , ' ').replace(')' , ' ').replace('5' , ' ').replace('0' , ' ').replace('.' , ' ').split()).lower() for name in names]
 
     return val, names
 
@@ -233,20 +233,44 @@ def stem():
             vals[value] = [" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]]
 
 
+def save_surface_forms(file_name):
+    sf = []
+    for k in database:
+        for v in database[k]:
+            for l in database[k][v]:
+                sf.append(l)
+    sf.sort()
+
+    # save the database vocabulary - all the surface forms
+    with codecs.open(file_name,'w','UTF-8') as f:
+        for l in sf:
+            f.write(l)
+            f.write('\n')
+
+def save_SRILM_classes(file_name):
+    sf = []
+    for k in database:
+        for v in database[k]:
+            for l in database[k][v]:
+                sf.append("CL_"+k.upper() + " " + l.upper())
+    sf.sort()
+
+    # save the database vocabulary - all the surface forms
+    with codecs.open(file_name,'w','UTF-8') as f:
+        for l in sf:
+            f.write(l)
+            f.write('\n')
+
 ########################################################################
 #                  Automatically expand the database                   #
 ########################################################################
 add_time()
 add_stops()
 
-# save the database vocabulary - all the surface forms
-with codecs.open('database_surface_forms.txt','w','UTF-8') as f:
-    for k in database:
-        for v in database[k]:
-            for l in database[k][v]:
-                f.write(l)
-                f.write('\n')
+save_surface_forms('database_surface_forms.txt')
+save_SRILM_classes('database_SRILM_classes.txt')
 
 # FIXME: This is not the best place to do stemming.
 stem()
 
+save_surface_forms('database_surface_forms_stemmed.txt')
