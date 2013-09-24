@@ -4,11 +4,27 @@
 import collections
 import sys
 
+
+""" This script filters input on stdin from the SRILM ``ngram -debug 1 -ppl your_text.txt -lm your_lm.arpa`` so that
+only sentences matching the criteria below are printed on the standard output.
+
+The criteria:
+
+::
+  min_words = 4
+  max_words = 15
+  max_ppl = 300
+  max_oovs = 5
+  max_oovs_per = 0.2
+  max_zprobs = 2
+
+"""
+
 min_words = 4
 max_words = 15
-max_ppl = 400
+max_ppl = 300
 max_oovs = 5
-max_oovs_per = 0.3
+max_oovs_per = 0.2
 max_zprobs = 2
 
 in3 = collections.deque(maxlen=3)

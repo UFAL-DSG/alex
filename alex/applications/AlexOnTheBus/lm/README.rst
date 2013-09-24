@@ -1,7 +1,77 @@
 Building the language model for the Public Transport Info telephone service (Czech)
-===================================================================================
+============================================================================
+
+The data
+--------
+To build the domain specific language model, we use the approach described in :doc:`alex.applications.LANGUAGE_MODELLING`.
+So fat, we have collected this data:
+
+#. selected out-of-domain data - 1191 sentences
+#. bootstrap text - 128 sentences
+#. indomain data - 1500 sentences
+
+Building the models
+------------------
+The models are built using the script ``build.py``.
+
+It requires to set the following variables:
+
+::
+
+  bootstrap_text                  = "bootstrap.txt"
+  classes                         = "../data/database_SRILM_classes.txt"
+  indomain_data_dir               = "indomain_data"
+
+The variables description:
+
+- bootstrap_text - the bootstrap.txt file contains a priori handcrafted in-domain sentences.
+- classes - the ``../data/database_SRILM_classes.txt`` file is created by the ``database.py`` script in the
+  ``alex/applications/AlexOnTheBus/data`` directory.
+- indomain_data_dir - should include links to directories containing ``asr_transcribed.xml`` files with transcribed
+  audio data
 
 
-TODOs
------
-- Use the surface forms from the database to expand in-domain vocabulary.
+The process of building/re-building the LM is:
+
+.. code-block:: bash
+
+  ../data/database.py
+  ./build.py
+
+Reuse of build.py
+-----------------
+The ``build.py`` script can be easily generalised to a different language or different text data, e.g. the in-domain
+data.
+
+Final results
+-------------
+
+This is the last part of the ``./build.py`` output:
+
+::
+    Test language models
+    ------------------------------------------------------------------------------------------------------------------------
+    Indomain dev 3-gram LM on dev in-domain data.
+    ------------------------------------------------------------------------------------------------------------------------
+    file 12_indomain_data_dev_norm.txt: 756 sentences, 1835 words, 0 OOVs
+    0 zeroprobs, logprob= -2767.49 ppl= 11.6981 ppl1= 32.2232
+    ------------------------------------------------------------------------------------------------------------------------
+    Indomain trn 3-gram LM on dev in-domain data.
+    ------------------------------------------------------------------------------------------------------------------------
+    file 12_indomain_data_dev_norm.txt: 756 sentences, 1835 words, 0 OOVs
+    0 zeroprobs, logprob= -2795.65 ppl= 11.9946 ppl1= 33.3823
+    ------------------------------------------------------------------------------------------------------------------------
+    Expanded trn 3-gram LM on dev in-domain data.
+    ------------------------------------------------------------------------------------------------------------------------
+    file 12_indomain_data_dev_norm.txt: 756 sentences, 1835 words, 0 OOVs
+    0 zeroprobs, logprob= -2937.86 ppl= 13.6104 ppl1= 39.9036
+    ------------------------------------------------------------------------------------------------------------------------
+    Final 3-gram LM on dev in-domain data.
+    ------------------------------------------------------------------------------------------------------------------------
+    file 12_indomain_data_dev_norm.txt: 756 sentences, 1835 words, 0 OOVs
+    0 zeroprobs, logprob= -2973.99 ppl= 14.0545 ppl1= 41.7546
+    ------------------------------------------------------------------------------------------------------------------------
+    Final 2-gram LM on dev in-domain data.
+    ------------------------------------------------------------------------------------------------------------------------
+    file 12_indomain_data_dev_norm.txt: 756 sentences, 1835 words, 0 OOVs
+    0 zeroprobs, logprob= -3144.25 ppl= 16.3504 ppl1= 51.6998
