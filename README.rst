@@ -24,7 +24,7 @@ Implemented features:
 - SLU using a set of logistic regression classifiers for dialogue act items
 - DM using deterministic one best dialogue state tracking and handcrafted policies
 - NLG using template based generation possibly with efficient inflection into the correct surface form for
-   morphologically rich languages
+  morphologically rich languages
 - TTS using ``flite``, ``VoiceRSS`` and ``SpeechTech``
 - evaluation of dialogue systems using Amazon Mechanical Turk crowdsourcing platform
 - transcription and semantic annotation of collected audio using Crowdflower crowdsourcing platform
