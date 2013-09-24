@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import codecs
 import os
 import re
+import sys
 
 __all__ = ['database']
 
@@ -267,10 +268,12 @@ def save_SRILM_classes(file_name):
 add_time()
 add_stops()
 
-save_surface_forms('database_surface_forms.txt')
-save_SRILM_classes('database_SRILM_classes.txt')
+if len(sys.argv) > 1 and sys.argv[1] == "dump":
+    save_surface_forms('database_surface_forms.txt')
+    save_SRILM_classes('database_SRILM_classes.txt')
 
 # FIXME: This is not the best place to do stemming.
 stem()
 
-save_surface_forms('database_surface_forms_stemmed.txt')
+if len(sys.argv) > 1 and sys.argv[1] == "dump":
+    save_surface_forms('database_surface_forms_stemmed.txt')

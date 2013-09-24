@@ -35,7 +35,9 @@ The process of building/re-building the LM is:
 
 .. code-block:: bash
 
-  ../data/database.py
+  cd ../data
+  ./database.py dump
+  cd ../lm
   ./build.py
 
 Reuse of build.py
