@@ -39,7 +39,7 @@ if __name__ == "__main__":
     import autopath
 
 from alex.corpustools.cued import find_wavs
-from alex.corpustools.trsnorm import exclude, exclude_by_dict, normalise_trs
+from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
 
 
 def save_transcription(trs_fname, trs):
@@ -114,7 +114,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
                 print '-' * term_width
                 print " # f:", wav_basename, "t:", trs
 
-            trs = normalise_trs(trs)
+            trs = normalise_text(trs)
             if verbose:
                 print "  after normalisation:", trs
 

@@ -1,18 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
-import os.path
-import xml.dom.minidom
-import glob
-import codecs
-import random
-
-import autopath
-
-import alex.corpustools.lm as lm
-import alex.utils.various as various
-
 """
 This script builds the domain specific language model for the Public Transport Info domain (Czech)
 
@@ -24,8 +12,21 @@ The training procedure is as follows:
 #. Select 1M sentences with lowest perplexity given the class based language model.
 #. Append the selected sentences to the training data generated in the 1. step.
 #. Re-build the class based language model.
-
 """
+
+import os
+import xml.dom.minidom
+import glob
+import codecs
+import random
+
+import autopath
+
+import alex.corpustools.lm as lm
+import alex.utils.various as various
+
+from alex.corpustools.text_norm_cs import normalise_text
+
 
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
@@ -118,14 +119,7 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
             if '-' in t:
                 continue
 
-            # Here it would be useful to have a generic czech normaliser, which could be used at different places.
-            # For example, also in generating transcriptions for ASR training.
-            t = t.replace('(noise)', '_NOISE_')
-            t = t.replace('(hum)', '_NOISE_')
-            t = t.replace('(sil)', '_SIL_')
-            t = t.replace('(breath)', '_INHALE_')
-            t = t.replace('(laugh)', '_LAUGH_')
-            tt.append(t)
+            tt.append(normalise_text(t))
 
     random.seed(0)
     random.shuffle(tt)

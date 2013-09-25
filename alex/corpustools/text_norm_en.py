@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 fdm=marker :
 """
-This module provides tools for normalisation of transcriptions, mainly for
+This module provides tools for **ENGLISH** normalisation of transcriptions, mainly for
 those obtained from human transcribers.
 """
 
+from __future__ import unicode_literals
+
 import re
 
-__all__ = ['normalise_trs', 'exclude', 'exclude_by_dict']
+__all__ = ['normalise_text', 'exclude', 'exclude_by_dict']
 
 # nonspeech event transcriptions {{{
 _nonspeech_map = {
@@ -352,7 +354,7 @@ _sure_punct_rx = re.compile(r'[.?!",_]')
 _parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
 
 
-def normalise_trs(text):
+def normalise_text(text):
     """
     Normalises the transcription.  This is the main function of this module.
     """
@@ -376,7 +378,12 @@ def normalise_trs(text):
             text = text.replace(parenized, uscored)
         text = _more_spaces.sub(' ', text.strip())
 
-    return text.encode('ascii', 'ignore')
+    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
+    # return text.translate(None, '*+~')
+    for char in '*+~':
+        text = text.replace(char, '')
+
+    return text
 #}}}
 
 

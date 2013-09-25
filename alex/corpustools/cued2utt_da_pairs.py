@@ -16,7 +16,7 @@ if __name__ == "__main__":
     import autopath
 
 from alex.corpustools.cued import find_logs
-from alex.corpustools.trsnorm import exclude, exclude_by_dict, normalise_trs
+from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
 from alex.utils.various import get_text_from_xml_node
 
 """
@@ -170,7 +170,7 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
         # and excluding non-conformant utterances.
         if transcription is not None:
             if normalise:
-                transcription = normalise_trs(transcription)
+                transcription = normalise_text(transcription)
             if do_exclude:
                 if known_words is not None:
                     trs_excluded = exclude_by_dict(transcription, known_words)
@@ -185,7 +185,7 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
                     transcription = None
         if asrhyp is not None:
             if normalise:
-                asrhyp = normalise_trs(asrhyp)
+                asrhyp = normalise_text(asrhyp)
             if do_exclude:
                 if known_words is not None:
                     asr_excluded = exclude_by_dict(asrhyp, known_words)

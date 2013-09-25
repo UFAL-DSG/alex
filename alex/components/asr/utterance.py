@@ -5,17 +5,17 @@
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import copy
+from collections import namedtuple
 from itertools import izip, product
 from operator import add, itemgetter, mul
 
-from alex.utils import text
-from alex.utils.text import Escaper
 from alex.components.slu.exceptions import SLUException
-from alex.corpustools.wavaskey import load_wavaskey
+from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 from alex.ml.hypothesis import Hypothesis, NBList
 from alex.ml.exceptions import NBListException
+from alex.utils import text
+from alex.utils.text import Escaper
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
@@ -108,6 +108,16 @@ def load_utt_nblists(fname, limit=None, n=40, encoding='UTF-8'):
     return {key: cn.get_utterance_nblist(n=n)
             for (key, cn) in cn_dict.iteritems()}
 
+
+def save_utterance(file_name, utt, encoding='UTF-8'):
+    """
+    Saves a dictionary of utterances in the wave as key format into a file.
+
+    :param file_name: name of the target file
+    :param utt: a dictionary with the utterances where the keys are the names of teh corresponding wave files
+    :return: None
+    """
+    save_wavaskey(file_name, utt, encoding)
 
 class UtteranceException(SLUException):
     pass

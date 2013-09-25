@@ -4,13 +4,15 @@
 
 from __future__ import unicode_literals
 
-from collections import defaultdict
 import copy
+import codecs
+
 from operator import xor
+from collections import defaultdict
 
 from alex.components.slu.exceptions import SLUException, DialogueActItemException
 from alex.ml.exceptions import NBListException
-from alex.corpustools.wavaskey import load_wavaskey
+from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 from alex.ml.features import Abstracted, Features, AbstractedTuple2
 from alex.ml.hypothesis import Hypothesis, NBList, ConfusionNetwork
 from alex.utils.text import split_by
@@ -39,12 +41,8 @@ def load_das(das_fname, limit=None, encoding='UTF-8'):
     return load_wavaskey(das_fname, DialogueAct, limit, encoding)
 
 
-def save_das(file_name, das):
-    with open(file_name, 'w') as outfile:
-        for turn_key in sorted(das):
-            outfile.write('{key} => {da}\n'.format(key=turn_key,
-                                                   da=das[turn_key]))
-
+def save_das(file_name, das, encoding = 'UTF-8'):
+    save_wavaskey(file_name, das, encoding)
 
 class DialogueActItem(Abstracted):
     """
@@ -1178,8 +1176,7 @@ def merge_slu_nblists(multiple_nblists):
 
     for prob_nblist, nblist in multiple_nblists:
         if not isinstance(nblist, DialogueActNBList):
-            raise SLUException(
-                "Cannot merge something that is not DialogueActNBList.")
+            raise SLUException("Cannot merge something that is not DialogueActNBList.")
         nblist.merge()
         nblist.add_other()
 
@@ -1199,8 +1196,7 @@ def merge_slu_confnets(confnet_hyps):
 
     for prob_confnet, confnet in confnet_hyps:
         if not isinstance(confnet, DialogueActConfusionNetwork):
-            raise SLUException("Cannot merge something that is not a "
-                               "DialogueActConfusionNetwork.")
+            raise SLUException("Cannot merge something that is not a DialogueActConfusionNetwork.")
 
         for prob, dai in confnet.cn:
             # it is not clear why I wanted to remove all other() dialogue acts

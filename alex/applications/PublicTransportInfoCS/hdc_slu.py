@@ -129,7 +129,7 @@ class PTICSHDCSLU(SLUInterface):
                     cn.add(0.499, DialogueActItem(dat, "", stop_name))
 
     def parse_time(self, abutterance, cn):
-        """Detects the time in th input abstract utterance.
+        """Detects the time in the input abstract utterance.
 
         :param abutterance:
         :param cn:
