@@ -10,10 +10,10 @@ from alex.components.slu.base import CategoryLabelDatabase
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.components.asr.utterance import Utterance
 
-from aotb_preprocessing import AOTBSLUPreprocessing
+from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 
 cldb = CategoryLabelDatabase('./data/database.py')
-pp = AOTBSLUPreprocessing(cldb)
+pp = PTICSSLUPreprocessing(cldb)
 pp.text_normalization_mapping += [
     (["ve"], ["v"]),
 ]

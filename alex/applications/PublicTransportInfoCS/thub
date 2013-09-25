@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd ..
+
+./thub.py -c ./PublicTransportInfoCS/aotb.cfg

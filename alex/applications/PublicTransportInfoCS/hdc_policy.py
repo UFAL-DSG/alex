@@ -23,11 +23,11 @@ def randbool(n):
     return False
 
 
-class AOTBHDCPolicy(DialoguePolicy):
-    """The handcrafted policy for the AOTB system."""
+class PTICSHDCPolicy(DialoguePolicy):
+    """The handcrafted policy for the PTIcs system."""
 
     def __init__(self, cfg, ontology):
-        super(AOTBHDCPolicy, self).__init__(cfg, ontology)
+        super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
         self.directions = GooglePIDDirectionsFinder()
 
@@ -47,7 +47,7 @@ class AOTBHDCPolicy(DialoguePolicy):
 
         res_da = None
 
-        if dialogue_state.turn_number > self.cfg['AlexOnTheBus']['max_turns']:
+        if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
             res_da = DialogueAct('bye()&inform(toolong="true")')
         elif len(self.das) == 0:
             # NLG("Dobrý den. Jak Vám mohu pomoci")

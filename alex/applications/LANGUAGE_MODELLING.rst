@@ -67,7 +67,7 @@ For more details please see :doc:`alex.applications.CamInfoRest.lm.README`.
 
 PTIcs
 -------
-For more details please see :doc:`alex.applications.AlexOnTheBus.lm.README`.
+For more details please see :doc:`alex.applications.PublicTransportInfoCS.lm.README`.
 
 
 

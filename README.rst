@@ -31,7 +31,7 @@ Implemented features:
 - building acoustic models using the HTK and KALDI
 - example dialogue domains:
 
-  - PTIcs: :doc:`alex.applications.AlexOnTheBus.README`
+  - PTIcs: :doc:`alex.applications.PublicTransportInfoCS.README`
 
 Missing features:
 
@@ -61,7 +61,7 @@ master, and again *re-test the code*. Testing involves:
 - testing all interactive tests in the ``alex/test`` directory
 - testing that the example dialogue domains are working properly. E.g.
 
-  - running PTIcs: :doc:`alex.applications.AlexOnTheBus.README`
+  - running PTIcs: :doc:`alex.applications.PublicTransportInfoCS.README`
   - running RAMcs: :doc:`alex.applications.RepeatAfterMe.README`
 
 If you are **not** a core member of the development team, please **fork** the project. Then make a topic branch make all
