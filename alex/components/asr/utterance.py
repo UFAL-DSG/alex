@@ -188,6 +188,7 @@ class Utterance(object):
     def __getitem__(self, idx):
         return self._utterance[idx]
 
+
     def __iter__(self):
         for word in self._utterance:
             yield word
@@ -296,11 +297,30 @@ class Utterance(object):
             # `orig' replaced by `replacement' and return that.
             ret_utt = Utterance('')
             if not isinstance(replacement, list):
-                replacement = list(replacement)
-            ret_utt.utterance = (self._utterance[:orig_pos] +
-                                 replacement +
-                                 self._utterance[orig_pos + len(orig):])
+                replacement = [replacement,]
+            ret_utt.utterance = self._utterance[:orig_pos] + replacement + self._utterance[orig_pos + len(orig):]
+            ret_utt._wordset = set(ret_utt._utterance)
+
         return (ret_utt, orig_pos) if return_startidx else ret_utt
+
+    def replace2(self, start, end, replacement):
+        """
+        Replace the words from start to end with the replacement.
+
+        :param start: the start position of replaced word sequence
+        :param end: the end position of replaced word sequence
+        :param replacement: a replacement
+        :return: return a new Utterance instance with the word sequence replaced with the replacement
+        """
+
+        ret_utt = Utterance('')
+        if not isinstance(replacement, list):
+            replacement = [replacement,]
+
+        ret_utt.utterance = self._utterance[:start] + replacement + self._utterance[end:]
+        ret_utt._wordset = set(ret_utt._utterance)
+
+        return ret_utt
 
     def lower(self):
         """Lowercases words of this utterance.

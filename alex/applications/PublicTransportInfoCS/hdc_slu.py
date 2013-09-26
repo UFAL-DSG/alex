@@ -156,7 +156,10 @@ class PTICSHDCSLU(SLUInterface):
                     cn.add(1.0, DialogueActItem("inform", 'time', time_value))
 
     def parse_meta(self, utterance, cn):
-        if (_any_word_in(utterance, ["ahoj",  "nazdar", "zdar", ]) or
+        if "_noise_" in utterance.utterance or len(utterance.utterance) == 0:
+            cn.add(1.0, DialogueActItem("null"))
+
+        if (_any_word_in(utterance, ["ahoj",  "nazdar", "zdar", "haló"]) or
                 _all_words_in(utterance, ["dobrý",  "den"])):
             cn.add(1.0, DialogueActItem("hello"))
 
@@ -222,6 +225,7 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request','from_stop'))
 
         if _all_words_in(utterance, ["kam", "to", "jede"]) or \
+            _all_words_in(utterance, ["na", "jakou", "jede"]) or \
             _all_words_in(utterance, ["do", "jake", "jede"]) or \
             _all_words_in(utterance, ["do", "jaké", "jede"]) or \
             _all_words_in(utterance, ["co", "cíl", ]) or \
@@ -239,7 +243,7 @@ class PTICSHDCSLU(SLUInterface):
             if _any_word_in(utterance, ["první", ]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if _any_word_in(utterance, ["druhé"]):
+            if _any_word_in(utterance, ["druhé", "druhou"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
 
             if _any_word_in(utterance, ["třetí"]):

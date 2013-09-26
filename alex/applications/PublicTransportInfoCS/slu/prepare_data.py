@@ -24,17 +24,23 @@ slu = PTICSHDCSLU(preprocessing)
 
 fn_train_sem = 'train.sem'
 fn_train_trn = 'train.trn'
+fn_train_trn_hdc_sem = 'train.trn.hdc.sem'
 fn_train_asr = 'train.asr'
+fn_train_asr_hdc_sem = 'train.asr.hdc.sem'
 fn_train_nbl = 'train.nbl'
 
 fn_dev_sem = 'dev.sem'
 fn_dev_trn = 'dev.trn'
+fn_dev_trn_hdc_sem = 'dev.trn.hdc.sem'
 fn_dev_asr = 'dev.asr'
+fn_dev_asr_hdc_sem = 'dev.asr.hdc.sem'
 fn_dev_nbl = 'dev.nbl'
 
 fn_test_sem = 'test.sem'
 fn_test_trn = 'test.trn'
+fn_test_trn_hdc_sem = 'test.trn.hdc.sem'
 fn_test_asr = 'test.asr'
+fn_test_asr_hdc_sem = 'test.asr.hdc.sem'
 fn_test_nbl = 'test.nbl'
 
 indomain_data_dir = "indomain_data"
@@ -54,7 +60,9 @@ files = various.flatten(files)
 
 sem = []
 trn = []
+trn_hdc_sem = []
 asr = []
+asr_hdc_sem = []
 nbl = []
 
 for fn in files:
@@ -80,29 +88,28 @@ for fn in files:
         wav_key = recs[0].getAttribute('fname')
         t = various.get_text_from_xml_node(trans[0])
         t = normalise_text(t)
-        if '-' in t or '_' in t or '(' in t:
+
+        # FIXME: We should be more tolerant and use more transcriptions
+        if t != '_NOISE_' and ('-' in t or '_' in t or '(' in t):
             continue
 
         trn.append((wav_key, t))
 
         # TODO: the interface to parsing one best will go back to simple passing directly Utterance
         s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
-        sem.append((wav_key, s))
+        trn_hdc_sem.append((wav_key, s))
 
         a = various.get_text_from_xml_node(hyps[0])
         asr.append((wav_key, a))
 
+        s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
+        asr_hdc_sem.append((wav_key, s))
+
         n = [ (h.getAttribute('p'), various.get_text_from_xml_node(h)) for h in hyps ]
         nbl.append((wav_key, n))
 
-# sem
-train_sem = sem[:int(0.8*len(sem))]
-dev_sem = sem[int(0.8*len(sem)):int(0.9*len(sem))]
-test_sem = sem[int(0.9*len(sem)):]
-
-save_wavaskey(fn_train_sem, dict(train_sem))
-save_wavaskey(fn_dev_sem, dict(dev_sem))
-save_wavaskey(fn_test_sem, dict(test_sem))
+        # there is no manual semantics in the transcriptions yet
+        sem.append((wav_key, None))
 
 # trn
 train_trn = trn[:int(0.8*len(trn))]
@@ -113,6 +120,15 @@ save_wavaskey(fn_train_trn, dict(train_trn))
 save_wavaskey(fn_dev_trn, dict(dev_trn))
 save_wavaskey(fn_test_trn, dict(test_trn))
 
+# trn_hdc_sem
+train_trn_hdc_sem = trn_hdc_sem[:int(0.8*len(trn_hdc_sem))]
+dev_trn_hdc_sem = trn_hdc_sem[int(0.8*len(trn_hdc_sem)):int(0.9*len(trn_hdc_sem))]
+test_trn_hdc_sem = trn_hdc_sem[int(0.9*len(trn_hdc_sem)):]
+
+save_wavaskey(fn_train_trn_hdc_sem, dict(train_trn_hdc_sem))
+save_wavaskey(fn_dev_trn_hdc_sem, dict(dev_trn_hdc_sem))
+save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem))
+
 # asr
 train_asr = asr[:int(0.8*len(asr))]
 dev_asr = asr[int(0.8*len(asr)):int(0.9*len(asr))]
@@ -121,6 +137,15 @@ test_asr = asr[int(0.9*len(asr)):]
 save_wavaskey(fn_train_asr, dict(train_asr))
 save_wavaskey(fn_dev_asr, dict(dev_asr))
 save_wavaskey(fn_test_asr, dict(test_asr))
+
+# asr_hdc_sem
+train_asr_hdc_sem = asr_hdc_sem[:int(0.8*len(asr_hdc_sem))]
+dev_asr_hdc_sem = asr_hdc_sem[int(0.8*len(asr_hdc_sem)):int(0.9*len(asr_hdc_sem))]
+test_asr_hdc_sem = asr_hdc_sem[int(0.9*len(asr_hdc_sem)):]
+
+save_wavaskey(fn_train_asr_hdc_sem, dict(train_asr_hdc_sem))
+save_wavaskey(fn_dev_asr_hdc_sem, dict(dev_asr_hdc_sem))
+save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem))
 
 # n-best lists
 train_nbl = nbl[:int(0.8*len(nbl))]
