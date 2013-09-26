@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ..
-
-./shub.py -c ./AlexOnTheBus/aotb.cfg

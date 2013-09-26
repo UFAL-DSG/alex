@@ -2,7 +2,7 @@
 set -e
 
 ENVDIR="/xdisk/devel/vystadial_lab/vystadial_env"
-TMPDIR="/tmp/aotb" #$(date +%s)
+TMPDIR="/tmp/ptics" #$(date +%s)
 cd ../../../
 
 rm -rf $TMPDIR
@@ -15,7 +15,7 @@ find alex \
     -or -path "alex/components/*" \
     -or -path "alex/utils/*" \
     -or -path "alex/resources/vad/*" \
-    -or -path "alex/applications/AlexOnTheBus/*" \
+    -or -path "alex/applications/PublicTransportInfoCS/*" \
     -or -path "alex/applications/__init__.py" \
     -or -path "alex/applications/autopath.py" \
     -or -path "alex/applications/vhub.py" \
@@ -31,11 +31,11 @@ find alex \
     ! -name ".*" \
     -exec cp --parents {} $TMPDIR \;
 
-cp alex/applications/AlexOnTheBus/aotb.cfg ${TMPDIR}/alex/resources/default.cfg
+cp alex/applications/PublicTransportInfoCS/ptics.cfg ${TMPDIR}/alex/resources/default.cfg
 
 mkdir ${TMPDIR}/env
 cp -r $ENVDIR/setenv ${TMPDIR}/
 cp -r $ENVDIR/python2.7/ ${TMPDIR}/env/
 
 cd /tmp/
-zip -r aotb.zip aotb
+zip -r ptics.zip ptics

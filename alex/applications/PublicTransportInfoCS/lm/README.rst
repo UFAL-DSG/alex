@@ -26,7 +26,7 @@ The variables description:
 
 - bootstrap_text - the bootstrap.txt file contains a priori handcrafted in-domain sentences.
 - classes - the ``../data/database_SRILM_classes.txt`` file is created by the ``database.py`` script in the
-  ``alex/applications/AlexOnTheBus/data`` directory.
+  ``alex/applications/PublicTransportInfoCS/data`` directory.
 - indomain_data_dir - should include links to directories containing ``asr_transcribed.xml`` files with transcribed
   audio data
 

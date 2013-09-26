@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ..
-
-./vhub.py -c ./AlexOnTheBus/aotb.cfg ./AlexOnTheBus/aotb_live.cfg ../resources/private/ext-800899998.cfg

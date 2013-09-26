@@ -43,9 +43,9 @@ def _phrase_in(utterance, words):
     return cz_stem(words) in utterance
 
 
-class AOTBSLU(SLUInterface):
+class PTICSHDCSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
-        super(AOTBSLU, self).__init__(preprocessing, cfg)
+        super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
 
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.

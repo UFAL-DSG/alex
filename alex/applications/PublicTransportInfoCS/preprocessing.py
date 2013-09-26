@@ -11,7 +11,7 @@ from alex.components.asr.utterance import Utterance
 from alex.utils.czech_stemmer import cz_stem
 
 
-class AOTBSLUPreprocessing(SLUPreprocessing):
+class PTICSSLUPreprocessing(SLUPreprocessing):
     """
     Extends SLUPreprocessing for some transformations specific for Czech:
         - devocalisation of prepositions
@@ -19,7 +19,7 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
 
     """
     def __init__(self, *args, **kwargs):
-        super(AOTBSLUPreprocessing, self).__init__(*args, **kwargs)
+        super(PTICSSLUPreprocessing, self).__init__(*args, **kwargs)
         # XXX This is not very nice.  The parent class cares mainly about
         # normalising English, not Czech.
         # not really, the implicit mapping is just an example.
@@ -35,7 +35,7 @@ class AOTBSLUPreprocessing(SLUPreprocessing):
         ]
 
     def text_normalisation(self, utterance):
-        utterance = super(AOTBSLUPreprocessing,
+        utterance = super(PTICSSLUPreprocessing,
                           self).text_normalisation(utterance)
         utt = Utterance(" ".join(map(cz_stem, utterance)))
         return utt
