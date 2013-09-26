@@ -79,7 +79,7 @@ class SpeechtechTTS(TTSInterface):
                 mp3response = urllib2.urlopen(request)
 
                 return mp3response.read()
-        except urllib2.HTTPError, urllib2.URLError:
+        except (urllib2.HTTPError, urllib2.URLError):
             raise TTSException("SpeechTech TTS error.")
 
         raise TTSException("Time out: No data synthesized.")
@@ -105,7 +105,7 @@ class SpeechtechTTS(TTSInterface):
                 return b""
                 
         except TTSException as e:
-            m = e + "Text: %s" % text
+            m = unicode(e) + " Text: %s" % text
             self.cfg['Logging']['system_logger'].exception(m)
             return b""
 
