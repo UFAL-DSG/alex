@@ -230,7 +230,7 @@ def stem():
 
     for _, vals in database.iteritems():
         for value in vals.keys():
-            vals[value] = [" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]]
+            vals[value] = set([" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]])
 
 
 def save_surface_forms(file_name):

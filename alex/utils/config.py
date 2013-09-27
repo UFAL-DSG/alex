@@ -311,7 +311,7 @@ class Config(object):
         for k, v in d.iteritems():
             if isinstance(v, collections.Mapping):
                 self.config_replace(p, s, v)
-            elif isinstance(v, str):
+            elif isinstance(v, basestring):
                 d[k] = d[k].replace(p, s)
         return
 
@@ -345,7 +345,7 @@ class Config(object):
                     target_dict[k] = item
                     # store the value of the unfolded items under the given key
                     if unfold_id_key is not None:
-                        str_rep = str(item)
+                        str_rep = unicode(item)
                         ci[unfold_id_key] = ci[unfold_id_key] + '_' + str_rep \
                                             if unfold_id_key in ci else str_rep
                     # unfold other variables

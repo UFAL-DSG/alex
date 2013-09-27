@@ -109,7 +109,7 @@ def load_utt_nblists(fname, limit=None, n=40, encoding='UTF-8'):
             for (key, cn) in cn_dict.iteritems()}
 
 
-def save_utterance(file_name, utt, encoding='UTF-8'):
+def save_utterances(file_name, utt, encoding='UTF-8'):
     """
     Saves a dictionary of utterances in the wave as key format into a file.
 

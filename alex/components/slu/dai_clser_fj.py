@@ -14,8 +14,7 @@ from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import UtteranceFeatures, UtteranceHyp
 from alex.components.slu.base import SLUInterface
-from alex.components.slu.da import DialogueActItem, \
-    DialogueActConfusionNetwork, merge_slu_confnets
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork, merge_slu_confnets
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -39,10 +38,7 @@ class DAILogRegClassifier(SLUInterface):
 
     """
 
-    def __init__(self,
-                 preprocessing=None,
-                 features_size=4,
-                 *args, **kwargs):
+    def __init__(self, preprocessing=None, features_size=4, *args, **kwargs):
         self.features_size = features_size
         self.preprocessing = preprocessing
 
@@ -61,23 +57,16 @@ class DAILogRegClassifier(SLUInterface):
         self.category_labels = {}
         if self.preprocessing:
             for utt_idx in self.utterances_list:
-                self.utterances[utt_idx] = self.preprocessing\
-                    .text_normalisation(self.utterances[utt_idx])
-                self.utterances[utt_idx], self.das[utt_idx], \
-                        self.category_labels[utt_idx] = \
-                    self.preprocessing.values2category_labels_in_da(
-                        self.utterances[utt_idx], self.das[utt_idx])
+                self.utterances[utt_idx] = self.preprocessing.text_normalisation(self.utterances[utt_idx])
+                self.utterances[utt_idx], self.das[utt_idx], self.category_labels[utt_idx] = \
+                    self.preprocessing.values2category_labels_in_da(self.utterances[utt_idx], self.das[utt_idx])
 
         # Generate utterance features.
         self.utterance_features = {}
         for utt_idx in self.utterances_list:
-            self.utterance_features[utt_idx] = \
-                UtteranceFeatures('ngram',
-                                  self.features_size,
-                                  self.utterances[utt_idx])
+            self.utterance_features[utt_idx] = UtteranceFeatures('ngram', self.features_size, self.utterances[utt_idx])
 
-    def prune_features(self, min_feature_count=5, verbose=False,
-                       *args, **kwargs):
+    def prune_features(self, min_feature_count=5, verbose=False, *args, **kwargs):
         """Prune those features that are unique. They are irrelevant for
         computing dot kernels.
         """
@@ -96,8 +85,7 @@ class DAILogRegClassifier(SLUInterface):
                 self.remove_features.append(feat)
 
         if verbose:
-            print "Number of features occurring less then %d times: %d" % (
-                min_feature_count, len(self.remove_features))
+            print "Number of features occurring less then %d times: %d" % (min_feature_count, len(self.remove_features))
 
         self.remove_features = set(self.remove_features)
         for utt in self.utterances_list:
@@ -263,8 +251,7 @@ class DAILogRegClassifier(SLUInterface):
     def get_size(self):
         return len(self.features_list)
 
-    def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False,
-                     *args, **kwargs):
+    def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False, *args, **kwargs):
         """
         Parse `utterance' and generate the best interpretation in the form of
         a dialogue act (an instance of DialogueAct).
@@ -285,25 +272,20 @@ class DAILogRegClassifier(SLUInterface):
 
         if self.preprocessing:
             utterance = self.preprocessing.text_normalisation(utterance)
-            utterance, category_labels = \
-                self.preprocessing.values2category_labels_in_utterance(
-                    utterance)
+            utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
 
         if verbose:
             print utterance
             print category_labels
 
         # Generate utterance features.
-        utterance_features = UtteranceFeatures('ngram',
-                                               self.features_size,
-                                               utterance)
+        utterance_features = UtteranceFeatures('ngram', self.features_size, utterance)
 
         if verbose:
             print utterance_features
 
         kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(
-            self.features_mapping)
+        kernel_vector[0] = utterance_features.get_feature_vector(self.features_mapping)
 
         da_confnet = DialogueActConfusionNetwork()
         for dai in self.trained_classifiers:

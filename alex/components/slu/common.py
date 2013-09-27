@@ -159,22 +159,18 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
             raise SLUException(msg)
 
         clser_class = slu_type
-        from alex.components.slu.base import CategoryLabelDatabase, \
-            SLUPreprocessing
+        from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
     # Load appropriate classes based on the classifier type required.
     elif slu_type == 'cl-seq':
         from alex.components.slu.dai_clser_fj import DAILogRegClassifier
-        from alex.components.slu.base_fj import CategoryLabelDatabase, \
-            SLUPreprocessing
+        from alex.components.slu.base_fj import CategoryLabelDatabase, SLUPreprocessing
         clser_class = DAILogRegClassifier
     elif slu_type == 'cl-tracing':
         from alex.components.slu.dailrclassifier import DAILogRegClassifier
-        from alex.components.slu.base import CategoryLabelDatabase, \
-            SLUPreprocessing
+        from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
         clser_class = DAILogRegClassifier
     else:
-        raise SLUException('Unsupported SLU parser type: {type_}'
-                           .format(type_=slu_type))
+        raise SLUException('Unsupported SLU parser type: {type_}'.format(type_=slu_type))
 
     # Prepare the classifier.
     if 'clser' in cfg_this_slu:
@@ -200,8 +196,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
             # XXX No other preprocessing class is expected in the SLU part of
             # the code, but this would be the place to swap the class for
             # another one.
-            preprocessing_cls = cfg_this_slu.get('preprocessing_cls',
-                                                 SLUPreprocessing)
+            preprocessing_cls = cfg_this_slu.get('preprocessing_cls',SLUPreprocessing)
             preprocessing = preprocessing_cls(cldb)
         else:
             preprocessing = None
