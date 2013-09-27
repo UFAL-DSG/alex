@@ -270,12 +270,26 @@ class DAILogRegClassifier(SLUInterface):
 
     def get_abstract_das(self, da, fvss):
         new_da = copy.deepcopy(da)
-
+        c_fvss = copy.deepcopy(fvss)
+        
+        cli = 0
+        dai_cl_2_v_f = []
         for dai in new_da:
-            for f, v, s in fvss:
+            
+            for fvs in c_fvss:
+                f, v, s = fvs
                 if dai.value == v:
-                    dai.value = 'SLOT_'+s.upper()
-        return new_da
+                    dai.value = 'CL_'+s.upper()
+                    
+                    c_fvss.remove(fvs)
+                    dai_cl_2_v_f.append((v,f))
+                    break
+            else:
+                dai_cl_2_v_f.append((None,None))
+            
+        print new_da, dai_cl_2_v_f
+        
+        return new_da, dai_cl_2_v_f
 
     def get_fvs_in_nblist(self, nblist):
         """
@@ -314,24 +328,25 @@ class DAILogRegClassifier(SLUInterface):
 
         self.utterance_fvs = {}
         self.das_abstracted = {}
+        self.das_category_labels = {}
         for utt_idx in self.utterances_list:
             self.utterances[utt_idx] = self.preprocessing.normalise(self.utterances[utt_idx])
             self.utterance_fvs[utt_idx] = self.get_fvs(self.utterances[utt_idx])
-            self.das_abstracted[utt_idx] = self.get_abstract_das(self.das[utt_idx],self.utterance_fvs[utt_idx])
+            self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = self.get_abstract_das(self.das[utt_idx],self.utterance_fvs[utt_idx])
 
         # get the classifiers
         self.classifiers = defaultdict(int)
         self.classifiers_abstracted = defaultdict(int)
 
         for k in self.utterances_list:
-            for dai in self.das[k].dais:
+            for dai in self.das_abstracted[k].dais:
                 self.classifiers[unicode(dai)] += 1
 
-            for dai in self.das_abstracted[k].dais:
-                self.classifiers_abstracted[unicode(dai)] += 1
+#            for dai in self.das_abstracted[k].dais:
+ #               self.classifiers_abstracted[unicode(dai)] += 1
 
                 if verbose:
-                    if dai.value and '*' not in dai.value:
+                    if dai.value and 'CL_' not in dai.value:
                         print '=' * 120
                         print 'Un-abstracted slot value'
                         print '-' * 120
@@ -375,23 +390,28 @@ class DAILogRegClassifier(SLUInterface):
     def gen_classifiers_outputs(self):
         # generate training data
         self.classifiers_outputs = defaultdict(list)
-
-        parsed_classifiers = {}
-        for c in self.classifiers:
-            parsed_classifiers[c] = DialogueActItem()
-            parsed_classifiers[c].parse(c)
+        self.classifiers_cls = defaultdict(list)
 
         for utt_idx in self.utterances_list:
+            print "-"*120
+            print unicode(self.utterances[utt_idx])
+            
             for c in self.classifiers:
-                if parsed_classifiers[c] in self.das[utt_idx]:
-                    self.classifiers_outputs[c].append(1.0)
+                for i, dai in enumerate(self.das_abstracted[utt_idx]):
+                    if c == dai:
+                        self.classifiers_outputs[c].append(1.0)
+                        self.classifiers_cls[c].append(self.das_category_labels[utt_idx][i])
+                        break
                 else:
                     self.classifiers_outputs[c].append(0.0)
+                    self.classifiers_cls[c].append((None,None))
+                    
+                print c,
+                print self.classifiers_outputs[c][-1], 
+                print self.classifiers_cls[c][-1]
 
         for c in self.classifiers:
             self.classifiers_outputs[c] = np.array(self.classifiers_outputs[c])
-            print c
-            print self.classifiers_outputs[c]
 
     def get_utterance_features(self):
         pass
