@@ -20,46 +20,46 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork,
 from alex.utils.config import load_as_module
 from alex.utils.various import nesteddict
 
-class SlotValueFormDatabase(object):
-    """ Provides a convenient interface to a database of slot value forms tuples.
+class CategoryLabelDatabase(object):
+    """ Provides a convenient interface to a database of category label value forms tuples.
 
     Attributes:
-          form_value_category: a list of (form, value, slot) tuples
+          form_value_category: a list of (form, value, category label) tuples
 
     """
 
     def __init__(self, file_name):
         self.database = {}
         self.forms = []
-        self.form_value_slot = []
-        self.form2value2slot = nesteddict()
+        self.form_value_cl = []
+        self.form2value2cl = nesteddict()
 
         if file_name:
             self.load(file_name)
 
     def __iter__(self):
-        """Yields tuples (form, value, slot) from the database."""
+        """Yields tuples (form, value, category label) from the database."""
 
-        for i in self.form_value_slot:
+        for i in self.form_value_cl:
             yield i
 
     def load(self, file_name):
         """
-        Load the database with slots, values, and forms from a file.
+        Load the database with category labels, values, and forms from a file.
 
-        :param file_name: a file name of a the slot value form database file
+        :param file_name: a file name of a the category label database file
 
         """
 
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
-            raise SLUException("The slot value form database does not define the `database' object!")
+            raise SLUException("The category label database does not define the `database' object!")
         self.database = db_mod.database
 
         self.normalise_database()
         # Update derived data structures.
-        self.gen_form_value_slot_list()
-        self.gen_mapping_form2value2slot()
+        self.gen_form_value_cl_list()
+        self.gen_mapping_form2value2cl()
 
 
     def normalise_database(self):
@@ -73,32 +73,32 @@ class SlotValueFormDatabase(object):
         self.database = new_db
 
 
-    def gen_form_value_slot_list(self):
+    def gen_form_value_cl_list(self):
         """
-        Generates an list of form, value, slot tuples from the database. This list is ordered where the tuples
+        Generates an list of form, value, category label tuples from the database. This list is ordered where the tuples
         with the longest surface forms are at the beginning of the list.
 
         :return: none
         """
-        for slot in self.database:
-            for value in self.database[slot]:
-                for form in self.database[slot][value]:
-                    self.form_value_slot.append((form, value, slot))
+        for cl in self.database:
+            for value in self.database[cl]:
+                for form in self.database[cl][value]:
+                    self.form_value_cl.append((form, value, cl))
 
-        self.form_value_slot.sort(key=lambda fvs: len(fvs[0]), reverse=True)
+        self.form_value_cl.sort(key=lambda fvc: len(fvc[0]), reverse=True)
 
-    def gen_mapping_form2value2slot(self):
+    def gen_mapping_form2value2cl(self):
         """
-        Generates an list of form, value, slot tuples from the database . This list is ordered where the tuples
+        Generates an list of form, value, category label tuples from the database . This list is ordered where the tuples
         with the longest surface forms are at the beginning of the list.
 
         :return: none
         """
 
-        for slot in self.database:
-            for value in self.database[slot]:
-                for form in self.database[slot][value]:
-                    self.form2value2slot[form][value][slot] = 1
+        for cl in self.database:
+            for value in self.database[cl]:
+                for form in self.database[cl][value]:
+                    self.form2value2cl[form][value][cl] = 1
                     self.forms.append(form)
 
         self.forms.sort(key=lambda f: len(f), reverse=True)
@@ -106,8 +106,8 @@ class SlotValueFormDatabase(object):
 
 class SLUPreprocessing(object):
     """Implements preprocessing of utterances or utterances and dialogue acts.
-    The main purpose is to replace all values in the database by their slot
-    labels (slot names) to reduce the complexity of the input utterances.
+    The main purpose is to replace all values in the database by their category labels to reduce the complexity
+    of the input utterances.
 
     In addition, it implements text normalisation for SLU input, e.g. removing
     filler words such as UHM, UM etc., converting "I'm" into "I am" etc.  Some
@@ -124,19 +124,19 @@ class SLUPreprocessing(object):
                                   (['(hesitation)', ], []),
     ]
 
-    def __init__(self, svfdb, text_normalization=None):
+    def __init__(self, cldb, text_normalization=None):
         """Initialises a SLUPreprocessing object with particular preprocessing
         parameters.
 
-        :param svfdb: an iterable of (surface, value, slot) tuples describing the
-                     relation between surface forms and (slot, value) pairs
+        :param cldb: an iterable of (surface, value, category label) tuples describing the
+                     relation between surface forms and (category labels, value) pairs
         :param text_normalization:  an iterable of tuples (source, target) where
                                     ``source`` occurrences in the text should be substituted by
                                     ``target``, both `source' and `target' being specified as
                                      a sequence of words
 
         """
-        self.svfdb = svfdb
+        self.cldb = cldb
 
         if text_normalization:
             self.text_normalization_mapping = text_normalization
@@ -156,7 +156,7 @@ class SLUPreprocessing(object):
 
     def normalise_confnet(self, confnet):
         """
-        Normalises the confnet (the output of an ASR).
+        Normalises the confusion network (the output of an ASR).
 
         E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
         into "I am", etc.
@@ -200,17 +200,17 @@ class DAILogRegClassifier(SLUInterface):
 
     """
 
-    def __init__(self, svfdb, preprocessing, features_size=4, *args, **kwargs):
+    def __init__(self, cldb, preprocessing, features_size=4, *args, **kwargs):
         self.features_size = features_size
         self.preprocessing = preprocessing
-        self.svfdb = svfdb
+        self.cldb = cldb
 
     def abstract_utterance(self, utterance):
         """
         Return a list of possible abstractions of the utterance.
 
         :param utterance: an Utterance instance
-        :return: a list of abstracted utterance, form, value, slot tuples
+        :return: a list of abstracted utterance, form, value, category label tuples
         """
 
         abs_utts = []
@@ -223,13 +223,13 @@ class DAILogRegClassifier(SLUInterface):
                 #print start, end
                 #print f
 
-                if f in self.svfdb.form2value2slot:
-                    for v in self.svfdb.form2value2slot[f]:
-                        for s in self.svfdb.form2value2slot[f][v]:
+                if f in self.cldb.form2value2cl:
+                    for v in self.cldb.form2value2cl[f]:
+                        for c in self.cldb.form2value2cl[f][v]:
                             u = copy.deepcopy(utterance)
-                            u = u.replace2(start,end,'SLOT_'+s.upper())
+                            u = u.replace2(start,end,'SLOT_'+c.upper())
 
-                            abs_utts.append((u,f,v,s))
+                            abs_utts.append((u,f,v,c))
 
                     #print f
                     break
@@ -237,16 +237,38 @@ class DAILogRegClassifier(SLUInterface):
             start += 1
         return abs_utts
 
-    def get_fvs_in_utterance(self, utterance):
+    def get_abstract_das(self, da, fvcs):
+        new_da = copy.deepcopy(da)
+        c_fvcs = copy.deepcopy(fvcs)
+
+        cli = 0
+        dai_cl_2_v_f_c = []
+        for dai in new_da:
+            for fvc in c_fvcs:
+                f, v, c = fvc
+                if dai.value == v:
+                    dai.value = 'CL_'+c.upper()
+
+                    c_fvcs.remove(fvc)
+                    dai_cl_2_v_f_c.append((v,f,dai.value))
+                    break
+            else:
+                dai_cl_2_v_f_c.append((None,None,None))
+
+        #print new_da, dai_cl_2_v_f_c
+
+        return new_da, dai_cl_2_v_f_c
+
+    def get_fvc_in_utterance(self, utterance):
         """
-        Return a list of all form, value, slot tuples in the utterance.
-        This is useful to find/guess what slot level classifiers will be necessary to instantiate.
+        Return a list of all form, value, category label tuples in the utterance.
+        This is useful to find/guess what category label level classifiers will be necessary to instantiate.
 
         :param utterance: an Utterance instance
-        :return: a list of forms, values, and slots found in the input sentence
+        :return: a list of form, value, and category label tuples found in the input sentence
         """
 
-        fvss = set()
+        fvcs = set()
 
         start = 0
         while start < len(utterance):
@@ -254,70 +276,81 @@ class DAILogRegClassifier(SLUInterface):
             while end >  start:
                 f = tuple(utterance[start:end])
 
-                # this looks for an exact surface form in the SVFDB
+                # this looks for an exact surface form in the CLDB
                 # however, we could also search for those withing a some distance from the exact surface form,
                 # for example using a string edit distance
-                if f in self.svfdb.form2value2slot:
-                    for v in self.svfdb.form2value2slot[f]:
-                        for s in self.svfdb.form2value2slot[f][v]:
-                            fvss.add((f,v,s))
+                if f in self.cldb.form2value2cl:
+                    for v in self.cldb.form2value2cl[f]:
+                        for c in self.cldb.form2value2cl[f][v]:
+                            fvcs.add((f,v,c))
 
                     break
                 end -= 1
             start += 1
 
-        return fvss
+        return fvcs
 
-    def get_abstract_das(self, da, fvss):
-        new_da = copy.deepcopy(da)
-        c_fvss = copy.deepcopy(fvss)
-        
-        cli = 0
-        dai_cl_2_v_f = []
-        for dai in new_da:
-            
-            for fvs in c_fvss:
-                f, v, s = fvs
-                if dai.value == v:
-                    dai.value = 'CL_'+s.upper()
-                    
-                    c_fvss.remove(fvs)
-                    dai_cl_2_v_f.append((v,f))
-                    break
-            else:
-                dai_cl_2_v_f.append((None,None))
-            
-        print new_da, dai_cl_2_v_f
-        
-        return new_da, dai_cl_2_v_f
-
-    def get_fvs_in_nblist(self, nblist):
+    def get_fvc_in_nblist(self, nblist):
         """
-        Return a list of all form, value, slot tuples in the nblist.
+        Return a list of all form, value, category label tuples in the nblist.
 
         :param nblist: an UtteranceNBList instance
-        :return:
+        :return: a list of form, value, and category label tuples found in the input sentence
         """
         pass
 
-    def get_fvs_in_confnet(self, confnet):
+    def get_fvc_in_confnet(self, confnet):
         """
-        Return a list of all form, value, slot tuples in the confusion network.
+        Return a list of all form, value, category label tuples in the confusion network.
 
         :param nblist: an UtteranceConfusionNetwork instance
-        :return:
+        :return: a list of form, value, and category label tuples found in the input sentence
         """
         pass
 
-    def get_fvs(self, obs):
+    def get_fvc(self, obs):
+        """
+
+        :param obs: the utterance being processed in multiple formats
+        :return: a list of form, value, and category label tuples found in the input sentence
+        """
         if isinstance(obs, Utterance):
-            return self.get_fvs_in_utterance(obs)
+            return self.get_fvc_in_utterance(obs)
         elif isinstance(obs, UtteranceConfusionNetwork):
-            return self.get_fvs_in_confnet(obs)
+            return self.get_fvc_in_confnet(obs)
         elif isinstance(obs, UtteranceNBList):
-            return self.get_fvs_in_nblist(obs)
+            return self.get_fvc_in_nblist(obs)
         else:
             raise DAILRException("Unsupported observations.")
+
+    def get_features_in_utterance(self, obs, fvc):
+        return None
+
+    def get_features_in_nblist(self, obs, fvc):
+        return None
+
+    def get_features_in_confnet(self, obs, fvc):
+        return None
+
+    def get_features(self, obs, fvc):
+        """
+        Generate utterance features for a specific utterance given by utt_idx.
+
+        :param obs: the utterance being processed in multiple formats
+        :param fvc: a form, value category tuple describing how the utterance should be abstracted
+        :return: a set of features from the utterance
+        """
+        if isinstance(obs, Utterance):
+            return self.get_features_in_utterance(obs, fvc)
+        elif isinstance(obs, UtteranceConfusionNetwork):
+            return self.get_features_in_confnet(obs, fvc)
+        elif isinstance(obs, UtteranceNBList):
+            return self.get_features_in_nblist(obs, fvc)
+        else:
+            raise DAILRException("Unsupported observations.")
+
+    def prune_features(self, min_feature_count=5, verbose=False):
+        pass
 
     def extract_classifiers(self, das, utterances, verbose=False):
         # process the training data
@@ -326,48 +359,48 @@ class DAILogRegClassifier(SLUInterface):
 
         self.utterances_list = self.utterances.keys()
 
-        self.utterance_fvs = {}
+        self.utterance_fvc = {}
         self.das_abstracted = {}
         self.das_category_labels = {}
         for utt_idx in self.utterances_list:
             self.utterances[utt_idx] = self.preprocessing.normalise(self.utterances[utt_idx])
-            self.utterance_fvs[utt_idx] = self.get_fvs(self.utterances[utt_idx])
-            self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = self.get_abstract_das(self.das[utt_idx],self.utterance_fvs[utt_idx])
+            self.utterance_fvc[utt_idx] = self.get_fvc(self.utterances[utt_idx])
+            self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = self.get_abstract_das(self.das[utt_idx],self.utterance_fvc[utt_idx])
 
         # get the classifiers
         self.classifiers = defaultdict(int)
-        self.classifiers_abstracted = defaultdict(int)
+        self.classifiers = defaultdict(int)
 
         for k in self.utterances_list:
             for dai in self.das_abstracted[k].dais:
                 self.classifiers[unicode(dai)] += 1
 
-#            for dai in self.das_abstracted[k].dais:
- #               self.classifiers_abstracted[unicode(dai)] += 1
-
                 if verbose:
                     if dai.value and 'CL_' not in dai.value:
                         print '=' * 120
-                        print 'Un-abstracted slot value'
+                        print 'Un-abstracted cl value'
                         print '-' * 120
                         print unicode(self.utterances[k])
-                        print unicode(self.utterance_fvs[k])
+                        print unicode(self.utterance_fvc[k])
                         print unicode(self.das[k])
                         print unicode(self.das_abstracted[k])
 
 
     def prune_abstracted_classifiers(self, min_classifier_count=5):
         new_classifiers = {}
-        for k in self.classifiers_abstracted:
-            if '=' in k and '0' not in k and self.classifiers_abstracted[k] < min_classifier_count:
+        for k in self.classifiers:
+            if '=' in k and '0' not in k and self.classifiers[k] < min_classifier_count:
                 continue
 
             if '="dontcare"' in k and '(="dontcare")' not in k:
                 continue
 
-            new_classifiers[k] = self.classifiers_abstracted[k]
+            if 'null()' in k:
+                continue
 
-        self.classifiers_abstracted = new_classifiers
+            new_classifiers[k] = self.classifiers[k]
+
+        self.classifiers = new_classifiers
 
 
     def print_classifiers(self):
@@ -380,59 +413,61 @@ class DAILogRegClassifier(SLUInterface):
         for k in sorted(self.classifiers):
           print('%40s = %d' % (k, self.classifiers[k]))
 
-        print "-"*120
-        print "Number of abstracted classifiers: ", len(self.classifiers_abstracted)
-        print "-"*120
-
-        for k in sorted(self.classifiers_abstracted):
-          print('%40s = %d' % (k, self.classifiers_abstracted[k]))
-
-    def gen_classifiers_outputs(self):
+    def gen_classifiers_data(self):
         # generate training data
         self.classifiers_outputs = defaultdict(list)
         self.classifiers_cls = defaultdict(list)
+        self.classifiers_features = defaultdict(list)
+
+        self.parsed_classifiers= {}
+        for clser in self.classifiers:
+            self.parsed_classifiers[clser] = DialogueActItem()
+            self.parsed_classifiers[clser].parse(clser)
 
         for utt_idx in self.utterances_list:
             print "-"*120
             print unicode(self.utterances[utt_idx])
-            
-            for c in self.classifiers:
-                for i, dai in enumerate(self.das_abstracted[utt_idx]):
-                    if c == dai:
-                        self.classifiers_outputs[c].append(1.0)
-                        self.classifiers_cls[c].append(self.das_category_labels[utt_idx][i])
-                        break
+            print unicode(self.das[utt_idx])
+
+            for clser in self.classifiers:
+                if self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value.startswith('CL_'):
+                    # process abstracted classifiers
+                    for i, (dai, (f, v, c)) in enumerate(zip(self.das_abstracted[utt_idx], self.das_category_labels[utt_idx])):
+                        if clser == dai and self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value == c:
+                            print "+ Matching a classifier in the abstracted dai, and matching category label"
+                            self.classifiers_outputs[clser].append(1.0)
+                            self.classifiers_cls[clser].append(self.das_category_labels[utt_idx][i])
+
+                        elif clser != dai and self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value == c:
+                            print "- NON-Matching a classifier in the abstracted dai, and matching category label"
+                            self.classifiers_outputs[clser].append(0.0)
+                            self.classifiers_cls[clser].append(self.das_category_labels[utt_idx][i])
+                        else:
+                            print "- NON-Matching a classifier in the abstracted dai, and NON-matching category label"
+                            self.classifiers_outputs[clser].append(0.0)
+                            self.classifiers_cls[clser].append((None, None, None))
+
+                        self.classifiers_features[clser].append(self.get_features(self.utterances[utt_idx], self.das_category_labels[utt_idx][i]))
+
+                        print "  @", clser, i, dai, f, v, c
                 else:
-                    self.classifiers_outputs[c].append(0.0)
-                    self.classifiers_cls[c].append((None,None))
-                    
-                print c,
-                print self.classifiers_outputs[c][-1], 
-                print self.classifiers_cls[c][-1]
+                    # process concrete classifiers
+                    if clser in self.das_abstracted[utt_idx]:
+                        print "+ Matching a classifier "
+                        self.classifiers_outputs[clser].append(1.0)
+                        self.classifiers_cls[clser].append((None,None,None))
+                    else:
+                        print "- NON-Matching a classifier"
+                        self.classifiers_outputs[clser].append(0.0)
+                        self.classifiers_cls[clser].append((None,None,None))
 
-        for c in self.classifiers:
-            self.classifiers_outputs[c] = np.array(self.classifiers_outputs[c])
+                    print "  @", clser
 
-    def get_utterance_features(self):
-        pass
-
-    def extract_features(self, das, utterances, verbose=False):
-
-        # generate utterance features.
-        self.utterance_features = {}
-        #for utt_idx in self.utterances_list:
-        #    self.utterance_features[utt_idx] = UtteranceFeatures('ngram', self.features_size, self.utterances[utt_idx])
-        #    if isinstance(utt_hyp, Utterance):
-        #        self.utterance_features[utt_idx] = UtteranceFeatures('ngram', self.features_size, self.utterances[utt_idx])
-        #    elif isinstance(utt_hyp, UtteranceConfusionNetwork):
-        #        self.utterance_features[utt_idx] = UtteranceConfusionNetworkFeatures('ngram', self.features_size, self.utterances[utt_idx])
-        #    else:
-        #        assert isinstance(utt_hyp, UtteranceNBList)
-        #        self.utterance_features[utt_idx] = UtteranceNBListFeatures('ngram', self.features_size, self.utterances[utt_idx])
-
-    def prune_features(self, min_feature_count=5, verbose=False):
-        pass
-
+        for clser in self.classifiers:
+            self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser])
+            
+            print clser
+            print zip(self.classifiers_outputs[clser], self.classifiers_cls[clser])
 
     def gen_input_matrix(self):
         pass
