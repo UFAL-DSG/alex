@@ -95,7 +95,7 @@ for fn in files:
 
         trn.append((wav_key, t))
 
-        # TODO: the interface to parsing one best will go back to simple passing directly Utterance
+        print "Parsing:", unicode(t)
         s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
         trn_hdc_sem.append((wav_key, s))
 

@@ -234,7 +234,7 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
             # Train the model.
             dai_clser.train(balance=cfg_tr.get('balance', None),
                             calibrate=cfg_tr.get('calibrate', None),
-                            sparsification=cfg_tr.get('sparsification', None),
+                            inverse_regularisation=cfg_tr.get('sparsification', None),
                             verbose=verbose)
             # Save the model.
             model_fname = cfg_tr.get('model_fname', None)

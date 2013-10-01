@@ -8,8 +8,7 @@ import autopath
 
 from alex.components.asr.utterance import UtteranceHyp
 from alex.components.slu.base import SLUInterface
-from alex.components.slu.da import DialogueActItem, \
-    DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 from alex.utils.czech_stemmer import cz_stem
 
 # if there is a change in search parameters from_stop, to_stop, time, then
