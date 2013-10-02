@@ -70,16 +70,16 @@ changes in the topic branch. Then follow the instructions above, that is:
 - evaluate unit and interactive tests, test the implemented domains that they still work with your changes
 - then merge any changes upstream in the master master branch
 - again do the evaluation and testing
-- if everything is ok, send us a push request.
+- if everything is ok, send us a pull request.
 
 Documentation
 -------------
-The documentation for this project fot this project is generated using Sphinx and its ``autodoc`` extension. Please document
+The documentation for this project is generated using Sphinx and its ``autodoc`` extension. Please document
 all your code as much as possible using the conventions which can parsed by Sphinx. Also provide README style
 documentation describing the complete packages, applications, or preparation of data and models. This documentation can
 be and should be placed near the code and/or application to which it is the most
 relevant. For formatting the text, use reStructured (reSt) *wiki like* syntax. The advantage of reSt is that it fairly
-readable in source format and it can nicely rendered into HTML or PDF using Spinx. Documents with the ``rst`` extension
+readable in source format and it can nicely rendered into HTML or PDF using Sphinx. Documents with the ``rst`` extension
 are automatically detected, included into the documentation, and an index page for these documents is created.
 
 Each document should start with every descriptive title, e.g.:
@@ -102,7 +102,7 @@ Then the text should be sectioned further, e.g.:
   Notes
   -----
 
-More information on  ow to write documentation is available at
+More information on  how to write documentation is available at
 
 - `Quick cheatsheet for ReST and Sphinx <http://matplotlib.org/sampledoc/cheatsheet.html>`_
 - `More thorough documentation with code examples <http://packages.python.org/an_example_pypi_project/sphinx.html>`_
@@ -142,4 +142,3 @@ If you contributed to this project, you are encouraged to add yourself here ;-)
 - Matej Korvas
 - David Marek
 - Ondrej Platek
-
