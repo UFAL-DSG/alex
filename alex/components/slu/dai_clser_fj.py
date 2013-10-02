@@ -57,7 +57,7 @@ class DAILogRegClassifier(SLUInterface):
         self.category_labels = {}
         if self.preprocessing:
             for utt_idx in self.utterances_list:
-                self.utterances[utt_idx] = self.preprocessing.text_normalisation(self.utterances[utt_idx])
+                self.utterances[utt_idx] = self.preprocessing.normalise_utterance(self.utterances[utt_idx])
                 self.utterances[utt_idx], self.das[utt_idx], self.category_labels[utt_idx] = \
                     self.preprocessing.values2category_labels_in_da(self.utterances[utt_idx], self.das[utt_idx])
 
@@ -271,7 +271,7 @@ class DAILogRegClassifier(SLUInterface):
             print utterance
 
         if self.preprocessing:
-            utterance = self.preprocessing.text_normalisation(utterance)
+            utterance = self.preprocessing.normalise_utterance(utterance)
             utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
 
         if verbose:

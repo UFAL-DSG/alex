@@ -34,7 +34,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['barandov'], ['barrandov']),
         ]
 
-    def text_normalisation(self, utterance):
-        utterance = super(PTICSSLUPreprocessing,self).text_normalisation(utterance)
+    def normalise_utterance(self, utterance):
+        utterance = super(PTICSSLUPreprocessing,self).normalise_utterance(utterance)
         utt = Utterance(" ".join(map(cz_stem, utterance)))
         return utt

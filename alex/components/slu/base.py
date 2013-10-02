@@ -198,8 +198,7 @@ class SLUPreprocessing(object):
         if text_normalization:
             self.text_normalization_mapping = text_normalization
 
-    # TODO Rename to normalise_utterance.
-    def text_normalisation(self, utterance):
+    def normalise_utterance(self, utterance):
         """
         Normalises the utterance (the output of an ASR).
 
@@ -227,13 +226,13 @@ class SLUPreprocessing(object):
 
     def normalise(self, utt_hyp):
         if isinstance(utt_hyp, Utterance):
-            return self.text_normalisation(utt_hyp)
+            return self.normalise_utterance(utt_hyp)
         elif isinstance(utt_hyp, UtteranceConfusionNetwork):
             return self.normalise_confnet(utt_hyp)
         else:
             assert isinstance(utt_hyp, UtteranceNBList)
             for utt_idx, hyp in enumerate(utt_hyp):
-                utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
+                utt_hyp[utt_idx][1] = self.normalise_utterance(hyp[1])
 
     # TODO Update the docstring for the `all_options' argument.
     def values2category_labels_in_utterance(self, utterance,

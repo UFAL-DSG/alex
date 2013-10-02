@@ -115,7 +115,7 @@ class DAIKerLogRegClassifierLearning(object):
         self.category_labels = {}
         if self.preprocessing:
             for k in self.utterances:
-                self.utterances[k] = self.preprocessing.text_normalisation(
+                self.utterances[k] = self.preprocessing.normalise_utterance(
                     self.utterances[k])
                 (self.utterances[k], self.das[k], self.category_labels[k]) = (
                     self.preprocessing.values2category_labels_in_da(
@@ -321,7 +321,7 @@ class DAIKerLogRegClassifier(object):
             print utterance
 
         if self.preprocessing:
-            utterance = self.preprocessing.text_normalisation(utterance)
+            utterance = self.preprocessing.normalise_utterance(utterance)
             utterance, category_labels = (
                 self.preprocessing.values2category_labels_in_utterance(
                     utterance))

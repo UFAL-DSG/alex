@@ -273,7 +273,7 @@ class PTICSHDCSLU(SLUInterface):
 
         if self.preprocessing:
             # the text normalisation performs stemming
-            utterance = self.preprocessing.text_normalisation(utterance)
+            utterance = self.preprocessing.normalise_utterance(utterance)
 
             abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
 

@@ -46,12 +46,12 @@ class SemScorer(object):
         recall = coef * tp / tot_ap if tot_ap > 0. else _nan
 
         # DEBUG
-        if precision > 1 + 99 * percent:
-            import ipdb
-            ipdb.set_trace()
-        if recall > 1 + 99 * percent:
-            import ipdb
-            ipdb.set_trace()
+        #if precision > 1 + 99 * percent:
+        #    import ipdb
+        #    ipdb.set_trace()
+        #if recall > 1 + 99 * percent:
+        #    import ipdb
+        #    ipdb.set_trace()
 
         return precision, recall, SemScorer.hmean(precision, recall)
 
@@ -59,9 +59,9 @@ class SemScorer(object):
     def hmean(a, b):
         if a + b > 0.:
             # DEBUG
-            if np.isinf(a) or np.isinf(b):
-                import ipdb
-                ipdb.set_trace()
+            #if np.isinf(a) or np.isinf(b):
+            #    import ipdb
+            #    ipdb.set_trace()
             return 2 * a * b / (a + b)
         elif a == b == 0.:
             return 0.
@@ -120,7 +120,7 @@ class SemScorer(object):
 
         get_scores = SemScorer.get_scores
         stats = np.zeros(3, dtype=int)
-        scores = np.empty((len(ref_dict), 3), dtype=float)
+        scores = np.empty((len(ref_dict), 3), dtype=np.float16)
         dai_stats = defaultdict(lambda: np.zeros(3, dtype=int))
         # dai_scores = defaultdict(lambda: list())
         dai_scores = dict()

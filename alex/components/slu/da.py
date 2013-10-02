@@ -10,7 +10,7 @@ import codecs
 from operator import xor
 from collections import defaultdict
 
-from alex.components.slu.exceptions import SLUException, DialogueActItemException
+from alex.components.slu.exceptions import SLUException, DialogueActException, DialogueActItemException
 from alex.ml.exceptions import NBListException
 from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 from alex.ml.features import Abstracted, Features, AbstractedTuple2

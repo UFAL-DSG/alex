@@ -22,6 +22,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork,
 from alex.utils.config import load_as_module
 from alex.utils.various import nesteddict
 
+
 class CategoryLabelDatabase(object):
     """ Provides a convenient interface to a database of category label value forms tuples.
 
@@ -106,80 +107,6 @@ class CategoryLabelDatabase(object):
         self.forms.sort(key=lambda f: len(f), reverse=True)
 
 
-class SLUPreprocessing(object):
-    """Implements preprocessing of utterances or utterances and dialogue acts.
-    The main purpose is to replace all values in the database by their category labels to reduce the complexity
-    of the input utterances.
-
-    In addition, it implements text normalisation for SLU input, e.g. removing
-    filler words such as UHM, UM etc., converting "I'm" into "I am" etc.  Some
-    normalisation is hard-coded. However, it can be updated by providing
-    normalisation patterns.
-
-    """
-    text_normalization_mapping = [(['erm', ], []),
-                                  (['uhm', ], []),
-                                  (['um', ], []),
-                                  (["i'm", ], ['i', 'am']),
-                                  (['(sil)', ], []),
-                                  (['(%hesitation)', ], []),
-                                  (['(hesitation)', ], []),
-    ]
-
-    def __init__(self, cldb, text_normalization=None):
-        """Initialises a SLUPreprocessing object with particular preprocessing
-        parameters.
-
-        :param cldb: an iterable of (surface, value, category label) tuples describing the
-                     relation between surface forms and (category labels, value) pairs
-        :param text_normalization:  an iterable of tuples (source, target) where
-                                    ``source`` occurrences in the text should be substituted by
-                                    ``target``, both `source' and `target' being specified as
-                                     a sequence of words
-
-        """
-        self.cldb = cldb
-
-        if text_normalization:
-            self.text_normalization_mapping = text_normalization
-
-    def normalise_utterance(self, utterance):
-        """
-        Normalises the utterance (the output of an ASR).
-
-        E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
-        into "I am", etc.
-
-        """
-        utterance.lower()
-        for mapping in self.text_normalization_mapping:
-            utterance = utterance.replace(mapping[0], mapping[1])
-        return utterance
-
-    def normalise_confnet(self, confnet):
-        """
-        Normalises the confusion network (the output of an ASR).
-
-        E.g., it removes filler words such as UHM, UM, etc., converts "I'm"
-        into "I am", etc.
-
-        """
-        confnet.lower()
-        for mapping in self.text_normalization_mapping:
-            confnet = confnet.replace(mapping[0], mapping[1])
-        return confnet
-
-    def normalise(self, utt_hyp):
-        if isinstance(utt_hyp, Utterance):
-            return self.normalise_utterance(utt_hyp)
-        elif isinstance(utt_hyp, UtteranceConfusionNetwork):
-            return self.normalise_confnet(utt_hyp)
-        elif isinstance(utt_hyp, UtteranceNBList):
-            for utt_idx, hyp in enumerate(utt_hyp):
-                utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
-        else:
-            raise SLUException("Unsupported utterance hypothesis.")
-
 class Features(object):
     def __init__(self):
         self.features = defaultdict(float)
@@ -216,9 +143,16 @@ class Features(object):
                 if f in self.features:
                     del self.features[f]
 
-    def extend(self, features, f1_weight = 1.0, f2_weight = 1.0):
+    def scale(self, scale=1.0):
+        for f in self.features:
+            self.features[f] *= scale
+
+    def merge(self, features, weight=1.0):
         for f in features:
-            self.features[f] = f1_weight*self.features[f] + f2_weight*features[f]
+            self.features[f] += weight * features[f]
+
+        self.set = set(self.features.keys())
+
 
 class UtteranceFeatures(Features):
     def __init__(self, type='ngram', size=3, utterance=None):
@@ -233,10 +167,10 @@ class UtteranceFeatures(Features):
     def parse(self, utt):
         self.features['_empty_'] = 1.0 if not utt else 0.0
 
-        utt = ['<s>',] + utt.utterance + ['</s>',]
+        utt = ['<s>', ] + utt.utterance + ['</s>', ]
 
         if self.type == 'ngram':
-            for k in range(1, self.size+1):
+            for k in range(1, self.size + 1):
                 for i in range(len(utt)):
                     if i + k > len(utt):
                         break
@@ -258,7 +192,6 @@ class UtteranceFeatures(Features):
             self.features[f] += new_features[f]
 
         self.set = set(self.features.keys())
-
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -300,7 +233,7 @@ class DAILogRegClassifier(SLUInterface):
         start = 0
         while start < len(utterance):
             end = len(utterance)
-            while end >  start:
+            while end > start:
                 f = tuple(utterance[start:end])
                 #print start, end
                 #print f
@@ -309,9 +242,9 @@ class DAILogRegClassifier(SLUInterface):
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
                             u = copy.deepcopy(utterance)
-                            u = u.replace2(start,end,'CL_'+c.upper())
+                            u = u.replace2(start, end, 'CL_' + c.upper())
 
-                            abs_utts.append((u,f,v,c))
+                            abs_utts.append((u, f, v, c))
 
                     #print f
                     break
@@ -337,13 +270,13 @@ class DAILogRegClassifier(SLUInterface):
         start = 0
         while start < len(utterance):
             end = len(utterance)
-            while end >  start:
+            while end > start:
                 f = tuple(utterance[start:end])
                 #print start, end
                 #print f, form
 
                 if f == form:
-                    abs_utt = abs_utt.replace2(start,end,c)
+                    abs_utt = abs_utt.replace2(start, end, c)
 
                     break
                 end -= 1
@@ -363,7 +296,7 @@ class DAILogRegClassifier(SLUInterface):
         start = 0
         while start < len(utterance):
             end = len(utterance)
-            while end >  start:
+            while end > start:
                 f = tuple(utterance[start:end])
                 #print start, end
                 #print f
@@ -371,7 +304,7 @@ class DAILogRegClassifier(SLUInterface):
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
-                            abs_utt = abs_utt.replace2(start,end,'CL_OTHER_'+c.upper())
+                            abs_utt = abs_utt.replace2(start, end, 'CL_OTHER_' + c.upper())
 
                     break
                 end -= 1
@@ -387,13 +320,13 @@ class DAILogRegClassifier(SLUInterface):
             for fvc in c_fvcs:
                 f, v, c = fvc
                 if dai.value == v:
-                    dai.value = 'CL_'+c.upper()
+                    dai.value = 'CL_' + c.upper()
 
                     c_fvcs.remove(fvc)
-                    dai_cl_2_f_v_c.append((f,v,dai.value))
+                    dai_cl_2_f_v_c.append((f, v, dai.value))
                     break
             else:
-                dai_cl_2_f_v_c.append((None,None,None))
+                dai_cl_2_f_v_c.append((None, None, None))
 
         return new_da, dai_cl_2_f_v_c
 
@@ -411,7 +344,7 @@ class DAILogRegClassifier(SLUInterface):
         start = 0
         while start < len(utterance):
             end = len(utterance)
-            while end >  start:
+            while end > start:
                 f = tuple(utterance[start:end])
 
                 # this looks for an exact surface form in the CLDB
@@ -420,7 +353,7 @@ class DAILogRegClassifier(SLUInterface):
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
-                            fvcs.add((f,v,c))
+                            fvcs.add((f, v, c))
 
                     break
                 end -= 1
@@ -464,9 +397,18 @@ class DAILogRegClassifier(SLUInterface):
     def get_features_in_utterance(self, obs, fvc):
         abs_obs = self.get_abstract_utterance(obs, fvc)
         abs_obs2 = self.get_abstract_utterance2(abs_obs)
-        feat = UtteranceFeatures(size=self.features_size,utterance=obs)
-        feat.extend(UtteranceFeatures(size=self.features_size,utterance=abs_obs),f1_weight=0.5, f2_weight=0.5)
-        feat.extend(UtteranceFeatures(size=self.features_size,utterance=abs_obs2),f1_weight=0.666, f2_weight=0.334)
+        #stem_obs =  Utterance(" ".join(map(cz_stem, obs)))
+        #abs_stem_obs = self.get_abstract_utterance(stem_obs, fvc)
+        #abs_stem_obs2 = self.get_abstract_utterance2(stem_abs_obs)
+
+        scale = 1.0 / 3
+        feat = UtteranceFeatures(size=self.features_size, utterance=obs)
+        feat.scale(scale)
+        feat.merge(UtteranceFeatures(size=self.features_size, utterance=abs_obs), weight=scale)
+        feat.merge(UtteranceFeatures(size=self.features_size, utterance=abs_obs2), weight=scale)
+        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=stem_obs),weight=scale)
+        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=abs_stem_obs),weight=scale)
+        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=abs_stem_obs2),weight=scale)
 
         return feat
 
@@ -506,7 +448,8 @@ class DAILogRegClassifier(SLUInterface):
         for utt_idx in self.utterances_list:
             self.utterances[utt_idx] = self.preprocessing.normalise(self.utterances[utt_idx])
             self.utterance_fvc[utt_idx] = self.get_fvc(self.utterances[utt_idx])
-            self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = self.get_abstract_das(self.das[utt_idx],self.utterance_fvc[utt_idx])
+            self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = \
+                self.get_abstract_das(self.das[utt_idx],self.utterance_fvc[utt_idx])
 
         # get the classifiers
         self.classifiers = defaultdict(int)
@@ -545,29 +488,29 @@ class DAILogRegClassifier(SLUInterface):
 
 
     def print_classifiers(self):
-        print "="*120
+        print "=" * 120
         print "Classifiers detected in the training data"
-        print "-"*120
+        print "-" * 120
         print "Number of classifiers: ", len(self.classifiers)
-        print "-"*120
+        print "-" * 120
 
         for k in sorted(self.classifiers):
-          print('%40s = %d' % (k, self.classifiers[k]))
+            print('%40s = %d' % (k, self.classifiers[k]))
 
-    def gen_classifiers_data(self, verbose = False):
+    def gen_classifiers_data(self, verbose=False):
         # generate training data
         self.classifiers_outputs = defaultdict(list)
         self.classifiers_cls = defaultdict(list)
         self.classifiers_features = defaultdict(list)
 
-        self.parsed_classifiers= {}
+        self.parsed_classifiers = {}
         for clser in self.classifiers:
             self.parsed_classifiers[clser] = DialogueActItem()
             self.parsed_classifiers[clser].parse(clser)
 
         for utt_idx in self.utterances_list:
             if verbose:
-                print "-"*120
+                print "-" * 120
                 print unicode(self.utterances[utt_idx])
                 print unicode(self.das[utt_idx])
 
@@ -592,7 +535,8 @@ class DAILogRegClassifier(SLUInterface):
                             self.classifiers_outputs[clser].append(0.0)
                             self.classifiers_cls[clser].append((None, None, None))
 
-                        self.classifiers_features[clser].append(self.get_features(self.utterances[utt_idx], self.das_category_labels[utt_idx][i]))
+                        self.classifiers_features[clser].append(
+                            self.get_features(self.utterances[utt_idx], self.das_category_labels[utt_idx][i]))
 
                         if verbose:
                             print "  @", clser, i, dai, f, v, c
@@ -602,14 +546,14 @@ class DAILogRegClassifier(SLUInterface):
                         if verbose:
                             print "+ Matching a classifier "
                         self.classifiers_outputs[clser].append(1.0)
-                        self.classifiers_cls[clser].append((None,None,None))
+                        self.classifiers_cls[clser].append((None, None, None))
                     else:
                         if verbose:
                             print "- NON-Matching a classifier"
                         self.classifiers_outputs[clser].append(0.0)
-                        self.classifiers_cls[clser].append((None,None,None))
+                        self.classifiers_cls[clser].append((None, None, None))
 
-                    self.classifiers_features[clser].append(self.get_features(self.utterances[utt_idx], (None,None,None)))
+                    self.classifiers_features[clser].append(self.get_features(self.utterances[utt_idx], (None, None, None)))
 
                     if verbose:
                         print "  @", clser
@@ -649,7 +593,7 @@ class DAILogRegClassifier(SLUInterface):
                     remove_features.append(f)
 
             if verbose:
-                print "  Number of features occurring less then %d times: %d" %(min_feature_count, len(remove_features))
+                print "  Number of features occurring less then %d times: %d" % (min_feature_count, len(remove_features))
 
             remove_features = set(remove_features)
             for feat in self.classifiers_features[clser]:
@@ -670,8 +614,8 @@ class DAILogRegClassifier(SLUInterface):
                 print "  Number of features after pruning: ", len(features_counts)
 
 
-    def gen_input_matrix(self, verbose = True):
-        self.classifiers_input_matrix = {}
+    def gen_classifiers_inputs(self, verbose=True):
+        self.classifiers_inputs = {}
 
         if verbose:
             print '=' * 120
@@ -682,15 +626,10 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 print "Computing features for %s" % (clser, )
 
-            self.classifiers_input_matrix[clser] = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
-
-            every_n_feature = int(len(self.classifiers_features[clser]) / 10)
+            self.classifiers_inputs[clser] = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
 
             for i, feat in enumerate(self.classifiers_features[clser]):
-                #if verbose and (i % every_n_feature == 0):
-                #    print "Computing features for %s, processed %6.1f%%" % (clser, 100.0 * i / len(self.classifiers_features[clser]))
-
-                self.classifiers_input_matrix[clser][i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
+                self.classifiers_inputs[clser][i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
 
 
     def train(self, inverse_regularisation=1.0, verbose=True):
@@ -706,21 +645,23 @@ class DAILogRegClassifier(SLUInterface):
                 print "Training classifier: ", clser
 
             lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-6)
-            lr.fit(self.classifiers_input_matrix[clser], self.classifiers_outputs[clser])
+            lr.fit(self.classifiers_inputs[clser], self.classifiers_outputs[clser])
             self.trained_classifiers[clser] = lr
 
             if verbose:
-                mean_accuracy = lr.score(self.classifiers_input_matrix[clser], self.classifiers_outputs[clser])
+                mean_accuracy = lr.score(self.classifiers_inputs[clser], self.classifiers_outputs[clser])
                 print "  Prediction mean accuracy on the training data: %6.2f" % (100.0 * mean_accuracy, )
                 print "  Size of the params:", lr.coef_.shape
 
     def save_model(self, file_name, gzip=None):
-        data = [self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers, self.features_size]
+        data = [self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
+                self.parsed_classifiers, self.features_size]
 
         if gzip is None:
             gzip = file_name.endswith('gz')
         if gzip:
             import gzip
+
             open_meth = gzip.open
         else:
             open_meth = open
@@ -731,12 +672,14 @@ class DAILogRegClassifier(SLUInterface):
         # Handle gzipped files.
         if file_name.endswith('gz'):
             import gzip
+
             open_meth = gzip.open
         else:
             open_meth = open
 
         with open_meth(file_name, 'rb') as model_file:
-            (self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers, self.features_size) = pickle.load(model_file)
+            (self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
+             self.parsed_classifiers, self.features_size) = pickle.load(model_file)
 
     def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False, *args, **kwargs):
         """
@@ -754,48 +697,72 @@ class DAILogRegClassifier(SLUInterface):
             utterance = utterance.utterance
 
         if verbose:
-            print utterance
+            print '='*120
+            print 'Parsing 1 best'
+            print '-'*120
+            print unicode(utterance)
 
         if self.preprocessing:
-            utterance = self.preprocessing.normalise_text(utterance)
-            utterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
+            utterance = self.preprocessing.normalise(utterance)
+            utterance_fvcs = self.get_fvc(utterance)
 
         if verbose:
-            print utterance
-            print category_labels
+            print unicode(utterance)
+            print unicode(utterance_fvcs)
 
-        # Generate utterance features.
-        utterance_features = UtteranceFeatures('ngram', self.features_size, utterance)
-
-        if verbose:
-            print utterance_features
-
-        kernel_vector = np.zeros((1, len(self.features_mapping)))
-        kernel_vector[0] = utterance_features.get_feature_vector(self.features_mapping)
 
         da_confnet = DialogueActConfusionNetwork()
-        for dai in self.trained_classifiers:
+        for clser in self.trained_classifiers:
             if verbose:
-                print "Using classifier: ", str(dai)
+                print "Using classifier: ", unicode(clser)
 
-            p = self.trained_classifiers[dai].predict_proba(kernel_vector)
+            if self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value.startswith('CL_'):
+                # process abstracted classifiers
 
-            if verbose:
-                print p
+                for f, v, c in utterance_fvcs:
+                    cc = "CL_" + c.upper()
 
-            da_confnet.add(p[0][1], dai)
+                    if self.parsed_classifiers[clser].value == cc:
+                        classifiers_features = self.get_features(utterance, (f, v, cc))
+                        classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])))
+                        classifiers_inputs[0] = classifiers_features.get_feature_vector(self.classifiers_features_mapping[clser])
 
-        if verbose:
-            print "DA: ", da_confnet
+                        #if verbose:
+                        #    print classifiers_features
+                        #    print self.classifiers_features_mapping[clser]
 
-        da_confnet = self.preprocessing.category_labels2values_in_confnet(
-            da_confnet, category_labels)
+                        p = self.trained_classifiers[clser].predict_proba(classifiers_inputs)
+
+                        if verbose:
+                            print '  Probability:', p
+
+                        dai = DialogueActItem(self.parsed_classifiers[clser].dat, self.parsed_classifiers[clser].name, v)
+                        da_confnet.add(p[0][1], dai)
+            else:
+                # process concrete classifiers
+                classifiers_features = self.get_features(utterance, (None, None, None))
+                classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])))
+                classifiers_inputs[0] = classifiers_features.get_feature_vector(self.classifiers_features_mapping[clser])
+
+                #if verbose:
+                #    print classifiers_features
+                #    print self.classifiers_features_mapping[clser]
+
+                p = self.trained_classifiers[clser].predict_proba(classifiers_inputs)
+
+                if verbose:
+                    print '  Probability:', p
+
+                da_confnet.add(p[0][1], self.parsed_classifiers[clser])
+
+        #if verbose:
+        #    print "DA conf net:"
+        #    print da_confnet
+
+        #da_confnet = self.preprocessing.category_labels2values_in_confnet(da_confnet, category_labels)
         da_confnet.sort().merge()
 
-        if ret_cl_map:
-            return da_confnet, category_labels
         return da_confnet
-
 
     def parse_nblist(self, obs, *args, **kwargs):
         """
