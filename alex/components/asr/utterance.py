@@ -592,8 +592,20 @@ class UtteranceNBList(ASRHypothesis, NBList):
                 most probable to the least probable ones
 
     """
-    def __init__(self):
+    def __init__(self, rep = None):
         NBList.__init__(self)
+
+        if rep:
+            self.deserialise(rep)
+
+    def serialise(self):
+        return [[prob, unicode(fact)] for prob, fact in self.n_best]
+
+    def deserialise(self, rep):
+        rep = eval(rep)
+
+        for p, u in rep:
+            self.add(p, Utterance(u))
 
     def get_best_utterance(self):
         """Returns the most probable utterance.
@@ -650,7 +662,7 @@ class UtteranceNBListFeatures(Features):
 
     def parse(self, utt_nblist):
         """This should be called only once during the object's lifetime,
-        preferrably from within the initialiser.
+        preferably from within the initialiser.
         """
         first_utt_feats = None
         for hyp_idx, hyp in enumerate(utt_nblist):

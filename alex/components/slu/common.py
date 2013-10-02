@@ -340,7 +340,7 @@ def test(cfgor):
     from numpy import mean, std
 
     from alex.components.slu.da import save_das
-    from alex.corpustools.semscore import SemScorer
+    from alex.corpustools.semscore_mk import SemScorer
 
     # Shorthands.
     model_fname = cfgor.cfg_te['model_fname']

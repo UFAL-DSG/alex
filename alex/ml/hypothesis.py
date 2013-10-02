@@ -44,7 +44,7 @@ class NBList(Hypothesis):
 
     def __init__(self):
         self.n_best = []
-        self.tolerance_over1 = 1e-5
+        self.tolerance_over1 = 1e-2
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')

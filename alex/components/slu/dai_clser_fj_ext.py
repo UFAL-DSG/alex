@@ -689,9 +689,9 @@ class DAILogRegClassifier(SLUInterface):
         The result is the dialogue act confusion network.
 
         """
-        utterance = obs.get('utt', None)
-        if utterance is None:
-            raise DAILRException("Need to get an utterance to parse.")
+
+        utterance = obs['utt']
+
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
@@ -755,52 +755,47 @@ class DAILogRegClassifier(SLUInterface):
 
                 da_confnet.add(p[0][1], self.parsed_classifiers[clser])
 
-        #if verbose:
-        #    print "DA conf net:"
-        #    print da_confnet
-
-        #da_confnet = self.preprocessing.category_labels2values_in_confnet(da_confnet, category_labels)
         da_confnet.sort().merge()
 
         return da_confnet
 
-    def parse_nblist(self, obs, *args, **kwargs):
-        """
-        Parses n-best list by parsing each item on the list and then merging
-        the results.
-        """
-
-        utterance_list = obs['utt_nbl']
-        if len(utterance_list) == 0:
-            raise DAILRException("Empty utterance N-best list.")
-
-        confnets = []
-        for prob, utt in utterance_list:
-            if "__other__" == utt:
-                confnet = DialogueActConfusionNetwork()
-                confnet.add(1.0, DialogueActItem("other"))
-            else:
-                confnet = self.parse_1_best(utt)
-
-            confnets.append((prob, confnet))
-
-            # print prob, utt
-            # confnet.prune()
-            # confnet.sort()
-            # print confnet
-
-        confnet = merge_slu_confnets(confnets)
-        confnet.prune()
-        confnet.sort()
-
-        return confnet
-
-    def parse_confnet(self, obs, verbose=False, *args, **kwargs):
-        """
-        Parses the word confusion network by generating an n-best list and
-        parsing this n-best list.
-        """
-        confnet = obs['utt_cn']
-        nblist = confnet.get_utterance_nblist(n=40)
-        sem = self.parse_nblist(nblist)
-        return sem
+    #def parse_nblist(self, obs, *args, **kwargs):
+    #    """
+    #    Parses n-best list by parsing each item on the list and then merging
+    #    the results.
+    #    """
+    #
+    #    utterance_list = obs['utt_nbl']
+    #    if len(utterance_list) == 0:
+    #        raise DAILRException("Empty utterance N-best list.")
+    #
+    #    confnets = []
+    #    for prob, utt in utterance_list:
+    #        if "__other__" == utt:
+    #            confnet = DialogueActConfusionNetwork()
+    #            confnet.add(1.0, DialogueActItem("other"))
+    #        else:
+    #            confnet = self.parse_1_best(utt)
+    #
+    #        confnets.append((prob, confnet))
+    #
+    #        # print prob, utt
+    #        # confnet.prune()
+    #        # confnet.sort()
+    #        # print confnet
+    #
+    #    confnet = merge_slu_confnets(confnets)
+    #    confnet.prune()
+    #    confnet.sort()
+    #
+    #    return confnet
+    #
+    #def parse_confnet(self, obs, verbose=False, *args, **kwargs):
+    #    """
+    #    Parses the word confusion network by generating an n-best list and
+    #    parsing this n-best list.
+    #    """
+    #    confnet = obs['utt_cn']
+    #    nblist = confnet.get_utterance_nblist(n=40)
+    #    sem = self.parse_nblist(nblist)
+    #    return sem
