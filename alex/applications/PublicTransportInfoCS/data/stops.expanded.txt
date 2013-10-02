@@ -1801,8 +1801,8 @@ Rembrandtova;Rembrandtovy;Rembrandtovu
 Říčany , park A . Švehly;Říčan , parku A . Švehly
 Říčany , Pivoňková;Říčan , Pivoňkové;Říčan , Pivoňkový;Říčany , Pivoňkovou
 Říčany , Podhradí;Říčan , Podhradí
-Říčany , Pod Kavčí Skálou
-Říčany , Pod lihovarem
+Říčany , Pod Kavčí Skálou;Říčan , Pod Kavčí Skálou
+Říčany , Pod lihovarem;Říčan , Pod lihovarem
 Říčany , průmyslová zóna Zděbrady;Říčan , průmyslové zóny Zděbrady;Říčan , průmyslový zóny Zděbrady;Říčany , průmyslovou zónu Zděbrady
 Říčany , průmyslový areál Černokostelecká;Říčan , průmyslového areálu Černokostelecká;Říčan , průmyslovýho areálu Černokostelecká;Říčany , průmyslovej areál Černokostelecká
 Říčany , Rychta;Říčan , Rychty;Říčany , Rychtu
