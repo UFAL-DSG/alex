@@ -681,21 +681,7 @@ class DAILogRegClassifier(SLUInterface):
             (self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
              self.parsed_classifiers, self.features_size) = pickle.load(model_file)
 
-    def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False, *args, **kwargs):
-        """
-        Parse ``utterance`` and generate the best interpretation in the form of
-        a dialogue act (an instance of DialogueAct).
-
-        The result is the dialogue act confusion network.
-
-        """
-
-        utterance = obs['utt']
-
-        if isinstance(utterance, UtteranceHyp):
-            # Parse just the utterance and ignore the confidence score.
-            utterance = utterance.utterance
-
+    def parse_X(self, utterance, verbose=False):
         if verbose:
             print '='*120
             print 'Parsing 1 best'
@@ -759,37 +745,35 @@ class DAILogRegClassifier(SLUInterface):
 
         return da_confnet
 
-    #def parse_nblist(self, obs, *args, **kwargs):
-    #    """
-    #    Parses n-best list by parsing each item on the list and then merging
-    #    the results.
-    #    """
-    #
-    #    utterance_list = obs['utt_nbl']
-    #    if len(utterance_list) == 0:
-    #        raise DAILRException("Empty utterance N-best list.")
-    #
-    #    confnets = []
-    #    for prob, utt in utterance_list:
-    #        if "__other__" == utt:
-    #            confnet = DialogueActConfusionNetwork()
-    #            confnet.add(1.0, DialogueActItem("other"))
-    #        else:
-    #            confnet = self.parse_1_best(utt)
-    #
-    #        confnets.append((prob, confnet))
-    #
-    #        # print prob, utt
-    #        # confnet.prune()
-    #        # confnet.sort()
-    #        # print confnet
-    #
-    #    confnet = merge_slu_confnets(confnets)
-    #    confnet.prune()
-    #    confnet.sort()
-    #
-    #    return confnet
-    #
+    def parse_1_best(self, obs=dict(), ret_cl_map=False, verbose=False, *args, **kwargs):
+        """
+        Parse ``utterance`` and generate the best interpretation in the form of
+        a dialogue act (an instance of DialogueAct).
+
+        The result is the dialogue act confusion network.
+
+        """
+
+        utterance = obs['utt']
+
+        if isinstance(utterance, UtteranceHyp):
+            # Parse just the utterance and ignore the confidence score.
+            utterance = utterance.utterance
+
+        return self.parse_X(utterance, verbose)
+
+    def parse_nblist(self, obs, verbose=False, *args, **kwargs):
+        """
+        Parses n-best list by parsing each item on the list and then merging
+        the results.
+        """
+
+        utterance_list = obs['utt_nbl']
+        if len(utterance_list) == 0:
+            raise DAILRException("Empty utterance N-best list.")
+
+        return self.parse_X(utterance_list, verbose)
+
     #def parse_confnet(self, obs, verbose=False, *args, **kwargs):
     #    """
     #    Parses the word confusion network by generating an n-best list and
