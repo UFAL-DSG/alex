@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import glob
 import os
 import xml.dom.minidom
-
+import random
 import autopath
 
 import alex.utils.various as various
@@ -21,6 +21,14 @@ from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
 cldb = CategoryLabelDatabase('../data/database.py')
 preprocessing = PTICSSLUPreprocessing(cldb)
 slu = PTICSHDCSLU(preprocessing)
+
+fn_all_sem = 'all.sem'
+fn_all_trn = 'all.trn'
+fn_all_trn_hdc_sem = 'all.trn.hdc.sem'
+fn_all_asr = 'all.asr'
+fn_all_asr_hdc_sem = 'all.asr.hdc.sem'
+fn_all_nbl = 'all.nbl'
+fn_all_nbl_hdc_sem = 'all.nbl.hdc.sem'
 
 fn_train_sem = 'train.sem'
 fn_train_trn = 'train.trn'
@@ -137,6 +145,29 @@ for fn in files[:100000]:
 
         # there is no manual semantics in the transcriptions yet
         sem.append((wav_key, None))
+
+
+# all
+save_wavaskey(fn_all_trn, dict(trn))
+save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
+save_wavaskey(fn_all_asr, dict(asr))
+save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
+save_wavaskey(fn_all_nbl, dict(nbl))
+save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
+
+
+random.seed(0)
+random.shuffle(trn)
+random.seed(0)
+random.shuffle(trn_hdc_sem)
+random.seed(0)
+random.shuffle(asr)
+random.seed(0)
+random.shuffle(asr_hdc_sem)
+random.seed(0)
+random.shuffle(nbl)
+random.seed(0)
+random.shuffle(nbl_hdc_sem)
 
 # trn
 train_trn = trn[:int(0.8*len(trn))]

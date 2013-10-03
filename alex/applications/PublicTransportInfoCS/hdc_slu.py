@@ -9,22 +9,12 @@ import autopath
 from alex.components.asr.utterance import UtteranceHyp
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
-from alex.utils.czech_stemmer import cz_stem
 
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
 
-
-def _fill_utterance_values(abutterance, category, res):
-    for _, value in abutterance.insts_for_type((category.upper(), )):
-        if value == ("[OTHER]", ):
-            continue
-
-        res[category].append(value)
-
-
 def _any_word_in(utterance, words):
-    for alt_expr in cz_stem(words):
+    for alt_expr in words:
         if  alt_expr in utterance.utterance:
             return True
 
@@ -32,14 +22,14 @@ def _any_word_in(utterance, words):
 
 
 def _all_words_in(utterance, words):
-    for alt_expr in cz_stem(words):
+    for alt_expr in words:
         if  alt_expr not in utterance.utterance:
             return False
     return True
 
 
 def _phrase_in(utterance, words):
-    return cz_stem(words) in utterance
+    return words in utterance
 
 
 class PTICSHDCSLU(SLUInterface):
@@ -56,32 +46,55 @@ class PTICSHDCSLU(SLUInterface):
                           "počáteční", "počátek", "výchozí", "start"])
         preps_to = set(["k", "do", "konec", "na", "konečná", "koncová",
                         "cílová", "cíl", "výstupní"])
+        fillers_from = set(["start", ])
+        fillers_to = set(["cíl",])
 
         u = abutterance
         N = len(u)
 
-        confirm = _phrase_in(u, ['jede', 'to']) or _phrase_in(u, ['odjíždí', 'to'])
+        confirm = _phrase_in(u, ['jede', 'to']) or _phrase_in(u, ['odjíždí', 'to']) or _phrase_in(u, ['je', 'výchozí',])
+        deny = _phrase_in(u, ['nechci', 'jet']) or _phrase_in(u, ['nechci', 'odjíždět'])
 
         for i, w in enumerate(u):
             if w.startswith("STOP="):
                 stop_name = w[5:]
                 from_stop = False
                 to_stop = False
+                stop_decided = False
 
-                if i >= 2:
-                    if not u[i - 1].startswith("STOP="):
-                        if u[i - 2] in preps_from:
+                if i >= 3:
+                    if not u[i - 2].startswith("STOP=") and not u[i - 1].startswith("STOP="):
+                        if u[i - 3] in preps_from:
                             from_stop = True
+                            stop_decided = True
+                        elif u[i - 3] in preps_to:
+                            to_stop = True
+                            stop_decided = True
+
+                if not stop_decided and i >= 2:
+                    if not u[i - 1].startswith("STOP="):
+                        if u[i - 2] in fillers_from and u[i - 1] == 'na':
+                            from_stop = True
+                            stop_decided = True
+                        elif u[i - 2] in fillers_to and u[i - 1] == 'na':
+                            to_stop = True
+                            stop_decided = True
+                        elif u[i - 2] in preps_from:
+                            from_stop = True
+                            stop_decided = True
                         elif u[i - 2] in preps_to:
                             to_stop = True
+                            stop_decided = True
 
-                if i >= 1:
+                if not stop_decided and i >= 1:
                     if u[i - 1] in preps_from:
                         from_stop = True
+                        stop_decided = True
                     elif u[i - 1] in preps_to:
                         to_stop = True
+                        stop_decided = True
 
-                if not from_stop and not to_stop:
+                if not stop_decided:
                     if i <= N - 3:
                         if not u[i + 1].startswith("STOP="):
                             if u[i + 2] in preps_from:
@@ -106,6 +119,8 @@ class PTICSHDCSLU(SLUInterface):
 
                 if confirm:
                     dat = "confirm"
+                elif deny:
+                    dat = "deny"
                 else:
                     dat = "inform"
 
@@ -122,8 +137,8 @@ class PTICSHDCSLU(SLUInterface):
 
                 # backoff 2: we do not know what slot it belongs to, let the DM
                 # decide in the context resolution
-                if ((not from_stop and not to_stop)
-                        or (from_stop and to_stop)):
+                if ((not from_stop and not to_stop) or \
+                        (from_stop and to_stop)):
                     cn.add(0.501, DialogueActItem(dat, "", stop_name))
                     cn.add(0.499, DialogueActItem(dat, "", stop_name))
 
@@ -133,132 +148,285 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance:
         :param cn:
         """
-        preps_in = set(["v", "čas"])
 
         u = abutterance
         N = len(u)
 
+        preps_in = set(["v", "čas"])
+
+        confirm = _phrase_in(u, ['jede', 'to'])
+        deny = _phrase_in(u, ['nechci', 'ne'])
+
         for i, w in enumerate(u):
             if w.startswith("TIME="):
-                time_value = w[5:]
+                value = w[5:]
                 time = False
 
                 if i >= 1:
                     if u[i - 1] in preps_in:
                         time = True
 
-                if N == 1:
-                    # if there is only one word in the utterance then suppose that it is time
-                    time = True
+                if confirm:
+                    dat = "confirm"
+                elif deny:
+                    dat = "deny"
+                else:
+                    dat = "inform"
 
                 if time:
-                    cn.add(1.0, DialogueActItem("inform", 'time', time_value))
+                    cn.add(1.0, DialogueActItem(dat, 'time', value))
+
+    def parse_time_rel(self, abutterance, cn):
+        """Detects the relative time in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:ce
+        """
+
+        u = abutterance
+        N = len(u)
+
+        preps_in = set(["za", ])
+
+        confirm = _phrase_in(u, ['jede', 'to'])
+        deny = _phrase_in(u, ['nechci', 'ne'])
+
+        for i, w in enumerate(u):
+            if w.startswith("TIME_REL="):
+                value = w[9:]
+                time = False
+
+                if i >= 1:
+                    if u[i - 1] in preps_in:
+                        time = True
+
+                if value == "now" and not _phrase_in(u, ['no','a',]):
+                    time = True
+
+                if confirm:
+                    dat = "confirm"
+                elif deny:
+                    dat = "deny"
+                else:
+                    dat = "inform"
+
+                if time:
+                    cn.add(1.0, DialogueActItem(dat, 'time_rel', value))
+
+    def parse_date_rel(self, abutterance, cn):
+        """Detects the relative date in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+
+        u = abutterance
+
+        confirm = _phrase_in(u, ['jede', 'to'])
+        deny = _phrase_in(u, ['nechci', 'ne'])
+
+        for i, w in enumerate(u):
+            if w.startswith("DATE_REL="):
+                value = w[9:]
+
+                if confirm:
+                    cn.add(1.0, DialogueActItem("confirm", 'date_rel', value))
+                elif deny:
+                    cn.add(1.0, DialogueActItem("deny", 'date_rel', value))
+                else:
+                    cn.add(1.0, DialogueActItem("inform", 'date_rel', value))
+
+    def parse_ampm(self, abutterance, cn):
+        """Detects the ampm in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+
+        u = abutterance
+
+        confirm = _phrase_in(u, ['jede', 'to'])
+        deny = _phrase_in(u, ['nechci', 'ne'])
+
+        for i, w in enumerate(u):
+            if w.startswith("AMPM="):
+                value = w[5:]
+
+                if confirm:
+                    cn.add(1.0, DialogueActItem("confirm", 'ampm', value))
+                elif deny:
+                    cn.add(1.0, DialogueActItem("deny", 'ampm', value))
+                else:
+                    cn.add(1.0, DialogueActItem("inform", 'ampm', value))
+
+    def parse_transport_type(self, abutterance, cn):
+        """Detects the transport type in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+
+        u = abutterance
+
+        confirm = _phrase_in(u, ['jede', 'to'])
+        deny = _phrase_in(u, ['nechci', 'jet'])
+
+        for i, w in enumerate(u):
+            if w.startswith("TRANS_TYPE="):
+                value = w[11:]
+
+                if confirm:
+                    cn.add(1.0, DialogueActItem("confirm", 'trans_type', value))
+                elif deny:
+                    cn.add(1.0, DialogueActItem("deny", 'trans_type', value))
+                else:
+                    cn.add(1.0, DialogueActItem("inform", 'trans_type', value))
+
+    def parse_task(self, abutterance, cn):
+        """Detects the task in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+
+        u = abutterance
+
+        deny = _phrase_in(u, ['nechci', 'nehledám'])
+
+        for i, w in enumerate(u):
+            if w.startswith("TASK="):
+                value = w[5:]
+
+                if deny:
+                    cn.add(1.0, DialogueActItem("deny", 'task', value))
+                else:
+                    cn.add(1.0, DialogueActItem("inform", 'task', value))
 
     def parse_meta(self, utterance, cn):
-        if "_noise_" in utterance.utterance or len(utterance.utterance) == 0:
+        """
+        Detects all dialogue acts which do not generalise its slot values using CLDB.
+
+        :param utterance:
+        :param cn:
+        :return: None
+        """
+        u = utterance
+        if "_noise_" in u.utterance or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("null"))
 
-        if (_any_word_in(utterance, ["ahoj",  "nazdar", "zdar", "haló"]) or
-                _all_words_in(utterance, ["dobrý",  "den"])):
+        if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
+                _all_words_in(u, ["dobrý",  "den"])):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if (_any_word_in(utterance,
-                         ["nashledanou", "shledanou", "shle", "nashle",
-                          "sbohem", "bohem", "zbohem", "zbohem", "konec",
-                          "hledanou", "naschledanou"])):
+        if (_any_word_in(u,["nashledanou", "shledanou", "shle", "nashle", "sbohem", "bohem", "zbohem", "zbohem", "konec",
+                            "hledanou", "naschledanou"])):
             cn.add(1.0, DialogueActItem("bye"))
 
-        if not _any_word_in(utterance, ["spojení", "zastávka", "stanice", "možnost"]):
-            if _any_word_in(utterance, ["jiný", "jiné", "jiná", "další", "dál", "jiného"]):
+        if not _any_word_in(u, ["spojení", "zastávka", "stanice", "možnost"]):
+            if _any_word_in(u, ["jiný", "jiné", "jiná", "jiného"]):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not (_any_word_in(utterance,
-                             ["spojení", "zastávka", "stanice", "možnost"])):
-            if (_any_word_in(utterance,
-                             ["zopakovat",  "opakovat", "znov", "opakuj",
-                              "zopakuj"])
-                    or _phrase_in(utterance, ["ještě", "jedno"])):
+        if not (_any_word_in(u,["spojení", "zastávka", "stanice", "možnost"])):
+            if (_any_word_in(u,["zopakovat",  "opakovat", "znova", "znovu", "opakuj", "zopakuj"])
+                    or _phrase_in(u, ["ještě", "jednou"])):
                 cn.add(1.0, DialogueActItem("repeat"))
 
-        if _any_word_in(utterance, ["nápověda",  "pomoc", "help", "nevím", "nevim"]) or \
-            _all_words_in(utterance, ["co", "říct"]) or \
-            _all_words_in(utterance, ["co", "zeptat"]):
+        if _any_word_in(u, ["nápověda",  "pomoc", "help", "nevím", "nevim"]) or \
+            _all_words_in(u, ["co", "říct"]) or \
+            _all_words_in(u, ["co", "zeptat"]):
             cn.add(1.0, DialogueActItem("help"))
 
-        if _any_word_in(utterance, ["ano",  "jo", "jasně"]):
+        if _any_word_in(u, ["ano",  "jo", "jasně"]) and \
+            not _any_word_in(u, ["nerozuměj",  ]) :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if _any_word_in(utterance, ["ne", "nejed"]):
+        if _any_word_in(u, ["ne", "nejedu"]):
             cn.add(1.0, DialogueActItem("negate"))
 
-        if (_any_word_in(utterance,
-                         ["díky", "dikec", "děkuji", "děkuju", "děkují"])):
+        if _any_word_in(u,["díky", "dikec", "děkuji", "děkuju", "děkují"]):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if ((_any_word_in(utterance, ["od", "začít", ])
-                and _any_word_in(utterance, ["začátku", "znov", ])
-                or _any_word_in(utterance, ["restart", ])
-                or _all_words_in(utterance, ["nové", "spojení"]))):
+        if _any_word_in(u,["ok", "pořádku",]):
+            cn.add(1.0, DialogueActItem("ack"))
+
+        if _any_word_in(u, ["od", "začít", ]) and _any_word_in(u, ["začátku", "znova", "znovu"]) or \
+            _any_word_in(u, ["restart", ]) or \
+           _phrase_in(u, ["nové", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
+           _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, ["spoj", "ze", ]):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','from_centre','true'))
+        if len(u.utterance) == 1 and "centra" in u.utterance:
+            # we do not know whether to or from and it must be one of them
+            cn.add(1.0, DialogueActItem('inform','centre_direction','*'))
 
-        if _phrase_in(utterance, ["do", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','to_centre','true'))
+        if _phrase_in(u, ["z", "centra"]) and not _any_word_in(u, ["ne", "nejedu", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','centre_direction','from'))
 
-        if _phrase_in(utterance, ["z", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','from_centre','false'))
+        if _phrase_in(u, ["do", "centra"]) and not _any_word_in(u, ["ne", "nejedu", "nechci"]):
+            cn.add(1.0, DialogueActItem('inform','centre_direction','to'))
 
-        if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','to_centre','false'))
+        if _phrase_in(u, ["z", "centra"]) and _any_word_in(u, ["ne", "nejedu", "nechci"]):
+            cn.add(1.0, DialogueActItem('deny','centre_direction','from'))
 
-        if _all_words_in(utterance, ["od", "to", "jede"]) or \
-            _all_words_in(utterance, ["z", "jake", "jede"]) or \
-            _all_words_in(utterance, ["z", "jaké", "jede"]) or \
-            _all_words_in(utterance, ["jaká", "výchozí", ]) or \
-            _all_words_in(utterance, ["kde", "začátek", ]) or \
-            _all_words_in(utterance, ["odkud", "to", "jede"]) or \
-            _all_words_in(utterance, ["odkud", "pojede"]) or \
-            _all_words_in(utterance, ["od", "kud", "pojede"]):
+        if _phrase_in(u, ["do", "centra"]) and _any_word_in(u, ["ne", "nejedu", "nechci"]):
+            cn.add(1.0, DialogueActItem('deny','centre_direction','to'))
+
+        if _all_words_in(u, ["od", "to", "jede"]) or \
+            _all_words_in(u, ["z", "jake", "jede"]) or \
+            _all_words_in(u, ["z", "jaké", "jede"]) or \
+            _all_words_in(u, ["jaká", "výchozí", ]) or \
+            _all_words_in(u, ["kde", "začátek", ]) or \
+            _all_words_in(u, ["odkud", "to", "jede"]) or \
+            _all_words_in(u, ["odkud", "jede"]) or \
+            _all_words_in(u, ["odkud", "pojede"]) or \
+            _all_words_in(u, ["od", "kud", "pojede"]):
             cn.add(1.0, DialogueActItem('request','from_stop'))
 
-        if _all_words_in(utterance, ["kam", "to", "jede"]) or \
-            _all_words_in(utterance, ["na", "jakou", "jede"]) or \
-            _all_words_in(utterance, ["do", "jake", "jede"]) or \
-            _all_words_in(utterance, ["do", "jaké", "jede"]) or \
-            _all_words_in(utterance, ["co", "cíl", ]) or \
-            _all_words_in(utterance, ["jaká", "cílová", ]) or \
-            _all_words_in(utterance, ["kde", "konečná", ]) or \
-            _all_words_in(utterance, ["kde", "konečná", ]) or \
-            _all_words_in(utterance, ["kam", "pojede"]):
+        if _all_words_in(u, ["kam", "to", "jede"]) or \
+            _all_words_in(u, ["na", "jakou", "jede"]) or \
+            _all_words_in(u, ["do", "jake", "jede"]) or \
+            _all_words_in(u, ["do", "jaké", "jede"]) or \
+            _all_words_in(u, ["co", "cíl", ]) or \
+            _all_words_in(u, ["jaká", "cílová", ]) or \
+            _all_words_in(u, ["kde", "konečná", ]) or \
+            _all_words_in(u, ["kde", "konečná", ]) or \
+            _all_words_in(u, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _any_word_in(utterance, ["kolik", "jsou", "je"]) and \
-            _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
+        if _any_word_in(u, ["kolik", "jsou", "je"]) and \
+            _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
-        if _any_word_in(utterance, ["spoj", "spojení", "možnost", "cesta", "zpoždění", "stažení"]):
-            if _any_word_in(utterance, ["první", ]):
+        if _any_word_in(u, ["spoj", "spojení", "spoje", "možnost", "možnosti", "cesta", "cestu", "cesty", "zpoždění", "stažení"]):
+            if _any_word_in(u, ["první", ]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if _any_word_in(utterance, ["druhé", "druhou"]):
+            if _any_word_in(u, ["druhé", "druhá", "druhou"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
 
-            if _any_word_in(utterance, ["třetí"]):
+            if _any_word_in(u, ["třetí"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "3"))
 
-            if _any_word_in(utterance, ["čtvrté", "čtvrtá"]):
+            if _any_word_in(u, ["čtvrté", "čtvrtá", "čtvrtou"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if _any_word_in(utterance, ["poslední", "znovu", "opakovat", "zopakovat"]):
+            if _any_word_in(u, ["poslední", "znovu", "znova", "opakovat", "zopakovat"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if _any_word_in(utterance, ["další", "jiné", "následující"]):
+            if _any_word_in(u, ["další", "jiné", "následující"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
-            if _any_word_in(utterance, ["předchozí", "před"]):
+            if _any_word_in(u, ["předchozí", "před"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
+
+        if len(u) == 1 and _any_word_in(u, ["další", "následující"]):
+            cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+
+        if len(u) == 1 and _any_word_in(u, ["předchozí", "před"]):
+            cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
+
+        if _any_word_in(u, ["neslyšíme", "halo", "haló"]) :
+            cn.add(1.0, DialogueActItem('canthearyou'))
 
     def parse_1_best(self, obs, verbose=False):
         """Parse an utterance into a dialogue act."""
@@ -272,7 +440,7 @@ class PTICSHDCSLU(SLUInterface):
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
         if self.preprocessing:
-            # the text normalisation performs stemming
+            # the text normalisation
             utterance = self.preprocessing.normalise_utterance(utterance)
 
             abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
@@ -288,6 +456,16 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_stop(abutterance, res_cn)
         elif 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
+        elif 'TIME_REL' in category_labels:
+            self.parse_time_rel(abutterance, res_cn)
+        elif 'DATE_REL' in category_labels:
+            self.parse_date_rel(abutterance, res_cn)
+        elif 'AMPM' in category_labels:
+            self.parse_ampm(abutterance, res_cn)
+        elif 'TRANS_TYPE' in category_labels:
+            self.parse_transport_type(abutterance, res_cn)
+        elif 'TASK' in category_labels:
+            self.parse_task(abutterance, res_cn)
 
         self.parse_meta(utterance, res_cn)
 

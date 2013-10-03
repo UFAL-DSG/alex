@@ -298,9 +298,9 @@ class Utterance(object):
             ret_utt = Utterance('')
             if not isinstance(replacement, list):
                 replacement = list(replacement)
-                ret_utt.utterance = (self._utterance[:orig_pos] +
-                                 replacement +
-                                 self._utterance[orig_pos + len(orig):])
+            ret_utt.utterance = (self._utterance[:orig_pos] +
+                             replacement +
+                             self._utterance[orig_pos + len(orig):])
             ret_utt._wordset = set(ret_utt._utterance)
 
         return (ret_utt, orig_pos) if return_startidx else ret_utt

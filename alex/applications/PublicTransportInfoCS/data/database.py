@@ -13,24 +13,39 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "next_tram": ["další"]
+        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení", "zjistit spoj", "hledám spojení",],
+        "find_platform": ["najít nastupště", "zjistit nástupiště",],
     },
     "time": {
-        "now": ["nyní", "teď", "následující"]
+    },
+    "time_rel": {
+        "now": ["nyní", "teď", "hned"],
+        "0:05": ["pět minut", ],
+        "0:10": ["deset minut", ],
+        "0:20": ["dvacet minut", ],
+        "0:30": ["půl hodiny", ],
+        "0:45": ["tři čtvrtě hodiny", ],
+        "1:00": ["hodinu", ],
+        "2:00": ["dvě hodiny", ],
+    },
+    "date_rel": {
+        "today": ["dnes", "dneska", ],
+        "tomorrow": ["zítra", ],
+        "day_after_tomorrow": ["pozítří", ],
     },
     "stop": {
     },
-    "tt": {
-        "bus": ["bus", "autobus"],
-        "tram": ["tram", "tramvaj", "tramvajka"],
-        "metro": ["metro", "krtek", "podzemka"],
-        "vlak": ["vlak", "rychlík", "panťák"],
-        "lanovka": ["lanovka"],
-        "přívoz": ["přívoz", "loď"],
+    "trans_type": {
+        "bus": ["bus", "busem", "autobus", "autobusem"],
+        "tram": ["tram", "tramvaj", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
+        "metro": ["metro", "metrem", "krtek", "krtkem", "podzemka", "podzemkou"],
+        "vlak": ["vlak", "vlakem", "rychlík", "rychlíkem", "panťák", "panťákem"],
+        "lanovka": ["lanovka", "lanovkou", "lanová dráha", "lanovou dráhou"],
+        "přívoz": ["přívoz", "přívozem", "loď", "lodí"],
     },
     "ampm": {
         "am": ["dopo", "dopoledne", "ráno"],
-        "pm": ["odpo", "odpoledne", "večer"],
+        "pm": ["odpo", "odpoledne", "večer", "noc", "noci"],
     },
 }
 
@@ -80,11 +95,10 @@ _substs_lit = [
     ('\\bn\\.', ['nad']),
     ('\\bp\\.', ['pod']),
     ('\\b(\w)\\.', ['\\1']),   # ideally uppercase...
-    ('\\bI\\b', ['jedna']),
+    ('\\bI$', ['jedna']),
     ('\\bII\\b', ['dva']),
 ]
-_substs = [(re.compile(regex), [val + ' ' for val in vals])
-           for (regex, vals) in _substs_lit]
+_substs = [(re.compile(regex), [val + ' ' for val in vals]) for (regex, vals) in _substs_lit]
 _num_rx = re.compile('[1-9][0-9]*')
 _num_rx_exh = re.compile('^[1-9][0-9]*$')
 
@@ -173,11 +187,11 @@ def add_time():
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
     if expanded_format:
-        val, names = line.split(';', 1)
-        names = names.split(';')
+        line = line.split(';')
+        val, names = line[0], line
     else:
         val = line
-        names = [line]
+        names = [line,]
 
     # Do some basic pre-processing.
     # Expand abbreviations.
@@ -271,8 +285,9 @@ if len(sys.argv) > 1 and sys.argv[1] == "dump":
     save_surface_forms('database_surface_forms.txt')
     save_SRILM_classes('database_SRILM_classes.txt')
 
-# FIXME: This is not the best place to do stemming.
-stem()
-
-if len(sys.argv) > 1 and sys.argv[1] == "dump":
-    save_surface_forms('database_surface_forms_stemmed.txt')
+# WARNING: This is not the best place to do stemming.
+# we will not use stemming anymore because we have much better stop expansion
+#stem()
+#
+#if len(sys.argv) > 1 and sys.argv[1] == "dump":
+#    save_surface_forms('database_surface_forms_stemmed.txt')

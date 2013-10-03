@@ -1,3 +1,16 @@
+Smíchov;Smíchova
+Holešovice;Holešovic
+Chuchle;Chuchel
+Praha;Prahy;Prahu
+Brno;Brna
+Plzeň;Plzně
+Olomouc;Olomouce;Olomouca
+Liberec;Liberce
+Pardubice;Pardubic
+Barrandov;Barrandova;
+Zvonařka;Zvonařku;Zvonařky
+Žižkov;Žižkova
+Stromovka;Stromovky;Stromovku
 Albertov;Albertova
 Ametystová;Ametystové;Ametystový;Ametystovou
 Amforová;Amforové;Amforový;Amforovou

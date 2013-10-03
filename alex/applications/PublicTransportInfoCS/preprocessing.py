@@ -15,15 +15,11 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
     """
     Extends SLUPreprocessing for some transformations specific for Czech:
         - devocalisation of prepositions
-        - stemming.
+        (- stemming).
 
     """
     def __init__(self, *args, **kwargs):
         super(PTICSSLUPreprocessing, self).__init__(*args, **kwargs)
-        # XXX This is not very nice.  The parent class cares mainly about
-        # normalising English, not Czech.
-        # not really, the implicit mapping is just an example.
-        # In fact, it could be moved into a default config.
 
         self.text_normalization_mapping += [
             (['ve'], ['v']),
@@ -31,10 +27,18 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['ku'], ['k']),
             (['ze'], ['z']),
             (['se'], ['s']),
-            (['barandov'], ['barrandov']),
+            (['andělu'],        ['anděla']),
+            (['zvonařky'],      ['zvonařka']),
+            (['zvonařku'],      ['zvonařka']),
+            (['bucharovy'],     ['bucharova']),
+            (['bucharovu'],     ['bucharova']),
+            (['barandov'],      ['barrandov']),
+            (['dejvic'],        ['dejvická']),
+            (['dejvice'],       ['dejvická']),
+            (['litňanská'],     ['letňanská']),
         ]
 
     def normalise_utterance(self, utterance):
         utterance = super(PTICSSLUPreprocessing,self).normalise_utterance(utterance)
-        utt = Utterance(" ".join(map(cz_stem, utterance)))
-        return utt
+        #utterance = Utterance(" ".join(map(cz_stem, utterance)))
+        return utterance
