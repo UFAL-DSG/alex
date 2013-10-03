@@ -217,7 +217,7 @@ The ASR model is trained on transcriptions and evaluated on both transcriptions 
 On can see that the ASR model scores worse on the TRN DEV and TRN TEST data when compared to the TRN model. This is
 expected result. The good thing is that the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
 compared to *the TRN model*. Even more, the the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
-compared to *the HDC SLU model* when evaluated on the ASR data. The improvement is about 8 % increase in F-measure absolute.
+compared to *the HDC SLU model* when evaluated on the ASR data. The improvement is about 8 % in F-measure (absolute).
 
 This shows that SLU trained on the ASR data sets can be beneficial.
 
