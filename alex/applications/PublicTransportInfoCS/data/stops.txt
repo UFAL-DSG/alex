@@ -10,40 +10,43 @@ Avia Letňany
 Baba I
 Baba II
 Babice
-Babice Babičky
-Babice U hřiště
+Babice, Babičky
+Babice, U hřiště
 Bachova
 Bakovská
 Balabenka
 Balkán
 Baně
 Barchovice
-Barchovice Hryzely
-Barchovice Radlice
-Barchovice rozc.Radlice
+Barchovice, Hryzely
+Barchovice, Radlice
+Barchovice, rozcestí Radlice
 Barrandovská
 Bártlova
 Barvy a laky
 Basilejské náměstí
 Bašť
-Bašť Baštěk
-Bašť Baštěk náves
+Bašť, Baštěk
+Bašť, Baštěk, náves
 Bašteckého
-Bašť Měšická
+Bašť, Měšická
 Baterie
 Bavorská
 Bazar
 Bazovského
 Běchovice
 Bečváry
-Bečváry rozc.Poďousy
-Bečváry žel.st.
+Bečváry, rozcestí Poďousy
+Bečváry, železniční stanice
 Belárie
+Běleč
 Bělocerkevská
 Benice
 Benkova
-Beroun aut.st.
-Beroun Hostim
+Beroun
+Beroun, autobusové stanoviště
+Beroun, Hostim
+Beroun - Závodí
 Bertramka
 Betáň
 Betonárka
@@ -61,89 +64,96 @@ Bohdalec
 Bohdalecká
 Bohemians
 Bohnické údolí
-Bojanovice chaty
-Bojanovice Malá Lečice
-Bojanovice Malá Lečice U Hesů
-Bojanovice rest.
-Bojanovice Senešnice
+Bojanovice
+Bojanovice, chaty
+Bojanovice, Malá Lečice
+Bojanovice, Malá Lečice, U Hesů
+Bojanovice, restaurace
+Bojanovice, Senešice
 Bojasova
+Bojov
 Boletická
 Bolevecká
 Boloňská
-Bořanovice rozc.
-Borek rozc.
+Bořanovice, rozcestí
+Borek, rozcestí
 Bořislavka
+Bošice
+Bošice zastávka
 Botanická zahrada
 Botanická zahrada Troja
-Brandýs n.L. St.Bol. aut.st.
-Brandýs n.L. St.Bol. Baumit
-Brandýs n.L. St.Bol. Brázdimská
-Brandýs n.L. St.Bol. dům peč.služby
-Brandýs n.L. St.Bol. Fakulta
-Brandýs n.L. St.Bol. Hájenka
-Brandýs n.L. St.Bol. Kasárna
-Brandýs n.L. St.Bol. Kralovice
-Brandýs n.L. St.Bol. most
-Brandýs n.L. St.Bol. nádr.
-Brandýs n.L. St.Bol. nám.
-Brandýs n.L. St.Bol. Na Panském
-Brandýs n.L. St.Bol. na Radosti
-Brandýs n.L. St.Bol. nem.
-Brandýs n.L. St.Bol. pekárny
-Brandýs n.L. St.Bol. Popovice
-Brandýs n.L. St.Bol. Pražská
-Brandýs n.L. St.Bol. Rychta
-Brandýs n.L. St.Bol. sídl.BSS
-Brandýs n.L. St.Bol. sídliště
-Brandýs n.L. St.Bol. sídl.u nádr.
-Brandýs n.L. St.Bol. škola
-Brandýs n.L. St.Bol. Školní
-Brandýs n.L. St.Bol. Sokolovská
-Brandýs n.L. St.Bol. U brány
-Brandýs n.L. St.Bol. u hřbitova
-Brandýs n.L. St.Bol. U křížku
-Brandýs n.L. St.Bol. U soudu
-Brandýs n.L. St.Bol. VDO
-Brandýs n.L. St.Bol. V olšinkách
-Brandýs n.L. St.Bol. Vosí hnízdo
-Brandýs n.L. St.Bol. Vrábí
-Brandýs n.L. St.Bol. Zahr.Město
-Brandýs n.L. St.Bol. zdrav.stř.
-Brandýs n.L. St.Bol. žel.st.
+Brandýsek
+Brandýs nad Labem
+Brandýs nad Labem - Stará Boleslav, autobusové stanoviště
+Brandýs nad Labem - Stará Boleslav, Baumit
+Brandýs nad Labem - Stará Boleslav, Brázdimská
+Brandýs nad Labem - Stará Boleslav, dům pečovatelské služby
+Brandýs nad Labem - Stará Boleslav, Fakulta
+Brandýs nad Labem - Stará Boleslav, Hájenka
+Brandýs nad Labem - Stará Boleslav, Kasárna
+Brandýs nad Labem - Stará Boleslav, Kralovice
+Brandýs nad Labem - Stará Boleslav, most
+Brandýs nad Labem - Stará Boleslav, nádraží
+Brandýs nad Labem - Stará Boleslav, náměstí
+Brandýs nad Labem - Stará Boleslav, Na Panském
+Brandýs nad Labem - Stará Boleslav, na Radosti
+Brandýs nad Labem - Stará Boleslav, nemocnice
+Brandýs nad Labem - Stará Boleslav, pekárny
+Brandýs nad Labem - Stará Boleslav, Popovice
+Brandýs nad Labem - Stará Boleslav, Pražská
+Brandýs nad Labem - Stará Boleslav, Rychta
+Brandýs nad Labem - Stará Boleslav, sídliště
+Brandýs nad Labem - Stará Boleslav, sídliště BSS
+Brandýs nad Labem - Stará Boleslav, sídliště u nádraží
+Brandýs nad Labem - Stará Boleslav, škola
+Brandýs nad Labem - Stará Boleslav, Školní
+Brandýs nad Labem - Stará Boleslav, Sokolovská
+Brandýs nad Labem - Stará Boleslav, U brány
+Brandýs nad Labem - Stará Boleslav, u hřbitova
+Brandýs nad Labem - Stará Boleslav, U křížku
+Brandýs nad Labem - Stará Boleslav, U soudu
+Brandýs nad Labem - Stará Boleslav, VDO
+Brandýs nad Labem - Stará Boleslav, V olšinkách
+Brandýs nad Labem - Stará Boleslav, Vosí hnízdo
+Brandýs nad Labem - Stará Boleslav, Vrábí
+Brandýs nad Labem - Stará Boleslav, Zahradní Město
+Brandýs nad Labem - Stará Boleslav, zdravotní středisko
+Brandýs nad Labem - Stará Boleslav, železniční stanice
+Brandýs nad Labem - Zápská
+Brandýs nad Labem zastávka
 Branické náměstí
 Bratřínov
 Braunova
-Brázdim Nový Brázdim
-Brázdim rozc.Veliký Brázdim
-Brázdim Starý Brázdim
+Brázdim, Nový Brázdim
+Brázdim, rozcestí Veliký Brázdim
+Brázdim, Starý Brázdim
 Brechtova
 Breitcetlova
 Břetislavka
 Břevnovská
 Břevnovský klášter
 Břežany II
-Břežany II na Malé Straně
-Břežany II U sokolovny
+Břežany II, na Malé Straně
+Břežany II, U sokolovny
 Březiněves
 Březiněveská
-Březí Podskalí
-Březí U křížku
-Březí V Jezírku
-Březová Oleško Březová
-Březová Oleško Oleško
-Březová Oleško U topolů
+Březí, Podskalí
+Březí, U křížku
+Březí, V Jezírku
+Březová - Oleško, Březová
+Březová - Oleško, Oleško
+Březová - Oleško, U topolů
 Bříství
-Bříství Svárov
+Bříství, Svárov
 Brodecká
 Brodského
 Brozánská
 Brumlovka
-Brumlovka Za Betou
 Bruselská
 Brusnice
 Bryksova
 Bubovice
-Bubovice Višňovka
+Bubovice, Višňovka
 Bucharova
 Budějovická
 Budovec
@@ -158,41 +168,42 @@ Butovická
 Čechova škola
 Čechovo náměstí
 Čechův most
-Čelákovice Kovohutě
-Čelákovice nám.
-Čelákovice rozc.Sedlčánky
-Čelákovice Rumunská
-Čelákovice Sedlčánky
-Čelákovice TOS
-Čelákovice V hájku
-Čelákovice V Prokopě
-Čelákovice Záluží
-Čelákovice Záluží cihelna
-Čelákovice žel.st.
+Čelákovice
+Čelákovice - Jiřina
+Čelákovice, Kovohutě
+Čelákovice, náměstí
+Čelákovice, rozcestí Sedlčánky
+Čelákovice, Rumunská
+Čelákovice, Sedlčánky
+Čelákovice, TOS
+Čelákovice, V hájku
+Čelákovice, V Prokopě
+Čelákovice, Záluží
+Čelákovice, Záluží, cihelna
+Čelákovice zastávka
+Čelákovice, železniční stanice
 Cementárna Radotín
 Centrum Zahradní Město
+Čerčany
 Černé Voděrady
-Černé Voděrady Chaloupky
-Černé Voděrady ObÚ
+Černé Voděrady, Chaloupky
+Černé Voděrady, Obecní úřad
 Černická
 Černíky
 Černínova
 Černokostelecká
 Černolice
-Černolice Nový Dvůr
+Černolice, Nový Dvůr
 Černošice
-Černošice Dr.Janského
-Černošice II. škola
-Černošice Javorová
-Černošice Kladenská
-Černošice Komenského
-Černošice Mokropsy žel.zast.
-Černošice Slunečná
-Černošice U Kamenného mostu
-Černošice U Vodárny
-Černošice Vráž samoobsluha
-Černošice Vráž U transformátoru
-Černošice žel.zast.
+Černošice, II, škola
+Černošice, Javorová
+Černošice, Kladenská
+Černošice, Komenského
+Černošice - Mokropsy
+Černošice, U Vodárny
+Černošice, Vráž, samoobsluha
+Černošice, Vráž, U transformátoru
+Černošice, železniční zastávka
 Černý kůň
 Černý Most
 Čertousy
@@ -200,42 +211,45 @@ Centrum Zahradní Město
 Červeňanského
 Červený dvůr
 Červený Újezd
-Červený Újezd rozc.
-Červený Újezd U Náprstků
+Červený Újezd, rozcestí
+Červený Újezd, U Náprstků
 Červený Vrch
 Českobrodská
 Českolipská
 Českomoravská
-Český Brod Jana Kouly
-Český Brod Jungmannova
-Český Brod Kollárova
-Český Brod Liblice Bylanská
-Český Brod Liblice obec
-Český Brod Liblice SEŠ
-Český Brod muzeum
-Český Brod Na Bulánce
-Český Brod nem.
-Český Brod sídliště
-Český Brod Štolmíř
-Český Brod U vodárny
-Český Brod Zahrady
-Český Brod Zborovská
-Český Brod žel.st.
+Český Brod
+Český Brod, Jana Kouly
+Český Brod, Jungmannova
+Český Brod, Kollárova
+Český Brod, Liblice, Bylanská
+Český Brod, Liblice, obec
+Český Brod, Liblice, SEŠ
+Český Brod, Liblice, vodárna
+Český Brod, muzeum
+Český Brod, Na Bulánce
+Český Brod, nemocnice
+Český Brod, sídliště
+Český Brod, Štolmíř
+Český Brod, U vodárny
+Český Brod, Zahrady
+Český Brod, Zborovská
+Český Brod, železniční stanice
 Čestlice
-Čestlice Albert hypermarket
-Čestlice Aquapalace
-Čestlice kika
-Čestlice Polní
-Čestlice Rebo
-Čestlice Rehau
+Čestlice, Albert hypermarket
+Čestlice, Asbis
+Čestlice, Kika - Aquapalace
+Čestlice, Lipová
+Čestlice, Polní
+Čestlice, Rehau
+Čestlice, V Oblouku
 Chaplinovo náměstí
 Chlumín
 Chmelnice
 Choceradská
 Chocerady
-Chocerady Růženín sídliště
-Chocerady Samechov
-Chocerady Vlkovec žel.st.
+Chocerady, Růženín, sídliště
+Chocerady, Samechov
+Chocerady, Vlkovec, železniční stanice
 Chodov
 Chodovec
 Chodovská
@@ -244,57 +258,64 @@ Cholupice
 Cholupický vrch
 Choteč
 Chotkovy sady
+Chotutice
 Chrást
-Chrášťany
-Chrášťany Bylany
-Chrášťany Bylany škola
-Chrášťany Chotouň
-Chrášťany Mezcestí
-Chrášťany Protherm
-Chrášťany Scania Label
-Chrást host.
+Chrášťany, Bylany {okres Kolín}
+Chrášťany, Bylany, škola {okres Kolín}
+Chrášťany, Chotouň {okres Kolín}
+Chrášťany, Mezcestí {okres Praha - západ}
+Chrášťany {okres Kolín}
+Chrášťany {okres Praha - západ}
+Chrášťany, Protherm {okres Praha - západ}
+Chrášťany, Scania - Label {okres Praha - západ}
+Chrást, hostinec
+Chrást nad Sázavou
+Chroustov
 Chvaly
 Chvatěruby
 Chýně
-Chýně Háje
-Chýně Na Vyhlídce
-Chýně Pivovarský dvůr
-Chýně Žitná
+Chýně, Háje
+Chýně, Na Vyhlídce
+Chýně, Pivovarský dvůr
+Chýně, Žitná
 Chýnice
-Chýnice Pod Radnicí
+Chýnice, Pod Radnicí
 Chýnovská
 Cibulka
 Cikánka
 Cílkova
 Čím
-Čím Hrdlička
+Čím, Hrdlička
 Čimice
 Čimický háj
 Čínská
 Ciolkovského
+Císařská louka
 Čisovice
-Čisovice Bojov
-Čisovice Bojov višňovka
-Čisovice Bojov žel.st.
-Čisovice Pod Horou
-Čisovice u školy
-Čisovice žel.st.
+Čisovice, Bojov
+Čisovice, Bojov, Višňovka
+Čisovice, Bojov, železniční stanice
+Čisovice, Pod Horou
+Čisovice, u školy
+Čisovice, železniční stanice
 ČSAD Smíchov
 Ctěnice
+Čtyřkoly
 Cukrovar Čakovice
 Cukrovar Modřany
 Ďáblice
 Ďáblický hřbitov
 Darwinova
-Davle Na Javorce
-Davle obec
-Davle pod Račany
-Davle Sázava
-Davle Sázava Třešňovka
-Davle Sloup
-Davle Sloup U Jeřábu
-Davle u Kiliána
-Davle u pomníku
+Davle
+Davle, Na Javorce
+Davle, obec
+Davle, pod Račany
+Davle, Sázava
+Davle, Sázava, Třešňovka
+Davle, Sloup
+Davle, Sloup, U Jeřábu
+Davle, u Kiliána
+Davle, u pomníku
 Dědina
 Dědinova
 Dejvická
@@ -314,40 +335,43 @@ Dlouhá míle
 Dlouhá třída
 Dobeška
 Dobratická
-Dobřejovice Čestlická
-Dobřejovice Na návsi
+Dobřejovice, Čestlická
+Dobřejovice, Na návsi
 Dobříč
-Dobřichovice nádraží
-Dobřichovice Pod Vinicí
-Dobřichovice pošta
-Dobřichovice rozc.Karlík
-Dobřichovice ÚKZÚZ
-Dobříš Kodetka
-Dobříš Kostelíček
-Dobříš nám.
-Dobříš Průmyslová zóna
-Dobříš žel.st.
+Dobřichovice
+Dobřichovice, nádraží
+Dobřichovice, Pod Vinicí
+Dobřichovice, pošta
+Dobřichovice, rozcestí Karlík
+Dobřichovice, ÚKZÚZ
+Dobříš
+Dobříš, Kodetka
+Dobříš, Kostelíček
+Dobříš, náměstí
+Dobříš, Průmyslová zóna
+Dobříš, železniční stanice
 Dobročovice
 Dobročovická
 Dobronická
 Dobrovíz
-Dobrovíz komerční zóna
-Dobrovíz Obecní úřad
+Dobrovíz, komerční zóna
+Dobrovíz, Obecní úřad
 Do Čertous
-Dolany Debrno
+Dolany
+Dolany, Debrno
 Doležalova
 Doliny
 Do Lipan
-Dolní Břežany hřiště
-Dolní Břežany Lhota
-Dolní Břežany Nad Mlýnem
-Dolní Břežany Na kopečku
-Dolní Břežany náměstí
-Dolní Břežany Na Rovném
-Dolní Břežany Na Spálence
-Dolní Břežany Obecní úřad
-Dolní Břežany škola
-Dolní Břežany Zálepy
+Dolní Břežany, hřiště
+Dolní Břežany, Lhota
+Dolní Břežany, Nad Mlýnem
+Dolní Břežany, Na kopečku
+Dolní Břežany, náměstí
+Dolní Břežany, Na Rovném
+Dolní Břežany, Na Spálence
+Dolní Břežany, Obecní úřad
+Dolní Břežany, škola
+Dolní Břežany, Zálepy
 Dolní Chabry
 Dolní Měcholupy
 Dolní Počernice
@@ -362,23 +386,24 @@ Do Rybníčků
 Dostihová
 Doubek
 Doubravčice
-Doubravčice bytovky
-Doubravčice Čihadla
+Doubravčice, bytovky
+Doubravčice, Čihadla
 Drahelčice
 Drazdecká
+Dřetovice
 Dřevařská
 Dřevčice
-Dřevčice cihelna
-Dřevčice rozc.Jenštejn
+Dřevčice, cihelna
+Dřevčice, rozcestí Jenštejn
 Dreyerova
 Drinopol
-Dřínov náves
-Dřínov Stavadla
-Dřínov U kříže
-Dřínov u rybníka
+Dřínov, náves
+Dřínov, Stavadla
+Dřínov, U kříže
+Dřínov, u rybníka
 Dřísy
-Dřísy u vily
-Dřísy žel.st.
+Dřísy, u vily
+Dřísy, železniční stanice
 Drobná
 Druhanická
 Družná
@@ -390,13 +415,10 @@ Dvorce
 Dyrinka
 Elišky Přemyslovny
 Farkáň
-Filadelfie
 Filmové ateliéry
 Filosofská
 Flora
 Florenc
-Florenc   B
-Florenc   C
 Formanská
 Frančíkova
 Františka Veselého
@@ -407,7 +429,6 @@ Garáže Klíčov
 Generála Janouška
 Geologická
 Gercenova
-Globus
 Grussova
 Habrová
 Hadovitá
@@ -424,9 +445,9 @@ Hellichova
 Hercovka
 Herink
 Hládkov
-Hlásná Třebaň Rovina
+Hlásná Třebaň, Rovina
 Hlavenec
-Hlavenec U 4 kamenů křiž.
+Hlavenec, U Čtyř kamenů, křižovatka
 Hlavní
 Hlavní nádraží
 Hlohová
@@ -440,96 +461,98 @@ Högerova
 Holečkova
 Holoubkovská
 Holubice
-Holubice Kozinec
-Holubice Kozinec Habrová
+Holubice, Kozinec
+Holubice, Kozinec, Habrová
 Holyně
 Hořany
 Horčičkova
 Horky
 Horní cesta
 Horní Kruty
-Horní Kruty Bohouňovice II
-Horní Kruty Dolní Kruty
-Horní Kruty Přestavlky
-Horní Kruty Újezdec
+Horní Kruty, Bohouňovice II
+Horní Kruty, Dolní Kruty
+Horní Kruty, Přestavlky
+Horní Kruty, Újezdec
 Hornocholupická
 Horoměřice
-Horoměřice V lipkách
+Horoměřice, V lipkách
 Horoměřická
 Horoušany
-Horoušany Horoušánky
-Horoušany Horoušánky náves
-Horoušany U rybníka
+Horoušany, Horoušánky
+Horoušany, Horoušánky, náves
+Horoušany, U rybníka
 Hostavice
 Hostín u Vojkovic
 Hostivařská
 Hostivařské náměstí
 Hostivice
-Hostivice Břve
-Hostivice Břve sportovní hala
-Hostivice Jeneček
-Hostivice Litovice
-Hostivice Na Pískách
-Hostivice Nouzov
-Hostivice Palouky
-Hostivice Průmyslová
-Hostivice Sportovců
-Hostivice stadion
-Hostivice Staré Litovice
-Hostivice Ve vilkách
+Hostivice, Břve
+Hostivice, Břve, sportovní hala
+Hostivice, Jeneček
+Hostivice - Litovice
+Hostivice, Litovice
+Hostivice, Na Pískách
+Hostivice, Nouzov
+Hostivice, Palouky
+Hostivice, Průmyslová
+Hostivice, Sportovců
+Hostivice, stadion
+Hostivice, Staré Litovice
+Hostivice, Ve vilkách
 Hostouň
-Hostouň Na Pohoří
-Hostouň u hřiště
+Hostouň, Na Pohoří
+Hostouň, u hřiště
+Hostouň u Prahy
 Hostýnská
 Hotel Golf
 Hovorčovice
-Hovorčovice u kostela
+Hovorčovice, u kostela
 Hradčanská
 Hradešín
-Hradešín ObÚ
-Hradešín sklady Marca
-Hradištko
-Hradištko Brunšov
-Hradištko chaty
-Hradištko Kersko hl.sil.
-Hradištko Kersko osada
-Hradištko Kersko u lavičky
-Hradištko Kersko U pramene
-Hradištko osada
-Hradištko Pikovice most
-Hradištko Pikovice obec
-Hradištko Pikovice Pod Medníkem
-Hradištko Rajchardov
-Hradištko u rybníčku
-Hradištko zámek
+Hradešín, Obecní úřad
+Hradešín, sklady Marca
+Hradištko, Brunšov {okres Praha - západ}
+Hradištko, chaty {okres Nymburk}
+Hradištko, Kersko, hlavní silnice {okres Nymburk}
+Hradištko, Kersko, osada {okres Nymburk}
+Hradištko, Kersko, u lavičky {okres Nymburk}
+Hradištko, Kersko, U pramene {okres Nymburk}
+Hradištko {okres Nymburk}
+Hradištko, osada {okres Praha - západ}
+Hradištko, Pikovice, most {okres Praha - západ}
+Hradištko, Pikovice, obec {okres Praha - západ}
+Hradištko, Pikovice, Pod Medníkem {okres Praha - západ}
+Hradištko, Rajchardov {okres Praha - západ}
+Hradištko, u rybníčku {okres Praha - západ}
+Hradištko, zámek {okres Praha - západ}
 Hrazanská
 Hřebenka
 Hříbková
 Hrnčíře
 Hrnčířský hřbitov
 Hrusice
-Hrusice Na Šmejkalce
-Hrusice Vlčí halíř
+Hrusice, Na Šmejkalce
+Hrusice, Vlčí halíř
 Hulická
 Huntířovská
 Hůrka
 Husinecká
-Husinec Řež
-Husinec Řež sídliště
-Husinec Řež záv.
-Husinec rozc.
-Husinec samota
+Husinec, Řež
+Husinec, Řež, sídliště
+Husinec, Řež, závod
+Husinec, rozcestí
+Husinec, samota
 Hutě
 Hutmanka
+Hvězdonice
 Hvozdnice
-Hvozdnice chaty
+Hvozdnice, chaty
 Hybšmanka
 Hydrologický ústav
-IKEA
 IKEM
 Internacionální
 Invalidovna
-I. P. Pavlova
+I.P.Pavlova
 Italská
 Jahodnice
 Jahodnice II
@@ -539,78 +562,81 @@ Jana Masaryka
 Jankovcova
 Janovská
 Jarníkova
+Jarov
 Jedličkův ústav
 Jemnická
 Jeneč
-Jeneč komerční zóna
-Jeneč Lidická
-Jeneč nádraží
+Jeneč, komerční zóna
+Jeneč, Lidická
+Jeneč, nádraží
+Jeneč zastávka
 Jenerálka
 Jenštejn
-Jenštejn Dehtáry
-Jenštejn Domov seniorů
-Jenštejn Hradní
+Jenštejn, Dehtáry
+Jenštejn, Domov seniorů
+Jenštejn, Hradní
 Jeřická
 Jesenice
-Jesenice Belnická
-Jesenice bytovky
-Jesenice Horní Jirčany
-Jesenice Horní Jirčany vodárna
-Jesenice Kocanda
-Jesenice Mladíkov
-Jesenice Osnice
-Jesenice Osnice hřbitov
-Jesenice škola
-Jesenice Vestecká
-Jesenice Zdiměřice
-Jesenice Zdiměřice bytovky
-Jesenice Zdiměřice škola
-Jesenice Zdiměřice u rybníka
+Jesenice, Belnická
+Jesenice, bytovky
+Jesenice, Horní Jirčany
+Jesenice, Horní Jirčany, vodárna
+Jesenice, Kocanda
+Jesenice, Mladíkov
+Jesenice, Osnice
+Jesenice, Osnice, hřbitov
+Jesenice, škola
+Jesenice, Vestecká
+Jesenice, Zdiměřice
+Jesenice, Zdiměřice, bytovky
+Jesenice, Zdiměřice, škola
+Jesenice, Zdiměřice, u rybníka
 Jesenická
 Jevany
-Jevany Bohumil
-Jevany Černokostelecká
-Jevany Lesní podnik
-Jevany Penčice
-Jevany Smrčiny
-Jevany Spojovací
+Jevany, Bohumil
+Jevany, Černokostelecká
+Jevany, Lesní podnik
+Jevany, Penčice
+Jevany, Smrčiny
+Jevany, Spojovací
 Jezerka
 Ježovická
-Jílové u Prahy Borek
-Jílové u Prahy Čs.armády
-Jílové u Prahy hřbitov
-Jílové u Prahy Kamenná Vrata
-Jílové u Prahy Luka p.Medníkem
-Jílové u Prahy Luka p.M. nádraží
-Jílové u Prahy náměstí
-Jílové u Prahy Pražská
-Jílové u Prahy Radlík
-Jílové u Prahy rozc.Radlík
-Jílové u Prahy Studené obec
-Jílové u Prahy Studené závod
-Jílové u Prahy učiliště
+Jílové u Prahy
+Jílové u Prahy, Borek
+Jílové u Prahy, Československé armády
+Jílové u Prahy, hřbitov
+Jílové u Prahy, Kamenná Vrata
+Jílové u Prahy, Luka pod Medníkem
+Jílové u Prahy, náměstí
+Jílové u Prahy, Pražská
+Jílové u Prahy, Radlík
+Jílové u Prahy, rozcestí Radlík
+Jílové u Prahy, Studené, obec
+Jílové u Prahy, Studené, závod
+Jílové u Prahy, učiliště
 Jíloviště
-Jíloviště Cukrák
-Jíloviště hl.sil.
-Jíloviště přívoz
-Jíloviště Výzkumný ústav
+Jíloviště, Cukrák
+Jíloviště, hlavní silnice
+Jíloviště, přívoz
+Jíloviště, Výzkumný ústav
 Jílovská
 Jindřišská
-Jinočany Hlavní
-Jinočany náměstí
+Jinočany, Hlavní
+Jinočany, náměstí
 Jinonice
 Jinonická
 Jiráskova čtvrť
 Jiráskovo náměstí
 Jirčanská
+Jiřice
 Jiřího z Poděbrad
 Jirny
-Jirny DHL
-Jirny Logistický park
-Jirny Nové Jirny I
-Jirny Nové Jirny II
-Jirny rozc.
-Jirny zámek
+Jirny, DHL
+Jirny, Logistický park
+Jirny, Nové Jirny, I
+Jirny, Nové Jirny, II
+Jirny, rozcestí
+Jirny, zámek
 Jitřní
 Jiviny
 Jižní Město
@@ -622,37 +648,40 @@ Kafkova
 Kajetánka
 Kalinův mlýn
 Kaliště
-Kaliště Lensedly
-Kaliště Poddubí
-Kaliště V Loučkách
-Kamenice Kuklík
-Kamenice Kult.dům
-Kamenice Ládví
-Kamenice Nová Hospoda
-Kamenice Olešovice
-Kamenice Skuheř
-Kamenice Štiřín
-Kamenice Těptín
-Kamenice Těptín U Kozlího kamene
-Kamenice U dvora
-Kamenice Valnovka
-Kamenice Všedobrovice
+Kaliště, Lensedly
+Kaliště, Poddubí
+Kaliště, V Loučkách
+Kamenice, Kuklík
+Kamenice, Kulturní dům
+Kamenice, Ládví
+Kamenice, Nová Hospoda
+Kamenice, Olešovice
+Kamenice, Skuheř
+Kamenice, Štiřín
+Kamenice, Těptín
+Kamenice, Těptín, U Kozlího kamene
+Kamenice, U dvora
+Kamenice, Valnovka
+Kamenice, Všedobrovice
 Kamenická
+Kamenné Žehrovice
+Kamenný Most u Kralup nad Vltavou
 Kamenný Přívoz
-Kamenný Přívoz Kamenný Újezdec
-Kamenný Přívoz U křížku
-Kamenný Přívoz žel.st.
+Kamenný Přívoz, Kamenný Újezdec
+Kamenný Přívoz, U křížku
+Kamenný Přívoz, železniční stanice
 Kamenolom Zbraslav
 Kamýcká
 Kapitána Stránského
-Káraný most
-Káraný pošta
-Káraný vodárna
+Káraný, most
+Káraný, pošta
+Káraný, vodárna
 Karenova
 Karlík
 Karlínské náměstí
 Karlovo náměstí
 Karlovy lázně
+Karlštejn
 Karlštejnská
 Kateřinky
 Kateřinská
@@ -689,49 +718,56 @@ K Hájům
 Khodlova
 K Holyni
 K Horoměřicům
+Kladno
+Kladno - Dubí
+Kladno město
+Kladno - Ostrovec
+Kladno - Rozdělov
+Kladno - Švermov
+Kladno - Vrapice
 Klamovka
 Klánova
 Klánovice
 Klárův ústav
 Klecany
-Klecany Ahold
-Klecany Astrapark
-Klecany D8 Park
-Klecany Drasty
-Klecany Drasty čistírna
-Klecany Klecánky
-Klecany U hřbitova
-Klecany U kostela
-Klecany Zdibsko
+Klecany, Ahold
+Klecany, Astrapark
+Klecany, D8 Park
+Klecany, Drasty
+Klecany, Drasty, čistírna
+Klecany, Klecánky
+Klecany, U hřbitova
+Klecany, U kostela
+Klecany, Zdibsko
 K Lesoparku
 K Letišti
 K Letňanům
 Klíčany
-Klíčany Břežanská
+Klíčany, Břežanská
 Klíčov
 Klíčovská
 Klikovka
 Klínec
-Klínec škola
-Klínec u hřiště
+Klínec, škola
+Klínec, u hřiště
 K Lipanům
 Kloboučnická
 Klokočná
 Klučov
-Klučov Lstiboř
-Klučov Skramníky
-Klučov U mlýna
-Klučov Žhery
+Klučov, Lstiboř
+Klučov, Skramníky
+Klučov, U mlýna
+Klučov, Žhery
 Klukovice
-Kly Krausovna
-Kly Lom
-Kly Větrušice
-Kly Vinice
-Kly Záboří
+Kly, Krausovna
+Kly, Lom
+Kly, Větrušice
+Kly, Vinice
+Kly, Záboří
 K Netlukám
-Kněževes skladový areál
-Kněževes Stará hospoda
-Kněževes U nádraží
+Kněževes, skladový areál
+Kněževes, Stará hospoda
+Kněževes, U nádraží
 Kněžská luka
 K Noskovně
 Knovízská
@@ -741,12 +777,14 @@ Kobyliská střelnice
 Kobylisy
 Kodaňská
 Kodymova
-Koh i noor
+Koh-i-noor
 Kojetice
-Kojetice rozc.
-Kojetice žel.st.
+Kojetice, rozcestí
+Kojetice u Prahy
+Kojetice, železniční stanice
 Kokořínská
 Kolbenova
+Koleč
 Koleje Jižní Město
 Koleje Strahov
 Koleje Větrník
@@ -758,58 +796,61 @@ Komárovská
 Komořany
 Konětopy
 Konojedy
-Konojedy Klíče
-Konojedy pila
-Konojedy rozc.
+Konojedy, Klíče
+Konojedy, pila
+Konojedy, rozcestí
 Konvářka
 Korandova
 Korek
-Kořenice rozc.Chotouchov
+Kořenice, rozcestí Chotouchov
 Korkyně
-Korkyně Křížov
+Korkyně, Křížov
 Korunovační
 Korytná
 Kosoř
-Kosoř rozc.
-Kostelec n.Č.l. Chaloupky
-Kostelec n.Č.l. Dobrovského
-Kostelec n.Č.l. Jevanská
-Kostelec n.Č.l. nám.
-Kostelec n.Č.l. Na Skalce
-Kostelec n.Č.l. sanatorium
-Kostelec n.Č.l. Svatbín
-Kostelec n.Č.l. Svatbínská
-Kostelec n.Č.l. Trativody
-Kostelec n.Č.l. Truba
-Kostelec n.Č.l. U Křížku
-Kostelec n.L. Jiřice
-Kostelec n.L. Jiřice U kapličky
-Kostelec n.L. nám.
-Kostelec n.L. Na růžku
-Kostelec n.L. u váhy
-Kostelec n.L. záv.
-Kostelec n.L. žel.st.
+Kosoř, rozcestí
+Kostelec nad Černými lesy, Chaloupky
+Kostelec nad Černými lesy, Dobrovského
+Kostelec nad Černými lesy, Jevanská
+Kostelec nad Černými lesy, náměstí
+Kostelec nad Černými lesy, Na Skalce
+Kostelec nad Černými lesy, sanatorium
+Kostelec nad Černými lesy, Svatbín
+Kostelec nad Černými lesy, Svatbínská
+Kostelec nad Černými lesy, Trativody
+Kostelec nad Černými lesy, Truba
+Kostelec nad Černými lesy, U Křížku
+Kostelec nad Labem
+Kostelec nad Labem, Jiřice
+Kostelec nad Labem, Jiřice, U kapličky
+Kostelec nad Labem, náměstí
+Kostelec nad Labem, Na růžku
+Kostelec nad Labem, u váhy
+Kostelec nad Labem, závod
+Kostelec nad Labem, železniční stanice
 Kostelec u Křížků
-Kostelec u Křížků škola
-Kostelní Hlavno u kostela
-Kostelní Hlavno u pomníku
+Kostelec u Křížků, škola
+Kostelní Hlavno, u kostela
+Kostelní Hlavno, u pomníku
 Kostelní Lhota
-Kostelní Lhota u kovárny
+Kostelní Lhota, u kovárny
 Kostrounek
+Kotevní
 Kotlářka
 Kounice
 Kouřim
-Kouřim Molitorov
-Kouřim rozc.Běšínov
-Kouřim skanzen
-Kouřim ZŠ
+Kouřim, Molitorov
+Kouřim, rozcestí Běšínov
+Kouřim, skanzen
+Kouřim, ZŠ
 Kovárna
 Kovářova
+Kováry
 Kovošrot
 Kozojedy
-Kozojedy rozc.
+Kozojedy, rozcestí
 Kozomín
-Kozomín rozc.0.4
+Kozomín, rozcestí
 K Pitkovičkám
 Krahulčí
 Krakov
@@ -817,14 +858,19 @@ Králova
 Královice
 Královická
 Královský letohrádek
-Kralupy n.Vlt. Barvy Laky
-Kralupy n.Vlt. Kaučuk
-Kralupy n.Vlt. Kovošrot
-Kralupy n.Vlt. Lobeček
-Kralupy n.Vlt. Lobeček pískovna
-Kralupy n.Vlt. Lobeček rozc.
-Kralupy n.Vlt. OS Máj
-Kralupy n.Vlt. žel.st.
+Kralupy nad Vltavou
+Kralupy nad Vltavou, Barvy Laky
+Kralupy nad Vltavou, Kaučuk
+Kralupy nad Vltavou, Kovošrot
+Kralupy nad Vltavou, Lobeček
+Kralupy nad Vltavou, Lobeček, pískovna
+Kralupy nad Vltavou, Lobeček, rozcestí
+Kralupy nad Vltavou - Minice
+Kralupy nad Vltavou, OS Máj
+Kralupy nad Vltavou předměstí
+Kralupy nad Vltavou, železniční stanice
+Králův Dvůr
+Králův Dvůr - Popovice
 Krausova
 Krčská
 Krčský hřbitov
@@ -832,27 +878,28 @@ Krejcárek
 Krematorium Motol
 Krematorium Strašnice
 Křenek
-Křenek rozc.1.5
+Křenek, rozcestí
 Křenice
 Křeslice
-Krhanice Prosečnice
+Krhanice
+Krhanice, Prosečnice
 K Říčanům
 Křižíkova
 Křížkový Újezdec
-Křížkový Újezdec Čenětice
+Křížkový Újezdec, Čenětice
 Křížová
-Krňany bytovky
-Krňany obec
-Krňany rozc.Třebsín
-Krňany Slapnice
-Krňany Teletín
-Krňany Závist
-Krňany Závist u křížku
+Krňany, bytovky
+Krňany, obec
+Krňany, rozcestí Třebsín
+Krňany, Slapnice
+Krňany, Teletín
+Krňany, Závist
+Krňany, Závist, u Křížku
 Krňovická
 Krocínka
 Krupá
-Krupá dvůr Chrást
-Krupá rozc.Syneč
+Krupá, dvůr Chrást
+Krupá, rozcestí Syneč
 Krymská
 Krystalová
 Kšely
@@ -867,36 +914,36 @@ Kuchyňka
 Kudrnova
 Kuliška
 Kunice
-Kunice Dolní Lomnice
-Kunice Dolní Lomnice Chlum
-Kunice rozc.Vidovice
-Kunice U Dálnice
-Kunice U Hřbitova
-Kunice Vidovice
-Kunice Vidovice Bonavita
-Kunice Vidovice zámek
-Kunice Všešímy
-Kunice Všešímy Pardálov
+Kunice, Dolní Lomnice
+Kunice, Dolní Lomnice, Chlum
+Kunice, rozcestí Vidovice
+Kunice, U Dálnice
+Kunice, U Hřbitova
+Kunice, Vidovice
+Kunice, Vidovice, Bonavita
+Kunice, Vidovice, zámek
+Kunice, Všešímy
+Kunice, Všešímy, Pardálov
 Kunratice
 Kunratická škola
-Kutná Hora aut.st.
-Kutná Hora Centrum
-Kutná Hora k nem.
-Kutná Hora poliklinika
+Kutná Hora, autobusové stanoviště
+Kutná Hora, Centrum
+Kutná Hora, k nemocnici
+Kutná Hora, poliklinika
 Kutnohorská
 Kvasinská
 Květnice
-Květnice Na Ladech
-Květnice rozc.
-Květnice Za Mlýnem
+Květnice, Na Ladech
+Květnice, rozcestí
+Květnice, Za Mlýnem
 Květnová
 K Vystrkovu
 Kyje
 Kyjský hřbitov
 Kyselova
-Kytín náves
-Kytín rozc.
-Kytín U Hřbitova
+Kytín, náves
+Kytín, rozcestí
+Kytín, u hřbitova
 K Závětinám
 K Zelenči
 K Žižkovu
@@ -909,9 +956,10 @@ Lahovská
 Lánská
 Laurová
 Lazarská
+Lazarská (Spálená ulice)
 Lázeňka
 Lázně Toušeň
-Lázně Toušeň zast.
+Lázně Toušeň, zastávka
 Lehárova
 Lehovec
 Lešanská
@@ -922,38 +970,40 @@ Letiště
 Letňanská
 Letňany
 Lety
-Lety K Libří
-Lety Na Návsi
+Lety, K Libří
+Lety, Na Návsi
 Levského
 Lhota
 Lhotecký les
 Lhotka
+Libčice nad Vltavou
+Libčice nad Vltavou - Letky
 Liběchovská
 Libeňská
 Libeňský most
 Libeř
-Libeř Libeň
-Libeř Libeň Oáza
-Libeř Libeň odb.STS
-Libeř Libeň U Hrušků
-Libeř Na ovčíně
-Líbeznice I
-Líbeznice II
-Líbeznice pošta
-Líbeznice škola
-Líbeznice zdrav.stř.
+Libeř, Libeň
+Libeř, Libeň, Oáza
+Libeř, Libeň, odbočka STS
+Libeř, Libeň, U Hrušků
+Libeř, Na ovčíně
+Líbeznice, I
+Líbeznice, II
+Líbeznice, pošta
+Líbeznice, škola
+Líbeznice, zdravotní středisko
 Líbeznická
-Libiš aut.st.
-Libiš Ke Spolaně
-Libiš obec
-Libiš samoobsluha
-Libiš Spolana 3
-Libiš Spolana 4
+Libiš, autobusové stanoviště
+Libiš, Ke Spolaně
+Libiš, obec
+Libiš, samoobsluha
+Libiš, Spolana 3
+Libiš, Spolana 4
 Libocká
 Libošovická
 Libuš
 Lichoceves
-Lichoceves Noutonice
+Lichoceves, Noutonice
 Lidečská
 Lihovar
 Limuzská
@@ -964,40 +1014,46 @@ Lipnická
 Lipovická
 Lísek
 Líšnice
-Líšnice hl.sil.
-Líšnice Spálený mlýn
+Líšnice, hlavní silnice
+Líšnice, Spálený mlýn
+Liteň
 Litochlebské náměstí
 Litovický potok
 Livornská
 Lnářská
+Lobkovice
 Lochkov
 Loděnice
-Loděnice Jánská I
-Loděnice Jánská II
-Loděnice pod lanovkou
+Loděnice, Jánská, I
+Loděnice, Jánská, II
+Loděnice, pod lanovkou
 Lohenická
 Lomnická
 Lomy
 Lotyšská
 Louňovice
-Louňovice Na hrázi I
-Louňovice Na hrázi II
+Louňovice, Na hrázi I
+Louňovice, Na hrázi II
+Lštění
 Luka
+Luka pod Medníkem
 Lukavecká
 Lužce
 Lužiny
-Lysá n.L. Litol
-Lysá n.L. Litol Mírová
-Lysá n.L. Litol u mostu
-Lysá n.L. pošta
-Lysá n.L. žel.st.
+Lysá nad Labem
+Lysá nad Labem - Dvorce
+Lysá nad Labem, Litol
+Lysá nad Labem, Litol, Mírová
+Lysá nad Labem, Litol, u mostu
+Lysá nad Labem, pošta
+Lysá nad Labem, železniční stanice
 Lýskova
 Lysolaje
 Macharovo náměstí
 Madlina
 Malá Chuchle
 Malá Hraštice
-Malá Hraštice vilová čtvrť
+Malá Hraštice, vilová čtvrť
 Malá Ohrada
 Malešická
 Malešická stráň
@@ -1006,7 +1062,7 @@ Malešické náměstí
 Malostranská
 Malostranské náměstí
 Malotice
-Malotice Lhotky
+Malotice, Lhotky
 Malovanka
 Malvazinky
 Malý Břevnov
@@ -1018,99 +1074,104 @@ Máslovice
 Masojedy
 Mečeříž
 Měchenice
-Měchenice rozc.k žel.st.
-Měchenice samoobsluha
-Měchenice žel.st.
+Měchenice, rozcestí k železniční stanici
+Měchenice, samoobsluha
+Měchenice, železniční stanice
 Měchenická
 Měděnecká
-Mělník aut.st.
-Mělník cukrovar
-Mělník Mlazice žel.zast.
-Mělník Podolí nem.
-Mělník Podolí pivovar
-Mělník Pšovka
-Mělník u hřiště
-Mělník u Nováků
-Mělník záv.Loděnice
+Mělník, autobusové stanoviště
+Mělník, cukrovar
+Mělník, Mlazice, železniční zastávka
+Mělník, Podolí, nemocnice
+Mělník, Podolí, pivovar
+Mělník, Pšovka
+Mělník, u hřiště
+Mělník, u Nováků
+Mělník, závod Loděnice
 Měšice
-Měšice Agropodnik
-Měšice Na Rejdišti
+Měšice, Agropodnik
+Měšice, Na Rejdišti
+Měšice u Prahy
 Městský archiv
 Metodějova
 Mezi Hřbitovy
 Mezouň
 Michelangelova
 Michelská
-Michelský les
 Michnovka
 Mikulova
 Milčice
-Milčice křiž.
+Milčice, křižovatka
 Milevská
 Milíčov
 Milovice
-Milovice Armádní
-Milovice radnice
-Milovice Sportovní
-Milovice Topolová
-Milovice Tyršova
-Milovice žel.st.
+Milovice, Armádní
+Milovice, radnice
+Milovice, Sportovní
+Milovice, Topolová
+Milovice, Tyršova
+Milovice, železniční stanice
 Mirošovice
+Mirošovice u Prahy
 Mirovická
 Miskovice
 Miškovice
-Miskovice Přítoky
+Miskovice, Přítoky
 Mladějovská
 Mládí
-Mnichovice bytovky
-Mnichovice hotel Myšlín
-Mnichovice Myšlín
-Mnichovice nám.
-Mnichovice požární dům
-Mnichovice U hřbitova
-Mnichovice U křížku
-Mnichovice Závěrka
-Mnichovice zdrav.stř.
-Mníšek p.Brdy Čisovická
-Mníšek p.Brdy Hladový Vrch
-Mníšek p.Brdy Kaple
-Mníšek p.Brdy Nad Špejcharem
-Mníšek p.Brdy Na Kvíkalce
-Mníšek p.Brdy náměstí
-Mníšek p.Brdy OPS Magdaléna
-Mníšek p.Brdy Pražská
-Mníšek p.Brdy Rymaně žel.zast.
-Mníšek p.Brdy sídliště
-Mníšek p.Brdy Stříbrná Lhota
-Mníšek p.Brdy Stř.Lhota U křížku
-Mníšek p.Brdy u hřbitova
-Mníšek p.Brdy u hřiště
-Mníšek p.Brdy U Šibence
-Mníšek p.Brdy ÚVR
-Mníšek p.Brdy Základní škola
-Mníšek p.Brdy závod
-Mníšek p. Brdy závod (hl.sil.)
-Mníšek p.Brdy žel.st.
+Mlčechvosty
+Mnichovice
+Mnichovice, bytovky
+Mnichovice, hotel Myšlín
+Mnichovice, Myšlín
+Mnichovice, náměstí
+Mnichovice, požární dům
+Mnichovice, U hřbitova
+Mnichovice, U křížku
+Mnichovice, Závěrka
+Mnichovice, zdravotní středisko
+Mníšek pod Brdy
+Mníšek pod Brdy, Čisovická
+Mníšek pod Brdy, Hladový Vrch
+Mníšek pod Brdy, Kaple
+Mníšek pod Brdy, Nad Špejcharem
+Mníšek pod Brdy, Na Kvíkalce
+Mníšek pod Brdy, náměstí
+Mníšek pod Brdy, OPS Magdaléna
+Mníšek pod Brdy, Pražská
+Mníšek pod Brdy, Rymaně, železniční zastávka
+Mníšek pod Brdy, sídliště
+Mníšek pod Brdy, Stříbrná Lhota
+Mníšek pod Brdy, Stříbrná Lhota, U křížku
+Mníšek pod Brdy, u hřbitova
+Mníšek pod Brdy, u hřiště
+Mníšek pod Brdy, U Šibence
+Mníšek pod Brdy, ÚVR
+Mníšek pod Brdy, Základní škola
+Mníšek pod Brdy, závod
+Mníšek pod Brdy, závod (hlavní silnice)
+Mníšek pod Brdy, železniční stanice
 Mochov
 Modletice
-Modletice Kaufland
-Modletice rozc.
-Modletice rozc.Doubravice
-Modletice Tvin
-Modletice V hůrce
+Modletice, Doubravice
+Modletice, Kaufland
+Modletice, rozcestí
+Modletice, rozcestí Doubravice
+Modletice, V hůrce
 Modřanská rokle
 Modřanská škola
 Modrá škola
 Mokrá
 Mokřanská
+Mokrovraty
 Moráň
 Moravanská
 Mořina
-Mořina odb.lom
-Mořina Trněný Újezd
-Mořina Trněný Újezd rozc.
-Mořina Trněný Újezd rozc.I
-Mořina u Pěchotů
+Mořina, odbočka lom
+Mořina, Trněný Újezd
+Mořina, Trněný Újezd, rozcestí
+Mořina, Trněný Újezd, rozcestí I
+Mořina, u Pěchotů
 Mořinka
 Morseova
 Most Závodu míru
@@ -1118,21 +1179,19 @@ Motol
 Mototechna
 Mrákovská
 Mratín
-Mratín cukrovar
+Mratín, cukrovar
 Mrkosova
 Mrzky
+Mstětice
 Mukařov
-Mukařov odb.Tehovec
-Mukařov škola
-Mukařov Srbín
-Mukařov Žernovka
+Mukařov, odbočka Tehovec
+Mukařov, škola
+Mukařov, Srbín
+Mukařov, Žernovka
 Multiaréna Praha
 Murmanská
-Můstek   A
-Můstek   B
+Můstek
 Muzeum
-Muzeum   A
-Muzeum   C
 Myslíkova
 Myšlínská
 Na Beránku
@@ -1166,7 +1225,7 @@ Nádraží Horní Měcholupy
 Nádraží Horní Počernice
 Nádraží Hostivař
 Nádraží Klánovice
-Nádraží Klánovice sever
+Nádraží Klánovice - sever
 Nádraží Krč
 Nádraží Kyje
 Nádraží Libeň
@@ -1242,15 +1301,18 @@ Na Veselí
 Na Viničkách
 Na Vrchách
 Na Vrstevnici
+Nebozízek
 Nebušice
 Nedvězí
 Nehvizdy
-Nehvizdy Nehvízdky
-Nehvizdy U studánky
+Nehvizdy, Nehvízdky
+Nehvizdy, U studánky
+Nelahozeves
+Nelahozeves zámek
 Nemocnice Bubeneč
 Nemocnice Bulovka
-Nemocnice Bulovka   gynekologie
-Nemocnice Bulovka   onkologie
+Nemocnice Bulovka - gynekologie
+Nemocnice Bulovka - onkologie
 Nemocnice Krč
 Nemocnice Motol
 Nemocnice Na Františku
@@ -1258,41 +1320,48 @@ Nemocnice Na Homolce
 Nemocnice pod Petřínem
 Nemocnice Vinohrady
 Nepasické náměstí
-Neratovice Byškovice
-Neratovice III.ZŠ
-Neratovice Kojetická
-Neratovice Korycany
-Neratovice Lobkovice hřbitov
-Neratovice Nám.Republiky
-Neratovice U Vojtěcha
-Neratovice žel.st.
+Neratovice
+Neratovice, Byškovice
+Neratovice, III. ZŠ
+Neratovice, Kojetická
+Neratovice, Korycany
+Neratovice, Lobkovice, hřbitov
+Neratovice město
+Neratovice, Náměstí Republiky
+Neratovice, U Vojtěcha
+Neratovice, železniční stanice
 Nerudova
 Nespeky
-Nespeky rozc.Pyšely
+Nespeky, rozcestí Pyšely
+Nesvačily
 Netluky
+Netřeba
 Netušilská
-Netvořice Lhota rozc.0.5
-Netvořice Pošta
+Netvořice, Lhota, rozcestí
+Netvořice, Pošta
+Neuměřice
 Nevanova
-Neveklov Jablonka
-Neveklov Jablonná
+Neveklov, Jablonka
+Neveklov, Jablonná
 Newtonova
 Norbertov
+Noutonice
 Nová kolonie
 Nová Šárka
 Nová Ves
-Nová Ves p.Pleší
-Nová Ves p.Pleší rozc.k sanat.
-Nová Ves p.Pleší sanatorium
-Nová Ves p.Pleší Včelník
+Nová Ves pod Pleší
+Nová Ves pod Pleší, rozcestí k sanatoriu
+Nová Ves pod Pleší, sanatorium
+Nová Ves pod Pleší, Včelník
 Nové Butovice
-Nové dvory
-Nové Dvory
-Nové Dvory Krámy
-Nové Dvory Krámy rozc.1.0
-Nové Dvory Nová Hospoda
-Nové Dvory Porostliny
+Nové Dvory, Krámy {okres Příbram}
+Nové Dvory, Krámy, rozcestí {okres Příbram}
+Nové Dvory, Nová Hospoda {okres Příbram}
+Nové dvory {obvod Praha 4}
+Nové Dvory {okres Příbram}
+Nové Dvory, Porostliny {okres Příbram}
 Nové náměstí
+Nové Ouholice
 Nové Petrovice
 Nové Pitkovice
 Nové Podolí
@@ -1306,29 +1375,31 @@ Novovysočanská
 Novozámecká
 Nový Hloubětín
 Nový Knín
-Nový Knín ELKO
-Nový Knín Libčice
-Nový Knín sokolovna
-Nový Knín Sudovice
+Nový Knín, ELKO
+Nový Knín, Libčice
+Nový Knín, sokolovna
+Nový Knín, Sudovice
 Nový Prosek
 Nový Slivenec
 Nový Střížkov
 Nový Vestec
-Nový Vestec Na Pískách
-Nový Vestec U mostu
+Nový Vestec, Na Pískách
+Nový Vestec, U mostu
 Nučice
-Nučice bytovky
-Nučice nádraží
-Nučice Na Kladívku
-Nučice Na Krahulově
-Nučice Pod vinicí
-Nučice Prokopská náves
-Nučice rozc.Krahulov
-Nučice Sokolská
-Nučice žel.zast.
+Nučice, bytovky {okres Praha - západ}
+Nučice, nádraží {okres Praha - západ}
+Nučice, Na Kladívku {okres Kolín}
+Nučice, Na Krahulově {okres Praha - západ}
+Nučice {okres Kolín}
+Nučice, Pod vinicí {okres Praha - západ}
+Nučice, Prokopská náves {okres Praha - západ}
+Nučice, rozcestí Krahulov {okres Praha - západ}
+Nučice, Sokolská {okres Praha - západ}
+Nučice zastávka
+Nučice, železniční zastávka {okres Praha - západ}
 Nupaky
-Nupaky hotel
-Nupaky školka
+Nupaky, hotel
+Nupaky, školka
 Nuselská radnice
 Nuselské schody
 Nušlova
@@ -1342,105 +1413,116 @@ Obchodní dům Petřiny
 Obchodní náměstí
 Obora Hvězda
 Obříství
-Obříství Dušníky
-Obříství Štěpánský most
+Obříství, Dušníky
+Obříství, Štěpánský most
 Observatoř Libuš
 Ocelářská
 Oderská
 Odlehlá
-Odolena Voda Dolínek
-Odolena Voda Dolínek Vodolská
-Odolena Voda Dolní náměstí
-Odolena Voda U klubu
-Odolena Voda U školy
-Odolena Voda záv.
+Odolena Voda, Dolínek
+Odolena Voda, Dolínek, Vodolská
+Odolena Voda, Dolní náměstí
+Odolena Voda, U klubu
+Odolena Voda, U školy
+Odolena Voda, závod
 Odra
 Ohrada
 Ohradní
 Ohradské náměstí
 Ohrobec
-Ohrobec Károv
-Ohrobec U Čisteckých
-Ohrobec u rybníka
+Ohrobec, Károv
+Ohrobec, U Čisteckých
+Ohrobec, u rybníka
 Okoř
 Okořská
 Okrouhlická
 Okrouhlo
-Okrouhlo Zahořany
+Okrouhlo, Zahořany
 Oleška
-Oleška Brník
-Oleška Brník u rybníka
-Oleška Bulánka
-Oleška Králka
-Oleška Krymlov
-Oleška rozc.Krymlov
+Oleška, Brník
+Oleška, Brník, u rybníka
+Oleška, Bulánka
+Oleška, Králka
+Oleška, Krymlov
+Oleška, rozcestí Krymlov
+Olovnice
+Olovnice zastávka
 Olšanská
 Olšanské hřbitovy
 Olšanské náměstí
-Ondřejov hřbitov
-Ondřejov nám.
-Ondřejov Třemblat
-Ondřejov Třemblat K Myšlínu
-Ondřejov Třemblat Lipská
-Ondřejov Třemblat náves
-Ondřejov Třemblat rozc.Mnichovice
-Ondřejov Třemblat rozc.Zvánovice
-Ondřejov Turkovice
-Ondřejov Turkovická
-Ondřejov U pily
+Ondřejov, hřbitov
+Ondřejov, náměstí
+Ondřejov, Třemblat
+Ondřejov, Třemblat, K Myšlínu
+Ondřejov, Třemblat, Lipská
+Ondřejov, Třemblat, náves
+Ondřejov, Třemblat, rozcestí Mnichovice
+Ondřejov, Třemblat, rozcestí Zvánovice
+Ondřejov, Turkovice
+Ondřejov, Turkovická
+Ondřejov, U pily
 Opálová
 Opatov
 Oplany
-Oplany háj.
+Oplany, hájovna
 Ordovická
 Ořech
-Ořech K Ovčínu
+Ořech, K Ovčínu
 Ořechovka
-Ořech u školy
-Ořech u sokolovny
+Ořech, u školy
+Ořech, u sokolovny
 Ořešská
 Orionka
 Ortenovo náměstí
 Osadní
 Osecká
+Ostrá
 Ostrčilovo náměstí
 Otakara Vrby
 Otakarova
 Otěšínská
 Otínská
-Outlet centrum Štěrboholy
-Ovčáry Kopa rozc.0.6
+Otradovice
+Otvovice
+Ovčáry
+Ovčáry, Kopa, rozcestí
 Ovčí hájek
 Paceřická
 Palackého náměstí
 Palmovka
 Palouček
 Panenské Břežany
-Panenské Břežany zámek
+Panenské Břežany, zámek
 Pánkova
 Pankrác
 Pavelkova
 Pavlíkova
+Pavlov
 Pávovské náměstí
-Pečky Tona
-Pečky Velké Chvalovice
-Pečky žel.st.
+Pecerady
+Pečky
+Pečky, Tona
+Pečky, Velké Chvalovice
+Pečky, železniční stanice
 Pekárenská
-Pelc Tyrolka
+Pelc - Tyrolka
 Peluněk
 Perlit
 Perunova
 Pětihosty
 Petříkov
-Petříkov Radimovice
-Petříkov rozc.
+Petříkov, Radimovice
+Petříkov, rozcestí
+Petřín
 Petřiny
 Petrov
-Petrov Bohuliby
-Petrov Bohuliby obora
-Petrov Chlomek
-Petrov U Ručiček
-Petrov Ve Vilách
+Petrov, Bohuliby
+Petrov, Bohuliby, obora
+Petrov - Chlomek
+Petrov, Chlomek
+Petrov u Prahy
+Petrov, U Ručiček
+Petrov, Ve Vilách
 Petržílova
 Petýrkova
 Picassova
@@ -1452,9 +1534,12 @@ Písková Lhota
 Písnice
 Pitkovice
 Plaňanská
+Plaňany
+Plaňany zastávka
 Plánická
 Platónova
 Plošná
+Plužiny
 Plynárna Michle
 Plynárna Satalice
 Plzeňka
@@ -1465,11 +1550,11 @@ Podbělohorská
 Pod Chodovem
 Pod Dálnicí
 Pod Děvínem
-Poděbrady hřbitov
-Poděbrady Oáza
-Poděbrady Přední Lhota u Kopečků
-Poděbrady Riegrovo nám.
-Poděbrady žel.st.
+Poděbrady, hřbitov
+Poděbrady, Oáza
+Poděbrady, Přední Lhota, u Kopečků
+Poděbrady, Riegrovo náměstí
+Poděbrady, železniční stanice
 Pod Hájem
 Podhajská pole
 Podhoří
@@ -1481,8 +1566,10 @@ Pod Konvářkou
 Podkovářská
 Pod Krocínkou
 Pod Kyjovem
+Podlešín
 Pod Lipkami
 Pod Lochkovem
+Podlužanská
 Pod Mezí
 Podnikatelská
 Pod Oborou
@@ -1490,7 +1577,7 @@ Podolanka
 Podolská vodárna
 Pod Pekařkou
 Pod Rapidem
-Pod Říhákem
+Pod Řihákem
 Pod Ryšánkou
 Pod Šafránkou
 Pod Šmukýřkou
@@ -1503,12 +1590,13 @@ Pod Zatáčkou
 Pod Žvahovem
 Pohořelec
 Pohoří
-Pohoří Chotouň
-Pohoří Markvart
-Pohoří Pohorka
-Pohoří Skalsko
+Pohoří, Chotouň
+Pohoří, Markvart
+Pohoří, Pohorka
+Pohoří, Skalsko
 Polerady
-Polerady rozc.
+Polerady nad Labem
+Polerady, rozcestí
 Polesná
 Polešovická
 Poliklinika Barrandov
@@ -1528,20 +1616,67 @@ Poliklinika Vltavská
 Poliklinika Vysočany
 Poliklinika Zahradní Město
 Polygrafická
-Popovičky Chomutovice
-Popovičky Nebřenice
-Popovičky rozc.
-Poříčany prodejna
-Poříčany škola
-Poříčany u Hroudů
-Poříčany žel.st.
+Popovičky, Chomutovice
+Popovičky, Nebřenice
+Popovičky, rozcestí
+Poříčany
+Poříčany, prodejna
+Poříčany, škola
+Poříčany, u Hroudů
+Poříčany, železniční stanice
+Poříčí nad Sázavou
+Poříčí nad Sázavou - Svárov
 Pošta Újezd nad Lesy
 Poštovka
 Poštovská
 Postřižín
-Postřižín U kapličky
+Postřižín, U kapličky
 Povltavská
 Práčská
+Praha - Běchovice
+Praha - Braník
+Praha - Bubeneč
+Praha - Bubny
+Praha - Čakovice
+Praha - Cibulka
+Praha - Dejvice
+Praha - Dolní Počernice
+Praha hlavní nádraží
+Praha - Hlubočepy
+Praha - Holešovice
+Praha - Holešovice zastávka
+Praha - Holyně
+Praha - Horní Měcholupy
+Praha - Horní Počernice
+Praha - Hostivař
+Praha - Jinonice
+Praha - Kbely
+Praha - Klánovice
+Praha - Kolovraty
+Praha - Komořany
+Praha - Krč
+Praha - Kyje
+Praha - Libeň
+Praha Masarykovo nádraží
+Praha - Modřany zastávka
+Praha - Radotín
+Praha - Řeporyje
+Praha - Ruzyně
+Praha - Satalice
+Praha - Sedlec
+Praha - Smíchov
+Praha - Smíchov Na Knížecí
+Praha - Smíchov severní nástupiště
+Praha - Stodůlky
+Praha - Strašnice zastávka
+Praha - Uhříněves
+Praha - Veleslavín
+Praha - Velká Chuchle
+Praha - Vršovice
+Praha - Vysočany
+Praha - Zbraslav
+Praha - Zličín
+Praha - Žvahov
 Prašná
 Právnická fakulta
 Pražská čtvrť
@@ -1551,87 +1686,90 @@ Pražský hrad
 Předboj
 Přední Kopanina
 Přehvozdí
-Přehvozdí U hřbitova
-Přerov n.L. Nový Přerov
-Přerov n.L. rozc.u obory
-Přerov n.L. U skanzenu
+Přehvozdí, U hřbitova
+Přerov nad Labem, Nový Přerov
+Přerov nad Labem, rozcestí u obory
+Přerov nad Labem, U skanzenu
 Přeštická
 Přeštínská
-Přezletice Horní náves
-Přezletice Kocanda
-Přezletice Vinořská
+Přezletice, Horní náves
+Přezletice, Kocanda
+Přezletice, Vinořská
 Příborská
 Přímské náměstí
 Přírodní
 Přišimasy
-Přišimasy Horka
+Přišimasy, Horka
 Přístav Holešovice
 Přístaviště
 Přístav Radotín
 Přistoupim
-Přistoupim rozc.
+Přistoupim, rozcestí
 Přívorská
 Přívozní
 Prosecká
+Prosečnice
 Prosek
 Prosluněná
 Průběžná
 Průchova
 Průhonice
-Průhonice hájovna
-Průhonice Hole
-Průhonice Komárov
-Průhonice Rozkoš
-Průhonice Tovární
+Průhonice, hájovna
+Průhonice, Hole
+Průhonice, Komárov
+Průhonice, Rozkoš
+Průhonice, Tovární
 Průhonský háj
 Průmstav
 Průmyslová
 Prunéřovská
 Prusice
-Prusice rozc.
+Prusice, rozcestí
 Prvomájová
 Psáry
-Psáry Dolní Jirčany
-Psáry Dolní Jirčany cihelna
-Psáry Domov Laguna
-Psáry Štědřík
+Psáry, Dolní Jirčany
+Psáry, Dolní Jirčany, cihelna
+Psáry, Domov Laguna
+Psáry, Štědřík
 Psohlavců
 Ptice
-Ptice křiž.
+Ptice, křižovatka
 Pučálka
-Pyšely hotel Doly
-Pyšely nám.
-Pyšely Nová Ves
-Pyšely sokolovna
-Pyšely Zaječice
-Rabyně Blaženice
-Rabyně hl.přístav
-Rabyně hotel Nová Rabyně
-Rabyně Loutí
-Rabyně Měřín
-Rabyně Nedvězí
-Rabyně rozc.Blaženice
-Rabyně Strážovna
-Rabyně Stromeč
+Pyšely
+Pyšely, hotel Doly
+Pyšely, náměstí
+Pyšely, Nová Ves
+Pyšely, sokolovna
+Pyšely, Zaječice
+Rabyně, Blaženice
+Rabyně, hlavní přístav
+Rabyně, hotel Nová Rabyně
+Rabyně, Loutí
+Rabyně, Měřín
+Rabyně, Nedvězí
+Rabyně, rozcestí Blaženice
+Rabyně, Strážovna
+Rabyně, Stromeč
 Radějovice
-Radějovice Olešky
+Radějovice, Olešky
 Radhošťská
+Radim
 Radiová
 Radlická
 Radonice
-Radonice Ligasova
-Radonice Penny Market
+Radonice, Ligasova
+Radonice, Penny Market
 Radonická
 Radošovická
 Radotínská
 Raichlova
 Rájecká
 Rajská zahrada
-Ratboř rozc.Těšínky
+Ratboř, rozcestí Těšínky
 Ratibořická
-Řehenice Babice
-Řehenice Dařbože
-Řehenice Křiváček
+Řehenice, Babice
+Řehenice, Dařbože
+Řehenice, Křiváček
 Reinerova
 Rektorská
 Rembrandtova
@@ -1639,139 +1777,153 @@ Rembrandtova
 Řepínská
 Řeporyjské náměstí
 Řepský hřbitov
-Řevnice nám.
+Řevnice
+Řevnice, náměstí
+Řež
 Řezáčovo náměstí
 Říčanova
-Říčany 5.května
-Říčany Černokostelecká
-Říčany hřbitov
-Říčany Jažlovice
-Říčany Komenského nám.
-Říčany Kuří
-Říčany Kuříčko
-Říčany K žel.st.
-Říčany Marvánek
-Říčany Nádraží
-Říčany nám.
-Říčany Olivovna
-Říčany Pacov
-Říčany park A.Švehly
-Říčany Pivoňková
-Říčany Podhradí
-Říčany Pod Kavčí Skálou
-Říčany Pod lihovarem
-Říčany prům.areál Černokostelecká
-Říčany prům.zóna Zděbrady
-Říčany Rychta
-Říčany sídl.Olivovna
-Říčany Spojovací ZŠ
-Říčany Štefánikova
-Říčany Strašín
-Říčany Strašín rest.
-Říčany U lípy
-Říčany U Milána
-Říčany U nem.
-Říčany U podjezdu
-Říčany U Větrníku
-Říčany Voděrádky
-Říčany Voděrádky Pod Mostem
-Říčany Voděrádky U Kapličky
-Říčany Voděradská
-Říčany Wolkerova
+Říčany
+Říčany, 5. května
+Říčany, Černokostelecká
+Říčany, Fibichova
+Říčany, hřbitov
+Říčany, Jažlovice
+Říčany, Komenského náměstí
+Říčany, Kuří
+Říčany, Kuříčko
+Říčany, K železniční stanici
+Říčany, Marvánek
+Říčany, Nádraží
+Říčany, náměstí
+Říčany, Olivovna
+Říčany, Pacov
+Říčany, Pacov, Horní Pacov
+Říčany, park A. Švehly
+Říčany, Pivoňková
+Říčany, Podhradí
+Říčany, Pod Kavčí Skálou
+Říčany, Pod lihovarem
+Říčany, průmyslová zóna Zděbrady
+Říčany, průmyslový areál Černokostelecká
+Říčany, Rychta
+Říčany, sídliště Olivovna
+Říčany, Spojovací ZŠ
+Říčany, Štefánikova
+Říčany, Strašín
+Říčany, Strašín, restaurace
+Říčany, U lípy
+Říčany, U Milána
+Říčany, U nemocnice
+Říčany, u podjezdu
+Říčany, U Větrníku
+Říčany, Voděrádky
+Říčany, Voděrádky, Pod Mostem
+Říčany, Voděrádky, U Kapličky
+Říčany, Voděradská
+Říčany, Wolkerova
 Římská
 Řitka
-Řitka Bučina
-Řitka hl.sil.
+Řitka, Bučina
+Řitka, hlavní silnice
 Roblín
-Roblín hájovna
-Roblín Kuchařík
+Roblín, hájovna
+Roblín, Kuchařík
 Rohožnická
 Rokoska
 Rokycanova
 Ronešova
 Rosečská
 Rostoklaty
-Rostoklaty Nová Ves II
-Rostoklaty žel.st.
+Rostoklaty, Nová Ves II
+Rostoklaty, železniční stanice
 Rousínovská
 Roztocká
-Roztoky Levý Hradec
-Roztoky nádraží
-Roztoky rozc.Žalov
-Roztoky Tyršovo nám.
-Roztoky U rybníčku
+Roztoky, Levý Hradec
+Roztoky, nádraží
+Roztoky, rozcestí Žalov
+Roztoky, Tyršovo náměstí
+Roztoky u Prahy
+Roztoky, U rybníčku
+Roztoky - Žalov
 Roztylské náměstí
 Roztyly
 Rozýnova
 Rtyňská
-Rudná Celní úřad
-Rudná Delvita
-Rudná Dušníky
-Rudná FIC
-Rudná Hewlett Packard
-Rudná Hořelice
-Rudná Nerudova
-Rudná škola
-Rudná U kina
-Rudná U nádraží
-Rudná V Brance
-Rudná zdrav.stř.
+Rudná, Celní úřad
+Rudná, Delvita
+Rudná, Dušníky
+Rudná, FIC
+Rudná, Hewlett - Packard
+Rudná, Hořelice
+Rudná, Nerudova
+Rudná, škola
+Rudná, U kina
+Rudná, U nádraží
+Rudná u Prahy
+Rudná, V Brance
+Rudná, zdravotní středisko
 Ruská
 Ruzyňská
 Ruzyňská škola
 Ruzyňský hřbitov
 Ruzyňský velkoobchod
 Rychnovská
+Rymaně
 Ryšánka
 Sadská
-Sadská hotel Modrá Hvězda
-Sadská Husova
-Sadská kaple
-Sadská Mrsolská cesta
-Sadská Prokopova
+Sadská, hotel Modrá hvězda
+Sadská, Husova
+Sadská, kaple
+Sadská, Mrsolská cesta
+Sadská, Prokopova
 Safírová
 Šafránecká
 Šafránkova
+Samechov
 Santoška
 Satalice
 Satalická obora
 Šatovka
-Sázava aut.st.
-Sázava Černé Budy
-Sázava osada Kopaniny
+Sázava, autobusové stanoviště
+Sázava - Černé Budy
+Sázava, Černé Budy
+Sázava, osada Kopaniny
+Sázava zastávka
 Schengenská
 Schodová
 Sdružení
 Šeberák
 Šeberov
 Šedivého
-Sedlec
 Sedlecký přívoz
-Sedlec PEMA
-Sedlec Školní
+Sedlec {obvod Praha 6}
+Sedlec {okres Praha - východ}
+Sedlec, PEMA {okres Praha - východ}
+Sedlec, Školní {okres Praha - východ}
 Sekeřická
 Selská
 Selských baterií
 Semice
-Semice křiž.
-Semice rozc.Velenka
-Semice školka
+Semice, křižovatka
+Semice, rozcestí Velenka
+Semice, školka
 Sendražická
-Senohraby odb.
-Senohraby U zvoničky
-Senohraby žel.st.
+Senohraby
+Senohraby, odbočka
+Senohraby, U zvoničky
+Senohraby, železniční stanice
 Serpentina
-Šestajovice Balkán
-Šestajovice Pražská
-Šestajovice U školy
-Šestajovice Za Stodolami
+Šestajovice, Balkán
+Šestajovice, Pražská
+Šestajovice, U školy
+Šestajovice, Za Stodolami
 Severozápadní
 Sezemická
 Sibeliova
 Sibiřské náměstí
 Sibřina
-Sibřina Říčanská
-Sibřina Stupice
+Sibřina, Říčanská
+Sibřina, Stupice
 Sídliště Barrandov
 Sídliště Bohnice
 Sídliště Čakovice
@@ -1812,6 +1964,7 @@ Skládka Chabry
 Skládka Ďáblice
 Sklářská
 Skloněná
+Skochovice
 Škola Dolní Počernice
 Škola Dubeč
 Škola Kolovraty
@@ -1822,22 +1975,23 @@ Skloněná
 Škola Řepy
 Škola Štěrboholy
 Škola Velká Chuchle
-Skorkov Otradovice
-Skorkov Otradovice křiž.
-Skorkov Podbrahy
-Skorkov u transformátoru
-Škvorec MŠ
-Škvorec nám.
-Škvorec rozc.
-Škvorec rozc.Zlatá
-Škvorec Třebohostice
-Škvorec Třebohostice škola
+Skorkov, Otradovice
+Skorkov, Otradovice, křižovatka
+Skorkov, Podbrahy
+Skorkov, u transformátoru
+Skuhrov pod Brdy
+Škvorec, MŠ
+Škvorec, náměstí
+Škvorec, rozcestí
+Škvorec, rozcestí Zlatá
+Škvorec, Třebohostice
+Škvorec, Třebohostice, škola
 Slánská
-Slapy Jednota
-Slapy motorest I
-Slapy motorest II
-Slapy Na polesí
-Slapy Na Rovínku
+Slapy, Jednota
+Slapy, motorest I
+Slapy, motorest II
+Slapy, Na polesí
+Slapy, Na Rovínku
 Slatiňanská
 Slatinová
 Slavia
@@ -1846,9 +2000,9 @@ Slivenec
 Slivenecká
 Slovinská
 Sluhy
-Sluhy Nad hájem
-Sluhy rozc.Brázdim
-Sluštice škola
+Sluhy, Nad Hájem
+Sluhy, rozcestí Brázdim
+Sluštice, škola
 Služská
 Smaragdová
 Smíchovské nádraží
@@ -1874,12 +2028,15 @@ Spořilov
 Šporkova
 Sportareál Satalice
 Správa sociálního zabezpečení
+Srbsko
 Stadion Strahov
 Staňkovice
-Staňkovice Chlum rozc.0.5
-Staňkovice Nová Ves rozc.0.3
-Staňkovice Ostašov rozc.1.1
-Staňkovice Smilovice rozc.1.0
+Staňkovice, Chlum, rozcestí
+Staňkovice, Nová Ves, rozcestí
+Staňkovice, Ostašov, rozcestí
+Staňkovice, Smilovice, rozcestí
+Stará Boleslav
+Stará Huť
 Stará obec
 Stará Stodůlecká
 Staré Bohnice
@@ -1895,15 +2052,15 @@ Starý Spořilov
 Starý Vestec
 Starý Zličín
 Statenice
-Statenice Černý Vůl
-Statenice Černý Vůl hospoda
-Statenice U kovárny
+Statenice, Černý Vůl
+Statenice, Černý Vůl, hospoda
+Statenice, U kovárny
 Stavební zóna Horní Počernice
 Štěchovice
-Štěchovice Masečín
-Štěchovice Masečín Chrástky
-Štěchovice Nad horou
-Štěchovice Třebenice
+Štěchovice, Masečín
+Štěchovice, Masečín, Chrástky
+Štěchovice, nad horou
+Štěchovice, Třebenice
 Štěchovická
 Štefkova
 Stejskalova
@@ -1913,89 +2070,94 @@ Stejskalova
 Štěpničná
 Štěrboholy
 Štíhlice
-Štíhlice Doubravčická
+Štíhlice, Doubravčická
 Stodůlky
-Strančice Kašovice
-Strančice Otice
-Strančice Otice U viaduktu
-Strančice Předboř
-Strančice rozc.průmyslová zóna
-Strančice škola
-Strančice Svojšovice
-Strančice Všechromy
-Strančice Všechromy náves
-Strančice žel.st.
+Strančice
+Strančice, Kašovice
+Strančice, Otice
+Strančice, Otice, U viaduktu
+Strančice, Předboř
+Strančice, rozcestí průmyslová zóna
+Strančice, škola
+Strančice, Svojšovice
+Strančice, Všechromy
+Strančice, Všechromy, náves
+Strančice, železniční stanice
 Strašnická
+Stratov
 Strážní
+Středokluky
 Střelničná
-Stříbrná Skalice Blatiny
-Stříbrná Skalice Hradec
-Stříbrná Skalice Hrad.Střimelice
-Stříbrná Skalice Hruškov
-Stříbrná Skalice Kost.Střimelice
-Stříbrná Skalice náměstí
-Stříbrná Skalice Propast
-Stříbrná Skalice U Konvalinků
-Stříbrná Skalice V Můstkách
-Stříbrná Skalice Vozlín
-Stříbrná Skalice žel.st.
+Stříbrná Skalice
+Stříbrná Skalice, Blatiny
+Stříbrná Skalice, Hradec
+Stříbrná Skalice, Hradové Střimelice
+Stříbrná Skalice, Hruškov
+Stříbrná Skalice, Kostelní Střimelice
+Stříbrná Skalice, Kostelní Střimelice, Skalka
+Střibrná Skalice, náměstí
+Stříbrná Skalice, Propast
+Stříbrná Skalice, U Konvalinků
+Stříbrná Skalice, V Můstkách
+Stříbrná Skalice, Vozlín
+Stříbrná Skalice, železniční stanice
 Střížkov
 Strnady
 Strojírenská
 Strossmayerovo náměstí
-Stř.Skalice Kost.Střimel. Skalka
 Struhařov
-Struhařov Habr
-Struhařov U hřiště
+Struhařov, Habr
+Struhařov, U hřiště
 Studenecká
-Suchdol
-Suchdol Vysoká rozc.1.2
+Suchdol {obvod Praha 6}
+Suchdol {okres Kutná Hora}
+Suchdol, Vysoká, rozcestí {okres Kutná Hora}
 Sudějovická
 Sudovo Hlavno
-Sudovo Hlavno rozc.k háj.
+Sudovo Hlavno, rozcestí k hájence
 Sulice
-Sulice Biopharm VÚ
-Sulice Hlubočinka
-Sulice Na Křížkách
-Sulice rozc.Nechánice
-Sulice rozc.Radějovice
-Sulice Želivec
-Sulice Želivec Mandava
+Sulice, Biopharm - VÚ
+Sulice, Hlubočinka
+Sulice, Na Křížkách
+Sulice, rozcestí Nechánice
+Sulice, rozcestí Radějovice
+Sulice, Želivec
+Sulice, Želivec, Mandava
 Sulická
 Šumavská
 Šumperská
 Švandovo divadlo
 Svárov
-Svárov Rymáň
-Svárov škola
+Svárov, Rymáň
+Svárov, škola
 Svatoňovická
 Svatoplukova
-Svatý Jan p.Skalou
-Svatý Jan p.Skalou Sedlec
-Svatý Jan p.Skalou Svatý Jánek
+Svatý Jan pod Skalou
+Svatý Jan pod Skalou, Sedlec
+Svatý Jan pod Skalou, Svatý Jánek
 Svémyslice
 Svépravice
 Světice
 Svojetice
-Svojetice K Tehovci
-Svojetice Na skalce
-Svojetice Na vyhlídce
-Svojetice U háj.
+Svojetice, K Tehovci
+Svojetice, Na skalce
+Svojetice, Na vyhlídce
+Svojetice, U hájenky
 Svrkyně
 Sychrov
-Tachlovice Jakubská náves
-Tachlovice Na vrškách
+Tachlovice, Jakubská náves
+Tachlovice, Na vrškách
 Tachovské náměstí
 Talichova
 Tálínská
 Tatce
-Tatce žel.zast.
+Tatce, železniční zastávka
 Tehov
 Tehovec
-Tehovec Mototechna
-Tehovec Vojkov
+Tehovec, Mototechna
+Tehovec, Vojkov
 Tehovičky
-Tehov Lada
+Tehov, Lada
 Televizní věž
 Tempo
 Teplárna Malešice
@@ -2007,71 +2169,74 @@ Terezínská
 Terminál 1
 Terminál 2
 Terminál 3
-TESCO
 Těšnov
 Thákurova
 Tišice
-Tišice Chrást
-Tišice Kozly
-Tišice záv.Kafilerie
+Tišice, Chrást
+Tišice, Kozly
+Tišice, závod Kafilerie
 Tiskařská
 Tismice
-Tismice bytovky
-Tismice Limuzy
-Tismice MŠ
-Tismice Na Kopečku
+Tismice, bytovky
+Tismice, Limuzy
+Tismice, MŠ
+Tismice, Na Kopečku
 Točná
 Tolstého
 Topolová
 Toulcův dvůr
+Toušice
 Toužimská
 Továrny Hostivař
 Třebenická
 Třebešín
 Třebešovská
+Třebestovice
 Třebonice
 Třeboradice
 Třebotov
-Třebotov Kala
-Třebotov pomník
-Třebotov sanatorium
-Třebotov škola
-Třebotov Solopisky
-Třebotov Solopisky ZD
+Třebotov, Kala
+Třebotov, pomník
+Třebotov, sanatorium
+Třebotov, škola
+Třebotov, Solopisky
+Třebotov, Solopisky, ZD
 Třebovle
-Třebovle Borek
-Třebovle Království rozc.
+Třebovle, Borek
+Třebovle, Království, rozcestí
 Třinecká
 Trnová
-Trnová rozcestí
-Trnová škola
+Trnová, rozcestí
+Trnová, škola
 Trojská
 Trutnovská
-Tuchoměřice Kněžívka
-Tuchoměřice komerční zóna
-Tuchoměřice kult.dům
-Tuchoměřice Pastvišťata
-Tuchoměřice rozc.
-Tuchoměřice Špejchar
-Tuchoměřice Štěrbův mlýn
-Tuchoměřice U dvora
-Tuchoměřice zámek
+Tuchoměřice
+Tuchoměřice, Kněžívka
+Tuchoměřice, komerční zóna
+Tuchoměřice, kulturní dům
+Tuchoměřice, Pastvišťata
+Tuchoměřice, rozcestí
+Tuchoměřice, Špejchar
+Tuchoměřice, Štěrbův mlýn
+Tuchoměřice, U dvora
+Tuchoměřice, zámek
 Tuchoraz
-Tuchoraz U sadů
+Tuchoraz, U sadů
 Tuhaň
-Tuhaň Červená Píska
-Tuhaň Červená Píska I
+Tuhaň, Červená Píska
+Tuhaň, Červená Píska, I
 Tuháňská
 Tuklaty
-Tuklaty Tlustovousy
+Tuklaty, Tlustovousy
 Tupolevova
 Tursko
 Tusarova
 Tylova čtvrť
-Týnec n.Sáz. aut.st.
-Týnec n.Sáz. Čakovice
-Týnec n.Sáz. Čisté potoky
-Týnec n.Sáz. hrad Zbořený Kostelec
+Týnec nad Sázavou
+Týnec nad Sázavou, autobusové stanoviště
+Týnec nad Sázavou, Čakovice
+Týnec nad Sázavou, Čisté potoky
+Týnec nad Sázavou, hrad Zbořený Kostelec
 Tyršova čtvrť
 U Belárie
 U Bílého mlýnku
@@ -2081,11 +2246,11 @@ U Drahaně
 U Elektry
 U Háje
 U Hangáru
-Uhlířské Janovice nám.
+Uhlířské Janovice, náměstí
 Úholičky
-Úholičky V kopci
+Úholičky, V kopci
 Úhonice
-Úhonice škola
+Úhonice, škola
 Uhříněves
 Uhříněveský hřbitov
 U Jankovky
@@ -2100,6 +2265,7 @@ U Kříže
 U Křížku
 U Kundratky
 U Kunratického lesa
+U Labutě
 U Ladronky
 U Lesíka
 U Libušského potoka
@@ -2110,9 +2276,10 @@ U Matěje
 U Měchurky
 U Nemocnice
 Únětice
-Únětice Na parcelách
-Únětice Obecní úřad
-Unhošť nám.
+Únětice, Na parcelách
+Únětice, Obecní úřad
+Unhošť
+Unhošť, náměstí
 U Palaty
 U Památníku
 U Počernického rybníka
@@ -2136,32 +2303,34 @@ U Tabulky
 U Továren
 U Tří svatých
 U Václava
-Úvaly Elektromechanika
-Úvaly Husova
-Úvaly nám.
-Úvaly Náměstí Svobody
-Úvaly Na Slovanech
-Úvaly Radlická čtvrť
-Úvaly rozc.Horoušánky
-Úvaly rozc.Slovany
-Úvaly U hřbitova
-Úvaly U Mlýna
-Úvaly V Setých
-Úvaly žel.st.
+Úvaly
+Úvaly, Elektromechanika
+Úvaly, Husova
+Úvaly, náměstí
+Úvaly, Na Slovanech
+Úvaly, Radlická čtvrť
+Úvaly, rozcestí Horoušánky
+Úvaly, rozcestí Slovany
+Úvaly, U hřbitova
+Úvaly, U Mlýna
+Úvaly, U MŠ
+Úvaly, V Setých
+Úvaly, železniční stanice
 U Včely
 U Vodojemu
 U Vody
 U Vojenské nemocnice
 U Waltrovky
 Úžice
-Úžice Benátky
-Úžice Čekánov rozc.0.5
-Úžice Červená Lhota
-Úžice Chrastná rozc.0.5
-Úžice Kopeč
-Úžice Netřeba
-Úžice rozc.Mělník
-Úžice Smrk rozc.0.8
+Úžice, Benátky {okres Kutná Hora}
+Úžice, Čekánov, rozcestí {okres Kutná Hora}
+Úžice, Červená Lhota {okres Mělník}
+Úžice, Chrastná, rozcestí {okres Kutná Hora}
+Úžice, Kopeč {okres Mělník}
+Úžice, Netřeba {okres Mělník}
+Úžice {okres Mělník}
+Úžice, rozcestí Mělník {okres Kutná Hora}
+Úžice, Smrk, rozcestí {okres Kutná Hora}
 U Zvoničky
 U Zvonu
 Vackov
@@ -2173,34 +2342,36 @@ Valtická
 V Chotejně
 Veleň
 Velenka
-Veleň Mírovice
-Veleň Obecní úřad
+Veleň, Mírovice
+Veleň, U Pomníku
 Veletržní palác
 Veliká Ves
+Velká Bučina
 Velká Chuchle
 Velká Lečice
 Velká Ohrada
 Velké Popovice
-Velké Popovice Brtnice
-Velké Popovice Lojovice
-Velké Popovice pivovar
-Velké Popovice Řepčice
-Velké Popovice rozc.Krámský
-Velké Popovice škola
-Velké Popovice Todice
+Velké Popovice, Brtnice
+Velké Popovice, Lojovice
+Velké Popovice, pivovar
+Velké Popovice, Řepčice
+Velké Popovice, rozcestí Krámský
+Velké Popovice, škola
+Velké Popovice, Todice
 Velké Přílepy
-Velké Přílepy Pražská
-Velké Přílepy Roztocká
+Velké Přílepy, Pražská
+Velké Přílepy, Roztocká
 Veltrusy
-Veltrusy STS
+Veltrusy, STS
+Velvary
 Venušina
 Veronské náměstí
 Veslařský ostrov
-Vestec Obecní úřad
-Vestec Safina
-Vestec Šátalka
-Vestec U Klimešů
-Vestec U vodárny
+Vestec, Obecní úřad
+Vestec, Safina
+Vestec, Šátalka
+Vestec, U Klimešů
+Vestec, U vodárny
 Ve Studeném
 Větrník
 Větrov
@@ -2219,12 +2390,12 @@ Vinořský hřbitov
 Višňová
 Vítězné náměstí
 Vitice
-Vitice Chotýš
-Vitice Dobré Pole
-Vitice Hřiby
-Vitice Lipany mohyla
-Vitice Močedník
-Vitice u školy
+Vitice, Chotýš
+Vitice, Dobré Pole
+Vitice, Hřiby
+Vitice, Lipany, mohyla
+Vitice, Močedník
+Vitice, u školy
 V Korytech
 V Ladech
 Vlašimská
@@ -2232,13 +2403,14 @@ Vlastibořská
 Vlastina
 V Lískách
 Vlkančice
-Vlkančice Komorce
-Vlkančice Pyskočely
-Vlkančice Pyskočely Na Bábě
-Vlkančice Pyskočely Plužiny
-Vlkančice Stará Hůra
-Vlkančice U Králů
-Vlkančice U zbořeného mlýna
+Vlkančice, Komorce
+Vlkančice, Pyskočely
+Vlkančice, Pyskočely, Na Bábě
+Vlkančice, Pyskočely, Plužiny
+Vlkančice, Stará Hůra
+Vlkančice, U Králů
+Vlkančice, U zbořeného mlýna
+Vlkovec
 Vlnitá
 Vltavská
 V Mokřinách
@@ -2246,24 +2418,24 @@ V Násypu
 V Nových domcích
 Vodičkova
 Vodochody
-Vodochody Hoštice
-Vodochody rozc.Hoštice
-Vodochody U školy
+Vodochody, Hoštice
+Vodochody, rozcestí Hoštice
+Vodochody, U školy
 Vojenská nemocnice
 Vojická
 Vojkovice
-Vojkovice Bukol
-Vojkovice Bukol přívoz
-Vojkovice Dědibaby
-Vojkovice Křivousy
+Vojkovice, Bukol
+Vojkovice, Bukol, přívoz
+Vojkovice, Dědibaby
+Vojkovice, Křivousy
 Volha
 Vonoklasy
-Vonoklasy chaty
-Vonoklasy samoobsluha
+Vonoklasy, chaty
+Vonoklasy, samoobsluha
 Vosmíkových
 Voznice
-Voznice Chouzavá
-Voznice polesí
+Voznice, Chouzavá
+Voznice, polesí
 Vozovna Hloubětín
 Vozovna Kobylisy
 Vozovna Motol
@@ -2274,33 +2446,39 @@ Vozovna Vokovice
 Vozovna Žižkov
 V Podbabě
 V Přístavu
-Vrané n.Vlt. škola
+Vraňany
+Vrané nad Vltavou
+Vrané nad Vltavou, škola
 Vratislavova
 Vrátkov
-Vráž rozc.k žel.st.
+Vráž, rozcestí k železniční stanici
 Vrážská
-Vráž U jelena
+Vráž u Berouna
+Vráž, U jelena
+Vrbčany
 Vrbova
 V Remízku
 Vršovické náměstí
 Vršovický hřbitov
 V Rybníčkách
 V Sedlci
-Všenory sportovní areál
-Všenory U Kácovských
-Všenory U Křížků
+Všenory
+Všenory, sportovní areál
+Všenory, U Kácovských
+Všenory, U Křížků
+Všeradice
 Všestarská
 Všestary
-Všestary rozc.Menčice
-Všestary Vávrov
+Všestary, rozcestí Menčice
+Všestary, Vávrov
 Všestudy
-Všestudy Dušníky n.Vlt.
-Všestudy u sušárny
-Všetaty odb.k Přívorům
-Všetaty Přívory
-Všetaty Přívory Průhon
+Všestudy, Dušníky nad Vltavou
+Všestudy, u sušárny
+Všetaty
+Všetaty, odbočka k Přívorům
+Všetaty, Přívory
+Všetaty, Přívory, Průhon
 V Sudech
-VÚ Běchovice
 V Uličce
 Vychovatelna
 Výhledské náměstí
@@ -2308,26 +2486,29 @@ Výhledy
 Vykáň
 Vypich
 Vyšehořovice
-Vyšehořovice Kozovazy
-Vyšehořovice Vyšehořovičky
+Vyšehořovice, Kozovazy
+Vyšehořovice, Vyšehořovičky
 Vyšehrad
 Vyskočilova
 Vysočanská
 Vysokovská
-Vysoký Újezd
-Vysoký Újezd Kozolupy
-Vysoký Újezd Kuchař I
-Vysoký Újezd Kuchař II
-Vysoký Újezd sokolovna
+Vysoký Újezd, Kozolupy {okres Praha - západ}
+Vysoký Újezd, Kuchař, II {okres Praha - západ}
+Vysoký Újezd, Kuchař, I {okres Praha - západ}
+Vysoký Újezd {okres Benešov}
+Vysoký Újezd {okres Praha - západ}
+Vysoký Újezd, sokolovna {okres Praha - západ}
 Výstaviště Holešovice
 Výstaviště Letňany
 Výtoň
 Výžerky
-Výžerky rozc.
+Výžerky, rozcestí
+Výzkumné ústavy Běchovice
 Vyžlovka
-Vyžlovka hotel Praha
+Vyžlovka, hotel Praha
 V Zápolí
 V Zátiší
+Wagnerova
 Wattova
 Weberova
 Winklerova
@@ -2335,25 +2516,30 @@ Xaverov
 Xaverovský háj
 Záběhlice
 Záběhlická škola
+Žabonosy
 Žabovřeská
 Žabovřesky
 Za Chalupami
 Za Čimickým hájem
 Zadní Jiviny
 Zadní Kopanina
+Zadní Třebaň
 Za Farou
-Zahořany zvláštní škola
+Zahořany, zvláštní škola
 Za Horou
 Záhorského
 Zahrádky
 Zahradníčkova
 Zahradnictví
 Zahradní Město
+Zákolany
+Zákolany zastávka
 Žákovská
+Zalešany
 Zálesí
 Zálezlice
-Zálezlice Kozárovice
-Zálezlice rozc.1.2
+Zálezlice, Kozárovice
+Zálezlice, rozcestí
 Zamašská
 Zamenhofova
 Zámky
@@ -2361,55 +2547,59 @@ Za Mototechnou
 Za Nadjezdem
 Za Pavilonem
 Zápy
-Zápy Ostrov lázně
-Zápy PREFA
-Zápy Stavby mostů
-Zápy Tesco Brandýs n.L.
-Zápy U pomníku
+Zápy, Ostrov, lázně
+Zápy, PREFA
+Zápy, Stavby mostů
+Zápy, Tesco Brandýs nad Labem
+Zápy, U pomníku
 Žárská
 Záryby
-Záryby Martinov
+Záryby, Martinov
+Za Skalkou
 Za Slánskou silnicí
-Zásmuky Doubravčany
-Zásmuky Dupanda
-Zásmuky nám.
-Zásmuky rozc.Vršice
-Zásmuky u sokolovny
+Zásmuky
+Zásmuky, Doubravčany
+Zásmuky, Dupanda
+Zásmuky, náměstí
+Zásmuky, rozcestí Vršice
+Zásmuky, u sokolovny
 Zatáčka
 Zátišská
 Za Tratí
 Závist
 Závodiště Chuchle
 Zborovská
-Zborov   Strašnické divadlo
+Zborov - Strašnické divadlo
 Zbraslavské náměstí
-Zbuzany nádraží
-Zbuzany Obecní úřad
+Zbuzany
+Zbuzany, nádraží
+Zbuzany, Obecní úřad
 Zbyslavská
 Ždánice
-Ždánice U Jánů
+Ždánice, U Jánů
 Zderazská
 Zdiby
-Zdiby Přemyšlení
-Zdiby Přemyšlení V Remízkách
-Zdiby U celnice
-Zdiby U parku
-Zdiby Veltěž
-Zdiby Veltěž pošta
-Zdiby Výzkumný ústav
+Zdiby, Přemyšlení
+Zdiby, Přemyšlení, V Remízkách
+Zdiby, U celnice
+Zdiby, U parku
+Zdiby, Veltěž
+Zdiby, Veltěž, pošta
+Zdiby, Výzkumný ústav
 Zdiměřická
 Zelená
 Zelená liška
 Zeleneč
-Zeleneč Bezručova
-Zeleneč obora
-Zeleneč u hřiště
-Zeleneč žel.zast.
+Zeleneč, Bezručova
+Zeleneč, obora
+Zeleneč, u hřiště
+Zeleneč, železniční zastávka
 Zelené domky
 Zelený pruh
 Želivecká
 Želivského
 Zemanka
+Zeměchy
 Zemědělská univerzita
 Ženské domovy
 Zentiva
@@ -2417,11 +2607,12 @@ Zentiva
 Zhořelecká
 Živcová
 Zlatá
-Zlatníky Hodkovice Břežanská
-Zlatníky Hodkovice náves
-Zlatníky Hodkovice Slunečná
-Zlatníky Hodkovice U hasičárny
-Zlatníky Hodkovice u prodejny
+Zlatníky - Hodkovice, Břežanská
+Zlatníky - Hodkovice, náves
+Zlatníky - Hodkovice, Slunečná
+Zlatníky - Hodkovice, U hasičárny
+Zlatníky - Hodkovice, u prodejny
+Zlenice
 Zlíchov
 Zličín
 Zlončice
@@ -2431,10 +2622,10 @@ Zmrzlík
 Zoologická zahrada
 Žvahov
 Zvánovice
-Zvánovice Kádov
+Zvánovice, Kádov
 Zvole
-Zvole Černíky
-Zvole Jílovská
-Zvole Nová Zvole
-Zvole škola
-Zvonařka
+Zvole, Černíky
+Zvole, Jílovská
+Zvoleněves
+Zvole, Nová Zvole
+Zvole, škola
