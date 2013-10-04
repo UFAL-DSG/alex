@@ -4,8 +4,8 @@ Building a SLU for the PTIcs domain
 Available data
 --------------
 
-At this moment there we have only data which were automatically generated using handcrafted SLU (HDC SLU) on the
-transcribed audio. In general, the quality of the annotation is decent. However, manual annotation is needed.
+At this moment there we have only data which were automatically generated using handcrafted SLU (HDC SLU) parser on the
+transcribed audio. In general, the quality of the automatic annotation is very good.
 
 The data can be prepared using the ``prapare_data.py`` script. It assumes that there exist the ``indomain_data`` directory
 with links to directories with ``asr_transcribed.xml`` files. Then it uses these files to extract transcriptions
@@ -44,6 +44,13 @@ Then when detecting surface forms / category labels in an utterance:
 
 Evaluation
 ----------
+
+Evaluation of the min number of feature counts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Probably due to small amount of data (cca 900 utterances), it is beneficial to use features which appeared in
+the training data only two times.
+
 
 Estimating accuracy of the HDC SLU on ASR 1-best hypothesis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -217,7 +224,7 @@ The ASR model is trained on transcriptions and evaluated on both transcriptions 
 On can see that the ASR model scores worse on the TRN DEV and TRN TEST data when compared to the TRN model. This is
 expected result. The good thing is that the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
 compared to *the TRN model*. Even more, the the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
-compared to *the HDC SLU model* when evaluated on the ASR data. The improvement is about 8 % in F-measure (absolute).
+compared to *the HDC SLU parser* when evaluated on the ASR data. The improvement is about 8 % in F-measure (absolute).
 
 This shows that SLU trained on the ASR data sets can be beneficial.
 

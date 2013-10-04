@@ -211,6 +211,18 @@ class SLUPreprocessing(object):
             utterance = utterance.replace(mapping[0], mapping[1])
         return utterance
 
+    def normalise_nblist(self, nblist):
+        """
+        Normalises the N-best list (the output of an ASR).
+
+        :param nblist:
+        :return:
+        """
+        unb = copy.deepcopy(nblist)
+        for utt_idx, hyp in enumerate(unb):
+            unb[utt_idx][1] = self.normalise_utterance(hyp[1])
+        return unb
+
     def normalise_confnet(self, confnet):
         """
         Normalises the confnet (the output of an ASR).
@@ -227,16 +239,15 @@ class SLUPreprocessing(object):
     def normalise(self, utt_hyp):
         if isinstance(utt_hyp, Utterance):
             return self.normalise_utterance(utt_hyp)
+        elif isinstance(utt_hyp, UtteranceNBList):
+            return self.normalise_nblist(utt_hyp)
         elif isinstance(utt_hyp, UtteranceConfusionNetwork):
             return self.normalise_confnet(utt_hyp)
         else:
-            assert isinstance(utt_hyp, UtteranceNBList)
-            for utt_idx, hyp in enumerate(utt_hyp):
-                utt_hyp[utt_idx][1] = self.normalise_utterance(hyp[1])
+            raise SLUException("Unsupported observations.")
 
     # TODO Update the docstring for the `all_options' argument.
-    def values2category_labels_in_utterance(self, utterance,
-                                            all_options=False):
+    def values2category_labels_in_utterance(self, utterance,all_options=False):
         """Replaces strings matching surface forms in the label database with
         their slot names plus index.
 

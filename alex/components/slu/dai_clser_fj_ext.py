@@ -22,6 +22,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork,
 from alex.utils.config import load_as_module
 from alex.utils.various import nesteddict
 
+CONFNET2NBLIST_EXPANSION_APPROX = 40
 
 class CategoryLabelDatabase(object):
     """ Provides a convenient interface to a database of category label value forms tuples.
@@ -311,7 +312,7 @@ class DAILogRegClassifier(SLUInterface):
             start += 1
         return abs_utt
 
-    def get_abstract_das(self, da, fvcs):
+    def get_abstract_da(self, da, fvcs):
         new_da = copy.deepcopy(da)
         c_fvcs = copy.deepcopy(fvcs)
 
@@ -368,7 +369,14 @@ class DAILogRegClassifier(SLUInterface):
         :param nblist: an UtteranceNBList instance
         :return: a list of form, value, and category label tuples found in the input sentence
         """
-        pass
+
+        #return self.get_fvc_in_utterance(nblist[0][1])
+
+        fvcs = set()
+        for p, u in nblist:
+            fvcs.update(self.get_fvc_in_utterance(u))
+
+        return fvcs
 
     def get_fvc_in_confnet(self, confnet):
         """
@@ -377,46 +385,77 @@ class DAILogRegClassifier(SLUInterface):
         :param nblist: an UtteranceConfusionNetwork instance
         :return: a list of form, value, and category label tuples found in the input sentence
         """
-        pass
+        nblist = confnet.get_utterance_nblist(n=CONFNET2NBLIST_EXPANSION_APPROX)
+
+        return self.get_fvc_in_confnet(nblist)
 
     def get_fvc(self, obs):
         """
+        This function returns the form, value, category label tuple for any of the following classses
+
+        - Utterance
+        - UttranceNBList
+        - UtteranceConfusionNetwork
 
         :param obs: the utterance being processed in multiple formats
         :return: a list of form, value, and category label tuples found in the input sentence
         """
+
         if isinstance(obs, Utterance):
             return self.get_fvc_in_utterance(obs)
-        elif isinstance(obs, UtteranceConfusionNetwork):
-            return self.get_fvc_in_confnet(obs)
         elif isinstance(obs, UtteranceNBList):
             return self.get_fvc_in_nblist(obs)
+        elif isinstance(obs, UtteranceConfusionNetwork):
+            return self.get_fvc_in_confnet(obs)
         else:
             raise DAILRException("Unsupported observations.")
 
-    def get_features_in_utterance(self, obs, fvc):
-        abs_obs = self.get_abstract_utterance(obs, fvc)
-        abs_obs2 = self.get_abstract_utterance2(abs_obs)
-        #stem_obs =  Utterance(" ".join(map(cz_stem, obs)))
-        #abs_stem_obs = self.get_abstract_utterance(stem_obs, fvc)
-        #abs_stem_obs2 = self.get_abstract_utterance2(stem_abs_obs)
+    def get_features_in_utterance(self, utterance, fvc):
+        """
+        Returns features extracted from the utterance observation. At this moment, the function extracts N-grams of size
+        self.feature_size. These N-grams are extracted from:
 
+        - the original utterance,
+        - the abstracted utterance for the given FVC
+        - the abstracted where all other FVCs are abstracted as well
+
+        :param utterance:
+        :param fvc:
+        :return: the UtteranceFeatures instance
+        """
+
+        abs_obs = self.get_abstract_utterance(utterance, fvc)
+        abs_obs2 = self.get_abstract_utterance2(abs_obs)
+
+        feat = UtteranceFeatures(size=self.features_size)
         scale = 1.0 / 3
-        feat = UtteranceFeatures(size=self.features_size, utterance=obs)
-        feat.scale(scale)
+        feat.merge(UtteranceFeatures(size=self.features_size, utterance=utterance), weight=scale)
         feat.merge(UtteranceFeatures(size=self.features_size, utterance=abs_obs), weight=scale)
         feat.merge(UtteranceFeatures(size=self.features_size, utterance=abs_obs2), weight=scale)
-        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=stem_obs),weight=scale)
-        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=abs_stem_obs),weight=scale)
-        #feat.merge(UtteranceFeatures(size=self.features_size,utterance=abs_stem_obs2),weight=scale)
 
         return feat
 
-    def get_features_in_nblist(self, obs, fvc, fvcs):
-        return None
+    def get_features_in_nblist(self, nblist, fvc):
+        #return self.get_features_in_utterance(nblist[0][1], fvc)
 
-    def get_features_in_confnet(self, obs, fvc, fvcs):
-        return None
+        feat = UtteranceFeatures(size=self.features_size)
+
+        scale_p = [p for p, h in nblist]
+        scale_p[0] = 1.0
+
+        for i, (p, u) in enumerate(nblist):
+            feat.merge(self.get_features_in_utterance(u, fvc), weight=scale_p[i])
+
+        nbl_global = dict([ ("nbl_prob_{i}".format(i=i), p) for i, (p, h) in enumerate(nblist)])
+        nbl_global["nbl_len"] = len(nblist)
+
+        feat.merge(nbl_global)
+
+        return feat
+
+    def get_features_in_confnet(self, confnet, fvc):
+        nblist = confnet.get_utterance_nblist(n=CONFNET2NBLIST_EXPANSION_APPROX)
+        return self.get_features_in_nblist(nblist, fvc)
 
     def get_features(self, obs, fvc):
         """
@@ -426,12 +465,13 @@ class DAILogRegClassifier(SLUInterface):
         :param fvc: a form, value category tuple describing how the utterance should be abstracted
         :return: a set of features from the utterance
         """
+
         if isinstance(obs, Utterance):
             return self.get_features_in_utterance(obs, fvc)
-        elif isinstance(obs, UtteranceConfusionNetwork):
-            return self.get_features_in_confnet(obs, fvc)
         elif isinstance(obs, UtteranceNBList):
             return self.get_features_in_nblist(obs, fvc)
+        elif isinstance(obs, UtteranceConfusionNetwork):
+            return self.get_features_in_confnet(obs, fvc)
         else:
             raise DAILRException("Unsupported observations.")
 
@@ -449,7 +489,7 @@ class DAILogRegClassifier(SLUInterface):
             self.utterances[utt_idx] = self.preprocessing.normalise(self.utterances[utt_idx])
             self.utterance_fvc[utt_idx] = self.get_fvc(self.utterances[utt_idx])
             self.das_abstracted[utt_idx], self.das_category_labels[utt_idx] = \
-                self.get_abstract_das(self.das[utt_idx],self.utterance_fvc[utt_idx])
+                self.get_abstract_da(self.das[utt_idx],self.utterance_fvc[utt_idx])
 
         # get the classifiers
         self.classifiers = defaultdict(int)
@@ -684,7 +724,7 @@ class DAILogRegClassifier(SLUInterface):
     def parse_X(self, utterance, verbose=False):
         if verbose:
             print '='*120
-            print 'Parsing 1 best'
+            print 'Parsing X'
             print '-'*120
             print unicode(utterance)
 
@@ -774,12 +814,10 @@ class DAILogRegClassifier(SLUInterface):
 
         return self.parse_X(utterance_list, verbose)
 
-    #def parse_confnet(self, obs, verbose=False, *args, **kwargs):
-    #    """
-    #    Parses the word confusion network by generating an n-best list and
-    #    parsing this n-best list.
-    #    """
-    #    confnet = obs['utt_cn']
-    #    nblist = confnet.get_utterance_nblist(n=40)
-    #    sem = self.parse_nblist(nblist)
-    #    return sem
+    def parse_confnet(self, obs, verbose=False, *args, **kwargs):
+        """
+        Parses the word confusion network by generating an n-best list and
+        parsing this n-best list.
+        """
+        confnet = obs['utt_cn']
+        return self.parse_X(confnet, verbose)
