@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import urllib
-import datetime
+from datetime import datetime
+from datetime import time as dttime
 import time
 import json
-from collections import namedtuple
 
-import autopath
 
 class Directions(object):
     pass
@@ -26,17 +25,20 @@ class GoogleDirections(Directions):
     def __len__(self):
         return len(self.routes)
 
+
 class GoogleRoute(object):
     def __init__(self, input_json):
         self.legs = []
         for leg in input_json['legs']:
             self.legs.append(GoogleRouteLeg(leg))
 
+
 class GoogleRouteLeg(object):
     def __init__(self, input_json):
         self.steps = []
         for step in input_json['steps']:
             self.steps.append(GoogleRouteLegStep(step))
+
 
 class GoogleRouteLegStep(object):
     MODE_TRANSIT = "TRANSIT"
@@ -45,24 +47,35 @@ class GoogleRouteLegStep(object):
     def __init__(self, input_json):
         self.travel_mode = input_json['travel_mode']
         if self.travel_mode == self.MODE_TRANSIT:
-            self.departure_stop = input_json['transit_details']['departure_stop']['name']
+            self.departure_stop = \
+                    input_json['transit_details']['departure_stop']['name']
             self.departure_time = \
-                self.parsetime(input_json['transit_details']['departure_time']['text'])
-            self.arrival_stop = input_json['transit_details']['arrival_stop']['name']
+                    self.parsetime(input_json['transit_details']
+                                   ['departure_time']['text'])
+            self.arrival_stop = \
+                    input_json['transit_details']['arrival_stop']['name']
             self.arrival_time = \
-                self.parsetime(input_json['transit_details']['arrival_time']['text'])
+                    self.parsetime(input_json['transit_details']
+                                   ['arrival_time']['text'])
             self.headsign = input_json['transit_details']['headsign']
-            self.vehicle = input_json['transit_details']['line']['vehicle']['type']
-            self.line_name = input_json['transit_details']['line']['short_name']
+            self.vehicle = \
+                    input_json['transit_details']['line']['vehicle']['type']
+            self.line_name = \
+                    input_json['transit_details']['line']['short_name']
 
     def parsetime(self, time_str):
-        dt = datetime.datetime.strptime(time_str, "%H:%M%p")
-        return dt
+        hour, mins = time_str.strip('apm').split(':', 1)
+        hour = int(hour)
+        mins = int(mins)
+        if time_str.lower().endswith('pm'):
+            hour += 12
+        return datetime.combine(datetime.now(),
+                                dttime(hour, mins))
 
 
 class DirectionsFinder(object):
     def get_directions(self, from_stop, to_stop, time):
-        raise NotImplementedException()
+        raise NotImplementedError()
 
 
 class GooglePIDDirectionsFinder(DirectionsFinder):
@@ -71,9 +84,9 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
     def get_directions(self, from_stop, to_stop, departure_time):
-        departure = datetime.datetime.combine(
-            datetime.datetime.now(),
-            datetime.datetime.strptime(departure_time, "%H:%M").time()
+        departure = datetime.combine(
+            datetime.now(),
+            datetime.strptime(departure_time, "%H:%M").time()
         )
 
         departure_time = int(time.mktime(departure.timetuple()))

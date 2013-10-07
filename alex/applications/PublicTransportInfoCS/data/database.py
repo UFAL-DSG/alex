@@ -49,15 +49,15 @@ NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
 STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
-                                       # other forms of the words; still very
-                                       # dirty, though
+                                   # other forms of the words; still very
+                                   # dirty, though
 #STOPS_FNAME = "stops.txt"
 
 
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
     ('\\bn\\.Vlt\\.', ['nad Vltavou']),
-    ('žel\\.st\\.', ['železniční stanice']),  # FIXME None would say this.
+    ('žel\\.st\\.', ['železniční stanice']), # FIXME None would say this.
                                               # Factorise.
     ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
     ('žel\\.zast\\.', ['železniční zastávka']),
@@ -80,7 +80,7 @@ _substs_lit = [
     ('\\bhl\\.sil\\.', ['hlavní silnice']),
     ('\\bn\\.', ['nad']),
     ('\\bp\\.', ['pod']),
-    ('\\b(\w)\\.', ['\\1']),   # ideally uppercase...
+    ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
     ('\\bI\\b', ['jedna']),
     ('\\bII\\b', ['dva']),
 ]
@@ -173,9 +173,9 @@ def add_time():
 
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
-    if expanded_format:
+    if expanded_format and ';' in line:
         val, names = line.split(';', 1)
-        names = names.split(';')
+        names = [val] + names.split(';')
     else:
         val = line
         names = [line]
@@ -208,7 +208,10 @@ def preprocess_stops_line(line, expanded_format=False):
                     new_words.append(word)
             names.append(' '.join(new_words))
     # Remove extra spaces, lowercase.
-    names = [' '.join(name.replace(',' , ' ').replace('-' , ' ').replace('(' , ' ').replace(')' , ' ').replace('5' , ' ').replace('0' , ' ').replace('.' , ' ').split()).lower() for name in names]
+    names = [' '.join(name.replace(',', ' ').replace('-', ' ')
+                      .replace('(', ' ').replace(')', ' ').replace('5', ' ')
+                      .replace('0', ' ').replace('.', ' ').split()).lower()
+             for name in names]
 
     return val, names
 
@@ -217,7 +220,8 @@ def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
     is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
+    with codecs.open(os.path.join(dirname, STOPS_FNAME),
+                     encoding='utf-8') as stops_file:
         for line in stops_file:
             stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
             for synonym in stop_names:
@@ -231,7 +235,8 @@ def stem():
 
     for _, vals in database.iteritems():
         for value in vals.keys():
-            vals[value] = [" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]]
+            vals[value] = [" ".join(cz_stem(word) for word in surface.split())
+                           for surface in vals[value]]
 
 
 def save_surface_forms(file_name):
@@ -243,21 +248,22 @@ def save_surface_forms(file_name):
     sf.sort()
 
     # save the database vocabulary - all the surface forms
-    with codecs.open(file_name,'w','UTF-8') as f:
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
         for l in sf:
             f.write(l)
             f.write('\n')
+
 
 def save_SRILM_classes(file_name):
     sf = []
     for k in database:
         for v in database[k]:
             for l in database[k][v]:
-                sf.append("CL_"+k.upper() + " " + l.upper())
+                sf.append("CL_" + k.upper() + " " + l.upper())
     sf.sort()
 
     # save the database vocabulary - all the surface forms
-    with codecs.open(file_name,'w','UTF-8') as f:
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
         for l in sf:
             f.write(l)
             f.write('\n')
