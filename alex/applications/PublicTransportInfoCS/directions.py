@@ -68,7 +68,7 @@ class GoogleRouteLegStep(object):
         hour = int(hour)
         mins = int(mins)
         if time_str.lower().endswith('pm'):
-            hour += 12
+            hour = (hour + 12) % 24
         return datetime.combine(datetime.now(),
                                 dttime(hour, mins))
 
