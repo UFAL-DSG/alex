@@ -15,7 +15,7 @@ if ( @ARGV != 2 ) {
     die("Usage: ./gen_stops.pl [--cases=1,2,4] stops.txt stops.expanded.txt\n");
 }
 
-# Lemmatize & tag all stops and pipe the output in here
+# Lemmatize & tag all stops using Treex and pipe the output in here
 my $command = "treex -Lcs Read::Sentences from='" . $ARGV[0] . "'"
     . " W2A::CS::Tokenize W2A::CS::TagFeaturama lemmatize=1 W2A::CS::FixMorphoErrors"
     . " Write::AttributeSentences layer=a attributes='form lemma tag' |";
