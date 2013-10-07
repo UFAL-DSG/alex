@@ -103,7 +103,7 @@ def db_add(slot, value, surface):
     database[slot].setdefault(value, set()).add(surface)
 
 
-# TODO allow etc. "jednadvacet" "dvaadvacet"
+# TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
     """Spells out the number given in the argument."""
     tens, units = num / 10, num % 10
