@@ -168,9 +168,9 @@ def add_time():
         if hour >= 1 and hour <= 12:
             # (X-1):15 quarter past (X-1)
             time_val = "{h}:15".format(h=(hour - 1))
-            time_str = "čtvrt na {h} {hi}".format(h=hour_str, hi=hour_id)
+            time_str = "čtvrt na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "čtvrt na {h} {hi}".format(h=hour, hi=hour_id)
+            time_str = "čtvrt na {h}".format(h=hour)
             db_add("time", time_val, time_str)
             # (X-1):30 half past (X-1)
             time_val = "{h}:30".format(h=(hour - 1))
@@ -178,9 +178,9 @@ def add_time():
             db_add("time", time_val, time_str)
             # (X-1):45 quarter to X
             time_val = "{h}:45".format(h=(hour - 1))
-            time_str = "tři čtvrtě na {h} {hi}".format(h=hour_str, hi=hour_id)
+            time_str = "tři čtvrtě na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "tři čtvrtě na {h} {hi}".format(h=hour, hi=hour_id)
+            time_str = "tři čtvrtě na {h}".format(h=hour)
             db_add("time", time_val, time_str)
 
         for minute in xrange(60):
