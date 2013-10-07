@@ -173,9 +173,9 @@ def add_time():
 
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
-    if expanded_format:
+    if expanded_format and ';' in line:
         val, names = line.split(';', 1)
-        names = names.split(';')
+        names = [line] + names.split(';')
     else:
         val = line
         names = [line]
