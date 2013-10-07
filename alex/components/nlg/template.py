@@ -88,8 +88,11 @@ class AbstractTemplateNLG(object):
 
     def match_generic_templates(self, da, svs):
         """\
-        Find a matching template for a dialogue act
-        using substitutions in case of the slot values.
+        Find a matching template for a dialogue act using substitutions
+        for slot values.
+
+        Returns a matching template and a dialogue act where values of some
+        of the slots are substituted with a generic value.
         """
         tpl = None
 
@@ -124,19 +127,21 @@ class AbstractTemplateNLG(object):
         Randomly select alternative templates for generation.
 
         The selection process is modeled by an embedded list structure
-        (a tree like structure).
-        In the first level the algorithm selects one of N.
-        In the second level, for every item it selects one of M, and joins them together.
+        (a tree-like structure).
+        In the first, level the algorithm selects one of N.
+        In the second level, for every item it selects one of M,
+        and joins them together.
         This continues toward the leaves which must be non-list objects.
 
-        There are the following random selection options (only the first three):
+        There are the following random selection options (only the first
+        three):
 
         (1)
             {
             'hello()' : u"Hello",
             }
 
-            It will return the "Hello" string.
+            This will return the "Hello" string.
 
         (2)
             {
@@ -145,7 +150,7 @@ class AbstractTemplateNLG(object):
                         ),
             }
 
-            It will return one of the "Hello" or "Hi" strings.
+            This will return one of the "Hello" or "Hi" strings.
 
 
         (2)
@@ -165,12 +170,12 @@ class AbstractTemplateNLG(object):
                         ),
             }
 
-            It will return one of the following strings:
+            This will return one of the following strings:
                 "Hello. How are you doing? Speak!"
                 "Hi. How are you doing? Speak!"
                 "Hello. Welcome. Speak!"
                 "Hi. Welcome. Speak!"
-                "Hi my friend"
+                "Hi my friend."
         """
         if isinstance(tpl, basestring):
             return tpl
@@ -187,13 +192,42 @@ class AbstractTemplateNLG(object):
 
                 return u" ".join(tpl_rc_and).replace(u'  ', u' ')
             elif isinstance(tpl_rc_or, tuple):
-                raise TemplateNLGException("Unsupported generation type. "
-                                           "At this level, the template cannot be a tuple: template = %s" % unicode(tpl))
+                raise TemplateNLGException("Unsupported generation type. " +
+                                           "At this level, the template" +
+                                           "cannot be a tuple: template = %s" %
+                                           unicode(tpl))
         elif isinstance(tpl, list):
-            raise TemplateNLGException("Unsupported generation type. "
-                                       "At this level, the template must cannot be a list: template = %s" % unicode(tpl))
+            raise TemplateNLGException("Unsupported generation type. " +
+                                       "At this level, the template cannot " +
+                                       "be a list: template = %s" %
+                                       unicode(tpl))
         else:
             raise TemplateNLGException("Unsupported generation type.")
+
+    def match_and_fill_generic(self, da, svs):
+        """\
+        Match a generic template and fill in the proper values for the slots
+        which were substituted by a generic value.
+
+        Will return the output text with the proper values filled in if a
+        generic template can be found; will throw a TemplateNLGException
+        otherwise.
+        """
+        # find a generic template
+        tpls, mda = self.match_generic_templates(da, svs)
+        tpl = self.random_select(tpls)
+        svs_mda = mda.get_slots_and_values()
+
+        # prepare a list of generic values to be filled in
+        svsx = []
+        for (slot_orig, val_orig), (_, val_generic) in zip(svs, svs_mda):
+
+            if val_generic.startswith('{'):
+                svsx.append([val_generic[1:-1], val_orig])
+            else:
+                svsx.append([slot_orig, val_orig])
+        # return with generic values filled in
+        return self.fill_in_template(tpl, svsx)
 
     def generate(self, da):
         """\
@@ -209,32 +243,20 @@ class AbstractTemplateNLG(object):
                 pass
             else:
                 # try to return exact match
-                self.last_utterance = self.random_select(self.templates[unicode(da)])
+                self.last_utterance = \
+                        self.random_select(self.templates[unicode(da)])
         except KeyError:
             # try to find a relaxed match
             svs = da.get_slots_and_values()
 
             try:
-                tpls, mda = self.match_generic_templates(da, svs)
-                tpl = self.random_select(tpls)
-                svs_mda = mda.get_slots_and_values()
+                self.last_utterance = self.match_and_fill_generic(da, svs)
 
-                # update the format names from the generic template
-                svsx = []
-                for (so, vo), (sg, vg) in zip(svs, svs_mda):
-
-                    if vg.startswith('{'):
-                        svsx.append([vg[1:-1], vo])
-                    else:
-                        svsx.append([so, vo])
-
-                self.last_utterance = self.fill_in_template(tpl, svsx)
             except TemplateNLGException:
                 composed_utt = []
 
                 # try to find a template for each dialogue act item and concatenate them
                 try:
-                    dai_tpl = []
                     for dai in da:
                         try:
                             dai_utt = self.random_select(self.templates[unicode(dai)])
@@ -244,9 +266,7 @@ class AbstractTemplateNLG(object):
                             dax.append(dai)
                             svsx = dax.get_slots_and_values()
                             try:
-                                tpls, mda = self.match_generic_templates(dax, svsx)
-                                dai_tpl = self.random_select(tpls)
-                                dai_utt = self.fill_in_template(dai_tpl, svsx)
+                                dai_utt = self.match_and_fill_generic(dax, svsx)
                             except TemplateNLGException:
                                 dai_utt = unicode(dai)
 
