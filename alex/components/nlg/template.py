@@ -42,8 +42,8 @@ class AbstractTemplateNLG(object):
                     self.cfg['NLG']['TemplateCompose'].tolower().strip()
             if compose_setting.startswith('greedy'):
                 self.compose_utterance = self.compose_utterance_greedy
-                self.compose_greedy_lookahead = int(re.search(r'\d+', 
-                                                    compose_setting).group(0))
+                self.compose_greedy_lookahead = \
+                        int(re.search(r'\d+', compose_setting).group(0))
             elif compose_setting == 'single':
                 self.compose_utterance = self.compose_utterance_single
 
