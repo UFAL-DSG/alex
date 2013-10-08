@@ -213,12 +213,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 dialogue_state['time'] == "none" and \
                 randbool(10):
                 req_da.extend(DialogueAct('request(time)'))
-            elif dialogue_state['from_stop'] == "none" and dialogue_state['from_centre'] == "none" and \
+            elif dialogue_state['from_stop'] == "none" and \
+                (dialogue_state['centre_direction'] != "none" or dialogue_state['centre_direction'] != "*") and \
                 randbool(9):
-                req_da.extend(DialogueAct('confirm(from_centre="true")'))
-            elif dialogue_state['to_stop'] == "none" and dialogue_state['to_centre'] == "none" and \
+                req_da.extend(DialogueAct('confirm(centre_direction="from")'))
+            elif dialogue_state['to_stop'] == "none" and \
+                (dialogue_state['centre_direction'] != "none" or dialogue_state['centre_direction'] != "*")and \
                 randbool(8):
-                req_da.extend(DialogueAct('confirm(to_centre="true")'))
+                req_da.extend(DialogueAct('confirm(centre_direction="to")'))
             elif dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
                 randbool(3):
                 req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))

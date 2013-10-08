@@ -32,19 +32,29 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
         ],
 
-        'from_centre': [
+        'time_rel': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
-            'binary',
         ],
-        'to_centre': [
+        'date': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
-            'binary',
+        ],
+
+        'date_rel': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            #'system_requests',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+        ],
+        'centre_direction': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_requests', 'system_confirms',
+            'system_iconfirms', 'system_selects',
         ],
         'num_transfers': [
             'user_requests',
