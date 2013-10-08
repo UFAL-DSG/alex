@@ -294,11 +294,11 @@ class PTICSHDCPolicy(DialoguePolicy):
             time = self.get_default_time()
         else:
             time_parsed = datetime.strptime(time, "%H:%M")
-            new_hour = time_parsed.hour
-            if datetime.now().hour > time_parsed.hour:
-                new_hour = (new_hour + 12) % 24
-
-            time = "%d:%.2d" % (new_hour, time_parsed.minute)
+            time_hour = time_parsed.hour
+            now_hour = datetime.now().hour
+            if now_hour > time_hour and now_hour < time_hour + 12:
+                time_hour = (time_hour + 12) % 24
+            time = "%d:%.2d" % (time_hour, time_parsed.minute)
 
         dialogue_state.directions = self.directions.get_directions(
             from_stop=dialogue_state['from_stop'],
