@@ -22,7 +22,7 @@ class AbstractTemplateNLG(object):
 
     It implements numerous backoff strategies:
     1) it matches the exactly the input dialogue against the templates
-    2) if it cannot find exact match, then it tries to find a generic template (slot independent)
+    2) if it cannot find exact match, then it tries to find a generic template (slot-independent)
     3) if it cannot find a generic template, the it tries to compose
         the template from templates for individual dialogue act items
     """
@@ -32,8 +32,20 @@ class AbstractTemplateNLG(object):
         Constructor, just save a link to the configuration.
         """
         self.cfg = cfg
-
+        # this will save the last utterance
         self.last_utterance = u""
+        # setup the composing strategy
+        self.compose_utterance = self.compose_utterance_greedy
+        self.compose_greedy_lookahead = 5
+        if self.cfg['NLG']['TemplateCompose']:
+            compose_setting = \
+                    self.cfg['NLG']['TemplateCompose'].tolower().strip()
+            if compose_setting.startswith('greedy'):
+                self.compose_utterance = self.compose_utterance_greedy
+                self.compose_greedy_lookahead = int(re.search(r'\d+', 
+                                                    compose_setting).group(0))
+            elif compose_setting == 'single':
+                self.compose_utterance = self.compose_utterance_single
 
     def load_templates(self, file_name):
         """\
@@ -237,9 +249,9 @@ class AbstractTemplateNLG(object):
         Then try to find a relaxed match of a more generic template and
         fill in the actual values of the variables.
         """
-
         try:
             if unicode(da) == 'irepeat()':
+                # just return last utterance
                 pass
             else:
                 # try to return exact match
@@ -253,32 +265,75 @@ class AbstractTemplateNLG(object):
                 self.last_utterance = self.match_and_fill_generic(da, svs)
 
             except TemplateNLGException:
-                composed_utt = []
-
                 # try to find a template for each dialogue act item and concatenate them
                 try:
-                    for dai in da:
-                        try:
-                            dai_utt = self.random_select(self.templates[unicode(dai)])
-                        except KeyError:
-                            # try to find a relaxed match
-                            dax = DialogueAct()
-                            dax.append(dai)
-                            svsx = dax.get_slots_and_values()
-                            try:
-                                dai_utt = self.match_and_fill_generic(dax, svsx)
-                            except TemplateNLGException:
-                                dai_utt = unicode(dai)
-
-                        composed_utt.append(dai_utt)
-
-                    self.last_utterance = ' '.join(composed_utt)
+                    self.last_utterance = self.compose_utterance(da)
 
                 except TemplateNLGException:
                     # nothing to do, I must backoff
                     self.last_utterance = self.backoff(da)
 
         return self.last_utterance
+
+    def compose_utterance_single(self, da):
+        """\
+        Compose an utterance from templates for single dialogue act items.
+        Returns the composed utterance.
+        """
+        composed_utt = []
+        for dai in da:
+            try:
+                dai_utt = self.random_select(self.templates[unicode(dai)])
+            except KeyError:
+                # try to find a relaxed match
+                dax = DialogueAct()
+                dax.append(dai)
+                svsx = dax.get_slots_and_values()
+                try:
+                    dai_utt = self.match_and_fill_generic(dax, svsx)
+                except TemplateNLGException:
+                    dai_utt = unicode(dai)
+
+            composed_utt.append(dai_utt)
+        return ' '.join(composed_utt)
+
+
+    def compose_utterance_greedy(self, da):
+        """\
+        Compose an utterance from templates by iteratively looking for
+        the longest (up to self.compose_greedy_lookahead) matching
+        sub-utterance at the current position in the DA.
+
+        Returns the composed utterance.
+        """
+        composed_utt = []
+        sub_start = 0
+        while sub_start < len(da):
+            dax_utt = None
+            dax_len = None
+            for sub_len in xrange(self.compose_greedy_lookahead, 0, -1):
+                dax = DialogueAct()
+                dax.extend(da[sub_start:sub_start + sub_len])
+                try:
+                    dax_utt = self.random_select(self.templates[unicode(dax)])
+                    dax_len = sub_len
+                except KeyError:
+                    # try to find a relaxed match
+                    svsx = dax.get_slots_and_values()
+                    try:
+                        dax_utt = self.match_and_fill_generic(dax, svsx)
+                        dax_len = sub_len
+                        break
+                    except TemplateNLGException:
+                        continue
+            if dax_utt is None:
+                dax_utt = unicode(da[sub_start])
+                dax_len = 1
+            composed_utt.append(dax_utt)
+            sub_start += dax_len
+        return ' '.join(composed_utt)
+
+
 
     def fill_in_template(self, tpl, svs):
         """\
@@ -289,8 +344,10 @@ class AbstractTemplateNLG(object):
 
     def backoff(self, da):
         """\
-        Provide an alternative NLG template for the dialogue output which is not covered in the templates.
-        This serves as a backoff solution. This should be implemented in derived classes.
+        Provide an alternative NLG template for the dialogue
+        output which is not covered in the templates.
+        This serves as a backoff solution.
+        This should be implemented in derived classes.
         """
         raise NotImplementedError()
 
