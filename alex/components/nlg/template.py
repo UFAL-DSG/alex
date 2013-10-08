@@ -140,7 +140,7 @@ class AbstractTemplateNLG(object):
 
         The selection process is modeled by an embedded list structure
         (a tree-like structure).
-        In the first, level the algorithm selects one of N.
+        In the first level, the algorithm selects one of N.
         In the second level, for every item it selects one of M,
         and joins them together.
         This continues toward the leaves which must be non-list objects.
