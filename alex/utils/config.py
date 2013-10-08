@@ -9,21 +9,112 @@ import copy
 import cStringIO
 from importlib import import_module
 import os
-import os.path
+import time
 import pprint
 import re
 import sys
 import tempfile
+import shutil
+import math
+import urllib
 
 import alex.utils.env as env
 from alex.utils.exceptions import ConfigException
 
 config = None
 
+online_update_server = "https://vystadial.ms.mff.cuni.cz/download/"
 
 def as_project_path(path):
     return os.path.join(env.root(), path)
 
+__current_size = 0  # global state variable, which exists solely as a
+                    # workaround against Python 3.3.0 regression
+                    # http://bugs.python.org/issue16409
+                    # fixed in Python 3.3.1
+
+def callback_download_progress(blocks, block_size, total_size):
+    """callback function for urlretrieve that is called when connection is
+    created and when once for each block
+
+    :param blocks: number of blocks transferred so far
+    :param block_size: in bytes
+    :param total_size: in bytes, can be -1 if server doesn't return it
+    """
+    global __current_size
+
+    width = 80
+
+    if sys.version_info[:3] == (3, 3, 0):  # regression workaround
+        if blocks == 0:  # first call
+            __current_size = 0
+        else:
+            __current_size += block_size
+        current_size = __current_size
+    else:
+        current_size = min(blocks*block_size, total_size)
+
+    # number of dots on thermometer scale
+    avail_dots = width-2
+    shaded_dots = int(math.floor(float(current_size) / total_size * avail_dots))
+    progress = '[' + '.'*shaded_dots + ' '*(avail_dots-shaded_dots) + ']'
+
+    if progress:
+        sys.stdout.write("\r" + progress)
+
+def set_online_update_server(server_name):
+    """
+    Set the name of the online update server. This function can be used to change the server name from inside a
+    config file.
+
+
+    :param server_name: the HTTP(s) path to the server and a location where the desired data reside.
+    :return: None
+    """
+    global online_update_server
+
+    online_update_server = server_name
+
+def online_update(file_name):
+    """
+    This function can download file from a default server if it is not available locally. The default server location
+    can be changed in the config file.
+
+    The original file name is transformed into absolute name using as_project_path function.
+
+    :param fn: the file name which should be downloaded from the server
+    :return: a file name of the local copy of the file downloaded from the server
+    """
+    url = online_update_server+file_name
+    url_time = time.mktime(urllib.urlopen(url).info().getdate('Last-Modified'))
+
+    fn = as_project_path(file_name)
+
+    if os.path.exists(fn):
+        file_name_time = os.path.getmtime(fn)
+
+        if url_time <= file_name_time:
+            return fn
+
+    print "="*80
+    print "Downloading file:", fn
+    if os.path.exists(fn) and url_time > file_name_time:
+        print "The modification time of the remote file is different. "
+    print "-"*80
+
+    # get filename for temp file in current directory
+    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn+".", )
+    os.close(fd)
+    os.unlink(tmpfile)
+
+    (tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback_download_progress)
+
+    shutil.move(tmpfile, fn)
+    os.utime(fn, (url_time, url_time))
+
+    print
+
+    return fn
 
 def _expand_file_var(text, path):
     # This method has clear limitations, since it ignores the whole Python
