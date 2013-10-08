@@ -114,12 +114,12 @@ _num_rx = re.compile('[1-9][0-9]*')
 _num_rx_exh = re.compile('^[1-9][0-9]*$')
 
 
-def db_add(slot, value, surface):
+def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
-    surface = surface.strip()
-    if len(value) == 0 or len(surface) == 0:
+    form = form.strip()
+    if len(value) == 0 or len(form) == 0:
         return
-    database[slot].setdefault(value, set()).add(surface)
+    database[category_label].setdefault(value, set()).add(form)
 
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
@@ -219,7 +219,8 @@ def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
     if expanded_format:
         line = line.split(';')
-        name, forms = line[0], line
+        name = line[0]
+        forms = line
     else:
         name = line
         forms = [line,]
@@ -251,11 +252,12 @@ def preprocess_stops_line(line, expanded_format=False):
                 else:
                     new_words.append(word)
             forms.append(' '.join(new_words))
+
     # Remove extra spaces, lowercase.
-    forms = [' '.join(name.replace(',', ' ').replace('-', ' ')
+    forms = [' '.join(form.replace(',', ' ').replace('-', ' ')
                       .replace('(', ' ').replace(')', ' ').replace('5', ' ')
                       .replace('0', ' ').replace('.', ' ').split()).lower()
-             for name in forms]
+             for form in forms]
 
     return name, forms
 
@@ -266,10 +268,9 @@ def add_stops():
     is_expanded = 'expanded' in STOPS_FNAME
     with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
         for line in stops_file:
-            stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
-            for synonym in stop_names:
-                db_add('stop', stop_val, synonym)
-
+            stop_name, stop_surface_forms = preprocess_stops_line(line, expanded_format=is_expanded)
+            for form in stop_surface_forms:
+                db_add('stop', stop_name, form)
 
 def stem():
     """Stems words of all surface forms in the database."""
