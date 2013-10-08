@@ -24,7 +24,6 @@ The script generates the following files:
 Future work
 -----------
 
-- Fix VHUB unicode problem.
 - Ask a question after hangup by DM
 - When happens call disconnect do not close session.xml. Only when new session is created, the old is closed.
 - Enable new trained SLU.
