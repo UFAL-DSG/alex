@@ -116,14 +116,13 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             # use da as it is
             da = user_da
         elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
-        # get only the best dialogue act
-        #            da = user_da.get_best_da()
+            # get only the best dialogue act
+            da = user_da.get_best_da()
             # in DSTC baseline like approach I will dais conf. score, so I will not
             # have to pick the best hyp
-            da = user_da.get_best_nonnull_da()
+            #da = user_da.get_best_nonnull_da()
         else:
-            raise DeterministicDiscriminativeDialogueStateException(
-                "Unsupported input for the dialogue manager.")
+            raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
 
         if self.cfg['DM']['basic']['debug']:
             self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)

@@ -880,7 +880,12 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         return da
 
     def get_best_nonnull_da(self):
-        """Return the best dialogue act (with the highest probability)."""
+        """
+        Return the best dialogue act (with the highest probability) ignoring the best null() dialogue act item.
+
+        Instead of returning the ``null()`` act, it returns the most probable DAI with a defined slot name.
+
+        """
 
         res = self.get_best_da()
 

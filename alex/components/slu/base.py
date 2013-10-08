@@ -260,6 +260,7 @@ class SLUPreprocessing(object):
 
         """
         utterance.lower()
+
         for mapping in self.text_normalization_mapping:
             utterance = utterance.replace(mapping[0], mapping[1])
         return utterance
@@ -271,6 +272,7 @@ class SLUPreprocessing(object):
         :param nblist:
         :return:
         """
+
         unb = copy.deepcopy(nblist)
         for utt_idx, hyp in enumerate(unb):
             unb[utt_idx][1] = self.normalise_utterance(hyp[1])
