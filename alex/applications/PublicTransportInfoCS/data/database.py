@@ -40,6 +40,11 @@ NUMBERS_10 = ["", "deset", "dvacet", "třicet", "čtyřicet", "padesát",
               "šedesát", ]
 NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
                 "patnáct", "šestnáct", "sedmnáct", "osmnáct", "devatenáct"]
+NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "šestý",
+               "sedmý", "osmý", "devátý", "desátý", "jedenáctý", "dvanáctý",
+               "třináctý", "čtrnáctý", "patnáctý", "šestnáctý", "sedmnáctý",
+               "osmnáctý", "devatenáctý", "dvacátý", "jednadvacátý",
+               "dvaadvacátý", "třiadvacátý"]
 
 # name of the file with one stop per line, assumed to reside in the same
 # directory as this script
@@ -49,15 +54,15 @@ NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
 STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
-                                       # other forms of the words; still very
-                                       # dirty, though
+                                    # other forms of the words; still very
+                                    # dirty, though
 #STOPS_FNAME = "stops.txt"
 
 
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
     ('\\bn\\.Vlt\\.', ['nad Vltavou']),
-    ('žel\\.st\\.', ['železniční stanice']),  # FIXME None would say this.
+    ('žel\\.st\\.', ['železniční stanice']), # FIXME None would say this.
                                               # Factorise.
     ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
     ('žel\\.zast\\.', ['železniční zastávka']),
@@ -80,7 +85,7 @@ _substs_lit = [
     ('\\bhl\\.sil\\.', ['hlavní silnice']),
     ('\\bn\\.', ['nad']),
     ('\\bp\\.', ['pod']),
-    ('\\b(\w)\\.', ['\\1']),   # ideally uppercase...
+    ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
     ('\\bI\\b', ['jedna']),
     ('\\bII\\b', ['dva']),
 ]
@@ -98,6 +103,7 @@ def db_add(slot, value, surface):
     database[slot].setdefault(value, set()).add(surface)
 
 
+# TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
     """Spells out the number given in the argument."""
     tens, units = num / 10, num % 10
@@ -113,69 +119,89 @@ def spell_number(num):
         return units_str
 
 
-# DEPRECATED
-# def time_wrap(what):
-#     return "v %s" % what
-# DEPRECATED
-# def time_rel_wrap(what):
-#     return "za %s" % what
-# DEPRECATED
-# def time_rel_prefix(what):
-#     return "+%s" % what
-
-
 def add_time():
     """
     Basic approximation of all known explicit time expressions.
 
     Handles:
         <hour>
-        <hour> hodin <minute>
+        <hour> hodin(a/y)
+        <hour> hodin(a/y) <minute>
         <houn> <minute>
-    where <hour> and <minute> are spelled as numbers.
+        půl/čtvrt/tři čtvrtě <hour>
+    where <hour> and <minute> are spelled /given as numbers.
 
-    Cannot handle:
-        pět nula nula
+    Cannot yet handle:
         pět nula jedna
-        jedna hodina dvacet   ...would have to be "jedna hodin dvacet"
-        tři hodiny dvacet     ...would have to be "tři hodin dvacet"
         za pět osum
         dvě odpoledne         ...only "čtrnáct" is taken to denote "14"
 
     """
-    numbers_str = [spell_number(num) for num in xrange(60)]
     # ["nula", "jedna", ..., "padesát devět"]
+    numbers_str = [spell_number(num) for num in xrange(60)]
+
     for hour in xrange(24):
         hour_str = numbers_str[hour]
+        hour_ord = NUMBERS_ORD[hour]
+        if hour_ord.endswith('ý'):
+            hour_ord = hour_ord[:-1] + 'é'
+        if hour == 1:
+            hour_ord = 'jedné'
+        hour_id = 'hodin'
+        if hour == 1:
+            hour_id = 'hodina'
+        elif hour in [2, 3, 4]:
+            hour_id = 'hodiny'
+        # X:00
         time_val = "{h}:00".format(h=hour)
+        db_add("time", time_val, str(hour))
         db_add("time", time_val, hour_str)
-        # db_add("time", time_val, time_wrap(hour_str))
-        # db_add("time", time_rel_prefix(time_val), time_rel_wrap(hour_str))
+        time_str = "{h} nula nula".format(h=hour_str)
+        db_add("time", time_val, time_str)
+        time_str = "{h} {hi}".format(h=hour_str, hi=hour_id)
+        db_add("time", time_val, time_str)
+        time_str = "{h} {hi}".format(h=hour, hi=hour_id)
+        db_add("time", time_val, time_str)
+        time_str = "{h} hodině".format(h=hour_ord)
+        db_add("time", time_val, time_str)
+
+        if hour >= 1 and hour <= 12:
+            # (X-1):15 quarter past (X-1)
+            time_val = "{h}:15".format(h=(hour - 1))
+            time_str = "čtvrt na {h}".format(h=hour_str)
+            db_add("time", time_val, time_str)
+            time_str = "čtvrt na {h}".format(h=hour)
+            db_add("time", time_val, time_str)
+            # (X-1):30 half past (X-1)
+            time_val = "{h}:30".format(h=(hour - 1))
+            time_str = "půl {ho}".format(ho=hour_ord)
+            db_add("time", time_val, time_str)
+            # (X-1):45 quarter to X
+            time_val = "{h}:45".format(h=(hour - 1))
+            time_str = "tři čtvrtě na {h}".format(h=hour_str)
+            db_add("time", time_val, time_str)
+            time_str = "tři čtvrtě na {h}".format(h=hour)
+            db_add("time", time_val, time_str)
 
         for minute in xrange(60):
             minute_str = numbers_str[minute]
             time_val = "{h}:{m}".format(h=hour, m=minute)
-            # FIXME This is not always appropriate.
-            time_str = "{h} hodin {m}".format(h=hour_str, m=minute_str)
+            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id,
+                                             m=minute_str)
+            db_add("time", time_val, time_str)
+            time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
             db_add("time", time_val, time_str)
             time_str = "{h} {m}".format(h=hour_str, m=minute_str)
             db_add("time", time_val, time_str)
-            # db_add("time", time_val, time_wrap(time_str))
-            # db_add("time", time_rel_prefix(time_val), time_rel_wrap(time_str))
-
-    # DEPRECATED
-    # for minute in xrange(60):
-        # time_val = "%d" % minute
-        # mm_word = spell_number(minute)
-        # time_str = "%s minut" % (mm_word, )
-        # db_add("time", time_rel_prefix(time_val), time_rel_wrap(time_str))
+            time_str = "{h} {m}".format(h=hour, m=minute)
+            db_add("time", time_val, time_str)
 
 
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
     if expanded_format and ';' in line:
         val, names = line.split(';', 1)
-        names = [line] + names.split(';')
+        names = [val] + names.split(';')
     else:
         val = line
         names = [line]
@@ -208,7 +234,10 @@ def preprocess_stops_line(line, expanded_format=False):
                     new_words.append(word)
             names.append(' '.join(new_words))
     # Remove extra spaces, lowercase.
-    names = [' '.join(name.replace(',' , ' ').replace('-' , ' ').replace('(' , ' ').replace(')' , ' ').replace('5' , ' ').replace('0' , ' ').replace('.' , ' ').split()).lower() for name in names]
+    names = [' '.join(name.replace(',', ' ').replace('-', ' ')
+                      .replace('(', ' ').replace(')', ' ').replace('5', ' ')
+                      .replace('0', ' ').replace('.', ' ').split()).lower()
+             for name in names]
 
     return val, names
 
@@ -217,7 +246,8 @@ def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
     is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
+    with codecs.open(os.path.join(dirname, STOPS_FNAME),
+                     encoding='utf-8') as stops_file:
         for line in stops_file:
             stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
             for synonym in stop_names:
@@ -231,7 +261,8 @@ def stem():
 
     for _, vals in database.iteritems():
         for value in vals.keys():
-            vals[value] = [" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]]
+            vals[value] = [" ".join(cz_stem(word) for word in surface.split())
+                           for surface in vals[value]]
 
 
 def save_surface_forms(file_name):
@@ -243,21 +274,22 @@ def save_surface_forms(file_name):
     sf.sort()
 
     # save the database vocabulary - all the surface forms
-    with codecs.open(file_name,'w','UTF-8') as f:
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
         for l in sf:
             f.write(l)
             f.write('\n')
+
 
 def save_SRILM_classes(file_name):
     sf = []
     for k in database:
         for v in database[k]:
             for l in database[k][v]:
-                sf.append("CL_"+k.upper() + " " + l.upper())
+                sf.append("CL_" + k.upper() + " " + l.upper())
     sf.sort()
 
     # save the database vocabulary - all the surface forms
-    with codecs.open(file_name,'w','UTF-8') as f:
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
         for l in sf:
             f.write(l)
             f.write('\n')
