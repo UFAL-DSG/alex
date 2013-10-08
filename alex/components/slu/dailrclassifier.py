@@ -171,9 +171,15 @@ class DAILogRegClassifier(SLUInterface):
                             abs_utts.append((u, f, v, c))
 
                     #print f
+
+                    # skip all substring for this form
+                    start = end
                     break
                 end -= 1
-            start += 1
+            else:
+                start += 1
+
+
         return abs_utts
 
     def get_abstract_utterance(self, utterance, fvc):
@@ -202,9 +208,13 @@ class DAILogRegClassifier(SLUInterface):
                 if f == form:
                     abs_utt = abs_utt.replace2(start, end, c)
 
+                    # skip all substring for this form
+                    start = end
                     break
                 end -= 1
-            start += 1
+            else:
+                start += 1
+
         return abs_utt
 
     def get_abstract_utterance2(self, utterance):
@@ -230,9 +240,13 @@ class DAILogRegClassifier(SLUInterface):
                         for c in self.cldb.form2value2cl[f][v]:
                             abs_utt = abs_utt.replace2(start, end, 'CL_OTHER_' + c.upper())
 
+                    # skip all substring for this form
+                    start = end
                     break
                 end -= 1
-            start += 1
+            else:
+                start += 1
+
         return abs_utt
 
     def get_abstract_da(self, da, fvcs):
@@ -279,9 +293,12 @@ class DAILogRegClassifier(SLUInterface):
                         for c in self.cldb.form2value2cl[f][v]:
                             fvcs.add((f, v, c))
 
+                    # skip all substring for this form
+                    start = end
                     break
                 end -= 1
-            start += 1
+            else:
+                start += 1
 
         return fvcs
 
@@ -660,6 +677,8 @@ class DAILogRegClassifier(SLUInterface):
                     cc = "CL_" + c.upper()
 
                     if self.parsed_classifiers[clser].value == cc:
+                        #print clser, f, v, c
+
                         classifiers_features = self.get_features(utterance, (f, v, cc))
                         classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])))
                         classifiers_inputs[0] = classifiers_features.get_feature_vector(self.classifiers_features_mapping[clser])
