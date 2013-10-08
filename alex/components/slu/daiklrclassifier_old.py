@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from da import DialogueActItem, DialogueAct
-from dailrclassifier import *
+from dailrclassifier_old import *
 
 
 class DAIDotKernel(object):

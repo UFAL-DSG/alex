@@ -46,7 +46,7 @@ class PTICSHDCSLU(SLUInterface):
                           "počáteční", "počátek", "výchozí", "start"])
         preps_to = set(["k", "do", "konec", "na", "konečná", "koncová",
                         "cílová", "cíl", "výstupní"])
-        fillers_from = set(["start", ])
+        fillers_from = set(["start", "stojím", "jsem" ])
         fillers_to = set(["cíl",])
 
         u = abutterance
@@ -62,8 +62,18 @@ class PTICSHDCSLU(SLUInterface):
                 to_stop = False
                 stop_decided = False
 
+                if stop_name == "Čím":
+                    # just ignore this stop
+                    continue
+
                 if i >= 3:
                     if not u[i - 2].startswith("STOP=") and not u[i - 1].startswith("STOP="):
+                        if u[i - 3] in fillers_from and u[i - 2] == 'na':
+                            from_stop = True
+                            stop_decided = True
+                        elif u[i - 3] in fillers_to and u[i - 2] == 'na':
+                            to_stop = True
+                            stop_decided = True
                         if u[i - 3] in preps_from:
                             from_stop = True
                             stop_decided = True
@@ -152,7 +162,7 @@ class PTICSHDCSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        preps_in = set(["v", "čas"])
+        preps_in = set(["v", "čas", "po", "před", "kolem"])
 
         confirm = _phrase_in(u, ['jede', 'to'])
         deny = _phrase_in(u, ['nechci', 'ne'])
@@ -259,7 +269,7 @@ class PTICSHDCSLU(SLUInterface):
                 else:
                     cn.add(1.0, DialogueActItem("inform", 'ampm', value))
 
-    def parse_transport_type(self, abutterance, cn):
+    def parse_trans_type(self, abutterance, cn):
         """Detects the transport type in the input abstract utterance.
 
         :param abutterance:
@@ -355,7 +365,7 @@ class PTICSHDCSLU(SLUInterface):
            _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, ["spoj", "ze", ]):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if len(u.utterance) == 1 and "centra" in u.utterance:
+        if len(u.utterance) == 1 and _any_word_in(u, ["centra", "centrum", ]):
             # we do not know whether to or from and it must be one of them
             cn.add(1.0, DialogueActItem('inform','centre_direction','*'))
 
@@ -392,6 +402,18 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, ["kde", "konečná", ]) or \
             _all_words_in(u, ["kam", "pojede"]):
             cn.add(1.0, DialogueActItem('request','to_stop'))
+
+        if _all_words_in(u, ["kdy", "to", "jede"]) or \
+            _all_words_in(u, ["kdy", "mi", "jede"]) or \
+            _all_words_in(u, ["v", "kolik", "jede"]) or \
+            _all_words_in(u, ["kdy", "to", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','time'))
+
+        if _all_words_in(u, ["za", "jak", "dlouho", "jede"]) or \
+            _all_words_in(u, ["za", "kolik", "minut", "jede"]) or \
+            _all_words_in(u, ["za", "kolik", "minut", "pojede"]) or \
+            _all_words_in(u, ["za", "jak", "dlouho", "pojede"]):
+            cn.add(1.0, DialogueActItem('request','time_rel'))
 
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
@@ -451,20 +473,23 @@ class PTICSHDCSLU(SLUInterface):
         else:
             category_labels = dict()
 
+        #print 'After preprocessing: "{utt}".'.format(utt=abutterance)
+        #print category_labels
+        #
         res_cn = DialogueActConfusionNetwork()
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
-        elif 'TIME' in category_labels:
+        if 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
-        elif 'TIME_REL' in category_labels:
+        if 'TIME_REL' in category_labels:
             self.parse_time_rel(abutterance, res_cn)
-        elif 'DATE_REL' in category_labels:
+        if 'DATE_REL' in category_labels:
             self.parse_date_rel(abutterance, res_cn)
-        elif 'AMPM' in category_labels:
+        if 'AMPM' in category_labels:
             self.parse_ampm(abutterance, res_cn)
-        elif 'TRANS_TYPE' in category_labels:
-            self.parse_transport_type(abutterance, res_cn)
-        elif 'TASK' in category_labels:
+        if 'TRANS_TYPE' in category_labels:
+            self.parse_trans_type(abutterance, res_cn)
+        if 'TASK' in category_labels:
             self.parse_task(abutterance, res_cn)
 
         self.parse_meta(utterance, res_cn)

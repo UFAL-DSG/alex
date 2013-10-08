@@ -7,18 +7,10 @@ import os.path
 import codecs
 import autopath
 
-from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
+import test as trained_slu_test
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
-from alex.components.slu.dai_clser_fj_ext import CategoryLabelDatabase, DAILogRegClassifier
-from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
-from alex.corpustools.semscore import score
 
-cldb = CategoryLabelDatabase('../data/database.py')
-preprocessing = PTICSSLUPreprocessing(cldb)
-slu = DAILogRegClassifier(cldb, preprocessing)
-
-
-def test(fn_model, fn_input, constructor, fn_reference):
+def hdc_slu_test(fn_input, constructor, fn_reference):
     """
     Tests a SLU DAILogRegClassifier model.
 
@@ -29,10 +21,18 @@ def test(fn_model, fn_input, constructor, fn_reference):
     :return:
     """
     print "="*120
-    print "Testing: ", fn_model, fn_input, fn_reference
+    print "Testing HDC SLU: ", fn_input, fn_reference
     print "-"*120
 
-    slu.load_model(fn_model)
+    from alex.components.slu.base import CategoryLabelDatabase
+    from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
+    from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
+    from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
+    from alex.corpustools.semscore import score
+
+    cldb = CategoryLabelDatabase('../data/database.py')
+    preprocessing = PTICSSLUPreprocessing(cldb)
+    hdc_slu = PTICSHDCSLU(preprocessing)
 
     test_utterances = load_wavaskey(fn_input, constructor, limit=100000)
 
@@ -50,7 +50,7 @@ def test(fn_model, fn_input, constructor, fn_reference):
         print utt_key, " ==> "
         print unicode(utt)
 
-        da_confnet = slu.parse(obs, verbose=False)
+        da_confnet = hdc_slu.parse(obs, verbose=False)
 
         print "Conf net:"
         print unicode(da_confnet)
@@ -67,16 +67,9 @@ def test(fn_model, fn_input, constructor, fn_reference):
             print '*' * 120
             print utt
             print dah.da
-            slu.parse(obs, verbose=True)
+            hdc_slu.parse(obs, verbose=True)
 
-    if 'trn' in fn_model:
-        fn_sem = os.path.basename(fn_input)+'.model.trn.sem.out'
-    elif 'asr' in fn_model:
-        fn_sem = os.path.basename(fn_input)+'.model.asr.sem.out'
-    elif 'nbl' in fn_model:
-        fn_sem = os.path.basename(fn_input)+'.model.nbl.sem.out'
-    else:
-        fn_sem = os.path.basename(fn_input)+'.XXX.sem.out'
+    fn_sem = os.path.basename(fn_input)+'.hdc_slu.sem.out'
 
     save_wavaskey(fn_sem, parsed_das)
 
@@ -84,27 +77,8 @@ def test(fn_model, fn_input, constructor, fn_reference):
     score(fn_reference, fn_sem, True, f)
     f.close()
 
-#test('./dailogreg.trn.model', './dev.trn', Utterance, './dev.trn.hdc.sem')
-#test('./dailogreg.trn.model', './dev.asr', Utterance, './dev.trn.hdc.sem')
-#test('./dailogreg.trn.model', './dev.nbl', UtteranceNBList, './dev.trn.hdc.sem')
-#
-#test('./dailogreg.trn.model', './test.trn', Utterance, './test.trn.hdc.sem')
-#test('./dailogreg.trn.model', './test.asr', Utterance, './test.trn.hdc.sem')
-#test('./dailogreg.trn.model', './test.nbl', UtteranceNBList, './test.trn.hdc.sem')
-#
-#
-#test('./dailogreg.asr.model', './dev.trn', Utterance, './dev.trn.hdc.sem')
-#test('./dailogreg.asr.model', './dev.asr', Utterance, './dev.trn.hdc.sem')
-#test('./dailogreg.asr.model', './dev.nbl', UtteranceNBList, './dev.trn.hdc.sem')
-#
-#test('./dailogreg.asr.model', './test.trn', Utterance, './test.trn.hdc.sem')
-#test('./dailogreg.asr.model', './test.asr', Utterance, './test.trn.hdc.sem')
-#test('./dailogreg.asr.model', './test.nbl', UtteranceNBList, './test.trn.hdc.sem')
+trained_slu_test.test('./dailogreg.trn.model', './bootstrap.trn', Utterance, './bootstrap.sem')
+trained_slu_test.test('./dailogreg.asr.model', './bootstrap.trn', Utterance, './bootstrap.sem')
+trained_slu_test.test('./dailogreg.nbl.model', './bootstrap.trn', Utterance, './bootstrap.sem')
 
-#test('./dailogreg.nbl.model', './dev.trn', Utterance, './dev.trn.hdc.sem')
-#test('./dailogreg.nbl.model', './dev.asr', Utterance, './dev.trn.hdc.sem')
-test('./dailogreg.nbl.model', './dev.nbl', UtteranceNBList, './dev.trn.hdc.sem')
-#
-#test('./dailogreg.nbl.model', './test.trn', Utterance, './test.trn.hdc.sem')
-#test('./dailogreg.nbl.model', './test.asr', Utterance, './test.trn.hdc.sem')
-test('./dailogreg.nbl.model', './test.nbl', UtteranceNBList, './test.trn.hdc.sem')
+hdc_slu_test('./bootstrap.trn', Utterance, './bootstrap.sem')

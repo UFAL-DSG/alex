@@ -19,7 +19,7 @@ database = {
     "time": {
     },
     "time_rel": {
-        "now": ["nyní", "teď", "hned"],
+        "now": ["nyní", "teď", "hned", "nejbližší"],
         "0:05": ["pět minut", ],
         "0:10": ["deset minut", ],
         "0:20": ["dvacet minut", ],
@@ -36,16 +36,19 @@ database = {
     "stop": {
     },
     "trans_type": {
-        "bus": ["bus", "busem", "autobus", "autobusem"],
-        "tram": ["tram", "tramvaj", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "metro": ["metro", "metrem", "krtek", "krtkem", "podzemka", "podzemkou"],
-        "vlak": ["vlak", "vlakem", "rychlík", "rychlíkem", "panťák", "panťákem"],
-        "lanovka": ["lanovka", "lanovkou", "lanová dráha", "lanovou dráhou"],
-        "přívoz": ["přívoz", "přívozem", "loď", "lodí"],
+        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
+        "tram": ["tram", "tramvaj", "tramvajoví", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
+        "metro": ["metro", "metrem", "metrema", "metru","krtek", "krtkem", "podzemka", "podzemkou"],
+        "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
+        "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
+        "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
     },
     "ampm": {
-        "am": ["dopo", "dopoledne", "ráno"],
-        "pm": ["odpo", "odpoledne", "večer", "noc", "noci"],
+        "morning": ["ráno", "nadránem"],
+        "am": ["dopo", "dopoledne",],
+        "pm": ["odpo", "odpoledne",],
+        "evening": ["večer", "podvečer", ],
+        "night": ["noc", "noci"],
     },
 }
 

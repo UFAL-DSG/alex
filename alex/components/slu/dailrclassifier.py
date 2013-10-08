@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-This is a rewrite of the DAILogRegClassifier ``from dai_clser_fj.py``. The underlying approach is the same; however,
-the way how the features are computed is changed significantly. Therefore, all classes including those ``from base_fj.py``
-are defined here just so emphasize that these are designed to support this classifier.
+This is a rewrite of the DAILogRegClassifier ``from dailrclassifier_old.py``. The underlying approach is the same; however,
+the way how the features are computed is changed significantly.
 """
 from __future__ import unicode_literals
 
@@ -19,96 +18,16 @@ from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBLi
 from alex.components.slu.exceptions import SLUException, DAILRException
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork, merge_slu_confnets
-from alex.utils.config import load_as_module
-from alex.utils.various import nesteddict
+from alex.utils.cache import lru_cache
 
 CONFNET2NBLIST_EXPANSION_APPROX = 40
 
-class CategoryLabelDatabase(object):
-    """ Provides a convenient interface to a database of category label value forms tuples.
-
-    Attributes:
-          form_value_category: a list of (form, value, category label) tuples
-
-    """
-
-    def __init__(self, file_name):
-        self.database = {}
-        self.forms = []
-        self.form_value_cl = []
-        self.form2value2cl = nesteddict()
-
-        if file_name:
-            self.load(file_name)
-
-    def __iter__(self):
-        """Yields tuples (form, value, category label) from the database."""
-
-        for i in self.form_value_cl:
-            yield i
-
-    def load(self, file_name):
-        """
-        Load the database with category labels, values, and forms from a file.
-
-        :param file_name: a file name of a the category label database file
-
-        """
-
-        db_mod = load_as_module(file_name, force=True)
-        if not hasattr(db_mod, 'database'):
-            raise SLUException("The category label database does not define the `database' object!")
-        self.database = db_mod.database
-
-        self.normalise_database()
-        # Update derived data structures.
-        self.gen_form_value_cl_list()
-        self.gen_mapping_form2value2cl()
-
-
-    def normalise_database(self):
-        """Normalise database. E.g. split utterances into sequences of words.
-        """
-        new_db = dict()
-        for name in self.database:
-            new_db[name] = dict()
-            for value in self.database[name]:
-                new_db[name][value] = [tuple(form.split()) for form in self.database[name][value]]
-        self.database = new_db
-
-
-    def gen_form_value_cl_list(self):
-        """
-        Generates an list of form, value, category label tuples from the database. This list is ordered where the tuples
-        with the longest surface forms are at the beginning of the list.
-
-        :return: none
-        """
-        for cl in self.database:
-            for value in self.database[cl]:
-                for form in self.database[cl][value]:
-                    self.form_value_cl.append((form, value, cl))
-
-        self.form_value_cl.sort(key=lambda fvc: len(fvc[0]), reverse=True)
-
-    def gen_mapping_form2value2cl(self):
-        """
-        Generates an list of form, value, category label tuples from the database . This list is ordered where the tuples
-        with the longest surface forms are at the beginning of the list.
-
-        :return: none
-        """
-
-        for cl in self.database:
-            for value in self.database[cl]:
-                for form in self.database[cl][value]:
-                    self.form2value2cl[form][value][cl] = 1
-                    self.forms.append(form)
-
-        self.forms.sort(key=lambda f: len(f), reverse=True)
-
 
 class Features(object):
+    """
+    This is a simple feature object. It is a light version of an unnecessary complicated alex.ml.features.Features class.
+    """
+
     def __init__(self):
         self.features = defaultdict(float)
 
@@ -156,6 +75,10 @@ class Features(object):
 
 
 class UtteranceFeatures(Features):
+    """
+    This is a simple feature object. It is a light version of a alex.components.asr.utterance.UtteranceFeatures class.
+    """
+
     def __init__(self, type='ngram', size=3, utterance=None):
         super(UtteranceFeatures, self).__init__()
 
@@ -389,6 +312,7 @@ class DAILogRegClassifier(SLUInterface):
 
         return self.get_fvc_in_confnet(nblist)
 
+    @lru_cache(maxsize=1000)
     def get_fvc(self, obs):
         """
         This function returns the form, value, category label tuple for any of the following classses
@@ -457,6 +381,7 @@ class DAILogRegClassifier(SLUInterface):
         nblist = confnet.get_utterance_nblist(n=CONFNET2NBLIST_EXPANSION_APPROX)
         return self.get_features_in_nblist(nblist, fvc)
 
+    @lru_cache(maxsize=1000)
     def get_features(self, obs, fvc):
         """
         Generate utterance features for a specific utterance given by utt_idx.
@@ -512,17 +437,17 @@ class DAILogRegClassifier(SLUInterface):
 
     def prune_classifiers(self, min_classifier_count=5):
         new_classifiers = {}
-        for k in self.classifiers:
-            if '=' in k and '0' not in k and self.classifiers[k] < min_classifier_count:
+        for clser in self.classifiers:
+            if '=' in clser and 'CL_' not in clser and self.classifiers[clser] < min_classifier_count:
                 continue
 
-            if '="dontcare"' in k and '(="dontcare")' not in k:
+            if '="dontcare"' in clser and '(="dontcare")' not in clser:
                 continue
 
-            if 'null()' in k:
+            if 'null()' in clser:
                 continue
 
-            new_classifiers[k] = self.classifiers[k]
+            new_classifiers[clser] = self.classifiers[clser]
 
         self.classifiers = new_classifiers
 
@@ -615,7 +540,7 @@ class DAILogRegClassifier(SLUInterface):
             print 'Pruning features'
             print '-' * 120
 
-        for clser in self.classifiers:
+        for clser in sorted(self.classifiers):
             if verbose:
                 print "Classifier: ", clser
 
@@ -654,24 +579,6 @@ class DAILogRegClassifier(SLUInterface):
                 print "  Number of features after pruning: ", len(features_counts)
 
 
-    def gen_classifiers_inputs(self, verbose=True):
-        self.classifiers_inputs = {}
-
-        if verbose:
-            print '=' * 120
-            print 'Generating input matrix'
-            print '-' * 120
-
-        for clser in self.classifiers:
-            if verbose:
-                print "Computing features for %s" % (clser, )
-
-            self.classifiers_inputs[clser] = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
-
-            for i, feat in enumerate(self.classifiers_features[clser]):
-                self.classifiers_inputs[clser][i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
-
-
     def train(self, inverse_regularisation=1.0, verbose=True):
         self.trained_classifiers = {}
 
@@ -684,12 +591,16 @@ class DAILogRegClassifier(SLUInterface):
             if verbose:
                 print "Training classifier: ", clser
 
+            classifier_input = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
+            for i, feat in enumerate(self.classifiers_features[clser]):
+                classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
+
             lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-6)
-            lr.fit(self.classifiers_inputs[clser], self.classifiers_outputs[clser])
+            lr.fit(classifier_input, self.classifiers_outputs[clser])
             self.trained_classifiers[clser] = lr
 
             if verbose:
-                mean_accuracy = lr.score(self.classifiers_inputs[clser], self.classifiers_outputs[clser])
+                mean_accuracy = lr.score(classifier_input, self.classifiers_outputs[clser])
                 print "  Prediction mean accuracy on the training data: %6.2f" % (100.0 * mean_accuracy, )
                 print "  Size of the params:", lr.coef_.shape
 

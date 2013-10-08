@@ -162,11 +162,11 @@ def slu_factory(cfg, slu_type=None, require_model=False, training=False,
         from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
     # Load appropriate classes based on the classifier type required.
     elif slu_type == 'cl-seq':
-        from alex.components.slu.dai_clser_fj import DAILogRegClassifier
+        from alex.components.slu.dailrclassifier_old import DAILogRegClassifier
         from alex.components.slu.base_fj import CategoryLabelDatabase, SLUPreprocessing
         clser_class = DAILogRegClassifier
     elif slu_type == 'cl-tracing':
-        from alex.components.slu.dailrclassifier import DAILogRegClassifier
+        from alex.components.slu.dailrclassifier_mk import DAILogRegClassifier
         from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
         clser_class = DAILogRegClassifier
     else:

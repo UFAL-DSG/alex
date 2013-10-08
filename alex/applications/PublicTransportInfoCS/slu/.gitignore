@@ -3,3 +3,6 @@ dev.*
 test.*
 all.*
 *.model
+*.sem.out
+*.sem.out.score
+*.old

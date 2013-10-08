@@ -12,7 +12,7 @@ from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.common import slu_factory
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
-import alex.components.slu.dailrclassifier as DAILRSLU
+import alex.components.slu.dailrclassifier_mk as DAILRSLU
 from alex.utils.config import Config
 from alex.utils.config import as_project_path
 

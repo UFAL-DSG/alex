@@ -5,10 +5,6 @@
 import multiprocessing
 import time
 
-# import alex.components.slu.daiklrclassifier as DAIKLRSLU
-# import alex.components.slu.dailrclassifier as DAILRSLU
-# import alex.components.slu.templateclassifier as TSLU
-
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.components.slu.common import slu_factory

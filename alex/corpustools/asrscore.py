@@ -6,149 +6,77 @@ from __future__ import unicode_literals
 import re
 import argparse
 import sys
-import codecs
-
-from collections import defaultdict
 
 import autopath
 
-from alex.utils.text import split_by
+from alex.corpustools.wavaskey import load_wavaskey
+from alex.components.asr.utterance import Utterance
+from alex.utils.text import min_edit_dist, min_edit_ops
 
-def load_semantics(file_name):
-    f = codecs.open(file_name,encoding = 'UTF-8')
+def score_file(reftext, testtext):
+    """
+    Computes ASR scores between reference and test word strings.
 
-    semantics = defaultdict(list)
-    for l in f:
-        l = l.strip()
-        if not l:
-            continue
+    :param reftext:
+    :param testtext:
+    :return: a tuple with percentages of correct, substitutions, deletions, insertions, error rate, and a number of reference words.
+    """
+    ii, dd, ss, nn = 0.0, 0.0, 0.0, 0.0
 
-        l = l.split("=>")
+    for utt_idx in sorted(reftext):
+        r = re.sub(ur"\b_\w+_\b",r"",str(reftext[utt_idx]),flags=re.UNICODE).lower().split()
+        t = re.sub(ur"\b_\w+_\b",r"",str(testtext[utt_idx]),flags=re.UNICODE).lower().split()
+        i, d, s = min_edit_ops(t, r)
 
-        key = l[0].strip()
-        sem = l[1].strip()
+        #print "Ref:", unicode(r)
+        #print "Tst:", unicode(t)
+        #print i, d, s
+        #print
 
-        sem = split_by(sem, '&', '(', ')', '"')
+        ii += i
+        dd += d
+        ss += s
 
-        semantics[key] = sem
-    f.close()
+        nn += len(reftext[utt_idx])
 
-    return semantics
+    return (nn-ss-dd)/nn*100, ss/nn*100, dd/nn*100, ii/nn*100, (ss+dd+ii)/nn*100, nn
 
-def score_da(ref_da, test_da):
-    """Computed according to http://en.wikipedia.org/wiki/Precision_and_recall"""
+def score(fn_reftext, fn_testtext, outfile = sys.stdout):
+    reftext  = load_wavaskey(fn_reftext, Utterance)
+    testtext = load_wavaskey(fn_testtext, Utterance)
 
-    tp = 0.0
-    fp = 0.0
-    fn = 0.0
+    corr, sub, dels, ins, wer, nwords = score_file(reftext, testtext)
 
-    statsp = defaultdict(lambda : defaultdict(float))
+    m ="""
+    Ref: {r}
+    Tst: {t}
+    |==============================================================================================|
+    |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
+    |----------------------------------------------------------------------------------------------|
+    | Sum/Avg    |{num_sents:^14}|{num_words:^11.0f}|{corr:^10.2f}|{sub:^10.2f}|{dels:^10.2f}|{ins:^10.2f}|{wer:^10.2f}|
+    |==============================================================================================|
+    """.format(r=fn_reftext, t=fn_testtext, num_sents = len(reftext), num_words = nwords, corr=corr, sub = sub, dels = dels, ins = ins, wer = wer)
 
-    for i in test_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
-        if i in ref_da:
-            tp += 1.0
-            statsp[ri]['tp'] += 1.0
-        else:
-            fp += 1.0
-            statsp[ri]['fp'] += 1.0
-
-    for i in ref_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
-        if i not in test_da:
-            fn += 1.0
-            statsp[ri]['fn'] += 1.0
-
-    return tp, fp, fn, statsp
-
-def score_file(refsem, testsem):
-    tp = 0.0
-    fp = 0.0
-    fn = 0.0
-
-    stats = defaultdict(lambda : defaultdict(float))
-
-    for k in sorted(refsem):
-        tpp, fpp, fnp, statsp = score_da(refsem[k], testsem[k])
-        tp += tpp
-        fp += fpp
-        fn += fnp
-
-        for kk in statsp:
-            for kkk in statsp[kk]:
-                stats[kk][kkk] += statsp[kk][kkk]
-
-    precision = 100.0*tp/(tp+fp)
-    recall    = 100.0*tp/(tp+fn)
-
-    for k in stats:
-        try:
-            stats[k]['precision'] = 100.0*stats[k]['tp']/(stats[k]['tp']+stats[k]['fp'])
-        except ZeroDivisionError:
-            stats[k]['precision'] = 0.001
-
-        try:
-            stats[k]['recall'] = 100.0*stats[k]['tp']/(stats[k]['tp']+stats[k]['fn'])
-        except ZeroDivisionError:
-            stats[k]['recall'] = 0.001
-
-        stats[k]['precision'] += 0.000001
-        stats[k]['recall']    += 0.000001
-
-    return precision, recall, stats
-
-def score(refsem, testsem, item_level = False, outfile = sys.stdout):
-    refsem  = load_semantics(refsem)
-    testsem = load_semantics(testsem)
-
-    precision, recall, stats = score_file(refsem, testsem)
-
-    if item_level:
-        outfile.write("The results are based on {num_das} DAs\n".format(num_das=len(refsem)))
-        outfile.write("-"*80)
-        outfile.write("\n")
-
-        outfile.write("%40s %10s %10s %10s " % ('Dialogue act', 'Precision',  'Recall', 'F-measure'))
-        outfile.write("\n")
-        for k in sorted(stats):
-            outfile.write("%40s %10.2f %10.2f %10.2f " % (k,
-                                                          stats[k]['precision'],
-                                                          stats[k]['recall'],
-                                                          2*stats[k]['precision']*stats[k]['recall']/(stats[k]['precision']+stats[k]['recall'])
-            ))
-            outfile.write("\n")
-
-        outfile.write("-"*80)
-        outfile.write("\n")
-
-    outfile.write("Total precision: %6.2f" % precision)
-    outfile.write("\n")
-    outfile.write("Total recall:    %6.2f" % recall)
-    outfile.write("\n")
-    outfile.write("Total F-measure: %6.2f" % (2*precision*recall/(precision+recall), ))
+    outfile.write(m)
     outfile.write("\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
-    Compute scores for semantic parser output against reference semantics.
-    The scores include total item precision and recall, and slot level
-    precision and recall.
+    Compute ASR scores for ASR output against reference text.
 
     The files structures must be as follows:
-      sem_name    => sem_content
+      text_name    => text_content
       ----------------------------------------
-      0000001.wav => inform(food="Chinese")
-      0000002.wav => request(phone)
+      0000001.wav => I want Chinese food
+      0000002.wav => Give me the phone number
 
-    The semantics from the test file and the reference file is matched
-    based on the sem_name.
+    The text from the test file and the reference file is matched based on the text_name.
     """)
 
     parser.add_argument('refsem', action="store", help='a file with reference semantics')
     parser.add_argument('testsem', action="store", help='a file with tested semantics')
-    parser.add_argument('-i', action="store_true", default=False, dest="item_level", help='print item level precision and recall')
 
     args = parser.parse_args()
 
-    score(args.refsem, args.testsem, args.item_level)
+    score(args.refsem, args.testsem)
