@@ -31,8 +31,7 @@ def _expand_file_var(text, path):
     return text.replace('__file__', "'{p}'".format(p=path))
 
 
-def load_as_module(path, force=False, encoding='UTF-8',
-                   text_transforms=list()):
+def load_as_module(path, force=False, encoding='UTF-8', text_transforms=list()):
     """
     Loads a file pointed to by `path' as a Python module with minimal impact on
     the global program environment.  The file name should end in '.py'.
@@ -254,8 +253,7 @@ class Config(object):
         expand_cap = lambda text: text.replace('{cfg_abs_path}',
                                                cfg_abs_dirname)
 
-        self.config = config = load_as_module(
-            file_name, force=True, text_transforms=(expand_cap, )).config
+        self.config = config = load_as_module(file_name, force=True, text_transforms=(expand_cap, )).config
 
         self.load_includes()
 

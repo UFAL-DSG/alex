@@ -14,6 +14,9 @@ def get_dm_type(cfg):
 def dm_factory(dm_type, cfg):
     dm = None
 
+    if dm_type == None:
+        dm_type = get_dm_type(cfg)
+
     # do not forget to maintain all supported dialogue managers
     if dm_type == 'basic':
         dm = DialogueManager(cfg)
@@ -25,7 +28,6 @@ def dm_factory(dm_type, cfg):
         try:
             dm = dm_type(cfg)
         except NameError:
-            raise DMException(
-            'Unsupported dialogue manager: %s' % dm_type)
+            raise DMException('Unsupported dialogue manager: %s' % dm_type)
 
     return dm

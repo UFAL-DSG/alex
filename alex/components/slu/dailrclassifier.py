@@ -15,9 +15,9 @@ from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
-from alex.components.slu.exceptions import SLUException, DAILRException
+from alex.components.slu.exceptions import DAILRException
 from alex.components.slu.base import SLUInterface
-from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork, merge_slu_confnets
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 from alex.utils.cache import lru_cache
 
 CONFNET2NBLIST_EXPANSION_APPROX = 40
@@ -143,6 +143,11 @@ class DAILogRegClassifier(SLUInterface):
         self.features_size = features_size
         self.preprocessing = preprocessing
         self.cldb = cldb
+
+    def __repr__(self):
+        r = "DAILogRegClassifier({cldb},{preprocessing},{features_size})"\
+            .format(cldb=self.cldb, preprocessing=self.preprocessing, features_size=self.features_size)
+        return r
 
     def abstract_utterance(self, utterance):
         """

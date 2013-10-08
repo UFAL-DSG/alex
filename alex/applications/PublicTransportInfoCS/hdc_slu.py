@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
 from alex.components.asr.utterance import UtteranceHyp
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
@@ -35,6 +33,9 @@ def _phrase_in(utterance, words):
 class PTICSHDCSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
+
+    def __repr__(self):
+        return "PTICSHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
 
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.

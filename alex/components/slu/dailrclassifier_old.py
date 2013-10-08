@@ -18,24 +18,22 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork,
 
 
 class DAILogRegClassifier(SLUInterface):
-    """Implements learning of dialogue act item classifiers based on logistic
-    regression.
+    """
+    Implements learning of dialogue act item classifiers based on logistic regression.
 
     The parser implements a parser based on set of classifiers for each
     dialogue act item. When parsing the input utterance, the parse classifies
     whether a given dialogue act item is present. Then, the output dialogue
     act is composed of all detected dialogue act items.
 
-    Dialogue act is defined as a composition of dialogue act items. E.g.
+    Dialogue act is defined as a composition of dialogue act items. E.g.:
 
-    confirm(drinks="wine")&inform(name="kings shilling") <=> 'does kings serve wine'
+    ::
+        confirm(drinks="wine")&inform(name="kings shilling") <=> does kings serve wine
 
-    where confirm(drinks="wine") and inform(name="kings shilling") are two
-    dialogue act items.
+    where ``confirm(drinks="wine")`` and ``inform(name="kings shilling")`` are two dialogue act items.
 
-    This parser uses logistic regression as the classifier of the dialogue
-    act items.
-
+    This parser uses logistic regression as the classifier of the dialogue act items.
     """
 
     def __init__(self, preprocessing=None, features_size=4, *args, **kwargs):
