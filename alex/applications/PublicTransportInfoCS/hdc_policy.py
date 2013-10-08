@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 
-import datetime
 import random
 
 import autopath
@@ -294,9 +293,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         if time == "none" or time == "now":
             time = self.get_default_time()
         else:
-            time_parsed = datetime.datetime.strptime(time, "%H:%M")
+            time_parsed = datetime.strptime(time, "%H:%M")
             new_hour = time_parsed.hour
-            if datetime.datetime.now().hour > time_parsed.hour:
+            if datetime.now().hour > time_parsed.hour:
                 new_hour = (new_hour + 12) % 24
 
             time = "%d:%.2d" % (new_hour, time_parsed.minute)
@@ -387,4 +386,4 @@ class PTICSHDCPolicy(DialoguePolicy):
 
     def get_default_time(self):
         """Return default value for time."""
-        return datetime.datetime.now().strftime("%H:%M")
+        return datetime.now().strftime("%H:%M")

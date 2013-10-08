@@ -17,8 +17,8 @@ from alex.utils.czech_stemmer import cz_stem
 
 
 def _fill_utterance_values(abutterance, category, res):
-    for _, value in abutterance.insts_for_type((category.upper(), )):
-        if value == ("[OTHER]", ):
+    for _, value in abutterance.insts_for_type((category.upper(),)):
+        if value == ("[OTHER]",):
             continue
 
         res[category].append(value)
@@ -134,7 +134,7 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance:
         :param cn:
         """
-        preps_in = set(["v", "čas"])
+        preps_in = set(["v", "čas", "o", "po"])
 
         u = abutterance
         N = len(u)
@@ -156,8 +156,8 @@ class PTICSHDCSLU(SLUInterface):
                     cn.add(1.0, DialogueActItem("inform", 'time', time_value))
 
     def parse_meta(self, utterance, cn):
-        if (_any_word_in(utterance, ["ahoj",  "nazdar", "zdar", ]) or
-                _all_words_in(utterance, ["dobrý",  "den"])):
+        if (_any_word_in(utterance, ["ahoj", "nazdar", "zdar", ]) or
+                _all_words_in(utterance, ["dobrý", "den"])):
             cn.add(1.0, DialogueActItem("hello"))
 
         if (_any_word_in(utterance,
@@ -173,17 +173,17 @@ class PTICSHDCSLU(SLUInterface):
         if not (_any_word_in(utterance,
                              ["spojení", "zastávka", "stanice", "možnost"])):
             if (_any_word_in(utterance,
-                             ["zopakovat",  "opakovat", "znov", "opakuj",
+                             ["zopakovat", "opakovat", "znov", "opakuj",
                               "zopakuj"])
                     or _phrase_in(utterance, ["ještě", "jedno"])):
                 cn.add(1.0, DialogueActItem("repeat"))
 
-        if _any_word_in(utterance, ["nápověda",  "pomoc", "help", "nevím", "nevim"]) or \
+        if _any_word_in(utterance, ["nápověda", "pomoc", "help", "nevím", "nevim"]) or \
             _all_words_in(utterance, ["co", "říct"]) or \
             _all_words_in(utterance, ["co", "zeptat"]):
             cn.add(1.0, DialogueActItem("help"))
 
-        if _any_word_in(utterance, ["ano",  "jo", "jasně"]):
+        if _any_word_in(utterance, ["ano", "jo", "jasně"]):
             cn.add(1.0, DialogueActItem("affirm"))
 
         if _any_word_in(utterance, ["ne", "nejed"]):
@@ -200,16 +200,16 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("restart"))
 
         if _phrase_in(utterance, ["z", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','from_centre','true'))
+            cn.add(1.0, DialogueActItem('inform', 'from_centre', 'true'))
 
         if _phrase_in(utterance, ["do", "centra"]) and not _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','to_centre','true'))
+            cn.add(1.0, DialogueActItem('inform', 'to_centre', 'true'))
 
         if _phrase_in(utterance, ["z", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','from_centre','false'))
+            cn.add(1.0, DialogueActItem('inform', 'from_centre', 'false'))
 
         if _phrase_in(utterance, ["do", "centra"]) and _any_word_in(utterance, ["ne", "nejed", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','to_centre','false'))
+            cn.add(1.0, DialogueActItem('inform', 'to_centre', 'false'))
 
         if _all_words_in(utterance, ["od", "to", "jede"]) or \
             _all_words_in(utterance, ["z", "jake", "jede"]) or \
@@ -219,7 +219,7 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(utterance, ["odkud", "to", "jede"]) or \
             _all_words_in(utterance, ["odkud", "pojede"]) or \
             _all_words_in(utterance, ["od", "kud", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','from_stop'))
+            cn.add(1.0, DialogueActItem('request', 'from_stop'))
 
         if _all_words_in(utterance, ["kam", "to", "jede"]) or \
             _all_words_in(utterance, ["do", "jake", "jede"]) or \
@@ -229,11 +229,11 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(utterance, ["kde", "konečná", ]) or \
             _all_words_in(utterance, ["kde", "konečná", ]) or \
             _all_words_in(utterance, ["kam", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','to_stop'))
+            cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
         if _any_word_in(utterance, ["kolik", "jsou", "je"]) and \
             _any_word_in(utterance, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
-            cn.add(1.0, DialogueActItem('request','num_transfers'))
+            cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
         if _any_word_in(utterance, ["spoj", "spojení", "možnost", "cesta", "zpoždění", "stažení"]):
             if _any_word_in(utterance, ["první", ]):
