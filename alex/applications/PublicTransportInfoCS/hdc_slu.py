@@ -162,7 +162,7 @@ class PTICSHDCSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        preps_in = set(["v", "čas", "po", "před", "kolem"])
+        preps_in = set(["v", "čas", "o", "po", "před", "kolem"])
 
         confirm = _phrase_in(u, ['jede', 'to'])
         deny = _phrase_in(u, ['nechci', 'ne'])

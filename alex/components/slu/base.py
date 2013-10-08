@@ -47,12 +47,12 @@ ft_props = {
     # Following gets used when doing reranking.
     'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False), }
 ft_default_args = {
-    'ngram': ('ngram', 4, ),
-    'nbl_ngram': ('ngram', ),
-    'cn_ngram': ('ngram', 4, ),
-    'ab_ngram': ('ngram', 4, ),
-    'ab_nbl_ngram': ('ngram', ),
-    'ab_cn_ngram': ('ngram', 4, ),
+    'ngram': ('ngram', 4,),
+    'nbl_ngram': ('ngram',),
+    'cn_ngram': ('ngram', 4,),
+    'ab_ngram': ('ngram', 4,),
+    'ab_nbl_ngram': ('ngram',),
+    'ab_cn_ngram': ('ngram', 4,),
     'prev_da': tuple(),
     'da_nbl': tuple(),
 }
@@ -383,9 +383,9 @@ class SLUPreprocessing(object):
                     # original <surface> sequence of tokens.  This is done
                     # crudely using two subsequent substitutions, so the
                     # original <surface> gets forgotten.
-                    utterance_cp = utterance_cp.replace(surface, (value, ))
+                    utterance_cp = utterance_cp.replace(surface, (value,))
                     utterance_cp = utterance_cp.phrase2category_label(
-                        (value, ), (category_label, ))
+                        (value,), (category_label,))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= utt_len:
@@ -466,9 +466,9 @@ class SLUPreprocessing(object):
                 for hyp_idx in hyps_with_surface:
                     # XXX Temporary solution.  See above for comments on the
                     # use of replace and phrase2category_label.
-                    new_utt = nblist_cp[hyp_idx][1].replace(surface, (value, ))
+                    new_utt = nblist_cp[hyp_idx][1].replace(surface, (value,))
                     nblist_cp[hyp_idx][1] = (new_utt.phrase2category_label(
-                        (value, ), (category_label, )))
+                        (value,), (category_label,)))
 
                 # If nothing is left to replace, stop iterating the database.
                 if substituted_len >= tot_len:
@@ -516,11 +516,11 @@ class SLUPreprocessing(object):
                 # original <surface> sequence of tokens.  This is done
                 # crudely using two subsequent substitutions, so the
                 # original <surface> gets forgotten.
-                confnet_cp = confnet_cp.replace((value, ), ('__HIDDEN__', ))
-                confnet_cp = confnet_cp.replace(surface, (value, ))
+                confnet_cp = confnet_cp.replace((value,), ('__HIDDEN__',))
+                confnet_cp = confnet_cp.replace(surface, (value,))
                 confnet_cp = confnet_cp.phrase2category_label(
-                    (value, ), (slot_upper, ))
-                confnet_cp = confnet_cp.replace(('__HIDDEN__', ), (value, ))
+                    (value,), (slot_upper,))
+                confnet_cp = confnet_cp.replace(('__HIDDEN__',), (value,))
 
         return confnet_cp, valform_for_cl
 
