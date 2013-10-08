@@ -281,8 +281,10 @@ class AbstractTemplateNLG(object):
         Returns the composed utterance.
         """
         composed_utt = []
+        # try to find a template for each single dialogue act item
         for dai in da:
             try:
+                # look for an exact match
                 dai_utt = self.random_select(self.templates[unicode(dai)])
             except KeyError:
                 # try to find a relaxed match
@@ -293,7 +295,7 @@ class AbstractTemplateNLG(object):
                     dai_utt = self.match_and_fill_generic(dax, svsx)
                 except TemplateNLGException:
                     dai_utt = unicode(dai)
-
+            
             composed_utt.append(dai_utt)
         return ' '.join(composed_utt)
 
@@ -308,13 +310,18 @@ class AbstractTemplateNLG(object):
         """
         composed_utt = []
         sub_start = 0
+        # pass through the dialogue act
         while sub_start < len(da):
             dax_utt = None
             dax_len = None
+            # greedily look for the longest template that will cover the next
+            # dialogue act items (try longer templates first, from max. 
+            # length given in settings down to 1).
             for sub_len in xrange(self.compose_greedy_lookahead, 0, -1):
                 dax = DialogueAct()
                 dax.extend(da[sub_start:sub_start + sub_len])
                 try:
+                    # try to find an exact match
                     dax_utt = self.random_select(self.templates[unicode(dax)])
                     dax_len = sub_len
                 except KeyError:
@@ -325,8 +332,9 @@ class AbstractTemplateNLG(object):
                         dax_len = sub_len
                         break
                     except TemplateNLGException:
+                        # nothing found: look for shorter templates
                         continue
-            if dax_utt is None:
+            if dax_utt is None: # dummy backoff
                 dax_utt = unicode(da[sub_start])
                 dax_len = 1
             composed_utt.append(dax_utt)
