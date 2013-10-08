@@ -76,7 +76,6 @@ STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
                                     # dirty, though
 #STOPS_FNAME = "stops.txt"
 
-
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
     ('\\bn\\.Vlt\\.', ['nad Vltavou']),
@@ -106,7 +105,10 @@ _substs_lit = [
     ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
     ('\\bI$', ['jedna']),
     ('\\bII\\b', ['dva']),
+    ('\\bD1\\b', ['dé jedna']),
+    ('\\bD8\\b', ['dé osm']),
 ]
+
 _substs = [(re.compile(regex), [val + ' ' for val in vals]) for (regex, vals) in _substs_lit]
 _num_rx = re.compile('[1-9][0-9]*')
 _num_rx_exh = re.compile('^[1-9][0-9]*$')
@@ -171,14 +173,14 @@ def add_time():
             hour_id = 'hodiny'
         # X:00
         time_val = "{h}:00".format(h=hour)
-        db_add("time", time_val, str(hour))
+        #db_add("time", time_val, str(hour))
         db_add("time", time_val, hour_str)
         time_str = "{h} nula nula".format(h=hour_str)
         db_add("time", time_val, time_str)
         time_str = "{h} {hi}".format(h=hour_str, hi=hour_id)
         db_add("time", time_val, time_str)
-        time_str = "{h} {hi}".format(h=hour, hi=hour_id)
-        db_add("time", time_val, time_str)
+        #time_str = "{h} {hi}".format(h=hour, hi=hour_id)
+        #db_add("time", time_val, time_str)
         time_str = "{h} hodině".format(h=hour_ord)
         db_add("time", time_val, time_str)
 
@@ -187,8 +189,8 @@ def add_time():
             time_val = "{h}:15".format(h=(hour - 1))
             time_str = "čtvrt na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "čtvrt na {h}".format(h=hour)
-            db_add("time", time_val, time_str)
+            #time_str = "čtvrt na {h}".format(h=hour)
+            #db_add("time", time_val, time_str)
             # (X-1):30 half past (X-1)
             time_val = "{h}:30".format(h=(hour - 1))
             time_str = "půl {ho}".format(ho=hour_ord)
@@ -197,48 +199,47 @@ def add_time():
             time_val = "{h}:45".format(h=(hour - 1))
             time_str = "tři čtvrtě na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "tři čtvrtě na {h}".format(h=hour)
-            db_add("time", time_val, time_str)
+            #time_str = "tři čtvrtě na {h}".format(h=hour)
+            #db_add("time", time_val, time_str)
 
         for minute in xrange(60):
             minute_str = numbers_str[minute]
             time_val = "{h}:{m}".format(h=hour, m=minute)
-            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id,
-                                             m=minute_str)
+            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id, m=minute_str)
             db_add("time", time_val, time_str)
-            time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
-            db_add("time", time_val, time_str)
+            #time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
+            #db_add("time", time_val, time_str)
             time_str = "{h} {m}".format(h=hour_str, m=minute_str)
             db_add("time", time_val, time_str)
-            time_str = "{h} {m}".format(h=hour, m=minute)
-            db_add("time", time_val, time_str)
+            #time_str = "{h} {m}".format(h=hour, m=minute)
+            #db_add("time", time_val, time_str)
 
 
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
     if expanded_format:
         line = line.split(';')
-        val, names = line[0], line
+        name, forms = line[0], line
     else:
-        val = line
-        names = [line,]
+        name = line
+        forms = [line,]
 
-    # Do some basic pre-processing.
-    # Expand abbreviations.
-    for regex, subs in _substs:
-        if any(map(regex.search, names)):
-            old_names = names
-            names = list()
-            for old_name in old_names:
-                if regex.search(old_name):
-                    for sub in subs:
-                        names.append(regex.sub(sub, old_name))
-                else:
-                    names.append(old_name)
+    # Do some basic pre-processing. Expand abbreviations.
+    new_forms = []
+    for form in forms:
+        new_form = form
+        for regex, subs in _substs:
+            if regex.search(form):
+                for sub in subs:
+                    new_form = regex.sub(sub, new_form)
+
+        new_forms.append(new_form)
+    forms = new_forms
+
     # Spell out numerals.
-    if any(map(_num_rx.search, names)):
-        old_names = names
-        names = list()
+    if any(map(_num_rx.search, forms)):
+        old_names = forms
+        forms = list()
         for name in old_names:
             new_words = list()
             for word in name.split():
@@ -249,22 +250,21 @@ def preprocess_stops_line(line, expanded_format=False):
                         new_words.append(word)
                 else:
                     new_words.append(word)
-            names.append(' '.join(new_words))
+            forms.append(' '.join(new_words))
     # Remove extra spaces, lowercase.
-    names = [' '.join(name.replace(',', ' ').replace('-', ' ')
+    forms = [' '.join(name.replace(',', ' ').replace('-', ' ')
                       .replace('(', ' ').replace(')', ' ').replace('5', ' ')
                       .replace('0', ' ').replace('.', ' ').split()).lower()
-             for name in names]
+             for name in forms]
 
-    return val, names
+    return name, forms
 
 
 def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
     is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME),
-                     encoding='utf-8') as stops_file:
+    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
         for line in stops_file:
             stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
             for synonym in stop_names:
@@ -281,32 +281,32 @@ def stem():
             vals[value] = set([" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]])
 
 def save_surface_forms(file_name):
-    sf = []
+    surface_forms = []
     for k in database:
         for v in database[k]:
-            for l in database[k][v]:
-                sf.append(l)
-    sf.sort()
+            for f in database[k][v]:
+                surface_forms.append(f)
+    surface_forms.sort()
 
     # save the database vocabulary - all the surface forms
     with codecs.open(file_name, 'w', 'UTF-8') as f:
-        for l in sf:
-            f.write(l)
+        for sf in surface_forms:
+            f.write(sf)
             f.write('\n')
 
 
 def save_SRILM_classes(file_name):
-    sf = []
+    surface_forms = []
     for k in database:
         for v in database[k]:
-            for l in database[k][v]:
-                sf.append("CL_" + k.upper() + " " + l.upper())
-    sf.sort()
+            for f in database[k][v]:
+                surface_forms.append("CL_" + k.upper() + " " + f.upper())
+    surface_forms.sort()
 
     # save the database vocabulary - all the surface forms
     with codecs.open(file_name, 'w', 'UTF-8') as f:
-        for l in sf:
-            f.write(l)
+        for sf in surface_forms:
+            f.write(sf)
             f.write('\n')
 
 ########################################################################
