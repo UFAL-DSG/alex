@@ -37,7 +37,7 @@ class AbstractTemplateNLG(object):
         # setup the composing strategy
         self.compose_utterance = self.compose_utterance_greedy
         self.compose_greedy_lookahead = 5
-        if self.cfg['NLG']['TemplateCompose']:
+        if 'NLG' in self.cfg and 'TemplateCompose' in self.cfg['NLG']:
             compose_setting = \
                     self.cfg['NLG']['TemplateCompose'].tolower().strip()
             if compose_setting.startswith('greedy'):
