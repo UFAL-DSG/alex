@@ -1104,7 +1104,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         self.cn = new_cn
         return self
 
-    def prune(self, prune_prob=0.001):
+    def prune(self, prune_prob=0.01):
         """Prune all low probability dialogue act items."""
         pruned_cn = []
         for prob, dai in self.cn:

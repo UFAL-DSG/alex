@@ -438,7 +438,7 @@ class ConfusionNetwork(Hypothesis):
 #         """
 #         pass
 #
-#     def prune(self, prune_prob=0.001):
+#     def prune(self, prune_prob=0.01):
 #         """Prune all low probability dialogue act items."""
 #         pruned_cn = []
 #         for prob, fact in self.cn:
