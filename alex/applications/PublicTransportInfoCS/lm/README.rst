@@ -1,6 +1,10 @@
 Building the language model for the Public Transport Info telephone service (Czech)
 ============================================================================
 
+::
+
+    *WARNING* To build the language model, you will need a machine with a lot of memmory. More than 16GB.
+
 The data
 --------
 To build the domain specific language model, we use the approach described in :doc:`alex.applications.LANGUAGE_MODELLING`.
