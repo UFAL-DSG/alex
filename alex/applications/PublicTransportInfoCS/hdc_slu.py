@@ -325,10 +325,10 @@ class PTICSHDCSLU(SLUInterface):
         if "_noise_" in u.utterance or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("null"))
 
-        if "_silence_" in u.utteranceor:
+        if "_silence_" in u.utterance:
             cn.add(1.0, DialogueActItem("silence"))
 
-        if "_other_" in u.utteranceor:
+        if "_other_" in u.utterance:
             cn.add(1.0, DialogueActItem("other"))
 
         if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
@@ -501,11 +501,5 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_task(abutterance, res_cn)
 
         self.parse_meta(utterance, res_cn)
-
-        # if the conf network is empty then it should output null() and not other()
-
-        # other() should denote something that we explicitly do not understand
-        #if not res_cn:
-        #    res_cn.add(1.0, DialogueActItem("other"))
 
         return res_cn

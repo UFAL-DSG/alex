@@ -21,17 +21,18 @@ SLU
 
 The SLU can generate either:
 
-- a normal dialogue act
+- a ordinary dialogue act
 - the ``null()`` act which should be ignored by the DM, and the system should respond with ``silence()``
-- the ``silence()`` act which denote that the user was silent, a probably reasonable system act is ``silence()`` as well
+- the ``silence()`` act which denote that the user was silent, a probably reasonable system response is ``silence()`` as well
 - the ``other()`` act which denote that the input was something else that was lost during processing
 
 
 The SLU should map:
 
-- ``_noise_`` to ``null()`` - noise should be ignored
+- ``_noise_`` to ``null()`` - noise can be ignored in general
 - ``_silence_`` to ``silence()`` - silence will be processed in the DM
-- ``_other_`` to ``other()`` - other hypotheses will be handled by the DM
+- ``_other_`` to ``other()`` - other hypotheses will be handled by the DM, mostly by responding "I did not get that. Can
+  you ... ?"
 
 
 DM
@@ -44,7 +45,12 @@ The DM can generate either:
 
 The DM should map:
 
-- ``null()`` to ``silence()`` - because the ``null()`` act is to ignore the input
-- ``silence()`` to ``silence()`` or a normal dialogue act - the DM should be silent or to ask user "Are still there?"
+- ``null()`` to ``silence()`` - because the ``null()`` act denote that the input should be ignored; however there is a
+  problem with this, read the note below for current workaround for this
+- ``silence()`` to ``silence()`` or a normal dialogue act - the DM should be silent or to ask the user "Are still there?"
 - ``other()`` to ``notunderstood()`` - to show the user that we did not understood the input and that the input should
   be rephrased instead of just being repeated.
+
+**PROBLEM** As of now, both handcrafted and trained SLUs cannot correctly classify the ``other()`` dialogue act. It has
+a very low recall for this DA. Instead of the ``other()`` DA it returns the ``null()`` DA. Therefore,  the ``null()``
+act is processed in DMs as if it was the ``other()`` DA.

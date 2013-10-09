@@ -98,4 +98,8 @@ bootstrap_0100.wav => inform(alternative="2")
 bootstrap_0101.wav => inform(alternative="3")
 bootstrap_0102.wav => inform(alternative="4")
 bootstrap_0103.wav => inform(alternative="last")
+bootstrap_0104.wav => repeat()
+bootstrap_0105.wav => repeat()
+bootstrap_0106.wav => repeat()
+bootstrap_0107.wav => repeat()
 
