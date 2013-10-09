@@ -716,7 +716,7 @@ class DAILogRegClassifier(SLUInterface):
 
                 da_confnet.add(p[0][1], self.parsed_classifiers[clser])
 
-        da_confnet.sort().merge()
+        da_confnet.sort().merge().prune()
 
         return da_confnet
 

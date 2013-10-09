@@ -322,8 +322,14 @@ class PTICSHDCSLU(SLUInterface):
         :return: None
         """
         u = utterance
-        if "_noise_" in u.utterance or len(u.utterance) == 0:
+        if "_noise_" in u.utterance:
             cn.add(1.0, DialogueActItem("null"))
+
+        if "__silence__" in u.utteranceor or len(u.utterance) == 0:
+            cn.add(1.0, DialogueActItem("silence"))
+
+        if "__other__" in u.utteranceor:
+            cn.add(1.0, DialogueActItem("other"))
 
         if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
                 _all_words_in(u, ["dobrý",  "den"])):
@@ -478,6 +484,7 @@ class PTICSHDCSLU(SLUInterface):
         #print category_labels
         #
         res_cn = DialogueActConfusionNetwork()
+
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
         if 'TIME' in category_labels:
@@ -495,7 +502,10 @@ class PTICSHDCSLU(SLUInterface):
 
         self.parse_meta(utterance, res_cn)
 
-        if not res_cn:
-            res_cn.add(1.0, DialogueActItem("other"))
+        # if the conf network is empty then it should output null() and not other()
+
+        # other() should denote something that we explicitly do not understand
+        #if not res_cn:
+        #    res_cn.add(1.0, DialogueActItem("other"))
 
         return res_cn

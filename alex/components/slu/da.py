@@ -1000,7 +1000,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         return da
 
-    def get_da_nblist_naive(self, n=10, expand_upto_total_prob_mass=0.9):
+    def get_da_nblist_naive(self, n=10, prune_prob=0.005):
         """For each CN item creates a NB list item."""
 
         res = []
@@ -1015,7 +1015,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         res.sort(reverse=True)
         return res
 
-    def get_da_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+    def get_da_nblist(self, n=10, prune_prob=0.005):
         """Parses the input dialogue act item confusion network and generates
         N-best hypotheses.
 
@@ -1023,8 +1023,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         assigned probability.  The list also include a dialogue act for not
         having the correct dialogue act in the list - other().
 
-        FIXME: I should stop the expansion when expand_upto_total_prob_mass is
-        reached.
+        Generation of hypotheses will stop when the probability of the hypotheses is smaller then the ``prune_prob``.
 
         """
 
@@ -1054,8 +1053,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                 # print "current_prob, current_hyp_index:", current_prob,
                 # current_hyp_index
 
-                for hyp_index in \
-                        self.get_next_worse_candidates(current_hyp_index):
+                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)
                     open_hyp.append((prob, hyp_index))
 
@@ -1104,7 +1102,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         self.cn = new_cn
         return self
 
-    def prune(self, prune_prob=0.01):
+    def prune(self, prune_prob=0.005):
         """Prune all low probability dialogue act items."""
         pruned_cn = []
         for prob, dai in self.cn:

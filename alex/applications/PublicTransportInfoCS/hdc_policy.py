@@ -57,7 +57,8 @@ class PTICSHDCPolicy(DialoguePolicy):
 #            # NLG("Ahoj.")
 #            res_da = DialogueAct("hello()")
 
-        elif dialogue_state["ludait"] == "silence":
+        elif dialogue_state["ludait"] == "silence" or dialogue_state["ludait"] == "null":
+            # at this moment the silence and the explicit null act is treated teh same way
             # NLG("")
             silence_time = dialogue_state['silence_time']
 
@@ -65,11 +66,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct('inform(silence_timeout="true")')
             else:
                 res_da = DialogueAct("silence()")
-
-        elif dialogue_state["ludait"] == "null":
-            # NLG("")
-            # ignore the turn
-            res_da = DialogueAct("silence()")
 
         elif dialogue_state["ludait"] == "bye":
             # NLG("Na shledanou.")
