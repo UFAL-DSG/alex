@@ -66,6 +66,11 @@ class PTICSHDCPolicy(DialoguePolicy):
             else:
                 res_da = DialogueAct("silence()")
 
+        elif dialogue_state["ludait"] == "null":
+            # NLG("")
+            # ignore the turn
+            res_da = DialogueAct("silence()")
+
         elif dialogue_state["ludait"] == "bye":
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
@@ -191,7 +196,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif dialogue_state["ludait"] == "other":
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
-
         else:
             res_da = DialogueAct()
 
