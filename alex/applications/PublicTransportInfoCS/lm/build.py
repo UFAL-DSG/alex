@@ -234,7 +234,7 @@ if not os.path.exists(expanded_data_text_trn_norm_tg_arpa):
     print cmd
     os.system(cmd)
 
-    cmd = "cat %s | grep -v 'CL_[[:alnum:]]\+ CL_'> %s" % \
+    cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] ]\+CL_'> %s" % \
           (expanded_data_text_trn_norm_tg_arpa,
            expanded_data_text_trn_norm_tg_arpa_filtered)
 

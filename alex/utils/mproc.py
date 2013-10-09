@@ -196,7 +196,7 @@ class SystemLogger(object):
         """ Disable logging into the call-specific directory.
         """
         self.current_session_log_dir_name.value = ''
-        self._session_started = True
+        self._session_started = False
 
     @global_lock(lock)
     def _get_session_started(self):
