@@ -1444,8 +1444,11 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # TODO Implement the option to keep the original value, just adding the
     # replacement by its side.
     def get_next_worse_candidates(self, hyp_index):
-        """Returns such hypotheses that will have lower probability. It assumes
-        that the confusion network is sorted."""
+        """
+        Returns such hypotheses that will have lower probability. It assumes
+        that the confusion network is sorted.
+
+        """
         worse_hyp = []
 
         for i in range(len(hyp_index)):
@@ -1465,12 +1468,14 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return Utterance(' '.join(s))
 
     # FIXME Make this method aware of _long_links.
-    def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+    def get_utterance_nblist(self, n=10, prune_prob=0.005):
         """Parses the confusion network and generates n best hypotheses.
 
         The result is a list of utterance hypotheses each with a with assigned
         probability.  The list also includes the utterance "_other_" for not
         having the correct utterance in the list.
+
+        Generation of hypotheses will stop when the probability of the hypotheses is smaller then the ``prune_prob``.
 
         """
 
@@ -1496,8 +1501,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 # print "current_prob, current_hyp_index:", current_prob,
                 # current_hyp_index
 
-                for hyp_index in self.get_next_worse_candidates(
-                        current_hyp_index):
+                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)
                     open_hyp.append((prob, hyp_index))
 

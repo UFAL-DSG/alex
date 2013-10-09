@@ -322,10 +322,10 @@ class PTICSHDCSLU(SLUInterface):
         :return: None
         """
         u = utterance
-        if "_noise_" in u.utterance:
+        if "_noise_" in u.utterance or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("null"))
 
-        if "_silence_" in u.utteranceor or len(u.utterance) == 0:
+        if "_silence_" in u.utteranceor:
             cn.add(1.0, DialogueActItem("silence"))
 
         if "_other_" in u.utteranceor:
