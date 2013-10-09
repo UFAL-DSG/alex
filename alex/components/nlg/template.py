@@ -316,6 +316,14 @@ class TemplateNLG(AbstractTemplateNLG):
         return ' '.join((hours, hr_id, 'a', mins, min_id))
 
     def vocalize_prepos(self, text):
+        """\
+        Vocalize prepositions in the utterance, i.e. 'k', 'v', 'z', 's'
+        are changed to 'ke', 've', 'ze', 'se' if appropriate given the
+        following word.
+
+        This is mainly needed for time expressions, e.g. "v jednu hodinu"
+        (at 1:00), but "ve dvě hodiny" (at 2:00).
+        """
         def pairwise(iterable):
             a = iter(iterable)
             return itertools.izip(a, a)
