@@ -729,10 +729,10 @@ class SLUInterface(object):
         del obs_wo_nblist['utt_nbl']
         dacn_list = []
         for prob, utt in nblist:
-            if "__other__" == utt:
+            if "_other_" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("other"))
-            elif "__silence__" == utt:
+            elif "_silence_" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("silence"))
             else:

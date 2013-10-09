@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-exludedValues = set(['__silence__', ])
+exludedValues = set(['_silence_', ])
 
 ####################################################################################
 
@@ -153,7 +153,7 @@ class Goal(Node):
         pObserving  - probability that the observed value is correct
         """
 
-        if parents['observation'][0] == '__silence__':
+        if parents['observation'][0] == '_silence_':
             # there is no observation
             if parents['previous'][0] == value:
                 return self.parameters['pRemebering']
@@ -322,7 +322,7 @@ class ConstChangeGoal(GroupingGoal):
                 # now compute transitions from the other values to the cur value
                 #  => use cur as previous
                 self.values[cur] += self.probTable(cur,
-                                                   {'previous': ('__other__', self.parents['previous'].cardinality),
+                                                   {'previous': ('_other_', self.parents['previous'].cardinality),
                                                     'observation': (obs, self.parents['observation'].cardinality)}) \
                     * (1 - self.parents['previous'].values[cur]) \
                     * self.parents['observation'].values[obs]

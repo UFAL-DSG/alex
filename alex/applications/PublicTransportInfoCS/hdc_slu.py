@@ -325,6 +325,12 @@ class PTICSHDCSLU(SLUInterface):
         if "_noise_" in u.utterance or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("null"))
 
+        if "_silence_" in u.utterance:
+            cn.add(1.0, DialogueActItem("silence"))
+
+        if "_other_" in u.utterance:
+            cn.add(1.0, DialogueActItem("other"))
+
         if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
                 _all_words_in(u, ["dobrý",  "den"])):
             cn.add(1.0, DialogueActItem("hello"))
@@ -478,6 +484,7 @@ class PTICSHDCSLU(SLUInterface):
         #print category_labels
         #
         res_cn = DialogueActConfusionNetwork()
+
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
         if 'TIME' in category_labels:
@@ -494,8 +501,5 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_task(abutterance, res_cn)
 
         self.parse_meta(utterance, res_cn)
-
-        if not res_cn:
-            res_cn.add(1.0, DialogueActItem("other"))
 
         return res_cn
