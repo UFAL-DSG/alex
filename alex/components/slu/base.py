@@ -732,7 +732,7 @@ class SLUInterface(object):
             if "__other__" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("other"))
-            elif "__silence__" == utt:
+            elif "_silence_" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("silence"))
             else:

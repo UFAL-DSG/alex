@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-exludedValues = set(['__silence__', ])
+exludedValues = set(['_silence_', ])
 
 ####################################################################################
 
@@ -153,7 +153,7 @@ class Goal(Node):
         pObserving  - probability that the observed value is correct
         """
 
-        if parents['observation'][0] == '__silence__':
+        if parents['observation'][0] == '_silence_':
             # there is no observation
             if parents['previous'][0] == value:
                 return self.parameters['pRemebering']

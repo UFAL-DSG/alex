@@ -325,7 +325,7 @@ class PTICSHDCSLU(SLUInterface):
         if "_noise_" in u.utterance:
             cn.add(1.0, DialogueActItem("null"))
 
-        if "__silence__" in u.utteranceor or len(u.utterance) == 0:
+        if "_silence_" in u.utteranceor or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("silence"))
 
         if "__other__" in u.utteranceor:
