@@ -2,6 +2,10 @@
 # coding=utf-8
 #
 
+"""
+A collection of helper functions for generating Czech.
+"""
+
 from __future__ import unicode_literals
 
 import re
