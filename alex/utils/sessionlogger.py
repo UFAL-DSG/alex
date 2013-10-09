@@ -71,8 +71,7 @@ class SessionLogger(object):
         """
         self.session_dir_name.value = output_dir
 
-        f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
-                 "w", 0)
+        f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
@@ -92,11 +91,19 @@ class SessionLogger(object):
 
     @global_lock(lock)
     def session_end(self):
-        """ Disables logging into the session-specific directory.
         """
-        self._flush()
-        self.session_dir_name.value = ''
-        self._is_open = False
+        *WARNING: Deprecated* Disables logging into the session-specific directory.
+
+        We better do not end a session because very often after the session_end() method is called there are still
+        incoming messages. Therefore, it is better to wait for the session_start() method to set a
+        new destination for the session log.
+
+        """
+
+
+        #self._flush()
+        #self.session_dir_name.value = ''
+        #self._is_open = False
 
     @global_lock(lock)
     def _get_is_open(self):
@@ -114,8 +121,7 @@ class SessionLogger(object):
         if self._is_open:
             return self.session_dir_name.value
         else:
-            raise SessionClosedException("There is no directory for a session "
-                                         "that has been closed.")
+            raise SessionClosedException("There is no directory for a session that has been closed.")
 
     def cfg_formatter(self, message):
         """ Format the message - pretty print
@@ -131,8 +137,7 @@ class SessionLogger(object):
         modifying it.
 
         """
-        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'),
-                      "r+", 0)
+        self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
@@ -379,9 +384,7 @@ class SessionLogger(object):
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(
-                ("Missing rec element for the {fname} fname.".format(
-                    fname=fname)))
+            raise SessionLoggerException( ("Missing rec element for the {fname} fname.".format(fname=fname)))
 
         self.close_session_xml(doc)
 
