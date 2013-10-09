@@ -397,7 +397,7 @@ class AbstractedUtterance(Utterance, Abstracted):
         try:
             return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
         except AttributeError:
-            return hash((('__other__', ), tuple()))
+            return hash((('_other_', ), tuple()))
 
     @classmethod
     def from_utterance(cls, utterance):
@@ -616,7 +616,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return self.get_best()
 
     def get_best(self):
-        if self.n_best[0][1] == '__other__':
+        if self.n_best[0][1] == '_other_':
             return self.n_best[1][1]
         return self.n_best[0][1]
 
@@ -626,7 +626,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return NBList.normalise(self)
 
     def normalise(self):
-        """The N-best list is extended to include the "__other__" utterance to
+        """The N-best list is extended to include the "_other_" utterance to
         represent those utterance hypotheses which are not included in the
         N-best list.
 
@@ -637,7 +637,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
 
     def add_other(self):
         try:
-            return NBList.add_other(self, Utterance('__other__'))
+            return NBList.add_other(self, Utterance('_other_'))
         except NBListException as e:
             raise UtteranceNBListException(e)
 
@@ -1469,7 +1469,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         """Parses the confusion network and generates n best hypotheses.
 
         The result is a list of utterance hypotheses each with a with assigned
-        probability.  The list also includes the utterance "__other__" for not
+        probability.  The list also includes the utterance "_other_" for not
         having the correct utterance in the list.
 
         """

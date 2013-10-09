@@ -322,7 +322,7 @@ class ConstChangeGoal(GroupingGoal):
                 # now compute transitions from the other values to the cur value
                 #  => use cur as previous
                 self.values[cur] += self.probTable(cur,
-                                                   {'previous': ('__other__', self.parents['previous'].cardinality),
+                                                   {'previous': ('_other_', self.parents['previous'].cardinality),
                                                     'observation': (obs, self.parents['observation'].cardinality)}) \
                     * (1 - self.parents['previous'].values[cur]) \
                     * self.parents['observation'].values[obs]

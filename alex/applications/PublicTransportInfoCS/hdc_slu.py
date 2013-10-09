@@ -328,7 +328,7 @@ class PTICSHDCSLU(SLUInterface):
         if "_silence_" in u.utteranceor or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("silence"))
 
-        if "__other__" in u.utteranceor:
+        if "_other_" in u.utteranceor:
             cn.add(1.0, DialogueActItem("other"))
 
         if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
