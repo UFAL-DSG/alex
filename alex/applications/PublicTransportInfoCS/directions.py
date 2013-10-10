@@ -56,6 +56,26 @@ class GoogleRouteLeg(object):
 
 
 class GoogleRouteLegStep(object):
+    """
+    One step in a Google route leg -- taking one means of public transport
+    or walking.
+
+    Data members:
+    travel_mode -- TRANSIT / WALKING
+
+    * For TRANSIT steps:
+        departure_stop
+        departure_time
+        arrival_stop
+        arrival_time
+        headsign       -- direction of the transit line
+        vehicle        -- type of the transit vehicle (TRAM, SUBWAY, BUS)
+        line_name      -- name or number of the transit line
+
+    * For WALKING steps:
+        duration       -- estimated walking duration (seconds)
+    """
+
     MODE_TRANSIT = "TRANSIT"
     MODE_WALKING = "WALKING"
 
@@ -77,6 +97,9 @@ class GoogleRouteLegStep(object):
                     input_json['transit_details']['line']['vehicle']['type']
             self.line_name = \
                     input_json['transit_details']['line']['short_name']
+        elif self.travel_mode == self.MODE_WALKING:
+            self.duration = input_json['duration']['value']
+            self.distance = input_json['distance']['value']
 
     def parsetime(self, time_str):
         hour, mins = time_str.strip('apm').split(':', 1)
@@ -86,25 +109,41 @@ class GoogleRouteLegStep(object):
             hour = (hour + 12) % 24
         return datetime.combine(datetime.now(),
                                 dttime(hour, mins))
+
     def __repr__(self):
         ret = self.travel_mode
         if self.travel_mode == self.MODE_TRANSIT:
             ret += ': ' + self.vehicle + ' ' + self.line_name + \
                     ' [^' + self.headsign + ']: ' + self.departure_stop + \
-                    ' ' + str(self.departure_time) + ' -> '  + \
+                    ' ' + str(self.departure_time) + ' -> ' + \
                     self.arrival_stop + ' ' + str(self.arrival_time)
-            
+        elif self.travel_mode == self.MODE_WALKING:
+            ret += ': ' + str(self.duration / 60) + ' min, ' + \
+                    str(self.distance) + ' m'
         return ret.encode('utf8')
 
+
 class DirectionsFinder(object):
+    """Abstract ancestor for transit direction finders."""
+
     def get_directions(self, from_stop, to_stop, time):
+        """
+        Retrieve the transit directions from the given stop to the given stop
+        at the given time.
+
+        Should be implemented in derived classes.
+        """
         raise NotImplementedError()
 
 
 class GooglePIDDirectionsFinder(DirectionsFinder):
-    def __init__(self, *args, **kwargs):
-        super(GooglePIDDirectionsFinder, self).__init__(*args, **kwargs)
-        self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
+    """Transit direction finder using the Google Maps query engine."""
+
+    def __init__(self, cfg):
+        super(GooglePIDDirectionsFinder, self).__init__()
+        self.system_logger = cfg['Logging']['system_logger']
+        self.directions_url = \
+                'http://maps.googleapis.com/maps/api/directions/json'
 
     def get_directions(self, from_stop, to_stop, departure_time):
 
@@ -124,11 +163,13 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
             'alternatives': 'true',
             'mode': 'transit',
         }
+        self.system_logger.info("Google Directions request:\n" + str(data))
 
-        page = urllib.urlopen(self.directions_url + '?' + urllib.urlencode(data))
+        page = urllib.urlopen(self.directions_url + '?' +
+                              urllib.urlencode(data))
         response = json.load(page)
 
         directions = GoogleDirections(response)
+        self.system_logger.info("Google Directions response:\n" +
+                                str(directions).decode('utf8'))
         return directions
-
-

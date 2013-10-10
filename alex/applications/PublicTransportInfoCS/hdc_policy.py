@@ -28,7 +28,7 @@ class PTICSHDCPolicy(DialoguePolicy):
     def __init__(self, cfg, ontology):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
-        self.directions = GooglePIDDirectionsFinder()
+        self.directions = GooglePIDDirectionsFinder(cfg=cfg)
 
         self.das = []
         self.last_system_dialogue_act = None
