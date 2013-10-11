@@ -69,6 +69,7 @@ class SessionLogger(object):
     def session_start(self, output_dir):
         """ Records the target directory and creates the template call log.
         """
+
         self.session_dir_name.value = output_dir
 
         f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
@@ -99,7 +100,6 @@ class SessionLogger(object):
         new destination for the session log.
 
         """
-
 
         #self._flush()
         #self.session_dir_name.value = ''
@@ -137,6 +137,7 @@ class SessionLogger(object):
         modifying it.
 
         """
+
         self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
         fcntl.lockf(self.f, fcntl.LOCK_EX)
 
@@ -241,8 +242,8 @@ class SessionLogger(object):
             da.setAttribute("fname", fname)
             da.setAttribute("starttime", self.get_time_str())
         else:
-            raise SessionLoggerException(("Missing dialogue element for %s "
-                                          "speaker") % speaker)
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing dialogue element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -259,8 +260,8 @@ class SessionLogger(object):
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException("Missing dialogue_rec element for "
-                                         "%s fname" % fname)
+            self.close_session_xml(doc)
+            raise SessionLoggerException("Missing dialogue_rec element for %s fname" % fname)
 
         self.close_session_xml(doc)
 
@@ -320,8 +321,8 @@ class SessionLogger(object):
                 da.appendChild(doc.createTextNode(unicode(dialogue_act)))
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -342,8 +343,8 @@ class SessionLogger(object):
                 da.appendChild(doc.createTextNode(unicode(text)))
                 break
         else:
-            raise SessionLoggerException(
-                "Missing turn element for {spkr} speaker".format(spkr=speaker))
+            self.close_session_xml(doc)
+            raise SessionLoggerException("Missing turn element for {spkr} speaker".format(spkr=speaker))
 
         self.close_session_xml(doc)
 
@@ -364,9 +365,8 @@ class SessionLogger(object):
                 da.setAttribute("starttime", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(
-                ("Missing turn element for the {spkr} speaker".format(
-                    spkr=speaker)))
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing turn element for the {spkr} speaker".format(spkr=speaker)))
 
         self.rec_started_filename = fname
         self.close_session_xml(doc)
@@ -384,6 +384,7 @@ class SessionLogger(object):
                 els[i].setAttribute("endtime", self.get_time_str())
                 break
         else:
+            self.close_session_xml(doc)
             raise SessionLoggerException( ("Missing rec element for the {fname} fname.".format(fname=fname)))
 
         self.close_session_xml(doc)
@@ -435,6 +436,7 @@ class SessionLogger(object):
 
                 break
         else:
+            self.close_session_xml(doc)
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
@@ -477,6 +479,7 @@ class SessionLogger(object):
 
                 break
         else:
+            self.close_session_xml(doc)
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
@@ -498,8 +501,7 @@ class SessionLogger(object):
                     da.setAttribute("asr_time", self.get_time_str())
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -516,8 +518,8 @@ class SessionLogger(object):
                 els[i].appendChild(doc.createElement("hangup"))
                 break
         else:
-            raise SessionLoggerException(("Missing turn element for %s "
-                                          "speaker") % speaker)
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)
 
@@ -555,6 +557,7 @@ class SessionLogger(object):
 
                 break
         else:
+            self.close_session_xml(doc)
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
         self.close_session_xml(doc)

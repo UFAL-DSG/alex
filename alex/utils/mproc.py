@@ -189,20 +189,18 @@ class SystemLogger(object):
         session_name = self.get_time_str() + '-' + remote_uri
         self.current_session_log_dir_name.value = os.path.join(self.output_dir, session_name)
         os.makedirs(self.current_session_log_dir_name.value)
-        self._session_started = True
 
     @global_lock(lock)
     def session_end(self):
-        """ Disable logging into the call-specific directory.
         """
-        self.current_session_log_dir_name.value = ''
-        self._session_started = False
+        *WARNING: Deprecated* Disables logging into the session-specific directory.
 
-    @global_lock(lock)
-    def _get_session_started(self):
-        return self._session_started
-
-    session_started = property(_get_session_started)
+        We better do not end a session because very often after the session_end() method is called there are still
+        incoming messages. Therefore, it is better to wait for the session_start() method to set a
+        new destination for the session log.
+        """
+        
+        #self.current_session_log_dir_name.value = ''
 
     # XXX: Returning the enclosing directory in case the session has been
     # closed may not be ideal. In some cases, it causes session logs to be
@@ -212,8 +210,6 @@ class SystemLogger(object):
         """ Return directory where all the call related files should be stored.
         """
         if self.current_session_log_dir_name.value:
-        # This should be equivalent and more accurate. (Matěj)
-        # if self._session_started:
             return self.current_session_log_dir_name.value
 
         # back off to the default logging directory
@@ -243,32 +239,25 @@ class SystemLogger(object):
 
         if self.stdout:
             # Log to stdout.
-            if (SystemLogger.levels[lvl] >=
-                    SystemLogger.levels[self.stdout_log_level]):
+            if (SystemLogger.levels[lvl] >= SystemLogger.levels[self.stdout_log_level]):
                 print self.formatter(lvl, message)
                 sys.stdout.flush()
 
         if self.output_dir:
-            if (SystemLogger.levels[lvl] >=
-                    SystemLogger.levels[self.file_log_level]):
+            if (SystemLogger.levels[lvl] >= SystemLogger.levels[self.file_log_level]):
                 # Log to the global log.
                 log_fname = os.path.join(self.output_dir, 'system.log')
-                with codecs.open(log_fname, "a+", encoding='utf8',
-                                 buffering=0) as log_file:
+                with codecs.open(log_fname, "a+", encoding='utf8', buffering=0) as log_file:
                     fcntl.lockf(log_file, fcntl.LOCK_EX)
                     log_file.write(self.formatter(lvl, message))
                     log_file.write('\n')
                     fcntl.lockf(log_file, fcntl.LOCK_UN)
 
         if self.current_session_log_dir_name.value:
-            if (session_system_log
-                or SystemLogger.levels[lvl] >=
-                    SystemLogger.levels[self.file_log_level]):
+            if (session_system_log or SystemLogger.levels[lvl] >= SystemLogger.levels[self.file_log_level]):
                 # Log to the call-specific log.
-                session_log_fname = os.path.join(
-                    self.current_session_log_dir_name.value, 'system.log')
-                with codecs.open(session_log_fname, "a+", encoding='utf8',
-                                 buffering=0) as session_log_file:
+                session_log_fname = os.path.join(self.current_session_log_dir_name.value, 'system.log')
+                with codecs.open(session_log_fname, "a+", encoding='utf8', buffering=0) as session_log_file:
                     fcntl.lockf(session_log_file, fcntl.LOCK_EX)
                     session_log_file.write(self.formatter(lvl, message))
                     session_log_file.write('\n')
