@@ -137,9 +137,9 @@ class VoipHub(Hub):
 
                         if command.parsed['__name__'] == "incoming_call":
                             self.cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
-                            self.cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(self.cfg))
-
                             self.cfg['Logging']['session_logger'].session_start(self.cfg['Logging']['system_logger'].get_session_dir_name())
+
+                            self.cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(self.cfg))
                             self.cfg['Logging']['session_logger'].config('config = ' + unicode(self.cfg))
                             self.cfg['Logging']['session_logger'].header(self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
                             self.cfg['Logging']['session_logger'].input_source("voip")

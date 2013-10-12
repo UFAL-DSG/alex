@@ -144,8 +144,10 @@ class CallCallback(pj.CallCallback):
                 timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
                 self.output_file_name_recorded = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.recorded.wav'.format(stamp=timestamp))
                 self.output_file_name_played = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.played.wav'.format(stamp=timestamp))
-
-                while 1:
+ 
+                i = 0
+                while i < 20:
+                    i += 1
                     try:
                         # this can fail if the session.xml is not created yet
                         self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
