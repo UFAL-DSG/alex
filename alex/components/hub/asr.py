@@ -185,7 +185,7 @@ class ASR(multiprocessing.Process):
                             self.system_logger.debug(msg)
 
                         asr_hyp = UtteranceConfusionNetwork()
-                        asr_hyp.add([[1.0, "__silence__"], ])
+                        asr_hyp.add([[1.0, "_other_"], ])
 
                     # The ASR component can return either NBList or a confusion
                     # network.

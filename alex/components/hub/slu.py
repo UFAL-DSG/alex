@@ -5,11 +5,7 @@
 import multiprocessing
 import time
 
-# import alex.components.slu.daiklrclassifier as DAIKLRSLU
-# import alex.components.slu.dailrclassifier as DAILRSLU
-# import alex.components.slu.templateclassifier as TSLU
-
-from alex.components.slu.da import DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueActNBList, DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, ASRHyp, SLUHyp
 from alex.components.slu.common import slu_factory
 from alex.components.slu.exceptions import SLUException
@@ -100,21 +96,30 @@ class SLU(multiprocessing.Process):
                 slu_hyp = self.slu.parse(data_asr.hyp)
                 fname = data_asr.fname
 
+                confnet = None
+                nblist = None
+
+                if isinstance(slu_hyp, DialogueActConfusionNetwork):
+                    confnet = slu_hyp
+                    nblist = slu_hyp.get_da_nblist()
+                elif isinstance(slu_hyp, DialogueActNBList):
+                    confnet = None
+                    nblist = slu_hyp
+
+
                 if self.cfg['SLU']['debug']:
                     s = []
                     s.append("SLU Hypothesis")
                     s.append("-" * 60)
-                    s.append(unicode(slu_hyp))
+                    s.append("Confnet:")
+                    s.append(unicode(confnet))
+                    s.append("Nblist:")
+                    s.append(unicode(nblist))
                     s.append("")
                     s = '\n'.join(s)
                     self.cfg['Logging']['system_logger'].debug(s)
 
-                if type(slu_hyp) is DialogueActConfusionNetwork:
-                    confnet = slu_hyp
-                else:
-                    confnet = None
-
-                self.cfg['Logging']['session_logger'].slu("user", fname, slu_hyp.get_da_nblist(), confnet=confnet)
+                self.cfg['Logging']['session_logger'].slu("user", fname, nblist, confnet=confnet)
 
                 self.commands.send(Command('slu_parsed(fname="%s")' % fname, 'SLU', 'HUB'))
                 self.slu_hypotheses_out.send(SLUHyp(slu_hyp, asr_hyp=data_asr.hyp))

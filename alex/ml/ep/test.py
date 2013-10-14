@@ -55,7 +55,7 @@ if __name__ == '__main__':
             observation[choice(values)] = random()
 
         if random() > 0.1:
-            observation['__silence__'] = random()
+            observation['_silence_'] = random()
 
         observation.normalise()
         observations.append(observation)

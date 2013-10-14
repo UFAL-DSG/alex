@@ -13,24 +13,42 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "next_tram": ["další"]
+        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení", "zjistit spoj", "hledám spojení",],
+        "find_platform": ["najít nastupště", "zjistit nástupiště",],
     },
     "time": {
-        "now": ["nyní", "teď", "následující"]
+    },
+    "time_rel": {
+        "now": ["nyní", "teď", "hned", "nejbližší"],
+        "0:05": ["pět minut", ],
+        "0:10": ["deset minut", ],
+        "0:20": ["dvacet minut", ],
+        "0:30": ["půl hodiny", ],
+        "0:45": ["tři čtvrtě hodiny", ],
+        "1:00": ["hodinu", ],
+        "2:00": ["dvě hodiny", ],
+    },
+    "date_rel": {
+        "today": ["dnes", "dneska", ],
+        "tomorrow": ["zítra", ],
+        "day_after_tomorrow": ["pozítří", ],
     },
     "stop": {
     },
-    "tt": {
-        "bus": ["bus", "autobus"],
-        "tram": ["tram", "tramvaj", "tramvajka"],
-        "metro": ["metro", "krtek", "podzemka"],
-        "vlak": ["vlak", "rychlík", "panťák"],
-        "lanovka": ["lanovka"],
-        "přívoz": ["přívoz", "loď"],
+    "trans_type": {
+        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
+        "tram": ["tram", "tramvaj", "tramvajoví", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
+        "metro": ["metro", "metrem", "metrema", "metru","krtek", "krtkem", "podzemka", "podzemkou"],
+        "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
+        "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
+        "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
     },
     "ampm": {
-        "am": ["dopo", "dopoledne", "ráno"],
-        "pm": ["odpo", "odpoledne", "večer"],
+        "morning": ["ráno", "nadránem"],
+        "am": ["dopo", "dopoledne",],
+        "pm": ["odpo", "odpoledne",],
+        "evening": ["večer", "podvečer", ],
+        "night": ["noc", "noci"],
     },
 }
 
@@ -57,7 +75,6 @@ STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
                                     # other forms of the words; still very
                                     # dirty, though
 #STOPS_FNAME = "stops.txt"
-
 
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
@@ -86,21 +103,23 @@ _substs_lit = [
     ('\\bn\\.', ['nad']),
     ('\\bp\\.', ['pod']),
     ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
-    ('\\bI\\b', ['jedna']),
+    ('\\bI$', ['jedna']),
     ('\\bII\\b', ['dva']),
+    ('\\bD1\\b', ['dé jedna']),
+    ('\\bD8\\b', ['dé osm']),
 ]
-_substs = [(re.compile(regex), [val + ' ' for val in vals])
-           for (regex, vals) in _substs_lit]
+
+_substs = [(re.compile(regex), [val + ' ' for val in vals]) for (regex, vals) in _substs_lit]
 _num_rx = re.compile('[1-9][0-9]*')
 _num_rx_exh = re.compile('^[1-9][0-9]*$')
 
 
-def db_add(slot, value, surface):
+def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
-    surface = surface.strip()
-    if len(value) == 0 or len(surface) == 0:
+    form = form.strip()
+    if len(value) == 0 or len(form) == 0:
         return
-    database[slot].setdefault(value, set()).add(surface)
+    database[category_label].setdefault(value, set()).add(form)
 
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
@@ -154,14 +173,14 @@ def add_time():
             hour_id = 'hodiny'
         # X:00
         time_val = "{h}:00".format(h=hour)
-        db_add("time", time_val, str(hour))
+        #db_add("time", time_val, str(hour))
         db_add("time", time_val, hour_str)
         time_str = "{h} nula nula".format(h=hour_str)
         db_add("time", time_val, time_str)
         time_str = "{h} {hi}".format(h=hour_str, hi=hour_id)
         db_add("time", time_val, time_str)
-        time_str = "{h} {hi}".format(h=hour, hi=hour_id)
-        db_add("time", time_val, time_str)
+        #time_str = "{h} {hi}".format(h=hour, hi=hour_id)
+        #db_add("time", time_val, time_str)
         time_str = "{h} hodině".format(h=hour_ord)
         db_add("time", time_val, time_str)
 
@@ -170,8 +189,8 @@ def add_time():
             time_val = "{h}:15".format(h=(hour - 1))
             time_str = "čtvrt na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "čtvrt na {h}".format(h=hour)
-            db_add("time", time_val, time_str)
+            #time_str = "čtvrt na {h}".format(h=hour)
+            #db_add("time", time_val, time_str)
             # (X-1):30 half past (X-1)
             time_val = "{h}:30".format(h=(hour - 1))
             time_str = "půl {ho}".format(ho=hour_ord)
@@ -180,48 +199,48 @@ def add_time():
             time_val = "{h}:45".format(h=(hour - 1))
             time_str = "tři čtvrtě na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            time_str = "tři čtvrtě na {h}".format(h=hour)
-            db_add("time", time_val, time_str)
+            #time_str = "tři čtvrtě na {h}".format(h=hour)
+            #db_add("time", time_val, time_str)
 
         for minute in xrange(60):
             minute_str = numbers_str[minute]
             time_val = "{h}:{m}".format(h=hour, m=minute)
-            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id,
-                                             m=minute_str)
+            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id, m=minute_str)
             db_add("time", time_val, time_str)
-            time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
-            db_add("time", time_val, time_str)
+            #time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
+            #db_add("time", time_val, time_str)
             time_str = "{h} {m}".format(h=hour_str, m=minute_str)
             db_add("time", time_val, time_str)
-            time_str = "{h} {m}".format(h=hour, m=minute)
-            db_add("time", time_val, time_str)
+            #time_str = "{h} {m}".format(h=hour, m=minute)
+            #db_add("time", time_val, time_str)
 
 
 def preprocess_stops_line(line, expanded_format=False):
     line = line.strip()
-    if expanded_format and ';' in line:
-        val, names = line.split(';', 1)
-        names = [val] + names.split(';')
+    if expanded_format:
+        line = line.split(';')
+        name = line[0]
+        forms = line
     else:
-        val = line
-        names = [line]
+        name = line
+        forms = [line,]
 
-    # Do some basic pre-processing.
-    # Expand abbreviations.
-    for regex, subs in _substs:
-        if any(map(regex.search, names)):
-            old_names = names
-            names = list()
-            for old_name in old_names:
-                if regex.search(old_name):
-                    for sub in subs:
-                        names.append(regex.sub(sub, old_name))
-                else:
-                    names.append(old_name)
+    # Do some basic pre-processing. Expand abbreviations.
+    new_forms = []
+    for form in forms:
+        new_form = form
+        for regex, subs in _substs:
+            if regex.search(form):
+                for sub in subs:
+                    new_form = regex.sub(sub, new_form)
+
+        new_forms.append(new_form)
+    forms = new_forms
+
     # Spell out numerals.
-    if any(map(_num_rx.search, names)):
-        old_names = names
-        names = list()
+    if any(map(_num_rx.search, forms)):
+        old_names = forms
+        forms = list()
         for name in old_names:
             new_words = list()
             for word in name.split():
@@ -232,27 +251,26 @@ def preprocess_stops_line(line, expanded_format=False):
                         new_words.append(word)
                 else:
                     new_words.append(word)
-            names.append(' '.join(new_words))
+            forms.append(' '.join(new_words))
+
     # Remove extra spaces, lowercase.
-    names = [' '.join(name.replace(',', ' ').replace('-', ' ')
+    forms = [' '.join(form.replace(',', ' ').replace('-', ' ')
                       .replace('(', ' ').replace(')', ' ').replace('5', ' ')
                       .replace('0', ' ').replace('.', ' ').split()).lower()
-             for name in names]
+             for form in forms]
 
-    return val, names
+    return name, forms
 
 
 def add_stops():
     """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
     dirname = os.path.dirname(os.path.abspath(__file__))
     is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME),
-                     encoding='utf-8') as stops_file:
+    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
         for line in stops_file:
-            stop_val, stop_names = preprocess_stops_line(line, expanded_format=is_expanded)
-            for synonym in stop_names:
-                db_add('stop', stop_val, synonym)
-
+            stop_name, stop_surface_forms = preprocess_stops_line(line, expanded_format=is_expanded)
+            for form in stop_surface_forms:
+                db_add('stop', stop_name, form)
 
 def stem():
     """Stems words of all surface forms in the database."""
@@ -261,37 +279,35 @@ def stem():
 
     for _, vals in database.iteritems():
         for value in vals.keys():
-            vals[value] = [" ".join(cz_stem(word) for word in surface.split())
-                           for surface in vals[value]]
-
+            vals[value] = set([" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]])
 
 def save_surface_forms(file_name):
-    sf = []
+    surface_forms = []
     for k in database:
         for v in database[k]:
-            for l in database[k][v]:
-                sf.append(l)
-    sf.sort()
+            for f in database[k][v]:
+                surface_forms.append(f)
+    surface_forms.sort()
 
     # save the database vocabulary - all the surface forms
     with codecs.open(file_name, 'w', 'UTF-8') as f:
-        for l in sf:
-            f.write(l)
+        for sf in surface_forms:
+            f.write(sf)
             f.write('\n')
 
 
 def save_SRILM_classes(file_name):
-    sf = []
+    surface_forms = []
     for k in database:
         for v in database[k]:
-            for l in database[k][v]:
-                sf.append("CL_" + k.upper() + " " + l.upper())
-    sf.sort()
+            for f in database[k][v]:
+                surface_forms.append("CL_" + k.upper() + " " + f.upper())
+    surface_forms.sort()
 
     # save the database vocabulary - all the surface forms
     with codecs.open(file_name, 'w', 'UTF-8') as f:
-        for l in sf:
-            f.write(l)
+        for sf in surface_forms:
+            f.write(sf)
             f.write('\n')
 
 ########################################################################
@@ -304,8 +320,9 @@ if len(sys.argv) > 1 and sys.argv[1] == "dump":
     save_surface_forms('database_surface_forms.txt')
     save_SRILM_classes('database_SRILM_classes.txt')
 
-# FIXME: This is not the best place to do stemming.
-stem()
-
-if len(sys.argv) > 1 and sys.argv[1] == "dump":
-    save_surface_forms('database_surface_forms_stemmed.txt')
+# WARNING: This is not the best place to do stemming.
+# we will not use stemming anymore because we have much better stop expansion
+#stem()
+#
+#if len(sys.argv) > 1 and sys.argv[1] == "dump":
+#    save_surface_forms('database_surface_forms_stemmed.txt')

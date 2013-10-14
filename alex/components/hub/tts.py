@@ -102,7 +102,7 @@ class TTS(multiprocessing.Process):
         return struct.pack('h',0)*length
 
     def synthesize(self, user_id, text, log="true"):
-        if text == "__silence__" or text == "silence()":
+        if text == "_silence_" or text == "silence()":
             # just let the TTS generate an empty wav
             text == ""
 

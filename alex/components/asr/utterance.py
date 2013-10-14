@@ -5,17 +5,17 @@
 
 from __future__ import unicode_literals
 
-from collections import namedtuple
 import copy
+from collections import namedtuple
 from itertools import izip, product
 from operator import add, itemgetter, mul
 
-from alex.utils import text
-from alex.utils.text import Escaper
 from alex.components.slu.exceptions import SLUException
-from alex.corpustools.wavaskey import load_wavaskey
+from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 from alex.ml.hypothesis import Hypothesis, NBList
 from alex.ml.exceptions import NBListException
+from alex.utils import text
+from alex.utils.text import Escaper
 # TODO: The following import is a temporary workaround for moving classes
 # originally defined here to that module.  Instead, refer to the new module's
 # definitions everywhere where this module would have been used.
@@ -109,6 +109,16 @@ def load_utt_nblists(fname, limit=None, n=40, encoding='UTF-8'):
             for (key, cn) in cn_dict.iteritems()}
 
 
+def save_utterances(file_name, utt, encoding='UTF-8'):
+    """
+    Saves a dictionary of utterances in the wave as key format into a file.
+
+    :param file_name: name of the target file
+    :param utt: a dictionary with the utterances where the keys are the names of teh corresponding wave files
+    :return: None
+    """
+    save_wavaskey(file_name, utt, encoding)
+
 class UtteranceException(SLUException):
     pass
 
@@ -177,6 +187,7 @@ class Utterance(object):
 
     def __getitem__(self, idx):
         return self._utterance[idx]
+
 
     def __iter__(self):
         for word in self._utterance:
@@ -288,9 +299,30 @@ class Utterance(object):
             if not isinstance(replacement, list):
                 replacement = list(replacement)
             ret_utt.utterance = (self._utterance[:orig_pos] +
-                                 replacement +
-                                 self._utterance[orig_pos + len(orig):])
+                             replacement +
+                             self._utterance[orig_pos + len(orig):])
+            ret_utt._wordset = set(ret_utt._utterance)
+
         return (ret_utt, orig_pos) if return_startidx else ret_utt
+
+    def replace2(self, start, end, replacement):
+        """
+        Replace the words from start to end with the replacement.
+
+        :param start: the start position of replaced word sequence
+        :param end: the end position of replaced word sequence
+        :param replacement: a replacement
+        :return: return a new Utterance instance with the word sequence replaced with the replacement
+        """
+
+        ret_utt = Utterance('')
+        if not isinstance(replacement, list):
+            replacement = [replacement,]
+
+        ret_utt.utterance = self._utterance[:start] + replacement + self._utterance[end:]
+        ret_utt._wordset = set(ret_utt._utterance)
+
+        return ret_utt
 
     def lower(self):
         """Lowercases words of this utterance.
@@ -365,7 +397,7 @@ class AbstractedUtterance(Utterance, Abstracted):
         try:
             return hash((tuple(self._utterance), tuple(self._abstr_idxs)))
         except AttributeError:
-            return hash((('__other__', ), tuple()))
+            return hash((('_other_', ), tuple()))
 
     @classmethod
     def from_utterance(cls, utterance):
@@ -560,8 +592,20 @@ class UtteranceNBList(ASRHypothesis, NBList):
                 most probable to the least probable ones
 
     """
-    def __init__(self):
+    def __init__(self, rep = None):
         NBList.__init__(self)
+
+        if rep:
+            self.deserialise(rep)
+
+    def serialise(self):
+        return [[prob, unicode(fact)] for prob, fact in self.n_best]
+
+    def deserialise(self, rep):
+        rep = eval(rep)
+
+        for p, u in rep:
+            self.add(p, Utterance(u))
 
     def get_best_utterance(self):
         """Returns the most probable utterance.
@@ -572,7 +616,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return self.get_best()
 
     def get_best(self):
-        if self.n_best[0][1] == '__other__':
+        if self.n_best[0][1] == '_other_':
             return self.n_best[1][1]
         return self.n_best[0][1]
 
@@ -582,7 +626,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return NBList.normalise(self)
 
     def normalise(self):
-        """The N-best list is extended to include the "__other__" utterance to
+        """The N-best list is extended to include the "_other_" utterance to
         represent those utterance hypotheses which are not included in the
         N-best list.
 
@@ -593,7 +637,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
 
     def add_other(self):
         try:
-            return NBList.add_other(self, Utterance('__other__'))
+            return NBList.add_other(self, Utterance('_other_'))
         except NBListException as e:
             raise UtteranceNBListException(e)
 
@@ -618,7 +662,7 @@ class UtteranceNBListFeatures(Features):
 
     def parse(self, utt_nblist):
         """This should be called only once during the object's lifetime,
-        preferrably from within the initialiser.
+        preferably from within the initialiser.
         """
         first_utt_feats = None
         for hyp_idx, hyp in enumerate(utt_nblist):
@@ -1400,8 +1444,11 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
     # TODO Implement the option to keep the original value, just adding the
     # replacement by its side.
     def get_next_worse_candidates(self, hyp_index):
-        """Returns such hypotheses that will have lower probability. It assumes
-        that the confusion network is sorted."""
+        """
+        Returns such hypotheses that will have lower probability. It assumes
+        that the confusion network is sorted.
+
+        """
         worse_hyp = []
 
         for i in range(len(hyp_index)):
@@ -1421,12 +1468,14 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
         return Utterance(' '.join(s))
 
     # FIXME Make this method aware of _long_links.
-    def get_utterance_nblist(self, n=10, expand_upto_total_prob_mass=0.9):
+    def get_utterance_nblist(self, n=10, prune_prob=0.005):
         """Parses the confusion network and generates n best hypotheses.
 
         The result is a list of utterance hypotheses each with a with assigned
-        probability.  The list also includes the utterance "__other__" for not
+        probability.  The list also includes the utterance "_other_" for not
         having the correct utterance in the list.
+
+        Generation of hypotheses will stop when the probability of the hypotheses is smaller then the ``prune_prob``.
 
         """
 
@@ -1452,8 +1501,7 @@ class UtteranceConfusionNetwork(ASRHypothesis, Abstracted):
                 # print "current_prob, current_hyp_index:", current_prob,
                 # current_hyp_index
 
-                for hyp_index in self.get_next_worse_candidates(
-                        current_hyp_index):
+                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)
                     open_hyp.append((prob, hyp_index))
 
