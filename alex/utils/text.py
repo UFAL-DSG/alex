@@ -142,6 +142,65 @@ def parse_command(command):
 
     return d
 
+def min_edit_dist(target, source):
+    ''' Computes the min edit distance from target to source. '''
+
+    n = len(target)
+    m = len(source)
+
+    distance = [[0.0 for i in range(m)] for j in range(n)]
+
+    for i in range(1,n):
+        distance[i][0] = distance[i-1][0] + 1
+
+    for j in range(1,m):
+        distance[0][j] = distance[0][j-1] + 1
+
+    for i in range(1,n):
+        for j in range(1,m):
+           distance[i][j] = min(distance[i-1][j] + 1,
+                                distance[i][j-1] + 1,
+                                distance[i-1][j-1] + (0 if target[i] == source[j] else 2))
+    return distance[n-1][m-1]
+
+
+def min_edit_ops(target, source, cost=lambda insertions, deletions, substitutions: insertions + deletions + 2.0 * substitutions):
+    """ Computes the min edit operations from target to source.
+
+    :param target: a target sequence
+    :param source: a source sequence
+    :param cost: an expression for computing cost of the edit operations
+    :return: a tuple of (insertions, deletions, substitutions)
+
+    """
+    n = len(target)
+    m = len(source)
+    ops = [[(0, 0, 0) for i in range(m + 1)] for j in range(n + 1)]
+    for i in range(1, n + 1):
+        ops[i][0] = (ops[i - 1][0][0] + 1, ops[i - 1][0][1], ops[i - 1][0][2])
+    for j in range(1, m + 1):
+        ops[0][j] = (ops[0][j - 1][0], ops[0][j - 1][1] + 1, ops[0][j - 1][2])
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            insertion = cost(ops[i - 1][j][0] + 1, ops[i - 1][j][1], ops[i - 1][j][2])
+            deletion = cost(ops[i][j - 1][0], ops[i][j - 1][1] + 1, ops[i][j - 1][2])
+            if source[j - 1] != target[i - 1]:
+                substitution = cost(ops[i - 1][j - 1][0], ops[i - 1][j - 1][1], ops[i - 1][j - 1][2] + 1)
+            else:
+                substitution = cost(ops[i - 1][j - 1][0], ops[i - 1][j - 1][1], ops[i - 1][j - 1][2])
+
+            if substitution <= insertion and substitution <= deletion:
+                if source[j - 1] != target[i - 1]:
+                    ops[i][j] = (ops[i - 1][j - 1][0], ops[i - 1][j - 1][1], ops[i - 1][j - 1][2] + 1)
+                else:
+                    ops[i][j] = (ops[i - 1][j - 1][0], ops[i - 1][j - 1][1], ops[i - 1][j - 1][2])
+            elif insertion <= deletion and insertion <= deletion:
+                ops[i][j] = (ops[i - 1][j][0] + 1, ops[i - 1][j][1], ops[i - 1][j][2])
+            elif deletion <= insertion and deletion <= substitution:
+                ops[i][j] = (ops[i][j - 1][0], ops[i][j - 1][1] + 1, ops[i][j - 1][2])
+            else:
+                raise Exception("min_edit_ops unexpected state")
+    return ops[n][m]
 
 class Escaper(object):
     """

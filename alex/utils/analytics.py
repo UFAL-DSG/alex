@@ -23,9 +23,8 @@ class Analytics(object):
         self.domain_name = domain_name
 
     def __repr__(self):
-        return ("Analytics(account_id='{account_id}', "
-                "domain_name='{domain_name}')").format(
-                    account_id=self.account_id, domain_name=self.domain_name)
+        return "Analytics(account_id='{account_id}', domain_name='{domain_name}')".\
+            format(account_id=self.account_id, domain_name=self.domain_name)
 
     def start_session(self, caller_id):
         self.caller_id = caller_id

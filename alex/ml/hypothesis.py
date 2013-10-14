@@ -44,7 +44,7 @@ class NBList(Hypothesis):
 
     def __init__(self):
         self.n_best = []
-        self.tolerance_over1 = 1e-5
+        self.tolerance_over1 = 1e-2
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -122,7 +122,8 @@ class NBList(Hypothesis):
         return self
 
     def add_other(self, other):
-        """The N-best list is extended to include the `other' object to
+        """
+        The N-best list is extended to include the ``other`` object to
         represent those object values that are not enumerated in the list.
 
         Returns self.
@@ -438,7 +439,7 @@ class ConfusionNetwork(Hypothesis):
 #         """
 #         pass
 #
-#     def prune(self, prune_prob=0.001):
+#     def prune(self, prune_prob=0.01):
 #         """Prune all low probability dialogue act items."""
 #         pruned_cn = []
 #         for prob, fact in self.cn:

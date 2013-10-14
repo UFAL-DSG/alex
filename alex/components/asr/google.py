@@ -94,7 +94,7 @@ class GoogleASR():
                         # guess the confX score
                         nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['utterance']))
             elif hyp['status'] == 5:
-                nblist.add(1.0, '__silence__')
+                nblist.add(1.0, Utterance('_other_'))
         except:
             nblist = UtteranceNBList()
 

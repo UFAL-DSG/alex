@@ -10,6 +10,7 @@ import re
 import subprocess
 import xml.dom.minidom
 
+from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
 
 """
 This program process transcribed audio in Transcriber files and copies all
@@ -35,65 +36,6 @@ The last one is an example of a more advanced glob. It says basically that
 all odd dialogue turns should be ignored.
 
 """
-
-_subst = [('<SILENCE>', ' _SIL_ '),
-          ('<INHALE>', ' _INHALE_ '),
-          ('<NOISE>', ' _NOISE_ '),
-          ('<COUGH>', ' _EHM_HMM_ '),
-          ('<MOUTH>', ' _EHM_HMM_ '),
-          ('<LAUGH>', ' _LAUGH_ '),
-          ('<EHM A>', ' _EHM_HMM_ '),
-          ('<EHM N>', ' _EHM_HMM_ '),
-          ('<EHM >', ' _EHM_HMM_ '),
-          ('JESLTI', 'JESTLI'),
-          (u'NMŮŽU', u'NEMŮŽU'),
-          ('6E', ' '),
-          ]
-for idx, tup in enumerate(_subst):
-    pat, sub = tup
-    _subst[idx] = (re.compile(ur'(\W|^){pat}(?=$|\W)'.format(pat=pat)),
-                   r'\1' + sub)
-
-_hesitation = [re.compile(r"\bUMMM\b")]
-
-_excluded_characters = ['|', '-', '=', '(', ')', '[', ']', '{', '}', '<', '>',
-                       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-_more_spaces = re.compile(r'\s{2,}')
-_sure_punct_rx = re.compile(r'[.?!",_]')
-
-
-def normalise_trs(text):
-    text = _sure_punct_rx.sub(' ', text)
-    text = text.strip().upper()
-    # Do dictionary substitutions.
-    for pat, sub in _subst:
-        text = pat.sub(sub, text)
-    text = _more_spaces.sub(' ', text).strip()
-    for word in _hesitation:
-        text = word.sub('(HESITATION)', text)
-    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
-    # return text.translate(None, '*+~')
-    for char in '*+~':
-        text = text.replace(char, '')
-    return text
-
-
-def exclude(text):
-    """
-    Determines whether `text' is not good enough and should be excluded. "Good
-    enough" is defined as containing none of `_excluded_characters' and being
-    longer than one word.
-
-    """
-    for char in _excluded_characters:
-        if char in text:
-            return True
-
-    if len(text) < 2:
-        return True
-
-    return False
-
 
 def unique_str():
     """Generates a fairly unique string."""
@@ -170,7 +112,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
                 end=endtime, trs=transcription.encode('UTF-8'))
 
         # Normalise
-        transcription = normalise_trs(transcription)
+        transcription = normalise_text(transcription)
         if verbose:
             print "  after normalisation:", transcription.encode('UTF-8')
         if exclude(transcription):
@@ -180,8 +122,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
 
         # Save the transcription and corresponding wav files.
         wc.update(transcription.split())
-        n_overwrites += save_transcription(transcription_file_name,
-                                           transcription)
+        n_overwrites += save_transcription(transcription_file_name, transcription)
         if not trs_only:
             try:
                 cut_wavs(src_wav_fname, tgt_wav_fname, starttime, endtime)

@@ -3,8 +3,9 @@
 # This code is almost PEP8-compliant. See
 # http://www.python.org/dev/peps/pep-0008.
 
-from collections import defaultdict, namedtuple
 import copy
+
+from collections import defaultdict, namedtuple
 from itertools import product
 
 from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
@@ -13,8 +14,9 @@ from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
     UtteranceConfusionNetworkFeatures
 from alex.components.slu.da import DialogueActItem, DialogueActFeatures, \
     DialogueActNBListFeatures, DialogueActConfusionNetwork, merge_slu_confnets
-from alex.utils.config import load_as_module
 from alex.components.slu.exceptions import SLUException
+from alex.utils.config import load_as_module
+from alex.utils.various import nesteddict
 
 
 FeatureProps = namedtuple('FeatureProps',
@@ -79,14 +81,37 @@ class CategoryLabelDatabase(object):
     category labels.
 
     Attributes:
-        synonym_value_category: a list of (form, value, category) tuples
+        synonym_value_category: a list of (form, value, category label) tuples
+
+    Mapping surface forms to category labels
+    ----------------------------------------
+
+    In an utterance:
+
+    - there can be multiple surface forms in an utterance
+    - surface forms can overlap
+    - a surface form can map to multiple category labels
+
+    Then when detecting surface forms / category labels in an utterance:
+
+    #. find all existing surface forms / category labels and generate a new utterance with for every found surface form and
+       category label (called abstracted), where the original surface form is replaced by its category label
+
+       - instead of testing all surface forms from the CLDB from the longest to the shortest in the utterance, we test
+         all the substrings in the utterance from the longest to the shortest
+
 
     """
     def __init__(self, file_name):
         self.database = {}
         self.synonym_value_category = []
+        self.forms = []
+        self.form_value_cl = []
+        self.form2value2cl = nesteddict()
+
         if file_name:
             self.load(file_name)
+
         # Bookkeeping.
         self._form_val_upname = None
         self._form_upnames_vals = None
@@ -100,8 +125,7 @@ class CategoryLabelDatabase(object):
     def form_val_upname(self):
         """list of tuples (form, value, name.upper()) from the database"""
         if self._form_val_upname is None:
-            self._form_val_upname = [(form, val, name.upper())
-                                     for (form, val, name) in self]
+            self._form_val_upname = [(form, val, name.upper()) for (form, val, name) in self]
         return self._form_val_upname
 
     @property
@@ -120,20 +144,21 @@ class CategoryLabelDatabase(object):
             self._form_upnames_vals = \
                 [(form, dict(upnames_vals))
                  for (form, upnames_vals) in
-                 sorted(upnames_vals4form.viewitems(),
-                        key=lambda item:-len(item[0]))]
+                 sorted(upnames_vals4form.viewitems(), key=lambda item: -len(item[0]))]
         return self._form_upnames_vals
 
     def load(self, file_name):
         db_mod = load_as_module(file_name, force=True)
         if not hasattr(db_mod, 'database'):
-            raise SLUException("The category label database does not define "
-                               "the `database' object!")
+            raise SLUException("The category label database does not define the `database' object!")
         self.database = db_mod.database
 
         self.normalise_database()
         # Update derived data structures.
         self.gen_synonym_value_category()
+        self.gen_form_value_cl_list()
+        self.gen_mapping_form2value2cl()
+
         self._form_val_upname = None
         self._form_upnames_vals = None
 
@@ -144,9 +169,7 @@ class CategoryLabelDatabase(object):
         for name in self.database:
             new_db[name] = dict()
             for value in self.database[name]:
-                new_db[name][value] = map(
-                    lambda phrase: tuple(phrase.split()),
-                    self.database[name][value])
+                new_db[name][value] = [tuple(form.split()) for form in self.database[name][value]]
         self.database = new_db
 
     def gen_synonym_value_category(self):
@@ -158,6 +181,36 @@ class CategoryLabelDatabase(object):
         # words.
         self.synonym_value_category.sort(
             key=lambda svc: len(svc[0]), reverse=True)
+
+    def gen_form_value_cl_list(self):
+        """
+        Generates an list of form, value, category label tuples from the database. This list is ordered where the tuples
+        with the longest surface forms are at the beginning of the list.
+
+        :return: none
+        """
+        for cl in self.database:
+            for value in self.database[cl]:
+                for form in self.database[cl][value]:
+                    self.form_value_cl.append((form, value, cl))
+
+        self.form_value_cl.sort(key=lambda fvc: len(fvc[0]), reverse=True)
+
+    def gen_mapping_form2value2cl(self):
+        """
+        Generates an list of form, value, category label tuples from the database . This list is ordered where the tuples
+        with the longest surface forms are at the beginning of the list.
+
+        :return: none
+        """
+
+        for cl in self.database:
+            for value in self.database[cl]:
+                for form in self.database[cl][value]:
+                    self.form2value2cl[form][value][cl] = 1
+                    self.forms.append(form)
+
+        self.forms.sort(key=lambda f: len(f), reverse=True)
 
 
 class SLUPreprocessing(object):
@@ -198,8 +251,7 @@ class SLUPreprocessing(object):
         if text_normalization:
             self.text_normalization_mapping = text_normalization
 
-    # TODO Rename to normalise_utterance.
-    def text_normalisation(self, utterance):
+    def normalise_utterance(self, utterance):
         """
         Normalises the utterance (the output of an ASR).
 
@@ -208,9 +260,23 @@ class SLUPreprocessing(object):
 
         """
         utterance.lower()
+
         for mapping in self.text_normalization_mapping:
             utterance = utterance.replace(mapping[0], mapping[1])
         return utterance
+
+    def normalise_nblist(self, nblist):
+        """
+        Normalises the N-best list (the output of an ASR).
+
+        :param nblist:
+        :return:
+        """
+
+        unb = copy.deepcopy(nblist)
+        for utt_idx, hyp in enumerate(unb):
+            unb[utt_idx][1] = self.normalise_utterance(hyp[1])
+        return unb
 
     def normalise_confnet(self, confnet):
         """
@@ -227,17 +293,16 @@ class SLUPreprocessing(object):
 
     def normalise(self, utt_hyp):
         if isinstance(utt_hyp, Utterance):
-            return self.text_normalisation(utt_hyp)
+            return self.normalise_utterance(utt_hyp)
+        elif isinstance(utt_hyp, UtteranceNBList):
+            return self.normalise_nblist(utt_hyp)
         elif isinstance(utt_hyp, UtteranceConfusionNetwork):
             return self.normalise_confnet(utt_hyp)
         else:
-            assert isinstance(utt_hyp, UtteranceNBList)
-            for utt_idx, hyp in enumerate(utt_hyp):
-                utt_hyp[utt_idx][1] = self.text_normalisation(hyp[1])
+            raise SLUException("Unsupported observations.")
 
     # TODO Update the docstring for the `all_options' argument.
-    def values2category_labels_in_utterance(self, utterance,
-                                            all_options=False):
+    def values2category_labels_in_utterance(self, utterance,all_options=False):
         """Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
@@ -664,10 +729,10 @@ class SLUInterface(object):
         del obs_wo_nblist['utt_nbl']
         dacn_list = []
         for prob, utt in nblist:
-            if "__other__" == utt:
+            if "_other_" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("other"))
-            elif "__silence__" == utt:
+            elif "_silence_" == utt:
                 dacn = DialogueActConfusionNetwork()
                 dacn.add(1.0, DialogueActItem("silence"))
             else:
