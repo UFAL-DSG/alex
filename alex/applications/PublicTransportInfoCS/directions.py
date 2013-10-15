@@ -85,13 +85,13 @@ class GoogleRouteLegStep(object):
             self.departure_stop = \
                     input_json['transit_details']['departure_stop']['name']
             self.departure_time = \
-                    self.parsetime(input_json['transit_details']
-                                   ['departure_time']['text'])
+                    datetime.fromtimestamp(input_json['transit_details']
+                                           ['departure_time']['value'])
             self.arrival_stop = \
                     input_json['transit_details']['arrival_stop']['name']
             self.arrival_time = \
-                    self.parsetime(input_json['transit_details']
-                                   ['arrival_time']['text'])
+                    datetime.fromtimestamp(input_json['transit_details']
+                                           ['arrival_time']['value'])
             self.headsign = input_json['transit_details']['headsign']
             self.vehicle = \
                     input_json['transit_details']['line']['vehicle']['type']
@@ -100,15 +100,6 @@ class GoogleRouteLegStep(object):
         elif self.travel_mode == self.MODE_WALKING:
             self.duration = input_json['duration']['value']
             self.distance = input_json['distance']['value']
-
-    def parsetime(self, time_str):
-        hour, mins = time_str.strip('apm').split(':', 1)
-        hour = int(hour)
-        mins = int(mins)
-        if time_str.lower().endswith('pm'):
-            hour = (hour + 12) % 24
-        return datetime.combine(datetime.now(),
-                                dttime(hour, mins))
 
     def __repr__(self):
         ret = self.travel_mode
@@ -147,13 +138,14 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
                 'http://maps.googleapis.com/maps/api/directions/json'
 
     def get_directions(self, from_stop, to_stop, departure_time):
+        """Get Google maps transit directions between the given stops
+        at the given time and date.
 
-        departure = datetime.combine(
-            datetime.now(),
-            datetime.strptime(departure_time, "%H:%M").time()
-        )
+        The time/date should be given as a datetime.datetime object.
+        Setting the correct date is compulsory!
+        """
 
-        departure_time = int(time.mktime(departure.timetuple()))
+        departure_time = int(time.mktime(departure_time.timetuple()))
 
         data = {
             'origin': '%s, Praha' % from_stop.encode('utf8'),
