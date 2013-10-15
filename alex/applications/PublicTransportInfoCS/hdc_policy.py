@@ -308,9 +308,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         if time == 'none' or time_rel != 'none':
             time = now
             if time_rel not in ['none', 'now']:
-                trel_parse = datetime.strptime(time, "%H:%M")
+                trel_parse = datetime.strptime(time_rel, "%H:%M")
                 time += timedelta(hours=trel_parse.hour,
-                                  mins=trel_parse.minute)
+                                  minutes=trel_parse.minute)
         # absolute time
         else:
             time_parsed = datetime.combine(now,
