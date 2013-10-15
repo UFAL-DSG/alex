@@ -1,19 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import argparse
-import codecs
-import collections
-import os.path
-import random
-import re
-import subprocess
-import xml.dom.minidom
-
-from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
-
 """
-This program process transcribed audio in Transcriber files and copies all
+This program processes transcribed audio in Transcriber files and copies all
 relevant speech segments into a destination directory.
 It also extracts transcriptions and saves them alongside the copied wavs.
 
@@ -37,6 +25,32 @@ all odd dialogue turns should be ignored.
 
 """
 
+import argparse
+import codecs
+import collections
+import os
+import os.path
+import random
+import xml.dom.minidom
+
+# Make sure the alex package is visible.
+if __name__ == '__main__':
+    import autopath
+
+from alex.utils.fs import find
+
+_LANG2NORMALISATION_MOD = {
+    'cs': 'alex.corpustools.text_norm_cs',
+    'en': 'alex.corpustools.text_norm_en'
+}
+
+from alex.utils.ui import getTerminalSize
+try:
+    _term_width = getTerminalSize()[1]
+except:
+    _term_width = 80
+
+
 def unique_str():
     """Generates a fairly unique string."""
     return hex(random.randint(0, 256 * 256 * 256 * 256 - 1))[2:]
@@ -47,11 +61,10 @@ def cut_wavs(src, tgt, start, end):
     it to `tgt'.
 
     """
-    existed = os.path.exists(trs_fname)
-    cmd = ("sox", "--ignore-length", src, tgt,
-           "trim", str(start), str(end - start))
-    print " ".join(cmd)
-    subprocess.call(cmd)
+    existed = os.path.exists(tgt)
+    cmd = ("sox", "--ignore-length", src, "-c 1 -r 16000 -b 16", tgt, "trim", str(start), str(end - start))
+    print u" ".join(cmd)
+    os.system(u" ".join(cmd))
     return existed
 
 
@@ -62,16 +75,24 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with codecs.open(trs_fname, 'w+', encoding='UTF-8') as trs_file:
-        trs_file.write(trs.encode('ascii', 'ignore'))
+        trs_file.write(trs)
+        # trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
 
 
-def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
+def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
     """Extracts wavs and their transcriptions from the provided big wav and the
     transcriber file.
 
     """
+
+    # Import the appropriate normalisation module.
+    norm_mod_name = _LANG2NORMALISATION_MOD[lang]
+    norm_mod = __import__(norm_mod_name,
+                          fromlist=('exclude', 'normalise_text'))
 
     # Parse the file.
     doc = xml.dom.minidom.parse(_file)
@@ -83,7 +104,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
     n_missing_trs = 0
     for uturn in uturns:
         if verbose:
-            print '-' * (getTerminalSize()[1] or 120)
+            print u'-' * _term_width
 
         # Retrieve the user turn's data.
         starttime = float(uturn.getAttribute('time').strip())
@@ -100,36 +121,37 @@ def extract_wavs_trns(_file, outdir, trs_only=False, verbose=False):
 
         # Construct various involved file names.
         src_wav_fname = _file.replace('.trs', '.wav')
-        tgt_ext = '-{start:07.2f}-{end:07.2f}-{hash}.wav'.format(
+        tgt_ext = u'-{start:07.2f}-{end:07.2f}-{hash}.wav'.format(
             start=starttime, end=endtime, hash=unique_str())
         tgt_wav_fname = os.path.join(
             outdir, os.path.basename(_file).replace('.trs', tgt_ext))
         transcription_file_name = tgt_wav_fname + '.trn'
 
         if verbose:
-            print " #f: {tgt}; # s: {start}; # e: {end}; t: {trs}".format(
+            print u" #f: {tgt}; # s: {start}; # e: {end}; t: {trs}".format(
                 tgt=os.path.basename(tgt_wav_fname), start=starttime,
-                end=endtime, trs=transcription.encode('UTF-8'))
+                end=endtime, trs=transcription)
 
         # Normalise
-        transcription = normalise_text(transcription)
+        transcription = norm_mod.normalise_text(transcription)
         if verbose:
-            print "  after normalisation:", transcription.encode('UTF-8')
-        if exclude(transcription):
+            print u"  after normalisation:", transcription
+        if norm_mod.exclude(transcription):
             if verbose:
-                print "  ...excluded"
+                print u"  ...excluded"
             continue
 
         # Save the transcription and corresponding wav files.
         wc.update(transcription.split())
-        n_overwrites += save_transcription(transcription_file_name, transcription)
+        n_overwrites += save_transcription(transcription_file_name,
+                                           transcription)
         if not trs_only:
             try:
                 cut_wavs(src_wav_fname, tgt_wav_fname, starttime, endtime)
                 size += os.path.getsize(tgt_wav_fname)
             except OSError:
                 n_missing_wav += 1
-                print "Missing audio file: ", tgt_wav_fname
+                print u"Missing audio file: ", tgt_wav_fname
 
     return size, n_overwrites, n_missing_wav, n_missing_trs
 
@@ -139,6 +161,7 @@ def convert(args):
     # Unpack the arguments.
     infname = args.infname
     outdir = args.outdir
+    lang = args.language
     verbose = args.verbose
     trs_only = args.only_transcriptions
     ignore_list_file = args.ignore
@@ -177,38 +200,44 @@ def convert(args):
     for trs_path in trs_paths:
 
         if verbose:
-            print "Processing transcription file: ", trs_path
+            print u"Processing transcription file: ", trs_path
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(trs_path, outdir, trs_only, verbose)
+            extract_wavs_trns(trs_path, outdir, trs_only, lang, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav
         n_missing_trs += cur_n_missing_trs
 
-    print "Size of copied audio data:", size
+    print u"Size of copied audio data:", size
 
-    sec = size / 16000
+    sec = size / (2*16000)
     hour = sec / 3600.0
 
-    print "Length of audio data in hours (for 8kHz 16bit WAVs):", hour
+    print u"Length of audio data in hours (for 16kHz 16bit WAVs output):", hour
     # Return the number of file collisions and overwrites.
     return n_overwrites, n_missing_wav, n_missing_trs
 
 
 if __name__ == '__main__':
-    wc = collections.Counter()  # word counter
-    import autopath
-    from alex.utils.fs import find
-    from alex.utils.ui import getTerminalSize
+    import sys
 
+    wc = collections.Counter()  # word counter
+
+    # Initialisation.
     random.seed(1)
+    if not sys.stdout.isatty():
+        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+    if not sys.stderr.isatty():
+        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+    if not sys.stdin.isatty():
+        sys.stdin = codecs.getreader('UTF-8')(sys.stdin)
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-        This program process transcribed audio in Transcriber (*.trs) files and
-        copies all relevant speech segments into a destination directory.
+        This program processes transcribed audio in Transcriber (*.trs) files
+        and copies all relevant speech segments into a destination directory.
         It also extracts transcriptions and saves them alongside the copied
         wavs.
 
@@ -231,6 +260,11 @@ if __name__ == '__main__':
                              'that should be ignored.  The globs are '
                              'interpreted wrt. the current working directory. '
                              'For an example, see the source code.')
+    parser.add_argument('-l', '--language',
+                        default='cs',
+                        metavar='CODE',
+                        help='Code of the language (e.g., "cs") of the '
+                             'transcriptions.')
     parser.add_argument('-t', '--only-transcriptions',
                         action="store_true",
                         help='only normalise transcriptions, ignore audio '
@@ -252,12 +286,12 @@ if __name__ == '__main__':
     n_overwrites, n_missing_wav, n_missing_trs = convert(args)
 
     # Report.
-    msg = ("# overwrites: {ovw};  # without transcription: {wotrs};  "
-           "# missing: {msng}").format(ovw=n_overwrites, wotrs=n_missing_trs,
-                                       msng=n_missing_wav)
+    msg = (u"# overwrites: {ovw};  # without transcription: {wotrs};  "
+           u"# missing: {msng}").format(ovw=n_overwrites, wotrs=n_missing_trs,
+                                        msng=n_missing_wav)
     print msg
 
     with codecs.open(args.word_list, 'w', "utf-8") as word_list_file:
         for word in sorted(wc):
-            word_list_file.write("{word}\t{count}\n".format(
+            word_list_file.write(u"{word}\t{count}\n".format(
                 word=word, count=wc[word]))
