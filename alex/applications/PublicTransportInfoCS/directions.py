@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import time as dttime
 import time
 import json
-
+import os.path
 
 class Directions(object):
     pass
@@ -142,6 +142,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
     def __init__(self, cfg):
         super(GooglePIDDirectionsFinder, self).__init__()
         self.system_logger = cfg['Logging']['system_logger']
+        self.session_logger = cfg['Logging']['session_logger']
         self.directions_url = \
                 'http://maps.googleapis.com/maps/api/directions/json'
 
@@ -168,8 +169,17 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         page = urllib.urlopen(self.directions_url + '?' +
                               urllib.urlencode(data))
         response = json.load(page)
+        self._log_response_json(page)
 
         directions = GoogleDirections(response)
         self.system_logger.info("Google Directions response:\n" +
                                 str(directions).decode('utf8'))
         return directions
+
+    def _log_response_json(self, data):
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        fname = os.path.join(self.system_logger.get_session_dir_name(),
+                             'google-query-{ts}.json'.format(ts=timestamp))
+        fh = open(fname, 'w')
+        fh.write(data)
+        fh.close()
