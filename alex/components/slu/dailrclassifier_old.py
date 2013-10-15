@@ -322,7 +322,7 @@ class DAILogRegClassifier(SLUInterface):
 
         confnets = []
         for prob, utt in utterance_list:
-            if "__other__" == utt:
+            if "_other_" == utt:
                 confnet = DialogueActConfusionNetwork()
                 confnet.add(1.0, DialogueActItem("other"))
             else:

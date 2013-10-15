@@ -122,7 +122,8 @@ class NBList(Hypothesis):
         return self
 
     def add_other(self, other):
-        """The N-best list is extended to include the `other' object to
+        """
+        The N-best list is extended to include the ``other`` object to
         represent those object values that are not enumerated in the list.
 
         Returns self.

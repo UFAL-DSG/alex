@@ -142,20 +142,14 @@ class CallCallback(pj.CallCallback):
 
                 # Construct the output file names.
                 timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-                self.output_file_name_recorded = os.path.join(
-                    self.system_logger.get_session_dir_name(),
-                    'all-{stamp}.recorded.wav'.format(stamp=timestamp))
-                self.output_file_name_played = os.path.join(
-                    self.system_logger.get_session_dir_name(),
-                    'all-{stamp}.played.wav'.format(stamp=timestamp))
+                self.output_file_name_recorded = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.recorded.wav'.format(stamp=timestamp))
+                self.output_file_name_played = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.played.wav'.format(stamp=timestamp))
 
                 while 1:
                     try:
                         # this can fail if the session.xml is not created yet
-                        self.session_logger.dialogue_rec_start("system",
-                            os.path.basename(self.output_file_name_played))
-                        self.session_logger.dialogue_rec_start("user",
-                            os.path.basename(self.output_file_name_recorded))
+                        self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+                        self.session_logger.dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
                     except IOError:
                         # Sleep for a while to let others react to the previous
                         # messages.
@@ -188,10 +182,11 @@ class CallCallback(pj.CallCallback):
                 try:
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_played))
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
-                except SessionLoggerException:
+                except SessionLoggerException as e:
                     # Please note that the session log is only created when the call is CONFIRMED.
                     # Therefore, the session is not always created, for example, when call is only
                     # in the state CONNECTING and it did not changed into the CONFIRMED state.
+                    print "SessionLoggerException:", e, " Exception pass"
                     pass
 
                 self.voipio.call = None
