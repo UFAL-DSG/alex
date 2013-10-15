@@ -6,19 +6,17 @@ cd $WORK_DIR
 # Get word list
 python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
 python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
+cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR/word_list_full
 
-
-# NOTE This should be run just once, even in repeated runs.
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.
-echo "<s>	[] sil" >> $WORK_DIR/dict_full
-echo "</s>	[] sil" >> $WORK_DIR/dict_full
-echo "silence	sil" >> $WORK_DIR/dict_full
-echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_full
-echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_full
-echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_full
-echo "_NOISE_	_noise_" >> $WORK_DIR/dict_full
-echo "_SIL_	sil" >> $WORK_DIR/dict_full
+echo "<s> [] sil" >> $WORK_DIR/dict_full
+echo "</s> [] sil" >> $WORK_DIR/dict_full
+echo "silence sil" >> $WORK_DIR/dict_full
+echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_full
+echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_full
+echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_full
+echo "_NOISE_ _noise_" >> $WORK_DIR/dict_full
 
 echo "<s> [] sil" > $WORK_DIR/dict_train
 echo "</s> [] sil" >> $WORK_DIR/dict_train
@@ -58,23 +56,40 @@ echo "_LAUGH_" >> $WORK_DIR/word_list_test
 echo "_EHM_HMM_" >> $WORK_DIR/word_list_test
 echo "_NOISE_" >> $WORK_DIR/word_list_test
 
-# Build the word network as a word loop of words in the testing data.
-HBuild -A -T 1 -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdnet_zerogram > $LOG_DIR/hbuild.log
+echo "<s>" >> $WORK_DIR/word_list_full
+echo "</s>" >> $WORK_DIR/word_list_full
+echo "_INHALE_" >> $WORK_DIR/word_list_full
+echo "_LAUGH_" >> $WORK_DIR/word_list_full
+echo "_EHM_HMM_" >> $WORK_DIR/word_list_full
+echo "_NOISE_" >> $WORK_DIR/word_list_full
+
+# Build the word network as a word loop of words in the testing data
+HBuild -A -T 1 -C $TRAIN_COMMON/configrawmit -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdnet_zerogram > $LOG_DIR/hbuild.log
 
 if [ -f $DATA_SOURCE_DIR/wdnet_bigram ]
 then
   cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
+else
+  rm $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+
+  ngram-count -text $WORK_DIR/all_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
+  ngram -lm $WORK_DIR/arpa_bigram -ppl $WORK_DIR/all_trns
+
+  HBuild -A -T 1 -C $TRAIN_COMMON/configrawmit -u '<UNK>' -s '<s>' '</s>' -n $WORK_DIR/arpa_bigram -z $WORK_DIR/word_list_full $WORK_DIR/wdnet_bigram > $LOG_DIR/hbuild.log
 fi
 
 if [ -f $DATA_SOURCE_DIR/arpa_trigram ]
 then
   cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
-fi
-if [ -f $WORK_DIR/arpa_trigram ]
-then
-	python $TRAIN_SCRIPTS/WordListFromARPALM.py $WORK_DIR/arpa_trigram > $WORK_DIR/word_list_hdecode
-fi
-if [ -f $WORK_DIR/dict_hdecode ]
-then
-  perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_hdecode $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
+else
+  rm $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+
+  ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
+  ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
+
+  cp $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
 fi

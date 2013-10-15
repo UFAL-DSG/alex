@@ -4,6 +4,9 @@
 
 source env_voip_cs.sh
 
+# DEBUG
+set -e
+
 date
 
 echo "Training word internal triphone model for English"
@@ -39,14 +42,15 @@ cd $WORK_DIR
 
 # We need to massage the CS dictionary for our use
 echo "Preparing Czech dictionary ..."
-$TRAIN_SCRIPTS/prep_cs_dict.sh
+# this is not needed beacause we use phonetic transcription
+#$TRAIN_SCRIPTS/prep_cs_dict.sh
 
 # Code the audio files to MFCC feature vectors
 echo "Coding test audio ..."
-#$TRAIN_SCRIPTS/prep_param_test.sh
+$TRAIN_SCRIPTS/prep_param_test.sh
 
 echo "Coding train audio ..."
-#$TRAIN_SCRIPTS/prep_param_train.sh
+$TRAIN_SCRIPTS/prep_param_train.sh
 
 # Intial setup of language model, dictionary, training and test MLFs
 echo "Building unigram language models and dictionary..."
