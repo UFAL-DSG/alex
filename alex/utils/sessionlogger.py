@@ -385,7 +385,7 @@ class SessionLogger(object):
                 break
         else:
             self.close_session_xml(doc)
-            raise SessionLoggerException( ("Missing rec element for the {fname} fname.".format(fname=fname)))
+            raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
 
         self.close_session_xml(doc)
 
@@ -528,6 +528,21 @@ class SessionLogger(object):
     ## SDC 2010 XML logging format.                                       ##
     ########################################################################
 
+    def _last_turn_element(self, doc, speaker):
+        """ Finds the XML element in the given open XML session
+        which corresponds to the last turn for the given speaker.
+
+        Closes the XML and throws an exception if the element cannot be found.
+        """
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length - 1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                return els[i]
+        else:
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+
     @global_lock(lock)
     @catch_ioerror
     def dialogue_state(self, speaker, dstate):
@@ -543,22 +558,15 @@ class SessionLogger(object):
 
         """
         doc = self.open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        turn = self._last_turn_element(doc, speaker)
 
-        for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
-                for state in dstate:
-                    ds = els[i].appendChild(doc.createElement("dialogue_state"))
+        for state in dstate:
+            ds = turn.appendChild(doc.createElement("dialogue_state"))
 
-                    for slot_name, slot_value in state:
-                        sl = ds.appendChild(doc.createElement("slot"))
-                        sl.setAttribute("name", "%s" % slot_name)
-                        sl.appendChild(doc.createTextNode(unicode(slot_value)))
-
-                break
-        else:
-            self.close_session_xml(doc)
-            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+            for slot_name, slot_value in state:
+                sl = ds.appendChild(doc.createElement("slot"))
+                sl.setAttribute("name", "%s" % slot_name)
+                sl.appendChild(doc.createTextNode(unicode(slot_value)))
 
         self.close_session_xml(doc)
 
@@ -570,3 +578,15 @@ class SessionLogger(object):
         This is an alex extension.
         """
         raise SessionLoggerException("Not implemented")
+
+    def external_query_data_file(self, fname):
+        """ Adds a link to a data file with external query (such as
+        Google directions).
+
+        This is an alex extension.
+        """
+        doc = self.open_session_xml()
+        turn = self._last_turn_element(doc, "system")
+        el = turn.appendChild(doc.createElement("external_query"))
+        el.setAttribute("fname", fname)
+        self.close_session_xml(doc)

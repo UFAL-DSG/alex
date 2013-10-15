@@ -183,3 +183,4 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         fh = open(fname, 'w')
         json.dump(data, fh)
         fh.close()
+        self.session_logger.external_query_data_file(os.path.basename(fname))
