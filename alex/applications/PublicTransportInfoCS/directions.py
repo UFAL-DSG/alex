@@ -169,7 +169,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         page = urllib.urlopen(self.directions_url + '?' +
                               urllib.urlencode(data))
         response = json.load(page)
-        self._log_response_json(page)
+        self._log_response_json(response)
 
         directions = GoogleDirections(response)
         self.system_logger.info("Google Directions response:\n" +
@@ -179,7 +179,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
     def _log_response_json(self, data):
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
         fname = os.path.join(self.system_logger.get_session_dir_name(),
-                             'google-query-{ts}.json'.format(ts=timestamp))
+                             'google-directions-{t}.json'.format(t=timestamp))
         fh = open(fname, 'w')
-        fh.write(data)
+        json.dump(data, fh)
         fh.close()
