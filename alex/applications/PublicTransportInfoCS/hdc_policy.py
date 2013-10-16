@@ -353,6 +353,10 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return self.say_directions(dialogue_state, route_type)
 
+    ORIGIN = 'ORIGIN'
+    DESTIN = 'FINAL_DEST'
+    NOTABLE_WALK = 180  # length (secs) of a walk that should be mentioned
+
     def say_directions(self, dialogue_state, route_type):
         """Return DAs for the directions in the current dialogue state."""
         if dialogue_state['route_alternative'] == "none":
@@ -360,30 +364,62 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
 
-        leg = route.legs[0]  # only 1 leg should be present in case we have no waypoints
+        # only 1 leg should be present in case we have no waypoints
+        steps = route.legs[0].steps
 
         res = []
 
+        # introduction
         if len(dialogue_state.directions) > 1:
-            # this is rather annoying since it always finds 4 directions
-#                if dialogue_state['route_alternative'] == 0:
-#                    res.append("inform(alternatives=%d)" % len(dialogue_state.directions))
             res.append('inform(found_directions="%s")' % route_type)
             if route_type != "last":
-                res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
+                res.append("inform(alternative=%d)" %
+                           (dialogue_state['route_alternative'] + 1))
 
-        for step_ndx, step in enumerate(leg.steps):
-            if step.travel_mode == step.MODE_TRANSIT:
+        # route description
+        prev_arrive_stop = self.ORIGIN  # remember previous arrival stop
+        for step_ndx, step in enumerate(steps):
+
+            # find out what will be the next departure stop (needed later)
+            next_leave_stop = self.DESTIN
+            if step_ndx < len(steps) - 2 and \
+                    steps[step_ndx + 1].travel_mode == step.MODE_WALKING:
+                next_leave_stop = steps[step_ndx + 2].departure_stop
+            elif step_ndx < len(steps) - 1 and \
+                    steps[step_ndx + 1].travel_mode == step.MODE_TRANSIT:
+                next_leave_stop = steps[step_ndx + 1].departure_stop
+
+            # walking
+            if step.travel_mode == step.MODE_WALKING:
+                # long walk (> 3 minutes) from origin/to destination
+                # or transfer among stops with different names
+                if ((next_leave_stop == self.DESTIN or
+                     prev_arrive_stop == self.ORIGIN) and
+                     step.duration > self.NOTABLE_WALK) or \
+                    (next_leave_stop != self.DESTIN and
+                     prev_arrive_stop != self.ORIGIN and
+                     next_leave_stop != prev_arrive_stop):
+                    # walking destination: next departure stop
+                    res.append(u"inform(walk_to=%s)" % next_leave_stop)
+                    res.append(u"inform(duration=0:%02d)" %
+                               (step.duration / 60))
+            # public transport
+            elif step.travel_mode == step.MODE_TRANSIT:
                 res.append(u"inform(vehicle=%s)" % step.vehicle)
                 res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
-                res.append(u"inform(enter_at=%s)" % step.departure_stop)
+                res.append(u"inform(go_at=%s)" %
+                           step.departure_time.strftime("%H:%M"))
+                # only mention departure if it differs from previous arrival
+                if step.departure_stop != prev_arrive_stop:
+                    res.append(u"inform(enter_at=%s)" % step.departure_stop)
                 res.append(u"inform(headsign=%s)" % step.headsign)
                 res.append(u"inform(exit_at=%s)" % step.arrival_stop)
-                res.append(u"inform(transfer='true')")
+                # only mention transfer if there is one
+                if next_leave_stop != self.DESTIN:
+                    res.append(u"inform(transfer='true')")
+                prev_arrive_stop = step.arrival_stop
 
-        res = res[:-1]
-
+        # no route found: apologize
         if len(res) == 0:
             res.append(u'apology()')
             res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
