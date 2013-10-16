@@ -378,8 +378,8 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
 
-_excluded_characters = ['_', '=', '-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
-                        '1', '2', '3', '4', '5', '6', '7', '8', '9']
+_excluded_characters = ['_', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', 
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
 _sure_punct_rx = re.compile(r'[.?!",_]')
@@ -412,8 +412,7 @@ def normalise_text(text):
             text = text.replace(parenized, uscored)
         text = _more_spaces.sub(' ', text.strip())
 
-    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
-    for char in '*+~^':
+    for char in '^':
         text = text.replace(char, '')
 
     return text

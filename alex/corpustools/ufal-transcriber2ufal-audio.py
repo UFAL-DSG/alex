@@ -79,7 +79,6 @@ def save_transcription(trs_fname, trs):
         trs += '\n'
     with codecs.open(trs_fname, 'w+', encoding='UTF-8') as trs_file:
         trs_file.write(trs)
-        # trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
 
 
@@ -292,5 +291,4 @@ if __name__ == '__main__':
 
     with codecs.open(args.word_list, 'w', "utf-8") as word_list_file:
         for word in sorted(wc):
-            word_list_file.write(u"{word}\t{count}\n".format(
-                word=word, count=wc[word]))
+            word_list_file.write(u"{word}\t{count}\n".format(word=word, count=wc[word]))
