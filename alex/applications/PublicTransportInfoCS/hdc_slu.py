@@ -397,7 +397,7 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, ["odkud", "jede"]) or \
             _all_words_in(u, ["odkud", "pojede"]) or \
             _all_words_in(u, ["od", "kud", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','from_stop'))
+            cn.add(1.0, DialogueActItem('request', 'from_stop'))
 
         if _all_words_in(u, ["kam", "to", "jede"]) or \
             _all_words_in(u, ["na", "jakou", "jede"]) or \
@@ -408,7 +408,13 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, ["kde", "konečná", ]) or \
             _all_words_in(u, ["kde", "konečná", ]) or \
             _all_words_in(u, ["kam", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','to_stop'))
+            cn.add(1.0, DialogueActItem('request', 'to_stop'))
+
+        if _all_words_in(u, ['kdy', 'tam', 'budu']) or \
+            (_all_words_in(u, ['kdy']) and
+             _any_word_in(['příjezd', 'přijede', 'dorazí',
+                           'přijedu', 'dorazím'])):
+            cn.add(1.0, DialogueActItem('request', 'arrive_at'))
 
         if _all_words_in(u, ["kdy", "to", "jede"]) or \
             _all_words_in(u, ["kdy", "mi", "jede"]) or \
