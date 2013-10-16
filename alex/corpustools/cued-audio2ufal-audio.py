@@ -30,9 +30,11 @@ all odd dialogue turns should be ignored.
 
 import argparse
 import collections
+import os
 import os.path
 import shutil
 import sys
+import codecs
 from xml.etree import ElementTree
 
 if __name__ == "__main__":
@@ -49,8 +51,8 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
-    with open(trs_fname, 'w') as trs_file:
-        trs_file.write(trs.encode('ascii', 'ignore'))
+    with codecs.open(trs_fname, 'w', 'UTF-8') as trs_file:
+        trs_file.write(trs)
     return existed
 
 
@@ -115,6 +117,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
                 print " # f:", wav_basename, "t:", trs
 
             trs = normalise_text(trs)
+            
             if verbose:
                 print "  after normalisation:", trs
 
@@ -131,12 +134,17 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
             trs_fname = os.path.join(outdir, wav_basename + '.trn')
 
             try:
-                size += os.path.getsize(wav_fname)
+                szx = os.path.getsize(wav_fname)
             except OSError:
                 print "Lost audio file:", wav_fname
             else:
                 try:
-                    shutil.copy2(wav_fname, outdir)
+                    #shutil.copy2(wav_fname, outdir)
+                    tgt = os.path.join(outdir, os.path.basename(wav_fname))
+                    cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=wav_fname, tgt=tgt)
+                    print cmd
+                    os.system(cmd)
+                    size += os.path.getsize(tgt)
                 except shutil.Error as e:
                     print >>sys.stderr, \
                         ("Isn't the `outdir' with previously copied files "
@@ -350,8 +358,7 @@ if __name__ == '__main__':
 
     # Print out the contents of the word counter to 'word_list'.
     # FIXME: Prevent overwrite.
-    with open(args.word_list, 'w') as word_list_file:
+    with codecs.open(args.word_list, 'w', "UTF-8") as word_list_file:
         for word in sorted(wc):
             word_list_file.write(
-                "{0}\t{1}\n".format(
-                    word.encode('ascii', 'ignore'), wc[word]))
+                "{0}\t{1}\n".format(word, wc[word]))

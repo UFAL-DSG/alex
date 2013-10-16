@@ -121,8 +121,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
 
         # Construct various involved file names.
         src_wav_fname = _file.replace('.trs', '.wav')
-        tgt_ext = u'-{start:07.2f}-{end:07.2f}-{hash}.wav'.format(
-            start=starttime, end=endtime, hash=unique_str())
+        tgt_ext = u'-{start:07.2f}-{end:07.2f}.wav'.format(start=starttime, end=endtime)
         tgt_wav_fname = os.path.join(
             outdir, os.path.basename(_file).replace('.trs', tgt_ext))
         transcription_file_name = tgt_wav_fname + '.trn'
