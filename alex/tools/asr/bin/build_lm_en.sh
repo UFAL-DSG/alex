@@ -4,8 +4,8 @@
 cd $WORK_DIR
 
 # Get word list
-python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
-python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" | grep -v "_" > $WORK_DIR/word_list_train
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" | grep -v "_" > $WORK_DIR/word_list_test
 cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR/word_list_full
 
 # We need sentence start and end symbols which match the WSJ
