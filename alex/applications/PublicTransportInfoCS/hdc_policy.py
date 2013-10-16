@@ -256,7 +256,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         return self.last_system_dialogue_act
 
     def get_from_stop(self, dialogue_state):
-        """Generates a dialogue act informing about the origin stop of the last recommended connection.
+        """Generates a dialogue act informing about the origin stop of the last
+        recommended connection.
 
         :rtype : DilogueAct
         """
@@ -265,11 +266,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
+                da.append(DialogueActItem('inform', 'from_stop',
+                                          step.departure_stop))
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
-
                 return da
 
     def get_to_stop(self, dialogue_state):
