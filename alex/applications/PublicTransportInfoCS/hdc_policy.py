@@ -236,12 +236,12 @@ class PTICSHDCPolicy(DialoguePolicy):
             if len(req_da) == 0:
                 if dialogue_state['from_stop'] == dialogue_state['to_stop']:
                     apology_da = DialogueAct()
-                    apology_da.extend(DialogueAct(u'apology()'))
-                    apology_da.extend(DialogueAct(u'inform(stops_conflict="thesame")'))
+                    apology_da.extend(DialogueAct('apology()'))
+                    apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
                     apology_da.extend(
-                        DialogueAct(u"inform(from_stop='%s')" % dialogue_state['from_stop']))
+                        DialogueAct("inform(from_stop='%s')" % dialogue_state['from_stop']))
                     apology_da.extend(
-                        DialogueAct(u"inform(to_stop='%s')" % dialogue_state['to_stop']))
+                        DialogueAct("inform(to_stop='%s')" % dialogue_state['to_stop']))
                     res_da.extend(apology_da)
                 else:
                     dir_da = self.get_directions(dialogue_state)
@@ -401,32 +401,35 @@ class PTICSHDCPolicy(DialoguePolicy):
                      prev_arrive_stop != self.ORIGIN and
                      next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
-                    res.append(u"inform(walk_to=%s)" % next_leave_stop)
-                    res.append(u"inform(duration=0:%02d)" %
+                    res.append("inform(walk_to=%s)" % next_leave_stop)
+                    res.append("inform(duration=0:%02d)" %
                                (step.duration / 60))
             # public transport
             elif step.travel_mode == step.MODE_TRANSIT:
-                res.append(u"inform(vehicle=%s)" % step.vehicle)
-                res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" %
+                res.append("inform(vehicle=%s)" % step.vehicle)
+                res.append("inform(line=%s)" % step.line_name)
+                res.append("inform(go_at=%s)" %
                            step.departure_time.strftime("%H:%M"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
-                    res.append(u"inform(enter_at=%s)" % step.departure_stop)
-                res.append(u"inform(headsign=%s)" % step.headsign)
-                res.append(u"inform(exit_at=%s)" % step.arrival_stop)
+                    res.append("inform(enter_at=%s)" % step.departure_stop)
+                res.append("inform(headsign=%s)" % step.headsign)
+                res.append("inform(exit_at=%s)" % step.arrival_stop)
                 # only mention transfer if there is one
                 if next_leave_stop != self.DESTIN:
-                    res.append(u"inform(transfer='true')")
+                    res.append("inform(transfer='true')")
+                else:
+                    res.append("inform(arrive_at=%s)" % 
+                               step.arrival_time.strftime("%H:%M"))
                 prev_arrive_stop = step.arrival_stop
 
         # no route found: apologize
         if len(res) == 0:
-            res.append(u'apology()')
-            res.append(u"inform(from_stop='%s')" % dialogue_state['from_stop'])
-            res.append(u"inform(to_stop='%s')" % dialogue_state['to_stop'])
+            res.append('apology()')
+            res.append("inform(from_stop='%s')" % dialogue_state['from_stop'])
+            res.append("inform(to_stop='%s')" % dialogue_state['to_stop'])
 
-        res_da = DialogueAct(u"&".join(res))
+        res_da = DialogueAct("&".join(res))
 
         return res_da
 
