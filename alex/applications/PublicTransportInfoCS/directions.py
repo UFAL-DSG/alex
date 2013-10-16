@@ -173,6 +173,6 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         fname = os.path.join(self.system_logger.get_session_dir_name(),
                              'google-directions-{t}.json'.format(t=timestamp))
         fh = open(fname, 'w')
-        json.dump(data, fh)
+        json.dump(data, fh, indent=4, separators=(',', ': '))
         fh.close()
         self.session_logger.external_query_data_file(os.path.basename(fname))
