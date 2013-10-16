@@ -7,7 +7,7 @@ cd $WORK_DIR
 WAVMAP="$WORK_DIR"/test_wavs.txt
 MFCLST="$WORK_DIR"/test_mfcs.txt
 # Find wavs to be coded.
-find "$TEST_DATA_SOURCE" -iname '*.wav' -printf '%f\t%p\n' \
+find -L "$TEST_DATA_SOURCE" -iname '*.wav' -printf '%f\t%p\n' \
 	| sed -e 's/\.wav\t/\t/' \
 	| LC_ALL=C sort -t'	' -k1,1 >"$WAVMAP"
 # Find mfcs already present.

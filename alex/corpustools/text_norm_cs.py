@@ -108,7 +108,7 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(ur'\b{word}\b'.format(word=word))
 
-_excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
+_excluded_characters = ['=', '-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
                         '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
@@ -142,7 +142,7 @@ def normalise_text(text):
 
     # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
     # return text.translate(None, '*+~')
-    for char in '*+~':
+    for char in '*+~^':
         text = text.replace(char, '')
 
     return text
