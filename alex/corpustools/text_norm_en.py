@@ -373,7 +373,7 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
                "UM", "URM", "URUH", "UUH", "ARRH", "AW", "EM", "ERM", "ERR",
                "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH",
                "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
-               "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM"]
+               "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM", "EMPH"]
 # }}}
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
