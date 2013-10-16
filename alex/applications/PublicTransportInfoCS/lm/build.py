@@ -106,9 +106,8 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
         doc = xml.dom.minidom.parse(fn)
         trans_list = doc.getElementsByTagName("asr_transcription")
 
-        for trans in trans_list:
-            if trans.getAttribute('breaks_gold') != '0':
-                continue
+	if trans_list:
+            trans = trans_list[-1]:
 
             t = various.get_text_from_xml_node(trans)
 
