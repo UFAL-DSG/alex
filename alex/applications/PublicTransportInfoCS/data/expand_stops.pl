@@ -12,7 +12,7 @@ my $cases_list = '1,2,4';
 GetOptions( 'cases|c=s' => \$cases_list );
 
 if ( @ARGV != 2 ) {
-    die("Usage: ./gen_stops.pl [--cases=1,2,4] stops.txt stops.expanded.txt\n");
+    die("Usage: ./expand_stops.pl [--cases=1,2,4] stops.txt stops.expanded.txt\n");
 }
 
 # Lemmatize & tag all stops using Treex and pipe the output in here
