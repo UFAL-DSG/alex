@@ -6,11 +6,13 @@ from __future__ import unicode_literals
 import random
 import itertools
 import copy
+import re
 
 from alex.components.slu.da import DialogueAct
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 from alex.components.nlg.exceptions import TemplateNLGException
+from alex.components.nlg.tools.cs import word_for_number, vocalize_prep
 
 
 class AbstractTemplateNLG(object):
@@ -377,7 +379,44 @@ class TemplateNLG(AbstractTemplateNLG):
         """\
         Simple text replacement template filling.
         """
-        return tpl.format(**dict(svs))
+        svs_dict = dict(svs)
+        for slot, val in svs_dict.iteritems():
+            if re.match(r'[0-9]{1,2}:[0-9]{2}', val):
+                svs_dict[slot] = self.spell_time(val)
+        return self.vocalize_prepos(tpl.format(**svs_dict))
+
+    HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
+
+    def spell_time(self, time):
+        """\
+        Convert a time expression into words (assuming accusative).
+        """
+        hours, mins = map(int, time.split(':'))
+        hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
+        hours = word_for_number(hours, 'F4')
+        if mins == 0:
+            return ' '.join((hours, hr_id))
+        min_id = 'minut' + self.HR_ENDING.get(mins, '')
+        mins = word_for_number(mins, 'F4')
+        return ' '.join((hours, hr_id, 'a', mins, min_id))
+
+    def vocalize_prepos(self, text):
+        """\
+        Vocalize prepositions in the utterance, i.e. 'k', 'v', 'z', 's'
+        are changed to 'ke', 've', 'ze', 'se' if appropriate given the
+        following word.
+
+        This is mainly needed for time expressions, e.g. "v jednu hodinu"
+        (at 1:00), but "ve dvě hodiny" (at 2:00).
+        """
+        def pairwise(iterable):
+            a = iter(iterable)
+            return itertools.izip(a, a)
+        parts = re.split(r'\b([vkzsVKZS]) ', text)
+        text = parts[0]
+        for prep, follow in pairwise(parts[1:]):
+            text += vocalize_prep(prep, follow) + ' ' + follow
+        return text
 
 
 class TectoTemplateNLG(AbstractTemplateNLG):
