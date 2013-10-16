@@ -104,21 +104,24 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
     for fn in files:
 #            print "Processing:", fn
         doc = xml.dom.minidom.parse(fn)
-        trans_list = doc.getElementsByTagName("asr_transcription")
+        turns = doc.getElementsByTagName("turn")
+        
+        for turn in turns: 
+            trans_list = turn.getElementsByTagName("asr_transcription")
 
-	if trans_list:
-            trans = trans_list[-1]:
+	    if trans_list:
+    		trans = trans_list[-1]
 
-            t = various.get_text_from_xml_node(trans)
+                t = various.get_text_from_xml_node(trans)
 
-            if '(unint)' in t:
-                continue
-            if '(unit)' in t:
-                continue
-            if '-' in t:
-                continue
+	        if '(unint)' in t:
+    	    	    continue
+        	if '(unit)' in t:
+            	    continue
+        	if '-' in t:
+            	    continue
 
-            tt.append(normalise_text(t))
+        	tt.append(normalise_text(t))
 
     random.seed(0)
     random.shuffle(tt)
