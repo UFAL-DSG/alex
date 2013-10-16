@@ -10,30 +10,30 @@ cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR
 
 # We need sentence start and end symbols which match the WSJ
 # standard language model and produce no output symbols.
-echo "<s>	[] sil" > $WORK_DIR/dict_full
-echo "</s>	[] sil" >> $WORK_DIR/dict_full
-echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_full
-echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_full
-echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_full
-echo "_NOISE_	_noise_" >> $WORK_DIR/dict_full
+echo "<s> [] sil" > $WORK_DIR/dict_full
+echo "</s> [] sil" >> $WORK_DIR/dict_full
+echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_full
+echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_full
+echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_full
+echo "_NOISE_ _noise_" >> $WORK_DIR/dict_full
 
-echo "<s>	[] sil" > $WORK_DIR/dict_train
-echo "</s>	[] sil" >> $WORK_DIR/dict_train
-echo "silence	sil" >> $WORK_DIR/dict_train
-echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_train
-echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_train
-echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_train
-echo "_NOISE_	_noise_" >> $WORK_DIR/dict_train
-echo "_SIL_	sil" >> $WORK_DIR/dict_train
+echo "<s> [] sil" > $WORK_DIR/dict_train
+echo "</s> [] sil" >> $WORK_DIR/dict_train
+echo "silence sil" >> $WORK_DIR/dict_train
+echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_train
+echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_train
+echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_train
+echo "_NOISE_ _noise_" >> $WORK_DIR/dict_train
+echo "_SIL_ sil" >> $WORK_DIR/dict_train
 
-echo "<s>	[] sil" > $WORK_DIR/dict_test
-echo "</s>	[] sil" >> $WORK_DIR/dict_test
-echo "silence	sil" >> $WORK_DIR/dict_test
-echo "_INHALE_	_inhale_" >> $WORK_DIR/dict_test
-echo "_LAUGH_	_laugh_" >> $WORK_DIR/dict_test
-echo "_EHM_HMM_	_ehm_hmm_" >> $WORK_DIR/dict_test
-echo "_NOISE_	_noise_" >> $WORK_DIR/dict_test
-echo "_SIL_	sil" >> $WORK_DIR/dict_test
+echo "<s> [] sil" > $WORK_DIR/dict_test
+echo "</s> [] sil" >> $WORK_DIR/dict_test
+echo "silence sil" >> $WORK_DIR/dict_test
+echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_test
+echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_test
+echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_test
+echo "_NOISE_ _noise_" >> $WORK_DIR/dict_test
+echo "_SIL_ sil" >> $WORK_DIR/dict_test
 
 # Add pronunciations for each word
 perl $TRAIN_SCRIPTS/PhoneticTranscriptionCS.pl $WORK_DIR/word_list_full $TEMP_DIR/dict_full
@@ -51,7 +51,7 @@ perl $TRAIN_SCRIPTS/AddSp.pl $WORK_DIR/dict_full 1 > $WORK_DIR/dict_full_sp_sil
 perl $TRAIN_SCRIPTS/AddSp.pl $WORK_DIR/dict_train 1 > $WORK_DIR/dict_train_sp_sil
 perl $TRAIN_SCRIPTS/AddSp.pl $WORK_DIR/dict_test 1 > $WORK_DIR/dict_test_sp_sil
 
-# Add to the word list no-speech events
+# Add to the word list non-speech events
 echo "_INHALE_" >> $WORK_DIR/word_list_test
 echo "_LAUGH_" >> $WORK_DIR/word_list_test
 echo "_EHM_HMM_" >> $WORK_DIR/word_list_test
@@ -72,10 +72,10 @@ then
   cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
 else
   rm $WORK_DIR/all_trns
-  find $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
-  find $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
-  ngram-count -text $WORK_DIR/all_trns -order 2 -kndiscount1 -kndiscount2 -lm $WORK_DIR/arpa_bigram
+  ngram-count -text $WORK_DIR/all_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
   ngram -lm $WORK_DIR/arpa_bigram -ppl $WORK_DIR/all_trns
 
   HBuild -A -T 1 -C $TRAIN_COMMON/configrawmit -u '<UNK>' -s '<s>' '</s>' -n $WORK_DIR/arpa_bigram -z $WORK_DIR/word_list_full $WORK_DIR/wdnet_bigram > $LOG_DIR/hbuild.log
@@ -86,12 +86,11 @@ then
   cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
 else
   rm $WORK_DIR/all_trns
-  find $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
-  find $TEST_DATA_SOURCE -name '*.trn' | xargs sed sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
-  ngram-count -text $WORK_DIR/all_trns -order 3 -kndiscount1 -kndiscount2 -kndiscount3 -lm $WORK_DIR/arpa_trigram
+  ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
 
   cp $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
 fi
-

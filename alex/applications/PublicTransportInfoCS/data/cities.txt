@@ -33,7 +33,7 @@ Báňovice
 Bantice
 Barchov
 Barchovice
-Bařice-Velké Těšany
+Bařice - Velké Těšany
 Bartošovice
 Bartošovice v Orlických horách
 Bartoušov
@@ -70,7 +70,7 @@ Bělá u Jevíčka
 Bělčice
 Běleč
 Běleč nad Orlicí
-Bělkovice-Lašťany
+Bělkovice - Lašťany
 Běloky
 Bělotín
 Bělov
@@ -124,7 +124,7 @@ Bílkovice
 Bílov
 Bílovec
 Bílovice
-Bílovice-Lutotín
+Bílovice - Lutotín
 Bílovice nad Svitavou
 Bílsko
 Bílsko u Hořic
@@ -135,7 +135,7 @@ Bílý Újezd
 Biřkov
 Biskoupky
 Biskupice
-Biskupice-Pulkov
+Biskupice - Pulkov
 Bítouchov
 Bítov
 Bítovany
@@ -179,7 +179,7 @@ Boharyně
 Bohaté Málkovice
 Bohatice
 Bohdalec
-Bohdalice-Pavlovice
+Bohdalice - Pavlovice
 Bohdalín
 Bohdalov
 Bohdalovice
@@ -267,14 +267,14 @@ Božice
 Boží Dar
 Bozkov
 Bradáčov
-Brada-Rybníček
+Brada - Rybníček
 Bradlec
 Bradlecká Lhota
 Brambory
 Braňany
 Brandov
 Brandýsek
-Brandýs nad Labem-Stará Boleslav
+Brandýs nad Labem - Stará Boleslav
 Brandýs nad Orlicí
 Branice
 Braníškov
@@ -325,7 +325,7 @@ Březno
 Březolupy
 Březová
 Březová nad Svitavou
-Březová-Oleško
+Březová - Oleško
 Březovice
 Březské
 Březsko
@@ -354,9 +354,9 @@ Broumy
 Brozany nad Ohří
 Brtnice
 Brtnička
-Brťov-Jeneč
+Brťov - Jeneč
 Brumov
-Brumov-Bylnice
+Brumov - Bylnice
 Brumovice
 Bruntál
 Brusné
@@ -419,7 +419,7 @@ Býčkovice
 Býkev
 Bykoš
 Býkovice
-Býkov-Láryšov
+Býkov - Láryšov
 Bylany
 Bynovec
 Byšice
@@ -498,7 +498,7 @@ Cep
 Čerčany
 Cerekvice nad Bystřicí
 Cerekvice nad Loučnou
-Cerekvička-Rosice
+Cerekvička - Rosice
 Cerhenice
 Cerhonice
 Cerhovice
@@ -610,7 +610,7 @@ Chlumec nad Cidlinou
 Chlumek
 Chlumětín
 Chlumín
-Chlum-Korouhvice
+Chlum - Korouhvice
 Chlum Svaté Maří
 Chlum u Třeboně
 Chlumy
@@ -708,7 +708,7 @@ Chválenice
 Chvaletice
 Chvalíkovice
 Chvalkovice
-Chvalnov-Lísky
+Chvalnov - Lísky
 Chvalovice
 Chvalšiny
 Chvatěruby
@@ -1098,7 +1098,7 @@ Františkov nad Ploučnicí
 Františkovy Lázně
 Frenštát pod Radhoštěm
 Fryčovice
-Frýdek-Místek
+Frýdek - Místek
 Frýdlant
 Frýdlant nad Ostravicí
 Frýdštejn
@@ -1391,11 +1391,11 @@ Hoštejn
 Hostějov
 Hostěnice
 Hostěradice
-Hostěrádky-Rešov
+Hostěrádky - Rešov
 Hostětice
 Hostětín
 Hoštice
-Hoštice-Heroltice
+Hoštice - Heroltice
 Hostim
 Hostín
 Hostinné
@@ -1421,7 +1421,7 @@ Hrabyně
 Hracholusky
 Hrachoviště
 Hradčany
-Hradčany-Kobeřice
+Hradčany - Kobeřice
 Hradce
 Hradčovice
 Hradec
@@ -1429,7 +1429,7 @@ Hradec Králové
 Hradec nad Moravicí
 Hradec nad Svitavou
 Hradečno
-Hradec-Nová Ves
+Hradec - Nová Ves
 Hrádek
 Hrádek nad Nisou
 Hradešice
@@ -1449,7 +1449,7 @@ Hřebečníky
 Hředle
 Hrejkovice
 Hřensko
-Hřibiny-Ledská
+Hřibiny - Ledská
 Hřibojedy
 Hřiměždice
 Hříšice
@@ -1499,7 +1499,7 @@ Huslenky
 Huštěnovice
 Hustopeče
 Hustopeče nad Bečvou
-Hutisko-Solanec
+Hutisko - Solanec
 Huzová
 Hvězdlice
 Hvězdonice
@@ -1614,7 +1614,7 @@ Jezbořice
 Jezdkovice
 Jezdovice
 Ježená
-Jezeřany-Maršovice
+Jezeřany - Maršovice
 Jezernice
 Ježkovice
 Ježov
@@ -1941,7 +1941,7 @@ Kout na Šumavě
 Kouty
 Kovač
 Kovalovice
-Koválovice-Osíčany
+Koválovice - Osíčany
 Kováň
 Kovanec
 Kovanice
@@ -1962,7 +1962,7 @@ Kozojedy
 Kozojídky
 Kozolupy
 Kozomín
-Kožušany-Tážaly
+Kožušany - Tážaly
 Kožušice
 Krabčice
 Kraborovice
@@ -2023,7 +2023,7 @@ Křečkov
 Křečovice
 Krejnice
 Křekov
-Křelov-Břuchotín
+Křelov - Břuchotín
 Křelovice
 Křemže
 Křenek
@@ -2079,7 +2079,7 @@ Křtiny
 Křtomil
 Krtov
 Krty
-Krty-Hradec
+Krty - Hradec
 Krucemburk
 Kruh
 Krumsín
@@ -2246,7 +2246,7 @@ Lhota u Lysic
 Lhota u Olešnice
 Lhota u Příbramě
 Lhota u Vsetína
-Lhota-Vlasenice
+Lhota - Vlasenice
 Lhotice
 Lhotka
 Lhotka nad Labem
@@ -2339,7 +2339,7 @@ Lipno nad Vltavou
 Lipoltice
 Lipov
 Lipová
-Lipová-lázně
+Lipová - lázně
 Lipovec
 Lipovice
 Liptál
@@ -2622,7 +2622,7 @@ Michálkovice
 Michalovice
 Míchov
 Mičovice
-Míčov-Sušice
+Míčov - Sušice
 Mikolajice
 Mikulášovice
 Mikulčice
@@ -2726,7 +2726,7 @@ Mohelnice nad Jizerou
 Mohelno
 Mojné
 Mokošín
-Mokrá-Horákov
+Mokrá - Horákov
 Mokré
 Mokré Lazce
 Mokrosuky
@@ -2759,7 +2759,7 @@ Mořice
 Mořina
 Mořinka
 Mořkov
-Morkovice-Slížany
+Morkovice - Slížany
 Morkůvky
 Mošnov
 Most
@@ -2780,7 +2780,7 @@ Mrtník
 Mrzky
 Mšec
 Mšecké Žehrovice
-Mšené-lázně
+Mšené - lázně
 Mšeno
 Mukařov
 Mutějovice
@@ -2857,7 +2857,7 @@ Nekmíř
 Nekoř
 Nekvasovy
 Nelahozeves
-Nelepeč-Žernůvka
+Nelepeč - Žernůvka
 Nelešovice
 Nemanice
 Němčany
@@ -3014,7 +3014,7 @@ Nový Ples
 Nový Poddvorov
 Nový Přerov
 Nový Rychnov
-Nový Šaldorf-Sedlešovice
+Nový Šaldorf - Sedlešovice
 Nový Telečkov
 Nový Vestec
 Nučice
@@ -3172,7 +3172,7 @@ Ostrov
 Ostrovačice
 Ostrovánky
 Ostrovec
-Ostrovec-Lhotka
+Ostrovec - Lhotka
 Ostrov nad Oslavou
 Ostrov u Bezdružic
 Ostrov u Macochy
@@ -3336,14 +3336,14 @@ Plzeň
 Pnětluky
 Pňovany
 Pňovice
-Pňov-Předhradí
+Pňov - Předhradí
 Poběžovice
 Poběžovice u Holic
 Poběžovice u Přelouče
 Počaply
 Počátky
 Počedělice
-Počenice-Tetětice
+Počenice - Tetětice
 Počepice
 Pochvalov
 Pocinovice
@@ -3567,13 +3567,13 @@ Protivín
 Provodín
 Provodov
 Provodovice
-Provodov-Šonov
+Provodov - Šonov
 Prštice
 Průhonice
 Prušánky
 Prusice
 Prusinovice
-Prusy-Boškůvky
+Prusy - Boškůvky
 Prysk
 Pržno
 Pšánky
@@ -3612,7 +3612,7 @@ Rabyně
 Račetice
 Račice
 Račice nad Trotinou
-Račice-Pístovice
+Račice - Pístovice
 Račín
 Račiněves
 Racková
@@ -3666,7 +3666,7 @@ Radvanec
 Radvanice
 Radvanice a Bartovice
 Rájec
-Rájec-Jestřebí
+Rájec - Jestřebí
 Ráječko
 Rajhrad
 Rajhradice
@@ -3782,7 +3782,7 @@ Rosice
 Rosička
 Rosovice
 Roštění
-Rostěnice-Zvonovice
+Rostěnice - Zvonovice
 Roštín
 Rostoklaty
 Rotava
@@ -3903,14 +3903,14 @@ Sebečice
 Šebířov
 Šebkovice
 Sebranice
-Šebrov-Kateřina
+Šebrov - Kateřina
 Seč
 Šedivec
 Sedlatice
 Sedlčany
 Sedlec
 Sedlečko u Soběslavě
-Sedlec-Prčice
+Sedlec - Prčice
 Sedlejov
 Sedletín
 Sedlice
@@ -4239,7 +4239,7 @@ Stínava
 Štipoklasy
 Štítary
 Štítina
-Štítná nad Vláří-Popov
+Štítná nad Vláří - Popov
 Štítov
 Štíty
 Stochov
@@ -4272,7 +4272,7 @@ Stránka
 Stranný
 Strašice
 Strašín
-Straškov-Vodochody
+Straškov - Vodochody
 Strašnov
 Strašov
 Stratov
@@ -4389,7 +4389,7 @@ Svatá
 Svatá Maří
 Svatava
 Svaté Pole
-Svatobořice-Mistřín
+Svatobořice - Mistřín
 Svatojanský Újezd
 Svatoňovice
 Svatoslav
@@ -4444,7 +4444,7 @@ Svrkyně
 Sychrov
 Sýkořice
 Synalov
-Synkov-Slemeno
+Synkov - Slemeno
 Syřenov
 Syrov
 Syrovátka
@@ -4597,7 +4597,7 @@ Troskovice
 Trotina
 Troubelice
 Troubky
-Troubky-Zdislavice
+Troubky - Zdislavice
 Troubsko
 Trpík
 Trpín
@@ -5042,7 +5042,7 @@ Vrábče
 Vraclav
 Vracov
 Vracovice
-Vračovice-Orlov
+Vračovice - Orlov
 Vraňany
 Vrančice
 Vrané nad Vltavou
@@ -5050,7 +5050,7 @@ Vranov
 Vranová
 Vranová Lhota
 Vranovice
-Vranovice-Kelčice
+Vranovice - Kelčice
 Vranov nad Dyjí
 Vranovská Ves
 Vraný
@@ -5183,7 +5183,7 @@ Záborná
 Žabovřesky nad Ohří
 Zábrdí
 Zábřeh
-Zábřezí-Řečice
+Zábřezí - Řečice
 Zábrodí
 Zabrušany
 Záchlumí
@@ -5197,8 +5197,8 @@ Zadní Vydří
 Zadní Zhořec
 Zádolí
 Žádovice
-Zádub-Závišín
-Zádveřice-Raková
+Zádub - Závišín
+Zádveřice - Raková
 Zahájí
 Zahnašovice
 Zahořany
@@ -5235,7 +5235,7 @@ Záluží
 Zálužice
 Žamberk
 Záměl
-Zámostí-Blata
+Zámostí - Blata
 Žampach
 Zámrsk
 Zámrsky
@@ -5390,7 +5390,7 @@ Zlatá Olešnice
 Zlaté Hory
 Zlátenka
 Zlatníky
-Zlatníky-Hodkovice
+Zlatníky - Hodkovice
 Žlebské Chvalovice
 Žleby
 Zlechov
@@ -5409,7 +5409,7 @@ Zlukov
 Znětínek
 Znojmo
 Zruč nad Sázavou
-Zruč-Senec
+Zruč - Senec
 Zubčice
 Zubří
 Zubrnice
