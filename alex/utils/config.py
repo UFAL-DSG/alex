@@ -23,7 +23,7 @@ from alex.utils.exceptions import ConfigException
 
 config = None
 
-online_update_server = "https://vystadial.ms.mff.cuni.cz/download/"
+online_update_server = "https://vystadial.ms.mff.cuni.cz/download/alex"
 
 def as_project_path(path):
     return os.path.join(env.root(), path)
