@@ -97,7 +97,7 @@ $TRAIN_SCRIPTS/train_mixup.sh
 date
 
 echo "Re-align the training data with the best triphone models."
-$TRAIN_SCRIPTS/realign.sh hmm67 tiedlist
+$TRAIN_SCRIPTS/realign.sh hmm67 tiedlist &
 
 #############
 #  TESTING  #
