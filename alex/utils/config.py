@@ -52,12 +52,12 @@ def callback_download_progress(blocks, block_size, total_size):
             __current_size += block_size
         current_size = __current_size
     else:
-        current_size = min(blocks*block_size, total_size)
+        current_size = min(blocks * block_size, total_size)
 
     # number of dots on thermometer scale
-    avail_dots = width-2
+    avail_dots = width - 2
     shaded_dots = int(math.floor(float(current_size) / total_size * avail_dots))
-    progress = '[' + '.'*shaded_dots + ' '*(avail_dots-shaded_dots) + ']'
+    progress = '[' + '.' * shaded_dots + ' ' * (avail_dots - shaded_dots) + ']'
 
     if progress:
         sys.stdout.write("\r" + progress)
@@ -85,14 +85,15 @@ def online_update(file_name):
     :param fn: the file name which should be downloaded from the server
     :return: a file name of the local copy of the file downloaded from the server
     """
-    url = online_update_server+file_name
-    url_time = time.mktime(urllib.urlopen(url).info().getdate('Last-Modified'))
+    url = online_update_server + file_name
+    url_time = urllib.urlopen(url).info().getdate('Last-Modified')
 
     fn = as_project_path(file_name)
-
+    if url_time is None:
+        return fn
     if os.path.exists(fn):
         file_name_time = os.path.getmtime(fn)
-
+        url_time = time.mktime(url_time)
         if url_time <= file_name_time:
             return fn
 
@@ -103,7 +104,7 @@ def online_update(file_name):
     print "-"*80
 
     # get filename for temp file in current directory
-    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn+".", )
+    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn + ".",)
     os.close(fd)
     os.unlink(tmpfile)
 
@@ -344,7 +345,7 @@ class Config(object):
         expand_cap = lambda text: text.replace('{cfg_abs_path}',
                                                cfg_abs_dirname)
 
-        self.config = config = load_as_module(file_name, force=True, text_transforms=(expand_cap, )).config
+        self.config = config = load_as_module(file_name, force=True, text_transforms=(expand_cap,)).config
 
         self.load_includes()
 
