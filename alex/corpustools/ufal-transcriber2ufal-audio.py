@@ -79,7 +79,6 @@ def save_transcription(trs_fname, trs):
         trs += '\n'
     with codecs.open(trs_fname, 'w+', encoding='UTF-8') as trs_file:
         trs_file.write(trs)
-        # trs_file.write(trs.encode('ascii', 'ignore'))
     return existed
 
 
@@ -121,8 +120,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
 
         # Construct various involved file names.
         src_wav_fname = _file.replace('.trs', '.wav')
-        tgt_ext = u'-{start:07.2f}-{end:07.2f}-{hash}.wav'.format(
-            start=starttime, end=endtime, hash=unique_str())
+        tgt_ext = u'-{start:07.2f}-{end:07.2f}.wav'.format(start=starttime, end=endtime)
         tgt_wav_fname = os.path.join(
             outdir, os.path.basename(_file).replace('.trs', tgt_ext))
         transcription_file_name = tgt_wav_fname + '.trn'
@@ -136,7 +134,9 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
         transcription = norm_mod.normalise_text(transcription)
         if verbose:
             print u"  after normalisation:", transcription
-        if norm_mod.exclude(transcription):
+        # exclude all transcriptions with non-speech events
+        # the transcriptions provided Transcriber have too much _SIL_ and _NOISE_ etc. data, it is better to ignore it.
+        if norm_mod.exclude(transcription) or "_" in transcription:
             if verbose:
                 print u"  ...excluded"
             continue
@@ -293,5 +293,4 @@ if __name__ == '__main__':
 
     with codecs.open(args.word_list, 'w', "utf-8") as word_list_file:
         for word in sorted(wc):
-            word_list_file.write(u"{word}\t{count}\n".format(
-                word=word, count=wc[word]))
+            word_list_file.write(u"{word}\t{count}\n".format(word=word, count=wc[word]))

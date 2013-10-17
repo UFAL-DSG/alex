@@ -4,12 +4,11 @@
 # http://www.python.org/dev/peps/pep-0008.
 
 """
-This program processes CUED call log files and copies all audio into
-a destination directory.
+This program processes UFAL call log files and copies all audio into a destination directory.
 It also extracts transcriptions from the log files and saves them alongside the
 copied wavs.
 
-It scans for 'user-transcription.norm.xml' to extract transcriptions and names
+It scans for 'asr_transcribed.xml' to extract transcriptions and names
 of .wav files.
 
 An example ignore list file could contain the following three lines:
@@ -28,6 +27,8 @@ all odd dialogue turns should be ignored.
 
 """
 
+from __future__ import unicode_literals
+
 import argparse
 import collections
 import os
@@ -35,10 +36,20 @@ import os.path
 import shutil
 import sys
 import codecs
+
 from xml.etree import ElementTree
 
-if __name__ == "__main__":
+# Make sure the alex package is visible.
+if __name__ == '__main__':
     import autopath
+
+from alex.utils.fs import find
+
+_LANG2NORMALISATION_MOD = {
+    'cs': 'alex.corpustools.text_norm_cs',
+    'en': 'alex.corpustools.text_norm_en'
+}
+
 
 from alex.corpustools.cued import find_wavs
 from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
@@ -56,8 +67,7 @@ def save_transcription(trs_fname, trs):
     return existed
 
 
-def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
-                      known_words=None, verbose=False):
+def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None, lang='cs', verbose=False):
     """Extracts wavs and their transcriptions from the named in `sess_fname',
     a CUED call log file. Extracting means copying them to `outdir'. Recordings
     themselves are expected to reside in `dirname'.
@@ -73,6 +83,11 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
     not present for existing recordings.
 
     """
+
+    # Import the appropriate normalisation module.
+    norm_mod_name = _LANG2NORMALISATION_MOD[lang]
+    norm_mod = __import__(norm_mod_name, fromlist=('exclude', 'normalise_text'))
+
     # Parse the file.
     try:
         doc = ElementTree.parse(sess_fname)
@@ -81,7 +96,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
             print '!!! Could not parse "{fname}": {msg!s}.'\
                 .format(fname=sess_fname, msg=error)
             return 0, 0, 0, 0
-    uturns = doc.findall(".//userturn")
+    uturns = doc.findall(".//turn")
 
     size = 0
     n_overwrites = 0
@@ -90,14 +105,19 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
     for uturn in uturns:
         # trs.text = uturn.getElementsByTagName("trs.text")
         # rec = uturn.getElementsByTagName("rec")
+        
+        if uturn.attrib['speaker'] != "user":
+            continue 
+            
         rec = uturn.find("rec")
-        trs = uturn.find("transcription")
+        trs = uturn.findall("asr_transcription")
         if trs is None:
             if rec is not None:
                 n_missing_trs += 1
             continue
         else:
-            trs = trs.text
+            # FIXME: Is the last transcription the right thing to be used? Probably. Must be checked!
+            trs = trs[-1].text
 
         # Check this is the wav from this directory.
         wav_basename = rec.attrib['fname'].strip()
@@ -118,7 +138,6 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
                 print "orig transcription:", trs.upper()
 
             trs = normalise_text(trs)
-            
             if verbose:
                 print "normalised trans:  ", trs
 
@@ -135,7 +154,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
             trs_fname = os.path.join(outdir, wav_basename + '.trn')
 
             try:
-                szx = os.path.getsize(wav_fname)
+                size += os.path.getsize(wav_fname)
             except OSError:
                 print "Lost audio file:", wav_fname
             else:
@@ -145,7 +164,6 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
                     cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=wav_fname, tgt=tgt)
                     print cmd
                     os.system(cmd)
-                    size += os.path.getsize(tgt)
                 except shutil.Error as e:
                     print >>sys.stderr, \
                         ("Isn't the `outdir' with previously copied files "
@@ -189,6 +207,7 @@ def convert(args):
     # Unpack the arguments.
     infname = args.infname
     outdir = args.outdir
+    lang = args.language
     verbose = args.verbose
     ignore_list_file = args.ignore
     dict_file = args.dictionary
@@ -235,28 +254,21 @@ def convert(args):
     sess_fnames = dict()
     # Call dir == prefix
     for prefix in wav_mapping.itervalues():
-        norm_fname = os.path.join(prefix, 'user-transcription.norm.xml')
+        norm_fname = os.path.join(prefix, 'asr_transcribed.xml')
         if os.path.isfile(norm_fname):
             sess_fnames[prefix] = norm_fname
         else:
-            basic_fname = os.path.join(prefix, 'user-transcription.xml')
+            basic_fname = os.path.join(prefix, 'session.xml')
             if os.path.isfile(basic_fname):
-                sess_fnames[prefix] = basic_fname
                 n_notnorm_trss += 1
             else:
-                basic_fname = os.path.join(prefix,
-                                           'user-transcription-all.xml')
-                if os.path.isfile(basic_fname):
-                    sess_fnames[prefix] = basic_fname
-                    n_notnorm_trss += 1
-                else:
-                    n_missing_trss += 1
+              n_missing_trss += 1
     # trn_paths = find(infname, 'user-transcription.norm.xml')
 
     print ""
-    print "Number of sessions                   :", len(sess_fnames)
-    print "Number of unnormalised transcriptions:", n_notnorm_trss
-    print "Number of missing transcriptions     :", n_missing_trss
+    print "Number of sessions:                   ", len(sess_fnames)
+    print "Number of untranscribed sessions:     ", n_notnorm_trss
+    print "Number of missing sessions:           ", n_missing_trss
     print ""
 
     # Copy files referred in the transcription logs to `outdir'.
@@ -270,8 +282,7 @@ def convert(args):
             print "Processing call log dir:", prefix
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(
-                prefix, call_log, outdir, wav_mapping, known_words, verbose)
+            extract_wavs_trns(prefix, call_log, outdir, wav_mapping, known_words, lang, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav
@@ -332,6 +343,11 @@ if __name__ == '__main__':
                             'The globs are interpreted wrt. the current '
                             'working directory. For an example, see the '
                             'source code.')
+    arger.add_argument('-l', '--language',
+                       default='cs',
+                       metavar='CODE',
+                       help='Code of the language (e.g., "cs") of the '
+                            'transcriptions.')
     arger.add_argument('-w', '--word-list',
                        default='word_list',
                        metavar='FILE',
@@ -350,14 +366,12 @@ if __name__ == '__main__':
     n_collisions, n_overwrites, n_ignores, n_missing_trs = convert(args)
 
     # Report.
-    msg = ("# collisions: {0};  # overwrites: {1};  # without transcription: "
-           "{2}")\
-        .format(n_collisions, n_overwrites, n_missing_trs)
+    msg = ("# collisions: {0};  # overwrites: {1};  # without transcription: {2}").format(n_collisions, n_overwrites, n_missing_trs)
     if args.count_ignored:
         msg += ";  # ignores: {0}".format(n_ignores)
     print msg
 
     # Print out the contents of the word counter to 'word_list'.
-    with codecs.open(args.word_list, 'w', "UTF-8") as word_list_file:
+    with codecs.open(args.word_list, 'w', 'UTF-8') as word_list_file:
         for word in sorted(wc):
             word_list_file.write(u"{word}\t{count}\n".format(word=word, count=wc[word]))
