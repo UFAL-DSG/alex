@@ -56,7 +56,6 @@ for uscored, forms in _nonspeech_map.iteritems():
     for form in forms:
         _nonspeech_trl[form] = uscored
 
-
 # substitutions {{{
 _subst = [('GOOD-BYE', 'GOODBYE'),
           ('GOOD BYE', 'GOODBYE'),
@@ -342,7 +341,7 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('CCENTRAL', 'CENTRAL'),
           ('FFSION', 'FUSION'),
           ('FOIR', 'FOR'),
-	  ('KINKGSHEDGES', 'KINGSHEDGES'),
+          ('KINKGSHEDGES', 'KINGSHEDGES'),
           ('MEXIAN', 'MEXICAN'),
           ('STREE', 'STREET'),
           ('INT HE', 'IN THE'),
@@ -428,8 +427,8 @@ def exclude(text):
     """
 #{{{
     if text in ['_NOISE_', '_EHM_HMM_', '_SIL_', '_INHALE_', '_LAUGH_']:
-	return False
-    
+        return False
+
     for char in _excluded_characters:
         if char in text:
             return True

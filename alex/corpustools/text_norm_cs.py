@@ -71,7 +71,6 @@ for uscored, forms in _nonspeech_map.iteritems():
     for form in forms:
         _nonspeech_trl[form] = uscored
 
-
 # substitutions {{{
 _subst = [('JESLTI', 'JESTLI'),
           ('NMŮŽU', 'NEMŮŽU'),
@@ -131,7 +130,7 @@ def normalise_text(text):
     for word in _hesitation:
         text = word.sub(' (HESITATION) ', text)
     text = _more_spaces.sub(' ', text).strip()
-    
+
     # Handle non-speech events (separate them from words they might be
     # agglutinated to, remove doubled parentheses, and substitute the known
     # non-speech events with the forms with underscores).
@@ -159,7 +158,7 @@ def exclude(text):
     """
 #{{{
     if text in ['_NOISE_', '_EHM_HMM_', '_SIL_', '_INHALE_', '_LAUGH_']:
-	return False
+        return False
 
     for char in _excluded_characters:
         if char in text:
