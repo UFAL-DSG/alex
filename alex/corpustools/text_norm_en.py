@@ -357,9 +357,14 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('ROMSY', 'ROMSEY'),
           ('NEEED', 'NEED'),
           ('ST', 'SAINT'),
+          ('THATS', 'THAT'),
+          ('MIDDLEEASTERN', 'MIDDLE EASTERN'),
           ('FUR', '_EXCLUDE_'),
           ('JAP', '_EXCLUDE_'),
           ('AD', '_EXCLUDE_'),
+          ('NOONAN', '_EXCLUDE_'),
+          ('TINKHAM', '_EXCLUDE_'),
+          ('TUK', '_EXCLUDE_'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
