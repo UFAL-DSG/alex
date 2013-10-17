@@ -45,7 +45,7 @@ def score_da(ref_da, test_da):
     statsp = defaultdict(lambda : defaultdict(float))
 
     for i in test_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i in ref_da:
             tp += 1.0
             statsp[ri]['tp'] += 1.0
@@ -54,7 +54,7 @@ def score_da(ref_da, test_da):
             statsp[ri]['fp'] += 1.0
 
     for i in ref_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0
