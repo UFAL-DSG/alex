@@ -12,7 +12,6 @@ cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR
 # standard language model and produce no output symbols.
 echo "<s> [] sil" > $WORK_DIR/dict_full
 echo "</s> [] sil" >> $WORK_DIR/dict_full
-echo "silence sil" >> $WORK_DIR/dict_full
 echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_full
 echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_full
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_full
@@ -21,7 +20,6 @@ echo "_SIL_ sil" >> $WORK_DIR/dict_full
 
 echo "<s> [] sil" > $WORK_DIR/dict_train
 echo "</s> [] sil" >> $WORK_DIR/dict_train
-echo "silence sil" >> $WORK_DIR/dict_train
 echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_train
 echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_train
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_train
@@ -30,7 +28,6 @@ echo "_SIL_ sil" >> $WORK_DIR/dict_train
 
 echo "<s> [] sil" > $WORK_DIR/dict_test
 echo "</s> [] sil" >> $WORK_DIR/dict_test
-echo "silence sil" >> $WORK_DIR/dict_test
 echo "_INHALE_ _inhale_" >> $WORK_DIR/dict_test
 echo "_LAUGH_ _laugh_" >> $WORK_DIR/dict_test
 echo "_EHM_HMM_ _ehm_hmm_" >> $WORK_DIR/dict_test
@@ -98,5 +95,5 @@ else
   ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
 
-  cat $WORK_DIR/dict_full | grep -v "_SIL_" | grep -v "silence" > $WORK_DIR/dict_hdecode
+  cat $WORK_DIR/dict_full | grep -v "_SIL_" > $WORK_DIR/dict_hdecode
 fi
