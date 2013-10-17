@@ -7,6 +7,7 @@ from datetime import time as dttime
 import time
 import json
 import os.path
+import codecs
 
 class Directions(object):
     pass
@@ -172,7 +173,8 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
         fname = os.path.join(self.system_logger.get_session_dir_name(),
                              'google-directions-{t}.json'.format(t=timestamp))
-        fh = open(fname, 'w')
-        json.dump(data, fh, indent=4, separators=(',', ': '))
+        fh = codecs.open(fname, 'w', 'UTF-8')
+        json.dump(data, fh, indent=4, separators=(',', ': '),
+                  ensure_ascii=False)
         fh.close()
         self.session_logger.external_query_data_file(os.path.basename(fname))
