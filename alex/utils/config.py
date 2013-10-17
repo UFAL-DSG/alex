@@ -86,31 +86,38 @@ def online_update(file_name):
     :return: a file name of the local copy of the file downloaded from the server
     """
     url = online_update_server+file_name
-    url_time = time.mktime(urllib.urlopen(url).info().getdate('Last-Modified'))
-
     fn = as_project_path(file_name)
+    
+    url_date = urllib.urlopen(url).info().getdate('Last-Modified')
 
-    if os.path.exists(fn):
-        file_name_time = os.path.getmtime(fn)
+    if url_date:
+        url_time = time.mktime(url_date)
 
-        if url_time <= file_name_time:
-            return fn
+        if os.path.exists(fn):
+            file_name_time = os.path.getmtime(fn)
 
-    print "="*80
-    print "Downloading file:", fn
-    if os.path.exists(fn) and url_time > file_name_time:
-        print "The modification time of the remote file is different. "
-    print "-"*80
+            if url_time <= file_name_time:
+                return fn
 
-    # get filename for temp file in current directory
-    (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn+".", )
-    os.close(fd)
-    os.unlink(tmpfile)
+        print "="*80
+        print "Downloading file:", fn
+        if os.path.exists(fn) and url_time > file_name_time:
+            print "The modification time of the remote file is different. "
+        print "-"*80
 
-    (tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback_download_progress)
+        # get filename for temp file in current directory
+        (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn+".", )
+        os.close(fd)
+        os.unlink(tmpfile)
 
-    shutil.move(tmpfile, fn)
-    os.utime(fn, (url_time, url_time))
+        (tmpfile, headers) = urllib.urlretrieve(url, tmpfile, callback_download_progress)
+
+        shutil.move(tmpfile, fn)
+        os.utime(fn, (url_time, url_time))
+    else:
+        print "="*80
+        print "Could not stat:", url
+        print "-"*80
 
     print
 
