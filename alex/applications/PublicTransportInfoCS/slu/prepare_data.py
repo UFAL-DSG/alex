@@ -90,31 +90,38 @@ for fn in files[:100000]:
         trans = turn.getElementsByTagName("asr_transcription")
         asrs = turn.getElementsByTagName("asr")
 
-        if len(recs) != 1 or len(trans) != 1:
-            print "Skipping a turn in {fn} - recs: {recs}, trans: {trans}".format(fn=fn, recs=len(recs), trans=len(trans))
+        if len(recs) != 1:
+            print "Skipping a turn {turn} in file: {fn} - recs: {recs}".format(turn=i,fn=fn, recs=len(recs))
             continue
 
-        if len(asrs) == 0 and i + 1 > len(turns):
+        if len(asrs) == 0 and (i + 1) < len(turns):
             next_asrs = turns[i+1].getElementsByTagName("asr")
             if len(next_asrs) != 2:
-                print "Skipping a turn in {fn} - next_asrs: {asrs}".format(fn=fn, asrs=len(next_asrs))
+                print "Skipping a turn {turn} in file: {fn} - asrs: {asrs} - next_asrs: {next_asrs}".format(turn=i, fn=fn, asrs=len(asrs), next_asrs=len(next_asrs))
                 continue
+            print "Recovered from missing ASR output by using a delayed ASR output from the following turn of turn {turn}. File: {fn} - next_asrs: {asrs}".format(turn=i, fn=fn, asrs=len(next_asrs))
             hyps = next_asrs[0].getElementsByTagName("hypothesis")
         elif len(asrs) == 1:
             hyps = asrs[0].getElementsByTagName("hypothesis")
         elif len(asrs) == 2:
-            hyps = asrs[1].getElementsByTagName("hypothesis")
+            print "Recovered from EXTRA ASR outputs by using a the last ASR output from the turn. File: {fn} - asrs: {asrs}".format(fn=fn, asrs=len(asrs))
+            hyps = asrs[-1].getElementsByTagName("hypothesis")
         else:
-            print "Skipping a turn in {fn} - asrs: {asrs}".format(fn=fn, asrs=len(asrs))
+            print "Skipping a turn {turn} in file {fn} - asrs: {asrs}".format(turn=i,fn=fn, asrs=len(asrs))
             continue
 
+        if len(trans) == 0:
+            print "Skipping a turn in {fn} - trans: {trans}".format(fn=fn, trans=len(trans))
+            continue
 
         wav_key = recs[0].getAttribute('fname')
-        t = various.get_text_from_xml_node(trans[0])
+        # FIXME: Check whether the last transcription is really the best! FJ
+        t = various.get_text_from_xml_node(trans[-1])
         t = normalise_text(t)
 
         # FIXME: We should be more tolerant and use more transcriptions
         if t != '_NOISE_' and ('-' in t or '_' in t or '(' in t):
+    	    print "Skipping transcription:", t
             continue
 
         trn.append((wav_key, t))

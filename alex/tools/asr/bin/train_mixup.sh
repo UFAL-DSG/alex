@@ -14,7 +14,7 @@
 cd $WORK_DIR
 
 # Prepare new directories for all our model files.
-for num in `seq 18 63`; do
+for num in `seq 18 67`; do
 	rm -rf hmm$num
 	mkdir hmm$num
 done
@@ -50,69 +50,40 @@ $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm24 hmm25 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm25 hmm26 tiedlist wintri.mlf 0
 $TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm26 hmm27 tiedlist wintri.mlf 0
 
-#######################################################
-# Mixup 2->4, sil from 4->8
-HHEd -B -H $WORK_DIR/hmm27/macros -H $WORK_DIR/hmm27/hmmdefs -M $WORK_DIR/hmm28 $TRAIN_COMMON/mix4.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix4.log
+# Gradually add 2 Gaussians to regular phone HMMs' states and 4 Gaussians 
+# to the silence model and re-estimate, until 18 Gaussians per state are 
+# reached.
+#
+# The resulting models will be in these directories:
+#
+# 	dir     # Gauss for normal    # Gauss for sil
+# 	─────────────────────────────────────────────
+# 	hmm32                    4                  8
+# 	hmm37                    6                 12
+# 	hmm42                    8                 16
+# 	hmm47                   10                 20
+# 	hmm52                   12                 24
+# 	hmm57                   14                 28
+# 	hmm62                   16                 32
+# 	hmm67                   18                 36
 
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm28 hmm29 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm29 hmm30 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm30 hmm31 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm31 hmm32 tiedlist wintri.mlf 0
+n_iters=4  # number of re-estimation iterations
+					 # (The table above assumes this is 4.)
+step_size=2  # number of Gaussians added to normal phone models in each step
+						 # (The table above assumes this is 2.)
 
-#######################################################
-# Mixup 4->6, sil 8->12
-HHEd -B -H $WORK_DIR/hmm32/macros -H $WORK_DIR/hmm32/hmmdefs -M $WORK_DIR/hmm33 $TRAIN_COMMON/mix6.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix6.log
+for new_n in `seq 4 $step_size 18`; do
+	# Split off the new Gaussians.
+	hmm_idx=$(($new_n / $step_size * $(($n_iters + 1)) + 18))
+	prev_dir="$WORK_DIR/hmm$(($hmm_idx - 1))"
+	HHEd -B -H $prev_dir/macros -H $prev_dir/hmmdefs \
+		-M $WORK_DIR/hmm$hmm_idx \
+		$TRAIN_COMMON/mix$new_n.hed $WORK_DIR/tiedlist \
+		>$LOG_DIR/hhed_mix$new_n.log
 
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm33 hmm34 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm34 hmm35 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm35 hmm36 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm36 hmm37 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 6->8, sil 12->16
-HHEd -B -H $WORK_DIR/hmm37/macros -H $WORK_DIR/hmm37/hmmdefs -M $WORK_DIR/hmm38 $TRAIN_COMMON/mix8.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix8.log
-
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm38 hmm39 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm39 hmm40 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm40 hmm41 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm41 hmm42 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 8->10, sil 16->20
-HHEd -B -H $WORK_DIR/hmm42/macros -H $WORK_DIR/hmm42/hmmdefs -M $WORK_DIR/hmm43 $TRAIN_COMMON/mix10.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix10.log
-
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm43 hmm44 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm44 hmm45 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm45 hmm46 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm46 hmm47 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 10->12, sil 20->24
-HHEd -B -H $WORK_DIR/hmm47/macros -H $WORK_DIR/hmm47/hmmdefs -M $WORK_DIR/hmm48 $TRAIN_COMMON/mix12.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix12.log
-
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm48 hmm49 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm49 hmm50 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm50 hmm51 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm51 hmm52 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 12->14, sil 24->28
-HHEd -B -H $WORK_DIR/hmm52/macros -H $WORK_DIR/hmm52/hmmdefs -M $WORK_DIR/hmm53 $TRAIN_COMMON/mix14.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix14.log
-
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm53 hmm54 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm54 hmm55 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm55 hmm56 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm56 hmm57 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 14->16, sil 28->32
-HHEd -B -H $WORK_DIR/hmm57/macros -H $WORK_DIR/hmm57/hmmdefs -M $WORK_DIR/hmm58 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log
-
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm58 hmm59 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm59 hmm60 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm60 hmm61 tiedlist wintri.mlf 0
-$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm61 hmm62 tiedlist wintri.mlf 0
-
-#######################################################
-# Mixup 16->18, sil 32->34
-HHEd -B -H $WORK_DIR/hmm62/macros -H $WORK_DIR/hmm62/hmmdefs -M $WORK_DIR/hmm63 $TRAIN_COMMON/mix16.hed $WORK_DIR/tiedlist > $LOG_DIR/hhed_mix16.log
+	# Re-estimate.
+	for iter in `seq 0 $(($n_iters - 1))`; do
+		$TRAIN_SCRIPTS/train_iter.sh $WORK_DIR hmm$(($hmm_idx + $iter)) \
+			hmm$(($hmm_idx + $iter + 1)) tiedlist wintri.mlf 0
+	done
+done

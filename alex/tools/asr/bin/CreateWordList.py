@@ -3,60 +3,46 @@
 
 import glob
 import sys
-import collections
 
-patern1, patern2, patern3, patern4 = None, None, None, None
+# Initialisation.
+dctn = '-'  # This is a special value for this argument, meaning no dictionary
+            # should be used.
+pats = list()
 
+# Read the command line arguments.
 try:
     dctn = sys.argv[1]
-    pattern1 = sys.argv[2]
-    pattern2 = sys.argv[3]
-    pattern3 = sys.argv[4]
-    pattern4 = sys.argv[5]
+    pats = sys.argv[2:]
 except IndexError:
     pass
 
-dict_test = True
-dct = {}
-try:
-    # load dictionary
-    dctf = open(dctn, 'r')
-    for l in dctf:
-        l = l.strip()
-        l = l.split()
+# Load the dictionary.
+if dctn != '-':
+    dct = set()
+    try:
+        with open(dctn, 'r') as dctf:
+            for line in dctf:
+                line = line.split()
+                if line:
+                    dct.add(line[0])
+    except IOError:
+        pass
 
-        if len(l) > 0:
-            dct[l[0]] = 1
+# Collect all filenames from the globs passed in as arguments.
+fns = list()
+for pat in pats:
+    fns.extend(glob.iglob(pat))
 
-    dctf.close()
-except IOError as e:
-    dict_test = False
-
-fns = glob.glob(pattern1)
-if patern2:
-    fns.extend(glob.glob(pattern2))
-if patern3:
-    fns.extend(glob.glob(pattern3))
-if patern4:
-    fns.extend(glob.glob(pattern4))
-
-word_list = collections.defaultdict(int)
+# Read all words from all the files.
+word_set = set()
 for fn in fns:
-    f = open(fn, 'r')
-    for l in f:
-        l = l.strip()
-        l = l.split()
+    with open(fn, 'r') as f:
+        for line in f:
+            word_set.update(line.split())
 
-        for w in l:
-            word_list[w] += 1
+# Filter the words by the dictionary if one was provided.
+word_list = sorted(word_set.intersection(dct) if dct else word_set)
 
-    f.close()
-
-word_list = sorted(word_list.keys())
-
-for w in word_list:
-    if dict_test:
-        if w in dct:
-            print w
-    else:
-        print w
+# Print out all the words.
+for word in word_list:
+    print word

@@ -1,7 +1,7 @@
 #!/bin/bash
 # This encodes the test data.
 
-cd $WORK_DIR
+cd "$WORK_DIR"
 
 # Create the list file we need to send to HCopy to convert .wav files to .mfc.
 WAVMAP="$WORK_DIR"/test_wavs.txt
