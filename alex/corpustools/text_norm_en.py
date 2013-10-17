@@ -192,6 +192,7 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('HII', 'HILL'),
           ('HIL', 'HILL'),
           ('I\'\'M', 'I\'M'),
+          ('I M', 'I AM'),
           ('IAM', 'I AM'),
           ('IAN', 'I AM'),
           ('I"M', 'I\'M'),
@@ -354,6 +355,11 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('NEWHAM', 'NEWNHAM'),
           ('VENE', 'VENUE'), 
           ('ROMSY', 'ROMSEY'),
+          ('NEEED', 'NEED'),
+          ('ST', 'SAINT'),
+          ('FUR', '_EXCLUDE_'),
+          ('JAP', '_EXCLUDE_'),
+          ('AD', '_EXCLUDE_'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
@@ -372,7 +378,7 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
                "UM", "URM", "URUH", "UUH", "ARRH", "AW", "EM", "ERM", "ERR",
                "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH",
                "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
-               "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM", "EMPH"]
+               "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM", "EMPH", "HMPH"]
 # }}}
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
