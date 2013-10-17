@@ -56,6 +56,7 @@ echo "_INHALE_" >> $WORK_DIR/word_list_test
 echo "_LAUGH_" >> $WORK_DIR/word_list_test
 echo "_EHM_HMM_" >> $WORK_DIR/word_list_test
 echo "_NOISE_" >> $WORK_DIR/word_list_test
+echo "_SIL_" >> $WORK_DIR/word_list_test
 
 echo "<s>" >> $WORK_DIR/word_list_full
 echo "</s>" >> $WORK_DIR/word_list_full
@@ -63,6 +64,7 @@ echo "_INHALE_" >> $WORK_DIR/word_list_full
 echo "_LAUGH_" >> $WORK_DIR/word_list_full
 echo "_EHM_HMM_" >> $WORK_DIR/word_list_full
 echo "_NOISE_" >> $WORK_DIR/word_list_full
+echo "_SIL_" >> $WORK_DIR/word_list_full
 
 # Build the word network as a word loop of words in the testing data
 HBuild -A -T 1 -C $TRAIN_COMMON/configrawmit -u '<UNK>' -s '<s>' '</s>' $WORK_DIR/word_list_test $WORK_DIR/wdnet_zerogram > $LOG_DIR/hbuild.log

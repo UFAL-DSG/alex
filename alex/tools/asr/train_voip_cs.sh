@@ -139,6 +139,8 @@ then
   #wait
 fi
 
+wait
+
 date
 
 echo "End of training"
