@@ -92,6 +92,8 @@ else
 
   ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
-
-  cat $WORK_DIR/dict_full | grep -v "_SIL_" > $WORK_DIR/dict_hdecode
 fi
+
+python $TRAIN_SCRIPTS/WordListFromARPALM.py $WORK_DIR/arpa_trigram | grep -v '_SIL_' > $WORK_DIR/word_list_hdecode
+perl $TRAIN_SCRIPTS/WordsToDictionary.pl $WORK_DIR/word_list_hdecode $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
+
