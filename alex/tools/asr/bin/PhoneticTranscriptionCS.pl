@@ -153,7 +153,7 @@ sub exceptions {
     s/^RADIO/RADYO/g;
     s/RELATIV/RELATYV/g;
     s/RESTITU/RESTYTU/g;
-    s/ROCK/ROK/g;
+    s/^ROCK/ROK/g;
     s/^ROZ/ROZ!/g;
     s/RUTIN/RUTYN/g;
     s/^RÁDI(.)/RÁDY$1/g;
@@ -182,8 +182,6 @@ sub exceptions {
     s/UNIVER/UNYVER/g;
     s/VENTI/VENTY/g;
     s/VERTIK/VERTYK/g;
-    s/SEDUMNÁCT0HO/VERTYK/g;
-    s/ŠEST6/VERTYK/g;
 }
 
 sub transcription {
