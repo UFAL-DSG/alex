@@ -13,8 +13,8 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení", "zjistit spoj", "hledám spojení",],
-        "find_platform": ["najít nastupště", "zjistit nástupiště",],
+        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení", "zjistit spoj", "hledám spojení", ],
+        "find_platform": ["najít nastupště", "zjistit nástupiště", ],
     },
     "time": {
     },
@@ -38,15 +38,15 @@ database = {
     "trans_type": {
         "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
         "tram": ["tram", "tramvaj", "tramvajoví", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "metro": ["metro", "metrem", "metrema", "metru","krtek", "krtkem", "podzemka", "podzemkou"],
+        "metro": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
         "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
         "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
         "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
     },
     "ampm": {
         "morning": ["ráno", "nadránem"],
-        "am": ["dopo", "dopoledne",],
-        "pm": ["odpo", "odpoledne",],
+        "am": ["dopo", "dopoledne", ],
+        "pm": ["odpo", "odpoledne", ],
         "evening": ["večer", "podvečer", ],
         "night": ["noc", "noci"],
     },
@@ -173,14 +173,9 @@ def add_time():
             hour_id = 'hodiny'
         # X:00
         time_val = "{h}:00".format(h=hour)
-        #db_add("time", time_val, str(hour))
         db_add("time", time_val, hour_str)
-        time_str = "{h} nula nula".format(h=hour_str)
-        db_add("time", time_val, time_str)
         time_str = "{h} {hi}".format(h=hour_str, hi=hour_id)
         db_add("time", time_val, time_str)
-        #time_str = "{h} {hi}".format(h=hour, hi=hour_id)
-        #db_add("time", time_val, time_str)
         time_str = "{h} hodině".format(h=hour_ord)
         db_add("time", time_val, time_str)
 
@@ -189,8 +184,6 @@ def add_time():
             time_val = "{h}:15".format(h=(hour - 1))
             time_str = "čtvrt na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            #time_str = "čtvrt na {h}".format(h=hour)
-            #db_add("time", time_val, time_str)
             # (X-1):30 half past (X-1)
             time_val = "{h}:30".format(h=(hour - 1))
             time_str = "půl {ho}".format(ho=hour_ord)
@@ -199,20 +192,20 @@ def add_time():
             time_val = "{h}:45".format(h=(hour - 1))
             time_str = "tři čtvrtě na {h}".format(h=hour_str)
             db_add("time", time_val, time_str)
-            #time_str = "tři čtvrtě na {h}".format(h=hour)
-            #db_add("time", time_val, time_str)
 
         for minute in xrange(60):
             minute_str = numbers_str[minute]
             time_val = "{h}:{m}".format(h=hour, m=minute)
-            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id, m=minute_str)
+            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id,
+                                             m=minute_str)
             db_add("time", time_val, time_str)
-            #time_str = "{h} {hi} {m}".format(h=hour, hi=hour_id, m=minute)
-            #db_add("time", time_val, time_str)
+            time_str = "{h} {hi} a {m}".format(h=hour_str, hi=hour_id,
+                                               m=minute_str)
+            db_add("time", time_val, time_str)
+            if minute < 10:
+                minute_str = 'nula ' + minute_str
             time_str = "{h} {m}".format(h=hour_str, m=minute_str)
             db_add("time", time_val, time_str)
-            #time_str = "{h} {m}".format(h=hour, m=minute)
-            #db_add("time", time_val, time_str)
 
 
 def preprocess_stops_line(line, expanded_format=False):
@@ -223,7 +216,7 @@ def preprocess_stops_line(line, expanded_format=False):
         forms = line
     else:
         name = line
-        forms = [line,]
+        forms = [line, ]
 
     # Do some basic pre-processing. Expand abbreviations.
     new_forms = []
