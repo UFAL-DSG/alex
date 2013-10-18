@@ -4,8 +4,8 @@
 cd $WORK_DIR
 
 # Get word list
-python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_train
-python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" > $WORK_DIR/word_list_test
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TRAIN_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" | grep -v "_" > $WORK_DIR/word_list_train
+python $TRAIN_SCRIPTS/CreateWordList.py $WORK_DIR/dict_full $TEST_DATA_SOURCE'/*.trn' | sort | uniq | grep -v "(" | grep -v "_" > $WORK_DIR/word_list_test
 cat $WORK_DIR/word_list_train $WORK_DIR/word_list_test | sort | uniq > $WORK_DIR/word_list_full
 
 # We need sentence start and end symbols which match the WSJ
@@ -72,7 +72,8 @@ then
   cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
 else
   rm $WORK_DIR/all_trns
-  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
+  #find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
   #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
   ngram-count -text $WORK_DIR/all_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
@@ -86,11 +87,12 @@ then
   cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
 else
   rm $WORK_DIR/all_trns
-  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
+  #find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
   #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
   ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
 
-  cp $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
+  cat $WORK_DIR/dict_full | grep -v "_SIL_" | grep -v "silence" > $WORK_DIR/dict_hdecode
 fi

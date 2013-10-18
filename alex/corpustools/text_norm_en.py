@@ -46,6 +46,7 @@ _nonspeech_map = {
         '(NOISE)',
         '(NOISES)',
         '(SCRAPE)',
+        '(STATIC)',
         '(SQUEAK)',
         '(TVNOISE)')
 }
@@ -55,10 +56,10 @@ for uscored, forms in _nonspeech_map.iteritems():
     for form in forms:
         _nonspeech_trl[form] = uscored
 
-
 # substitutions {{{
 _subst = [('GOOD-BYE', 'GOODBYE'),
           ('GOOD BYE', 'GOODBYE'),
+          ('BYE-BYE', 'BYE BYE'),
           ('PRICERANGE', 'PRICE RANGE'),
           ('WEST SIDE', 'WESTSIDE'),
           ('KINGS HEDGES', 'KINKGSHEDGES'),
@@ -130,6 +131,12 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('24', 'TWENTY FOUR'),
           ('ACONTEMPORARY', 'A CONTEMPORARY'),
           ('ADDELBROOKE\'S', 'ADDENBROOKE\'S'),
+          ('ADDENBROOKE\'S\'',  'ADDENBROOKE\'S'),
+          ('ADDENBROOKES\'',  'ADDENBROOKE\'S'),
+          ('ADDENBROOKES\'A',  'ADDENBROOKE\'S'),
+          ('ADDENBROOKE\'S\'A', 'ADDENBROOKE\'S'),
+          ('ADDENBROOKE\'S\'S', 'ADDENBROOKE\'S'),
+          ('ADDNEBROOKE\'S',  'ADDENBROOKE\'S'),
           ('ADDERSS', 'ADDRESS'),
           ('ADDESS', 'ADDRESS'),
           ('ADDRESSOF', 'ADDRESS OF'),
@@ -155,6 +162,7 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('CASLE', 'CASTLE'),
           ('CASTE', 'CASTLE'),
           ('CASTLE HILL', 'CASTLEHILL'),
+          ('CASTLE HILL\'', 'CASTLEHILL\'S'),
           ('CHEAPPRICERANGE', 'CHEAP PRICERANGE'),
           ('CHEAPRESTAURANT', 'CHEAP RESTAURANT'),
           ('CHIDREN', 'CHILDREN'),
@@ -184,6 +192,7 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('HII', 'HILL'),
           ('HIL', 'HILL'),
           ('I\'\'M', 'I\'M'),
+          ('I M', 'I AM'),
           ('IAM', 'I AM'),
           ('IAN', 'I AM'),
           ('I"M', 'I\'M'),
@@ -323,11 +332,44 @@ _subst = [('GOOD-BYE', 'GOODBYE'),
           ('TNANK', 'THANK'),
           ('SOMTHING', 'SOMETHING'),
           ('WHNAT', 'WHAT'),
+          ('WE\'', 'WE'),
+          ('THEY\'', 'THEY'),
+          ('YOU\'', 'YOU'),
+          ('QUEENS\'', 'QUEEN\'S'),
+          ('\'KAY', 'KAY'),
+          ('AREA`', 'AREA'),
+          ('APUB', 'A PUB'),
+          ('CCENTRAL', 'CENTRAL'),
+          ('FFSION', 'FUSION'),
+          ('FOIR', 'FOR'),
+          ('KINKGSHEDGES', 'KINGSHEDGES'),
+          ('MEXIAN', 'MEXICAN'),
+          ('STREE', 'STREET'),
+          ('INT HE', 'IN THE'),
+          ('INTERNNATIONAL', 'INTERNATIONAL'), 
+          ('RESTAURAT', 'RESTAURANT'), 
+          ('THA\'S', 'THAT\'S'), 
+          ('STANDARAD', 'STANDARD'),
+          ('TRUMPINTON', 'TRUMPINGTON'),
+          ('INTERNATION', 'INTERNATIONAL'), 
+          ('NEWHAM', 'NEWNHAM'),
+          ('VENE', 'VENUE'), 
+          ('ROMSY', 'ROMSEY'),
+          ('NEEED', 'NEED'),
+          ('ST', 'SAINT'),
+          ('THATS', 'THAT'),
+          ('MIDDLEEASTERN', 'MIDDLE EASTERN'),
+          ('FUR', '_EXCLUDE_'),
+          ('JAP', '_EXCLUDE_'),
+          ('AD', '_EXCLUDE_'),
+          ('NOONAN', '_EXCLUDE_'),
+          ('TINKHAM', '_EXCLUDE_'),
+          ('TUK', '_EXCLUDE_'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
     pat, sub = tup
-    _subst[idx] = (re.compile(ur'\b{pat}\b'.format(pat=pat)), sub)
+    _subst[idx] = (re.compile(r'(^|\s){pat}($|\s)'.format(pat=pat)), ' '+sub+' ')
 
 # hesitation expressions {{{
 _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
@@ -335,19 +377,19 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
                "AR-", "-AR", "ARRH", "AW", "EA-", "-EAR", "-EECH", "\"EECH\"",
                "-EEP", "-E", "E-", "EH", "EM", "--", "ER", "ERM", "ERR",
                "ERRM", "EX-", "F-", "HM", "HMM", "HMMM", "-HO", "HUH", "HU",
-               "-", "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU",
-               "MM", "MMHMM", "MMM", "NAH", "OHH", "OH", "SH", "--", "UHHH",
+               "HUM", "HUMM", "HUMN", "HUMN", "HUMPH", "HUP", "HUU", "-",
+               "MM", "MMHMM", "MMM", "NAH", "OHH", "OH", "SH", "UHHH",
                "UHH", "UHM", "UH'", "UH", "UHUH", "UHUM", "UMH", "UMM", "UMN",
                "UM", "URM", "URUH", "UUH", "ARRH", "AW", "EM", "ERM", "ERR",
                "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH",
                "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
-               "URUH", "MMMM", "MMM", "OHM", "UMMM"]
+               "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM", "EMPH", "HMPH"]
 # }}}
 for idx, word in enumerate(_hesitation):
-    _hesitation[idx] = re.compile(ur'\b{word}\b'.format(word=word))
+    _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
 
-_excluded_characters = ['-', '+', '(', ')', '[', ']', '{', '}', '<', '>', '0',
-                        '1', '2', '3', '4', '5', '6', '7', '8', '9']
+_excluded_characters = ['_', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', 
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 _more_spaces = re.compile(r'\s{2,}')
 _sure_punct_rx = re.compile(r'[.?!",_]')
@@ -361,12 +403,14 @@ def normalise_text(text):
 #{{{
     text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
-    text = _more_spaces.sub(' ', text)
+
     # Do dictionary substitutions.
     for pat, sub in _subst:
         text = pat.sub(sub, text)
     for word in _hesitation:
-        text = word.sub('(HESITATION)', text)
+        text = word.sub(' (HESITATION) ', text)
+    text = _more_spaces.sub(' ', text).strip()
+    
     # Handle non-speech events (separate them from words they might be
     # agglutinated to, remove doubled parentheses, and substitute the known
     # non-speech events with the forms with underscores).
@@ -378,9 +422,7 @@ def normalise_text(text):
             text = text.replace(parenized, uscored)
         text = _more_spaces.sub(' ', text.strip())
 
-    # remove signs of (1) incorrect pronunciation, (2) stuttering, (3) bargin
-    # return text.translate(None, '*+~')
-    for char in '*+~':
+    for char in '^':
         text = text.replace(char, '')
 
     return text
@@ -395,6 +437,9 @@ def exclude(text):
 
     """
 #{{{
+    if text in ['_NOISE_', '_EHM_HMM_', '_SIL_', '_INHALE_', '_LAUGH_']:
+        return False
+
     for char in _excluded_characters:
         if char in text:
             return True
