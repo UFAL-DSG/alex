@@ -59,8 +59,7 @@ Get the latest ``flite`` from http://www.festvox.org/flite/download.html and bui
 
 .. code-block:: bash
 
-  bunzip2 flite-1.4-release.tar.bz2
-  tar -xvf flite-1.4-release.tar
+  tar -xvjf flite-1.4-release.tar.bz2
   cd flite-1.4-release
   ./configure
   make
