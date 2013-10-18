@@ -412,7 +412,7 @@ class PTICSHDCSLU(SLUInterface):
 
         if _all_words_in(u, ['kdy', 'tam', 'budu']) or \
             (_all_words_in(u, ['kdy']) and
-             _any_word_in(['příjezd', 'přijede', 'dorazí',
+             _any_word_in(u, ['příjezd', 'přijede', 'dorazí',
                            'přijedu', 'dorazím'])):
             cn.add(1.0, DialogueActItem('request', 'arrive_at'))
 
