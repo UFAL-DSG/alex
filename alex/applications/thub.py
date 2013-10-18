@@ -242,10 +242,10 @@ if __name__ == '__main__':
     cfg['Logging']['system_logger'].info("Text Hub\n" + "=" * (term_width - 4))
 
     cfg['Logging']['system_logger'].session_start("localhost")
-    cfg['Logging']['system_logger'].session_system_log('config = ' + str(cfg))
+    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
 
     cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
-    cfg['Logging']['session_logger'].config('config = ' + str(cfg))
+    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
     cfg['Logging']['session_logger'].input_source("text")
 

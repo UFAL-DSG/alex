@@ -55,12 +55,11 @@ This version supports non-blocking audio.
 
 flite
 ~~~~~
-Get the latest ``flite`` and build it by following the these commands:
+Get the latest ``flite`` from http://www.festvox.org/flite/download.html and build it by following the these commands:
 
 .. code-block:: bash
 
-  bunzip2 flite-1.4-release.tar.bz2
-  tar -xvf flite-1.4-release.tar
+  tar -xvjf flite-1.4-release.tar.bz2
   cd flite-1.4-release
   ./configure
   make

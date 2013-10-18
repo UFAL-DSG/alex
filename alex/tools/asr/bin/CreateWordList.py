@@ -16,9 +16,9 @@ try:
 except IndexError:
     pass
 
+dct = set()
 # Load the dictionary.
 if dctn != '-':
-    dct = set()
     try:
         with open(dctn, 'r') as dctf:
             for line in dctf:
