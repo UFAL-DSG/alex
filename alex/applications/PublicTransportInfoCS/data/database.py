@@ -151,61 +151,68 @@ def add_time():
     where <hour> and <minute> are spelled /given as numbers.
 
     Cannot yet handle:
-        pět nula jedna
-        za pět osum
-        dvě odpoledne         ...only "čtrnáct" is taken to denote "14"
-
+        za pět osm
+        dvacet dvě hodiny
     """
     # ["nula", "jedna", ..., "padesát devět"]
     numbers_str = [spell_number(num) for num in xrange(60)]
+    hr_id_stem = 'hodin'
+    hr_endings = {1: [('u', 'u'), ('a', 'a')],
+                  2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
 
     for hour in xrange(24):
-        hour_str = numbers_str[hour]
-        hour_ord = NUMBERS_ORD[hour]
-        if hour_ord.endswith('ý'):
-            hour_ord = hour_ord[:-1] + 'é'
+        # set stems for hours (cardinal), hours (ordinal)
+        hr_str_stem = numbers_str[hour]
+        if hour == 22:
+            hr_str_stem = 'dvacet dva'
+        hr_ord = NUMBERS_ORD[hour]
+        if hr_ord.endswith('ý'):
+            hr_ord = hr_ord[:-1] + 'é'
         if hour == 1:
-            hour_ord = 'jedné'
-        hour_id = 'hodin'
-        if hour == 1:
-            hour_id = 'hodina'
-        elif hour in [2, 3, 4]:
-            hour_id = 'hodiny'
+            hr_ord = 'jedné'
+            hr_str_stem = 'jedn'
+
+        # some time expressions are not declined -- use just 1st ending
+        _, hr_str_end = hr_endings.get(hour, [('', '')])[0]
         # X:00
-        time_val = "{h}:00".format(h=hour)
-        db_add("time", time_val, hour_str)
-        time_str = "{h} {hi}".format(h=hour_str, hi=hour_id)
-        db_add("time", time_val, time_str)
-        time_str = "{h} hodině".format(h=hour_ord)
-        db_add("time", time_val, time_str)
+        add_db_time(hour, 0, "{ho} hodině", {'ho': hr_ord})
 
         if hour >= 1 and hour <= 12:
             # (X-1):15 quarter past (X-1)
-            time_val = "{h}:15".format(h=(hour - 1))
-            time_str = "čtvrt na {h}".format(h=hour_str)
-            db_add("time", time_val, time_str)
+            add_db_time(hour - 1, 15, "čtvrt na {h}",
+                        {'h': hr_str_stem + hr_str_end})
             # (X-1):30 half past (X-1)
-            time_val = "{h}:30".format(h=(hour - 1))
-            time_str = "půl {ho}".format(ho=hour_ord)
-            db_add("time", time_val, time_str)
+            add_db_time(hour - 1, 30, "půl {ho}", {'ho': hr_ord})
             # (X-1):45 quarter to X
-            time_val = "{h}:45".format(h=(hour - 1))
-            time_str = "tři čtvrtě na {h}".format(h=hour_str)
-            db_add("time", time_val, time_str)
+            add_db_time(hour - 1, 45, "tři čtvrtě na {h}",
+                        {'h': hr_str_stem + hr_str_end})
 
-        for minute in xrange(60):
-            minute_str = numbers_str[minute]
-            time_val = "{h}:{m}".format(h=hour, m=minute)
-            time_str = "{h} {hi} {m}".format(h=hour_str, hi=hour_id,
-                                             m=minute_str)
-            db_add("time", time_val, time_str)
-            time_str = "{h} {hi} a {m}".format(h=hour_str, hi=hour_id,
-                                               m=minute_str)
-            db_add("time", time_val, time_str)
-            if minute < 10:
-                minute_str = 'nula ' + minute_str
-            time_str = "{h} {m}".format(h=hour_str, m=minute_str)
-            db_add("time", time_val, time_str)
+        # some must be declined (but variants differ only for hour=1)
+        for hr_id_end, hr_str_end in hr_endings.get(hour, [('', '')]):
+            # X:00
+            add_db_time(hour, 0, "{h}", {'h': hr_str_stem + hr_str_end})
+            add_db_time(hour, 0, "{h} {hi}", {'h': hr_str_stem + hr_str_end,
+                                              'hi': hr_id_stem + hr_id_end})
+            # X:YY
+            for minute in xrange(60):
+                min_str = numbers_str[minute]
+                add_db_time(hour, minute, "{h} {hi} {m}",
+                            {'h': hr_str_stem + hr_str_end,
+                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
+                add_db_time(hour, minute, "{h} {hi} a {m}",
+                            {'h': hr_str_stem + hr_str_end,
+                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
+                if minute < 10:
+                    min_str = 'nula ' + min_str
+                add_db_time(hour, minute, "{h} {m}",
+                            {'h': hr_str_stem + hr_str_end, 'm': min_str})
+
+
+def add_db_time(hour, minute, format_str, replacements):
+    """Add a time expression to the database
+    (given time, format string and all replacements as a dict)."""
+    time_val = "%d:%02d" % (hour, minute)
+    db_add("time", time_val, format_str.format(**replacements))
 
 
 def preprocess_stops_line(line, expanded_format=False):
