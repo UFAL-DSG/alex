@@ -55,7 +55,7 @@ This version supports non-blocking audio.
 
 flite
 ~~~~~
-Get the latest ``flite`` and build it by following the these commands:
+Get the latest ``flite`` from http://www.festvox.org/flite/download.html and build it by following the these commands:
 
 .. code-block:: bash
 
