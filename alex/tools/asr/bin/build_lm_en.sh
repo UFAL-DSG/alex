@@ -72,7 +72,8 @@ then
   cp $DATA_SOURCE_DIR/wdnet_bigram $WORK_DIR/wdnet_bigram
 else
   rm $WORK_DIR/all_trns
-  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
+  #find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
   #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
   ngram-count -text $WORK_DIR/all_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
@@ -86,11 +87,12 @@ then
   cp $DATA_SOURCE_DIR/arpa_trigram $WORK_DIR/arpa_trigram
 else
   rm $WORK_DIR/all_trns
-  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
+  find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
+  #find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
   #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
   ngram-count -text $WORK_DIR/all_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/all_trns
 
-  cp $WORK_DIR/dict_full $WORK_DIR/dict_hdecode
+  cat $WORK_DIR/dict_full | grep -v "_SIL_" | grep -v "silence" > $WORK_DIR/dict_hdecode
 fi
