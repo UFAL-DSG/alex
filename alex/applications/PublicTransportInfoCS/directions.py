@@ -148,7 +148,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         departure_time = int(time.mktime(departure_time.timetuple()))
 
         data = {
-            'origin': '%s, Praha' % from_stop.encode('utf8'),
+            'origin': 'zastávka %s, Praha' % from_stop.encode('utf8'),
             'destination': 'zastávka %s, Praha' % to_stop.encode('utf8'),
             'region': 'cz',
             'departure_time': departure_time,
