@@ -97,7 +97,7 @@ $TRAIN_SCRIPTS/train_mixup.sh
 date
 
 echo "Re-align the training data with the best triphone models."
-$TRAIN_SCRIPTS/realign.sh hmm67 tiedlist
+$TRAIN_SCRIPTS/realign.sh hmm67 tiedlist &
 
 #############
 #  TESTING  #
@@ -137,6 +137,8 @@ then
   $TRAIN_SCRIPTS/eval_test_hd_no_lat.sh hmm67 ro"$RO"_tb"$TB"_prune150_trigram_18 150.0 $IP $SFT $WORK_DIR/arpa_trigram $WORK_DIR/dict_hdecode $CROSS &
   #wait
 fi
+
+wait 
 
 date
 
