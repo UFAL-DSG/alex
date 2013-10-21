@@ -23,6 +23,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         self.slots = defaultdict(lambda: "none")
         self.turns = []
         self.turn_number = 0
+        self.debug = cfg['DM']['basic']['debug']
+        self.session_logger = cfg['Logging']['session_logger']
+        self.system_logger = cfg['Logging']['system_logger']
 
     def __unicode__(self):
         """Get the content of the dialogue state in a human readable form."""
@@ -79,7 +82,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
             state.append((name, self.slots[name]))
 
-        self.cfg['Logging']['session_logger'].dialogue_state("system", [state, ])
+        self.session_logger.dialogue_state("system", [state, ])
 
     def restart(self):
         """Reinitialise the dialogue state so that the dialogue manager can start from scratch.
@@ -124,8 +127,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         else:
             raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
 
-        if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug(u'DDDState Dialogue Act in: %s' % da)
+        if self.debug:
+            self.system_logger.debug(u'DDDState Dialogue Act in: %s' % da)
 
         # store the input
         self.turns.append([da, system_da, deepcopy(self.slots)])
@@ -133,16 +136,16 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         # perform the context resolution
         user_da = self.context_resolution(da, system_da)
 
-        if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug(u'Context Resolution - Dialogue Act: %s' % user_da)
+        if self.debug:
+            self.system_logger.debug(u'Context Resolution - Dialogue Act: %s' % user_da)
 
         # perform the state update
         self.state_update(user_da, system_da)
         self.turn_number += 1
 
         # print the dialogue state if requested
-        if self.cfg['DM']['basic']['debug']:
-            self.cfg['Logging']['system_logger'].debug(self)
+        if self.debug:
+            self.system_logger.debug(self)
 
             requested_slots = self.get_requested_slots()
             confirmed_slots = self.get_confirmed_slots()
@@ -161,7 +164,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             s.append(unicode(non_informed_slots))
             s = '\n'.join(s)
 
-            self.cfg['Logging']['system_logger'].debug(s)
+            self.system_logger.debug(s)
 
     def context_resolution(self, user_da, system_da):
         """Resolves and converts meaning of some user dialogue acts given the context."""

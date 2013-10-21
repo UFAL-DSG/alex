@@ -100,6 +100,7 @@ ontology = {
 
 from database import database
 
+
 def add_slot_values_from_database(slot, category):
     for value in database.get(category, tuple()):
         ontology['slots'][slot].add(value)
