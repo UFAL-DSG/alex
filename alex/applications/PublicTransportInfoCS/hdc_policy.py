@@ -287,7 +287,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop',
                                           step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrive_at',
+                da.append(DialogueActItem('inform', 'arrival_time',
                                           step.arrival_time.strftime("%H:%M")))
                 return da
 
@@ -436,7 +436,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
-                res.append("inform(go_at=%s)" %
+                res.append("inform(departure_time=%s)" %
                            step.departure_time.strftime("%H:%M"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
@@ -447,7 +447,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if next_leave_stop != self.DESTIN:
                     res.append("inform(transfer='true')")
                 else:
-                    res.append("inform(arrive_at=%s)" %
+                    res.append("inform(arrival_time=%s)" %
                                step.arrival_time.strftime("%H:%M"))
                 prev_arrive_stop = step.arrival_stop
 
