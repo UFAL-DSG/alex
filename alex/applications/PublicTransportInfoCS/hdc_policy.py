@@ -24,7 +24,7 @@ def randbool(n):
 
 
 class PTICSHDCPolicy(DialoguePolicy):
-    """The handcrafted policy for the PTIcs system."""
+    """The handcrafted policy for the PTI-CS system."""
 
     def __init__(self, cfg, ontology):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
@@ -35,32 +35,27 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.last_system_dialogue_act = None
 
     def get_da(self, dialogue_state):
-        # all slots being requested by a user
+        # all slots being requested by the user
         requested_slots = dialogue_state.get_requested_slots()
-        # all slots being confirmed by a user
+        # all slots being confirmed by the user
         confirmed_slots = dialogue_state.get_confirmed_slots()
-        # all slots which had been supplied by a user however they were not implicitly confirmed
+        # all slots supplied by the user but not implicitly confirmed
         non_informed_slots = dialogue_state.get_non_informed_slots()
 
-#        accepted_slots = dialogue_state.get_accepted_slots()
-#        changed_slots = dialogue_state.get_changed_slots()
+        res_da = None  # output DA
 
-        res_da = None
-
-        if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
+        if dialogue_state.turn_number > \
+                self.cfg['PublicTransportInfoCS']['max_turns']:
+            # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
+
         elif len(self.das) == 0:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
 
-#       We do not have to respond to hello
-#        elif dialogue_state["ludait"] == "hello":
-#            # NLG("Ahoj.")
-#            res_da = DialogueAct("hello()")
-
         elif dialogue_state["ludait"] == "silence":
-            # at this moment the silence and the explicit null act is treated teh same way
-            # NLG("")
+            # at this moment the silence and the explicit null act
+            # are treated the same way: NLG("")
             silence_time = dialogue_state['silence_time']
 
             if silence_time > self.cfg['DM']['basic']['silence_timeout']:
@@ -72,7 +67,9 @@ class PTICSHDCPolicy(DialoguePolicy):
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
 
-        elif dialogue_state["ludait"] == "null" or dialogue_state["ludait"] == "other":
+        elif dialogue_state["ludait"] == "null" or \
+                 dialogue_state["ludait"] == "other":
+            # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
 
@@ -81,7 +78,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = DialogueAct("help()")
 
         elif dialogue_state["ludait"] == "thankyou":
-            # NLG("Diky.")
+            # NLG("Díky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
 
         elif dialogue_state["ludait"] == "restart":
@@ -96,159 +93,33 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif dialogue_state["ludait"] == "reqalts":
             # NLG("There is nothing else in the database.")
             # NLG("The next connection is ...")
-
-            if dialogue_state['route_alternative'] == "none":
-                res_da = DialogueAct('request(from_stop)')
-            else:
-                dialogue_state['route_alternative'] += 1
-                dialogue_state['route_alternative'] %= \
-                    len(dialogue_state.directions) if dialogue_state.directions is not None else 1
-
-                res_da = self.get_directions(dialogue_state)
+            res_da = self.get_an_alternative(dialogue_state)
 
         elif dialogue_state["alternative"] != "none":
-            res_da = DialogueAct()
-
-            if dialogue_state['route_alternative'] != "none":
-                if dialogue_state["alternative"] == "last":
-                    res_da.extend(self.get_directions(dialogue_state, "last"))
-                elif dialogue_state["alternative"] == "next":
-                    dialogue_state["route_alternative"] += 1
-
-                    if dialogue_state['route_alternative'] == len(dialogue_state.directions):
-                        dialogue_state["route_alternative"] -= 1
-                        res_da.append(DialogueActItem("inform", "found_directions", "no_next"))
-                    else:
-                        res_da.extend(self.get_directions(dialogue_state, "next"))
-
-                elif dialogue_state["alternative"] == "prev":
-                    dialogue_state["route_alternative"] -= 1
-
-                    if dialogue_state["route_alternative"] == -1:
-                        dialogue_state["route_alternative"] += 1
-                        res_da.append(DialogueActItem("inform", "found_directions", "no_prev"))
-                    else:
-                        res_da.extend(self.get_directions(dialogue_state, "prev"))
-
-                else:
-                    dialogue_state["route_alternative"] = int(dialogue_state["alternative"]) - 1
-                    res_da.extend(self.get_directions(dialogue_state))
-
-            else:
-                res_da.append(DialogueActItem("inform", "stops_conflict", "no_stops"))
-
+            # Search for traffic direction and/or present the requested
+            # directions already found
+            res_da = self.get_requested_alternative(dialogue_state)
             dialogue_state["alternative"] = "none"
 
         elif requested_slots:
             # inform about all requested slots
-            res_da = DialogueAct()
-            for slot in requested_slots:
-                if dialogue_state['route_alternative'] != "none":
-                    if slot == "from_stop":
-                        res_da.extend(self.get_from_stop(dialogue_state))
-                    elif slot in ['to_stop', 'arrive_at']:
-                        res_da.extend(self.get_to_stop(dialogue_state))
-                    elif slot == "num_transfers":
-                        res_da.extend(self.get_num_transfers(dialogue_state))
-                    elif slot == 'time_rel':
-                        res_da.extend(self.get_time_rel(dialogue_state))
-                else:
-                    if slot in ['from_stop', 'to_stop', 'num_transfers',
-                                'time_rel', 'arrive_at']:
-                        dai = DialogueActItem("inform", "stops_conflict", "no_stops")
-                        res_da.append(dai)
-
-                        if dialogue_state['from_stop'] == "none":
-                            dai = DialogueActItem("help", "inform", "from_stop")
-                            res_da.append(dai)
-                        elif dialogue_state['to_stop'] == "none":
-                            dai = DialogueActItem("help", "inform", "to_stop")
-                            res_da.append(dai)
-                    else:
-                        dai = DialogueActItem("inform", slot, requested_slots[slot])
-                        res_da.append(dai)
-                        dialogue_state["rh_" + slot] = "none"
-
-                dialogue_state["rh_" + slot] = "none"
+            res_da = self.get_requested_info(requested_slots, dialogue_state)
 
         elif confirmed_slots:
             # inform about all slots being confirmed by the user
-            res_da = DialogueAct()
-            for slot in confirmed_slots:
-                if slot == 'XXX':
-                    pass
-                elif slot == 'XXX':
-                    pass
-                elif confirmed_slots[slot] == dialogue_state[slot]:
-                    # it is as user expected
-                    res_da.append(DialogueActItem("affirm"))
-                    dai = DialogueActItem("inform", slot, dialogue_state[slot])
-                    res_da.append(dai)
-                else:
-                    # it is something else to what user expected
-                    res_da.append(DialogueActItem("negate"))
-                    dai = DialogueActItem("deny", slot, dialogue_state["ch_" + slot])
-                    res_da.append(dai)
-
-                    if dialogue_state[slot] != "none":
-                        dai = DialogueActItem("inform", slot, dialogue_state[slot])
-
-                    res_da.append(dai)
-
-                dialogue_state["ch_" + slot] = "none"
+            res_da = self.get_confirmed_info(confirmed_slots, dialogue_state)
 
         else:
-            res_da = DialogueAct()
-
-            if non_informed_slots:
-                iconf_da = DialogueAct()
-                # implicitly confirm all slots provided but not yet implicitly confirmed
-                for slot in non_informed_slots:
-                    if 'system_iconfirms' in self.ontology['slot_attributes'][slot]:
-                        dai = DialogueActItem("iconfirm", slot, non_informed_slots[slot])
-                        iconf_da.append(dai)
-
-                res_da.extend(iconf_da)
-
-            req_da = DialogueAct()
-
-            # check all state variables and the output one request dialogue act
-            # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-            if dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
-                dialogue_state['time'] == "none" and \
-                randbool(10):
-                req_da.extend(DialogueAct('request(time)'))
-            elif dialogue_state['from_stop'] == "none" and \
-                (dialogue_state['centre_direction'] != "none" or dialogue_state['centre_direction'] != "*") and \
-                randbool(9):
-                req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-            elif dialogue_state['to_stop'] == "none" and \
-                (dialogue_state['centre_direction'] != "none" or dialogue_state['centre_direction'] != "*")and \
-                randbool(8):
-                req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-            elif dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
-                randbool(3):
-                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-            elif dialogue_state['from_stop'] == "none":
-                req_da.extend(DialogueAct("request(from_stop)"))
-            elif dialogue_state['to_stop'] == "none":
-                req_da.extend(DialogueAct('request(to_stop)'))
-
-            res_da.extend(req_da)
-
+            # implicitly confirm all non-confirmed slots
+            res_da = self.get_iconfirm_info(non_informed_slots)
+            # request all unknown information
+            req_da = self.request_more_info(dialogue_state)
             if len(req_da) == 0:
-                if dialogue_state['from_stop'] == dialogue_state['to_stop']:
-                    apology_da = DialogueAct()
-                    apology_da.extend(DialogueAct('apology()'))
-                    apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
-                    apology_da.extend(
-                        DialogueAct("inform(from_stop='%s')" % dialogue_state['from_stop']))
-                    apology_da.extend(
-                        DialogueAct("inform(to_stop='%s')" % dialogue_state['to_stop']))
-                    res_da.extend(apology_da)
-                else:
-                    dir_da = self.get_directions(dialogue_state)
-                    res_da.extend(dir_da)
+                # we know everything we need -> start searching
+                res_da.extend(self.get_directions(dialogue_state,
+                                                  check_conflict=True))
+            else:
+                res_da.extend(req_da)
 
         dialogue_state["ludait"] = "none"
 
@@ -258,13 +129,209 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
 
-    def get_from_stop(self, dialogue_state):
+    def get_an_alternative(self, ds):
+        """Return an alternative route, if there is one, or ask for
+        origin stop if there has been no route searching so far.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct
+        """
+        if ds['route_alternative'] == "none":
+            return DialogueAct('request(from_stop)')
+        else:
+            ds['route_alternative'] += 1
+            ds['route_alternative'] %= len(ds.directions) \
+                    if ds.directions is not None else 1
+            return self.get_directions(ds)
+
+    def get_requested_alternative(self, ds):
+        """Return the requested route (or inform about not finding one).
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        if ds['route_alternative'] != "none":
+            if ds["alternative"] == "last":
+                res_da.extend(self.get_directions(ds, "last"))
+            elif ds["alternative"] == "next":
+                ds["route_alternative"] += 1
+
+                if ds['route_alternative'] == len(ds.directions):
+                    ds["route_alternative"] -= 1
+                    res_da.append(DialogueActItem("inform", "found_directions",
+                                                  "no_next"))
+                else:
+                    res_da.extend(self.get_directions(ds, "next"))
+
+            elif ds["alternative"] == "prev":
+                ds["route_alternative"] -= 1
+
+                if ds["route_alternative"] == -1:
+                    ds["route_alternative"] += 1
+                    res_da.append(DialogueActItem("inform", "found_directions",
+                                                  "no_prev"))
+                else:
+                    res_da.extend(self.get_directions(ds, "prev"))
+
+            else:
+                ds["route_alternative"] = int(ds["alternative"]) - 1
+                res_da.extend(self.get_directions(ds))
+
+        else:
+            res_da.append(DialogueActItem("inform", "stops_conflict",
+                                          "no_stops"))
+        return res_da
+
+    def get_requested_info(self, requested_slots, dialogue_state):
+        """Return a DA containing information about all requested slots.
+
+        :param dialogue_state: The current dialogue state
+        :param requested_slots: A dictionary with keys for all requested \
+                slots and the correct return values.
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        for slot in requested_slots:
+            if dialogue_state['route_alternative'] != "none":
+                if slot == "from_stop":
+                    res_da.extend(self.get_from_stop(dialogue_state))
+                elif slot in ['to_stop', 'arrive_at']:
+                    res_da.extend(self.get_to_stop(dialogue_state))
+                elif slot == "num_transfers":
+                    res_da.extend(self.get_num_transfers(dialogue_state))
+                elif slot == 'time_rel':
+                    res_da.extend(self.get_time_rel(dialogue_state))
+            else:
+                if slot in ['from_stop', 'to_stop', 'num_transfers',
+                            'time_rel', 'arrive_at']:
+                    dai = DialogueActItem("inform", "stops_conflict",
+                                          "no_stops")
+                    res_da.append(dai)
+
+                    if dialogue_state['from_stop'] == "none":
+                        dai = DialogueActItem("help", "inform", "from_stop")
+                        res_da.append(dai)
+                    elif dialogue_state['to_stop'] == "none":
+                        dai = DialogueActItem("help", "inform", "to_stop")
+                        res_da.append(dai)
+                else:
+                    dai = DialogueActItem("inform", slot,
+                                          requested_slots[slot])
+                    res_da.append(dai)
+                    dialogue_state["rh_" + slot] = "none"
+
+            dialogue_state["rh_" + slot] = "none"
+
+        return res_da
+
+    def get_confirmed_info(self, confirmed_slots, dialogue_state):
+        """Return a DA containing information about all slots being confirmed
+        by the user (confirm/deny).
+
+        Update the current dialogue state regarding the information provided.
+
+        :param dialogue_state: The current dialogue state
+        :param confirmed_slots: A dictionary with keys for all slots \
+                being confirmed, along with their values
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        for slot in confirmed_slots:
+            if slot == 'XXX':
+                pass
+            elif slot == 'XXX':
+                pass
+            elif confirmed_slots[slot] == dialogue_state[slot]:
+                # it is as user expected
+                res_da.append(DialogueActItem("affirm"))
+                dai = DialogueActItem("inform", slot, dialogue_state[slot])
+                res_da.append(dai)
+            else:
+                # it is something else than what user expected
+                res_da.append(DialogueActItem("negate"))
+                dai = DialogueActItem("deny", slot,
+                                      dialogue_state["ch_" + slot])
+                res_da.append(dai)
+
+                if dialogue_state[slot] != "none":
+                    dai = DialogueActItem("inform", slot, dialogue_state[slot])
+
+                res_da.append(dai)
+
+            dialogue_state["ch_" + slot] = "none"
+
+        return res_da
+
+    def get_iconfirm_info(self, non_informed_slots):
+        """Return a DA containing all needed implicit confirms.
+
+        Implicitly confirm all slots provided but not yet confirmed.
+
+        :param non_informed_slots: A dictionary with keys for all slots \
+                that have not been implicitly confirmed, along with \
+                their values
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        if non_informed_slots:
+            iconf_da = DialogueAct()
+            for slot in non_informed_slots:
+                if 'system_iconfirms' in \
+                        self.ontology['slot_attributes'][slot]:
+
+                    dai = DialogueActItem("iconfirm", slot,
+                                          non_informed_slots[slot])
+                    iconf_da.append(dai)
+
+            res_da.extend(iconf_da)
+        return res_da
+
+    def request_more_info(self, ds):
+        """Return a DA requesting further information needed to search
+        for traffic directions, or perform the search if no further information
+        is needed.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct
+        """
+        req_da = DialogueAct()
+
+        # check all state variables and the output one request dialogue act
+        # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
+        if ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
+            ds['time'] == "none" and randbool(10):
+            req_da.extend(DialogueAct('request(time)'))
+        # TODO: centre_direction conditions always fulfilled ?!?
+        elif ds['from_stop'] == "none" and \
+            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and \
+            randbool(9):
+            req_da.extend(DialogueAct('confirm(centre_direction="from")'))
+        elif ds['to_stop'] == "none" and \
+            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and \
+            randbool(8):
+            req_da.extend(DialogueAct('confirm(centre_direction="to")'))
+        elif ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
+            randbool(3):
+            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+        elif ds['from_stop'] == "none":
+            req_da.extend(DialogueAct("request(from_stop)"))
+        elif ds['to_stop'] == "none":
+            req_da.extend(DialogueAct('request(to_stop)'))
+
+        return req_da
+
+    def get_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last
         recommended connection.
 
         :rtype : DialogueAct
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = ds.directions.routes[ds['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -276,11 +343,11 @@ class PTICSHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
                 return da
 
-    def get_to_stop(self, dialogue_state):
+    def get_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = ds.directions.routes[ds['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
@@ -291,13 +358,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                                           step.arrival_time.strftime("%H:%M")))
                 return da
 
-    def get_num_transfers(self, dialogue_state):
+    def get_num_transfers(self, ds):
         """Return a DA informing the user about the number of transfers in the
         last recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = ds.directions.routes[ds['route_alternative']]
         leg = route.legs[0]
-        n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
+        n = sum([1 for step in leg.steps
+                 if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
         return da
 
@@ -321,18 +389,36 @@ class PTICSHDCPolicy(DialoguePolicy):
                                           (time_rel_hrs, time_rel_mins)))
                 return da
 
-    def get_directions(self, dialogue_state, route_type='true'):
+    def get_directions(self, ds, route_type='true', check_conflict=False):
         """Retrieve Google directions, save them to dialogue state and return
         corresponding DAs.
 
         Responsible for the interpretation of AM/PM time expressions.
+
+        :param ds: The current dialogue state
+        :param route_type: a label for the found route (to be passed on to \
+                :func:`say_directions`)
+        :param check_conflict: If true, will check if the origin and \
+                destination stops are different and issue a warning DA if not.
+        :rtype: DialogueAct
         """
+        # check for route conflicts
+        if check_conflict and ds['from_stop'] == ds['to_stop']:
+            apology_da = DialogueAct()
+            apology_da.extend(DialogueAct('apology()'))
+            apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
+            apology_da.extend(DialogueAct("inform(from_stop='%s')" %
+                                          ds['from_stop']))
+            apology_da.extend(DialogueAct("inform(to_stop='%s')" %
+                                          ds['to_stop']))
+            return apology_da
+
         # interpret dialogue state time
         now = datetime.now()
-        time = dialogue_state['time']
-        ampm = dialogue_state['ampm']
-        time_rel = dialogue_state['time_rel']
-        date_rel = dialogue_state['date_rel']
+        time = ds['time']
+        ampm = ds['ampm']
+        time_rel = ds['time_rel']
+        date_rel = ds['date_rel']
 
         # relative time
         if time == 'none' or time_rel != 'none':
@@ -365,7 +451,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif now_hour > time_hour and now_hour < time_hour + 12:
                 time_hour = (time_hour + 12) % 24
             time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            dialogue_state['time'] = "%d:%.2d" % (time.hour, time.minute)
+            ds['time'] = "%d:%.2d" % (time.hour, time.minute)
 
         # relative date
         if date_rel == 'tomorrow':
@@ -376,12 +462,12 @@ class PTICSHDCPolicy(DialoguePolicy):
             time += timedelta(days=1)
 
         # retrieve Google directions
-        dialogue_state.directions = self.directions.get_directions(
-            from_stop=dialogue_state['from_stop'],
-            to_stop=dialogue_state['to_stop'],
+        ds.directions = self.directions.get_directions(
+            from_stop=ds['from_stop'],
+            to_stop=ds['to_stop'],
             departure_time=time)
 
-        return self.say_directions(dialogue_state, route_type)
+        return self.say_directions(ds, route_type)
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
