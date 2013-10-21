@@ -108,6 +108,9 @@ def word_for_number(number, categ='M1'):
         if number % 10 == 1:
             return ' '.join((word_for_number((number / 10) * 10, categ),
                              'jedna'))
+        # 22, 32... - "2" doesn't change for different genders (set to masc.)
+        if number % 10 == 2:
+            categ = 'M' + categ if len(categ) == 1 else 'M' + categ[1]
         # other numbers are OK
         return ' '.join((word_for_number((number / 10) * 10, categ),
                          word_for_number(number % 10, categ)))
