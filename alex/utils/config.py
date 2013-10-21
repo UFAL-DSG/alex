@@ -23,7 +23,7 @@ from alex.utils.exceptions import ConfigException
 
 config = None
 
-online_update_server = "https://vystadial.ms.mff.cuni.cz/download/alex"
+online_update_server = "https://vystadial.ms.mff.cuni.cz/download/alex/"
 
 def as_project_path(path):
     return os.path.join(env.root(), path)
@@ -91,7 +91,7 @@ def online_update(file_name):
     fn = as_project_path(file_name)
 
     if url_time:
-        url_time = time.mktime(url_date)
+        url_time = time.mktime(url_time)
 
         if os.path.exists(fn):
             file_name_time = os.path.getmtime(fn)
