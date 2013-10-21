@@ -17,12 +17,14 @@ from collections import deque, defaultdict
 from alex.components.hub.messages import Command, Frame
 from alex.utils.exceptions import SessionLoggerException
 from alex.components.hub.exceptions import VoipIOException
+from alex.utils.exdec import catch_ioerror
 from alex.utils.procname import set_proc_name
 
 # Logging callback
 logger = None
 
 
+@catch_ioerror
 def log_cb(level, str, len):
     if logger:
         logger.info(str)
