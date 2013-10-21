@@ -11,8 +11,8 @@ ontology = {
         'time_rel': ['relative_time'],
         'duration': ['relative_time'],
         'time': ['absolute_time'],
-        'go_at': ['absolute_time'],
-        'arrive_at': ['absolute_time']
+        'departure_time': ['absolute_time'],
+        'arrival_time': ['absolute_time']
     },
 }
 

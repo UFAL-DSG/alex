@@ -298,7 +298,7 @@ class AbstractTemplateNLG(object):
                     dai_utt = self.match_and_fill_generic(dax, svsx)
                 except TemplateNLGException:
                     dai_utt = unicode(dai)
-            
+
             composed_utt.append(dai_utt)
         return ' '.join(composed_utt)
 

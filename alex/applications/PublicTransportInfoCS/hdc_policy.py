@@ -198,7 +198,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             if dialogue_state['route_alternative'] != "none":
                 if slot == "from_stop":
                     res_da.extend(self.get_from_stop(dialogue_state))
-                elif slot in ['to_stop', 'arrive_at']:
+                elif slot in ['to_stop', 'arrival_time']:
                     res_da.extend(self.get_to_stop(dialogue_state))
                 elif slot == "num_transfers":
                     res_da.extend(self.get_num_transfers(dialogue_state))
@@ -206,7 +206,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da.extend(self.get_time_rel(dialogue_state))
             else:
                 if slot in ['from_stop', 'to_stop', 'num_transfers',
-                            'time_rel', 'arrive_at']:
+                            'time_rel', 'arrival_time']:
                     dai = DialogueActItem("inform", "stops_conflict",
                                           "no_stops")
                     res_da.append(dai)
@@ -354,7 +354,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop',
                                           step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrive_at',
+                da.append(DialogueActItem('inform', 'arrival_time',
                                           step.arrival_time.strftime("%H:%M")))
                 return da
 
@@ -471,7 +471,6 @@ class PTICSHDCPolicy(DialoguePolicy):
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
-    NOTABLE_WALK = 180  # length (secs) of a walk that should be mentioned
 
     def say_directions(self, dialogue_state, route_type):
         """Return DAs for the directions in the current dialogue state."""
@@ -507,14 +506,14 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             # walking
             if step.travel_mode == step.MODE_WALKING:
-                # long walk (> 3 minutes) from origin/to destination
-                # or transfer among stops with different names
-                if ((next_leave_stop == self.DESTIN or
-                     prev_arrive_stop == self.ORIGIN) and
-                     step.duration > self.NOTABLE_WALK) or \
-                    (next_leave_stop != self.DESTIN and
-                     prev_arrive_stop != self.ORIGIN and
-                     next_leave_stop != prev_arrive_stop):
+                # walking to stops with different names
+                if (next_leave_stop == self.DESTIN and
+                    prev_arrive_stop != dialogue_state['to_stop']) or \
+                        (prev_arrive_stop == self.ORIGIN and
+                         next_leave_stop != dialogue_state['from_stop']) or \
+                        (next_leave_stop != self.DESTIN and
+                         prev_arrive_stop != self.ORIGIN and
+                         next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
                     res.append("inform(duration=0:%02d)" %
@@ -523,7 +522,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
-                res.append("inform(go_at=%s)" %
+                res.append("inform(departure_time=%s)" %
                            step.departure_time.strftime("%H:%M"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
@@ -534,7 +533,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if next_leave_stop != self.DESTIN:
                     res.append("inform(transfer='true')")
                 else:
-                    res.append("inform(arrive_at=%s)" %
+                    res.append("inform(arrival_time=%s)" %
                                step.arrival_time.strftime("%H:%M"))
                 prev_arrive_stop = step.arrival_stop
 
