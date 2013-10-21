@@ -280,7 +280,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(
-                    DialogueActItem('inform', 'arrive_at', step.arrival_time.strftime("%H:%M")))
+                    DialogueActItem('inform', 'arrival_time',
+                                    step.arrival_time.strftime("%H:%M")))
 
                 return da
 
@@ -376,7 +377,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 res.append(u"inform(vehicle=%s)" % step.vehicle)
                 res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
+                res.append(u"inform(departure_time=%s)" %
+                           step.departure_time.strftime("%H:%M"))
                 res.append(u"inform(enter_at=%s)" % step.departure_stop)
                 res.append(u"inform(headsign=%s)" % step.headsign)
                 res.append(u"inform(exit_at=%s)" % step.arrival_stop)
