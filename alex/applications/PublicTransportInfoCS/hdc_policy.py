@@ -385,7 +385,6 @@ class PTICSHDCPolicy(DialoguePolicy):
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
-    NOTABLE_WALK = 180  # length (secs) of a walk that should be mentioned
 
     def say_directions(self, dialogue_state, route_type):
         """Return DAs for the directions in the current dialogue state."""
@@ -421,14 +420,14 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             # walking
             if step.travel_mode == step.MODE_WALKING:
-                # long walk (> 3 minutes) from origin/to destination
-                # or transfer among stops with different names
-                if ((next_leave_stop == self.DESTIN or
-                     prev_arrive_stop == self.ORIGIN) and
-                     step.duration > self.NOTABLE_WALK) or \
-                    (next_leave_stop != self.DESTIN and
-                     prev_arrive_stop != self.ORIGIN and
-                     next_leave_stop != prev_arrive_stop):
+                # walking to stops with different names
+                if (next_leave_stop == self.DESTIN and
+                    prev_arrive_stop != dialogue_state['to_stop']) or \
+                        (prev_arrive_stop == self.ORIGIN and
+                         next_leave_stop != dialogue_state['from_stop']) or \
+                        (next_leave_stop != self.DESTIN and
+                         prev_arrive_stop != self.ORIGIN and
+                         next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
                     res.append("inform(duration=0:%02d)" %
