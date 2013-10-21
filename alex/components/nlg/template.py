@@ -13,6 +13,7 @@ from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 from alex.components.nlg.exceptions import TemplateNLGException
 from alex.components.nlg.tools.cs import word_for_number, vocalize_prep
+from alex.components.dm.ontology import Ontology
 
 
 class AbstractTemplateNLG(object):
@@ -287,33 +288,59 @@ class TemplateNLG(AbstractTemplateNLG):
     def __init__(self, cfg):
         super(TemplateNLG, self).__init__(cfg)
 
-        if self.cfg['NLG']['Template']['model']:
+        if 'model' in self.cfg['NLG']['Template']:
             self.load_templates(self.cfg['NLG']['Template']['model'])
+        self.ontology = Ontology()
+        self.rel_time_slots = set()
+        self.abs_time_slots = set()
+        if 'ontology' in self.cfg['NLG']['Template']:
+            self.ontology.load(cfg['NLG']['Template']['ontology'])
+            # keep track of relative and absolute time slots
+            for slot in self.ontology['slot_attributes']:
+                if 'relative_time' in self.ontology['slot_attributes'][slot]:
+                    self.rel_time_slots.add(slot)
+                elif 'absolute_time' in self.ontology['slot_attributes'][slot]:
+                    self.abs_time_slots.add(slot)
 
     def fill_in_template(self, tpl, svs):
         """\
         Simple text replacement template filling.
         """
         svs_dict = dict(svs)
+        # spell out time expressions, if applicable
         for slot, val in svs_dict.iteritems():
-            if re.match(r'[0-9]{1,2}:[0-9]{2}', val):
-                svs_dict[slot] = self.spell_time(val)
+            if slot in self.rel_time_slots:
+                svs_dict[slot] = self.spell_time(val, relative=True)
+            elif slot in self.abs_time_slots:
+                svs_dict[slot] = self.spell_time(val, relative=False)
+        # fill slots and vocalize prepositions
         return self.vocalize_prepos(tpl.format(**svs_dict))
 
     HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
 
-    def spell_time(self, time):
+    def spell_time(self, time, relative):
         """\
         Convert a time expression into words (assuming accusative).
+
+        :param time: The 24hr numerical time value in a string, e.g. '8:05'
+        'param relative: If true, time is interpreted as relative, i.e. \
+                0:15 will generate '15 minutes' and not '0 hours and \
+                15 minutes'.
+        :return: Czech time string with all numerals written out as words
         """
         hours, mins = map(int, time.split(':'))
-        hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
-        hours = word_for_number(hours, 'F4')
-        if mins == 0:
-            return ' '.join((hours, hr_id))
+        time_str = []
+        if not (relative and hours == 0):
+            hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
+            hours = word_for_number(hours, 'F4')
+            time_str.extend((hours, hr_id))
+        if mins == 0 and not relative:
+            return ' '.join(time_str)
+        if time_str:
+            time_str.append('a')
         min_id = 'minut' + self.HR_ENDING.get(mins, '')
         mins = word_for_number(mins, 'F4')
-        return ' '.join((hours, hr_id, 'a', mins, min_id))
+        return ' '.join(time_str + [mins, min_id])
 
     def vocalize_prepos(self, text):
         """\
