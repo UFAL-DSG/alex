@@ -11,6 +11,7 @@ import alex.utils.cache as cache
 import alex.utils.audio as audio
 
 from alex.components.tts import TTSInterface
+from alex.components.tts.exceptions import TTSException
 from alex.components.tts.preprocessing import TTSPreprocessing
 
 
@@ -45,9 +46,8 @@ class GoogleTTS(TTSInterface):
             print values
         data = urllib.urlencode(values)
         request = urllib2.Request(baseurl, data)
-        request.add_header(
-            "User-Agent",
-            "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
+        request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
+        request.add_header('Referer', 'translate.google.com')
         mp3response = urllib2.urlopen(request)
 
         return mp3response.read()

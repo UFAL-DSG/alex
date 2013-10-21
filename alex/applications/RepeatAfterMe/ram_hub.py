@@ -118,8 +118,7 @@ if __name__ == '__main__':
 
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n" +
-                                         "=" * 120)
+    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n" + "=" * 120)
 
     sample_sentences = load_sentences(cfg['RepeatAfterMe']['sentences_file'])
 
