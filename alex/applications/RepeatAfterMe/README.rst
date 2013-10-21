@@ -11,11 +11,10 @@ If you want to run ``ram_hub.py`` on some specific phone number than specify the
 
 ::
 
-  $ ./ram_hub.py -c ram_hub_LANG.cfg  ../../resources/private/ext-ram-PHONENUMBER.cfg
+  $ ./ram_hub.py -c ram_hub_LANG.cfg  ../../resources/private/ext-PHONENUMBER.cfg
 
 
 After collection desired number of calls, use ``copy_wavs_for_transcription.py`` to extract the wave files from
 the ``call_logs`` subdirectory for transcription. The files will be copied into into ``RAM-WAVs`` directory.
 
-These calls must be transcribed by the Transcriber or some similar software. The crowdsourcing tools available in
-this project are not suitable for transcription of these recordings.
+These calls must be transcribed by the Transcriber or some similar software.
