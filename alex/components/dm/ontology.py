@@ -15,7 +15,7 @@ class OntologyException(Exception):
 class Ontology(object):
     """Represents an ontology for a dialogue domain.
     """
-    def __init__(self, file_name):
+    def __init__(self, file_name=None):
         self.ontology = {}
         if file_name:
             self.load(file_name)
