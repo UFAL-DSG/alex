@@ -36,7 +36,7 @@ def get_user_from_uri(uri):
 
 def hash_remote_uri(remote_uri):
     user = get_user_from_uri(remote_uri)
-    return '"{h:=010x}" <sip:{h:=010x}@localhost>'.format(h=hash(user))
+    return '"{h}" <sip:{h}@localhost>'.format(h=hex(abs(hash(user)))[2:])
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.
