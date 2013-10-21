@@ -146,7 +146,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if dialogue_state['route_alternative'] != "none":
                     if slot == "from_stop":
                         res_da.extend(self.get_from_stop(dialogue_state))
-                    elif slot in ['to_stop', 'arrive_at']:
+                    elif slot in ['to_stop', 'arrival_time']:
                         res_da.extend(self.get_to_stop(dialogue_state))
                     elif slot == "num_transfers":
                         res_da.extend(self.get_num_transfers(dialogue_state))
@@ -154,7 +154,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                         res_da.extend(self.get_time_rel(dialogue_state))
                 else:
                     if slot in ['from_stop', 'to_stop', 'num_transfers',
-                                'time_rel', 'arrive_at']:
+                                'time_rel', 'arrival_time']:
                         dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                         res_da.append(dai)
 
