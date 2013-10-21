@@ -10,16 +10,18 @@ ontology = {
         'time': set(['now', '7:00', ]),
         'time_rel': set(['now', '7:00', ]),
         'ampm': set(['morning', 'am', 'pm', 'evening', 'night']),
-        'date': set([ ]),
+        'date': set([]),
         'date_rel': set(['today', 'tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'true', 'false', ]),
-        'alternative': set(['dontcare', 'first', 'second', 'third', 'forth', 'last', 'next', 'prev', ]),
+        'alternative': set(['dontcare', 'first', 'second', 'third', 'forth',
+                            'last', 'next', 'prev', ]),
     },
 
     'slot_attributes': {
         'silence_time': [],
         'task': [
-            'user_informs', #'user_requests', 'user_confirms',
+            'user_informs',
+            #'user_requests', 'user_confirms',
             #'system_informs', 'system_requests', 'system_confirms',
             #'system_iconfirms', 'system_selects',
         ],
