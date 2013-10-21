@@ -43,7 +43,7 @@ def hash_remote_uri(remote_uri):
 
     phone_number_hash[h] = user
 
-    return '"{h}" <sip:{h}@localhost>'.format(h=h)
+    return remote_uri.replace(user, h)
 
 def is_phone_number_hash(h):
     return h in phone_number_hash
