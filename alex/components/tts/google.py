@@ -57,13 +57,25 @@ class GoogleTTS(TTSInterface):
         Synthesize the text and returns it in a string with audio in default
         format and sample rate.
         """
+        wav = b""
 
-        text = self.preprocessing.process(text)
+        try:
+            if text:
+                text = self.preprocessing.process(text)
 
-        mp3 = self.get_tts_mp3(self.cfg['TTS']['Google']['language'],
-                               text,
-                               self.cfg['TTS']['Google'].get('rate', 1.0))
-        wav = audio.convert_mp3_to_wav(self.cfg, mp3)
-        wav = audio.change_tempo(self.cfg, self.cfg['TTS']['Google']['tempo'], wav)
+                mp3 = self.get_tts_mp3(self.cfg['TTS']['Google']['language'],
+                                       text,
+                                       self.cfg['TTS']['Google'].get('tempo', 1.0))
+                wav = audio.convert_mp3_to_wav(self.cfg, mp3)
+                wav = audio.change_tempo(self.cfg, self.cfg['TTS']['Google']['tempo'], wav)
+
+                return wav
+            else:
+                return b""
+
+        except TTSException as e:
+            m = unicode(e) + " Text: %s" % text
+            self.cfg['Logging']['system_logger'].exception(m)
+            return b""
 
         return wav
