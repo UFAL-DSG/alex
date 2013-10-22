@@ -1032,6 +1032,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         open_hyp = []
         closed_hyp = {}
 
+        i = 0
         for i, (p, dai) in enumerate(self.cn):
             if p < 0.5:
                 break
