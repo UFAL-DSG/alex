@@ -34,9 +34,22 @@ def get_user_from_uri(uri):
 
     return p.group(1)
 
+phone_number_hash = {}
 def hash_remote_uri(remote_uri):
+    global phone_number_hash
+
     user = get_user_from_uri(remote_uri)
-    return '"{h:=010x}" <sip:{h:=010x}@localhost>'.format(h=hash(user))
+    h = hex(abs(hash(user)))[2:]
+
+    phone_number_hash[h] = user
+
+    return remote_uri.replace(user, h)
+
+def is_phone_number_hash(h):
+    return h in phone_number_hash
+
+def recover_phone_number_from_hash(h):
+    return phone_number_hash[h]
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.
@@ -526,6 +539,15 @@ class VoipIO(multiprocessing.Process):
     def is_phone_number(self, dst):
         """ Check whether it is a phone number.
         """
+        p = re.search('(^(\+|00)?[0-9]{1,12}$)', dst)
+        if not p:
+            return False
+
+        return True
+
+    def is_hash(self, dst):
+        """ Check whether it is a phone number.
+        """
         p = re.search('(^\+?[0-9]{1,12}$)', dst)
         if not p:
             return False
@@ -604,6 +626,9 @@ class VoipIO(multiprocessing.Process):
         """ Call provided URI. Check whether it is allowed.
         """
         try:
+            if is_phone_number_hash(uri):
+                uri = recover_phone_number_from_hash(uri)
+
             uri = self.normalise_uri(uri)
 
             if self.cfg['VoipIO']['debug']:
@@ -622,8 +647,7 @@ class VoipIO(multiprocessing.Process):
                 if self.cfg['VoipIO']['debug']:
                     self.cfg['Logging']['system_logger'].debug('VoipIO : Blocked call to a forbidden phone number - %s' % uri)
             else:
-                raise VoipIOException(
-                    'Making call to SIP URI which is not SIP URI - ' + uri)
+                raise VoipIOException('Making call to SIP URI which is not SIP URI - ' + uri)
 
         except pj.Error as e:
             print "Exception: " + unicode(e)
