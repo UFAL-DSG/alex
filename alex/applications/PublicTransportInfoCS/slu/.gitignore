@@ -2,6 +2,7 @@ train.*
 dev.*
 test.*
 all.*
+uniq.*
 *.model
 *.sem.out
 *.sem.out.score
