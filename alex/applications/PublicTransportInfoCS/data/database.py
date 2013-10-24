@@ -20,7 +20,7 @@ database = {
         "2:00": set(["dvě hodiny", ]),
     },
     "time_rel": {
-        "now": ["nyní", "teď", "teďka", "hned", "nejbližší"],
+        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "tuto chvíli"],
         "0:05": ["pět minut", ],
         "0:10": ["deset minut", ],
         "0:20": ["dvacet minut", ],

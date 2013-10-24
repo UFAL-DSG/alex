@@ -36,6 +36,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['dejvic'],        ['dejvická']),
             (['dejvice'],       ['dejvická']),
             (['litňanská'],     ['letňanská']),
+            (['palacké'],       ['palackého']),
         ]
 
     def normalise_utterance(self, utterance):
