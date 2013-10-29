@@ -12,7 +12,6 @@ from alex.components.slu.da import DialogueAct
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 from alex.components.nlg.exceptions import TemplateNLGException
-from alex.components.nlg.tools.cs import word_for_number, vocalize_prep
 from alex.components.dm.ontology import Ontology
 
 
@@ -298,10 +297,9 @@ class AbstractTemplateNLG(object):
                     dai_utt = self.match_and_fill_generic(dax, svsx)
                 except TemplateNLGException:
                     dai_utt = unicode(dai)
-            
+
             composed_utt.append(dai_utt)
         return ' '.join(composed_utt)
-
 
     def compose_utterance_greedy(self, da):
         """\
@@ -318,7 +316,7 @@ class AbstractTemplateNLG(object):
             dax_utt = None
             dax_len = None
             # greedily look for the longest template that will cover the next
-            # dialogue act items (try longer templates first, from max. 
+            # dialogue act items (try longer templates first, from maximum
             # length given in settings down to 1).
             for sub_len in xrange(self.compose_greedy_lookahead, 0, -1):
                 dax = DialogueAct()
@@ -337,14 +335,12 @@ class AbstractTemplateNLG(object):
                     except TemplateNLGException:
                         # nothing found: look for shorter templates
                         continue
-            if dax_utt is None: # dummy backoff
+            if dax_utt is None:  # dummy backoff
                 dax_utt = unicode(da[sub_start])
                 dax_len = 1
             composed_utt.append(dax_utt)
             sub_start += dax_len
         return ' '.join(composed_utt)
-
-
 
     def fill_in_template(self, tpl, svs):
         """\
@@ -373,77 +369,66 @@ class TemplateNLG(AbstractTemplateNLG):
     def __init__(self, cfg):
         super(TemplateNLG, self).__init__(cfg)
 
+        # load templates
         if 'model' in self.cfg['NLG']['Template']:
             self.load_templates(self.cfg['NLG']['Template']['model'])
+
+        # load ontology
         self.ontology = Ontology()
-        self.rel_time_slots = set()
-        self.abs_time_slots = set()
         if 'ontology' in self.cfg['NLG']['Template']:
             self.ontology.load(cfg['NLG']['Template']['ontology'])
-            # keep track of relative and absolute time slots
-            for slot in self.ontology['slot_attributes']:
-                if 'relative_time' in self.ontology['slot_attributes'][slot]:
-                    self.rel_time_slots.add(slot)
-                elif 'absolute_time' in self.ontology['slot_attributes'][slot]:
-                    self.abs_time_slots.add(slot)
+
+        # initialize pre- and post-processing
+        self.preprocessing = None
+        self.postprocessing = None
+        if 'preprocessing_cls' in self.cfg['NLG']['Template']:
+            self.preprocessing = self.cfg['NLG']['Template']['preprocessing_cls'](self.ontology)
+        if 'postprocessing_cls' in self.cfg['NLG']['Template']:
+            self.postprocessing = self.cfg['NLG']['Template']['postprocessing_cls']()
 
     def fill_in_template(self, tpl, svs):
         """\
         Simple text replacement template filling.
+
+        Applies template NLG pre- and postprocessing, if applicable.
         """
         svs_dict = dict(svs)
-        # spell out time expressions, if applicable
-        for slot, val in svs_dict.iteritems():
-            if slot in self.rel_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=True)
-            elif slot in self.abs_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=False)
-        # fill slots and vocalize prepositions
-        return self.vocalize_prepos(tpl.format(**svs_dict))
+        if self.preprocessing is not None:
+            svs_dict = self.preprocessing.preprocess(svs_dict)
+        out_text = tpl.format(**svs_dict)
+        if self.postprocessing is not None:
+            return self.postprocessing.postprocess(out_text)
+        return out_text
 
-    HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
 
-    def spell_time(self, time, relative):
-        """\
-        Convert a time expression into words (assuming accusative).
+class TemplateNLGPreprocessing(object):
+    """Base class for template NLG preprocessing, handles preprocessing of the
+    values to be filled into a template.
 
-        :param time: The 24hr numerical time value in a string, e.g. '8:05'
-        'param relative: If true, time is interpreted as relative, i.e. \
-                0:15 will generate '15 minutes' and not '0 hours and \
-                15 minutes'.
-        :return: Czech time string with all numerals written out as words
-        """
-        hours, mins = map(int, time.split(':'))
-        time_str = []
-        if not (relative and hours == 0):
-            hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
-            hours = word_for_number(hours, 'F4')
-            time_str.extend((hours, hr_id))
-        if mins == 0 and not relative:
-            return ' '.join(time_str)
-        if time_str:
-            time_str.append('a')
-        min_id = 'minut' + self.HR_ENDING.get(mins, '')
-        mins = word_for_number(mins, 'F4')
-        return ' '.join(time_str + [mins, min_id])
+    This base class provides no functionality, it just defines an interface
+    for derived language-specific and/or domain-specific classes.
+    """
 
-    def vocalize_prepos(self, text):
-        """\
-        Vocalize prepositions in the utterance, i.e. 'k', 'v', 'z', 's'
-        are changed to 'ke', 've', 'ze', 'se' if appropriate given the
-        following word.
+    def __init__(self, ontology):
+        self.ontology = ontology
 
-        This is mainly needed for time expressions, e.g. "v jednu hodinu"
-        (at 1:00), but "ve dvě hodiny" (at 2:00).
-        """
-        def pairwise(iterable):
-            a = iter(iterable)
-            return itertools.izip(a, a)
-        parts = re.split(r'\b([vkzsVKZS]) ', text)
-        text = parts[0]
-        for prep, follow in pairwise(parts[1:]):
-            text += vocalize_prep(prep, follow) + ' ' + follow
-        return text
+    def preprocess(self, svs_dict):
+        raise NotImplementedError()
+
+
+class TemplateNLGPostprocessing(object):
+    """Base class for template NLG postprocessing, handles postprocessing of the
+    text resulting from filling in a template.
+
+    This base class provides no functionality, it just defines an interface
+    for derived language-specific and/or domain-specific classes.
+    """
+
+    def __init__(self):
+        pass
+
+    def postprocess(self, nlg_text):
+        raise NotImplementedError()
 
 
 class TectoTemplateNLG(AbstractTemplateNLG):
