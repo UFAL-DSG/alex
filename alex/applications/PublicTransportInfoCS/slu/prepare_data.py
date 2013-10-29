@@ -19,6 +19,17 @@ from alex.components.slu.base import CategoryLabelDatabase
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
 
+def normalise_semi_words(txt):
+    # normalise these semi-words
+    if txt == '__other__':
+        txt = '_other_'
+    elif txt == '__silence__':
+        txt = '_other_'
+    elif not txt:
+        txt = '_other_'
+
+    return txt
+
 cldb = CategoryLabelDatabase('../data/database.py')
 preprocessing = PTICSSLUPreprocessing(cldb)
 slu = PTICSHDCSLU(preprocessing)
@@ -140,6 +151,8 @@ for fn in files[:100000]:
         if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
             # HDC SLU on 1 best ASR
             a = various.get_text_from_xml_node(hyps[0])
+            a = normalise_semi_words(a)
+
             asr.append((wav_key, a))
 
             s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
@@ -148,8 +161,13 @@ for fn in files[:100000]:
             # HDC SLU on N best ASR
             n = UtteranceNBList()
             for h in hyps:
-                n.add(abs(float(h.getAttribute('p'))),Utterance(various.get_text_from_xml_node(h)))
-                n.normalise()
+                txt = various.get_text_from_xml_node(h)
+                txt = normalise_semi_words(txt)
+
+                n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
+
+            n.merge()
+            n.normalise()
 
             nbl.append((wav_key, n.serialise()))
 
@@ -184,17 +202,19 @@ if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
     save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
 
 
-    random.seed(0)
+    seed_value = 10
+
+    random.seed(seed_value)
     random.shuffle(trn)
-    random.seed(0)
+    random.seed(seed_value)
     random.shuffle(trn_hdc_sem)
-    random.seed(0)
+    random.seed(seed_value)
     random.shuffle(asr)
-    random.seed(0)
+    random.seed(seed_value)
     random.shuffle(asr_hdc_sem)
-    random.seed(0)
+    random.seed(seed_value)
     random.shuffle(nbl)
-    random.seed(0)
+    random.seed(seed_value)
     random.shuffle(nbl_hdc_sem)
 
     # trn
