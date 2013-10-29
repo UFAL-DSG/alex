@@ -35,11 +35,18 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
+        'via_stop': [
+            'user_informs', 'user_requests', 'user_confirms',
+            #'system_informs', 'system_requests',
+            'system_confirms', 'system_iconfirms',
+            #'system_selects',
+        ],
         'time': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
+            'absolute_time',
         ],
 
         'time_rel': [
@@ -47,6 +54,7 @@ ontology = {
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
+            'relative_time',
         ],
         'ampm': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -76,6 +84,18 @@ ontology = {
         ],
         'alternative': [
             'user_informs',
+        ],
+
+        'duration': [
+            'relative_time',
+        ],
+
+        'departure_time': [
+            'absolute_time',
+        ],
+
+        'arrival_time': [
+            'absolute_time',
         ],
 
         # not implemented yet

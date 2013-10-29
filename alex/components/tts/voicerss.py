@@ -24,30 +24,48 @@ class VoiceRssTTS(TTSInterface):
         super(VoiceRssTTS, self).__init__(cfg)
         self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['VoiceRss']['preprocessing'])
 
-    @cache.persistent_cache(True, 'VoiceRssTTS.get_tts_wav.')
-    def get_tts_wav(self, language, text):
+    @cache.persistent_cache(True, 'VoiceRssTTS.get_tts_mp3.')
+    def get_tts_mp3(self, language, text):
         """Access the VoiceRss TTS service and get synthesized audio
         for a text.
         Returns a string with a WAV stream."""
         baseurl = "http://api.voicerss.org"
         values = {'src': text.encode('utf8'),
                   'hl': language,
+                  'c': 'MP3',
+                  'f': '16khz_16bit_mono',
                   'key': self.cfg['TTS']['VoiceRss']['api_key']}
         data = urllib.urlencode(values)
         request = urllib2.Request(baseurl, data)
-        request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) " +
-                           "Gecko/20071127 Firefox/2.0.0.11")
+        request.add_header("User-Agent", "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11")
         try:
-            wavresponse = urllib2.urlopen(request)
-            return audio.convert_wav(self.cfg, wavresponse.read())
-        except Exception as e:
-            raise TTSException("TTS error: " + unicode(e))
+            mp3response = urllib2.urlopen(request)
+
+            return mp3response.read()
+        except (urllib2.HTTPError, urllib2.URLError):
+            raise TTSException("SpeechTech TTS error.")
 
     def synthesize(self, text):
         """Synthesize the text and return it in a string
         with audio in default format and sample rate."""
 
-        text = self.preprocessing.process(text)
-        wav = self.get_tts_wav(self.cfg['TTS']['VoiceRss']['language'], text)
-        wav = audio.change_tempo(self.cfg, self.cfg['TTS']['VoiceRss']['tempo'], wav)
+        wav = b""
+
+        try:
+            if text:
+                text = self.preprocessing.process(text)
+
+                mp3 = self.get_tts_mp3(self.cfg['TTS']['VoiceRss']['language'], text)
+                wav = audio.convert_mp3_to_wav(self.cfg, mp3)
+                wav = audio.change_tempo(self.cfg, self.cfg['TTS']['VoiceRss']['tempo'], wav)
+
+                return wav
+            else:
+                return b""
+
+        except TTSException as e:
+            m = unicode(e) + " Text: %s" % text
+            self.cfg['Logging']['system_logger'].exception(m)
+            return b""
+
         return wav

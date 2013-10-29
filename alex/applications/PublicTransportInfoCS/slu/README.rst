@@ -20,6 +20,8 @@ The script generates the following files:
 - ``*.nbl``: contains ASR N-best results
 - ``*.nbl.hdc.sem``: contains automatic annotation from n-best ASR using handcrafted SLU
 
+The scripts accepts ``uniq`` paramemeter for fast generation of HDC SLU only transcriptios. It geenrates only SLU output 
+only for unique transcriptions. This is usefull when tunning the HDC SLU.
 
 Future work
 -----------

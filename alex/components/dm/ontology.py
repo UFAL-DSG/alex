@@ -23,11 +23,13 @@ class Ontology(object):
     def __getitem__(self, key):
         return self.ontology[key]
 
+    def __contains__(self, key):
+        return key in self.ontology
+
     def load(self, file_name):
         on_mod = load_as_module(file_name, force=True)
         if not hasattr(on_mod, 'ontology'):
-            raise OntologyException("The ontology file does not " +
-                                    "define the 'ontology' object!")
+            raise OntologyException("The ontology file does not define the 'ontology' object!")
         self.ontology = on_mod.ontology
 
     def slot_has_value(self, name, value):
@@ -47,12 +49,12 @@ class Ontology(object):
     def slots_system_requests(self):
         """ Return all slots the system can request.
         """
-        return [slot for slot in self.ontology['slots'] \
+        return [slot for slot in self.ontology['slots']
                 if 'system_requests' in self.ontology['slot_attributes'][slot]]
 
     @lru_cache(maxsize=10)
     def slots_system_confirms(self):
         """ Return all slots the system can request.
         """
-        return [slot for slot in self.ontology['slots'] \
+        return [slot for slot in self.ontology['slots']
                 if 'system_confirms' in self.ontology['slot_attributes'][slot]]
