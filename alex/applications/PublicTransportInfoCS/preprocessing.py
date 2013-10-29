@@ -9,7 +9,6 @@ import autopath
 from alex.components.slu.base import SLUPreprocessing
 from alex.components.asr.utterance import Utterance
 from alex.utils.czech_stemmer import cz_stem
-from data.database import spell_number
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
 
@@ -26,7 +25,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
 
         num_norms = []
         for num in xrange(60):
-            num_norms.append(([str(num)], [spell_number(num)]))
+            num_norms.append(([str(num)], [word_for_number(num, 'F1')]))
         self.text_normalization_mapping += num_norms
 
         self.text_normalization_mapping += [
