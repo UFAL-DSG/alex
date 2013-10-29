@@ -29,6 +29,30 @@ def log_cb(level, str, len):
     if logger:
         logger.info(str)
 
+def get_user_from_uri(uri):
+    p = re.search(r'sip:([a-zA-Z0-9_\.]+)@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?', uri)
+    if not p:
+        return None
+
+    return p.group(1)
+
+phone_number_hash = {}
+def hash_remote_uri(remote_uri):
+    global phone_number_hash
+
+    user = get_user_from_uri(remote_uri)
+    h = hex(abs(hash(user)))[2:]
+
+    phone_number_hash[h] = user
+
+    return remote_uri.replace(user, h)
+
+def is_phone_number_hash(h):
+    return h in phone_number_hash
+
+def recover_phone_number_from_hash(h):
+    return phone_number_hash[h]
+
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.
     """
@@ -48,10 +72,10 @@ class AccountCallback(pj.AccountCallback):
 
         try:
             current_time = time.time()
-            remote_uri = call.info().remote_uri
+            remote_uri = hash_remote_uri(call.info().remote_uri)
 
             if not self.cfg['VoipIO']['reject_calls']:
-                if self.voipio.black_list[self.voipio.get_user_from_uri(remote_uri)] < current_time:
+                if self.voipio.black_list[get_user_from_uri(remote_uri)] < current_time:
                     # answer the call
                     self.voipio.call = call
                     self.voipio.on_incoming_call(remote_uri)
@@ -67,7 +91,7 @@ class AccountCallback(pj.AccountCallback):
                     # rejected the call since the caller is blacklisted
                     if self.cfg['VoipIO']['debug']:
                         self.cfg['Logging']['system_logger'].debug("AccountCallback::on_incoming_call - Rejected call from blacklisted remote URI %s " % remote_uri)
-                        wait_hours = (self.voipio.black_list[self.voipio.get_user_from_uri(remote_uri)] - current_time) / (60 * 60)
+                        wait_hours = (self.voipio.black_list[get_user_from_uri(remote_uri)] - current_time) / (60 * 60)
                         self.cfg['Logging']['system_logger'].debug("AccountCallback::on_incoming_call - Must wait for %d hours" % wait_hours)
                     # respond by "Busy here"
                     call.answer(486)
@@ -131,13 +155,13 @@ class CallCallback(pj.CallCallback):
                 self.system_logger.debug(
                     ("CallCallback::on_state : Call with {uri!s} is {st!s} last "
                      "code = {code!s} ({reas!s})").format(
-                        uri=self.call.info().remote_uri,
+                        uri=hash_remote_uri(self.call.info().remote_uri),
                         st=self.call.info().state_text,
                         code=self.call.info().last_code,
                         reas=self.call.info().last_reason))
 
             if self.call.info().state == pj.CallState.CONNECTING:
-                self.voipio.on_call_connecting(self.call.info().remote_uri)
+                self.voipio.on_call_connecting(hash_remote_uri(self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.CONFIRMED:
                 call_slot = self.call.info().conf_slot
@@ -146,8 +170,10 @@ class CallCallback(pj.CallCallback):
                 timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
                 self.output_file_name_recorded = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.recorded.wav'.format(stamp=timestamp))
                 self.output_file_name_played = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.played.wav'.format(stamp=timestamp))
-
-                while 1:
+ 
+                i = 0
+                while i < 20:
+                    i += 1
                     try:
                         # this can fail if the session.xml is not created yet
                         self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
@@ -178,7 +204,7 @@ class CallCallback(pj.CallCallback):
                 pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
 
                 # Send the callback.
-                self.voipio.on_call_confirmed(self.call.info().remote_uri)
+                self.voipio.on_call_confirmed(hash_remote_uri(self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.DISCONNECTED:
                 try:
@@ -202,7 +228,7 @@ class CallCallback(pj.CallCallback):
                     self.played_id = None
 
                 # Send the callback.
-                self.voipio.on_call_disconnected(self.call.info().remote_uri)
+                self.voipio.on_call_disconnected(hash_remote_uri(self.call.info().remote_uri))
         except:
             self.voipio.close_event.set()
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the CallCallback class.')
@@ -212,7 +238,7 @@ class CallCallback(pj.CallCallback):
         try:
             if self.cfg['VoipIO']['debug']:
                 m = []
-                m.append("CallCallback::on_transfer_status : Call with %s " % self.call.info().remote_uri)
+                m.append("CallCallback::on_transfer_status : Call with %s " % hash_remote_uri(self.call.info().remote_uri))
                 m.append("is %s " % self.call.info().state_text)
                 m.append("last code = %s " % self.call.info().last_code)
                 m.append("(%s)" % self.call.info().last_reason)
@@ -499,30 +525,29 @@ class VoipIO(multiprocessing.Process):
         return dst.startswith('sip:')
 
     def has_sip_uri(self, dst):
-        p = re.search(
-            r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+        p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
         if not p:
             return False
 
         return True
 
     def get_sip_uri(self, dst):
-        p = re.search(
-            r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
+        p = re.search(r'(sip:[a-zA-Z0-9_\.]+@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?)', dst)
         if not p:
             return None
 
         return p.group(0)
 
-    def get_user_from_uri(self, uri):
-        p = re.search(
-            r'sip:([a-zA-Z0-9_\.]+)@[a-zA-Z0-9_\.]+(:[0-9]{1,4})?', uri)
-        if not p:
-            return None
-
-        return p.group(1)
-
     def is_phone_number(self, dst):
+        """ Check whether it is a phone number.
+        """
+        p = re.search('(^(\+|00)?[0-9]{1,12}$)', dst)
+        if not p:
+            return False
+
+        return True
+
+    def is_hash(self, dst):
         """ Check whether it is a phone number.
         """
         p = re.search('(^\+?[0-9]{1,12}$)', dst)
@@ -603,6 +628,9 @@ class VoipIO(multiprocessing.Process):
         """ Call provided URI. Check whether it is allowed.
         """
         try:
+            if is_phone_number_hash(uri):
+                uri = recover_phone_number_from_hash(uri)
+
             uri = self.normalise_uri(uri)
 
             if self.cfg['VoipIO']['debug']:
@@ -614,15 +642,14 @@ class VoipIO(multiprocessing.Process):
                 self.call = self.acc.make_call(uri, cb=call_cb)
 
                 # send a message that there is a new incoming call
-                self.commands.send(Command('make_call(remote_uri="%s")' % self.get_user_from_uri(uri), 'VoipIO', 'HUB'))
+                self.commands.send(Command('make_call(remote_uri="%s")' % get_user_from_uri(uri), 'VoipIO', 'HUB'))
 
                 return self.call
             elif uri == "blocked":
                 if self.cfg['VoipIO']['debug']:
                     self.cfg['Logging']['system_logger'].debug('VoipIO : Blocked call to a forbidden phone number - %s' % uri)
             else:
-                raise VoipIOException(
-                    'Making call to SIP URI which is not SIP URI - ' + uri)
+                raise VoipIOException('Making call to SIP URI which is not SIP URI - ' + uri)
 
         except pj.Error as e:
             print "Exception: " + unicode(e)
@@ -658,28 +685,28 @@ class VoipIO(multiprocessing.Process):
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_incoming_call - from %s" % remote_uri)
 
         # send a message that there is a new incoming call
-        self.commands.send(Command('incoming_call(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('incoming_call(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_rejected_call(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_rejected_call - from %s" % remote_uri)
 
         # send a message that we rejected an incoming call
-        self.commands.send(Command('rejected_call(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('rejected_call(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_rejected_call_from_blacklisted_uri(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_rejected_call_from_blacklisted_uri - from %s" % remote_uri)
 
         # send a message that we rejected an incoming call from blacklisted user
-        self.commands.send(Command('rejected_call_from_blacklisted_uri(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('rejected_call_from_blacklisted_uri(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_connecting(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_connecting")
 
         # send a message that the call is connecting
-        self.commands.send(Command('call_connecting(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('call_connecting(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_confirmed(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
@@ -689,7 +716,7 @@ class VoipIO(multiprocessing.Process):
         self.audio_recording = True
 
         # send a message that the call is confirmed
-        self.commands.send(Command('call_confirmed(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('call_confirmed(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_call_disconnected(self, remote_uri):
         if self.cfg['VoipIO']['debug']:
@@ -699,7 +726,7 @@ class VoipIO(multiprocessing.Process):
         self.audio_recording = False
 
         # send a message that the call is disconnected
-        self.commands.send(Command('call_disconnected(remote_uri="%s")' % self.get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('call_disconnected(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:

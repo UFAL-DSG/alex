@@ -59,7 +59,7 @@ if __name__ == '__main__':
     indir = args.indir
     verbose = args.verbose
 
-    txt_files = glob.glob(os.path.join(indir, '*.txt'))
+    txt_files = glob.glob(os.path.join(indir, 'cs_*.txt'))
 
     r = []
 

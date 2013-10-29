@@ -24,6 +24,7 @@ def score_file(reftext, testtext):
     ii, dd, ss, nn = 0.0, 0.0, 0.0, 0.0
 
     for utt_idx in sorted(reftext):
+	    
         r = re.sub(ur"\b_\w+_\b",r"",str(reftext[utt_idx]),flags=re.UNICODE).lower().split()
         t = re.sub(ur"\b_\w+_\b",r"",str(testtext[utt_idx]),flags=re.UNICODE).lower().split()
         i, d, s = min_edit_ops(t, r)
@@ -37,7 +38,7 @@ def score_file(reftext, testtext):
         dd += d
         ss += s
 
-        nn += len(reftext[utt_idx])
+        nn += len(r)
 
     return (nn-ss-dd)/nn*100, ss/nn*100, dd/nn*100, ii/nn*100, (ss+dd+ii)/nn*100, nn
 
@@ -48,6 +49,8 @@ def score(fn_reftext, fn_testtext, outfile = sys.stdout):
     corr, sub, dels, ins, wer, nwords = score_file(reftext, testtext)
 
     m ="""
+    Please note that the scoring is implicitly ignoring all non-speech events.
+    
     Ref: {r}
     Tst: {t}
     |==============================================================================================|
@@ -64,6 +67,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
     Compute ASR scores for ASR output against reference text.
+    The scoring implicitly ignores non-speech events in comparison.
 
     The files structures must be as follows:
       text_name    => text_content
@@ -80,3 +84,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     score(args.refsem, args.testsem)
+                                        

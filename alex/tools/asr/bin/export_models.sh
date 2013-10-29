@@ -1,5 +1,5 @@
 #!/bin/bash
-# Export hmm models
+# Export HMM models for use with Julius.
 #
 # Parameters:
 #  1 - Directory name of model to be exported

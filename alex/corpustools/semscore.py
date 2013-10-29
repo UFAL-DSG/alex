@@ -45,7 +45,7 @@ def score_da(ref_da, test_da):
     statsp = defaultdict(lambda : defaultdict(float))
 
     for i in test_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i in ref_da:
             tp += 1.0
             statsp[ri]['tp'] += 1.0
@@ -54,7 +54,7 @@ def score_da(ref_da, test_da):
             statsp[ri]['fp'] += 1.0
 
     for i in ref_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\. :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0
@@ -97,17 +97,20 @@ def score_file(refsem, testsem):
 
     return precision, recall, stats
 
-def score(refsem, testsem, item_level = False, outfile = sys.stdout):
-    refsem  = load_semantics(refsem)
-    testsem = load_semantics(testsem)
+def score(fn_refsem, fn_testsem, item_level = False, outfile = sys.stdout):
+    refsem  = load_semantics(fn_refsem)
+    testsem = load_semantics(fn_testsem)
 
     precision, recall, stats = score_file(refsem, testsem)
 
+    outfile.write("Ref: {r}\n".format(r=fn_refsem))
+    outfile.write("Tst: {t}\n".format(t=fn_testsem))
+
+    outfile.write("The results are based on {num_das} DAs\n".format(num_das=len(refsem)))
+
     if item_level:
-        outfile.write("The results are based on {num_das} DAs\n".format(num_das=len(refsem)))
         outfile.write("-"*80)
         outfile.write("\n")
-
         outfile.write("%40s %10s %10s %10s " % ('Dialogue act', 'Precision',  'Recall', 'F-measure'))
         outfile.write("\n")
         for k in sorted(stats):

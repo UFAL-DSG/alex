@@ -33,6 +33,12 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
+        'via_stop': [
+            'user_informs', 'user_requests', 'user_confirms',
+            #'system_informs', 'system_requests',
+            'system_confirms', 'system_iconfirms',
+            #'system_selects',
+        ],
         'time': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
