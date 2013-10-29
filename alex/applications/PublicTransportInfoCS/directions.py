@@ -177,4 +177,4 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         json.dump(data, fh, indent=4, separators=(',', ': '),
                   ensure_ascii=False)
         fh.close()
-        self.session_logger.external_query_data_file(os.path.basename(fname))
+        self.session_logger.external_data_file('Google directions query', os.path.basename(fname))
