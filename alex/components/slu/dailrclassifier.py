@@ -56,6 +56,11 @@ class Features(object):
         return fv
 
     def prune(self, remove_features):
+        """
+        Prune all features in the ``remove_feature`` set.
+
+        :param remove_features: a set of features to be pruned.
+        """
         for f in list(self.set):
             if f in remove_features:
                 self.set.discard(f)
@@ -64,12 +69,38 @@ class Features(object):
                     del self.features[f]
 
     def scale(self, scale=1.0):
+        """
+        Scale all features with the scale.
+
+        :param scale: the scale factor.
+        """
         for f in self.features:
             self.features[f] *= scale
 
-    def merge(self, features, weight=1.0):
-        for f in features:
-            self.features[f] += weight * features[f]
+    def merge(self, features, weight=1.0, prefix=None):
+        """
+        Merges passed feature dictionary with its own features. To the features can be applied weight factor or
+        the features can be added as a binary feature. If a prefix is provided, then the features are added with
+        the prefixed feature name.
+
+        :param features: a dictionary-like object with features as keys and values
+        :param weight: a weight of added features with respect to already existing features. If None, then it is is added
+                       as a binary feature
+        :param prefix: prefix for a name of an added features, This is useful when one want to distinguish between
+                       similarly generated features
+        """
+        if weight:
+            for f in features:
+                if not prefix:
+                    self.features[f] += weight * features[f]
+                else:
+                    self.features[(prefix,)+f] += weight * features[f]
+        else:
+            for f in features:
+                if not prefix:
+                    self.features[f] = 1.0
+                else:
+                    self.features[(prefix,)+f] = 1.0
 
         self.set = set(self.features.keys())
 
@@ -89,7 +120,7 @@ class UtteranceFeatures(Features):
             self.parse(utterance)
 
     def parse(self, utt):
-        self.features['_empty_'] = 1.0 if not utt else 0.0
+        self.features[('_empty_',)] = 1.0 if not utt else 0.0
 
         utt = ['<s>', ] + utt.utterance + ['</s>', ]
 
@@ -386,7 +417,7 @@ class DAILogRegClassifier(SLUInterface):
 
         feat = UtteranceFeatures(size=self.features_size)
 
-        scale_p = [p for p, h in nblist]
+        scale_p = [p for p, u in nblist]
         scale_p[0] = 1.0
 
         for i, (p, u) in enumerate(nblist):

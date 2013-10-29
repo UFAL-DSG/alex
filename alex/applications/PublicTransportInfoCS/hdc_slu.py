@@ -351,10 +351,10 @@ class PTICSHDCSLU(SLUInterface):
         if "_noise_" in u.utterance or "_laugh_" in u.utterance or "_inhale_" in u.utterance or len(u.utterance) == 0:
             cn.add(1.0, DialogueActItem("null"))
 
-        if "_silence_" in u.utterance or "_sil_" in u.utterance:
+        if "_silence_" in u.utterance or "__silence__" in u.utterance or "_sil_" in u.utterance:
             cn.add(1.0, DialogueActItem("silence"))
 
-        if "_other_" in u.utterance or "_ehm_hmm_" in u.utterance:
+        if "_other_" in u.utterance or "__other__" in u.utterance or "_ehm_hmm_" in u.utterance:
             cn.add(1.0, DialogueActItem("other"))
 
         if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
