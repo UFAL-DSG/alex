@@ -8,6 +8,7 @@ import os
 import xml.dom.minidom
 import random
 import autopath
+import sys
 
 import alex.utils.various as various
 
@@ -18,9 +19,23 @@ from alex.components.slu.base import CategoryLabelDatabase
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
 
+def normalise_semi_words(txt):
+    # normalise these semi-words
+    if txt == '__other__':
+        txt = '_other_'
+    elif txt == '__silence__':
+        txt = '_other_'
+    elif not txt:
+        txt = '_other_'
+
+    return txt
+
 cldb = CategoryLabelDatabase('../data/database.py')
 preprocessing = PTICSSLUPreprocessing(cldb)
 slu = PTICSHDCSLU(preprocessing)
+
+fn_uniq_trn = 'uniq.trn'
+fn_uniq_trn_hdc_sem = 'uniq.trn.hdc.sem'
 
 fn_all_sem = 'all.sem'
 fn_all_trn = 'all.trn'
@@ -120,112 +135,138 @@ for fn in files[:100000]:
         t = normalise_text(t)
 
         # FIXME: We should be more tolerant and use more transcriptions
-        if t != '_NOISE_' and ('-' in t or '_' in t or '(' in t):
-    	    print "Skipping transcription:", t
+        if t != '_NOISE_' and t != '_SIL_' and t != '_EHM_HMM_' and t != '_INHALE_' and t != '_LAUGH_' and \
+            ('-' in t or '_' in t or '(' in t):
+            print "Skipping transcription:", t
             continue
 
         trn.append((wav_key, t))
 
         print "Parsing:", unicode(t)
 
-        # transcription
+        # HDC SLU on transcription
         s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
         trn_hdc_sem.append((wav_key, s))
 
-        # 1 best ASR
-        a = various.get_text_from_xml_node(hyps[0])
-        asr.append((wav_key, a))
+        if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
+            # HDC SLU on 1 best ASR
+            a = various.get_text_from_xml_node(hyps[0])
+            a = normalise_semi_words(a)
 
-        s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
-        asr_hdc_sem.append((wav_key, s))
+            asr.append((wav_key, a))
 
-        # N best ASR
-        n = UtteranceNBList()
-        for h in hyps:
-            n.add(abs(float(h.getAttribute('p'))),Utterance(various.get_text_from_xml_node(h)))
-        n.normalise()
+            s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
+            asr_hdc_sem.append((wav_key, s))
 
-        nbl.append((wav_key, n.serialise()))
+            # HDC SLU on N best ASR
+            n = UtteranceNBList()
+            for h in hyps:
+                txt = various.get_text_from_xml_node(h)
+                txt = normalise_semi_words(txt)
 
-        s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
-        nbl_hdc_sem.append((wav_key, s))
+                n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
+
+            n.merge()
+            n.normalise()
+
+            nbl.append((wav_key, n.serialise()))
+
+            s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
+            nbl_hdc_sem.append((wav_key, s))
 
         # there is no manual semantics in the transcriptions yet
         sem.append((wav_key, None))
 
 
-# all
-save_wavaskey(fn_all_trn, dict(trn))
-save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
-save_wavaskey(fn_all_asr, dict(asr))
-save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
-save_wavaskey(fn_all_nbl, dict(nbl))
-save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
+uniq_trn = {}
+uniq_trn_hdc_sem = {}
+trn_set = set()
+
+sem = dict(trn_hdc_sem)
+for k, v in trn:
+    if not v in trn_set:
+        trn_set.add(v)
+        uniq_trn[k] = v
+        uniq_trn_hdc_sem[k] = sem[k]
+
+save_wavaskey(fn_uniq_trn, uniq_trn)
+save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem)
+
+if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
+    # all
+    save_wavaskey(fn_all_trn, dict(trn))
+    save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
+    save_wavaskey(fn_all_asr, dict(asr))
+    save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
+    save_wavaskey(fn_all_nbl, dict(nbl))
+    save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
 
 
-random.seed(0)
-random.shuffle(trn)
-random.seed(0)
-random.shuffle(trn_hdc_sem)
-random.seed(0)
-random.shuffle(asr)
-random.seed(0)
-random.shuffle(asr_hdc_sem)
-random.seed(0)
-random.shuffle(nbl)
-random.seed(0)
-random.shuffle(nbl_hdc_sem)
+    seed_value = 10
 
-# trn
-train_trn = trn[:int(0.8*len(trn))]
-dev_trn = trn[int(0.8*len(trn)):int(0.9*len(trn))]
-test_trn = trn[int(0.9*len(trn)):]
+    random.seed(seed_value)
+    random.shuffle(trn)
+    random.seed(seed_value)
+    random.shuffle(trn_hdc_sem)
+    random.seed(seed_value)
+    random.shuffle(asr)
+    random.seed(seed_value)
+    random.shuffle(asr_hdc_sem)
+    random.seed(seed_value)
+    random.shuffle(nbl)
+    random.seed(seed_value)
+    random.shuffle(nbl_hdc_sem)
 
-save_wavaskey(fn_train_trn, dict(train_trn))
-save_wavaskey(fn_dev_trn, dict(dev_trn))
-save_wavaskey(fn_test_trn, dict(test_trn))
+    # trn
+    train_trn = trn[:int(0.8*len(trn))]
+    dev_trn = trn[int(0.8*len(trn)):int(0.9*len(trn))]
+    test_trn = trn[int(0.9*len(trn)):]
 
-# trn_hdc_sem
-train_trn_hdc_sem = trn_hdc_sem[:int(0.8*len(trn_hdc_sem))]
-dev_trn_hdc_sem = trn_hdc_sem[int(0.8*len(trn_hdc_sem)):int(0.9*len(trn_hdc_sem))]
-test_trn_hdc_sem = trn_hdc_sem[int(0.9*len(trn_hdc_sem)):]
+    save_wavaskey(fn_train_trn, dict(train_trn))
+    save_wavaskey(fn_dev_trn, dict(dev_trn))
+    save_wavaskey(fn_test_trn, dict(test_trn))
 
-save_wavaskey(fn_train_trn_hdc_sem, dict(train_trn_hdc_sem))
-save_wavaskey(fn_dev_trn_hdc_sem, dict(dev_trn_hdc_sem))
-save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem))
+    # trn_hdc_sem
+    train_trn_hdc_sem = trn_hdc_sem[:int(0.8*len(trn_hdc_sem))]
+    dev_trn_hdc_sem = trn_hdc_sem[int(0.8*len(trn_hdc_sem)):int(0.9*len(trn_hdc_sem))]
+    test_trn_hdc_sem = trn_hdc_sem[int(0.9*len(trn_hdc_sem)):]
 
-# asr
-train_asr = asr[:int(0.8*len(asr))]
-dev_asr = asr[int(0.8*len(asr)):int(0.9*len(asr))]
-test_asr = asr[int(0.9*len(asr)):]
+    save_wavaskey(fn_train_trn_hdc_sem, dict(train_trn_hdc_sem))
+    save_wavaskey(fn_dev_trn_hdc_sem, dict(dev_trn_hdc_sem))
+    save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem))
 
-save_wavaskey(fn_train_asr, dict(train_asr))
-save_wavaskey(fn_dev_asr, dict(dev_asr))
-save_wavaskey(fn_test_asr, dict(test_asr))
+    # asr
+    train_asr = asr[:int(0.8*len(asr))]
+    dev_asr = asr[int(0.8*len(asr)):int(0.9*len(asr))]
+    test_asr = asr[int(0.9*len(asr)):]
 
-# asr_hdc_sem
-train_asr_hdc_sem = asr_hdc_sem[:int(0.8*len(asr_hdc_sem))]
-dev_asr_hdc_sem = asr_hdc_sem[int(0.8*len(asr_hdc_sem)):int(0.9*len(asr_hdc_sem))]
-test_asr_hdc_sem = asr_hdc_sem[int(0.9*len(asr_hdc_sem)):]
+    save_wavaskey(fn_train_asr, dict(train_asr))
+    save_wavaskey(fn_dev_asr, dict(dev_asr))
+    save_wavaskey(fn_test_asr, dict(test_asr))
 
-save_wavaskey(fn_train_asr_hdc_sem, dict(train_asr_hdc_sem))
-save_wavaskey(fn_dev_asr_hdc_sem, dict(dev_asr_hdc_sem))
-save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem))
+    # asr_hdc_sem
+    train_asr_hdc_sem = asr_hdc_sem[:int(0.8*len(asr_hdc_sem))]
+    dev_asr_hdc_sem = asr_hdc_sem[int(0.8*len(asr_hdc_sem)):int(0.9*len(asr_hdc_sem))]
+    test_asr_hdc_sem = asr_hdc_sem[int(0.9*len(asr_hdc_sem)):]
 
-# n-best lists
-train_nbl = nbl[:int(0.8*len(nbl))]
-dev_nbl = nbl[int(0.8*len(nbl)):int(0.9*len(nbl))]
-test_nbl = nbl[int(0.9*len(nbl)):]
+    save_wavaskey(fn_train_asr_hdc_sem, dict(train_asr_hdc_sem))
+    save_wavaskey(fn_dev_asr_hdc_sem, dict(dev_asr_hdc_sem))
+    save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem))
 
-save_wavaskey(fn_train_nbl, dict(train_nbl))
-save_wavaskey(fn_dev_nbl, dict(dev_nbl))
-save_wavaskey(fn_test_nbl, dict(test_nbl))
+    # n-best lists
+    train_nbl = nbl[:int(0.8*len(nbl))]
+    dev_nbl = nbl[int(0.8*len(nbl)):int(0.9*len(nbl))]
+    test_nbl = nbl[int(0.9*len(nbl)):]
 
-# nbl_hdc_sem
-train_nbl_hdc_sem = nbl_hdc_sem[:int(0.8*len(nbl_hdc_sem))]
-dev_nbl_hdc_sem = nbl_hdc_sem[int(0.8*len(nbl_hdc_sem)):int(0.9*len(nbl_hdc_sem))]
-test_nbl_hdc_sem = nbl_hdc_sem[int(0.9*len(nbl_hdc_sem)):]
+    save_wavaskey(fn_train_nbl, dict(train_nbl))
+    save_wavaskey(fn_dev_nbl, dict(dev_nbl))
+    save_wavaskey(fn_test_nbl, dict(test_nbl))
 
-save_wavaskey(fn_train_nbl_hdc_sem, dict(train_nbl_hdc_sem))
-save_wavaskey(fn_dev_nbl_hdc_sem, dict(dev_nbl_hdc_sem))
-save_wavaskey(fn_test_nbl_hdc_sem, dict(test_nbl_hdc_sem))
+    # nbl_hdc_sem
+    train_nbl_hdc_sem = nbl_hdc_sem[:int(0.8*len(nbl_hdc_sem))]
+    dev_nbl_hdc_sem = nbl_hdc_sem[int(0.8*len(nbl_hdc_sem)):int(0.9*len(nbl_hdc_sem))]
+    test_nbl_hdc_sem = nbl_hdc_sem[int(0.9*len(nbl_hdc_sem)):]
+
+    save_wavaskey(fn_train_nbl_hdc_sem, dict(train_nbl_hdc_sem))
+    save_wavaskey(fn_dev_nbl_hdc_sem, dict(dev_nbl_hdc_sem))
+    save_wavaskey(fn_test_nbl_hdc_sem, dict(test_nbl_hdc_sem))

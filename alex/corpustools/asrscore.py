@@ -49,7 +49,7 @@ def score(fn_reftext, fn_testtext, outfile = sys.stdout):
     corr, sub, dels, ins, wer, nwords = score_file(reftext, testtext)
 
     m ="""
-    Please note that the scorring is implictly ignoring all non-speech events.
+    Please note that the scoring is implicitly ignoring all non-speech events.
     
     Ref: {r}
     Tst: {t}
