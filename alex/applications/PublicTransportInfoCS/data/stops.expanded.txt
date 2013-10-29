@@ -1,3 +1,9 @@
+Vinohrady;Vinohrad
+Vinohradská
+Bělohradská
+Bělohrady
+Vyšehrad;Vyšehradů;Vyšehrady
+Hostivař;Hostivaře
 Smíchov;Smíchova
 Holešovice;Holešovic
 Chuchle;Chuchel

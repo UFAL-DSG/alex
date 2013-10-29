@@ -13,8 +13,8 @@ The ASR can generate either:
 - the ``_silence_`` word to denote that the input was silence
 - the ``_other_`` word to denote that the input was something else that was lost during speech processing approximations
   such as N-best list enumeration or when the ASR did not provided any result. This is because we do not know what the
-  input was and it can be both something important or worth ignoring. As such, it deserve special treatment in
-  the system
+  input was and it can be both something important or worth ignoring. As such, it deserves special treatment in
+  the system.
 
 SLU
 ----
@@ -29,9 +29,9 @@ The SLU can generate either:
 
 The SLU should map:
 
-- ``_noise_`` to ``null()`` - noise can be ignored in general
-- ``_silence_`` to ``silence()`` - silence will be processed in the DM
-- ``_other_`` to ``other()`` - other hypotheses will be handled by the DM, mostly by responding "I did not get that. Can
+- ``_noise_``, ``_inhale_`` and ``_laugh_`` to ``null()`` - noise can be ignored in general
+- ``_silence_`` and ``_sil_`` to ``silence()`` - silence will be processed in the DM
+- ``_other_`` and ``_ehm_hmm_`` to ``other()`` - other hypotheses will be handled by the DM, mostly by responding "I did not get that. Can
   you ... ?"
 
 
@@ -52,5 +52,5 @@ The DM should map:
   be rephrased instead of just being repeated.
 
 **PROBLEM** As of now, both handcrafted and trained SLUs cannot correctly classify the ``other()`` dialogue act. It has
-a very low recall for this DA. Instead of the ``other()`` DA it returns the ``null()`` DA. Therefore,  the ``null()``
-act is processed in DMs as if it was the ``other()`` DA.
+a very low recall for this DA. Instead of the ``other()`` DA it returns the ``null()`` DA. Therefore, the ``null()``
+act is processed in DMs as if it was the ``other()`` DA **for now**.

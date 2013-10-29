@@ -4,26 +4,22 @@ from __future__ import unicode_literals
 
 import multiprocessing
 import time
-import sys
 import random
 import cPickle as pickle
-import sys
 import argparse
+import codecs
 
-from collections import defaultdict
-
-import __init__
+import autopath
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command, TTSText
-from alex.utils.mproc import SystemLogger
+from alex.components.hub.messages import Command
 from alex.utils.config import Config
 
 
 def load_sentences(file_name):
-    f = open(file_name, 'r')
+    f = codecs.open(file_name, 'r', 'UTF-8')
 
     r = []
     for s in f:
@@ -85,9 +81,7 @@ def play_intro(cfg, tts_commands, intro_id, last_intro_id):
     for i in range(len(cfg['RepeatAfterMe']['introduction'])):
         last_intro_id = str(intro_id)
         intro_id += 1
-        tts_commands.send(
-            Command('synthesize(user_id="%s",text="%s")' % (last_intro_id,
-                                                            cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
+        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
 
     return intro_id, last_intro_id
 
@@ -120,12 +114,11 @@ if __name__ == '__main__':
                         help='additional configure file')
     args = parser.parse_args()
 
-    cfg = Config.load_configs(['ram_hub.cfg'] + args.configs)
+    cfg = Config.load_configs(args.configs)
 
     #########################################################################
     #########################################################################
-    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n" +
-                                         "=" * 120)
+    cfg['Logging']['system_logger'].info("Repeat After Me dialogue system\n" + "=" * 120)
 
     sample_sentences = load_sentences(cfg['RepeatAfterMe']['sentences_file'])
 
@@ -190,10 +183,8 @@ if __name__ == '__main__':
                 last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
             # add the remote uri to the black list
-            vio_commands.send(
-                Command(
-                    'black_list(remote_uri="%s",expire="%d")' % (remote_uri,
-                                                                 current_time + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
+            vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
+                                                                                   current_time + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
             m.append('BLACKLISTED')
         else:
             m.append('OK')
@@ -223,10 +214,11 @@ if __name__ == '__main__':
             if isinstance(command, Command):
                 if command.parsed['__name__'] == "incoming_call" or command.parsed['__name__'] == "make_call":
                     cfg['Logging']['system_logger'].session_start(command.parsed['remote_uri'])
+                    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
+
                     cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
                     cfg['Logging']['system_logger'].info(command)
 
-                    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
                     cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
                     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
                     cfg['Logging']['session_logger'].input_source("voip")
@@ -280,14 +272,10 @@ if __name__ == '__main__':
                     if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
                             last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
-                        tts_commands.send(Command('synthesize(text="Děkujeme za zavolání, ale už jste volali hodně. '
-                                                  'Prosím zavolejte za dvacet čtyři hodin. Nashledanou.")', 'HUB', 'TTS'))
+                        tts_commands.send(Command('synthesize(text="%s")' % cfg['RepeatAfterMe']['rejected'], 'HUB', 'TTS'))
                         reject_played = True
                         s_voice_activity = True
-                        vio_commands.send(
-                            Command(
-                                'black_list(remote_uri="%s",expire="%d")' % (remote_uri,
-                                                                             time.time() + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
+                        vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time() + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
                         m.append('CALL REJECTED')
                     else:
                         # init the system
@@ -395,7 +383,7 @@ if __name__ == '__main__':
                 s_voice_activity = True
                 last_intro_id = str(intro_id)
                 intro_id += 1
-                tts_commands.send(Command('synthesize(text="%s")' % "To bylo všechno. Děkujeme za zavolání.", 'HUB', 'TTS'))
+                tts_commands.send(Command('synthesize(text="%s")' % cfg['RepeatAfterMe']['closing'], 'HUB', 'TTS'))
                 end_played = True
             else:
                 intro_played = False
@@ -408,16 +396,13 @@ if __name__ == '__main__':
         if intro_played and \
             s_voice_activity == False and \
             u_voice_activity == False and \
-            current_time - s_last_voice_activity_time > 5 and \
-                current_time - u_last_voice_activity_time > 0.6:
+            current_time - s_last_voice_activity_time > 5 and current_time - u_last_voice_activity_time > 0.6:
 
             s_voice_activity = True
             s1 = ram()
-            tts_commands.send(
-                Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
+            tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
             s2 = sample_sentence(sample_sentences)
-            tts_commands.send(
-                Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
+            tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
 
             s = s1 + ' ' + s2
 
