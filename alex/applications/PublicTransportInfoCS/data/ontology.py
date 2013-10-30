@@ -12,6 +12,7 @@ ontology = {
         'departure_time': set(['now', '7:00', ]),
         'departure_time_rel': set(['00:05']),
         'arrival_time': set([]),
+        'arrvial_time_rel': set(['00:05']),
         'duration': set([]),
         'ampm': set(['morning', 'am', 'pm', 'evening', 'night']),
         'departure_date': set([]),
@@ -68,7 +69,15 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
             'absolute_time',
         ],
+         'arrival_time_rel': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            #'system_requests',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'relative_time',
+        ],
         'duration': [
+            'user_requests',
             'relative_time',
         ],
         'ampm': [

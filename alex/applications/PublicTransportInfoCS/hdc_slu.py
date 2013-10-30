@@ -469,6 +469,13 @@ class PTICSHDCSLU(SLUInterface):
             (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dorazí dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
+        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude"):
+            cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
+
+        if not _any_word_in(u, 'za'):
+            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede"):
+                cn.add(1.0, DialogueActItem('request', 'duration'))
+
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
