@@ -102,19 +102,6 @@ ontology = {
         'transfer_stops': [
             'user_requests',
         ],
-        'connection_duration': [
-            'user_requests',
-        ],
-        'connection_price': [
-            'user_requests',
-        ],
-
-        'connection_time': [
-            'user_requests',
-        ],
-
-        'route_alternative': [
-        ],
     },
 }
 
