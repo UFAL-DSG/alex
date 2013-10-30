@@ -12,6 +12,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.slu.da import DialogueActConfusionNetwork
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
+from datetime import timedelta
 from .directions import *
 
 
@@ -28,7 +29,7 @@ class PTICSHDCPolicy(DialoguePolicy):
     def __init__(self, cfg, ontology):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
-        self.directions = GooglePIDDirectionsFinder()
+        self.directions = GooglePIDDirectionsFinder(cfg=cfg)
 
         self.das = []
         self.last_system_dialogue_act = None
@@ -279,7 +280,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(
-                    DialogueActItem('inform', 'arrive_at', step.arrival_time.strftime("%H:%M")))
+                    DialogueActItem('inform', 'arrival_time',
+                                    step.arrival_time.strftime("%H:%M")))
 
                 return da
 
@@ -291,18 +293,62 @@ class PTICSHDCPolicy(DialoguePolicy):
         return da
 
     def get_directions(self, dialogue_state, route_type='true'):
+        """Retrieve Google directions, save them to dialogue state and return
+        corresponding DAs.
 
+        Responsible for the interpretation of AM/PM time expressions.
+        """
+        # interpret dialogue state time
+        now = datetime.now()
         time = dialogue_state['time']
-        if time == "none" or time == "now":
-            time = self.get_default_time()
+        ampm = dialogue_state['ampm']
+        time_rel = dialogue_state['time_rel']
+        date_rel = dialogue_state['date_rel']
+
+        # relative time
+        if time == 'none' or time_rel != 'none':
+            time = now
+            if time_rel not in ['none', 'now']:
+                trel_parse = datetime.strptime(time_rel, "%H:%M")
+                time += timedelta(hours=trel_parse.hour,
+                                  minutes=trel_parse.minute)
+        # absolute time
         else:
-            time_parsed = datetime.strptime(time, "%H:%M")
-            new_hour = time_parsed.hour
-            if datetime.now().hour > time_parsed.hour:
-                new_hour = (new_hour + 12) % 24
+            time_parsed = datetime.combine(now,
+                    datetime.strptime(time, "%H:%M").time())
+            time_hour = time_parsed.hour
+            now_hour = now.hour
+            # handle 12hr time
+            if time_hour >= 1 and time_hour <= 12:
+                # interpret AM/PM
+                if ampm != 'none':
+                    # 'pm' ~ 12pm till 11:59pm
+                    if ampm == 'pm' and time_hour < 12:
+                        time_hour += 12
+                    # 'am'/'morning' ~ 12am till 11:59am
+                    elif ampm in ['am', 'morning'] and time_hour == 12:
+                        time_hour = 0
+                    # 'evening' ~ 4pm till 3:59am
+                    elif ampm == 'evening' and time_hour >= 4:
+                        time_hour = (time_hour + 12) % 24
+                    # 'night' ~ 6pm till 5:59am
+                    elif ampm == 'night' and time_hour >= 6:
+                        time_hour = (time_hour + 12) % 24
+                # 12hr time + no AM/PM set: default to next 12hrs
+                elif now_hour > time_hour and now_hour < time_hour + 12:
+                    time_hour = (time_hour + 12) % 24
+            time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
+            dialogue_state['time'] = "%d:%.2d" % (time.hour, time.minute)
 
-            time = "%d:%.2d" % (new_hour, time_parsed.minute)
+        # relative date
+        if date_rel == 'tomorrow':
+            time += timedelta(days=1)
+        elif date_rel == 'day_after_tomorrow':
+            time += timedelta(days=2)
+        elif time < now:
+            time += timedelta(days=1)
 
+        # retrieve Google directions
         dialogue_state.directions = self.directions.get_directions(
             from_stop=dialogue_state['from_stop'],
             to_stop=dialogue_state['to_stop'],
@@ -311,7 +357,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         return self.say_directions(dialogue_state, route_type)
 
     def say_directions(self, dialogue_state, route_type):
-        """Given the state say current directions."""
+        """Return DAs for the directions in the current dialogue state."""
         if dialogue_state['route_alternative'] == "none":
             dialogue_state['route_alternative'] = 0
 
@@ -333,7 +379,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 res.append(u"inform(vehicle=%s)" % step.vehicle)
                 res.append(u"inform(line=%s)" % step.line_name)
-                res.append(u"inform(go_at=%s)" % step.departure_time.strftime("%H:%M"))
+                res.append(u"inform(departure_time=%s)" %
+                           step.departure_time.strftime("%H:%M"))
                 res.append(u"inform(enter_at=%s)" % step.departure_stop)
                 res.append(u"inform(headsign=%s)" % step.headsign)
                 res.append(u"inform(exit_at=%s)" % step.arrival_stop)
@@ -386,7 +433,3 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "request", "num_transfers"))
 
         return res_da
-
-    def get_default_time(self):
-        """Return default value for time."""
-        return datetime.now().strftime("%H:%M")

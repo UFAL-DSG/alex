@@ -48,7 +48,7 @@ class SessionLogger(object):
     def get_date_str(self):
         """ Return current time in ISO format.
 
-        It is useful when constricting file and directory names.
+        It is useful when constructing file and directory names.
         """
         dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dt += " " + time.tzname[time.localtime().tm_isdst]
@@ -59,7 +59,7 @@ class SessionLogger(object):
     def get_time_str(self):
         """ Return current time in ISO format.
 
-        It is useful when constricting file and directory names.
+        It is useful when constructing file and directory names.
         """
         dt = time.time() - self.session_start_time.value
 
@@ -385,7 +385,7 @@ class SessionLogger(object):
                 break
         else:
             self.close_session_xml(doc)
-            raise SessionLoggerException( ("Missing rec element for the {fname} fname.".format(fname=fname)))
+            raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
 
         self.close_session_xml(doc)
 
@@ -528,6 +528,21 @@ class SessionLogger(object):
     ## SDC 2010 XML logging format.                                       ##
     ########################################################################
 
+    def _last_turn_element(self, doc, speaker):
+        """ Finds the XML element in the given open XML session
+        which corresponds to the last turn for the given speaker.
+
+        Closes the XML and throws an exception if the element cannot be found.
+        """
+        els = doc.getElementsByTagName("turn")
+
+        for i in range(els.length - 1, -1, -1):
+            if els[i].getAttribute("speaker") == speaker:
+                return els[i]
+        else:
+            self.close_session_xml(doc)
+            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+
     @global_lock(lock)
     @catch_ioerror
     def dialogue_state(self, speaker, dstate):
@@ -543,22 +558,15 @@ class SessionLogger(object):
 
         """
         doc = self.open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        turn = self._last_turn_element(doc, speaker)
 
-        for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("speaker") == speaker:
-                for state in dstate:
-                    ds = els[i].appendChild(doc.createElement("dialogue_state"))
+        for state in dstate:
+            ds = turn.appendChild(doc.createElement("dialogue_state"))
 
-                    for slot_name, slot_value in state:
-                        sl = ds.appendChild(doc.createElement("slot"))
-                        sl.setAttribute("name", "%s" % slot_name)
-                        sl.appendChild(doc.createTextNode(unicode(slot_value)))
-
-                break
-        else:
-            self.close_session_xml(doc)
-            raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
+            for slot_name, slot_value in state:
+                sl = ds.appendChild(doc.createElement("slot"))
+                sl.setAttribute("name", "%s" % slot_name)
+                sl.appendChild(doc.createTextNode(unicode(slot_value)))
 
         self.close_session_xml(doc)
 
@@ -570,3 +578,17 @@ class SessionLogger(object):
         This is an alex extension.
         """
         raise SessionLoggerException("Not implemented")
+
+    def external_data_file(self, ftype, fname):
+        """ Adds a link to an external data file (such as Google directions).
+        This will create an <external> link with appropriate "type" and "fname"
+        attributes.
+
+        This is an alex extension.
+        """
+        doc = self.open_session_xml()
+        turn = self._last_turn_element(doc, "system")
+        el = turn.appendChild(doc.createElement("external"))
+        el.setAttribute("type", ftype)
+        el.setAttribute("fname", fname)
+        self.close_session_xml(doc)

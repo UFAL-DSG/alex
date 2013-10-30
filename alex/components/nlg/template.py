@@ -6,11 +6,13 @@ from __future__ import unicode_literals
 import random
 import itertools
 import copy
+import re
 
 from alex.components.slu.da import DialogueAct
 from alex.utils.config import load_as_module
 from alex.components.nlg.tectotpl.core.run import Scenario
 from alex.components.nlg.exceptions import TemplateNLGException
+from alex.components.dm.ontology import Ontology
 
 
 class AbstractTemplateNLG(object):
@@ -295,10 +297,9 @@ class AbstractTemplateNLG(object):
                     dai_utt = self.match_and_fill_generic(dax, svsx)
                 except TemplateNLGException:
                     dai_utt = unicode(dai)
-            
+
             composed_utt.append(dai_utt)
         return ' '.join(composed_utt)
-
 
     def compose_utterance_greedy(self, da):
         """\
@@ -315,7 +316,7 @@ class AbstractTemplateNLG(object):
             dax_utt = None
             dax_len = None
             # greedily look for the longest template that will cover the next
-            # dialogue act items (try longer templates first, from max. 
+            # dialogue act items (try longer templates first, from maximum
             # length given in settings down to 1).
             for sub_len in xrange(self.compose_greedy_lookahead, 0, -1):
                 dax = DialogueAct()
@@ -334,14 +335,12 @@ class AbstractTemplateNLG(object):
                     except TemplateNLGException:
                         # nothing found: look for shorter templates
                         continue
-            if dax_utt is None: # dummy backoff
+            if dax_utt is None:  # dummy backoff
                 dax_utt = unicode(da[sub_start])
                 dax_len = 1
             composed_utt.append(dax_utt)
             sub_start += dax_len
         return ' '.join(composed_utt)
-
-
 
     def fill_in_template(self, tpl, svs):
         """\
@@ -370,14 +369,66 @@ class TemplateNLG(AbstractTemplateNLG):
     def __init__(self, cfg):
         super(TemplateNLG, self).__init__(cfg)
 
-        if self.cfg['NLG']['Template']['model']:
+        # load templates
+        if 'model' in self.cfg['NLG']['Template']:
             self.load_templates(self.cfg['NLG']['Template']['model'])
+
+        # load ontology
+        self.ontology = Ontology()
+        if 'ontology' in self.cfg['NLG']['Template']:
+            self.ontology.load(cfg['NLG']['Template']['ontology'])
+
+        # initialize pre- and post-processing
+        self.preprocessing = None
+        self.postprocessing = None
+        if 'preprocessing_cls' in self.cfg['NLG']['Template']:
+            self.preprocessing = self.cfg['NLG']['Template']['preprocessing_cls'](self.ontology)
+        if 'postprocessing_cls' in self.cfg['NLG']['Template']:
+            self.postprocessing = self.cfg['NLG']['Template']['postprocessing_cls']()
 
     def fill_in_template(self, tpl, svs):
         """\
         Simple text replacement template filling.
+
+        Applies template NLG pre- and postprocessing, if applicable.
         """
-        return tpl.format(**dict(svs))
+        svs_dict = dict(svs)
+        if self.preprocessing is not None:
+            svs_dict = self.preprocessing.preprocess(svs_dict)
+        out_text = tpl.format(**svs_dict)
+        if self.postprocessing is not None:
+            return self.postprocessing.postprocess(out_text)
+        return out_text
+
+
+class TemplateNLGPreprocessing(object):
+    """Base class for template NLG preprocessing, handles preprocessing of the
+    values to be filled into a template.
+
+    This base class provides no functionality, it just defines an interface
+    for derived language-specific and/or domain-specific classes.
+    """
+
+    def __init__(self, ontology):
+        self.ontology = ontology
+
+    def preprocess(self, svs_dict):
+        raise NotImplementedError()
+
+
+class TemplateNLGPostprocessing(object):
+    """Base class for template NLG postprocessing, handles postprocessing of the
+    text resulting from filling in a template.
+
+    This base class provides no functionality, it just defines an interface
+    for derived language-specific and/or domain-specific classes.
+    """
+
+    def __init__(self):
+        pass
+
+    def postprocess(self, nlg_text):
+        raise NotImplementedError()
 
 
 class TectoTemplateNLG(AbstractTemplateNLG):
