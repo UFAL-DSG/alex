@@ -150,11 +150,10 @@ class PTICSHDCPolicy(DialoguePolicy):
                         res_da.extend(self.get_to_stop(dialogue_state))
                     elif slot == "num_transfers":
                         res_da.extend(self.get_num_transfers(dialogue_state))
-                    elif slot == 'time_rel':
+                    elif slot == 'departure_time_rel':
                         res_da.extend(self.get_time_rel(dialogue_state))
                 else:
-                    if slot in ['from_stop', 'to_stop', 'num_transfers',
-                                'time_rel', 'arrival_time']:
+                    if slot in ['from_stop', 'to_stop', 'num_transfers', 'departure_time_rel', 'arrival_time']:
                         dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                         res_da.append(dai)
 
@@ -215,7 +214,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # check all state variables and the output one request dialogue act
             # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
             if dialogue_state['from_stop'] == "none" and dialogue_state['to_stop'] == "none" and \
-                dialogue_state['time'] == "none" and \
+                dialogue_state['departure_time'] == "none" and \
                 randbool(10):
                 req_da.extend(DialogueAct('request(time)'))
             elif dialogue_state['from_stop'] == "none" and \
@@ -317,7 +316,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 # construct relative time from now to departure
                 time_rel = (step.departure_time - datetime.now()).seconds / 60
                 time_rel_hrs, time_rel_mins = divmod(time_rel, 60)
-                da.append(DialogueActItem('inform', 'time_rel', '%d:%02d' %
+                da.append(DialogueActItem('inform', 'departure_time_rel', '%d:%02d' %
                                           (time_rel_hrs, time_rel_mins)))
                 return da
 
@@ -329,10 +328,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         # interpret dialogue state time
         now = datetime.now()
-        time = dialogue_state['time']
+        time = dialogue_state['departure_time']
         ampm = dialogue_state['ampm']
-        time_rel = dialogue_state['time_rel']
-        date_rel = dialogue_state['date_rel']
+        time_rel = dialogue_state['departure_time_rel']
+        date_rel = dialogue_state['departure_date_rel']
 
         # relative time
         if time == 'none' or time_rel != 'none':
@@ -367,7 +366,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 elif now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
             time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            dialogue_state['time'] = "%d:%.2d" % (time.hour, time.minute)
+            dialogue_state['departure_time'] = "%d:%.2d" % (time.hour, time.minute)
 
         # relative date
         if date_rel == 'tomorrow':
@@ -404,8 +403,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         if len(dialogue_state.directions) > 1:
             res.append('inform(found_directions="%s")' % route_type)
             if route_type != "last":
-                res.append("inform(alternative=%d)" %
-                           (dialogue_state['route_alternative'] + 1))
+                res.append("inform(alternative=%d)" %  (dialogue_state['route_alternative'] + 1))
 
         # route description
         prev_arrive_stop = self.ORIGIN  # remember previous arrival stop
@@ -474,7 +472,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif randbool(9):
                 res_da.append(DialogueActItem("help", "request", "help"))
             elif randbool(8):
-                res_da.append(DialogueActItem("help", "inform", "time"))
+                res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
             elif dialogue_state['from_stop'] == "none":

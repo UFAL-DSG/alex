@@ -207,7 +207,7 @@ class PTICSHDCSLU(SLUInterface):
                     dat = "inform"
 
                 if time:
-                    cn.add(1.0, DialogueActItem(dat, 'time', value))
+                    cn.add(1.0, DialogueActItem(dat, 'departure_time', value))
 
     def parse_time_rel(self, abutterance, cn):
         """Detects the relative time in the input abstract utterance.
@@ -247,7 +247,7 @@ class PTICSHDCSLU(SLUInterface):
                     dat = "inform"
 
                 if time:
-                    cn.add(1.0, DialogueActItem(dat, 'time_rel', value))
+                    cn.add(1.0, DialogueActItem(dat, 'departure_time_rel', value))
 
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.
@@ -296,8 +296,8 @@ class PTICSHDCSLU(SLUInterface):
                     else:
                         cn.add(1.0, DialogueActItem("inform", 'ampm', value))
 
-    def parse_trans_type(self, abutterance, cn):
-        """Detects the transport type in the input abstract utterance.
+    def parse_vehicle(self, abutterance, cn):
+        """Detects the vehicle (transport type) in the input abstract utterance.
 
         :param abutterance:
         :param cn:
@@ -309,15 +309,15 @@ class PTICSHDCSLU(SLUInterface):
         deny = _phrase_in(u, ['nechci', 'jet'])
 
         for i, w in enumerate(u):
-            if w.startswith("TRANS_TYPE="):
+            if w.startswith("VEHICLE="):
                 value = w[11:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("confirm", 'vehicle', value))
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("deny", 'vehicle', value))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("inform", 'vehicle', value))
 
     def parse_task(self, abutterance, cn):
         """Detects the task in the input abstract utterance.
@@ -448,24 +448,26 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, "kam pojede"):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _all_words_in(u, ['kdy', 'tam', 'budu']) or \
-            (_all_words_in(u, ['kdy']) and
-             _any_word_in(u, ['příjezd', 'přijede', 'dorazí',
-                           'přijedu', 'dorazím'])):
-            cn.add(1.0, DialogueActItem('request', 'arrival_time'))
-
         if _all_words_in(u,  "kdy to jede") or \
             _all_words_in(u, "kdy mi jede") or \
             _all_words_in(u, "v kolik jede") or \
             _all_words_in(u, "v kolik hodin") or \
-            _all_words_in(u, "kdy to pojede"):
-            cn.add(1.0, DialogueActItem('request','time'))
+            _all_words_in(u, "kdy to pojede") or \
+            (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
+            cn.add(1.0, DialogueActItem('request','departure_time'))
 
         if _all_words_in(u, ["za", "jak", "dlouho", "jede"]) or \
             _all_words_in(u, ["za", "kolik", "minut", "jede"]) or \
             _all_words_in(u, ["za", "kolik", "minut", "pojede"]) or \
             _all_words_in(u, ["za", "jak", "dlouho", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','time_rel'))
+            cn.add(1.0, DialogueActItem('request','departure_time_rel'))
+
+        if _all_words_in(u, 'kdy tam budu') or \
+            _all_words_in(u, 'kdy tam bude') or \
+            _all_words_in(u, 'v kolik tam bude') or \
+            _all_words_in(u, 'v kolik tam budu') or \
+            (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dorazí dorazím dorazíte')):
+            cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
@@ -551,8 +553,8 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_date_rel(abutterance, res_cn)
         if 'AMPM' in category_labels:
             self.parse_ampm(abutterance, res_cn)
-        if 'TRANS_TYPE' in category_labels:
-            self.parse_trans_type(abutterance, res_cn)
+        if 'VEHICLE' in category_labels:
+            self.parse_vehicle(abutterance, res_cn)
         if 'TASK' in category_labels:
             self.parse_task(abutterance, res_cn)
 
