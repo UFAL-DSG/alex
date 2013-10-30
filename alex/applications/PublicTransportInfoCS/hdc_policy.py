@@ -318,23 +318,25 @@ class PTICSHDCPolicy(DialoguePolicy):
                     datetime.strptime(time, "%H:%M").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
-            # 12hr time -- interpret AM/PM somehow
-            if time_hour >= 1 and time_hour <= 12 and ampm != 'none':
-                # 'pm' ~ 12pm till 11:59pm
-                if ampm == 'pm' and time_hour < 12:
-                    time_hour += 12
-                # 'am'/'morning' ~ 12am till 11:59am
-                elif ampm in ['am', 'morning'] and time_hour == 12:
-                    time_hour = 0
-                # 'evening' ~ 4pm till 3:59am
-                elif ampm == 'evening' and time_hour >= 4:
+            # handle 12hr time
+            if time_hour >= 1 and time_hour <= 12:
+                # interpret AM/PM
+                if ampm != 'none':
+                    # 'pm' ~ 12pm till 11:59pm
+                    if ampm == 'pm' and time_hour < 12:
+                        time_hour += 12
+                    # 'am'/'morning' ~ 12am till 11:59am
+                    elif ampm in ['am', 'morning'] and time_hour == 12:
+                        time_hour = 0
+                    # 'evening' ~ 4pm till 3:59am
+                    elif ampm == 'evening' and time_hour >= 4:
+                        time_hour = (time_hour + 12) % 24
+                    # 'night' ~ 6pm till 5:59am
+                    elif ampm == 'night' and time_hour >= 6:
+                        time_hour = (time_hour + 12) % 24
+                # 12hr time + no AM/PM set: default to next 12hrs
+                elif now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
-                # 'night' ~ 6pm till 5:59am
-                elif ampm == 'night' and time_hour >= 6:
-                    time_hour = (time_hour + 12) % 24
-            # 12hr time + no AM/PM set: default to next 12hrs
-            elif now_hour > time_hour and now_hour < time_hour + 12:
-                time_hour = (time_hour + 12) % 24
             time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
             dialogue_state['time'] = "%d:%.2d" % (time.hour, time.minute)
 
