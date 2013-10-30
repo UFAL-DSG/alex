@@ -25,7 +25,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
 
         num_norms = []
         for num in xrange(60):
-            num_norms.append(([str(num)], [word_for_number(num, 'F1')]))
+            num_norms.append(([unicode(num)], [word_for_number(num, 'F1')]))
         self.text_normalization_mapping += num_norms
 
         self.text_normalization_mapping += [
