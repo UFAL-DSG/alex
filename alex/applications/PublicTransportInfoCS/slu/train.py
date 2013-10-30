@@ -23,7 +23,9 @@ def increase_weight(d, weight):
 def train(fn_model,
           fn_transcription, constructor, fn_annotation,
           fn_bs_transcription, fn_bs_annotation,
-          min_feature_count = 2, limit = 100000):
+          min_feature_count = 2,
+          min_classifier_count = 2,
+          limit = 100000):
     """
     Trains a SLU DAILogRegClassifier model.
 
@@ -50,7 +52,7 @@ def train(fn_model,
     slu = DAILogRegClassifier(cldb, preprocessing, features_size=4)
 
     slu.extract_classifiers(das, utterances, verbose=True)
-    slu.prune_classifiers(min_classifier_count = 2)
+    slu.prune_classifiers(min_classifier_count = min_classifier_count)
     slu.print_classifiers()
     slu.gen_classifiers_data()
     slu.prune_features(min_feature_count = min_feature_count, verbose=True)
@@ -59,6 +61,17 @@ def train(fn_model,
 
     slu.save_model(fn_model)
 
-train('./dailogreg.trn.model', './train.trn', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem', min_feature_count = 2)
-train('./dailogreg.asr.model', './train.asr', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem', min_feature_count = 2 )
-train('./dailogreg.nbl.model', './train.nbl', UtteranceNBList, './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem', min_feature_count = 2)
+train('./dailogreg.trn.model.all', './all.trn', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+train('./dailogreg.asr.model.all', './all.asr', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+train('./dailogreg.nbl.model.all', './all.nbl', UtteranceNBList, './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+
+train('./dailogreg.trn.model', './train.trn', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+train('./dailogreg.asr.model', './train.asr', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+train('./dailogreg.nbl.model', './train.nbl', UtteranceNBList, './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+      min_feature_count = 2, min_classifier_count = 2)
+

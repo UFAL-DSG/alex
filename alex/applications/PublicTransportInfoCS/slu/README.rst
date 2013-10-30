@@ -20,8 +20,32 @@ The script generates the following files:
 - ``*.nbl``: contains ASR N-best results
 - ``*.nbl.hdc.sem``: contains automatic annotation from n-best ASR using handcrafted SLU
 
-The scripts accepts ``uniq`` paramemeter for fast generation of HDC SLU only transcriptios. It geenrates only SLU output 
-only for unique transcriptions. This is usefull when tunning the HDC SLU.
+The scripts accepts ``uniq`` parameter for fast generation of HDC SLU only transcriptions. It generates only HDC SLU
+output only for unique transcriptions. This is useful when tuning the HDC SLU.
+
+Building the models
+-------------------
+
+First, prepare the data. Link the directories with the domain data into the ``indomain_data`` directory. Then run the
+following command:
+
+::
+
+    ./prepare_data.py
+
+
+Second, train and test the models.
+
+::
+
+    ./train.py && ./test.py && ./test_bootstrap.py
+
+Third, look at the *.score files or compute the interesting scores by
+
+::
+
+    ./print_scores.sh
+
 
 Future work
 -----------
@@ -40,218 +64,184 @@ Evaluation of ASR from the call logs files
 The current ASR performance computed on from the call logs is as follows:
 ::
 
+    Please note that the scoring is implicitly ignoring all non-speech events.
+
     Ref: all.trn
     Tst: all.asr
     |==============================================================================================|
     |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
     |----------------------------------------------------------------------------------------------|
-    | Sum/Avg    |     1177     |   3108    |  58.46   |  16.86   |  24.68   |   0.55   |  42.08   |
+    | Sum/Avg    |     2455     |   6072    |  55.02   |  16.78   |  28.19   |   1.45   |  46.43   |
     |==============================================================================================|
 
-The used ASR decoder for the first 1177 sentences is Google.
+
+The used ASR decoder for the first 2455 sentences is Google.
 
 Evaluation of the min number of feature counts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Probably due to small amount of data (cca 900 utterances), it is beneficial to use features which appeared in
+Probably due to small amount of data (about 2000 utterances), it is still beneficial to use features which appeared in
 the training data only two times.
 
 
-Estimating accuracy of the HDC SLU on ASR 1-best hypothesis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cheating experiment: train and test on all data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Using the ``train.trn.hdc.sem`` and ``train.asr.hdc.sem``, the following results were obtained:
+Due to sparsity issue, the evaluation on proper test and dev sets suffers from sampling errors. Therefore, here
+we presents results when all data are used as training data and the metrics are evaluated on the training data!!!
+
+Using the ``./print_scores.sh`` one can get:
 
 ::
 
-    (2.7)jurcicek@loki:ptics_slu:/ha/home/jurcicek/UFAL-DSG-alex-dev/alex/applications/PublicTransportInfoCS/slu$ ../../../corpustools/semscore.py -i all.trn.hdc.sem all.asr.hdc.sem
-    The results are based on 1177 DAs
-    --------------------------------------------------------------------------------
-                                Dialogue act  Precision     Recall  F-measure
-                                       ack()      66.67     100.00      80.00
-                                    affirm()      77.78      77.78      77.78
-                                       bye()      98.18      72.00      83.08
-                               canthearyou()     100.00      73.33      84.62
-                      confirm(from_stop="*")     100.00      25.00      40.00
-                        confirm(to_stop="*")       0.00       0.00       0.00
-                     confirm(trans_type="*")       0.00       0.00       0.00
-                  deny(centre_direction="*")       0.00       0.00       0.00
-                         deny(from_stop="*")       0.00       0.00       0.00
-                                     hello()      80.00     100.00      88.89
-                                      help()     100.00      88.89      94.12
-                                inform(="*")      30.26      79.73      43.87
-                     inform(alternative="*")      96.67      59.18      73.42
-                            inform(ampm="*")       0.00       0.00       0.00
-                inform(centre_direction="*")     100.00     100.00     100.00
-                        inform(date_rel="*")     100.00     100.00     100.00
-                       inform(from_stop="*")      91.57      36.71      52.41
-                            inform(task="*")     100.00     100.00     100.00
-                        inform(time_rel="*")     100.00      56.25      72.00
-                         inform(to_stop="*")      93.68      46.35      62.02
-                      inform(trans_type="*")       0.00       0.00       0.00
-                                    negate()      83.33      45.45      58.82
-                                      null()      71.43      11.83      20.30
-                                     other()      11.46      88.71      20.30
-                                    repeat()      92.31      80.00      85.71
-                          request(from_stop)     100.00      52.63      68.97
-                      request(num_transfers)     100.00      71.43      83.33
-                            request(to_stop)     100.00      36.96      53.97
-                                   restart()     100.00      80.00      88.89
-                                  thankyou()     100.00      75.47      86.02
-    --------------------------------------------------------------------------------
-    Total precision:  51.31
-    Total recall:     50.52
-    Total F-measure:  50.91
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL ASR - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.asr.hdc.sem
+    The results are based on 2455 DAs
+    Total precision:  45.49
+    Total recall:     43.98
+    Total F-measure:  44.72
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL ASR - ASR model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.asr.model.asr.sem.out
+    The results are based on 2455 DAs
+    Total precision:  76.28
+    Total recall:     74.44
+    Total F-measure:  75.35
+
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL NBL - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.nbl.hdc.sem
+    The results are based on 2455 DAs
+    Total precision:  40.99
+    Total recall:     39.49
+    Total F-measure:  40.23
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL NBL - NBL model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.nbl.model.nbl.sem.out
+    The results are based on 2455 DAs
+    Total precision:  78.36
+    Total recall:     78.42
+    Total F-measure:  78.39
+
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL TRN - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.trn.hdc.sem
+    The results are based on 2455 DAs
+    Total precision: 100.00
+    Total recall:    100.00
+    Total F-measure: 100.00
+    ----------------------------------------------------------------------------------------------------------
+    DATA ALL TRN - TRN model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: all.trn.hdc.sem
+    Tst: all.trn.model.trn.sem.out
+    The results are based on 2455 DAs
+    Total precision:  98.62
+    Total recall:     98.51
+    Total F-measure:  98.57
 
 If the automatic annotations were correct, we could conclude that the F-measure of the HDC SLU parser on 1-best
-results is about 51 %.
+is about 44.72 and on N-best is about 40.23 %. This is confusing as it looks like that the decoding from n-best lists
+gives worse results when compared to decoding from 1-best ASR hypothesis.
 
+Evaluation of TRN model on test data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Estimating accuracy of the HDC SLU on ASR n-best hypothesis
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Using the ``train.trn.hdc.sem`` and ``train.nbl.hdc.sem``, the following results were obtained:
-
-::
-
-    (2.7)jurcicek@loki:ptics_slu:/ha/home/jurcicek/UFAL-DSG-alex-dev/alex/applications/PublicTransportInfoCS/slu$ ../../../corpustools/semscore.py -i all.trn.hdc.sem all.nbl.hdc.sem
-    The results are based on 1177 DAs
-    --------------------------------------------------------------------------------
-                                Dialogue act  Precision     Recall  F-measure
-                                       ack()      66.67     100.00      80.00
-                                    affirm()      87.50      77.78      82.35
-                                       bye()      98.15      70.67      82.17
-                               canthearyou()     100.00      60.00      75.00
-                      confirm(from_stop="*")     100.00      25.00      40.00
-                        confirm(to_stop="*")       0.00       0.00       0.00
-                     confirm(trans_type="*")       0.00       0.00       0.00
-                  deny(centre_direction="*")       0.00       0.00       0.00
-                         deny(from_stop="*")       0.00       0.00       0.00
-                                     hello()      80.00     100.00      88.89
-                                      help()     100.00      88.89      94.12
-                                inform(="*")      29.63      75.68      42.59
-                     inform(alternative="*")      97.56      54.42      69.87
-                            inform(ampm="*")       0.00       0.00       0.00
-                inform(centre_direction="*")     100.00      50.00      66.67
-                        inform(date_rel="*")     100.00     100.00     100.00
-                       inform(from_stop="*")      92.41      35.27      51.05
-                            inform(task="*")     100.00     100.00     100.00
-                        inform(time_rel="*")     100.00      34.38      51.16
-                         inform(to_stop="*")      93.33      43.75      59.57
-                      inform(trans_type="*")       0.00       0.00       0.00
-                                    negate()      83.33      45.45      58.82
-                                      null()      55.56      11.83      19.51
-                                     other()      10.74      88.71      19.16
-                                    repeat()      92.31      80.00      85.71
-                          request(from_stop)     100.00      44.74      61.82
-                      request(num_transfers)     100.00      71.43      83.33
-                            request(to_stop)     100.00      32.61      49.18
-                                   restart()     100.00      80.00      88.89
-                                  thankyou()     100.00      75.47      86.02
-    --------------------------------------------------------------------------------
-    Total precision:  48.53
-    Total recall:     47.78
-    Total F-measure:  48.15
-
-This is confusing as it looks like that the decoding from n-best lists gives worse results when compared to decoding from
-1-best ASR hypothesis.
-
-Evaluation of TRN model
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The TRN model is trained on transcriptions and evaluated on both transcriptions and the ASR output from dev and test data.
+The TRN model is trained on transcriptions and evaluated on transcriptions from test data.
 
 ::
 
-    DEV and TEST data size is about 120 utterances.
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST TRN - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.trn.hdc.sem
+    The results are based on 246 DAs
+    Total precision: 100.00
+    Total recall:    100.00
+    Total F-measure: 100.00
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST TRN - TRN model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.trn.model.trn.sem.out
+    The results are based on 246 DAs
+    Total precision:  98.07
+    Total recall:     97.32
+    Total F-measure:  97.69
 
-    TRN model on TRN DEV data
-
-    Total precision:  88.89
-    Total recall:     88.89
-    Total F-measure:  88.89
-
-    TRN model on TRN TEST data
-
-    Total precision:  91.41
-    Total recall:     92.13
-    Total F-measure:  91.76
-
-    TRN model on ASR DEV data
-
-    Total precision:  44.54
-    Total recall:     42.06
-    Total F-measure:  43.27
-
-    TRN model on ASR TEST data
-
-    Total precision:  48.33
-    Total recall:     45.67
-    Total F-measure:  46.96
-
-One can see that the performance of the TRN model on TRN dev and test data is **NOT** 100 % perfect. This is probably due to
-the mismatch between the train, dev, and test data sets. Once more training data will be available, we can expect better
+One can see that the performance of the TRN model on TRN test data is **NOT** 100 % perfect. This is probably due to
+the mismatch between the train and test data sets. Once more training data will be available, we can expect better
 results.
 
+Evaluation of ASR model on test data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Evaluation of ASR model
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The ASR model is trained on transcriptions and evaluated on both transcriptions and the ASR output from dev and test data.
-
-::
-
-    ASR model on TRN DEV data
-
-    Total precision:  81.75
-    Total recall:     81.75
-    Total F-measure:  81.75
-
-    ASR model on TRN TEST data
-
-    Total precision:  77.60
-    Total recall:     76.38
-    Total F-measure:  76.98
-
-    ASR model on ASR DEV data
-
-    Total precision:  59.20
-    Total recall:     58.73
-    Total F-measure:  58.96
-
-    ASR model on ASR TEST data
-
-    Total precision:  59.52
-    Total recall:     59.06
-    Total F-measure:  59.29
-
-On can see that the ASR model scores worse on the TRN DEV and TRN TEST data when compared to the TRN model. This is
-expected result. The good thing is that the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
-compared to *the TRN model*. Even more, the the **ASR model scores significantly better** on the ASR DEV and ASR TEST data when
-compared to *the HDC SLU parser* when evaluated on the ASR data. The improvement is about 8 % in F-measure (absolute).
-
-This shows that SLU trained on the ASR data sets can be beneficial.
-
-Evaluation of NBL model
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The NBL model is trained on transcriptions and evaluated on both transcriptions and the NBL output from dev and test data.
+The ASR model is trained on 1-best ASR output and evaluated on the 1-best ASR output from test data.
 
 ::
 
-    NBL model on TRN DEV data
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST ASR - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.asr.hdc.sem
+    The results are based on 246 DAs
+    Total precision:  45.56
+    Total recall:     45.21
+    Total F-measure:  45.38
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST ASR - ASR model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.asr.model.asr.sem.out
+    The results are based on 246 DAs
+    Total precision:  67.98
+    Total recall:     65.90
+    Total F-measure:  66.93
 
-    Total precision:  59.52
-    Total recall:     59.52
-    Total F-measure:  59.52
+The **ASR model scores significantly better** on the ASR test data when compared to *the HDC SLU parser* when evaluated
+on the ASR data. The improvement is about 20 % in F-measure (absolute). This shows that SLU trained on the ASR data
+can be beneficial.
 
-    NBL model on TRN TEST data
+Evaluation of NBL model on test data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Total precision:  63.28
-    Total recall:     63.78
-    Total F-measure:  63.53
+The NBL model is trained on N-best ASR output and evaluated on the N-best ASR from test data.
 
-One can see that using nblists even from Google ASR can help; though only a little. When more data will be available,
-more test and more feature engineering can be done. However, we are more interested in extracting features from lattices
-or confusion networks. However, for this we have to wait for working decoder generating lattices. The OpenJulius decoder
-is not a suitable as it crashes unexpectedly and cannot be used in a real system.
+::
+
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST NBL - HDC SLU
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.nbl.hdc.sem
+    The results are based on 246 DAs
+    Total precision:  41.31
+    Total recall:     41.00
+    Total F-measure:  41.15
+    ----------------------------------------------------------------------------------------------------------
+    DATA TEST NBL - NBL model
+    ----------------------------------------------------------------------------------------------------------
+    Ref: test.trn.hdc.sem
+    Tst: test.nbl.model.nbl.sem.out
+    The results are based on 246 DAs
+    Total precision:  68.48
+    Total recall:     67.43
+    Total F-measure:  67.95
+
+One can see that using nblists even from Google ASR can help; though only a little (about 1 %). When more data will be
+available, more test and more feature engineering can be done. However, we are more interested in extracting features
+from lattices or confusion networks. Now, we have to wait for a working decoder generating *good* lattices.
+The OpenJulius decoder is not a suitable as it crashes unexpectedly and cannot be used in a real system.
