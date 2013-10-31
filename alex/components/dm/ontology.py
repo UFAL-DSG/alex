@@ -30,7 +30,6 @@ class Ontology(object):
         on_mod = load_as_module(file_name, force=True)
         if not hasattr(on_mod, 'ontology'):
             raise OntologyException("The ontology file does not define the 'ontology' object!")
-
         self.ontology = on_mod.ontology
 
     def slot_has_value(self, name, value):
@@ -39,7 +38,9 @@ class Ontology(object):
         return value in self.ontology['slots'][name]
 
     def slot_is_binary(self, name):
-        """ Check whether the slot and the value are compatible.
+        """Check whether the given slot has a binary value (using the 'binary'
+        key in the 'slot_attributes' for the given slot name).
+
         :param name: name of the slot being checked
         """
         return 'binary' in self.ontology['slot_attributes'][name]

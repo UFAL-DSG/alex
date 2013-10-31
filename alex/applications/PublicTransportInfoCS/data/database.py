@@ -36,7 +36,7 @@ database = {
     },
     "stop": {
     },
-    "trans_type": {
+    "vehicle": {
         "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
         "tram": ["tram", "tramvaj", "tramvajoví", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
         "metro": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
