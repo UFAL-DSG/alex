@@ -9,6 +9,8 @@ A collection of helper functions for generating Czech.
 from __future__ import unicode_literals
 
 import re
+from alex.components.nlg.template import TemplateNLGPostprocessing
+import itertools
 
 __author__ = "Ondřej Dušek"
 __date__ = "2013"
@@ -128,3 +130,34 @@ def word_for_number(number, categ='M1'):
         else:
             num_word += 'i'
     return num_word
+
+
+class CzechTemplateNLGPostprocessing(TemplateNLGPostprocessing):
+    """Postprocessing filled in NLG templates for Czech.
+
+    Currently, this class only handles preposition vocalization.
+    """
+
+    def __init__(self):
+        super(CzechTemplateNLGPostprocessing, self).__init__()
+
+    def postprocess(self, nlg_text):
+        return self.vocalize_prepos(nlg_text)
+
+    def vocalize_prepos(self, text):
+        """\
+        Vocalize prepositions in the utterance, i.e. 'k', 'v', 'z', 's'
+        are changed to 'ke', 've', 'ze', 'se' if appropriate given the
+        following word.
+
+        This is mainly needed for time expressions, e.g. "v jednu hodinu"
+        (at 1:00), but "ve dvě hodiny" (at 2:00).
+        """
+        def pairwise(iterable):
+            a = iter(iterable)
+            return itertools.izip(a, a)
+        parts = re.split(r'\b([vkzsVKZS]) ', text)
+        text = parts[0]
+        for prep, follow in pairwise(parts[1:]):
+            text += vocalize_prep(prep, follow) + ' ' + follow
+        return text
