@@ -207,7 +207,7 @@ class PTICSHDCSLU(SLUInterface):
                     dat = "inform"
 
                 if time:
-                    cn.add(1.0, DialogueActItem(dat, 'time', value))
+                    cn.add(1.0, DialogueActItem(dat, 'departure_time', value))
 
     def parse_time_rel(self, abutterance, cn):
         """Detects the relative time in the input abstract utterance.
@@ -247,7 +247,7 @@ class PTICSHDCSLU(SLUInterface):
                     dat = "inform"
 
                 if time:
-                    cn.add(1.0, DialogueActItem(dat, 'time_rel', value))
+                    cn.add(1.0, DialogueActItem(dat, 'departure_time_rel', value))
 
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.
@@ -296,8 +296,8 @@ class PTICSHDCSLU(SLUInterface):
                     else:
                         cn.add(1.0, DialogueActItem("inform", 'ampm', value))
 
-    def parse_trans_type(self, abutterance, cn):
-        """Detects the transport type in the input abstract utterance.
+    def parse_vehicle(self, abutterance, cn):
+        """Detects the vehicle (transport type) in the input abstract utterance.
 
         :param abutterance:
         :param cn:
@@ -309,15 +309,15 @@ class PTICSHDCSLU(SLUInterface):
         deny = _phrase_in(u, ['nechci', 'jet'])
 
         for i, w in enumerate(u):
-            if w.startswith("TRANS_TYPE="):
-                value = w[11:]
+            if w.startswith("VEHICLE="):
+                value = w[8:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("confirm", 'vehicle', value))
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("deny", 'vehicle', value))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'trans_type', value))
+                    cn.add(1.0, DialogueActItem("inform", 'vehicle', value))
 
     def parse_task(self, abutterance, cn):
         """Detects the task in the input abstract utterance.
@@ -369,7 +369,7 @@ class PTICSHDCSLU(SLUInterface):
             if _any_word_in(u, ["jiný", "jiné", "jiná", "jiného"]):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not _any_word_in(u,["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená"]):
+        if not _any_word_in(u,["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená", "začátku"]):
             if (_any_word_in(u,["zopakovat",  "opakovat", "znova", "znovu", "opakuj", "zopakuj", 'zopakujte']) or
                 _phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
@@ -401,10 +401,13 @@ class PTICSHDCSLU(SLUInterface):
             not _any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
 
-        if _any_word_in(u, ["od", "začít", ]) and _any_word_in(u, ["začátku", "znova", "znovu"]) or \
-            _any_word_in(u, ["restart", "restartuj",]) or \
-           _phrase_in(u, ["nové", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
-           _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, ["spoj", "ze", ]):
+        if _any_word_in(u, "od začít") and _any_word_in(u, "začátku znova znovu") or \
+            _any_word_in(u, "reset resetuj restart restartuj") or \
+            _phrase_in(u, ["nové", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
+            _phrase_in(u, ["nový", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
+            _phrase_in(u, ["nové", "zadání"]) and not _any_word_in(u, "ze") or \
+            _phrase_in(u, ["nový", "zadání"]) and not _any_word_in(u, "ze") or \
+            _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, "spoj ze"):
             cn.add(1.0, DialogueActItem("restart"))
 
         if len(u.utterance) == 1 and _any_word_in(u, ["centra", "centrum", ]):
@@ -448,32 +451,43 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, "kam pojede"):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if _all_words_in(u, ['kdy', 'tam', 'budu']) or \
-            (_all_words_in(u, ['kdy']) and
-             _any_word_in(u, ['příjezd', 'přijede', 'dorazí',
-                           'přijedu', 'dorazím'])):
+        if not _any_word_in(u,'za budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+            if _all_words_in(u, "kdy jede") or \
+                _all_words_in(u, "v kolik jede") or \
+                _all_words_in(u, "v kolik hodin") or \
+                _all_words_in(u, "kdy to pojede") or \
+                (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
+                cn.add(1.0, DialogueActItem('request','departure_time'))
+
+        if not _any_word_in(u,'budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+            if _all_words_in(u, "za jak dlouho") or \
+                _all_words_in(u, "za kolik minut jede") or \
+                _all_words_in(u, "za kolik minut pojede") or \
+                _all_words_in(u, "za jak dlouho pojede"):
+                cn.add(1.0, DialogueActItem('request','departure_time_rel'))
+
+        if _all_words_in(u, 'kdy tam budu') or \
+            _all_words_in(u, 'kdy tam bude') or \
+            _all_words_in(u, 'v kolik tam bude') or \
+            _all_words_in(u, 'v kolik tam budu') or \
+            (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dojedu dorazí dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if _all_words_in(u,  "kdy to jede") or \
-            _all_words_in(u, "kdy mi jede") or \
-            _all_words_in(u, "v kolik jede") or \
-            _all_words_in(u, "v kolik hodin") or \
-            _all_words_in(u, "kdy to pojede"):
-            cn.add(1.0, DialogueActItem('request','time'))
+        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude příjedu přijede přijedete dojedu dorazí dorazím dorazíte"):
+            cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
-        if _all_words_in(u, ["za", "jak", "dlouho", "jede"]) or \
-            _all_words_in(u, ["za", "kolik", "minut", "jede"]) or \
-            _all_words_in(u, ["za", "kolik", "minut", "pojede"]) or \
-            _all_words_in(u, ["za", "jak", "dlouho", "pojede"]):
-            cn.add(1.0, DialogueActItem('request','time_rel'))
+        if not _any_word_in(u, 'za'):
+            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede"):
+                cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
             cn.add(1.0, DialogueActItem('request','num_transfers'))
 
-        if _any_word_in(u, ["spoj", "spojení", "spoje", "možnost", "možnosti", "varianta", "cesta", "cestu", "cesty",
+        if _any_word_in(u, ["spoj", "spojení", "spoje", "možnost", "možnosti", "varianta", 'alternativa', "cesta", "cestu", "cesty",
                             "zpoždění", "stažení", "nalezená"]):
-            if _any_word_in(u, ["první", "jedna"]):
+            if _any_word_in(u, ["první", "jedna"]) and \
+                not _any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
             if _any_word_in(u, ["druhé", "druhá", "druhou", "dva"]):
@@ -485,32 +499,32 @@ class PTICSHDCSLU(SLUInterface):
             if _any_word_in(u, ["čtvrté", "čtvrtá", "čtvrtou", "čtyři"]):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if _any_word_in(u, ["poslední", "znovu", "znova", "opakovat", "zopakovat", "zopakujte"]) and \
+            if _any_word_in(u, "poslední znovu znova opakovat zopakovat zopakujte") and \
                 not _all_words_in(u, "předchozí"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if _any_word_in(u, ["další", "jiné", "jiná", "následující",]) or \
+            if _any_word_in(u, "další jiné jiná následující") or \
                 _phrase_in(u, "ještě jedno") or \
                 _phrase_in(u, "ještě jednu"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
-            if _any_word_in(u, ["předchozí", "před"]):
+            if _any_word_in(u, "předchozí před"):
                 if _phrase_in(u, "nechci vědět předchozí"):
                     cn.add(1.0, DialogueActItem("deny", "alternative", "prev"))
                 else:
                     cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if len(u) == 1 and _any_word_in(u, ["další", "následující"]):
+        if len(u) == 1 and _any_word_in(u, 'další následující následují'):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
             (_all_words_in(u, "a další") or  _all_words_in(u, "a později")):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
-        if len(u) == 1 and _any_word_in(u, ["předchozí", "před"]):
+        if len(u) == 1 and _any_word_in(u, "předchozí před"):
             cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if _any_word_in(u, ["neslyšíme", "halo", "haló"]) :
+        if _any_word_in(u, "neslyšíme halo haló") :
             cn.add(1.0, DialogueActItem('canthearyou'))
 
     def parse_1_best(self, obs, verbose=False):
@@ -551,8 +565,8 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_date_rel(abutterance, res_cn)
         if 'AMPM' in category_labels:
             self.parse_ampm(abutterance, res_cn)
-        if 'TRANS_TYPE' in category_labels:
-            self.parse_trans_type(abutterance, res_cn)
+        if 'VEHICLE' in category_labels:
+            self.parse_vehicle(abutterance, res_cn)
         if 'TASK' in category_labels:
             self.parse_task(abutterance, res_cn)
 

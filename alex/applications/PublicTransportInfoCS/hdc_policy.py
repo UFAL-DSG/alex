@@ -196,19 +196,28 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for slot in requested_slots:
             if dialogue_state['route_alternative'] != "none":
-                if slot == "from_stop":
-                    res_da.extend(self.get_from_stop(dialogue_state))
-                elif slot in ['to_stop', 'arrival_time']:
-                    res_da.extend(self.get_to_stop(dialogue_state))
+                if slot == 'from_stop':
+                    res_da.extend(self.req_from_stop(dialogue_state))
+                elif slot == 'to_stop':
+                    res_da.extend(self.req_to_stop(dialogue_state))
+                elif slot == 'departure_time':
+                    res_da.extend(self.req_departure_time(dialogue_state))
+                elif slot == 'departure_time_rel':
+                    res_da.extend(self.req_departure_time_rel(dialogue_state))
+                elif slot == 'arrival_time':
+                    res_da.extend(self.req_arrival_time(dialogue_state))
+                elif slot == 'arrival_time_rel':
+                    res_da.extend(self.req_arrival_time_rel(dialogue_state))
+                elif slot in 'duration':
+                    res_da.extend(self.req_duration(dialogue_state))
                 elif slot == "num_transfers":
-                    res_da.extend(self.get_num_transfers(dialogue_state))
-                elif slot == 'time_rel':
-                    res_da.extend(self.get_time_rel(dialogue_state))
+                    res_da.extend(self.req_num_transfers(dialogue_state))
             else:
-                if slot in ['from_stop', 'to_stop', 'num_transfers',
-                            'time_rel', 'arrival_time']:
-                    dai = DialogueActItem("inform", "stops_conflict",
-                                          "no_stops")
+                if slot in ['from_stop', 'to_stop',
+                            'departure_time', 'departure_time_rel',
+                            'arrival_time', 'arrival_time_rel',
+                            'duration', 'num_transfers', ]:
+                    dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
                     if dialogue_state['from_stop'] == "none":
@@ -305,18 +314,15 @@ class PTICSHDCPolicy(DialoguePolicy):
         # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
         if ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
             ds['time'] == "none" and randbool(10):
-            req_da.extend(DialogueAct('request(time)'))
-        # TODO: centre_direction conditions always fulfilled ?!?
+            req_da.extend(DialogueAct('request(departure_time)'))
+        # TODO: centre_direction conditions below seem to be always fulfilled ?!?
         elif ds['from_stop'] == "none" and \
-            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and \
-            randbool(9):
+            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
         elif ds['to_stop'] == "none" and \
-            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and \
-            randbool(8):
+            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
-            randbool(3):
+        elif ds['from_stop'] == "none" and ds['to_stop'] == "none" and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
         elif ds['from_stop'] == "none":
             req_da.extend(DialogueAct("request(from_stop)"))
@@ -325,9 +331,13 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return req_da
 
-    def get_from_stop(self, ds):
+    def req_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last
         recommended connection.
+
+        TODO: this gives too much of information. Maybe it would be worth to split this into more dialogue acts
+          and let user ask for all individual pieces of information. The good thing would be that it would lead
+          to longer dialogues.
 
         :rtype : DialogueAct
         """
@@ -336,14 +346,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                da.append(DialogueActItem('inform', 'from_stop',
-                                          step.departure_stop))
+                da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
                 return da
 
-    def get_to_stop(self, ds):
+    def req_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
         recommended connection.
         """
@@ -352,42 +361,108 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
-                da.append(DialogueActItem('inform', 'to_stop',
-                                          step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrival_time',
-                                          step.arrival_time.strftime("%H:%M")))
+                da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 return da
 
-    def get_num_transfers(self, ds):
-        """Return a DA informing the user about the number of transfers in the
-        last recommended connection.
-        """
-        route = ds.directions.routes[ds['route_alternative']]
-        leg = route.legs[0]
-        n = sum([1 for step in leg.steps
-                 if step.travel_mode == step.MODE_TRANSIT]) - 1
-        da = DialogueAct('inform(num_transfers="%d")' % n)
-        return da
+    def req_departure_time(self, dialogue_state):
+        """Generates a dialogue act informing about the departure time from the origin stop of the last
+        recommended connection.
 
-    def get_time_rel(self, dialogue_state):
+        :rtype : DialogueAct
+        """
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        da = DialogueAct()
+        for step in leg.steps:
+            if step.travel_mode == step.MODE_TRANSIT:
+                da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
+                da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%H:%M")))
+                return da
+
+    def req_departure_time_rel(self, dialogue_state):
         """Return a DA informing the user about the relative time until the
         last recommended connection departs.
         """
         route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
-        steps = route.legs[0].steps
+        leg = route.legs[0]
         da = DialogueAct()
-        for step in steps:
+        for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                da.append(DialogueActItem('inform', 'from_stop',
-                                          step.departure_stop))
-                da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
-                da.append(DialogueActItem('inform', 'line', step.line_name))
+                da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 # construct relative time from now to departure
-                time_rel = (step.departure_time - datetime.now()).seconds / 60
-                time_rel_hrs, time_rel_mins = divmod(time_rel, 60)
-                da.append(DialogueActItem('inform', 'time_rel', '%d:%02d' %
-                                          (time_rel_hrs, time_rel_mins)))
+                departure_time_rel = (step.departure_time - datetime.now()).seconds / 60
+                departure_time_rel_hrs, departure_time_rel_mins = divmod(departure_time_rel, 60)
+                da.append(DialogueActItem('inform', 'departure_time_rel',
+                                          '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
                 return da
+
+    def req_arrival_time(self, dialogue_state):
+        """Return a DA informing about the arrival time the destination stop of the last
+        recommended connection.
+        """
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        da = DialogueAct()
+        for step in reversed(leg.steps):
+            if step.travel_mode == step.MODE_TRANSIT:
+                da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
+                da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%H:%M")))
+                return da
+
+    def req_arrival_time_rel(self, dialogue_state):
+        """Return a DA informing about the relative arrival time the destination stop of the last
+        recommended connection.
+        """
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        da = DialogueAct()
+        for step in reversed(leg.steps):
+            if step.travel_mode == step.MODE_TRANSIT:
+                da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
+                # construct relative time from now to arrival
+                arrival_time_rel = (step.arrival_time - datetime.now()).seconds / 60
+                arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
+                da.append(DialogueActItem('inform', 'arrival_time_rel',
+                                          '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
+                return da
+
+    def req_duration(self, dialogue_state):
+        """Return a DA informing about journey time to the destination stop of the last
+        recommended connection.
+        """
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        da = DialogueAct()
+        for step in leg.steps:
+            if step.travel_mode == step.MODE_TRANSIT:
+                departure_stop = step.departure_stop
+                departure_time = step.departure_time
+                break
+        else:
+            return None
+
+        for step in reversed(leg.steps):
+            if step.travel_mode == step.MODE_TRANSIT:
+                arrival_stop = step.arrival_stop
+                arrival_time = step.arrival_time
+                break
+        else:
+            return None
+
+        duration = (arrival_time - departure_time).seconds / 60
+        duration_hrs, duration_mins = divmod(duration, 60)
+        da.append(DialogueActItem('inform', 'duration', '%d:%02d' % (duration_hrs, duration_mins)))
+        return da
+
+    def req_num_transfers(self, dialogue_state):
+        """Return a DA informing the user about the number of transfers in the
+        last recommended connection.
+        """
+        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
+        da = DialogueAct('inform(num_transfers="%d")' % n)
+        return da
 
     def get_directions(self, ds, route_type='true', check_conflict=False):
         """Retrieve Google directions, save them to dialogue state and return
@@ -407,30 +482,28 @@ class PTICSHDCPolicy(DialoguePolicy):
             apology_da = DialogueAct()
             apology_da.extend(DialogueAct('apology()'))
             apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
-            apology_da.extend(DialogueAct("inform(from_stop='%s')" %
-                                          ds['from_stop']))
-            apology_da.extend(DialogueAct("inform(to_stop='%s')" %
-                                          ds['to_stop']))
+            apology_da.extend(DialogueAct("inform(from_stop='%s')" % ds['from_stop']))
+            apology_da.extend(DialogueAct("inform(to_stop='%s')" % ds['to_stop']))
             return apology_da
 
         # interpret dialogue state time
         now = datetime.now()
-        time = ds['time']
-        ampm = ds['ampm']
-        time_rel = ds['time_rel']
-        date_rel = ds['date_rel']
+        departure_time = dialogue_state['departure_time']
+        ampm = dialogue_state['ampm']
+        departure_time_rel = dialogue_state['departure_time_rel']
+        departure_date_rel = dialogue_state['departure_date_rel']
 
         # relative time
-        if time == 'none' or time_rel != 'none':
-            time = now
-            if time_rel not in ['none', 'now']:
-                trel_parse = datetime.strptime(time_rel, "%H:%M")
-                time += timedelta(hours=trel_parse.hour,
+        if departure_time == 'none' or departure_time_rel != 'none':
+            departure_time = now
+            if departure_time_rel not in ['none', 'now']:
+                trel_parse = datetime.strptime(departure_time_rel, "%H:%M")
+                departure_time += timedelta(hours=trel_parse.hour,
                                   minutes=trel_parse.minute)
         # absolute time
         else:
             time_parsed = datetime.combine(now,
-                    datetime.strptime(time, "%H:%M").time())
+                    datetime.strptime(departure_time, "%H:%M").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
             # handle 12hr time
@@ -452,24 +525,24 @@ class PTICSHDCPolicy(DialoguePolicy):
                 # 12hr time + no AM/PM set: default to next 12hrs
                 elif now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
-            time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            ds['time'] = "%d:%.2d" % (time.hour, time.minute)
+            departure_time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
+            dialogue_state['departure_time'] = "%d:%.2d" % (departure_time.hour, departure_time.minute)
 
         # relative date
-        if date_rel == 'tomorrow':
-            time += timedelta(days=1)
-        elif date_rel == 'day_after_tomorrow':
-            time += timedelta(days=2)
-        elif time < now:
-            time += timedelta(days=1)
+        if departure_date_rel == 'tomorrow':
+            departure_time += timedelta(days=1)
+        elif departure_date_rel == 'day_after_tomorrow':
+            departure_time += timedelta(days=2)
+        elif departure_time < now:
+            departure_time += timedelta(days=1)
 
         # retrieve Google directions
-        ds.directions = self.directions.get_directions(
-            from_stop=ds['from_stop'],
-            to_stop=ds['to_stop'],
-            departure_time=time)
+        dialogue_state.directions = self.directions.get_directions(
+            from_stop=dialogue_state['from_stop'],
+            to_stop=dialogue_state['to_stop'],
+            departure_time=departure_time)
 
-        return self.say_directions(ds, route_type)
+        return self.say_directions(dialogue_state, route_type)
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
@@ -518,8 +591,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                          next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
-                    res.append("inform(duration=0:%02d)" %
-                               (step.duration / 60))
+                    res.append("inform(duration=0:%02d)" % (step.duration / 60))
             # public transport
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
@@ -535,8 +607,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if next_leave_stop != self.DESTIN:
                     res.append("inform(transfer='true')")
                 else:
-                    res.append("inform(arrival_time=%s)" %
-                               step.arrival_time.strftime("%H:%M"))
+                    res.append("inform(arrival_time=%s)" % step.arrival_time.strftime("%H:%M"))
                 prev_arrive_stop = step.arrival_stop
 
         # no route found: apologize
