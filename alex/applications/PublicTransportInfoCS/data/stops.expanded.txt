@@ -1,3 +1,7 @@
+Roztoky;Roztok
+Písnická;Písnickou;Písnické
+Mikulova;Mikulovi
+Letiště Václava Havla;Letišti Václava Havla
 Vinohrady;Vinohrad
 Vinohradská
 Bělohradská

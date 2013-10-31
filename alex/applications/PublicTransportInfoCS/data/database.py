@@ -17,17 +17,12 @@ database = {
         "find_platform": ["najít nastupště", "zjistit nástupiště", ],
     },
     "time": {
-        "2:00": set(["dvě hodiny", ]),
-    },
-    "time_rel": {
-        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "tuto chvíli"],
-        "0:05": ["pět minut", ],
-        "0:10": ["deset minut", ],
-        "0:20": ["dvacet minut", ],
+        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
+        "0:01": ["minutu", ],
+        "0:15": ["čtvrt hodiny", ],
         "0:30": ["půl hodiny", ],
         "0:45": ["tři čtvrtě hodiny", ],
         "1:00": ["hodinu", ],
-        "2:00": ["dvě hodiny", ],
     },
     "date_rel": {
         "today": ["dnes", "dneska", ],
@@ -118,8 +113,13 @@ _num_rx_exh = re.compile('^[1-9][0-9]*$')
 def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
     form = form.strip()
+
     if len(value) == 0 or len(form) == 0:
         return
+
+    if value in database[category_label] and isinstance(database[category_label][value], list):
+        database[category_label][value] = set(database[category_label][value])
+
     database[category_label].setdefault(value, set()).add(form)
 
 
@@ -147,8 +147,9 @@ def add_time():
         <hour>
         <hour> hodin(a/y)
         <hour> hodin(a/y) <minute>
-        <houn> <minute>
+        <hour> <minute>
         půl/čtvrt/tři čtvrtě <hour>
+        <minute> minut(u/y)
     where <hour> and <minute> are spelled /given as numbers.
 
     Cannot yet handle:
@@ -160,6 +161,10 @@ def add_time():
     hr_id_stem = 'hodin'
     hr_endings = {1: [('u', 'u'), ('a', 'a')],
                   2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
+
+    min_id_stem = 'minut'
+    min_endings = {1: [('u', 'u'), ('a', 'a')],
+                   2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
 
     for hour in xrange(24):
         # set stems for hours (cardinal), hours (ordinal)
@@ -208,6 +213,17 @@ def add_time():
                 add_db_time(hour, minute, "{h} {m}",
                             {'h': hr_str_stem + hr_str_end, 'm': min_str})
 
+    # YY minut(u/y)
+    for minute in xrange(60):
+        min_str_stem = numbers_str[minute]
+        if minute == 22:
+            min_str_stem = 'dvacet dva'
+        if minute == 1:
+            min_str_stem = 'jedn'
+
+        for min_id_end, min_str_end in min_endings.get(minute, [('', '')]):
+            add_db_time(0, minute, "{m} {mi}", {'m': min_str_stem + min_str_end,
+                                                'mi': min_id_stem + min_id_end})
 
 def add_db_time(hour, minute, format_str, replacements):
     """Add a time expression to the database
@@ -273,15 +289,6 @@ def add_stops():
             for form in stop_surface_forms:
                 db_add('stop', stop_name, form)
 
-def stem():
-    """Stems words of all surface forms in the database."""
-    import autopath
-    from alex.utils.czech_stemmer import cz_stem
-
-    for _, vals in database.iteritems():
-        for value in vals.keys():
-            vals[value] = set([" ".join(cz_stem(word) for word in surface.split()) for surface in vals[value]])
-
 def save_surface_forms(file_name):
     surface_forms = []
     for k in database:
@@ -320,10 +327,3 @@ add_stops()
 if len(sys.argv) > 1 and sys.argv[1] == "dump":
     save_surface_forms('database_surface_forms.txt')
     save_SRILM_classes('database_SRILM_classes.txt')
-
-# WARNING: This is not the best place to do stemming.
-# we will not use stemming anymore because we have much better stop expansion
-#stem()
-#
-#if len(sys.argv) > 1 and sys.argv[1] == "dump":
-#    save_surface_forms('database_surface_forms_stemmed.txt')
