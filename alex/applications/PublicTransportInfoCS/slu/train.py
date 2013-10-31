@@ -37,9 +37,9 @@ def train(fn_model,
     :return:
     """
     bs_utterances = load_wavaskey(fn_bs_transcription, Utterance, limit = limit)
-    increase_weight(bs_utterances, 2)
+    increase_weight(bs_utterances, min_feature_count+1)
     bs_das = load_wavaskey(fn_bs_annotation, DialogueAct, limit = limit)
-    increase_weight(bs_das, 2)
+    increase_weight(bs_das, min_feature_count+1)
 
     utterances = load_wavaskey(fn_transcription, constructor, limit = limit)
     das = load_wavaskey(fn_annotation, DialogueAct, limit = limit)

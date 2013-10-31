@@ -369,7 +369,7 @@ class PTICSHDCSLU(SLUInterface):
             if _any_word_in(u, ["jiný", "jiné", "jiná", "jiného"]):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not _any_word_in(u,["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená"]):
+        if not _any_word_in(u,["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená", "začátku"]):
             if (_any_word_in(u,["zopakovat",  "opakovat", "znova", "znovu", "opakuj", "zopakuj", 'zopakujte']) or
                 _phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
@@ -401,10 +401,13 @@ class PTICSHDCSLU(SLUInterface):
             not _any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
 
-        if _any_word_in(u, ["od", "začít", ]) and _any_word_in(u, ["začátku", "znova", "znovu"]) or \
-            _any_word_in(u, ["restart", "restartuj",]) or \
-           _phrase_in(u, ["nové", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
-           _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, ["spoj", "ze", ]):
+        if _any_word_in(u, "od začít") and _any_word_in(u, "začátku znova znovu") or \
+            _any_word_in(u, "reset resetuj restart restartuj") or \
+            _phrase_in(u, ["nové", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
+            _phrase_in(u, ["nový", "spojení"]) and not _phrase_in(u, ["spojení", "ze", ]) or \
+            _phrase_in(u, ["nové", "zadání"]) and not _any_word_in(u, "ze") or \
+            _phrase_in(u, ["nový", "zadání"]) and not _any_word_in(u, "ze") or \
+            _phrase_in(u, ["nový", "spoj"]) and not _phrase_in(u, "spoj ze"):
             cn.add(1.0, DialogueActItem("restart"))
 
         if len(u.utterance) == 1 and _any_word_in(u, ["centra", "centrum", ]):
@@ -448,20 +451,20 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, "kam pojede"):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if not _any_word_in(u,'budu přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
-            if _all_words_in(u,  "kdy to jede") or \
-                _all_words_in(u, "kdy mi jede") or \
+        if not _any_word_in(u,'za budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+            if _all_words_in(u, "kdy jede") or \
                 _all_words_in(u, "v kolik jede") or \
                 _all_words_in(u, "v kolik hodin") or \
                 _all_words_in(u, "kdy to pojede") or \
                 (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
                 cn.add(1.0, DialogueActItem('request','departure_time'))
 
-        if _all_words_in(u, "za jak dlouho") or \
-            _all_words_in(u, "za kolik minut jede") or \
-            _all_words_in(u, "za kolik minut pojede") or \
-            _all_words_in(u, "za jak dlouho pojede"):
-            cn.add(1.0, DialogueActItem('request','departure_time_rel'))
+        if not _any_word_in(u,'budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+            if _all_words_in(u, "za jak dlouho") or \
+                _all_words_in(u, "za kolik minut jede") or \
+                _all_words_in(u, "za kolik minut pojede") or \
+                _all_words_in(u, "za jak dlouho pojede"):
+                cn.add(1.0, DialogueActItem('request','departure_time_rel'))
 
         if _all_words_in(u, 'kdy tam budu') or \
             _all_words_in(u, 'kdy tam bude') or \
@@ -470,7 +473,7 @@ class PTICSHDCSLU(SLUInterface):
             (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dojedu dorazí dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude"):
+        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude příjedu přijede přijedete dojedu dorazí dorazím dorazíte"):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not _any_word_in(u, 'za'):
