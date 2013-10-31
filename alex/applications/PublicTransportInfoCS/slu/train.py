@@ -62,16 +62,16 @@ def train(fn_model,
     slu.save_model(fn_model)
 
 train('./dailogreg.trn.model.all', './all.trn', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 train('./dailogreg.asr.model.all', './all.asr', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 train('./dailogreg.nbl.model.all', './all.nbl', UtteranceNBList, './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 
 train('./dailogreg.trn.model', './train.trn', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 train('./dailogreg.asr.model', './train.asr', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 train('./dailogreg.nbl.model', './train.nbl', UtteranceNBList, './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-      min_feature_count = 2, min_classifier_count = 2)
+      min_feature_count = 3, min_classifier_count = 2)
 

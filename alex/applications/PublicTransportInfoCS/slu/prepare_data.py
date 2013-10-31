@@ -134,15 +134,20 @@ for fn in files[:100000]:
         t = various.get_text_from_xml_node(trans[-1])
         t = normalise_text(t)
 
+        a = various.get_text_from_xml_node(hyps[0])
+
         # FIXME: We should be more tolerant and use more transcriptions
         if t != '_NOISE_' and t != '_SIL_' and t != '_EHM_HMM_' and t != '_INHALE_' and t != '_LAUGH_' and \
-            ('-' in t or '_' in t or '(' in t):
+            ('-' in t or '_' in t or '(' in t) or \
+            'DOM Element:' in a:
             print "Skipping transcription:", t
+            print "Skipping ASR output:   ", a
             continue
 
         trn.append((wav_key, t))
 
-        print "Parsing:", unicode(t)
+        print "Parsing transcription:", unicode(t)
+        print "                  ASR:", unicode(a)
 
         # HDC SLU on transcription
         s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
