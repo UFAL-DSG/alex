@@ -116,6 +116,10 @@ ontology = {
             'system_informs',
             'user_informs',
         ],
+        'route_alternative': [
+            # this is necessary to be defined as it is a state variable used by the policy and automatically added to
+            # the dialogue state
+        ],
 
         # not implemented yet
         'transfer_stops': [
