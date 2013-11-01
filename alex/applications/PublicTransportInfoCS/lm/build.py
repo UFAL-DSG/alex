@@ -216,7 +216,6 @@ if not os.path.exists(expanded_data_text_trn_norm_tg_arpa):
     os.system(cmd)
 
     # convert surface forms to classes
-    # | sed 's/\b\(CL_[[:alnum:]]\+\)[ ,\n]\1/\1/g' | grep -v 'CL_[[:alnum:]]\+ CL_'
     cmd = r"replace-words-with-classes addone=100 normalize=1 outfile=%s classes=%s %s > %s" % \
           (expanded_data_text_trn_norm_classes,
            classes,
@@ -236,7 +235,7 @@ if not os.path.exists(expanded_data_text_trn_norm_tg_arpa):
     print cmd
     os.system(cmd)
 
-    cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] ]\+CL_'> %s" % \
+    cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] _]\+CL_'> %s" % \
           (expanded_data_text_trn_norm_tg_arpa,
            expanded_data_text_trn_norm_tg_arpa_filtered)
 
