@@ -403,7 +403,7 @@ class PTICSHDCSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem("help"))
 
         if _any_word_in(u, "ano jo jasně") and \
-            not _any_word_in(u, "nerozuměj nechci") :
+            not _any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") :
             cn.add(1.0, DialogueActItem("affirm"))
 
         if _any_word_in(u, "ne né") or \
