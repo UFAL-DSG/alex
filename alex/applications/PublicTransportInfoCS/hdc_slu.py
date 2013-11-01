@@ -469,7 +469,7 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, "kam pojede"):
             cn.add(1.0, DialogueActItem('request','to_stop'))
 
-        if not _any_word_in(u,'za budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+        if not _any_word_in(u,'za budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if _all_words_in(u, "kdy jede") or \
                 _all_words_in(u, "v kolik jede") or \
                 _all_words_in(u, "v kolik hodin") or \
@@ -477,21 +477,21 @@ class PTICSHDCSLU(SLUInterface):
                 (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
                 cn.add(1.0, DialogueActItem('request','departure_time'))
 
-        if not _any_word_in(u,'budu bude přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+        if not _any_word_in(u,'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if _all_words_in(u, "za jak dlouho") or \
                 _all_words_in(u, "za kolik minut jede") or \
                 _all_words_in(u, "za kolik minut pojede") or \
                 _all_words_in(u, "za jak dlouho pojede"):
                 cn.add(1.0, DialogueActItem('request','departure_time_rel'))
 
-        if (_all_words_in(u, 'kdy tam') and _any_word_in(u, 'budu bude')) or \
-            (_all_words_in(u, 'v kolik tam') and _any_word_in(u, 'budu bude')) or \
-            (_all_words_in(u, 'v kolik hodin') and _any_word_in(u, 'budu bude')) or \
+        if (_all_words_in(u, 'kdy tam') and _any_word_in(u, 'budu bude budem')) or \
+            (_all_words_in(u, 'v kolik tam') and _any_word_in(u, 'budu bude budem')) or \
+            (_all_words_in(u, 'v kolik hodin') and _any_word_in(u, 'budu bude budem')) or \
             _all_words_in(u, 'čas příjezdu') or \
-            (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dojedu dorazí dorazím dorazíte')):
+            (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu přijedem dojedu dorazí dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude příjedu přijede přijedete dojedu dorazí dorazím dorazíte"):
+        if _all_words_in(u, 'za jak dlouho tam') and _any_word_in(u, "budu bude budem přijedu přijede přijedem přijedete dojedu dorazí dorazím dorazíte"):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not _any_word_in(u, 'za'):

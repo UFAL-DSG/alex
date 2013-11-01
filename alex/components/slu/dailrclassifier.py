@@ -13,6 +13,7 @@ import cPickle as pickle
 
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
+from scipy.sparse import lil_matrix, coo_matrix
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.slu.exceptions import DAILRException
@@ -54,6 +55,16 @@ class Features(object):
                 fv[features_mapping[f]] = self.features[f]
 
         return fv
+
+    def get_feature_vector_lil(self, features_mapping):
+        data = []
+        rows = []
+        for f in self.features:
+            if f in features_mapping:
+                data.append(self.features[f])
+                rows.append(features_mapping[f])
+
+        return data, rows
 
     def prune(self, remove_features):
         """
@@ -643,12 +654,15 @@ class DAILogRegClassifier(SLUInterface):
         for clser in sorted(self.classifiers):
             if verbose:
                 print "Training classifier: ", clser
+                print "  Matrix:            ", (len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser]))
 
-            classifier_input = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
+            classifier_input = lil_matrix((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
             for i, feat in enumerate(self.classifiers_features[clser]):
-                classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
+                classifier_input.data[i], classifier_input.rows[i] = feat.get_feature_vector_lil(self.classifiers_features_mapping[clser])
 
-            lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-6)
+            classifier_input = classifier_input.tocsr()
+
+            lr = LogisticRegression('l2', dual=True, C=inverse_regularisation, tol=1e-6)
             lr.fit(classifier_input, self.classifiers_outputs[clser])
             self.trained_classifiers[clser] = lr
 
