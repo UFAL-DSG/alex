@@ -203,6 +203,9 @@ _subst = [('JESLTI', 'JESTLI'),
           ('ÍPÉ PAVLOVA', 'I P PAVLOVA'),
           ('ÍPÉ PAVLOVY', 'I P PAVLOVY'),
           ('ÍPÉ PAVLOVU', 'I P PAVLOVU'),
+          ('ČAPLINOVO', 'CHAPLINOVO'),
+          ('ČAPLINOVA', 'CHAPLINOVA'),
+          ('DIVADLÓ', 'DIVADLO'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):

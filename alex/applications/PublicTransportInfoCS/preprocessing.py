@@ -47,10 +47,18 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['ajpí', 'pavlova'],   ['i','p','pavlova']),
             (['aj','pí','pavlova'], ['i','p','pavlova']),
             (['í','pé','pa', 'pavlova'], ['i','p','pavlova']),
+            (['i','p', 'pavlovy'], ['i','p','pavlova']),
             (['ajpák'],   ['i','p','pavlova']),
             (['ajpáku'],  ['i','p','pavlova']),
             (['ípák'],    ['i','p','pavlova']),
             (['ípáku'],   ['i','p','pavlova']),
+            (['čaplinovo'],   ['chaplinovo']),
+            (['čaplinova'],   ['chaplinova']),
+            (['zologická'],   ['zoologická']),
+            (['zoo praha'],   ['zoologická zahrada']),
+            (['na ruzyň'],  ['na letiště václava havla']),
+            (['václav havel'],  ['letiště václava havla']),
+            (['ruzyňské letiště'],  ['letiště václava havla']),
         ]
 
     def normalise_utterance(self, utterance):

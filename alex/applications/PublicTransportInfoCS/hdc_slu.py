@@ -377,8 +377,8 @@ class PTICSHDCSLU(SLUInterface):
                 _all_words_in(u, ["dobrý",  "den"])):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if (_any_word_in(u,["nashledanou", "shledanou", "schledanou", "shle", "nashle", "sbohem", "bohem", "zbohem", "zbohem", "konec",
-                            "hledanou", "naschledanou"])):
+        if (_any_word_in(u, "nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
+                            "naschledanou čau čauky čaues")):
             cn.add(1.0, DialogueActItem("bye"))
 
         if not _any_word_in(u, ["spojení", "zastávka", "stanice", "možnost", "varianta"]):
@@ -397,7 +397,7 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("apology"))
 
         if not _any_word_in(u, "nechci"):
-            if _any_word_in(u, "nápověda nápovědu pomoc help nevím nevim pomož pomoci pomohla pomohl pomůžete") or \
+            if _any_word_in(u, "nápověda nápovědu pomoc pomoct pomoci pomož pomohla pomohl pomůžete help nevím nevim") or \
                 _all_words_in(u, ["co", "říct"]) or \
                 _all_words_in(u, ["co", "zeptat"]):
                 cn.add(1.0, DialogueActItem("help"))
@@ -406,7 +406,7 @@ class PTICSHDCSLU(SLUInterface):
             not _any_word_in(u, "nerozuměj nechci") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if _any_word_in(u, "ne") or \
+        if _any_word_in(u, "ne né") or \
             len(u) == 1 and _any_word_in(u, "nejedu nechci") or \
             len(u) == 2 and _all_words_in(u, "ano nechci") or \
             _all_words_in(u, "to je špatně"):
@@ -549,7 +549,8 @@ class PTICSHDCSLU(SLUInterface):
         if _all_words_in(u, "nerozuměl jsem") or \
             _all_words_in(u, "nerozuměla jsem") or \
             _all_words_in(u, "taky nerozumím") or \
-            _all_words_in(u, "nerozumím vám"):
+            _all_words_in(u, "nerozumím vám") or \
+            (len(u) == 1 and _any_word_in(u, "nerozumím")):
             cn.add(1.0, DialogueActItem('notunderstood'))
 
     def parse_1_best(self, obs, verbose=False):

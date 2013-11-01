@@ -1,3 +1,5 @@
+Strašňice;Strašnic
+Hradčany;Hradčan
 Roztoky;Roztok
 Písnická;Písnickou;Písnické
 Mikulova;Mikulovi
