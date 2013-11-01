@@ -57,7 +57,7 @@ def train(fn_model,
     slu.gen_classifiers_data()
     slu.prune_features(min_feature_count = min_feature_count, verbose=True)
 
-    slu.train(inverse_regularisation=.5e-0, verbose=True)
+    slu.train(inverse_regularisation=1e1, verbose=True)
 
     slu.save_model(fn_model)
 
