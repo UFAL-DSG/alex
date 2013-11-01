@@ -114,8 +114,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da = self.request_more_info(dialogue_state)
             if len(req_da) == 0:
                 # we know everything we need -> start searching
-                res_da.extend(self.get_directions(dialogue_state,
-                                                  check_conflict=True))
+                res_da.extend(self.get_directions(dialogue_state, check_conflict=True))
             else:
                 res_da.extend(req_da)
 
