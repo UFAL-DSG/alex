@@ -44,8 +44,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         res_da = None  # output DA
 
-        if dialogue_state.turn_number > \
-                self.cfg['PublicTransportInfoCS']['max_turns']:
+        if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
             # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
 
@@ -67,8 +66,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
 
-        elif dialogue_state["ludait"] == "null" or \
-                 dialogue_state["ludait"] == "other":
+        elif dialogue_state["ludait"] == "null" or dialogue_state["ludait"] == "other":
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
@@ -140,8 +138,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             return DialogueAct('request(from_stop)')
         else:
             ds['route_alternative'] += 1
-            ds['route_alternative'] %= len(ds.directions) \
-                    if ds.directions is not None else 1
+            ds['route_alternative'] %= len(ds.directions) if ds.directions is not None else 1
             return self.get_directions(ds)
 
     def get_requested_alternative(self, ds):
@@ -309,7 +306,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
         if ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
-            ds['time'] == "none" and randbool(10):
+                ds['time'] == "none" and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
         # TODO: centre_direction conditions below seem to be always fulfilled ?!?
         elif ds['from_stop'] == "none" and \
@@ -555,8 +552,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         if len(dialogue_state.directions) > 1:
             res.append('inform(found_directions="%s")' % route_type)
             if route_type != "last":
-                res.append("inform(alternative=%d)" %
-                           (dialogue_state['route_alternative'] + 1))
+                res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
 
         # route description
         prev_arrive_stop = self.ORIGIN  # remember previous arrival stop
@@ -623,7 +619,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif randbool(9):
                 res_da.append(DialogueActItem("help", "request", "help"))
             elif randbool(8):
-                res_da.append(DialogueActItem("help", "inform", "time"))
+                res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
             elif dialogue_state['from_stop'] == "none":
