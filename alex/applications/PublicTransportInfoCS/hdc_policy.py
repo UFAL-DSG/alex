@@ -494,12 +494,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             departure_time = now
             if departure_time_rel not in ['none', 'now']:
                 trel_parse = datetime.strptime(departure_time_rel, "%H:%M")
-                departure_time += timedelta(hours=trel_parse.hour,
-                                  minutes=trel_parse.minute)
+                departure_time += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
         # absolute time
         else:
-            time_parsed = datetime.combine(now,
-                    datetime.strptime(departure_time, "%H:%M").time())
+            time_parsed = datetime.combine(now, datetime.strptime(departure_time, "%H:%M").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
             # handle 12hr time

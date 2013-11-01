@@ -44,6 +44,13 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['dejvice'], ['dejvická']),
             (['litňanská'], ['letňanská']),
             (['palacké'], ['palackého']),
+            (['ajpí', 'pavlova'],   ['i','p','pavlova']),
+            (['aj','pí','pavlova'], ['i','p','pavlova']),
+            (['í','pé','pa', 'pavlova'], ['i','p','pavlova']),
+            (['ajpák'],   ['i','p','pavlova']),
+            (['ajpáku'],  ['i','p','pavlova']),
+            (['ípák'],    ['i','p','pavlova']),
+            (['ípáku'],   ['i','p','pavlova']),
         ]
 
     def normalise_utterance(self, utterance):

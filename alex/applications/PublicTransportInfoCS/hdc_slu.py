@@ -185,29 +185,45 @@ class PTICSHDCSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        preps_in = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
+        preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
+        preps_rel = set(["za", ])
 
-        confirm = _phrase_in(u, ['jede', 'to'])
-        deny = _phrase_in(u, ['nechci', 'ne'])
+        confirm = lambda u: _phrase_in(u, 'jede to') or _phrase_in(u, 'odjíždí to') or _phrase_in(u, 'je výchozí')
+        deny = lambda u: _phrase_in(u, 'nechci jet') or _phrase_in(u, 'nechci odjíždět') or _phrase_in(u, 'nejedu')
 
+        last_time = 0
         for i, w in enumerate(u):
             if w.startswith("TIME="):
                 value = w[5:]
-                time = False
+                time_abs = False
+                time_rel = False
 
                 if i >= 1:
-                    if u[i - 1] in preps_in:
-                        time = True
+                    if u[i - 1] in preps_abs:
+                        time_abs = True
+                    if u[i - 1] in preps_rel:
+                        time_rel = True
 
-                if confirm:
+                if value == "now" and \
+                    not _phrase_in(u, 'no a') and \
+                    not _phrase_in(u, 'kolik je') and \
+                    not _phrase_in(u, 'neslyším') and \
+                    not _phrase_in(u, 'už mi neříká'):
+                    time_rel = True
+
+                if confirm(u[last_time:i]):
                     dat = "confirm"
-                elif deny:
+                elif deny(u[last_time:i]):
                     dat = "deny"
                 else:
                     dat = "inform"
 
-                if time:
+                if time_abs:
                     cn.add(1.0, DialogueActItem(dat, 'departure_time', value))
+                elif time_rel:
+                    cn.add(1.0, DialogueActItem(dat, 'departure_time_rel', value))
+
+                last_time = i
 
     def parse_time_rel(self, abutterance, cn):
         """Detects the relative time in the input abstract utterance.
@@ -234,7 +250,7 @@ class PTICSHDCSLU(SLUInterface):
                         time = True
 
                 if value == "now" and not _phrase_in(u, 'no a') and \
-                        not _phrase_in(u, 'a kolik je') and \
+                        not _phrase_in(u, 'kolik je') and \
                         not _phrase_in(u, 'neslyším') and \
                         not _phrase_in(u, 'už mi neříká'):
                     time = True
@@ -386,12 +402,14 @@ class PTICSHDCSLU(SLUInterface):
                 _all_words_in(u, ["co", "zeptat"]):
                 cn.add(1.0, DialogueActItem("help"))
 
-        if _any_word_in(u, ["ano",  "jo", "jasně"]) and \
-            not _any_word_in(u, ["nerozuměj",  ]) :
+        if _any_word_in(u, "ano jo jasně") and \
+            not _any_word_in(u, "nerozuměj nechci") :
             cn.add(1.0, DialogueActItem("affirm"))
 
         if _any_word_in(u, "ne") or \
-            len(u) == 1 and _phrase_in(u, "nejedu"):
+            len(u) == 1 and _any_word_in(u, "nejedu nechci") or \
+            len(u) == 2 and _all_words_in(u, "ano nechci") or \
+            _all_words_in(u, "to je špatně"):
             cn.add(1.0, DialogueActItem("negate"))
 
         if _any_word_in(u,["díky", "dikec", "děkuji", "dekuji", "děkuju", "děkují"]):
@@ -466,10 +484,10 @@ class PTICSHDCSLU(SLUInterface):
                 _all_words_in(u, "za jak dlouho pojede"):
                 cn.add(1.0, DialogueActItem('request','departure_time_rel'))
 
-        if _all_words_in(u, 'kdy tam budu') or \
-            _all_words_in(u, 'kdy tam bude') or \
-            _all_words_in(u, 'v kolik tam bude') or \
-            _all_words_in(u, 'v kolik tam budu') or \
+        if (_all_words_in(u, 'kdy tam') and _any_word_in(u, 'budu bude')) or \
+            (_all_words_in(u, 'v kolik tam') and _any_word_in(u, 'budu bude')) or \
+            (_all_words_in(u, 'v kolik hodin') and _any_word_in(u, 'budu bude')) or \
+            _all_words_in(u, 'čas příjezdu') or \
             (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'příjezd přijede přijedete přijedu dojedu dorazí dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
@@ -490,7 +508,8 @@ class PTICSHDCSLU(SLUInterface):
                 not _any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if _any_word_in(u, ["druhé", "druhá", "druhou", "dva"]):
+            if _any_word_in(u, ["druhé", "druhá", "druhou", "dva"])and \
+                not _any_word_in(u, 'třetí čtvrtá čtvrtý další'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
 
             if _any_word_in(u, ["třetí", "tři"]):
@@ -524,8 +543,14 @@ class PTICSHDCSLU(SLUInterface):
         if len(u) == 1 and _any_word_in(u, "předchozí před"):
             cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if _any_word_in(u, "neslyšíme halo haló") :
+        if _any_word_in(u, "neslyšíme neslyším halo haló") :
             cn.add(1.0, DialogueActItem('canthearyou'))
+
+        if _all_words_in(u, "nerozuměl jsem") or \
+            _all_words_in(u, "nerozuměla jsem") or \
+            _all_words_in(u, "taky nerozumím") or \
+            _all_words_in(u, "nerozumím vám"):
+            cn.add(1.0, DialogueActItem('notunderstood'))
 
     def parse_1_best(self, obs, verbose=False):
         """Parse an utterance into a dialogue act."""
@@ -559,8 +584,6 @@ class PTICSHDCSLU(SLUInterface):
             self.parse_stop(abutterance, res_cn)
         if 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
-        if 'TIME_REL' in category_labels:
-            self.parse_time_rel(abutterance, res_cn)
         if 'DATE_REL' in category_labels:
             self.parse_date_rel(abutterance, res_cn)
         if 'AMPM' in category_labels:
