@@ -290,13 +290,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         if non_informed_slots:
             iconf_da = DialogueAct()
             for slot in non_informed_slots:
-                if 'system_iconfirms' in \
-                        self.ontology['slot_attributes'][slot]:
-
-                    dai = DialogueActItem("iconfirm", slot,
-                                          non_informed_slots[slot])
+                if 'system_iconfirms' in self.ontology['slot_attributes'][slot]:
+                    dai = DialogueActItem("iconfirm", slot, non_informed_slots[slot])
                     iconf_da.append(dai)
-
             res_da.extend(iconf_da)
         return res_da
 
@@ -488,10 +484,10 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # interpret dialogue state time
         now = datetime.now()
-        departure_time = dialogue_state['departure_time']
-        ampm = dialogue_state['ampm']
-        departure_time_rel = dialogue_state['departure_time_rel']
-        departure_date_rel = dialogue_state['departure_date_rel']
+        departure_time = ds['departure_time']
+        ampm = ds['ampm']
+        departure_time_rel = ds['departure_time_rel']
+        departure_date_rel = ds['departure_date_rel']
 
         # relative time
         if departure_time == 'none' or departure_time_rel != 'none':
@@ -526,7 +522,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 elif now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
             departure_time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            dialogue_state['departure_time'] = "%d:%.2d" % (departure_time.hour, departure_time.minute)
+            ds['departure_time'] = "%d:%.2d" % (departure_time.hour, departure_time.minute)
 
         # relative date
         if departure_date_rel == 'tomorrow':
@@ -537,12 +533,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             departure_time += timedelta(days=1)
 
         # retrieve Google directions
-        dialogue_state.directions = self.directions.get_directions(
-            from_stop=dialogue_state['from_stop'],
-            to_stop=dialogue_state['to_stop'],
-            departure_time=departure_time)
-
-        return self.say_directions(dialogue_state, route_type)
+        ds.directions = self.directions.get_directions(from_stop=ds['from_stop'],
+                                                       to_stop=ds['to_stop'],
+                                                       departure_time=departure_time)
+        return self.say_directions(ds, route_type)
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
