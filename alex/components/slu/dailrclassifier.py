@@ -618,7 +618,7 @@ class DAILogRegClassifier(SLUInterface):
 
             remove_features = []
             for f in features_counts:
-                if features_counts[f] < min_feature_count:
+                if features_counts[f] < min_feature_count + len(f):
                     remove_features.append(f)
 
             if verbose:
