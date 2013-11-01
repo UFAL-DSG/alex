@@ -42,6 +42,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots supplied by the user but not implicitly confirmed
         non_informed_slots = dialogue_state.get_non_informed_slots()
 
+# TODO: implement these functions
+#        accepted_slots = dialogue_state.get_accepted_slots()
+#        changed_slots = dialogue_state.get_changed_slots()
+
         res_da = None  # output DA
 
         if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
@@ -307,12 +311,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         if ds['from_stop'] == "none" and ds['to_stop'] == "none" and \
                 ds['time'] == "none" and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        # TODO: centre_direction conditions below seem to be always fulfilled ?!?
         elif ds['from_stop'] == "none" and \
-            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and randbool(9):
+                ds['centre_direction'] != "none" and ds['centre_direction'] != "*" and randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
         elif ds['to_stop'] == "none" and \
-            (ds['centre_direction'] != "none" or ds['centre_direction'] != "*") and randbool(8):
+                ds['centre_direction'] != "none" and ds['centre_direction'] != "*" and randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
         elif ds['from_stop'] == "none" and ds['to_stop'] == "none" and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
