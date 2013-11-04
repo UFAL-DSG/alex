@@ -78,8 +78,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
         doc = ElementTree.parse(sess_fname)
     except IOError as error:
         if verbose:
-            print '!!! Could not parse "{fname}": {msg!s}.'\
-                .format(fname=sess_fname, msg=error)
+            print '!!! Could not parse "{fname}": {msg!s}.'.format(fname=sess_fname, msg=error)
             return 0, 0, 0, 0
     uturns = doc.findall(".//userturn")
 
@@ -93,9 +92,18 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping,
         rec = uturn.find("rec")
         trs = uturn.find("transcription")
         if trs is None:
-            if rec is not None:
-                n_missing_trs += 1
-            continue
+            trs2 = uturn.find("transcriptions")
+            if trs2:
+                trs3 = trs2.findall("transcription")
+
+                if trs3 is None:
+                   if rec is not None:
+                       n_missing_trs += 1
+                   continue
+                else:
+                    trs = trs3[-1].text
+            else:
+                continue
         else:
             trs = trs.text
 
@@ -268,10 +276,10 @@ def convert(args):
     for prefix, call_log in sess_fnames.iteritems():
         if verbose:
             print "Processing call log dir:", prefix
+            print " session file name:     ", call_log
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(
-                prefix, call_log, outdir, wav_mapping, known_words, verbose)
+            extract_wavs_trns(prefix, call_log, outdir, wav_mapping, known_words, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav

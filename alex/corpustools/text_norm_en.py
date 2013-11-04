@@ -437,7 +437,7 @@ def exclude(text):
 
     """
 #{{{
-    if text in ['_NOISE_', '_EHM_HMM_', '_SIL_', '_INHALE_', '_LAUGH_']:
+    if text in ['_NOISE_', '_EHM_HMM_', '_INHALE_', '_LAUGH_']:
         return False
 
     for char in _excluded_characters:
