@@ -76,12 +76,11 @@ else
   find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
   find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/train_trns
   find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/test_trns
-  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
   ngram-count -text $WORK_DIR/train_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
-  echo "Train data PPL"
+  echo "Bigram: Train data PPL"
   ngram -lm $WORK_DIR/arpa_bigram -ppl $WORK_DIR/train_trns
-  echo "Test data PPL"
+  echo "Bigram: Test data PPL"
   ngram -lm $WORK_DIR/arpa_bigram -ppl $WORK_DIR/test_trns
 
   HBuild -A -T 1 -C $TRAIN_COMMON/configrawmit -u '<UNK>' -s '<s>' '</s>' -n $WORK_DIR/arpa_bigram -z $WORK_DIR/word_list_full $WORK_DIR/wdnet_bigram > $LOG_DIR/hbuild.log
@@ -97,13 +96,12 @@ else
   find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/all_trns
   find -L $TRAIN_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/train_trns
   find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' >> $WORK_DIR/test_trns
-  #find -L $TEST_DATA_SOURCE -name '*.trn' | xargs sed -e '$a\' | sed s/\_SIL\_/\ /g >> $WORK_DIR/all_trns
 
-  ngram-count -text $WORK_DIR/train_trns -order 2 -wbdiscount -interpolate -lm $WORK_DIR/arpa_bigram
+  ngram-count -text $WORK_DIR/train_trns -order 3 -wbdiscount -interpolate -lm $WORK_DIR/arpa_trigram
 
-  echo "Train data PPL"
+  echo "Trigram: Train data PPL"
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/train_trns
-  echo "Test data PPL"
+  echo "Trigram: Test data PPL"
   ngram -lm $WORK_DIR/arpa_trigram -ppl $WORK_DIR/test_trns
 fi
 

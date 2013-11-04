@@ -53,7 +53,7 @@ echo "Coding train audio ..."
 $TRAIN_SCRIPTS/prep_param_train.sh
 
 # Intial setup of the language model, dictionary, training and test MLFs
-echo "Building unigram language models and dictionary..."
+echo "Building language models and dictionary..."
 $TRAIN_SCRIPTS/build_lm_cs.sh
 echo "Building training MLF ..."
 $TRAIN_SCRIPTS/make_mlf_train.sh all
