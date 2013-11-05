@@ -98,6 +98,20 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
             return 0, 0, 0, 0
     uturns = doc.findall(".//turn")
 
+    annotations = doc.findall('.//annotation')
+    if len(annotations) > 1:
+        print "Transcription was rejected as we have more then two transcriptions and " \
+              "we cannot decide which one is better."
+        return 0, 0, 0, 0
+    for a in annotations:
+        r = False
+        if 'worker_id' in a.attrib and a.attrib['worker_id'] == '19113916':
+            r = True
+
+        if r:
+            print "Transcription was rejected because of unreliable annotator."
+            return 0, 0, 0, 0
+
     size = 0
     n_overwrites = 0
     n_missing_wav = 0
@@ -135,7 +149,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
                 term_width = getTerminalSize()[1] or 80
                 print '-' * term_width
                 print "# f:", wav_basename
-                print "orig transcription:", trs.upper()
+                print "orig transcription:", trs.upper().strip()
 
             trs = normalise_text(trs)
             if verbose:
