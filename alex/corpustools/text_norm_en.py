@@ -620,6 +620,8 @@ _subst = [
           ('CB', '_EXCLUDE_'),
           ('JUROPA', 'EUROPE'),
           ('WHERES', '_EXCLUDE_'),
+          ('HK', '_EXCLUDE_'),
+          ('CAF', '_EXCLUDE_'),
           ('UNINTELLIGIBLE', '_EXCLUDE_'),
            ]
 #}}}
