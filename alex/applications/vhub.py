@@ -328,7 +328,7 @@ class VoipHub(Hub):
                             # if the DM generated non-silence dialogue act, then continue in processing it
 
                             if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time:
-                                # if the system is still talking then flush teh output
+                                # if the system is still talking then flush the output
                                 self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 

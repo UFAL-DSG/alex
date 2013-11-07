@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import multiprocessing
 import time
+import random
+import urllib
 
-from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 from alex.components.hub.messages import Command, SLUHyp, DMDA
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.dm.exceptions import DMException
@@ -31,10 +35,15 @@ class DM(multiprocessing.Process):
         self.close_event = close_event
         self.last_user_da_time = time.time()
         self.last_user_diff_time = time.time()
+        self.epilogue_state = None
 
         dm_type = get_dm_type(cfg)
         self.dm = dm_factory(dm_type, cfg)
         self.dm.new_dialogue()
+
+        self.codes = ["%04d" % i  for i in range(0, 10000)]
+        random.seed(self.cfg['DM']['epilogue']['code_seed'])
+        random.shuffle(self.codes)
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -68,6 +77,7 @@ class DM(multiprocessing.Process):
                     return False
 
                 if command.parsed['__name__'] == 'new_dialogue':
+                    self.epilogue_state = None
                     self.dm.new_dialogue()
 
                     self.cfg['Logging']['session_logger'].turn("system")
@@ -100,32 +110,80 @@ class DM(multiprocessing.Process):
                     # if yes then inform the DM
 
                     silence_time = command.parsed['silence_time']
+
                     cn = DialogueActConfusionNetwork()
                     cn.add(1.0, DialogueActItem('silence','time', silence_time))
 
+                    # process the input DA
                     self.dm.da_in(cn)
-                    da = self.dm.da_out()
-
-                    if self.cfg['DM']['debug']:
-                        s = []
-                        s.append("DM Output")
-                        s.append("-"*60)
-                        s.append(unicode(da))
-                        s.append("")
-                        s = '\n'.join(s)
-                        self.cfg['Logging']['system_logger'].debug(s)
 
                     self.cfg['Logging']['session_logger'].turn("system")
-                    self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                    self.dm.log_state()
 
-                    self.commands.send(DMDA(da, 'DM', 'HUB'))
-
-                    if da.has_dat("bye"):
+                    if self.epilogue_state and float(silence_time) > 5.0:
+                        # a user was silent for too long, therefore hung up
+                        self.cfg['Logging']['session_logger'].dialogue_act("system", self.epilogue_da)
+                        self.commands.send(DMDA(self.epilogue_da, 'DM', 'HUB'))
                         self.commands.send(Command('hangup()', 'DM', 'HUB'))
+                    else:
+                        da = self.dm.da_out()
+
+                        if self.cfg['DM']['debug']:
+                            s = []
+                            s.append("DM Output")
+                            s.append("-"*60)
+                            s.append(unicode(da))
+                            s.append("")
+                            s = '\n'.join(s)
+                            self.cfg['Logging']['system_logger'].debug(s)
+
+                        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                        self.commands.send(DMDA(da, 'DM', 'HUB'))
+
+                        if da.has_dat("bye"):
+                            self.commands.send(Command('hangup()', 'DM', 'HUB'))
 
                     return False
 
         return False
+
+    def epilogue_final_question(self):
+        da = DialogueAct('say(text="{text}")'.format(text=self.cfg['DM']['epilogue']['final_question']))
+        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+        self.commands.send(DMDA(da, 'DM', 'HUB'))
+
+    def epilogue_final_code(self):
+        code = self.codes.pop()
+
+        text = [c for c in code]
+        text = "  ".join(text)
+        text = self.cfg['DM']['epilogue']['final_code_text'].format(code = text)
+        text = [text,]*4
+        text = self.cfg['DM']['epilogue']['final_code_text_repeat'].join(text)
+
+        da = DialogueAct('say(text="{text}")'.format(text=text))
+        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+        self.commands.send(DMDA(da, 'DM', 'HUB'))
+
+        # pull the url
+        url = self.cfg['DM']['epilogue']['final_code_url'].format(code = code)
+        urllib.urlopen(url)
+
+        self.final_code_given = True
+
+    def epilogue(self):
+        """ Gives the user last information before hanging up.
+
+        :return the name of the activity or None
+        """
+        if self.cfg['DM']['epilogue']['final_question']:
+            self.epilogue_final_question()
+            return 'final_question'
+        elif self.cfg['DM']['epilogue']['final_code_url']:
+            self.epilogue_final_code()
+            return 'final_code'
+
+        return None
 
     def read_slu_hypotheses_write_dialogue_act(self):
         # read SLU hypothesis
@@ -133,7 +191,14 @@ class DM(multiprocessing.Process):
             # read SLU hypothesis
             data_slu = self.slu_hypotheses_in.recv()
 
-            if isinstance(data_slu, SLUHyp):
+            if self.epilogue_state:
+                # we have got another turn, now we can hang up.
+                self.cfg['Logging']['session_logger'].turn("system")
+                self.dm.log_state()
+                self.cfg['Logging']['session_logger'].dialogue_act("system", self.epilogue_da)
+                self.commands.send(DMDA(self.epilogue_da, 'DM', 'HUB'))
+                self.commands.send(Command('hangup()', 'DM', 'HUB'))
+            elif isinstance(data_slu, SLUHyp):
                 # reset measuring of the user silence
                 self.last_user_da_time = time.time()
                 self.last_user_diff_time = time.time()
@@ -146,23 +211,29 @@ class DM(multiprocessing.Process):
 
                 da = self.dm.da_out()
 
-                if self.cfg['DM']['debug']:
-                    s = []
-                    s.append("DM Output")
-                    s.append("-"*60)
-                    s.append(unicode(da))
-                    s.append("")
-                    s = '\n'.join(s)
-                    self.cfg['Logging']['system_logger'].debug(s)
-
-                self.cfg['Logging']['session_logger'].dialogue_act("system", da)
-
                 # do not communicate directly with the NLG, let the HUB decide
                 # to do work. The generation of the output must by synchronised with the input.
-                self.commands.send(DMDA(da, 'DM', 'HUB'))
-
                 if da.has_dat("bye"):
-                    self.commands.send(Command('hangup()', 'DM', 'HUB'))
+                    self.epilogue_state = self.epilogue()
+                    self.epilogue_da = da
+
+                    if not self.epilogue_state:
+                        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                        self.commands.send(DMDA(da, 'DM', 'HUB'))
+                        self.commands.send(Command('hangup()', 'DM', 'HUB'))
+                else:
+                    if self.cfg['DM']['debug']:
+                        s = []
+                        s.append("DM Output")
+                        s.append("-"*60)
+                        s.append(unicode(da))
+                        s.append("")
+                        s = '\n'.join(s)
+                        self.cfg['Logging']['system_logger'].debug(s)
+
+                    self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+                    self.commands.send(DMDA(da, 'DM', 'HUB'))
+
 
             elif isinstance(data_slu, Command):
                 self.cfg['Logging']['system_logger'].info(data_slu)
