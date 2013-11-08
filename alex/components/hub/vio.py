@@ -38,20 +38,34 @@ def get_user_from_uri(uri):
 
 phone_number_hash = {}
 def hash_remote_uri(remote_uri):
+#    return remote_uri
     global phone_number_hash
 
     user = get_user_from_uri(remote_uri)
     h = hex(abs(hash(user)))[2:]
-
     phone_number_hash[h] = user
+    converted_uri = remote_uri.replace(user, h)
 
-    return remote_uri.replace(user, h)
+    print "-"*120
+    print "  Hashing a user {user} to {h}".format(user=user,h=h)
+    print "  Converted {uri1} to {uri2}".format(uri1=remote_uri,uri2=converted_uri)
+    print "-"*120
+    print 
+
+    return converted_uri
 
 def is_phone_number_hash(h):
     return h in phone_number_hash
 
 def recover_phone_number_from_hash(h):
-    return phone_number_hash[h]
+    user = phone_number_hash[h]
+    
+    print "-"*120
+    print "  Recovering a user {user} from hash {h}".format(user=user,h=h)
+    print "-"*120
+    print 
+    
+    return user
 
 class AccountCallback(pj.AccountCallback):
     """ Callback to receive events from account.
@@ -547,15 +561,6 @@ class VoipIO(multiprocessing.Process):
 
         return True
 
-    def is_hash(self, dst):
-        """ Check whether it is a phone number.
-        """
-        p = re.search('(^\+?[0-9]{1,12}$)', dst)
-        if not p:
-            return False
-
-        return True
-
     def construct_sip_uri_from_phone_number(self, dst):
         """ Construct a valid SIP URI for given phone number.
         """
@@ -615,6 +620,12 @@ class VoipIO(multiprocessing.Process):
                 uri = self.construct_sip_uri_from_phone_number(uri)
             else:
                 return "blocked"
+        elif is_phone_number_hash(uri):
+            pn = recover_phone_number_from_hash(uri)
+            if self.is_accepted_phone_number(pn):
+                uri = self.construct_sip_uri_from_phone_number(uri)
+            else:
+                return "blocked"
         elif self.has_sip_uri(uri):
             uri = self.get_sip_uri(uri)
             if self.is_accepted_sip_uri(uri):
@@ -624,25 +635,31 @@ class VoipIO(multiprocessing.Process):
 
         return uri
 
-    def make_call(self, uri):
+    def make_call(self, remote_uri):
         """ Call provided URI. Check whether it is allowed.
         """
         try:
+            uri = remote_uri
             if is_phone_number_hash(uri):
                 uri = recover_phone_number_from_hash(uri)
 
+            remote_uri = self.normalise_uri(remote_uri)
             uri = self.normalise_uri(uri)
 
             if self.cfg['VoipIO']['debug']:
-                print "Making a call to", uri
+                print "-"*120
+                print "  Remote uri:      ", remote_uri
+                print "  Making a call to:", uri
+                print "-"*120
+                print 
 
             if self.is_sip_uri(uri):
                 # create a call back for the call
                 call_cb = CallCallback(self.cfg, None, self)
                 self.call = self.acc.make_call(uri, cb=call_cb)
 
-                # send a message that there is a new incoming call
-                self.commands.send(Command('make_call(remote_uri="%s")' % get_user_from_uri(uri), 'VoipIO', 'HUB'))
+                # send a message that we are calling to uri
+                self.commands.send(Command('make_call(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
                 return self.call
             elif uri == "blocked":
