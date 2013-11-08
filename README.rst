@@ -19,9 +19,9 @@ The main goals are:
 Implemented features:
 
 - VOIP using ``PJSIP 2.1`` with some modifications
-- ASR using ``OpenJulius`` and ``GoogleASR``
-- VAD using Gaussian Mixure Models and Feed-Forward Neural Networks
-- SLU using a set of logistic regression classifiers for dialogue act items
+- ASR using ``OpenJulius`` or ``GoogleASR``
+- VAD using Gaussian Mixure Models or Feed-Forward Neural Networks
+- SLU using a set of logistic regression classifiers for detecting dialogue acts
 - DM using deterministic one best dialogue state tracking and handcrafted policies
 - NLG using template based generation possibly with efficient inflection into the correct surface form for
   morphologically rich languages
@@ -35,8 +35,8 @@ Implemented features:
 
 Missing features:
 
-- there is no user simulator for any of the supported domains
-- as a result there is no trainable dialogue policies
+- no user simulator for any of the supported domains
+- no trainable dialogue policies
 
 Installation
 ------------
