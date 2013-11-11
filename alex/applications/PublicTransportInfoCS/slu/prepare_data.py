@@ -36,6 +36,7 @@ slu = PTICSHDCSLU(preprocessing)
 
 fn_uniq_trn = 'uniq.trn'
 fn_uniq_trn_hdc_sem = 'uniq.trn.hdc.sem'
+fn_uniq_trn_sem = 'uniq.trn.sem'
 
 fn_all_sem = 'all.sem'
 fn_all_trn = 'all.trn'
@@ -185,6 +186,7 @@ for fn in files[:100000]:
 
 uniq_trn = {}
 uniq_trn_hdc_sem = {}
+uniq_trn_sem = {}
 trn_set = set()
 
 sem = dict(trn_hdc_sem)
@@ -193,9 +195,11 @@ for k, v in trn:
         trn_set.add(v)
         uniq_trn[k] = v
         uniq_trn_hdc_sem[k] = sem[k]
+        uniq_trn_sem[k] = v + " <=> " + unicode(sem[k])
 
 save_wavaskey(fn_uniq_trn, uniq_trn)
 save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem)
+save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)
 
 if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
     # all
