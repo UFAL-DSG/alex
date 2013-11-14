@@ -33,11 +33,16 @@ def vocalize_prep(prep, following_word):
                                   'vzd|smí|stě|dnu|vzo|sti|sty|sro|dnů|' +
                                   'sdr|sbl|sbí|čty|zná)', following_word):
         return prep + 'e'
+    # exceptions 'v tř...' (town names) -- otherwise 've tř...' in all cases
+    if lcprep == 'v' and re.match('^(třine?c|třebíč|třebo[nň]|třeš[tť]|' +
+                                  'třebenic|třebechovic|třemoše?n)',
+                                  following_word, re.IGNORECASE):
+        return prep
     if lcprep == 'v' and re.match('^(v|f|st|sp|čt|sk|sv|kt|fr|fi|sl|sn|fu|' +
                                   'zl|fo|šv|zn|zp|šk|wa|ii|hř|dv|zd|sb|šp|' +
                                   'sh|št|zb|fa|fá|rw|zk|wi|tm|jm|we|fs|fy|' +
                                   'fó|žď|hv|gy|mz|žd|šl|gi|zh|sj|zt|žr|šr|' +
-                                  'cv|sw|sro|sml|tří|tva|srá|obž|zví|psa|' +
+                                  'cv|sw|tř|sro|sml|tva|srá|obž|zví|psa|' +
                                   'smr|žlu|sca|zrů|sce|zvo|zme|mně$|mne$)',
                                   following_word):
         return prep + 'e'
