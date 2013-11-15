@@ -52,7 +52,7 @@ class PTICSHDCSLU(SLUInterface):
         preps_via = set(["přes", ])
 
         fillers_from = set(["start", "stojím", "jsem" ])
-        fillers_to = set(["cíl",])
+        fillers_to = set(["cíl", ])
         fillers_via = set([])
 
         u = abutterance
@@ -373,8 +373,8 @@ class PTICSHDCSLU(SLUInterface):
         if "_other_" in u.utterance or "__other__" in u.utterance or "_ehm_hmm_" in u.utterance:
             cn.add(1.0, DialogueActItem("other"))
 
-        if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar",]) or
-                _all_words_in(u, ["dobrý",  "den"])):
+        if (_any_word_in(u, ["ahoj", "áhoj", "nazdar", "zdar", ]) or
+                _all_words_in(u, ["dobrý", "den"])):
             cn.add(1.0, DialogueActItem("hello"))
 
         if (_any_word_in(u, "nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
@@ -385,8 +385,8 @@ class PTICSHDCSLU(SLUInterface):
             if _any_word_in(u, ["jiný", "jiné", "jiná", "jiného"]):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not _any_word_in(u,["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená", "začátku"]):
-            if (_any_word_in(u,["zopakovat",  "opakovat", "znova", "znovu", "opakuj", "zopakuj", 'zopakujte']) or
+        if not _any_word_in(u, ["spojení", "zastávka", "stanice", "možnost", "spoj", "nabídnutý", "poslední", "nalezená", "začátku"]):
+            if (_any_word_in(u, ["zopakovat", "opakovat", "znova", "znovu", "opakuj", "zopakuj", 'zopakujte']) or
                 _phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
 
@@ -412,10 +412,10 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, "to je špatně"):
             cn.add(1.0, DialogueActItem("negate"))
 
-        if _any_word_in(u,["díky", "dikec", "děkuji", "dekuji", "děkuju", "děkují"]):
+        if _any_word_in(u, ["díky", "dikec", "děkuji", "dekuji", "děkuju", "děkují"]):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if _any_word_in(u,["ok", "pořádku", "dobře", "správně"]) and \
+        if _any_word_in(u, ["ok", "pořádku", "dobře", "správně"]) and \
             not _any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
 
@@ -430,19 +430,19 @@ class PTICSHDCSLU(SLUInterface):
 
         if len(u.utterance) == 1 and _any_word_in(u, ["centra", "centrum", ]):
             # we do not know whether to or from and it must be one of them
-            cn.add(1.0, DialogueActItem('inform','centre_direction','*'))
+            cn.add(1.0, DialogueActItem('inform', 'centre_direction', '*'))
 
         if _phrase_in(u, ["z", "centra"]) and not _any_word_in(u, ["ne", "nejedu", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','centre_direction','from'))
+            cn.add(1.0, DialogueActItem('inform', 'centre_direction', 'from'))
 
         if _phrase_in(u, ["do", "centra"]) and not _any_word_in(u, ["ne", "nejedu", "nechci"]):
-            cn.add(1.0, DialogueActItem('inform','centre_direction','to'))
+            cn.add(1.0, DialogueActItem('inform', 'centre_direction', 'to'))
 
         if _phrase_in(u, ["z", "centra"]) and _any_word_in(u, ["ne", "nejedu", "nechci"]):
-            cn.add(1.0, DialogueActItem('deny','centre_direction','from'))
+            cn.add(1.0, DialogueActItem('deny', 'centre_direction', 'from'))
 
         if _phrase_in(u, ["do", "centra"]) and _any_word_in(u, ["ne", "nejedu", "nechci"]):
-            cn.add(1.0, DialogueActItem('deny','centre_direction','to'))
+            cn.add(1.0, DialogueActItem('deny', 'centre_direction', 'to'))
 
         if _all_words_in(u, ["od", "to", "jede"]) or \
             _all_words_in(u, ["z", "jake", "jede"]) or \
@@ -467,15 +467,15 @@ class PTICSHDCSLU(SLUInterface):
             _all_words_in(u, ["kde", "konečná", ]) or \
             _all_words_in(u, "kam jede") or \
             _all_words_in(u, "kam pojede"):
-            cn.add(1.0, DialogueActItem('request','to_stop'))
+            cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
-        if not _any_word_in(u,'za budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+        if not _any_word_in(u, 'za budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if _all_words_in(u, "kdy jede") or \
                 _all_words_in(u, "v kolik jede") or \
                 _all_words_in(u, "v kolik hodin") or \
                 _all_words_in(u, "kdy to pojede") or \
                 (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
-                cn.add(1.0, DialogueActItem('request','departure_time'))
+                cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
         if not _any_word_in(u, 'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if _all_words_in(u, "za jak dlouho") or \
