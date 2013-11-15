@@ -144,7 +144,7 @@ class CategoryLabelDatabase(object):
             self._form_upnames_vals = \
                 [(form, dict(upnames_vals))
                  for (form, upnames_vals) in
-                 sorted(upnames_vals4form.viewitems(), key=lambda item: -len(item[0]))]
+                 sorted(upnames_vals4form.viewitems(), key=lambda item:-len(item[0]))]
         return self._form_upnames_vals
 
     def load(self, file_name):
@@ -262,7 +262,7 @@ class SLUPreprocessing(object):
         utterance.lower()
 
         for mapping in self.text_normalization_mapping:
-            utterance = utterance.replace(mapping[0], mapping[1])
+            utterance = utterance.replace_all(mapping[0], mapping[1])
         return utterance
 
     def normalise_nblist(self, nblist):
@@ -302,7 +302,7 @@ class SLUPreprocessing(object):
             raise SLUException("Unsupported observations.")
 
     # TODO Update the docstring for the `all_options' argument.
-    def values2category_labels_in_utterance(self, utterance,all_options=False):
+    def values2category_labels_in_utterance(self, utterance, all_options=False):
         """Replaces strings matching surface forms in the label database with
         their slot names plus index.
 
