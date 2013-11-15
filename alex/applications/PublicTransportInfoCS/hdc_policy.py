@@ -519,58 +519,21 @@ class PTICSHDCPolicy(DialoguePolicy):
             apology_da.extend(DialogueAct("inform(to_stop='%s')" % ds['to_stop']))
             return apology_da
 
-        # interpret dialogue state time
-        now = datetime.now()
-        departure_time = ds['departure_time']
-        ampm = ds['ampm']
-        departure_time_rel = ds['departure_time_rel']
-        departure_date_rel = ds['departure_date_rel']
-
-        # relative time
-        if departure_time == 'none' or departure_time_rel != 'none':
-            departure_time = now
-            if departure_time_rel not in ['none', 'now']:
-                trel_parse = datetime.strptime(departure_time_rel, "%H:%M")
-                departure_time += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
-        # absolute time
+        # interpret departure and arrival time
+        departure_time, arrival_time = None, None
+        if ds['arrival_time'] != 'none' or ds['arrival_time_rel'] != 'none':
+            arrival_time = self.interpret_time(ds['arrival_time'], ds['ampm'],
+                                                 ds['arrival_time_rel'], ds['date_rel'])
         else:
-            time_parsed = datetime.combine(now, datetime.strptime(departure_time, "%H:%M").time())
-            time_hour = time_parsed.hour
-            now_hour = now.hour
-            # handle 12hr time
-            if time_hour >= 1 and time_hour <= 12:
-                # interpret AM/PM
-                if ampm != 'none':
-                    # 'pm' ~ 12pm till 11:59pm
-                    if ampm == 'pm' and time_hour < 12:
-                        time_hour += 12
-                    # 'am'/'morning' ~ 12am till 11:59am
-                    elif ampm in ['am', 'morning'] and time_hour == 12:
-                        time_hour = 0
-                    # 'evening' ~ 4pm till 3:59am
-                    elif ampm == 'evening' and time_hour >= 4:
-                        time_hour = (time_hour + 12) % 24
-                    # 'night' ~ 6pm till 5:59am
-                    elif ampm == 'night' and time_hour >= 6:
-                        time_hour = (time_hour + 12) % 24
-                # 12hr time + no AM/PM set: default to next 12hrs
-                elif now_hour > time_hour and now_hour < time_hour + 12:
-                    time_hour = (time_hour + 12) % 24
-            departure_time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            ds['departure_time'] = "%d:%.2d" % (departure_time.hour, departure_time.minute)
-
-        # relative date
-        if departure_date_rel == 'tomorrow':
-            departure_time += timedelta(days=1)
-        elif departure_date_rel == 'day_after_tomorrow':
-            departure_time += timedelta(days=2)
-        elif departure_time < now:
-            departure_time += timedelta(days=1)
+            time_abs = ds['departure_time'] if ds['departure_time'] != 'none' else ds['time']
+            time_rel = ds['departure_time_rel'] if ds['departure_time_rel'] != 'none' else ds['time_rel']
+            departure_time = self.interpret_time(time_abs, ds['ampm'], time_rel, ds['date_rel'])
 
         # retrieve Google directions
         ds.directions = self.directions.get_directions(from_stop=ds['from_stop'],
                                                        to_stop=ds['to_stop'],
-                                                       departure_time=departure_time)
+                                                       departure_time=departure_time,
+                                                       arrival_time=arrival_time)
         return self.say_directions(ds, route_type)
 
     ORIGIN = 'ORIGIN'
@@ -645,6 +608,54 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct("&".join(res))
 
         return res_da
+
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel):
+
+        # interpret dialogue state time
+        now = datetime.now()
+
+        # relative time
+        if time_abs == 'none' or time_rel != 'none':
+            time_abs = now
+            if time_rel not in ['none', 'now']:
+                trel_parse = datetime.strptime(time_rel, "%H:%M")
+                time_abs += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
+        # absolute time
+        else:
+            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
+            time_hour = time_parsed.hour
+            now_hour = now.hour
+            # handle 12hr time
+            if time_hour >= 1 and time_hour <= 12:
+                # interpret AM/PM
+                if time_ampm != 'none':
+                    # 'pm' ~ 12pm till 11:59pm
+                    if time_ampm == 'pm' and time_hour < 12:
+                        time_hour += 12
+                    # 'am'/'morning' ~ 12am till 11:59am
+                    elif time_ampm in ['am', 'morning'] and time_hour == 12:
+                        time_hour = 0
+                    # 'evening' ~ 4pm till 3:59am
+                    elif time_ampm == 'evening' and time_hour >= 4:
+                        time_hour = (time_hour + 12) % 24
+                    # 'night' ~ 6pm till 5:59am
+                    elif time_ampm == 'night' and time_hour >= 6:
+                        time_hour = (time_hour + 12) % 24
+                # 12hr time + no AM/PM set: default to next 12hrs
+                elif now_hour > time_hour and now_hour < time_hour + 12:
+                    time_hour = (time_hour + 12) % 24
+            time_abs = datetime.combine(now, dttime(time_hour, time_parsed.minute))
+            # ds['time_abs'] = "%d:%.2d" % (time_abs.hour, time_abs.minute)
+
+        # relative date
+        if date_rel == 'tomorrow':
+            time_abs += timedelta(days=1)
+        elif date_rel == 'day_after_tomorrow':
+            time_abs += timedelta(days=2)
+        elif time_abs < now:
+            time_abs += timedelta(days=1)
+
+        return time_abs
 
     def get_limited_context_help(self, dialogue_state):
         res_da = DialogueAct()

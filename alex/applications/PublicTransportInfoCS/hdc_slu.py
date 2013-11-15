@@ -11,6 +11,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
 
+
 def _any_word_in(utterance, words):
     words = words if not isinstance(words, basestring) else words.strip().split()
     for alt_expr in words:
@@ -32,6 +33,13 @@ def _phrase_in(utterance, words):
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     words = words if not isinstance(words, basestring) else words.strip().split()
     return words in utterance
+
+
+def _any_phrase_in(utterance, phrases):
+    for phrase in phrases:
+        if _phrase_in(utterance, phrase):
+            return True
+    return False
 
 
 class PTICSHDCSLU(SLUInterface):
@@ -188,8 +196,27 @@ class PTICSHDCSLU(SLUInterface):
         preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
         preps_rel = set(["za", ])
 
-        confirm = lambda u: _phrase_in(u, 'jede to') or _phrase_in(u, 'odjíždí to') or _phrase_in(u, 'je výchozí')
-        deny = lambda u: _phrase_in(u, 'nechci jet') or _phrase_in(u, 'nechci odjíždět') or _phrase_in(u, 'nejedu')
+        test_context = [('confirm', 'departure', ['jede to', 'odjíždí to', 'je výchozí',
+                                                  'má to odjezd', 'je odjezd']),
+                        ('confirm', 'arrival', ['přijede to', 'přijíždí to',
+                                                'má to příjezd', 'je příjezd']),
+                        ('confirm', '', ['je to', 'myslíte', 'myslíš']),
+                        ('deny', 'departure', ['nechci jet', 'nejedu', 'nechci odjíždět',
+                                                'nechci odjezd', 'nechci vyjet', 'nechci vyjíždět',
+                                                'nechci vyrážet', 'nechci vyrazit']),
+                        ('deny', 'arrival', ['nechci přijet', 'nechci přijíždět',
+                                                'nechci příjezd', 'nechci dorazit']),
+                        ('deny', 'weather', ['nechci TASK=weather', 'nechci vědět TASK=weather']),
+                        ('deny', '', ['ne', 'nechci']),
+                        ('inform', 'departure', ['TASK=find_connection',
+                                                 'odjezd', 'odjíždet', 'odjet', 'jedu',
+                                                 'vyrážím', 'vyrážet', 'vyrazit',
+                                                 'bych jel', 'bych jela', 'abych jel',
+                                                 'abych jela']),
+                        ('inform', 'arrival', ['příjezd', 'přijet', 'dorazit', 'abych přijel',
+                                               'abych přijela']),
+                        ('inform', 'weather', ['TASK=weather']),
+                        ('inform', '', [])]
 
         last_time = 0
         for i, w in enumerate(u):
@@ -211,59 +238,14 @@ class PTICSHDCSLU(SLUInterface):
                     not _phrase_in(u, 'už mi neříká'):
                     time_rel = True
 
-                if confirm(u[last_time:i]):
-                    dat = "confirm"
-                elif deny(u[last_time:i]):
-                    dat = "deny"
-                else:
-                    dat = "inform"
-
-                if time_abs:
-                    cn.add(1.0, DialogueActItem(dat, 'departure_time', value))
-                elif time_rel:
-                    cn.add(1.0, DialogueActItem(dat, 'departure_time_rel', value))
+                if time_abs or time_rel:
+                    for act_type, time_type, phrases in test_context:
+                        if _any_phrase_in(u, phrases):
+                            break
+                    slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
+                    cn.add(1.0, DialogueActItem(act_type, slot, value))
 
                 last_time = i
-
-    def parse_time_rel(self, abutterance, cn):
-        """Detects the relative time in the input abstract utterance.
-
-        :param abutterance:
-        :param cn:ce
-        """
-
-        u = abutterance
-        N = len(u)
-
-        preps_in = set(["za", ])
-
-        confirm = _phrase_in(u, ['jede', 'to'])
-        deny = _phrase_in(u, ['nechci', 'ne'])
-
-        for i, w in enumerate(u):
-            if w.startswith("TIME_REL="):
-                value = w[9:]
-                time = False
-
-                if i >= 1:
-                    if u[i - 1] in preps_in:
-                        time = True
-
-                if value == "now" and not _phrase_in(u, 'no a') and \
-                        not _phrase_in(u, 'kolik je') and \
-                        not _phrase_in(u, 'neslyším') and \
-                        not _phrase_in(u, 'už mi neříká'):
-                    time = True
-
-                if confirm:
-                    dat = "confirm"
-                elif deny:
-                    dat = "deny"
-                else:
-                    dat = "inform"
-
-                if time:
-                    cn.add(1.0, DialogueActItem(dat, 'departure_time_rel', value))
 
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.

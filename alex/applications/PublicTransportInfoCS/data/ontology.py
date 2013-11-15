@@ -76,6 +76,26 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
             'relative_time',
         ],
+        'weather_time': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'absolute_time',
+        ],
+        'weather_time_rel': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'relative_time',
+        ],
+        'time': [
+            'user_informs',
+            'absolute_time',
+        ],
+        'time_rel': [
+            'user_informs',
+            'relative_time',
+        ],
         'duration': [
             'user_requests',
             'relative_time',
@@ -85,12 +105,14 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
+        # not implemented yet
         'date': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
         ],
+
         'date_rel': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',

@@ -146,25 +146,26 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         self.directions_url = \
                 'http://maps.googleapis.com/maps/api/directions/json'
 
-    def get_directions(self, from_stop, to_stop, departure_time):
+    def get_directions(self, from_stop, to_stop, departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
         at the given time and date.
 
         The time/date should be given as a datetime.datetime object.
         Setting the correct date is compulsory!
         """
-
-        departure_time = int(time.mktime(departure_time.timetuple()))
-
         data = {
             'origin': ('zastávka %s, Praha' % from_stop).encode('utf-8'),
             'destination': ('zastávka %s, Praha' % to_stop).encode('utf-8'),
             'region': 'cz',
-            'departure_time': departure_time,
             'sensor': 'false',
             'alternatives': 'true',
             'mode': 'transit',
         }
+        if departure_time:
+            data['departure_time'] = int(time.mktime(departure_time.timetuple()))
+        elif arrival_time:
+            data['arrival_time'] = int(time.mktime(arrival_time.timetuple()))
+
         self.system_logger.info("Google Directions request:\n" + str(data))
 
         page = urllib.urlopen(self.directions_url + '?' +
