@@ -91,12 +91,16 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = DialogueAct("irepeat()")
 
         elif 'current_time' in requested_slots:
+            # Respond to questions about current weather
+            # TODO: allow combining with other questions?
             res_da = self.req_current_time()
 
-        # topic dependendent
+        # topic-dependent
         elif dialogue_state['task'] == 'weather':
+            # talk about weather
             res_da = self.get_weather_res_da(dialogue_state, requested_slots)
         else:
+            # talk about public transport
             res_da = self.get_connection_res_da(dialogue_state, requested_slots)
 
         dialogue_state["ludait"] = "none"

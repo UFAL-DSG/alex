@@ -477,12 +477,12 @@ class PTICSHDCSLU(SLUInterface):
                 (_any_word_in(u, 'kdy kolik') and  _any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
                 cn.add(1.0, DialogueActItem('request','departure_time'))
 
-        if not _any_word_in(u,'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+        if not _any_word_in(u, 'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if _all_words_in(u, "za jak dlouho") or \
                 _all_words_in(u, "za kolik minut jede") or \
                 _all_words_in(u, "za kolik minut pojede") or \
                 _all_words_in(u, "za jak dlouho pojede"):
-                cn.add(1.0, DialogueActItem('request','departure_time_rel'))
+                cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if (_all_words_in(u, 'kdy tam') and _any_word_in(u, 'budu bude budem')) or \
             (_all_words_in(u, 'v kolik tam') and _any_word_in(u, 'budu bude budem')) or \
@@ -495,7 +495,7 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not _any_word_in(u, 'za'):
-            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede trvá"):
+            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede trvá trvat"):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if _all_words_in(u, 'kolik je hodin'):
@@ -503,7 +503,7 @@ class PTICSHDCSLU(SLUInterface):
 
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
-            cn.add(1.0, DialogueActItem('request','num_transfers'))
+            cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
         if _any_word_in(u, ["spoj", "spojení", "spoje", "možnost", "možnosti", "varianta", 'alternativa', "cesta", "cestu", "cesty",
                             "zpoždění", "stažení", "nalezená"]):
