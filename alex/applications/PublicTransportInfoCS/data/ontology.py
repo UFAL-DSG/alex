@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 ontology = {
     'slots': {
         'silence': set([]),
-        'task': set(['find_connection', 'find_platform']),
+        'task': set(['find_connection', 'find_platform', 'weather']),
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
@@ -115,6 +115,10 @@ ontology = {
         'alternative': [
             'system_informs',
             'user_informs',
+        ],
+        'current_time': [
+            'system_informs',
+            'absolute_time',
         ],
         'route_alternative': [
             # this is necessary to be defined as it is a state variable used by the policy and automatically added to

@@ -35,19 +35,17 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.last_system_dialogue_act = None
 
     def get_da(self, dialogue_state):
-        # all slots being requested by the user
-        requested_slots = dialogue_state.get_requested_slots()
-        # all slots being confirmed by the user
-        confirmed_slots = dialogue_state.get_confirmed_slots()
-        # all slots supplied by the user but not implicitly confirmed
-        non_informed_slots = dialogue_state.get_non_informed_slots()
 
 # TODO: implement these functions
 #        accepted_slots = dialogue_state.get_accepted_slots()
 #        changed_slots = dialogue_state.get_changed_slots()
 
-        res_da = None  # output DA
+        # all slots being requested by the user
+        requested_slots = dialogue_state.get_requested_slots()
+        # output DA
+        res_da = None
 
+        # topic-independent behavior
         if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
             # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
@@ -92,35 +90,14 @@ class PTICSHDCPolicy(DialoguePolicy):
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
 
-        elif dialogue_state["ludait"] == "reqalts":
-            # NLG("There is nothing else in the database.")
-            # NLG("The next connection is ...")
-            res_da = self.get_an_alternative(dialogue_state)
+        elif 'current_time' in requested_slots:
+            res_da = self.req_current_time()
 
-        elif dialogue_state["alternative"] != "none":
-            # Search for traffic direction and/or present the requested
-            # directions already found
-            res_da = self.get_requested_alternative(dialogue_state)
-            dialogue_state["alternative"] = "none"
-
-        elif requested_slots:
-            # inform about all requested slots
-            res_da = self.get_requested_info(requested_slots, dialogue_state)
-
-        elif confirmed_slots:
-            # inform about all slots being confirmed by the user
-            res_da = self.get_confirmed_info(confirmed_slots, dialogue_state)
-
+        # topic dependendent
+        elif dialogue_state['task'] == 'weather':
+            res_da = self.get_weather_res_da(dialogue_state, requested_slots)
         else:
-            # implicitly confirm all non-confirmed slots
-            res_da = self.get_iconfirm_info(non_informed_slots)
-            # request all unknown information
-            req_da = self.request_more_info(dialogue_state)
-            if len(req_da) == 0:
-                # we know everything we need -> start searching
-                res_da.extend(self.get_directions(dialogue_state, check_conflict=True))
-            else:
-                res_da.extend(req_da)
+            res_da = self.get_connection_res_da(dialogue_state, requested_slots)
 
         dialogue_state["ludait"] = "none"
 
@@ -129,6 +106,56 @@ class PTICSHDCPolicy(DialoguePolicy):
         # record the system dialogue acts
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
+
+    def get_connection_res_da(self, ds, requested_slots):
+        """Handle the public transport connection dialogue topic.
+
+        :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
+        """
+        # all slots being confirmed by the user
+        confirmed_slots = ds.get_confirmed_slots()
+        # all slots supplied by the user but not implicitly confirmed
+        non_informed_slots = ds.get_non_informed_slots()
+        # output DA
+        res_da = None
+
+        if ds["ludait"] == "reqalts":
+            # NLG("There is nothing else in the database.")
+            # NLG("The next connection is ...")
+            res_da = self.get_an_alternative(ds)
+
+        elif ds["alternative"] != "none":
+            # Search for traffic direction and/or present the requested
+            # directions already found
+            res_da = self.get_requested_alternative(ds)
+            ds["alternative"] = "none"
+
+        elif requested_slots:
+            # inform about all requested slots
+            res_da = self.get_requested_info(requested_slots, ds)
+
+        elif confirmed_slots:
+            # inform about all slots being confirmed by the user
+            res_da = self.get_confirmed_info(confirmed_slots, ds)
+
+        else:
+            # implicitly confirm all non-confirmed slots
+            res_da = self.get_iconfirm_info(non_informed_slots)
+            # request all unknown information
+            req_da = self.request_more_info(ds)
+            if len(req_da) == 0:
+                # we know everything we need -> start searching
+                res_da.extend(self.get_directions(ds, check_conflict=True))
+            else:
+                res_da.extend(req_da)
+        return res_da
+
+    def get_weather_res_da(self, ds, requested_slots):
+        """
+        """
+        return DialogueAct()
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for
@@ -325,6 +352,13 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da.extend(DialogueAct('request(to_stop)'))
 
         return req_da
+
+    def req_current_time(self):
+        """Generates a dialogue act informing about the current time.
+        :rtype: DialogueAct
+        """
+        cur_time = datetime.now()
+        return DialogueAct('inform(current_time=%d:%02d)' % (cur_time.hour, cur_time.minute))
 
     def req_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last

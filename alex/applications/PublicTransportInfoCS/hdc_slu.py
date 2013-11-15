@@ -495,8 +495,11 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not _any_word_in(u, 'za'):
-            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede"):
+            if _all_words_in(u, 'jak dlouho') and _any_word_in(u, "jede pojede trvá"):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
+
+        if _all_words_in(u, 'kolik je hodin'):
+            cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if _any_word_in(u, ["kolik", "jsou", "je"]) and \
             _any_word_in(u, ["přestupů", "přestupu", "přestupy", "stupňů", "přestup", "přestupku", "přestupky", "přestupků"]):
