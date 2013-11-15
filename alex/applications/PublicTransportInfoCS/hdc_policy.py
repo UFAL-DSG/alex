@@ -13,7 +13,10 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import *
+from .directions import GooglePIDDirectionsFinder
+from .weather import OpenWeatherMapWeatherFinder
+from datetime import datetime
+from datetime import time as dttime
 
 
 def randbool(n):
@@ -30,6 +33,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
         self.directions = GooglePIDDirectionsFinder(cfg=cfg)
+        self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
 
         self.das = []
         self.last_system_dialogue_act = None
@@ -159,7 +163,10 @@ class PTICSHDCPolicy(DialoguePolicy):
     def get_weather_res_da(self, ds, requested_slots):
         """
         """
-        return DialogueAct()
+        # TODO some more intelligent reasoning about the weather
+        weather = self.weather.get_weather()
+        return DialogueAct('inform(temperature="%d")&inform(weather_condition="%s")' %
+                           (weather.temp, weather.condition))
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for
