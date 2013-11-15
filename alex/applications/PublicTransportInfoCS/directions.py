@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import urllib
 from datetime import datetime
 from datetime import time as dttime
@@ -29,7 +31,7 @@ class GoogleDirections(Directions):
     def __repr__(self):
         ret = ''
         for i, route in enumerate(self.routes, start=1):
-            ret += "ROUTE " + str(i) + "\n" + route.__repr__() + "\n\n"
+            ret += "ROUTE " + unicode(i) + "\n" + route.__repr__() + "\n\n"
         return ret
 
 
@@ -42,7 +44,7 @@ class GoogleRoute(Route):
     def __repr__(self):
         ret = ''
         for i, leg in enumerate(self.legs, start=1):
-            ret += "LEG " + str(i) + "\n" + leg.__repr__() + "\n"
+            ret += "LEG " + unicode(i) + "\n" + leg.__repr__() + "\n"
         return ret
 
 
@@ -79,25 +81,31 @@ class GoogleRouteLegStep(object):
 
     MODE_TRANSIT = "TRANSIT"
     MODE_WALKING = "WALKING"
+    STOPS_MAPPING = {'Můstek - A': 'Můstek',
+                     'Můstek - B': 'Můstek',
+                     'Muzeum - A': 'Muzeum',
+                     'Muzeum - C': 'Muzeum',
+                     'Florenc - B': 'Florenc',
+                     'Florenc - C': 'Florenc'}
 
     def __init__(self, input_json):
         self.travel_mode = input_json['travel_mode']
+
         if self.travel_mode == self.MODE_TRANSIT:
-            self.departure_stop = \
-                    input_json['transit_details']['departure_stop']['name']
-            self.departure_time = \
-                    datetime.fromtimestamp(input_json['transit_details']
-                                           ['departure_time']['value'])
-            self.arrival_stop = \
-                    input_json['transit_details']['arrival_stop']['name']
-            self.arrival_time = \
-                    datetime.fromtimestamp(input_json['transit_details']
-                                           ['arrival_time']['value'])
+
+            self.departure_stop = input_json['transit_details']['departure_stop']['name']
+            self.departure_time = datetime.fromtimestamp(input_json['transit_details']
+                                                         ['departure_time']['value'])
+            self.arrival_stop = input_json['transit_details']['arrival_stop']['name']
+            self.arrival_time = datetime.fromtimestamp(input_json['transit_details']
+                                                       ['arrival_time']['value'])
             self.headsign = input_json['transit_details']['headsign']
-            self.vehicle = \
-                    input_json['transit_details']['line']['vehicle']['type']
-            self.line_name = \
-                    input_json['transit_details']['line']['short_name']
+            self.vehicle = input_json['transit_details']['line']['vehicle']['type']
+            self.line_name = input_json['transit_details']['line']['short_name']
+            # normalize some stops' names
+            self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
+            self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
+
         elif self.travel_mode == self.MODE_WALKING:
             self.duration = input_json['duration']['value']
             self.distance = input_json['distance']['value']
@@ -112,7 +120,7 @@ class GoogleRouteLegStep(object):
         elif self.travel_mode == self.MODE_WALKING:
             ret += ': ' + str(self.duration / 60) + ' min, ' + \
                     str(self.distance) + ' m'
-        return ret.encode('utf8')
+        return ret
 
 
 class DirectionsFinder(object):
@@ -149,8 +157,8 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         departure_time = int(time.mktime(departure_time.timetuple()))
 
         data = {
-            'origin': 'zastávka %s, Praha' % from_stop.encode('utf8'),
-            'destination': 'zastávka %s, Praha' % to_stop.encode('utf8'),
+            'origin': ('zastávka %s, Praha' % from_stop).encode('utf-8'),
+            'destination': ('zastávka %s, Praha' % to_stop).encode('utf-8'),
             'region': 'cz',
             'departure_time': departure_time,
             'sensor': 'false',
@@ -166,7 +174,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
 
         directions = GoogleDirections(response)
         self.system_logger.info("Google Directions response:\n" +
-                                str(directions).decode('utf8'))
+                                unicode(directions))
         return directions
 
     def _log_response_json(self, data):

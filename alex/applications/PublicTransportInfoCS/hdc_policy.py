@@ -596,8 +596,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                 # only mention transfer if there is one
                 if next_leave_stop != self.DESTIN:
                     res.append("inform(transfer='true')")
-                else:
-                    res.append("inform(arrival_time=%s)" % step.arrival_time.strftime("%H:%M"))
                 prev_arrive_stop = step.arrival_stop
 
         # no route found: apologize
