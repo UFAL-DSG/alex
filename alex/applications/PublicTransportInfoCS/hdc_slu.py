@@ -546,7 +546,7 @@ class PTICSHDCSLU(SLUInterface):
         if len(u) == 1 and _any_word_in(u, "předchozí před"):
             cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if _any_word_in(u, "neslyšíme neslyším halo haló") :
+        if _any_word_in(u, "neslyšíme neslyším halo haló"):
             cn.add(1.0, DialogueActItem('canthearyou'))
 
         if _all_words_in(u, "nerozuměl jsem") or \
