@@ -27,11 +27,14 @@ Implemented features:
   morphologically rich languages
 - TTS using ``flite``, ``VoiceRSS`` and ``SpeechTech``
 - evaluation of dialogue systems using Amazon Mechanical Turk crowdsourcing platform
-- transcription and semantic annotation of collected audio using Crowdflower crowdsourcing platform
 - building acoustic models using the HTK and KALDI
 - example dialogue domains:
 
   - PTIcs: :doc:`alex.applications.PublicTransportInfoCS.README`
+
+Features implemented in different repositories:
+
+- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform
 
 Missing features:
 
