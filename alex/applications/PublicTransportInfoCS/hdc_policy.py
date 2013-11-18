@@ -163,10 +163,39 @@ class PTICSHDCPolicy(DialoguePolicy):
     def get_weather_res_da(self, ds, requested_slots):
         """
         """
-        # TODO some more intelligent reasoning about the weather
-        weather = self.weather.get_weather()
-        return DialogueAct('inform(temperature="%d")&inform(weather_condition="%s")' %
-                           (weather.temp, weather.condition))
+        # interpret time
+        weather_time = None
+        time_abs = ds['weather_time'] if ds['weather_time'] != 'none' else ds['time']
+        time_rel = ds['weather_time_rel'] if ds['weather_time_rel'] != 'none' else ds['time_rel']
+        daily = (time_abs == 'none' and time_rel == 'none' and ds['date_rel'] != 'none')
+        # check if any time is set to distinguish current/prediction
+        if time_abs != 'none' or time_rel != 'none' or ds['ampm'] != 'none' or ds['date_rel'] != 'none':
+            weather_time = self.interpret_time(time_abs, ds['ampm'], time_rel, ds['date_rel'])
+        # request the weather
+        weather = self.weather.get_weather(weather_time, daily)
+        # return the result
+        res_da = DialogueAct()
+        # time
+        if weather_time:
+            if time_rel != 'none':
+                res_da.append(DialogueActItem('inform', 'weather_time_rel', time_rel))
+            elif time_abs != 'none':
+                res_da.append(DialogueActItem('inform', 'weather_time', time_abs))
+                if ds['ampm'] != 'none':
+                    res_da.append(DialogueActItem('inform', 'ampm', ds['ampm']))
+            if ds['date_rel'] != 'none':
+                res_da.append(DialogueActItem('inform', 'date_rel', ds['date_rel']))
+        else:
+            res_da.append(DialogueActItem('inform', 'time_rel', 'now'))
+        # temperature
+        if not daily:
+            res_da.append(DialogueActItem('inform', 'temperature', str(weather.temp)))
+        else:
+            res_da.append(DialogueActItem('inform', 'min_temperature', str(weather.min_temp)))
+            res_da.append(DialogueActItem('inform', 'max_temperature', str(weather.max_temp)))
+        # weather conditions
+        res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
+        return res_da
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for
@@ -530,7 +559,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         departure_time, arrival_time = None, None
         if ds['arrival_time'] != 'none' or ds['arrival_time_rel'] != 'none':
             arrival_time = self.interpret_time(ds['arrival_time'], ds['ampm'],
-                                                 ds['arrival_time_rel'], ds['date_rel'])
+                                               ds['arrival_time_rel'], ds['date_rel'])
         else:
             time_abs = ds['departure_time'] if ds['departure_time'] != 'none' else ds['time']
             time_rel = ds['departure_time_rel'] if ds['departure_time_rel'] != 'none' else ds['time_rel']

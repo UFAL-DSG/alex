@@ -111,6 +111,8 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
                 15 minutes'.
         :return: Czech time string with all numerals written out as words
         """
+        if ':' not in time:  # 'now' and similar
+            return time
         hours, mins = map(int, time.split(':'))
         time_str = []
         if not (relative and hours == 0):
