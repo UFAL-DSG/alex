@@ -64,7 +64,10 @@ class SemHub(Hub):
         print
 
     def input_da_nblist(self):
-        """Reads an N-best list of dialogue acts from the input. """
+        """Reads an N-best list of dialogue acts from the input.
+
+        :rtype : confusion network
+        """
 
         self.init_readline()
 
@@ -88,9 +91,8 @@ class SemHub(Hub):
 
         nblist.merge()
         nblist.scale()
-        nblist.add_other()
 
-        return nblist
+        return nblist.get_confnet()
 
     def run(self):
         """Controls the dialogue manager."""
@@ -107,13 +109,15 @@ class SemHub(Hub):
             """)
 
             while True:
+                self.cfg['Logging']['session_logger'].turn("system")
+                self.dm.log_state()
                 sys_da = self.dm.da_out()
                 self.output_da(sys_da)
 
                 nblist = self.input_da_nblist()
                 self.dm.da_in(nblist)
 
-                print nblist
+                #print "#102", nblist
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in SHUB process.')
             raise
@@ -147,6 +151,14 @@ if __name__ == '__main__':
     #########################################################################
     #########################################################################
     cfg['Logging']['system_logger'].info("Sem Hub\n" + "=" * 120)
+
+    cfg['Logging']['system_logger'].session_start("localhost")
+    cfg['Logging']['system_logger'].session_system_log('config = ' + unicode(cfg))
+
+    cfg['Logging']['session_logger'].session_start(cfg['Logging']['system_logger'].get_session_dir_name())
+    cfg['Logging']['session_logger'].config('config = ' + unicode(cfg))
+    cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
+    cfg['Logging']['session_logger'].input_source("dialogue acts")
 
     shub = SemHub(cfg)
 

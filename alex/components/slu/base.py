@@ -12,8 +12,7 @@ from alex.components.asr.utterance import AbstractedUtterance, Utterance, \
     UtteranceConfusionNetwork, UtteranceHyp, UtteranceNBList, \
     UtteranceFeatures, UtteranceNBListFeatures, \
     UtteranceConfusionNetworkFeatures
-from alex.components.slu.da import DialogueActItem, DialogueActFeatures, \
-    DialogueActNBListFeatures, DialogueActConfusionNetwork, merge_slu_confnets
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork, merge_slu_confnets
 from alex.components.slu.exceptions import SLUException
 from alex.utils.config import load_as_module
 from alex.utils.various import nesteddict
@@ -36,16 +35,14 @@ Note that names of abstracted observation types have to follow the format
 ft_props = {
     'ngram': FeatureProps('utt', UtteranceFeatures, False),
     'nbl_ngram': FeatureProps('utt_nbl', UtteranceNBListFeatures, False),
-    'cn_ngram': FeatureProps('utt_cn', UtteranceConfusionNetworkFeatures,
-                             False),
+    'cn_ngram': FeatureProps('utt_cn', UtteranceConfusionNetworkFeatures,False),
     'ab_ngram': FeatureProps('abutt', UtteranceFeatures, True),
-    'ab_nbl_ngram': FeatureProps('abutt_nbl', UtteranceNBListFeatures,
-                                 True),
-    'ab_cn_ngram': FeatureProps('abutt_cn',
-                                UtteranceConfusionNetworkFeatures, True),
-    'prev_da': FeatureProps('prev_da', DialogueActFeatures, False),
+    'ab_nbl_ngram': FeatureProps('abutt_nbl', UtteranceNBListFeatures,True),
+    'ab_cn_ngram': FeatureProps('abutt_cn',UtteranceConfusionNetworkFeatures, True),
+    #'prev_da': FeatureProps('prev_da', DialogueActFeatures, False),
     # Following gets used when doing reranking.
-    'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False), }
+    #'da_nbl': FeatureProps('da_nbl', DialogueActNBListFeatures, False),
+}
 ft_default_args = {
     'ngram': ('ngram', 4,),
     'nbl_ngram': ('ngram',),

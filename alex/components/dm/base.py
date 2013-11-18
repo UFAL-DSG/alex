@@ -6,6 +6,50 @@ from collections import defaultdict
 from alex.components.dm.ontology import Ontology
 
 
+class DiscreteValue(object):
+    def __init__(self, values, name="", desc=""):
+        self.values = values
+        self.name = name
+        self.desc = desc
+
+    def __str__(self):
+        return unicode(self).encode('ascii', 'replace')
+
+    def __unicode__(self):
+        """Get the content of the dialogue state in a human readable form."""
+        pass
+
+    def normalise(self):
+        """This function normalise the sum of all probabilities to 1.0"""
+
+        pass
+
+    def get_most_probable_hyp(self):
+        """The function returns the most probable value and its probability
+        in a tuple.
+        """
+
+        return None
+
+    def get_most_probable_value(self):
+        """The function returns the most probable value.
+        """
+
+        return self.get_most_probable_hyp()[1]
+
+    def get_two_most_probable_hyps(self):
+        """This function returns two most probable values and their probabilities.
+
+        The function returns a tuple consisting of two tuples (probability, value).
+        """
+
+        return None
+
+    def explain(self, full=False, linear_prob=False):
+        """This function prints the values and their probabilities for this node.
+        """
+        pass
+
 class DialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
 
@@ -155,5 +199,4 @@ class DialogueManager(object):
             f_token = urllib2.urlopen(token_url.format(curr_session))
             return f_token.read()
         else:
-            raise Exception(
-                "Please configure the 'token_url' DM parameter in config.")
+            raise Exception("Please configure the 'token_url' DM parameter in config.")

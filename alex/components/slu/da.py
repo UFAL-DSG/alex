@@ -10,10 +10,11 @@ import codecs
 from operator import xor
 from collections import defaultdict
 
-from alex.components.slu.exceptions import SLUException, DialogueActException, DialogueActItemException
-from alex.ml.exceptions import NBListException
 from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
-from alex.ml.features import Abstracted, Features, AbstractedTuple2
+from alex.components.slu.exceptions import SLUException, DialogueActException, DialogueActItemException, \
+    DialogueActConfusionNetworkException
+from alex.ml.exceptions import NBListException
+from alex.ml.features import Abstracted
 from alex.ml.hypothesis import Hypothesis, NBList, ConfusionNetwork
 from alex.utils.text import split_by
 
@@ -547,42 +548,6 @@ class DialogueAct(object):
         return self
 
 
-class DialogueActFeatures(Features):
-    """Represents features of a dialogue act.
-
-    Attributes:
-        features: defaultdict(float) of features
-        set: set of features
-        generic: mapping { feature : generic feature } for features from
-                 self.features.keys() that are abstracted
-        instantiable: mapping { feature : generic part of feature } for
-            features from self.features.keys() that are abstracted
-
-    """
-    def __init__(self, da, include_slotvals=True):
-        super(DialogueActFeatures, self).__init__()
-        self.generic = dict()
-        self.instantiable = dict()
-        # Features representing the complete DA.
-        for dai in da:
-            # import ipdb; ipdb.set_trace() # DEBUG
-            self.features[(dai.dat, )] += 1.
-            if dai.name is not None:
-                self.features[(dai.dat, dai.name)] += 1.
-                if dai.value is not None:
-                    full_feat = AbstractedTuple2(
-                        (dai.dat,
-                         '{n}={v}'.format(n=dai.name, v=dai.value)))
-                    self.features[full_feat] += 1.
-                    self.generic[full_feat] = full_feat.get_generic()
-                    self.instantiable[full_feat] = full_feat
-                    if include_slotvals:
-                        self.features[(dai.dat, dai.name, dai.value)] += 1.
-                        self.features[('.v', dai.value)] += 1.
-        # Summary features.
-        self.features[('dats', tuple(sorted(set(dai.dat for dai in da))))] = 1.
-        self.features['n_dais'] = len(da)
-
 
 class SLUHypothesis(Hypothesis):
     """This is the base class for all forms of probabilistic SLU hypotheses
@@ -704,6 +669,18 @@ class DialogueActNBList(SLUHypothesis, NBList):
         self.n_best = sorted(new_n_best, reverse=True)
         return self
 
+    def get_confnet(self):
+        confnet = DialogueActConfusionNetwork()
+
+        for prob, da in self.n_best:
+            for dai in da:
+                confnet.add_merge(prob, dai, combine='add')
+
+        confnet.merge()
+        confnet.sort()
+        return confnet
+
+
     # XXX It is now a class invariant that the n-best list is sorted.
     def sort(self):
         """DEPRECATED, going to be removed."""
@@ -712,63 +689,6 @@ class DialogueActNBList(SLUHypothesis, NBList):
 
     def has_dat(self, dat):
         return any(map(lambda hyp: hyp[1].has_dat(dat), self.n_best))
-
-
-class DialogueActNBListFeatures(Features):
-    """Represents features of a DA n-best list.
-
-    Attributes:
-        features: defaultdict(float) of features
-        set: set of features
-        generic: mapping { feature : generic feature } for features from
-            self.features.keys() that are abstracted
-        instantiable: mapping { feature : generic part of feature } for
-            features from self.features.keys() that are abstracted
-        include_slotvals: whether slot values should be also included (or
-                          ignored)
-
-    """
-    def __init__(self, da_nblist=None, include_slotvals=True):
-        # This initialises the self.features field.
-        super(DialogueActNBListFeatures, self).__init__()
-        self.generic = dict()
-        self.instantiable = dict()
-
-        self.include_slotvals = include_slotvals
-
-        if da_nblist is not None:
-            self.parse(da_nblist)
-
-    def parse(self, da_nblist):
-        first_da_feats = None
-        for hyp_idx, hyp in enumerate(da_nblist):
-            prob, da = hyp
-            da_feats = DialogueActFeatures(
-                da=da, include_slotvals=self.include_slotvals)
-            if first_da_feats is None:
-                first_da_feats = da_feats
-            for feat, feat_val in da_feats.iteritems():
-                # Include the first rank of features occurring in the n-best
-                # list.
-                if (0, feat) not in self.features:
-                    self.features[(0, feat)] = float(hyp_idx)
-                    if feat in da_feats.generic:
-                        self.generic[(0, feat)] = (0, da_feats.generic[feat])
-                        self.instantiable[(0, feat)] = \
-                            da_feats.instantiable[feat]
-                # Include the weighted features of individual hypotheses.
-                self.features[(1, feat)] += prob * feat_val
-                if feat in da_feats.generic:
-                    self.generic[(1, feat)] = (1, da_feats.generic[feat])
-                    self.instantiable[(1, feat)] = \
-                        da_feats.instantiable[feat]
-        # Add features of the top DA.
-        if first_da_feats is None:
-            self.features[(2, None)] = 1.
-        else:
-            self.features[(2, 'prob')] = da_nblist[0][0]
-            for feat, feat_val in first_da_feats.iteritems():
-                self.features[(2, feat)] = feat_val
 
 
 class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
@@ -844,6 +764,12 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
             else:
                 daitup2dai[(dai.dat, dai.name)] = dai
         return daitup2dai
+
+    def extend(self, conf_net):
+        if not isinstance(conf_net, ConfusionNetwork):
+            raise DialogueActConfusionNetworkException("Only DialogueActConfusionNetwork can be added.")
+        self.cn.extend(conf_net.cn)
+        return self
 
     def add_merge(self, probability, dai, combine='max'):
         """Combines the probability mass of the given dialogue act item with an
@@ -1127,8 +1053,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         """
         for p, dai in self.cn:
             if p >= 1.0:
-                raise DialogueActConfusionNetworkException(
-                    ("The probability of the {dai!s} dialogue act item is " +
+                raise DialogueActConfusionNetworkException(("The probability of the {dai!s} dialogue act item is " +
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
 
     def normalise_by_slot(self):
@@ -1212,8 +1137,7 @@ def merge_slu_confnets(confnet_hyps):
             # if dai.dat == "other":
             #     continue
 
-            merged.add_merge(prob_confnet * prob, dai,
-                             combine='add')
+            merged.add_merge(prob_confnet * prob, dai, combine='add')
 
     merged.sort()
 
