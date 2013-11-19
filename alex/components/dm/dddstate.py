@@ -40,6 +40,19 @@ class D3DiscreteValue(DiscreteValue):
     def reset(self):
         self.values = defaultdict(float, {'none': 1.0, })
 
+    def set(self, value, prob = None):
+        """This function sets a probability of a specific value.
+
+        *WARNING* This can lead to un-normalised probabilities.
+        """
+        if isinstance(value, dict) and not prob:
+            # rewrite the complete set of values
+            self.values = value
+        elif isinstance(value, basestring) and isinstance(prob, float):
+            self.values[value] = prob
+        else:
+            raise DeterministicDiscriminativeDialogueStateException('Unsupported D3DiscreteValue set value.')
+
     def normalise(self):
         """This function normalises the sum of all probabilities to 1.0"""
 
@@ -61,14 +74,6 @@ class D3DiscreteValue(DiscreteValue):
         """This function adds a value and its probability"""
 
         self.values[value] += prob
-
-    def set(self, value, prob):
-        """This function sets a probability of a specific value.
-
-        *WARNING* This can lead to un-normalised probabilities.
-        """
-
-        self.values[value] = prob
 
     def get_most_probable_hyp(self):
         """The function returns the most probable value and its probability
@@ -153,24 +158,28 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("D3State - Dialogue state content:")
         s.append("")
-        s.append("{slot} = {value}".format(slot="ludait",value=self.slots["ludait"]))
+        s.append("{slot:20} = {value}".format(slot="ludait",value=self.slots["ludait"]))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                 not sl.startswith('sh_') and not sl.startswith('rh_') and
-                not sl.startswith("ludait")]:
-            s.append("{slot} = {value}".format(slot=name,value=self.slots[name]))
+                not sl.startswith("ludait") and isinstance(self.slots[sl], D3DiscreteValue)]:
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
-            s.append("{slot} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
-            s.append("{slot} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
-            s.append("{slot} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+        s.append("")
+
+        for name in [sl for sl in sorted(self.slots) if not isinstance(self.slots[sl], D3DiscreteValue)]:
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
 
         s.append("")
 
@@ -253,16 +262,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         if not isinstance(user_da, DialogueActConfusionNetwork):
             raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
 
-        da = user_da
-
         if self.debug:
-            self.system_logger.debug('D3State Dialogue Act in:\n%s' % da)
-
-        # store the input
-        self.turns.append([da, system_da, deepcopy(self.slots)])
+            self.system_logger.debug('D3State Dialogue Act in:\n%s' % user_da)
 
         # perform the context resolution
-        user_da = self.context_resolution(da, system_da)
+        user_da = self.context_resolution(user_da, system_da)
 
         if self.debug:
             self.system_logger.debug('Context Resolution - Dialogue Act: \n%s' % user_da)
@@ -271,28 +275,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         self.state_update(user_da, system_da)
         self.turn_number += 1
 
+        # store the result
+        self.turns.append([deepcopy(user_da), deepcopy(system_da), deepcopy(self.slots)])
+
         # print the dialogue state if requested
         if self.debug:
             self.system_logger.debug(unicode(self))
-
-            requested_slots = self.get_requested_slots()
-            confirmed_slots = self.get_confirmed_slots()
-            non_informed_slots = self.get_non_informed_slots()
-            # accepted_slots = self.get_accepted_slots()
-            # changed_slots = self.get_changed_slots()
-
-            s = []
-            s.append('D3State - Dialogue state update')
-            s.append("")
-            s.append("Requested slots:")
-            s.append(unicode(requested_slots))
-            s.append("Confirmed slots:")
-            s.append(unicode(confirmed_slots))
-            s.append("Non-informed slots:")
-            s.append(unicode(non_informed_slots))
-            s = '\n'.join(s)
-
-            self.system_logger.debug(s)
 
     def context_resolution(self, user_da, system_da):
         """Resolves and converts meaning of some user dialogue acts
@@ -399,7 +387,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         print "#52", self.slots
 
-    def get_requested_slots(self, req_prob=0.8):
+    def get_slots_being_requested(self, req_prob=0.8):
         """Return all slots which are currently being requested by the user along with the correct value."""
         requested_slots = {}
 
@@ -413,19 +401,19 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         return requested_slots
 
-    def get_confirmed_slots(self, conf_prob=0.8):
+    def get_slots_being_confirmed(self, conf_prob=0.8):
         """Return all slots which are currently being confirmed by the user along with the value being confirmed."""
         confirmed_slots = {}
 
         for slot in self.slots:
             if isinstance(self.slots[slot], D3DiscreteValue) and slot.startswith("ch_"):
                 prob, value = self.slots[slot].get_most_probable_hyp()
-                if value not in ['none', 'system-informed'] and prob > conf_prob:
+                if value not in ['none', 'system-informed', None] and prob > conf_prob:
                     confirmed_slots[slot[3:]] = self.slots[slot]
 
         return confirmed_slots
 
-    def get_non_informed_slots(self, noninf_prob=0.8):
+    def get_slots_being_noninformed(self, noninf_prob=0.8):
         """Return all slots provided by the user and the system has not informed about them yet along with
         the value of the slot.
 
@@ -439,7 +427,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         Because the system informed about the food type and stored "system-informed", then
         we will not notice that we confirmed a different food type.
         """
-        non_informed_slots = {}
+        noninformed_slots = {}
 
         for slot in self.slots:
             # ignore some slots
@@ -452,21 +440,75 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             if "rh_" + slot not in self.slots or self.slots["rh_" + slot]["none"] > 0.999:
                 prob, value = self.slots[slot].get_most_probable_hyp()
                 # test that the nin informed value is an interesting value
-                if value != "none" and prob > noninf_prob:
-                    non_informed_slots[slot] = self.slots[slot]
+                if value not in ['none', None] and prob > noninf_prob:
+                    noninformed_slots[slot] = self.slots[slot]
 
-        return non_informed_slots
+        return noninformed_slots
 
-    def get_accepted_slots(self):
-        """Returns all slots which has a probability of a non "none" vale larger then some threshold.
+    def get_accepted_slots(self, acc_prob):
+        """Returns all slots which have a probability of a non "none" value larger then some threshold.
         """
-        return None
+        accepted_slots = {}
 
-    def get_changed_slots(self):
+        for slot in self.slots:
+            if isinstance(self.slots[slot], D3DiscreteValue):
+                prob, value = self.slots[slot].get_most_probable_hyp()
+                if value not in ['none', 'system-informed', None] and prob >= acc_prob:
+                    accepted_slots[slot] = self.slots[slot]
+
+        return accepted_slots
+
+    def get_slots_tobe_confirmed(self, min_prob, max_prob):
+        """Returns all slots which have a probability of a non "none" value larger then some threshold and still not so
+        large to be considered as accepted.
+        """
+        tobe_confirmed_slots = {}
+
+        for slot in self.slots:
+            if isinstance(self.slots[slot], D3DiscreteValue):
+                prob, value = self.slots[slot].get_most_probable_hyp()
+                if value not in ['none', 'system-informed', None] and min_prob <= prob < max_prob  :
+                    tobe_confirmed_slots[slot] = self.slots[slot]
+
+        return tobe_confirmed_slots
+
+    def get_slots_tobe_selected(self, sel_prob):
+        """Returns all slots which have a probability of the two most probable non "none" value larger then some threshold.
+        """
+        tobe_selected_slots = {}
+
+        for slot in self.slots:
+            if isinstance(self.slots[slot], D3DiscreteValue):
+                (prob1, value1), (prob2, value2) = self.slots[slot].get_two_most_probable_hyps()
+
+                if value1 not in ['none', 'system-informed', None] and prob1 > sel_prob and \
+                    value2 not in ['none', 'system-informed', None] and prob2 > sel_prob:
+                    tobe_selected_slots[slot] = self.slots[slot]
+
+        return tobe_selected_slots
+
+    def get_changed_slots(self, cha_prob):
         """Returns all slots that has changed from the previous turn. Because the change is determined by change in
         probability for a particular value, the can be vary small changes. Therefore we will report only changes
-        in accepted slots.
+        for values with probability larger then some threshold.
         """
+        changed_slots = {}
 
         # compare the accepted slots from the previous and the current turn
-        return None
+        if len(self.turns) >= 2:
+            cur_slots = self.turns[-1][2]
+            prev_slots = self.turns[-2][2]
+
+            for slot in cur_slots:
+                if isinstance(cur_slots[slot], D3DiscreteValue):
+                    cur_prob, cur_value = cur_slots[slot].get_most_probable_hyp()
+                    prev_prob, prev_value = prev_slots[slot].get_most_probable_hyp()
+
+                    if cur_value not in ['none', 'system-informed', None] and cur_prob > cha_prob and \
+                        prev_value not in ['none', 'system-informed', None] and prev_prob > cha_prob and \
+                        cur_value != prev_value:
+                        changed_slots[slot] = cur_slots[slot]
+
+            return changed_slots
+        else:
+            return {}

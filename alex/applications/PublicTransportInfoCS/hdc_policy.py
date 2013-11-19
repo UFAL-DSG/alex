@@ -34,8 +34,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.das = []
         self.last_system_dialogue_act = None
 
-        self.policy_conf = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
-
+        self.debug = cfg['DM']['basic']['debug']
+        self.session_logger = cfg['Logging']['session_logger']
+        self.system_logger = cfg['Logging']['system_logger']
+        self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
 
     def get_da(self, dialogue_state):
         """The main policy decisions are made here.
@@ -44,22 +46,42 @@ class PTICSHDCPolicy(DialoguePolicy):
         :return:
         """
 
-        max_prob_ludait_prob, max_prob_ludait  = dialogue_state["ludait"].get_most_probable_hyp()
-        if max_prob_ludait_prob < self.policy_conf['accept_prob_ludait']:
-            max_prob_ludait = 'none'
-
-        print "#61", max_prob_ludait_prob, max_prob_ludait
+        ludait_prob, ludait  = dialogue_state["ludait"].get_most_probable_hyp()
+        if ludait_prob < self.policy_cfg['accept_prob_ludait']:
+            ludait = 'none'
 
         # all slots being requested by the user
-        requested_slots = dialogue_state.get_requested_slots(self.policy_conf['accept_prob_requested'])
+        slots_being_requested = dialogue_state.get_slots_being_requested(self.policy_cfg['accept_prob_being_requested'])
         # all slots being confirmed by the user
-        confirmed_slots = dialogue_state.get_confirmed_slots(self.policy_conf['accept_prob_confirmed'])
+        slots_being_confirmed = dialogue_state.get_slots_being_confirmed(self.policy_cfg['accept_prob_being_confirmed'])
         # all slots supplied by the user but not implicitly confirmed
-        non_informed_slots = dialogue_state.get_non_informed_slots(self.policy_conf['accept_prob_noninformed'])
+        noninformed_slots = dialogue_state.get_slots_being_noninformed(self.policy_cfg['accept_prob_noninformed'])
         # all slots deemed to be accepted
-        accepted_slots = dialogue_state.get_accepted_slots()
+        accepted_slots = dialogue_state.get_accepted_slots(self.policy_cfg['accept_prob'])
+        # all slots that should be confirmed
+        slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.policy_cfg['accept_prob'])
+        # all slots for which the policy can use ``select`` DAI
+        slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         # all slots changed by a user in the last turn
-        changed_slots = dialogue_state.get_changed_slots()
+        changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['change_prob'])
+
+
+        if self.debug:
+            s = []
+            s.append('PTICSHDCPolicy - Slot stats')
+            s.append("")
+            s.append("ludait:                 %s" % unicode(ludait))
+            s.append("Slots being requested:  %s" % unicode(slots_being_requested))
+            s.append("Slots being confirmed:  %s" % unicode(slots_being_confirmed))
+            s.append("Non-informed slots:     %s" % unicode(noninformed_slots))
+            s.append("")
+            s.append("Accepted slots:         %s" % unicode(accepted_slots))
+            s.append("Slots to be confirmed:  %s" % unicode(slots_tobe_confirmed))
+            s.append("Slots to be selected:   %s" % unicode(slots_tobe_selected))
+            s.append("Changed slots:          %s" % unicode(changed_slots))
+            s = '\n'.join(s)
+
+            self.system_logger.debug(s)
 
         res_da = None  # output DA
 
@@ -71,7 +93,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
 
-        elif max_prob_ludait == "silence":
+        elif ludait == "silence":
             # at this moment the silence and the explicit null act
             # are treated the same way: NLG("")
             silence_time = dialogue_state['silence_time']
@@ -81,54 +103,54 @@ class PTICSHDCPolicy(DialoguePolicy):
             else:
                 res_da = DialogueAct("silence()")
 
-        elif max_prob_ludait == "bye":
+        elif ludait == "bye":
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
 
-        elif max_prob_ludait == "null" or max_prob_ludait == "other":
+        elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
 
-        elif max_prob_ludait == "help":
+        elif ludait == "help":
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
 
-        elif max_prob_ludait == "thankyou":
+        elif ludait == "thankyou":
             # NLG("Díky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
 
-        elif max_prob_ludait == "restart":
+        elif ludait == "restart":
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
 
-        elif max_prob_ludait == "repeat":
+        elif ludait == "repeat":
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
 
-        elif max_prob_ludait == "reqalts":
+        elif ludait == "reqalts":
             # NLG("There is nothing else in the database.")
             # NLG("The next connection is ...")
             res_da = self.get_an_alternative(dialogue_state)
 
-        elif dialogue_state["alternative"].test_most_probable_value('none', self.policy_conf['accept_prob'], neg_val=True):
+        elif dialogue_state["alternative"].test_most_probable_value('none', self.policy_cfg['accept_prob'], neg_val=True):
             # Search for traffic direction and/or present the requested
             # directions already found
             res_da = self.get_requested_alternative(dialogue_state)
             dialogue_state["alternative"].reset()
 
-        elif requested_slots:
+        elif slots_being_requested:
             # inform about all requested slots
-            res_da = self.get_requested_info(requested_slots, dialogue_state)
+            res_da = self.get_requested_info(slots_being_requested, dialogue_state)
 
-        elif confirmed_slots:
+        elif slots_being_confirmed:
             # inform about all slots being confirmed by the user
-            res_da = self.get_confirmed_info(confirmed_slots, dialogue_state)
+            res_da = self.get_confirmed_info(slots_being_confirmed, dialogue_state)
 
         else:
-            # implicitly confirm all non-confirmed slots
-            res_da = self.get_iconfirm_info(non_informed_slots)
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
             # request all unknown information
             req_da = self.request_more_info(dialogue_state)
             if len(req_da) == 0:
@@ -235,10 +257,10 @@ class PTICSHDCPolicy(DialoguePolicy):
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
-                    if dialogue_state['from_stop'].test_most_probable_value("none", self.policy_conf['accept_prob']):
+                    if dialogue_state['from_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
                         dai = DialogueActItem("help", "inform", "from_stop")
                         res_da.append(dai)
-                    elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_conf['accept_prob']):
+                    elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
                         dai = DialogueActItem("help", "inform", "to_stop")
                         res_da.append(dai)
                 else:
@@ -279,7 +301,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 dai = DialogueActItem("deny", slot, dialogue_state["ch_" + slot].get_most_probable_value())
                 res_da.append(dai)
 
-                if dialogue_state[slot].test_most_probable_value("none", self.policy_conf['accept_prob'], neg_val=True):
+                if dialogue_state[slot].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True):
                     dai = DialogueActItem("inform", slot, dialogue_state[slot].get_most_probable_value())
                     res_da.append(dai)
 
@@ -287,23 +309,25 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return res_da
 
-    def get_iconfirm_info(self, non_informed_slots):
+    def get_iconfirm_info(self, changed_slots):
         """Return a DA containing all needed implicit confirms.
 
         Implicitly confirm all slots provided but not yet confirmed.
 
-        :param non_informed_slots: A dictionary with keys for all slots \
+        This include also slots changed during the conversation.
+
+        :param changed_slots: A dictionary with keys for all slots \
                 that have not been implicitly confirmed, along with \
                 their values
         :rtype: DialogueAct
         """
         res_da = DialogueAct()
 
-        if non_informed_slots:
+        if changed_slots:
             iconf_da = DialogueAct()
-            for slot in non_informed_slots:
+            for slot in changed_slots:
                 if 'system_iconfirms' in self.ontology['slot_attributes'][slot]:
-                    dai = DialogueActItem("iconfirm", slot, non_informed_slots[slot].get_most_probable_value())
+                    dai = DialogueActItem("iconfirm", slot, changed_slots[slot].get_most_probable_value())
                     iconf_da.append(dai)
             res_da.extend(iconf_da)
         return res_da
@@ -320,28 +344,28 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-        if ds['from_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
-                ds['to_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
-                ds['time'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
+        if ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+                ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+                ds['time'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
                 randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
-                ds['centre_direction'].test_most_probable_value("none", self.policy_conf['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_most_probable_value("*", self.policy_conf['accept_prob'], neg_val=True)and \
+        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+                ds['centre_direction'].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True) and \
+                ds['centre_direction'].test_most_probable_value("*", self.policy_cfg['accept_prob'], neg_val=True)and \
                 randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif ds['to_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
-                ds['centre_direction'].test_most_probable_value("none", self.policy_conf['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_most_probable_value("*", self.policy_conf['accept_prob'], neg_val=True) and \
+        elif ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+                ds['centre_direction'].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True) and \
+                ds['centre_direction'].test_most_probable_value("*", self.policy_cfg['accept_prob'], neg_val=True) and \
                 randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
-                ds['to_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']) and \
+        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+                ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
                 randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']):
+        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']):
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif ds['to_stop'].test_most_probable_value('none', self.policy_conf['accept_prob']):
+        elif ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']):
             req_da.extend(DialogueAct('request(to_stop)'))
 
         return req_da
@@ -645,9 +669,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
-            elif dialogue_state['from_stop'].test_most_probable_value("none", self.policy_conf['accept_prob']):
+            elif dialogue_state['from_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
-            elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_conf['accept_prob']):
+            elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
         else:
             # we already offered a connection

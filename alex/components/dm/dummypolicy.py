@@ -24,12 +24,12 @@ class DummyDialoguePolicy(DialoguePolicy):
 
     def get_da(self, dialogue_state):
         # all slots being requested by the user
-        requested_slots = dialogue_state.get_requested_slots()
+        requested_slots = dialogue_state.get_slots_being_requested()
         # all slots being confirmed by the user
-        confirmed_slots = dialogue_state.get_confirmed_slots()
+        confirmed_slots = dialogue_state.get_slots_being_confirmed()
         # all slots which had been supplied by the user but have not been
         # implicitly confirmed
-        non_informed_slots = dialogue_state.get_non_informed_slots()
+        non_informed_slots = dialogue_state.get_slots_being_noninformed()
 
         if len(self.das) == 0:
             # NLG("Thank you for calling. How may I help you?")

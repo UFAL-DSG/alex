@@ -97,21 +97,21 @@ class DialogueState(object):
 
         """
 
-    def get_requested_slots(self):
+    def get_slots_being_requested(self):
         """
         Returns all slots which are currently being requested by the user along
         with the correct value.
         """
         pass
 
-    def get_confirmed_slots(self):
+    def get_slots_being_confirmed(self):
         """
         Returns all slots which are currently being confirmed by the user along
         with the value being confirmed.
         """
         pass
 
-    def get_non_informed_slots(self):
+    def get_slots_being_noninformed(self):
         """
         Returns all slots provided by the user and the system has not informed
         about them yet along with the value of the slot.
