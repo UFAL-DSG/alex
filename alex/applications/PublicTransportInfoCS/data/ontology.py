@@ -151,6 +151,15 @@ ontology = {
         'transfer_stops': [
             'user_requests',
         ],
+        'temperature': [
+            'temperature',
+        ],
+        'min_temperature': [
+            'temperature_int',
+        ],
+        'max_temperature': [
+            'temperature',
+        ],
     },
 }
 

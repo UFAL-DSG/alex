@@ -82,6 +82,9 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         # keep track of relative and absolute time slots
         self.rel_time_slots = set()
         self.abs_time_slots = set()
+        # keep track of temperature and temperature interval slots
+        self.temp_slots = set()
+        self.temp_int_slots = set()
         # load their lists from the ontology
         if 'slot_attributes' in self.ontology:
             for slot in self.ontology['slot_attributes']:
@@ -89,6 +92,10 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
                     self.rel_time_slots.add(slot)
                 elif 'absolute_time' in self.ontology['slot_attributes'][slot]:
                     self.abs_time_slots.add(slot)
+                elif 'temperature' in self.ontology['slot_attributes'][slot]:
+                    self.temp_slots.add(slot)
+                elif 'temperature_int' in self.ontology['slot_attributes'][slot]:
+                    self.temp_int_slots.add(slot)
 
     def preprocess(self, svs_dict):
         # spell out time expressions, if applicable
@@ -97,9 +104,14 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
                 svs_dict[slot] = self.spell_time(val, relative=True)
             elif slot in self.abs_time_slots:
                 svs_dict[slot] = self.spell_time(val, relative=False)
+            elif slot in self.temp_slots:
+                svs_dict[slot] = self.spell_temperature(val, interval=False)
+            elif slot in self.temp_int_slots:
+                svs_dict[slot] = self.spell_temperature(val, interval=True)
         return svs_dict
 
     HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
+    HR_ENDING_DEFAULT = ''
 
     def spell_time(self, time, relative):
         """\
@@ -119,10 +131,32 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
             hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
             hours = word_for_number(hours, 'F4')
             time_str.extend((hours, hr_id))
-        if mins == 0 and not relative:
+        if mins == 0 and (not relative or hours != 0):
             return ' '.join(time_str)
         if time_str:
             time_str.append('a')
-        min_id = 'minut' + self.HR_ENDING.get(mins, '')
+        min_id = 'minut' + self.HR_ENDING.get(mins, self.HR_ENDING_DEFAULT)
         mins = word_for_number(mins, 'F4')
         return ' '.join(time_str + [mins, min_id])
+
+    DEG_ENDING = {1: 'eň', 2: 'ně', 3: 'ně', 4: 'ně'}
+    DEG_ENDING_DEFAULT = 'ňů'
+
+    def spell_temperature(self, value, interval):
+        """Convert a temperature expression into words (assuming nominative).
+
+        :param value: Temperature value (whole number in degrees as string), \
+                e.g. '1' or '-10'.
+        :param interval: Boolean indicating whether to treat this as a start \
+                of an interval, i.e. omit the degrees word.
+        :return: Czech temperature expression as string
+        """
+        ret = ''
+        value = int(value)
+        if value < 0:
+            ret += 'mínus '
+            value = abs(value)
+        ret += word_for_number(value, 'M1')
+        if not interval:
+            ret += ' stup' + self.DEG_ENDING.get(value, self.DEG_ENDING_DEFAULT)
+        return ret

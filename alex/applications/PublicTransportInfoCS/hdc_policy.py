@@ -161,7 +161,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         return res_da
 
     def get_weather_res_da(self, ds, requested_slots):
-        """
+        """Handle the dialogue about weather.
+
+        :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
         """
         # interpret time
         weather_time = None
@@ -180,9 +184,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if time_rel != 'none':
                 res_da.append(DialogueActItem('inform', 'weather_time_rel', time_rel))
             elif time_abs != 'none':
-                res_da.append(DialogueActItem('inform', 'weather_time', time_abs))
-                if ds['ampm'] != 'none':
-                    res_da.append(DialogueActItem('inform', 'ampm', ds['ampm']))
+                res_da.append(DialogueActItem('inform', 'weather_time',
+                                              '%d:%02d' % (weather_time.hour, weather_time.minute)))
             if ds['date_rel'] != 'none':
                 res_da.append(DialogueActItem('inform', 'date_rel', ds['date_rel']))
         else:

@@ -10,6 +10,7 @@ import time
 import json
 import os.path
 import codecs
+from alex.tools.apirequest import APIRequest
 
 
 class Weather(object):
@@ -108,7 +109,7 @@ class OpenWeatherMapWeather(Weather):
             if ts >= fc1['dt'] and ts <= fc2['dt']:
                 self.condition = self.CONDITION_TRANSL[fc1['weather'][0]['id']]
                 # hourly forecast -- interpolate temperature
-                if daily is None:
+                if not daily:
                     slope = (fc2['main']['temp'] - fc1['main']['temp']) / (fc2['dt'] - fc1['dt'])
                     self.temp = self._round_temp(fc1['main']['temp'] + slope * (ts - fc1['dt']))
                 # daily forecast: use daily high & low
@@ -119,6 +120,14 @@ class OpenWeatherMapWeather(Weather):
 
     def _round_temp(self, temp):
         return int(round(temp - 273.15))
+
+    def __repr__(self):
+        ret = self.condition + ', '
+        if hasattr(self, 'min_temp'):
+            ret += str(self.min_temp) + ' – ' + str(self.max_temp)
+        else:
+            ret += str(self.temp)
+        return ret + ' °C'
 
 
 class WeatherFinder(object):
@@ -133,13 +142,12 @@ class WeatherFinder(object):
         raise NotImplementedError()
 
 
-class OpenWeatherMapWeatherFinder(WeatherFinder):
+class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
     """XXX"""
 
     def __init__(self, cfg):
-        super(WeatherFinder, self).__init__()
-        self.system_logger = cfg['Logging']['system_logger']
-        self.session_logger = cfg['Logging']['session_logger']
+        WeatherFinder.__init__(self)
+        APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
     def get_weather(self, time=None, daily=False):
@@ -161,18 +169,6 @@ class OpenWeatherMapWeatherFinder(WeatherFinder):
         page = urllib.urlopen(self.weather_url + method + '?' + urllib.urlencode(data))
         response = json.load(page)
         self._log_response_json(response)
-        print response
-        weather = OpenWeatherMapWeather(response, time)
+        weather = OpenWeatherMapWeather(response, time, daily)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather
-
-    # TODO change this to a general function!
-    def _log_response_json(self, data):
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-        fname = os.path.join(self.system_logger.get_session_dir_name(),
-                             'openweathermap-{t}.json'.format(t=timestamp))
-        fh = codecs.open(fname, 'w', 'UTF-8')
-        json.dump(data, fh, indent=4, separators=(',', ': '),
-                  ensure_ascii=False)
-        fh.close()
-        self.session_logger.external_data_file('OpenWeatherMap query', os.path.basename(fname))

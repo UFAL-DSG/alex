@@ -10,6 +10,7 @@ import time
 import json
 import os.path
 import codecs
+from alex.tools.apirequest import APIRequest
 
 
 class Directions(object):
@@ -137,15 +138,13 @@ class DirectionsFinder(object):
         raise NotImplementedError()
 
 
-class GooglePIDDirectionsFinder(DirectionsFinder):
+class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
     """Transit direction finder using the Google Maps query engine."""
 
     def __init__(self, cfg):
-        super(GooglePIDDirectionsFinder, self).__init__()
-        self.system_logger = cfg['Logging']['system_logger']
-        self.session_logger = cfg['Logging']['session_logger']
-        self.directions_url = \
-                'http://maps.googleapis.com/maps/api/directions/json'
+        DirectionsFinder.__init__(self)
+        APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
+        self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
     def get_directions(self, from_stop, to_stop, departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
@@ -178,13 +177,3 @@ class GooglePIDDirectionsFinder(DirectionsFinder):
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
-
-    def _log_response_json(self, data):
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-        fname = os.path.join(self.system_logger.get_session_dir_name(),
-                             'google-directions-{t}.json'.format(t=timestamp))
-        fh = codecs.open(fname, 'w', 'UTF-8')
-        json.dump(data, fh, indent=4, separators=(',', ': '),
-                  ensure_ascii=False)
-        fh.close()
-        self.session_logger.external_data_file('Google directions query', os.path.basename(fname))
