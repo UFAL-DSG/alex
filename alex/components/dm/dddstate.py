@@ -37,6 +37,12 @@ class D3DiscreteValue(DiscreteValue):
     def __getitem__(self, value):
         return self.values[value]
 
+    def __iter__(self):
+        return self.values.__iter__()
+
+    def items(self):
+        return sorted(self.values.items(), key=lambda x: x[1])
+
     def reset(self):
         self.values = defaultdict(float, {'none': 1.0, })
 
@@ -47,7 +53,7 @@ class D3DiscreteValue(DiscreteValue):
         """
         if isinstance(value, dict) and not prob:
             # rewrite the complete set of values
-            self.values = value
+            self.values = defaultdict(float, value)
         elif isinstance(value, basestring) and isinstance(prob, float):
             self.values[value] = prob
         else:
@@ -158,24 +164,24 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("D3State - Dialogue state content:")
         s.append("")
-        s.append("{slot:20} = {value}".format(slot="ludait",value=self.slots["ludait"]))
+        s.append("{slot:20} = {value}".format(slot="ludait",value=self.slots["ludait"].items()))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                 not sl.startswith('sh_') and not sl.startswith('rh_') and
                 not sl.startswith("ludait") and isinstance(self.slots[sl], D3DiscreteValue)]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
         s.append("")
 
         for name in [sl for sl in sorted(self.slots) if not isinstance(self.slots[sl], D3DiscreteValue)]:
@@ -336,56 +342,56 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             for dai in system_da:
                 if dai.dat == "inform":
                     # set that the system already informed about the slot
-                    self.slots["rh_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
-                    self.slots["ch_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
-                    self.slots["sh_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
+                    self.slots["rh_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["ch_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
 
                 if dai.dat == "iconfirm":
                     # set that the system already informed about the slot
-                    self.slots["rh_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
-                    self.slots["ch_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
-                    self.slots["sh_" + dai.name] = D3DiscreteValue({"system-informed": 1.0,})
+                    self.slots["rh_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["ch_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
 
         # now process the user dialogue act
         for prob, dai in user_da:
-            print "#1 SType:", dai.dat, dai.name
-            print "#51", self.slots
+            #print "#1 SType:", dai.dat, dai.name
+            #print "#51", self.slots
 
             if self.type == "MDP" and prob >= 0.5:
                 if dai.dat == "inform":
                     if dai.name:
-                        self.slots[dai.name] = D3DiscreteValue({dai.value: 1.0,})
+                        self.slots[dai.name].set({dai.value: 1.0,})
                 elif dai.dat == "deny":
                     # handle true and false values because we know their opposite values
                     if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
-                        self.slots[dai.name] = D3DiscreteValue({'false': 1.0,})
+                        self.slots[dai.name].set({'false': 1.0,})
                     elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
-                        self.slots[dai.name] = D3DiscreteValue({'true': 1.0,})
+                        self.slots[dai.name].set({'true': 1.0,})
 
                     else:
                     # FIXME: This is broken
-                        # gat the probaility of the denied value
+                        # gat the probability of the denied value
                         denied_value_prob = self.slots[dai.name][dai.value]
                         # it must be changed since user does not want this value but we do not know for what to change it
                         # therefore we will change it probability to 0.0
                         self.slots[dai.name] = D3DiscreteValue({dai.value: 0.0,})
                 elif dai.dat == "request":
-                    self.slots["rh_" + dai.name] = D3DiscreteValue({"user-requested": 1.0,})
+                    self.slots["rh_" + dai.name].set({"user-requested": 1.0,})
                 elif dai.dat == "confirm":
-                    self.slots["ch_" + dai.name] = D3DiscreteValue({dai.value: 1.0,})
+                    self.slots["ch_" + dai.name].set({dai.value: 1.0,})
                 elif dai.dat == "select":
-                    self.slots["sh_" + dai.name] = D3DiscreteValue({dai.value: 1.0,})
+                    self.slots["sh_" + dai.name].set({dai.value: 1.0,})
                 elif dai.dat in set(["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
                                  "repeat", "reqalts", "reqmore", "restart", "thankyou"]):
-                    self.slots["ludait"] = D3DiscreteValue({dai.dat: 1.0,})
+                    self.slots["ludait"].set({dai.dat: 1.0,})
                 elif dai.dat == "silence":
-                    self.slots["ludait"] = D3DiscreteValue({dai.dat: 1.0,})
+                    self.slots["ludait"].set({dai.dat: 1.0,})
                     if dai.name == "time":
                         self.slots['silence_time'] = float(dai.value)
             else:
                 pass
 
-        print "#52", self.slots
+        #print "#52", self.slots
 
     def get_slots_being_requested(self, req_prob=0.8):
         """Return all slots which are currently being requested by the user along with the correct value."""
