@@ -365,43 +365,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         # now process the user dialogue act
         for prob, dai in user_da:
-            print "#0 ", self.type
-            print "#1 SType:", prob, dai
-            #print "#51", self.slots
-
-            #if self.type == "MDP" and prob >= 0.5:
-            #    if dai.dat == "inform":
-            #        if dai.name:
-            #            self.slots[dai.name].set({dai.value: 1.0,})
-            #    elif dai.dat == "deny":
-            #        # handle true and false values because we know their opposite values
-            #        if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
-            #            self.slots[dai.name].set({'false': 1.0,})
-            #        elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
-            #            self.slots[dai.name].set({'true': 1.0,})
-            #
-            #        else:
-            #        # FIXME: This is broken
-            #            # gat the probability of the denied value
-            #            denied_value_prob = self.slots[dai.name][dai.value]
-            #            # it must be changed since user does not want this value but we do not know for what to change it
-            #            # therefore we will change it probability to 0.0
-            #            self.slots[dai.name] = D3DiscreteValue({dai.value: 0.0,})
-            #    elif dai.dat == "request":
-            #        self.slots["rh_" + dai.name].set({"user-requested": 1.0,})
-            #    elif dai.dat == "confirm":
-            #        self.slots["ch_" + dai.name].set({dai.value: 1.0,})
-            #    elif dai.dat == "select":
-            #        self.slots["sh_" + dai.name].set({dai.value: 1.0,})
-            #    elif dai.dat in set(["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
-            #                     "repeat", "reqalts", "reqmore", "restart", "thankyou"]):
-            #        self.slots["ludait"].set({dai.dat: 1.0,})
-            #    elif dai.dat == "silence":
-            #        self.slots["ludait"].set({dai.dat: 1.0,})
-            #        if dai.name == "time":
-            #            self.slots['silence_time'] = float(dai.value)
-            #else:
-            #    pass
+            #print "#0 ", self.type
+            #print "#1 SType:", prob, dai
+            ##print "#51", self.slots
 
             if self.type == "MDP":
                 if prob >= 0.5:
@@ -491,8 +457,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         noninformed_slots = {}
 
         for slot in self.slots:
-            # ignore some slots
-            if any([1.0 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
+            if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
                 continue
             if not isinstance(self.slots[slot], D3DiscreteValue):
                 continue
@@ -526,10 +491,15 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         tobe_confirmed_slots = {}
 
         for slot in self.slots:
-            if isinstance(self.slots[slot], D3DiscreteValue):
-                prob, value = self.slots[slot].get_most_probable_hyp()
-                if value not in ['none', 'system-informed', None] and min_prob <= prob and prob < max_prob:
-                    tobe_confirmed_slots[slot] = self.slots[slot]
+            if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
+                continue
+
+            if not isinstance(self.slots[slot], D3DiscreteValue):
+                continue
+
+            prob, value = self.slots[slot].get_most_probable_hyp()
+            if value not in ['none', 'system-informed', None] and min_prob <= prob and prob < max_prob:
+                tobe_confirmed_slots[slot] = self.slots[slot]
 
         return tobe_confirmed_slots
 
@@ -539,12 +509,17 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         tobe_selected_slots = {}
 
         for slot in self.slots:
-            if isinstance(self.slots[slot], D3DiscreteValue):
-                (prob1, value1), (prob2, value2) = self.slots[slot].get_two_most_probable_hyps()
+            if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
+                continue
 
-                if value1 not in ['none', 'system-informed', None] and prob1 > sel_prob and \
-                    value2 not in ['none', 'system-informed', None] and prob2 > sel_prob:
-                    tobe_selected_slots[slot] = self.slots[slot]
+            if not isinstance(self.slots[slot], D3DiscreteValue):
+                continue
+
+            (prob1, value1), (prob2, value2) = self.slots[slot].get_two_most_probable_hyps()
+
+            if value1 not in ['none', 'system-informed', None] and prob1 > sel_prob and \
+                value2 not in ['none', 'system-informed', None] and prob2 > sel_prob:
+                tobe_selected_slots[slot] = self.slots[slot]
 
         return tobe_selected_slots
 
@@ -561,14 +536,20 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             prev_slots = self.turns[-2][2]
 
             for slot in cur_slots:
-                if isinstance(cur_slots[slot], D3DiscreteValue):
-                    cur_prob, cur_value = cur_slots[slot].get_most_probable_hyp()
-                    prev_prob, prev_value = prev_slots[slot].get_most_probable_hyp()
+                if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
+                    continue
 
-                    if cur_value not in ['none', 'system-informed', None] and cur_prob > cha_prob and \
-                        prev_value not in ['system-informed', None] and prev_prob > cha_prob and \
-                        cur_value != prev_value:
-                        changed_slots[slot] = cur_slots[slot]
+                if not isinstance(cur_slots[slot], D3DiscreteValue):
+                    continue
+
+                cur_prob, cur_value = cur_slots[slot].get_most_probable_hyp()
+                prev_prob, prev_value = prev_slots[slot].get_most_probable_hyp()
+
+                if cur_value not in ['none', 'system-informed', None] and cur_prob > cha_prob and \
+                    prev_value not in ['system-informed', None] and \
+                    cur_value != prev_value:
+                    #prev_prob > cha_prob and \ # only the current value must be accepted
+                    changed_slots[slot] = cur_slots[slot]
 
             return changed_slots
         else:

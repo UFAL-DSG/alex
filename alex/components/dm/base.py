@@ -50,6 +50,13 @@ class DiscreteValue(object):
         """
         pass
 
+    def get_two_most_probable_values(self):
+        """The function returns two most probable values.
+        """
+        (prob1, val1), (prob2, val2) = self.get_two_most_probable_hyps()
+
+        return (val1, val2)
+
 class DialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
 

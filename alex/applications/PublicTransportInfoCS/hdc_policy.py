@@ -40,10 +40,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
 
     def get_da(self, dialogue_state):
-        """The main policy decisions are made here.
+        """The main policy decisions are made here. For each action, some set of conditions must be met. These
+         conditions depends on the action.
 
-        :param dialogue_state:
-        :return:
+        :param dialogue_state: the belief state provided by the tracker
+        :return: a dialogue act - the system action
         """
 
         ludait_prob, ludait  = dialogue_state["ludait"].get_most_probable_hyp()
@@ -155,6 +156,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif slots_being_confirmed:
             # inform about all slots being confirmed by the user
             res_da = self.get_confirmed_info(slots_being_confirmed, dialogue_state)
+
+        elif slots_tobe_selected:
+            # select between two values for a slot that is not certain
+            res_da = self.select_info(slots_tobe_confirmed)
+
+        elif slots_tobe_confirmed:
+            # confirm all slots that are not certain
+            res_da = self.confirm_info(slots_tobe_confirmed)
 
         else:
             # implicitly confirm all changed slots
@@ -285,6 +294,9 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         Update the current dialogue state regarding the information provided.
 
+        *WARNING* This confirms only against values in the dialogue state, however, it should (also in some cases)
+        confirm against the results obtained from database, e.g. departure_time slot.
+
         :param dialogue_state: The current dialogue state
         :param confirmed_slots: A dictionary with keys for all slots \
                 being confirmed, along with their values
@@ -293,11 +305,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in confirmed_slots:
-            if slot == 'XXX':
-                pass
-            elif slot == 'XXX':
-                pass
-            elif confirmed_slots[slot].get_most_probable_value() == dialogue_state[slot].get_most_probable_value():
+            if confirmed_slots[slot].get_most_probable_value() == dialogue_state[slot].get_most_probable_value():
                 # it is as user expected
                 res_da.append(DialogueActItem("affirm"))
                 dai = DialogueActItem("inform", slot, dialogue_state[slot].get_most_probable_value())
@@ -314,6 +322,42 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             dialogue_state["ch_" + slot].reset()
 
+        return res_da
+
+    def confirm_info(self, tobe_confirmed_slots):
+        """Return a DA containing confirming only one slot from the slot to be confirmed .
+
+        :param tobe_confirmed_slots: A dictionary with keys for all slots \
+                that should be confirmed, along with their values
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        for slot in tobe_confirmed_slots:
+            if 'system_confirms' in self.ontology['slot_attributes'][slot]:
+                dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].get_most_probable_value())
+                res_da.append(dai)
+                #confirm explicitly only one slot at the time
+                break
+        return res_da
+
+    def select_info(self, tobe_selected_slots):
+        """Return a DA containing select act for two most probable values of only one slot
+        from the slot to be used for select DAI.
+
+        :param tobe_selected_slots: A dictionary with keys for all slots \
+                which the two most probable values should be selected
+        :rtype: DialogueAct
+        """
+        res_da = DialogueAct()
+
+        for slot in tobe_selected_slots:
+            if 'system_selects' in self.ontology['slot_attributes'][slot]:
+                val1, val2 = tobe_selected_slots[slot].get_two_most_probable_values()
+                res_da.append(DialogueActItem("select", slot, val1))
+                res_da.append(DialogueActItem("select", slot, val2))
+                #select values only in one slot at the time
+                break
         return res_da
 
     def get_iconfirm_info(self, changed_slots):
