@@ -164,7 +164,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         elif time is not None:
             method = 'forecast'
 
-        self.system_logger.info("OpenWeatherMap request:\n" + str(data))
+        self.system_logger.info("OpenWeatherMap request:\n" + method + ' + ' + str(data))
 
         page = urllib.urlopen(self.weather_url + method + '?' + urllib.urlencode(data))
         response = json.load(page)

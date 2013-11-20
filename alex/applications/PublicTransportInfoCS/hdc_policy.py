@@ -171,7 +171,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         weather_time = None
         time_abs = ds['weather_time'] if ds['weather_time'] != 'none' else ds['time']
         time_rel = ds['weather_time_rel'] if ds['weather_time_rel'] != 'none' else ds['time_rel']
-        daily = (time_abs == 'none' and time_rel == 'none' and ds['date_rel'] != 'none')
+        daily = (time_abs == 'none' and time_rel == 'none' and
+                 ds['ampm'] == 'none' and ds['date_rel'] != 'none')
         # check if any time is set to distinguish current/prediction
         if time_abs != 'none' or time_rel != 'none' or ds['ampm'] != 'none' or ds['date_rel'] != 'none':
             weather_time = self.interpret_time(time_abs, ds['ampm'], time_rel, ds['date_rel'])
@@ -183,7 +184,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         if weather_time:
             if time_rel != 'none':
                 res_da.append(DialogueActItem('inform', 'weather_time_rel', time_rel))
-            elif time_abs != 'none':
+            elif time_abs != 'none' or ds['ampm'] != 'none':
                 res_da.append(DialogueActItem('inform', 'weather_time',
                                               '%d:%02d' % (weather_time.hour, weather_time.minute)))
             if ds['date_rel'] != 'none':
@@ -507,7 +508,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                departure_stop = step.departure_stop
                 departure_time = step.departure_time
                 break
         else:
@@ -515,7 +515,6 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
-                arrival_stop = step.arrival_stop
                 arrival_time = step.arrival_time
                 break
         else:
@@ -648,19 +647,27 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return res_da
 
+    DEFAULT_AMPM_TIMES = {'morning': "06:00",
+                          'am': "10:00",
+                          'pm': "15:00",
+                          'evening': "18:00",
+                          'night': "00:00"}
+
     def interpret_time(self, time_abs, time_ampm, time_rel, date_rel):
 
         # interpret dialogue state time
         now = datetime.now()
 
         # relative time
-        if time_abs == 'none' or time_rel != 'none':
+        if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
             time_abs = now
             if time_rel not in ['none', 'now']:
                 trel_parse = datetime.strptime(time_rel, "%H:%M")
                 time_abs += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
         # absolute time
         else:
+            if time_abs == 'none' and time_ampm != 'none':
+                time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
             time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
