@@ -13,7 +13,10 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import *
+from .directions import GooglePIDDirectionsFinder
+from .weather import OpenWeatherMapWeatherFinder
+from datetime import datetime
+from datetime import time as dttime
 
 
 def randbool(n):
@@ -30,6 +33,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
         self.directions = GooglePIDDirectionsFinder(cfg=cfg)
+        self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
 
         self.das = []
         self.last_system_dialogue_act = None
@@ -84,8 +88,10 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             self.system_logger.debug(s)
 
-        res_da = None  # output DA
+        # output DA
+        res_da = None
 
+        # topic-independent behavior
         if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
             # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
@@ -137,26 +143,6 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = DialogueAct("irepeat()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "reqalts":
-            # NLG("There is nothing else in the database.")
-            # NLG("The next connection is ...")
-            res_da = self.get_an_alternative(dialogue_state)
-            dialogue_state["ludait"].reset()
-
-        elif dialogue_state["alternative"].test_most_probable_value('none', self.policy_cfg['accept_prob'], neg_val=True):
-            # Search for traffic direction and/or present the requested
-            # directions already found
-            res_da = self.get_requested_alternative(dialogue_state)
-            dialogue_state["alternative"].reset()
-
-        elif slots_being_requested:
-            # inform about all requested slots
-            res_da = self.get_requested_info(slots_being_requested, dialogue_state)
-
-        elif slots_being_confirmed:
-            # inform about all slots being confirmed by the user
-            res_da = self.get_confirmed_info(slots_being_confirmed, dialogue_state)
-
         elif slots_tobe_selected:
             # select between two values for a slot that is not certain
             res_da = self.select_info(slots_tobe_confirmed)
@@ -165,23 +151,120 @@ class PTICSHDCPolicy(DialoguePolicy):
             # confirm all slots that are not certain
             res_da = self.confirm_info(slots_tobe_confirmed)
 
+        elif 'current_time' in slots_being_requested:
+            # Respond to questions about current weather
+            # TODO: allow combining with other questions?
+            res_da = self.req_current_time()
+
+        # topic-dependent
+        elif dialogue_state['task'].test_most_probable_value('weather', self.policy_cfg['accept_prob']):
+            # talk about weather
+            res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
+                                             changed_slots)
         else:
-            # implicitly confirm all changed slots
-            res_da = self.get_iconfirm_info(changed_slots)
-            # request all unknown information
-            req_da = self.request_more_info(dialogue_state)
-            if len(req_da) == 0:
-                # we know everything we need -> start searching
-                res_da.extend(self.get_directions(dialogue_state, check_conflict=True))
-            else:
-                res_da.extend(req_da)
+            # talk about public transport
+            res_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
+                                                changed_slots)
+
+        dialogue_state["ludait"].reset()
 
         self.last_system_dialogue_act = res_da
 
         # record the system dialogue acts
         self.das.append(self.last_system_dialogue_act)
-
         return self.last_system_dialogue_act
+
+    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, changed_slots):
+        """Handle the public transport connection dialogue topic.
+
+        :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
+        """
+
+        # output DA
+        res_da = None
+
+        if ludait == "reqalts":
+            # NLG("There is nothing else in the database.")
+            # NLG("The next connection is ...")
+            res_da = self.get_an_alternative(ds)
+            ds["ludait"].reset()
+
+        elif ds["alternative"].test_most_probable_value('none', self.policy_cfg['accept_prob'], neg_val=True):
+            # Search for traffic direction and/or present the requested
+            # directions already found
+            res_da = self.get_requested_alternative(ds)
+            ds["alternative"].reset()
+
+        elif slots_being_requested:
+            # inform about all requested slots
+            res_da = self.get_requested_info(slots_being_requested, ds)
+
+        elif slots_being_confirmed:
+            # inform about all slots being confirmed by the user
+            res_da = self.get_confirmed_info(slots_being_confirmed, ds)
+
+        else:
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
+            # request all unknown information
+            req_da = self.request_more_info(ds)
+            if len(req_da) == 0:
+                # we know everything we need -> start searching
+                res_da.extend(self.get_directions(ds, check_conflict=True))
+            else:
+                res_da.extend(req_da)
+        return res_da
+
+    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, changed_slots):
+        """Handle the dialogue about weather.
+
+        :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
+        """
+        # get dialogue state values
+        weather_time = ds['weather_time'].get_most_probable_value()
+        weather_time_rel = ds['weather_time_rel'].get_most_probable_value()
+        date_rel = ds['date_rel'].get_most_probable_value()
+        ampm = ds['ampm'].get_most_probable_value()
+        time = ds['time'].get_most_probable_value()
+        time_rel = ds['time_rel'].get_most_probable_value()
+
+        # interpret time
+        time_abs = weather_time if weather_time != 'none' else time
+        time_rel = weather_time_rel if weather_time_rel != 'none' else time_rel
+        daily = (time_abs == 'none' and time_rel == 'none' and
+                 ampm == 'none' and date_rel != 'none')
+        # check if any time is set to distinguish current/prediction
+        weather_time_int = None
+        if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
+            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
+        # request the weather
+        weather = self.weather.get_weather(weather_time_int, daily)
+        # return the result
+        res_da = DialogueAct()
+        # time
+        if weather_time_int:
+            if time_rel != 'none':
+                res_da.append(DialogueActItem('inform', 'weather_time_rel', time_rel))
+            elif time_abs != 'none' or ampm != 'none':
+                res_da.append(DialogueActItem('inform', 'weather_time',
+                                              '%d:%02d' % (weather_time_int.hour, weather_time_int.minute)))
+            if date_rel != 'none':
+                res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
+        else:
+            res_da.append(DialogueActItem('inform', 'time_rel', 'now'))
+        # temperature
+        if not daily:
+            res_da.append(DialogueActItem('inform', 'temperature', str(weather.temp)))
+        else:
+            res_da.append(DialogueActItem('inform', 'min_temperature', str(weather.min_temp)))
+            res_da.append(DialogueActItem('inform', 'max_temperature', str(weather.max_temp)))
+        # weather conditions
+        res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
+        return res_da
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for
@@ -421,6 +504,13 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return req_da
 
+    def req_current_time(self):
+        """Generates a dialogue act informing about the current time.
+        :rtype: DialogueAct
+        """
+        cur_time = datetime.now()
+        return DialogueAct('inform(current_time=%d:%02d)' % (cur_time.hour, cur_time.minute))
+
     def req_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last
         recommended connection.
@@ -525,7 +615,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                departure_stop = step.departure_stop
                 departure_time = step.departure_time
                 break
         else:
@@ -533,7 +622,6 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
-                arrival_stop = step.arrival_stop
                 arrival_time = step.arrival_time
                 break
         else:
@@ -579,58 +667,30 @@ class PTICSHDCPolicy(DialoguePolicy):
             apology_da.extend(DialogueAct("inform(to_stop='%s')" % to_stop_val))
             return apology_da
 
-        # interpret dialogue state time
-        now = datetime.now()
+        # get dialogue state values
         departure_time = ds['departure_time'].get_most_probable_value()
-        ampm = ds['ampm']
         departure_time_rel = ds['departure_time_rel'].get_most_probable_value()
-        departure_date_rel = ds['departure_date_rel'].get_most_probable_value()
+        arrival_time = ds['arrival_time'].get_most_probable_value()
+        arrival_time_rel = ds['arrival_time_rel'].get_most_probable_value()
+        date_rel = ds['date_rel'].get_most_probable_value()
+        ampm = ds['ampm'].get_most_probable_value()
+        time = ds['time'].get_most_probable_value()
+        time_rel = ds['time_rel'].get_most_probable_value()
 
-        # relative time
-        if departure_time == 'none' or departure_time_rel != 'none':
-            departure_time = now
-            if departure_time_rel not in ['none', 'now']:
-                trel_parse = datetime.strptime(departure_time_rel, "%H:%M")
-                departure_time += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
-        # absolute time
+        # interpret departure and arrival time
+        departure_time_int, arrival_time_int = None, None
+        if arrival_time != 'none' or arrival_time_rel != 'none':
+            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel)
         else:
-            time_parsed = datetime.combine(now, datetime.strptime(departure_time, "%H:%M").time())
-            time_hour = time_parsed.hour
-            now_hour = now.hour
-            # handle 12hr time
-            if time_hour >= 1 and time_hour <= 12:
-                # interpret AM/PM
-                if ampm != 'none':
-                    # 'pm' ~ 12pm till 11:59pm
-                    if ampm == 'pm' and time_hour < 12:
-                        time_hour += 12
-                    # 'am'/'morning' ~ 12am till 11:59am
-                    elif ampm in ['am', 'morning'] and time_hour == 12:
-                        time_hour = 0
-                    # 'evening' ~ 4pm till 3:59am
-                    elif ampm == 'evening' and time_hour >= 4:
-                        time_hour = (time_hour + 12) % 24
-                    # 'night' ~ 6pm till 5:59am
-                    elif ampm == 'night' and time_hour >= 6:
-                        time_hour = (time_hour + 12) % 24
-                # 12hr time + no AM/PM set: default to next 12hrs
-                elif now_hour > time_hour and now_hour < time_hour + 12:
-                    time_hour = (time_hour + 12) % 24
-            departure_time = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            ds['departure_time'] = "%d:%.2d" % (departure_time.hour, departure_time.minute)
-
-        # relative date
-        if departure_date_rel == 'tomorrow':
-            departure_time += timedelta(days=1)
-        elif departure_date_rel == 'day_after_tomorrow':
-            departure_time += timedelta(days=2)
-        elif departure_time < now:
-            departure_time += timedelta(days=1)
+            time_abs = departure_time if departure_time != 'none' else time
+            time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
+            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
 
         # retrieve Google directions
         ds.directions = self.directions.get_directions(from_stop=from_stop_val,
                                                        to_stop=to_stop_val,
-                                                       departure_time=departure_time)
+                                                       departure_time=departure_time_int,
+                                                       arrival_time=arrival_time_int)
         return self.say_directions(ds, route_type)
 
     ORIGIN = 'ORIGIN'
@@ -705,6 +765,62 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct("&".join(res))
 
         return res_da
+
+    DEFAULT_AMPM_TIMES = {'morning': "06:00",
+                          'am': "10:00",
+                          'pm': "15:00",
+                          'evening': "18:00",
+                          'night': "00:00"}
+
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel):
+
+        # interpret dialogue state time
+        now = datetime.now()
+
+        # relative time
+        if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
+            time_abs = now
+            if time_rel not in ['none', 'now']:
+                trel_parse = datetime.strptime(time_rel, "%H:%M")
+                time_abs += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
+        # absolute time
+        else:
+            if time_abs == 'none' and time_ampm != 'none':
+                time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
+            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
+            time_hour = time_parsed.hour
+            now_hour = now.hour
+            # handle 12hr time
+            if time_hour >= 1 and time_hour <= 12:
+                # interpret AM/PM
+                if time_ampm != 'none':
+                    # 'pm' ~ 12pm till 11:59pm
+                    if time_ampm == 'pm' and time_hour < 12:
+                        time_hour += 12
+                    # 'am'/'morning' ~ 12am till 11:59am
+                    elif time_ampm in ['am', 'morning'] and time_hour == 12:
+                        time_hour = 0
+                    # 'evening' ~ 4pm till 3:59am
+                    elif time_ampm == 'evening' and time_hour >= 4:
+                        time_hour = (time_hour + 12) % 24
+                    # 'night' ~ 6pm till 5:59am
+                    elif time_ampm == 'night' and time_hour >= 6:
+                        time_hour = (time_hour + 12) % 24
+                # 12hr time + no AM/PM set: default to next 12hrs
+                elif now_hour > time_hour and now_hour < time_hour + 12:
+                    time_hour = (time_hour + 12) % 24
+            time_abs = datetime.combine(now, dttime(time_hour, time_parsed.minute))
+            # ds['time_abs'] = "%d:%.2d" % (time_abs.hour, time_abs.minute)
+
+        # relative date
+        if date_rel == 'tomorrow':
+            time_abs += timedelta(days=1)
+        elif date_rel == 'day_after_tomorrow':
+            time_abs += timedelta(days=2)
+        elif time_abs < now:
+            time_abs += timedelta(days=1)
+
+        return time_abs
 
     def get_limited_context_help(self, dialogue_state):
         res_da = DialogueAct()

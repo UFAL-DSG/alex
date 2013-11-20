@@ -13,8 +13,10 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení", "zjistit spoj", "hledám spojení", ],
+        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení",
+                            "zjistit spoj", "hledám spojení", 'spojení', 'spoj', 'chci jet'],
         "find_platform": ["najít nastupště", "zjistit nástupiště", ],
+        'weather': ['počasí', 'jak bude', 'jak je']
     },
     "time": {
         "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
@@ -25,9 +27,13 @@ database = {
         "1:00": ["hodinu", ],
     },
     "date_rel": {
-        "today": ["dnes", "dneska", ],
-        "tomorrow": ["zítra", ],
-        "day_after_tomorrow": ["pozítří", ],
+        "today": ["dnes", "dneska",
+                  "dnešek", "dneška", "dnešku", "dneškem",
+                  "dnešní", "dnešnímu", "dnešního", "dnešním"],
+        "tomorrow": ["zítra", "zejtra",
+                     "zítřek", "zítřka", "zítřku", "zítřkem",
+                     "zítřejší", "zítřejšímu", "zítřejším", "zítřejšího"],
+        "day_after_tomorrow": ["pozítří", "pozejtří"],
     },
     "stop": {
     },

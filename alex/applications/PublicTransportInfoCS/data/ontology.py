@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 ontology = {
     'slots': {
         'silence': set([]),
-        'task': set(['find_connection', 'find_platform']),
+        'task': set(['find_connection', 'find_platform', 'weather']),
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
@@ -76,6 +76,26 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
             'relative_time',
         ],
+        'weather_time': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'absolute_time',
+        ],
+        'weather_time_rel': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs',
+            'system_confirms', 'system_iconfirms', 'system_selects',
+            'relative_time',
+        ],
+        'time': [
+            'user_informs',
+            'absolute_time',
+        ],
+        'time_rel': [
+            'user_informs',
+            'relative_time',
+        ],
         'duration': [
             'user_requests',
             'relative_time',
@@ -85,12 +105,14 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
+        # not implemented yet
         'date': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
             'system_confirms', 'system_iconfirms', 'system_selects',
         ],
+
         'date_rel': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
@@ -116,6 +138,10 @@ ontology = {
             'system_informs',
             'user_informs',
         ],
+        'current_time': [
+            'system_informs',
+            'absolute_time',
+        ],
         'route_alternative': [
             # this is necessary to be defined as it is a state variable used by the policy and automatically added to
             # the dialogue state
@@ -124,6 +150,15 @@ ontology = {
         # not implemented yet
         'transfer_stops': [
             'user_requests',
+        ],
+        'temperature': [
+            'temperature',
+        ],
+        'min_temperature': [
+            'temperature_int',
+        ],
+        'max_temperature': [
+            'temperature',
         ],
     },
 }
