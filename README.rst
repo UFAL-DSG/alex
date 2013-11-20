@@ -1,4 +1,4 @@
-Introduction into Alex Dialogue Systems Framework
+Alex Dialogue Systems Framework
 =================================================
 
 Description
@@ -27,11 +27,14 @@ Implemented features:
   morphologically rich languages
 - TTS using ``flite``, ``VoiceRSS`` and ``SpeechTech``
 - evaluation of dialogue systems using Amazon Mechanical Turk crowdsourcing platform
-- transcription and semantic annotation of collected audio using Crowdflower crowdsourcing platform
 - building acoustic models using the HTK and KALDI
 - example dialogue domains:
 
   - PTIcs: :doc:`alex.applications.PublicTransportInfoCS.README`
+
+Features implemented in different repositories:
+
+- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform
 
 Missing features:
 
@@ -75,14 +78,14 @@ changes in the topic branch. Then follow the instructions above, that is:
 Documentation
 -------------
 The documentation for this project is generated using Sphinx and its ``autodoc`` extension. Please document
-all your code as much as possible using the conventions which can parsed by Sphinx. Also provide README style
-documentation describing the complete packages, applications, or preparation of data and models. This documentation can
+all your code as much as possible using the conventions which can be parsed by Sphinx. Also provide README style
+documentation describing the complete packages, applications, or preparation of data and models. The documentation can
 be and should be placed near the code and/or application to which it is the most
-relevant. For formatting the text, use reStructured (reSt) *wiki like* syntax. The advantage of reSt is that it fairly
-readable in source format and it can nicely rendered into HTML or PDF using Sphinx. Documents with the ``rst`` extension
+relevant. For formatting the text, use reStructured (reSt) *wiki like* syntax. The advantage of reSt is that it is fairly
+readable in source format and it can be nicely rendered into HTML or PDF using Sphinx. Documents with the ``rst`` extension
 are automatically detected, included into the documentation, and an index page for these documents is created.
 
-Each document should start with every descriptive title, e.g.:
+Each document should start with a every descriptive title, e.g.:
 
 ::
 
