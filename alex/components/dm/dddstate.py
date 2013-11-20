@@ -41,7 +41,7 @@ class D3DiscreteValue(DiscreteValue):
         return self.values.__iter__()
 
     def items(self):
-        return sorted(self.values.items(), key=lambda x: x[1])
+        return sorted(self.values.items(), key=lambda x: x[1], reverse=True)
 
     def reset(self):
         self.values = defaultdict(float, {'none': 1.0, })
@@ -63,23 +63,44 @@ class D3DiscreteValue(DiscreteValue):
         """This function normalises the sum of all probabilities to 1.0"""
 
         s = sum([v for v in self.values.itervalues()])
-        if s < 1e-10:
+        if s < 1e-9:
             # this is a backup solution with unknown consequences
-            self.values['none'] = 1.0
+            n = len(self.values)
+            for value in self.values:
+                self.values[value] = 1.0/n
         else:
-            for value, prob in self.values:
+            for value in self.values:
                 self.values[value] /= s
 
     def scale(self, weight):
-        """This function scales each probability by the weight"""
+        """This function scales each probability by the weigh.t"""
 
-        for value, prob in self.values:
-            self.values[value] /= weight
+        for value in self.values:
+            self.values[value] *= weight
 
     def add(self, value, prob):
-        """This function adds a value and its probability"""
+        """This function adds probability to the given value."""
 
         self.values[value] += prob
+
+    def distribute(self, value, dist_prob):
+        """This function distributes a portion of probability mass assigned to the ``value`` to other values
+         with a weight ``prob``."""
+
+        value_prob = self.values[value]
+        non_value_prob = sum([p for v, p in self.values.iteritems() if v != value])
+
+        # first deny the value proportionally to the denied probability
+        self.set(value, (1.0 - dist_prob)*value_prob)
+
+        # second redistribute the denied probability mass to to other values proportionally to their own probability
+        # if all other values have probability close to zero, then distribute the probability mass uniformly
+        for v in self.values:
+            if v != value:
+                if non_value_prob > 1e-9:
+                    self.add(v, dist_prob*value_prob*self.values[v]/non_value_prob)
+                else:
+                    self.add(v, dist_prob*value_prob*1.0/(len(self.values) - 1))
 
     def get_most_probable_hyp(self):
         """The function returns the most probable value and its probability
@@ -255,16 +276,6 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             # save the last non-silence dialogue act
             self.last_system_da = system_da
 
-        #if isinstance(user_da, DialogueAct):
-        #    # use da as it is
-        #    da = user_da
-        #elif isinstance(user_da, DialogueActNBList) or isinstance(user_da, DialogueActConfusionNetwork):
-        #    # get only the best dialogue act
-        #    da = user_da.get_best_da()
-        #    # in DSTC baseline like approach I will dais conf. score, so I will not
-        #    # have to pick the best hyp
-        #    #da = user_da.get_best_nonnull_da()
-        #else:
         if not isinstance(user_da, DialogueActConfusionNetwork):
             raise DeterministicDiscriminativeDialogueStateException("Unsupported input for the dialogue manager.")
 
@@ -354,42 +365,86 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         # now process the user dialogue act
         for prob, dai in user_da:
-            #print "#1 SType:", dai.dat, dai.name
+            print "#0 ", self.type
+            print "#1 SType:", prob, dai
             #print "#51", self.slots
 
-            if self.type == "MDP" and prob >= 0.5:
-                if dai.dat == "inform":
-                    if dai.name:
-                        self.slots[dai.name].set({dai.value: 1.0,})
-                elif dai.dat == "deny":
-                    # handle true and false values because we know their opposite values
-                    if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
-                        self.slots[dai.name].set({'false': 1.0,})
-                    elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
-                        self.slots[dai.name].set({'true': 1.0,})
+            #if self.type == "MDP" and prob >= 0.5:
+            #    if dai.dat == "inform":
+            #        if dai.name:
+            #            self.slots[dai.name].set({dai.value: 1.0,})
+            #    elif dai.dat == "deny":
+            #        # handle true and false values because we know their opposite values
+            #        if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
+            #            self.slots[dai.name].set({'false': 1.0,})
+            #        elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
+            #            self.slots[dai.name].set({'true': 1.0,})
+            #
+            #        else:
+            #        # FIXME: This is broken
+            #            # gat the probability of the denied value
+            #            denied_value_prob = self.slots[dai.name][dai.value]
+            #            # it must be changed since user does not want this value but we do not know for what to change it
+            #            # therefore we will change it probability to 0.0
+            #            self.slots[dai.name] = D3DiscreteValue({dai.value: 0.0,})
+            #    elif dai.dat == "request":
+            #        self.slots["rh_" + dai.name].set({"user-requested": 1.0,})
+            #    elif dai.dat == "confirm":
+            #        self.slots["ch_" + dai.name].set({dai.value: 1.0,})
+            #    elif dai.dat == "select":
+            #        self.slots["sh_" + dai.name].set({dai.value: 1.0,})
+            #    elif dai.dat in set(["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
+            #                     "repeat", "reqalts", "reqmore", "restart", "thankyou"]):
+            #        self.slots["ludait"].set({dai.dat: 1.0,})
+            #    elif dai.dat == "silence":
+            #        self.slots["ludait"].set({dai.dat: 1.0,})
+            #        if dai.name == "time":
+            #            self.slots['silence_time'] = float(dai.value)
+            #else:
+            #    pass
 
-                    else:
-                    # FIXME: This is broken
-                        # gat the probability of the denied value
-                        denied_value_prob = self.slots[dai.name][dai.value]
-                        # it must be changed since user does not want this value but we do not know for what to change it
-                        # therefore we will change it probability to 0.0
-                        self.slots[dai.name] = D3DiscreteValue({dai.value: 0.0,})
-                elif dai.dat == "request":
-                    self.slots["rh_" + dai.name].set({"user-requested": 1.0,})
-                elif dai.dat == "confirm":
-                    self.slots["ch_" + dai.name].set({dai.value: 1.0,})
-                elif dai.dat == "select":
-                    self.slots["sh_" + dai.name].set({dai.value: 1.0,})
-                elif dai.dat in set(["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
-                                 "repeat", "reqalts", "reqmore", "restart", "thankyou"]):
-                    self.slots["ludait"].set({dai.dat: 1.0,})
-                elif dai.dat == "silence":
-                    self.slots["ludait"].set({dai.dat: 1.0,})
-                    if dai.name == "time":
-                        self.slots['silence_time'] = float(dai.value)
+            if self.type == "MDP":
+                if prob >= 0.5:
+                    weight = 0.0
+                else:
+                    continue
             else:
-                pass
+                weight = 1.0 - prob
+
+            if dai.dat == "inform":
+                if dai.name:
+                    self.slots[dai.name].scale(weight)
+                    self.slots[dai.name].add(dai.value, prob)
+            elif dai.dat == "deny":
+                # handle true and false values because we know their opposite values
+                if dai.value == "true" and self.ontology.slot_is_binary(dai.name):
+                    self.slots[dai.name].scale(weight)
+                    self.slots[dai.name].add('false', prob)
+                elif dai.value == "false" and self.ontology.slot_is_binary(dai.name):
+                    self.slots[dai.name].scale(weight)
+                    self.slots[dai.name].add('true', prob)
+                else:
+                    print self.slots[dai.name]
+                    self.slots[dai.name].distribute(dai.value, prob)
+                    print self.slots[dai.name]
+            elif dai.dat == "request":
+                self.slots["rh_" + dai.name].scale(weight)
+                self.slots["rh_" + dai.name].add("user-requested", prob)
+            elif dai.dat == "confirm":
+                self.slots["ch_" + dai.name].scale(weight)
+                self.slots["ch_" + dai.name].add(dai.value, prob)
+            elif dai.dat == "select":
+                self.slots["sh_" + dai.name].scale(weight)
+                self.slots["sh_" + dai.name].add(dai.value, prob)
+            elif dai.dat in set(["ack", "apology", "bye", "hangup", "hello", "help", "null", "other",
+                             "repeat", "reqalts", "reqmore", "restart", "thankyou"]):
+                self.slots["ludait"].scale(weight)
+                self.slots["ludait"].add(dai.dat, prob)
+            elif dai.dat == "silence":
+                self.slots["ludait"].scale(weight)
+                self.slots["ludait"].add(dai.dat, prob)
+                if dai.name == "time":
+                    self.slots['silence_time'] = float(dai.value)
 
         #print "#52", self.slots
 
@@ -473,7 +528,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         for slot in self.slots:
             if isinstance(self.slots[slot], D3DiscreteValue):
                 prob, value = self.slots[slot].get_most_probable_hyp()
-                if value not in ['none', 'system-informed', None] and min_prob <= prob < max_prob  :
+                if value not in ['none', 'system-informed', None] and min_prob <= prob and prob < max_prob:
                     tobe_confirmed_slots[slot] = self.slots[slot]
 
         return tobe_confirmed_slots
@@ -511,7 +566,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     prev_prob, prev_value = prev_slots[slot].get_most_probable_hyp()
 
                     if cur_value not in ['none', 'system-informed', None] and cur_prob > cha_prob and \
-                        prev_value not in ['none', 'system-informed', None] and prev_prob > cha_prob and \
+                        prev_value not in ['system-informed', None] and prev_prob > cha_prob and \
                         cur_value != prev_value:
                         changed_slots[slot] = cur_slots[slot]
 

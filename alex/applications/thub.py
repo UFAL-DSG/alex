@@ -10,8 +10,7 @@ import autopath
 import argparse
 
 from alex.applications.exceptions import TextHubException
-from alex.components.asr.utterance import Utterance, UtteranceNBList, \
-    UtteranceException
+from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceException
 from alex.components.dm.common import dm_factory, get_dm_type
 from alex.components.hub import Hub
 from alex.components.slu.da import DialogueActConfusionNetwork
@@ -19,7 +18,6 @@ from alex.components.slu.common import slu_factory
 from alex.components.nlg.common import nlg_factory, get_nlg_type
 from alex.utils.config import Config
 from alex.utils.ui import getTerminalSize
-from alex.utils.config import as_project_path
 
 
 class TextHub(Hub):

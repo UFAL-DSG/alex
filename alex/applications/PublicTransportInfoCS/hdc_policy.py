@@ -102,37 +102,45 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct('inform(silence_timeout="true")')
             else:
                 res_da = DialogueAct("silence()")
+            dialogue_state["ludait"].reset()
 
         elif ludait == "bye":
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
+            dialogue_state["ludait"].reset()
 
         elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
+            dialogue_state["ludait"].reset()
 
         elif ludait == "help":
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
+            dialogue_state["ludait"].reset()
 
         elif ludait == "thankyou":
             # NLG("Díky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
+            dialogue_state["ludait"].reset()
 
         elif ludait == "restart":
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
+            dialogue_state["ludait"].reset()
 
         elif ludait == "repeat":
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
+            dialogue_state["ludait"].reset()
 
         elif ludait == "reqalts":
             # NLG("There is nothing else in the database.")
             # NLG("The next connection is ...")
             res_da = self.get_an_alternative(dialogue_state)
+            dialogue_state["ludait"].reset()
 
         elif dialogue_state["alternative"].test_most_probable_value('none', self.policy_cfg['accept_prob'], neg_val=True):
             # Search for traffic direction and/or present the requested
@@ -159,12 +167,11 @@ class PTICSHDCPolicy(DialoguePolicy):
             else:
                 res_da.extend(req_da)
 
-        dialogue_state["ludait"].reset()
-
         self.last_system_dialogue_act = res_da
 
         # record the system dialogue acts
         self.das.append(self.last_system_dialogue_act)
+
         return self.last_system_dialogue_act
 
     def get_an_alternative(self, ds):

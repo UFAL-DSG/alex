@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+
 import autopath
 
 import argparse
@@ -74,7 +77,7 @@ class SemHub(Hub):
         nblist = DialogueActNBList()
         i = 1
         while i < 100:
-            l = raw_input("User DA %d: " % i)
+            l = raw_input("User DA %d: " % i).decode('utf8')
             if len(l) == 1 and l.startswith("."):
                 print
                 break
