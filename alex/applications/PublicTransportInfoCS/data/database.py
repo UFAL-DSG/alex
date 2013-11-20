@@ -39,7 +39,7 @@ database = {
     },
     "vehicle": {
         "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
-        "tram": ["tram", "tramvaj", "tramvajoví", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
+        "tram": ["tram", "tramvaj", "tramvajový", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
         "metro": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
         "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
         "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
@@ -230,6 +230,7 @@ def add_time():
         for min_id_end, min_str_end in min_endings.get(minute, [('', '')]):
             add_db_time(0, minute, "{m} {mi}", {'m': min_str_stem + min_str_end,
                                                 'mi': min_id_stem + min_id_end})
+
 
 def add_db_time(hour, minute, format_str, replacements):
     """Add a time expression to the database
