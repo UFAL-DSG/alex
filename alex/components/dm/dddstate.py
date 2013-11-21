@@ -422,9 +422,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots[dai.name].scale(weight)
                     self.slots[dai.name].add('true', prob)
                 else:
-                    print self.slots[dai.name]
                     self.slots[dai.name].distribute(dai.value, prob)
-                    print self.slots[dai.name]
             elif dai.dat == "request":
                 self.slots["rh_" + dai.name].scale(weight)
                 self.slots["rh_" + dai.name].add("user-requested", prob)
