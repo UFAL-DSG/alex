@@ -178,8 +178,7 @@ class PTICSHDCSLU(SLUInterface):
                 # decide in the context resolution
                 if ((not from_stop and not to_stop and not via_stop) or \
                         (from_stop and to_stop)):
-                    cn.add(0.501, DialogueActItem(dat, "", stop_name))
-                    cn.add(0.499, DialogueActItem(dat, "", stop_name))
+                    cn.add(1.0, DialogueActItem(dat, "", stop_name))
 
                 last_stop = i
 
