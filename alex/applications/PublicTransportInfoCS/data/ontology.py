@@ -166,8 +166,16 @@ ontology = {
     },
     'reset_on_change': {
         # reset slots when any of the specified slots has changed, for matching changed slots a regexp is used
-        'route_alternative': ['^from_stop$', '^to_stop$', '^departure_time$', '^departure_time_rel$', '^arrival_time$',
-                              '^arrival_time_rel$'],
+        'route_alternative': [
+            '^from_stop$', '^to_stop$', '^via_stop$',
+            '^departure_time$', '^departure_time_rel$',
+            '^arrival_time$', '^arrival_time_rel$',
+        ],
+        'task': [
+            '^from_stop$', '^to_stop$', '^via_stop$',
+            '^departure_time$', '^departure_time_rel$',
+            '^arrival_time$', '^arrival_time_rel$',
+        ],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation different inputs
