@@ -724,6 +724,10 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         for dai_hyp in self.cn:
             yield dai_hyp
 
+    def __reversed__(self):
+        for dai_hyp in reversed(self.cn):
+            yield dai_hyp
+
     @staticmethod
     def _combine_new(prob1, prob2):
         return prob2

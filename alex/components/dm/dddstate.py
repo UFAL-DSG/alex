@@ -137,8 +137,13 @@ class D3DiscreteValue(DiscreteValue):
 
         return ((max_prob1, max_value1), (max_prob2, max_value2))
 
-    def test_most_probable_value(self, test_value, test_prob, neg_val=False, neg_prob=False):
-        """ Test the most probable value ...
+    def test_mpv(self, test_value, test_prob, neg_val=False, neg_prob=False):
+        """ Test the most probable value of the slot whether:
+
+        1. the most probable value is equal to test_value and
+        2. its probability is larger the test_prob
+
+        Each of the above tests can be negated when neg_* is set True.
 
         :param test_value:
         :param test_prob:
@@ -398,7 +403,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
 
         # now process the user dialogue act
-        for prob, dai in user_da:
+        for prob, dai in reversed(user_da):
             #print "#0 ", self.type
             #print "#1 SType:", prob, dai
             ##print "#51", self.slots

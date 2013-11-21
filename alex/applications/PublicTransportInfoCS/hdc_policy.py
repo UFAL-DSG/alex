@@ -182,7 +182,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif dialogue_state['task'].test_most_probable_value('weather', self.policy_cfg['accept_prob']):
+        elif dialogue_state['task'].test_mpv('weather', self.policy_cfg['accept_prob']):
             # talk about weather
             res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                              changed_slots)
@@ -190,8 +190,6 @@ class PTICSHDCPolicy(DialoguePolicy):
             # talk about public transport
             res_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                                 changed_slots)
-
-        dialogue_state["ludait"].reset()
 
         self.last_system_dialogue_act = res_da
 
@@ -216,7 +214,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_an_alternative(ds)
             ds["ludait"].reset()
 
-        elif ds["alternative"].test_most_probable_value('none', self.policy_cfg['accept_prob'], neg_val=True):
+        elif ds["alternative"].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
             # Search for traffic direction and/or present the requested
             # directions already found
             res_da = self.get_requested_alternative(ds)
@@ -381,10 +379,10 @@ class PTICSHDCPolicy(DialoguePolicy):
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
-                    if dialogue_state['from_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
+                    if dialogue_state['from_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
                         dai = DialogueActItem("help", "inform", "from_stop")
                         res_da.append(dai)
-                    elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
+                    elif dialogue_state['to_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
                         dai = DialogueActItem("help", "inform", "to_stop")
                         res_da.append(dai)
                 else:
@@ -424,7 +422,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 dai = DialogueActItem("deny", slot, dialogue_state["ch_" + slot].get_most_probable_value())
                 res_da.append(dai)
 
-                if dialogue_state[slot].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True):
+                if dialogue_state[slot].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True):
                     dai = DialogueActItem("inform", slot, dialogue_state[slot].get_most_probable_value())
                     res_da.append(dai)
 
@@ -503,28 +501,28 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-        if ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
-                ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
-                ds['time'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+        if ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob'], ) and \
+                ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+                ds['time'].test_mpv('none', self.policy_cfg['accept_prob']) and \
                 randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
-                ds['centre_direction'].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_most_probable_value("*", self.policy_cfg['accept_prob'], neg_val=True)and \
+        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+                ds['centre_direction'].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True) and \
+                ds['centre_direction'].test_mpv("*", self.policy_cfg['accept_prob'], neg_val=True)and \
                 randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
-                ds['centre_direction'].test_most_probable_value("none", self.policy_cfg['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_most_probable_value("*", self.policy_cfg['accept_prob'], neg_val=True) and \
+        elif ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+                ds['centre_direction'].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True) and \
+                ds['centre_direction'].test_mpv("*", self.policy_cfg['accept_prob'], neg_val=True) and \
                 randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
-                ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']) and \
+        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+                ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
                 randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif ds['from_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']):
+        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif ds['to_stop'].test_most_probable_value('none', self.policy_cfg['accept_prob']):
+        elif ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
             req_da.extend(DialogueAct('request(to_stop)'))
 
         return req_da
@@ -861,9 +859,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
-            elif dialogue_state['from_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
+            elif dialogue_state['from_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
-            elif dialogue_state['to_stop'].test_most_probable_value("none", self.policy_cfg['accept_prob']):
+            elif dialogue_state['to_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
         else:
             # we already offered a connection
