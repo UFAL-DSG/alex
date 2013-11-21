@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 
+import re
+
 from alex.utils.config import load_as_module
 from alex.utils.cache import lru_cache
 
@@ -49,12 +51,43 @@ class Ontology(object):
     def slots_system_requests(self):
         """ Return all slots the system can request.
         """
-        return [slot for slot in self.ontology['slots']
-                if 'system_requests' in self.ontology['slot_attributes'][slot]]
+        return [slot for slot in self.ontology['slots'] if 'system_requests' in self.ontology['slot_attributes'][slot]]
 
     @lru_cache(maxsize=10)
     def slots_system_confirms(self):
         """ Return all slots the system can request.
         """
-        return [slot for slot in self.ontology['slots']
-                if 'system_confirms' in self.ontology['slot_attributes'][slot]]
+        return [slot for slot in self.ontology['slots'] if 'system_confirms' in self.ontology['slot_attributes'][slot]]
+
+    @lru_cache(maxsize=1000)
+    def last_talked_about(self, dat, name, value):
+        """Returns a list of slots and values that should be used to for tracking about what was talked about recently,
+        given the input dialogue acts.
+
+        :param dat: the source dialogue act type
+        :param name: the source slot name
+        :param value: the source slot value
+        :return: returns a list of target slot names and values used for tracking
+        """
+        lta_tsv = []
+
+        dat = dat if dat else ''
+        name = name if name else ''
+        value = value if value else ''
+
+        for target_slot, target_values in self.ontology['last_talked_about'].iteritems():
+            for target_value, source_patterns in target_values.iteritems():
+                for source_dat, source_name, source_value in source_patterns:
+                    if re.match(source_dat, dat) and re.match(source_name, name) and re.match(source_value, value):
+                        lta_tsv.append((target_slot, target_value))
+
+        return lta_tsv
+
+    @lru_cache(maxsize=1000)
+    def reset_on_change(self, slot, changed_slot):
+        if slot in self.ontology['reset_on_change']:
+            for pattern in self.ontology['reset_on_change'][slot]:
+                if re.match(pattern, changed_slot):
+                    return True
+        else:
+            return False

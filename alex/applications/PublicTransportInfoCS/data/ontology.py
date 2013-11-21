@@ -147,6 +147,9 @@ ontology = {
             # the dialogue state
         ],
 
+        'lta_departure_time': [],
+        'lta_time': [],
+
         # not implemented yet
         'transfer_stops': [
             'user_requests',
@@ -160,6 +163,27 @@ ontology = {
         'max_temperature': [
             'temperature',
         ],
+    },
+    'reset_on_change': {
+        # reset slots when any of the specified slots has changed, for matching changed slots a regexp is used
+        'route_alternative': ['^from_stop$', '^to_stop$', '^departure_time$', '^departure_time_rel$', '^arrival_time$',
+                              '^arrival_time_rel$'],
+    },
+    'last_talked_about': {
+        # introduces new slots as a marginalisation different inputs
+        # this is performed by converting dialogue acts into inform acts
+        'lta_time': {
+            # the following means, every time I talk about the time, it supports the value time in slot time_sel
+           'time': [('.*','^time$','.*'),],
+            # the following means, every time I talk about the time_rel, it supports the value time_rel in slot time_sel
+           'time_rel': [('.*','^time_rel$','.*'),],
+           # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
+           # slot
+        },
+        'lta_departure_time': {
+           'departure_time': [('.*','^departure_time$','.*'),],
+           'departure_time_rel': [('.*','^departure_time_rel$','.*'),],
+        },
     },
 }
 
@@ -176,3 +200,5 @@ add_slot_values_from_database('via_stop', 'stop')
 add_slot_values_from_database('departure_time', 'time')
 add_slot_values_from_database('departure_time_rel', 'time_rel')
 add_slot_values_from_database('arrival_time', 'time')
+add_slot_values_from_database('arrival_time_rel', 'time_rel')
+add_slot_values_from_database('departure_date_rel', 'date_rel')

@@ -43,6 +43,28 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
 
+    def reset_on_change(self, ds, changed_slots):
+        """Reset slots which depends on changed slots.
+
+        :param ds: dialogue state
+        :param changed_slots: slots changed in the last turn
+        """
+        for ds_slot in ds:
+            for changed_slot in changed_slots:
+                if self.ontology.reset_on_change(ds_slot, changed_slot):
+                    if isinstance(ds[ds_slot], float):
+                        ds[ds_slot] = 0.0
+                    elif isinstance(ds[ds_slot], int):
+                        ds[ds_slot] = 0.0
+                    elif isinstance(ds[ds_slot], basestring):
+                        ds[ds_slot] = "none"
+                    else:
+                        ds[ds_slot].reset()
+
+                    self.system_logger.debug("Reset on change: {slot} becasue of {changed_slot}".format(slot=ds_slot,
+                                                                                                        changed_slot=changed_slot))
+                    break
+
     def get_da(self, dialogue_state):
         """The main policy decisions are made here. For each action, some set of conditions must be met. These
          conditions depends on the action.
@@ -90,6 +112,9 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # output DA
         res_da = None
+
+        # reset all slots depending on changed slots
+        self.reset_on_change(dialogue_state, changed_slots)
 
         # topic-independent behavior
         if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:

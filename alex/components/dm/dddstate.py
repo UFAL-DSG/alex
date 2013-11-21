@@ -138,6 +138,14 @@ class D3DiscreteValue(DiscreteValue):
         return ((max_prob1, max_value1), (max_prob2, max_value2))
 
     def test_most_probable_value(self, test_value, test_prob, neg_val=False, neg_prob=False):
+        """ Test the most probable value ...
+
+        :param test_value:
+        :param test_prob:
+        :param neg_val:
+        :param neg_prob:
+        :return:
+        """
         prob, value = self.get_most_probable_hyp()
 
         if not neg_val:
@@ -221,6 +229,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     def __contains__(self, key):
         return key in self.slots
 
+    def __iter__(self):
+        return iter(self.slots)
+
     def log_state(self):
         """Log the state using the the session logger."""
 
@@ -282,11 +293,15 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         if self.debug:
             self.system_logger.debug('D3State Dialogue Act in:\n%s' % user_da)
 
-        # perform the context resolution
         user_da = self.context_resolution(user_da, system_da)
 
         if self.debug:
             self.system_logger.debug('Context Resolution - Dialogue Act: \n%s' % user_da)
+
+        user_da = self.last_talked_about(user_da, system_da)
+
+        if self.debug:
+            self.system_logger.debug('Last Talked About Inference - Dialogue Act: \n%s' % user_da)
 
         # perform the state update
         self.state_update(user_da, system_da)
@@ -335,6 +350,25 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
                     if new_user_dai:
                         new_user_da.add_merge(prob, new_user_dai, 'new')
+
+        new_user_da.extend(user_da)
+
+        return new_user_da
+
+    def last_talked_about(self, user_da, system_da):
+        """This adds dialogue act items to support inference of the last slots the user talked about."""
+        new_user_da = DialogueActConfusionNetwork()
+
+        for prob, user_dai in user_da:
+            new_user_dais = []
+            lta_tsvs = self.ontology.last_talked_about(user_dai.dat, user_dai.name, user_dai.value)
+
+            for name, value in lta_tsvs:
+                new_user_dais.append(DialogueActItem("inform", name, value))
+
+            if new_user_dais:
+                for nudai in new_user_dais:
+                    new_user_da.add_merge(prob, nudai, 'new')
 
         new_user_da.extend(user_da)
 
