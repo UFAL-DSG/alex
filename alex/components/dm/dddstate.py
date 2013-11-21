@@ -102,7 +102,7 @@ class D3DiscreteValue(DiscreteValue):
                 else:
                     self.add(v, dist_prob*value_prob*1.0/(len(self.values) - 1))
 
-    def get_most_probable_hyp(self):
+    def mph(self):
         """The function returns the most probable value and its probability
         in a tuple.
         """
@@ -116,7 +116,7 @@ class D3DiscreteValue(DiscreteValue):
 
         return (max_prob, max_value)
 
-    def get_two_most_probable_hyps(self):
+    def tmphs(self):
         """This function returns two most probable values and their probabilities.
 
         The function returns a tuple consisting of two tuples (probability, value).
@@ -137,7 +137,7 @@ class D3DiscreteValue(DiscreteValue):
 
         return ((max_prob1, max_value1), (max_prob2, max_value2))
 
-    def test_mpv(self, test_value, test_prob, neg_val=False, neg_prob=False):
+    def test(self, test_value = None, test_prob = None, neg_val=False, neg_prob=False):
         """ Test the most probable value of the slot whether:
 
         1. the most probable value is equal to test_value and
@@ -151,7 +151,7 @@ class D3DiscreteValue(DiscreteValue):
         :param neg_prob:
         :return:
         """
-        prob, value = self.get_most_probable_hyp()
+        prob, value = self.mph()
 
         if not neg_val:
             if test_value and value != test_value:
@@ -201,22 +201,15 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s.append("{slot:20} = {value}".format(slot="ludait",value=self.slots["ludait"].items()))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
-                not sl.startswith('sh_') and not sl.startswith('rh_') and
+                not sl.startswith('sh_') and not sl.startswith('rh_') and not sl.startswith('lta_') and
                 not sl.startswith("ludait") and isinstance(self.slots[sl], D3DiscreteValue)]:
             s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
         s.append("")
 
-        for name in [sl for sl in sorted(self.slots) if sl.startswith('rh_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
-        s.append("")
-
-        for name in [sl for sl in sorted(self.slots) if sl.startswith('ch_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
-        s.append("")
-
-        for name in [sl for sl in sorted(self.slots) if sl.startswith('sh_')]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
-        s.append("")
+        for prefix in ['lta_', 'rh_', 'ch_', 'sh_']:
+            for name in [sl for sl in sorted(self.slots) if sl.startswith(prefix)]:
+                s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
+            s.append("")
 
         for name in [sl for sl in sorted(self.slots) if not isinstance(self.slots[sl], D3DiscreteValue)]:
             s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
@@ -473,7 +466,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         for slot in self.slots:
             if isinstance(self.slots[slot], D3DiscreteValue) and slot.startswith("ch_"):
-                prob, value = self.slots[slot].get_most_probable_hyp()
+                prob, value = self.slots[slot].mph()
                 if value not in ['none', 'system-informed', None] and prob > conf_prob:
                     confirmed_slots[slot[3:]] = self.slots[slot]
 
@@ -503,7 +496,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
             # test whether the slot is not currently requested
             if "rh_" + slot not in self.slots or self.slots["rh_" + slot]["none"] > 0.999:
-                prob, value = self.slots[slot].get_most_probable_hyp()
+                prob, value = self.slots[slot].mph()
                 # test that the nin informed value is an interesting value
                 if value not in ['none', None] and prob > noninf_prob:
                     noninformed_slots[slot] = self.slots[slot]
@@ -517,7 +510,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         for slot in self.slots:
             if isinstance(self.slots[slot], D3DiscreteValue):
-                prob, value = self.slots[slot].get_most_probable_hyp()
+                prob, value = self.slots[slot].mph()
                 if value not in ['none', 'system-informed', None] and prob >= acc_prob:
                     accepted_slots[slot] = self.slots[slot]
 
@@ -536,7 +529,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             if not isinstance(self.slots[slot], D3DiscreteValue):
                 continue
 
-            prob, value = self.slots[slot].get_most_probable_hyp()
+            prob, value = self.slots[slot].mph()
             if value not in ['none', 'system-informed', None] and min_prob <= prob and prob < max_prob:
                 tobe_confirmed_slots[slot] = self.slots[slot]
 
@@ -554,7 +547,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             if not isinstance(self.slots[slot], D3DiscreteValue):
                 continue
 
-            (prob1, value1), (prob2, value2) = self.slots[slot].get_two_most_probable_hyps()
+            (prob1, value1), (prob2, value2) = self.slots[slot].tmphs()
 
             if value1 not in ['none', 'system-informed', None] and prob1 > sel_prob and \
                 value2 not in ['none', 'system-informed', None] and prob2 > sel_prob:
@@ -581,8 +574,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                 if not isinstance(cur_slots[slot], D3DiscreteValue):
                     continue
 
-                cur_prob, cur_value = cur_slots[slot].get_most_probable_hyp()
-                prev_prob, prev_value = prev_slots[slot].get_most_probable_hyp()
+                cur_prob, cur_value = cur_slots[slot].mph()
+                prev_prob, prev_value = prev_slots[slot].mph()
 
                 if cur_value not in ['none', 'system-informed', None] and cur_prob > cha_prob and \
                     prev_value not in ['system-informed', None] and \

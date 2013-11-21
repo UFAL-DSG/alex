@@ -24,20 +24,20 @@ class DiscreteValue(object):
 
         pass
 
-    def get_most_probable_hyp(self):
+    def mph(self):
         """The function returns the most probable value and its probability
         in a tuple.
         """
 
         return None
 
-    def get_most_probable_value(self):
+    def mpv(self):
         """The function returns the most probable value.
         """
 
-        return self.get_most_probable_hyp()[1]
+        return self.mph()[1]
 
-    def get_two_most_probable_hyps(self):
+    def tmphs(self):
         """This function returns two most probable values and their probabilities.
 
         The function returns a tuple consisting of two tuples (probability, value).
@@ -45,17 +45,17 @@ class DiscreteValue(object):
 
         return None
 
+    def tmpvs(self):
+        """The function returns two most probable values.
+        """
+        (prob1, val1), (prob2, val2) = self.tmphs()
+
+        return (val1, val2)
+
     def explain(self, full=False, linear_prob=False):
         """This function prints the values and their probabilities for this node.
         """
         pass
-
-    def get_two_most_probable_values(self):
-        """The function returns two most probable values.
-        """
-        (prob1, val1), (prob2, val2) = self.get_two_most_probable_hyps()
-
-        return (val1, val2)
 
 class DialogueState(object):
     """This is a trivial implementation of a dialogue state and its update.
