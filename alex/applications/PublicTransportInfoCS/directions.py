@@ -22,7 +22,9 @@ class Route(object):
 
 
 class GoogleDirections(Directions):
-    def __init__(self, input_json):
+    def __init__(self, from_stop, to_stop, input_json):
+        self.from_stop = from_stop
+        self.to_stop = to_stop
         self.routes = []
         for route in input_json['routes']:
             self.routes.append(GoogleRoute(route))
@@ -173,7 +175,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
         response = json.load(page)
         self._log_response_json(response)
 
-        directions = GoogleDirections(response)
+        directions = GoogleDirections(from_stop, to_stop, response)
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
