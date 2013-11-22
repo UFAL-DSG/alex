@@ -77,24 +77,14 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
             'relative_time',
         ],
-        'weather_time': [
-            'user_informs', 'user_requests', 'user_confirms',
-            'system_informs',
-            'system_confirms', 'system_iconfirms', 'system_selects',
-            'absolute_time',
-        ],
-        'weather_time_rel': [
-            'user_informs', 'user_requests', 'user_confirms',
-            'system_informs',
-            'system_confirms', 'system_iconfirms', 'system_selects',
-            'relative_time',
-        ],
         'time': [
-            'user_informs',
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms', 'system_selects',
             'absolute_time',
         ],
         'time_rel': [
-            'user_informs',
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms', 'system_selects',
             'relative_time',
         ],
         'duration': [
@@ -196,7 +186,7 @@ ontology = {
            'departure_time_rel': [('','^departure_time_rel$',''),],
         },
         'lta_task': {
-           'weather': [('','^task$','^weather$'),('','^weather','')],
+           'weather': [('','^task$','^weather$'),],
            'find_connection': [('','^task$','^find_connection$'),('','^departure_',''),('','^arrival_',''),
                                ('','^from_stop$',''), ('','^to_stop$',''),
                                ('','^duration$','')],

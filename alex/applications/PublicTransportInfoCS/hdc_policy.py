@@ -249,20 +249,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
         # get dialogue state values
-        weather_time = ds['weather_time'].mpv()
-        weather_time_rel = ds['weather_time_rel'].mpv()
+        time_abs = ds['time'].mpv()
+        time_rel = ds['time_rel'].mpv()
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
-        time = ds['time'].mpv()
-        time_rel = ds['time_rel'].mpv()
-
-        print "#81", weather_time, weather_time_rel, date_rel, ampm, time, time_rel
 
         # interpret time
-        time_abs = weather_time if weather_time != 'none' else time
-        time_rel = weather_time_rel if weather_time_rel != 'none' else time_rel
-        daily = (time_abs == 'none' and time_rel == 'none' and
-                 ampm == 'none' and date_rel != 'none')
+        daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
         # check if any time is set to distinguish current/prediction
         weather_time_int = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
@@ -274,9 +267,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         # time
         if weather_time_int:
             if time_rel != 'none':
-                res_da.append(DialogueActItem('inform', 'weather_time_rel', time_rel))
+                res_da.append(DialogueActItem('inform', 'time_rel', time_rel))
             elif time_abs != 'none' or ampm != 'none':
-                res_da.append(DialogueActItem('inform', 'weather_time',
+                res_da.append(DialogueActItem('inform', 'time',
                                               '%d:%02d' % (weather_time_int.hour, weather_time_int.minute)))
             if date_rel != 'none':
                 res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
