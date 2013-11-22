@@ -362,7 +362,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in requested_slots:
-            if ds['route_alternative'] != "none":
+            if ds['route_alternative'] in [0, 1, 2, 3]:
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':

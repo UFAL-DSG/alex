@@ -510,10 +510,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         accepted_slots = {}
 
         for slot in self.slots:
-            if isinstance(self.slots[slot], D3DiscreteValue):
-                prob, value = self.slots[slot].mph()
-                if value not in ['none', 'system-informed', None] and prob >= acc_prob:
-                    accepted_slots[slot] = self.slots[slot]
+            if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
+                continue
+            if not isinstance(self.slots[slot], D3DiscreteValue):
+                continue
+
+            prob, value = self.slots[slot].mph()
+            if value not in ['none', 'system-informed', None] and prob >= acc_prob:
+                accepted_slots[slot] = self.slots[slot]
 
         return accepted_slots
 
@@ -526,7 +530,6 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         for slot in self.slots:
             if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
                 continue
-
             if not isinstance(self.slots[slot], D3DiscreteValue):
                 continue
 
@@ -544,7 +547,6 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         for slot in self.slots:
             if any([1 for x in ['rh_', 'ch_', 'sh_', "ludait"] if slot.startswith(x)]):
                 continue
-
             if not isinstance(self.slots[slot], D3DiscreteValue):
                 continue
 
