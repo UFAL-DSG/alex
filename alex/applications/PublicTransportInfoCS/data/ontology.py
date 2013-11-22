@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+
 ontology = {
     'slots': {
         'silence': set([]),
@@ -147,8 +148,11 @@ ontology = {
             # the dialogue state
         ],
 
-        'lta_departure_time': [],
+        'lta_task': [],
         'lta_time': [],
+        'lta_date': [],
+        'lta_departure_time': [],
+        'lta_arrival_time': [],
 
         # not implemented yet
         'transfer_stops': [
@@ -166,27 +170,39 @@ ontology = {
     },
     'reset_on_change': {
         # reset slots when any of the specified slots has changed, for matching changed slots a regexp is used
-        'route_alternative': ['^from_stop$', '^to_stop$', '^departure_time$', '^departure_time_rel$', '^arrival_time$',
-                              '^arrival_time_rel$'],
+        'route_alternative': [
+            '^from_stop$', '^to_stop$', '^via_stop$',
+            '^departure_time$', '^departure_time_rel$',
+            '^arrival_time$', '^arrival_time_rel$',
+        ],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation different inputs
         # this is performed by converting dialogue acts into inform acts
         'lta_time': {
             # the following means, every time I talk about the time, it supports the value time in slot time_sel
-           'time': [('.*','^time$','.*'),],
+           'time': [('','^time$',''),],
             # the following means, every time I talk about the time_rel, it supports the value time_rel in slot time_sel
-           'time_rel': [('.*','^time_rel$','.*'),],
+           'time_rel': [('','^time_rel$',''),],
            # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
            # slot
         },
+        'lta_date': {
+           'date': [('','^date$',''),],
+           'date_rel': [('','^date_rel$',''),],
+        },
         'lta_departure_time': {
-           'departure_time': [('.*','^departure_time$','.*'),],
-           'departure_time_rel': [('.*','^departure_time_rel$','.*'),],
+           'departure_time': [('','^departure_time$',''),],
+           'departure_time_rel': [('','^departure_time_rel$',''),],
+        },
+        'lta_task': {
+           'weather': [('','^task$','^weather$'),('','^weather','')],
+           'find_connection': [('','^task$','^find_connection$'),('','^departure_',''),('','^arrival_',''),
+                               ('','^from_stop$',''), ('','^to_stop$',''),
+                               ('','^duration$','')],
         },
     },
 }
-
 from database import database
 
 

@@ -42,6 +42,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
+        self.accept_prob = self.policy_cfg['accept_prob']
 
     def reset_on_change(self, ds, changed_slots):
         """Reset slots which depends on changed slots.
@@ -61,7 +62,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     else:
                         ds[ds_slot].reset()
 
-                    self.system_logger.debug("Reset on change: {slot} becasue of {changed_slot}".format(slot=ds_slot,
+                    self.system_logger.debug("Reset on change: {slot} because of {changed_slot}".format(slot=ds_slot,
                                                                                                         changed_slot=changed_slot))
                     break
 
@@ -73,7 +74,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :return: a dialogue act - the system action
         """
 
-        ludait_prob, ludait  = dialogue_state["ludait"].get_most_probable_hyp()
+        ludait_prob, ludait  = dialogue_state["ludait"].mph()
         if ludait_prob < self.policy_cfg['accept_prob_ludait']:
             ludait = 'none'
 
@@ -84,9 +85,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots supplied by the user but not implicitly confirmed
         noninformed_slots = dialogue_state.get_slots_being_noninformed(self.policy_cfg['accept_prob_noninformed'])
         # all slots deemed to be accepted
-        accepted_slots = dialogue_state.get_accepted_slots(self.policy_cfg['accept_prob'])
+        accepted_slots = dialogue_state.get_accepted_slots(self.accept_prob)
         # all slots that should be confirmed
-        slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.policy_cfg['accept_prob'])
+        slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.accept_prob)
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         # all slots changed by a user in the last turn
@@ -182,14 +183,14 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif dialogue_state['task'].test_mpv('weather', self.policy_cfg['accept_prob']):
+        elif dialogue_state['lta_task'].test('weather', self.accept_prob):
             # talk about weather
             res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                             changed_slots)
+                                             accepted_slots, changed_slots)
         else:
             # talk about public transport
             res_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                                changed_slots)
+                                                accepted_slots, changed_slots)
 
         self.last_system_dialogue_act = res_da
 
@@ -197,7 +198,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
 
-    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, changed_slots):
+    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
@@ -214,7 +215,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_an_alternative(ds)
             ds["ludait"].reset()
 
-        elif ds["alternative"].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
+        elif "alternative" in accepted_slots:
             # Search for traffic direction and/or present the requested
             # directions already found
             res_da = self.get_requested_alternative(ds)
@@ -222,7 +223,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         elif slots_being_requested:
             # inform about all requested slots
-            res_da = self.get_requested_info(slots_being_requested, ds)
+            res_da = self.get_requested_info(slots_being_requested, ds, accepted_slots)
 
         elif slots_being_confirmed:
             # inform about all slots being confirmed by the user
@@ -232,7 +233,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # request all unknown information
-            req_da = self.request_more_info(ds)
+            req_da = self.request_more_info(ds, accepted_slots)
             if len(req_da) == 0:
                 # we know everything we need -> start searching
                 res_da.extend(self.get_directions(ds, check_conflict=True))
@@ -240,7 +241,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.extend(req_da)
         return res_da
 
-    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, changed_slots):
+    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
@@ -248,12 +249,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
         # get dialogue state values
-        weather_time = ds['weather_time'].get_most_probable_value()
-        weather_time_rel = ds['weather_time_rel'].get_most_probable_value()
-        date_rel = ds['date_rel'].get_most_probable_value()
-        ampm = ds['ampm'].get_most_probable_value()
-        time = ds['time'].get_most_probable_value()
-        time_rel = ds['time_rel'].get_most_probable_value()
+        weather_time = ds['weather_time'].mpv()
+        weather_time_rel = ds['weather_time_rel'].mpv()
+        date_rel = ds['date_rel'].mpv()
+        ampm = ds['ampm'].mpv()
+        time = ds['time'].mpv()
+        time_rel = ds['time_rel'].mpv()
+
+        print "#81", weather_time, weather_time_rel, date_rel, ampm, time, time_rel
 
         # interpret time
         time_abs = weather_time if weather_time != 'none' else time
@@ -312,7 +315,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         if 'route_alternative' in ds:
-            ds_alternative = ds["alternative"].get_most_probable_value()
+            ds_alternative = ds["alternative"].mpv()
 
             if ds_alternative == "last":
                 res_da.extend(self.get_directions(ds, "last"))
@@ -343,10 +346,10 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return res_da
 
-    def get_requested_info(self, requested_slots, dialogue_state):
+    def get_requested_info(self, requested_slots, ds, accepted_slots):
         """Return a DA containing information about all requested slots.
 
-        :param dialogue_state: The current dialogue state
+        :param ds: The current dialogue state
         :param requested_slots: A dictionary with keys for all requested \
                 slots and the correct return values.
         :rtype: DialogueAct
@@ -354,23 +357,23 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in requested_slots:
-            if dialogue_state['route_alternative'] != "none":
+            if ds['route_alternative'] != "none":
                 if slot == 'from_stop':
-                    res_da.extend(self.req_from_stop(dialogue_state))
+                    res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':
-                    res_da.extend(self.req_to_stop(dialogue_state))
+                    res_da.extend(self.req_to_stop(ds))
                 elif slot == 'departure_time':
-                    res_da.extend(self.req_departure_time(dialogue_state))
+                    res_da.extend(self.req_departure_time(ds))
                 elif slot == 'departure_time_rel':
-                    res_da.extend(self.req_departure_time_rel(dialogue_state))
+                    res_da.extend(self.req_departure_time_rel(ds))
                 elif slot == 'arrival_time':
-                    res_da.extend(self.req_arrival_time(dialogue_state))
+                    res_da.extend(self.req_arrival_time(ds))
                 elif slot == 'arrival_time_rel':
-                    res_da.extend(self.req_arrival_time_rel(dialogue_state))
+                    res_da.extend(self.req_arrival_time_rel(ds))
                 elif slot in 'duration':
-                    res_da.extend(self.req_duration(dialogue_state))
+                    res_da.extend(self.req_duration(ds))
                 elif slot == "num_transfers":
-                    res_da.extend(self.req_num_transfers(dialogue_state))
+                    res_da.extend(self.req_num_transfers(ds))
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
@@ -379,22 +382,22 @@ class PTICSHDCPolicy(DialoguePolicy):
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
-                    if dialogue_state['from_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
+                    if 'from_stop' not in accepted_slots:
                         dai = DialogueActItem("help", "inform", "from_stop")
                         res_da.append(dai)
-                    elif dialogue_state['to_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
+                    elif 'to_stop' not in accepted_slots:
                         dai = DialogueActItem("help", "inform", "to_stop")
                         res_da.append(dai)
                 else:
                     dai = DialogueActItem("inform", slot, requested_slots[slot])
                     res_da.append(dai)
-                    dialogue_state["rh_" + slot].reset()
+                    ds["rh_" + slot].reset()
 
-            dialogue_state["rh_" + slot].reset()
+            ds["rh_" + slot].reset()
 
         return res_da
 
-    def get_confirmed_info(self, confirmed_slots, dialogue_state):
+    def get_confirmed_info(self, confirmed_slots, ds, accepted_slots):
         """Return a DA containing information about all slots being confirmed
         by the user (confirm/deny).
 
@@ -403,7 +406,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         *WARNING* This confirms only against values in the dialogue state, however, it should (also in some cases)
         confirm against the results obtained from database, e.g. departure_time slot.
 
-        :param dialogue_state: The current dialogue state
+        :param ds: The current dialogue state
         :param confirmed_slots: A dictionary with keys for all slots \
                 being confirmed, along with their values
         :rtype: DialogueAct
@@ -411,22 +414,22 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in confirmed_slots:
-            if confirmed_slots[slot].get_most_probable_value() == dialogue_state[slot].get_most_probable_value():
+            if confirmed_slots[slot].mpv() == ds[slot].mpv():
                 # it is as user expected
                 res_da.append(DialogueActItem("affirm"))
-                dai = DialogueActItem("inform", slot, dialogue_state[slot].get_most_probable_value())
+                dai = DialogueActItem("inform", slot, ds[slot].mpv())
                 res_da.append(dai)
             else:
                 # it is something else than what user expected
                 res_da.append(DialogueActItem("negate"))
-                dai = DialogueActItem("deny", slot, dialogue_state["ch_" + slot].get_most_probable_value())
+                dai = DialogueActItem("deny", slot, ds["ch_" + slot].mpv())
                 res_da.append(dai)
 
-                if dialogue_state[slot].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True):
-                    dai = DialogueActItem("inform", slot, dialogue_state[slot].get_most_probable_value())
+                if slot in accepted_slots:
+                    dai = DialogueActItem("inform", slot, ds[slot].mpv())
                     res_da.append(dai)
 
-            dialogue_state["ch_" + slot].reset()
+            ds["ch_" + slot].reset()
 
         return res_da
 
@@ -441,7 +444,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for slot in tobe_confirmed_slots:
             if 'system_confirms' in self.ontology['slot_attributes'][slot]:
-                dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].get_most_probable_value())
+                dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].mpv())
                 res_da.append(dai)
                 #confirm explicitly only one slot at the time
                 break
@@ -459,7 +462,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for slot in tobe_selected_slots:
             if 'system_selects' in self.ontology['slot_attributes'][slot]:
-                val1, val2 = tobe_selected_slots[slot].get_two_most_probable_values()
+                val1, val2 = tobe_selected_slots[slot].tmpvs()
                 res_da.append(DialogueActItem("select", slot, val1))
                 res_da.append(DialogueActItem("select", slot, val2))
                 #select values only in one slot at the time
@@ -484,12 +487,12 @@ class PTICSHDCPolicy(DialoguePolicy):
             iconf_da = DialogueAct()
             for slot in changed_slots:
                 if 'system_iconfirms' in self.ontology['slot_attributes'][slot]:
-                    dai = DialogueActItem("iconfirm", slot, changed_slots[slot].get_most_probable_value())
+                    dai = DialogueActItem("iconfirm", slot, changed_slots[slot].mpv())
                     iconf_da.append(dai)
             res_da.extend(iconf_da)
         return res_da
 
-    def request_more_info(self, ds):
+    def request_more_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
         for traffic directions, or perform the search if no further information
         is needed.
@@ -501,28 +504,29 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-        if ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob'], ) and \
-                ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
-                ds['time'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+        if 'from_stop' not in accepted_slots and \
+                'to_stop' not in accepted_slots and \
+                ('departure_time' not in accepted_slots or
+                 'time' not in accepted_slots) and \
                 randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
-                ds['centre_direction'].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_mpv("*", self.policy_cfg['accept_prob'], neg_val=True)and \
+        elif 'from_stop' not in accepted_slots and \
+                ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].most_probable_value() == '*') and \
                 randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
-                ds['centre_direction'].test_mpv("none", self.policy_cfg['accept_prob'], neg_val=True) and \
-                ds['centre_direction'].test_mpv("*", self.policy_cfg['accept_prob'], neg_val=True) and \
+        elif 'to_stop' not in accepted_slots and \
+                ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].most_probable_value() == '*') and \
                 randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
-                ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob']) and \
+        elif 'from_stop' not in accepted_slots and \
+                'to_stop' not in accepted_slots and \
                 randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif ds['from_stop'].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
+        elif 'from_stop' not in accepted_slots:
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif ds['to_stop'].test_mpv('none', self.policy_cfg['accept_prob'], neg_val=True):
+        elif 'to_stop' not in accepted_slots:
             req_da.extend(DialogueAct('request(to_stop)'))
 
         return req_da
@@ -679,8 +683,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
         # check for route conflicts
-        from_stop_val = ds['from_stop'].get_most_probable_value()
-        to_stop_val = ds['to_stop'].get_most_probable_value()
+        from_stop_val = ds['from_stop'].mpv()
+        to_stop_val = ds['to_stop'].mpv()
 
         if check_conflict and from_stop_val == to_stop_val:
             apology_da = DialogueAct()
@@ -691,14 +695,14 @@ class PTICSHDCPolicy(DialoguePolicy):
             return apology_da
 
         # get dialogue state values
-        departure_time = ds['departure_time'].get_most_probable_value()
-        departure_time_rel = ds['departure_time_rel'].get_most_probable_value()
-        arrival_time = ds['arrival_time'].get_most_probable_value()
-        arrival_time_rel = ds['arrival_time_rel'].get_most_probable_value()
-        date_rel = ds['date_rel'].get_most_probable_value()
-        ampm = ds['ampm'].get_most_probable_value()
-        time = ds['time'].get_most_probable_value()
-        time_rel = ds['time_rel'].get_most_probable_value()
+        departure_time = ds['departure_time'].mpv()
+        departure_time_rel = ds['departure_time_rel'].mpv()
+        arrival_time = ds['arrival_time'].mpv()
+        arrival_time_rel = ds['arrival_time_rel'].mpv()
+        date_rel = ds['date_rel'].mpv()
+        ampm = ds['ampm'].mpv()
+        time = ds['time'].mpv()
+        time_rel = ds['time_rel'].mpv()
 
         # interpret departure and arrival time
         departure_time_int, arrival_time_int = None, None
@@ -782,8 +786,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         # no route found: apologize
         if len(res) == 0:
             res.append('apology()')
-            res.append("inform(from_stop='%s')" % dialogue_state['from_stop'].get_most_probable_value())
-            res.append("inform(to_stop='%s')" % dialogue_state['to_stop'].get_most_probable_value())
+            res.append("inform(from_stop='%s')" % dialogue_state['from_stop'].mpv())
+            res.append("inform(to_stop='%s')" % dialogue_state['to_stop'].mpv())
 
         res_da = DialogueAct("&".join(res))
 
@@ -859,9 +863,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
-            elif dialogue_state['from_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
+            elif not dialogue_state['from_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
-            elif dialogue_state['to_stop'].test_mpv("none", self.policy_cfg['accept_prob']):
+            elif not dialogue_state['to_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
         else:
             # we already offered a connection
