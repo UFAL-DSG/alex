@@ -34,7 +34,7 @@ Implemented features:
 
 Features implemented in different repositories:
 
-- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform
+- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform: https://github.com/UFAL-DSG/django-crowdflower-annotations
 
 Missing features:
 
