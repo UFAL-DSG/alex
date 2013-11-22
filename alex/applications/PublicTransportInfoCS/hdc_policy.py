@@ -42,6 +42,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
+        self.accepted_prob = self.policy_cfg['accept_prob']
 
     def reset_on_change(self, ds, changed_slots):
         """Reset slots which depends on changed slots.
@@ -84,9 +85,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots supplied by the user but not implicitly confirmed
         noninformed_slots = dialogue_state.get_slots_being_noninformed(self.policy_cfg['accept_prob_noninformed'])
         # all slots deemed to be accepted
-        accepted_slots = dialogue_state.get_accepted_slots(self.policy_cfg['accept_prob'])
+        accepted_slots = dialogue_state.get_accepted_slots(self.accept_prob)
         # all slots that should be confirmed
-        slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.policy_cfg['accept_prob'])
+        slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.accept_prob)
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         # all slots changed by a user in the last turn
@@ -182,7 +183,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif dialogue_state['task'].test('weather', self.policy_cfg['accept_prob']):
+        elif dialogue_state['task'].test('weather', self.accept_prob):
             # talk about weather
             res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                              accepted_slots, changed_slots)
@@ -254,6 +255,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         ampm = ds['ampm'].mpv()
         time = ds['time'].mpv()
         time_rel = ds['time_rel'].mpv()
+
+        print "#81", weather_time, weather_time_rel, date_rel, ampm, time, time_rel
 
         # interpret time
         time_abs = weather_time if weather_time != 'none' else time
@@ -860,9 +863,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "departure_time"))
             elif randbool(7):
                 res_da.append(DialogueActItem("help", "repeat"))
-            elif not dialogue_state['from_stop'].test("none", self.policy_cfg['accept_prob'], neg_val=True):
+            elif not dialogue_state['from_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
-            elif not dialogue_state['to_stop'].test("none", self.policy_cfg['accept_prob'], neg_val=True):
+            elif not dialogue_state['to_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
         else:
             # we already offered a connection
