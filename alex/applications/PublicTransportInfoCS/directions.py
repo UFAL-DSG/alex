@@ -156,8 +156,8 @@ class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
         Setting the correct date is compulsory!
         """
         data = {
-            'origin': ('zastávka %s, Praha' % from_stop).encode('utf-8'),
-            'destination': ('zastávka %s, Praha' % to_stop).encode('utf-8'),
+            'origin': ('"zastávka %s", Praha, Česká republika' % from_stop).encode('utf-8'),
+            'destination': ('"zastávka %s", Praha, Česká republika' % to_stop).encode('utf-8'),
             'region': 'cz',
             'sensor': 'false',
             'alternatives': 'true',
