@@ -53,7 +53,7 @@ is for every person different!
 
 Development process
 -------------------
-Anyone can contribute to the project as long as he or she agrees to the publishing his contributions under the APACHE 2.0
+Anyone can contribute to the project as long as he or she agrees to publish the contributions under the APACHE 2.0
 license.
 
 If you are a core member of the development team, please do not make changes directly in the master branch. Please,
