@@ -69,7 +69,6 @@ class PTICSHDCSLU(SLUInterface):
         confirm = lambda u: phrase_in(u, 'jede to') or phrase_in(u, 'odjíždí to') or phrase_in(u, 'je výchozí')
         deny = lambda u: phrase_in(u, 'nechci') or phrase_in(u, 'ne') or phrase_in(u, 'nejedu')
 
-
         last_stop = 0
         for i, w in enumerate(u):
             if w.startswith("STOP="):
