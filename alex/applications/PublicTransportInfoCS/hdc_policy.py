@@ -62,7 +62,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     else:
                         ds[ds_slot].reset()
 
-                    self.system_logger.debug("Reset on change: {slot} becasue of {changed_slot}".format(slot=ds_slot,
+                    self.system_logger.debug("Reset on change: {slot} because of {changed_slot}".format(slot=ds_slot,
                                                                                                         changed_slot=changed_slot))
                     break
 
