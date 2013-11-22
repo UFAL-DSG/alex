@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+
 ontology = {
     'slots': {
         'silence': set([]),
@@ -147,8 +148,11 @@ ontology = {
             # the dialogue state
         ],
 
-        'lta_departure_time': [],
+        'lta_task': [],
         'lta_time': [],
+        'lta_date': [],
+        'lta_departure_time': [],
+        'lta_arrival_time': [],
 
         # not implemented yet
         'transfer_stops': [
@@ -199,7 +203,6 @@ ontology = {
         },
     },
 }
-
 from database import database
 
 

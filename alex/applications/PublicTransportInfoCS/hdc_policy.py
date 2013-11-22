@@ -42,7 +42,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
-        self.accepted_prob = self.policy_cfg['accept_prob']
+        self.accept_prob = self.policy_cfg['accept_prob']
 
     def reset_on_change(self, ds, changed_slots):
         """Reset slots which depends on changed slots.
@@ -183,7 +183,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif dialogue_state['task'].test('weather', self.accept_prob):
+        elif dialogue_state['lta_task'].test('weather', self.accept_prob):
             # talk about weather
             res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                              accepted_slots, changed_slots)
