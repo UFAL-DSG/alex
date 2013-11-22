@@ -74,7 +74,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :return: a dialogue act - the system action
         """
 
-        ludait_prob, ludait  = dialogue_state["ludait"].mph()
+        ludait_prob, ludait = dialogue_state["ludait"].mph()
         if ludait_prob < self.policy_cfg['accept_prob_ludait']:
             ludait = 'none'
 
@@ -751,9 +751,9 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_WALKING:
                 # walking to stops with different names
                 if (next_leave_stop == self.DESTIN and
-                    prev_arrive_stop != dialogue_state['to_stop']) or \
+                    prev_arrive_stop != dialogue_state.directions.to_stop) or \
                         (prev_arrive_stop == self.ORIGIN and
-                         next_leave_stop != dialogue_state['from_stop']) or \
+                         next_leave_stop != dialogue_state.directions.from_stop) or \
                         (next_leave_stop != self.DESTIN and
                          prev_arrive_stop != self.ORIGIN and
                          next_leave_stop != prev_arrive_stop):
