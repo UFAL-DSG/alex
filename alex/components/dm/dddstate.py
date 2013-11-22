@@ -582,5 +582,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     changed_slots[slot] = cur_slots[slot]
 
             return changed_slots
+        elif len(self.turns) == 1:
+            # after the first turn all accepted slots are effectively changed
+            return self.get_accepted_slots(cha_prob)
         else:
             return {}
