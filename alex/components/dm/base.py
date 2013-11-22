@@ -19,6 +19,11 @@ class DiscreteValue(object):
         """Get the content of the dialogue state in a human readable form."""
         pass
 
+    def prune(self, threshold=1e-3):
+        """Prune all values with probability less then a threshold."""
+
+        pass
+
     def normalise(self):
         """This function normalise the sum of all probabilities to 1.0"""
 

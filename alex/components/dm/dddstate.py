@@ -32,7 +32,7 @@ class D3DiscreteValue(DiscreteValue):
         return repr(self.values)
 
     def __unicode__(self):
-        return repr(self.values)
+        return unicode(self.items())
 
     def __getitem__(self, value):
         return self.values[value]
@@ -198,21 +198,21 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("D3State - Dialogue state content:")
         s.append("")
-        s.append("{slot:20} = {value}".format(slot="ludait",value=self.slots["ludait"].items()))
+        s.append("{slot:20} = {value}".format(slot="ludait",value=unicode(self.slots["ludait"])))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                 not sl.startswith('sh_') and not sl.startswith('rh_') and not sl.startswith('lta_') and
                 not sl.startswith("ludait") and isinstance(self.slots[sl], D3DiscreteValue)]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
+            s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
         s.append("")
 
         for prefix in ['lta_', 'rh_', 'ch_', 'sh_']:
             for name in [sl for sl in sorted(self.slots) if sl.startswith(prefix)]:
-                s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name].items()))
+                s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
             s.append("")
 
         for name in [sl for sl in sorted(self.slots) if not isinstance(self.slots[sl], D3DiscreteValue)]:
-            s.append("{slot:20} = {value}".format(slot=name,value=self.slots[name]))
+            s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
 
         s.append("")
 
@@ -315,6 +315,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     def context_resolution(self, user_da, system_da):
         """Resolves and converts meaning of some user dialogue acts
         given the context."""
+        old_user_da = deepcopy(user_da)
         new_user_da = DialogueActConfusionNetwork()
 
         if isinstance(system_da, DialogueAct):
@@ -347,14 +348,15 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "false")
 
                     if new_user_dai:
-                        new_user_da.add_merge(prob, new_user_dai, 'new')
+                        new_user_da.add(prob, new_user_dai)
 
-        new_user_da.extend(user_da)
+        old_user_da.extend(new_user_da)
 
-        return new_user_da
+        return old_user_da
 
     def last_talked_about(self, user_da, system_da):
         """This adds dialogue act items to support inference of the last slots the user talked about."""
+        old_user_da = deepcopy(user_da)
         new_user_da = DialogueActConfusionNetwork()
 
         for prob, user_dai in user_da:
@@ -366,11 +368,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
             if new_user_dais:
                 for nudai in new_user_dais:
-                    new_user_da.add_merge(prob, nudai, 'new')
+                    new_user_da.add(prob, nudai)
 
-        new_user_da.extend(user_da)
+        old_user_da.extend(new_user_da)
 
-        return new_user_da
+        return old_user_da
 
     def state_update(self, user_da, system_da):
         """Records the information provided by the system and/or by the user."""
@@ -396,7 +398,8 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
 
         # now process the user dialogue act
-        for prob, dai in reversed(user_da):
+        # processing the low probability DAIs first, emphasize the dialogue acts with high probability
+        for prob, dai in sorted(user_da.items(),reverse=True):
             #print "#0 ", self.type
             #print "#1 SType:", prob, dai
             ##print "#51", self.slots

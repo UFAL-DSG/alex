@@ -505,12 +505,12 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da.extend(DialogueAct('request(departure_time)'))
         elif 'from_stop' not in accepted_slots and \
                 ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].most_probable_value() == '*') and \
+                ds['centre_direction'].mpv() == '*') and \
                 randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
         elif 'to_stop' not in accepted_slots and \
                 ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].most_probable_value() == '*') and \
+                ds['centre_direction'].mpv() == '*') and \
                 randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
         elif 'from_stop' not in accepted_slots and \
