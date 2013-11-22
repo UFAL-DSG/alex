@@ -195,25 +195,38 @@ class PTICSHDCSLU(SLUInterface):
         preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
         preps_rel = set(["za", ])
 
-        test_context = [('confirm', 'departure', ['jede to', 'odjíždí to', 'je výchozí',
-                                                  'má to odjezd', 'je odjezd']),
-                        ('confirm', 'arrival', ['přijede to', 'přijíždí to',
-                                                'má to příjezd', 'je příjezd']),
-                        ('confirm', '', ['je to', 'myslíte', 'myslíš']),
-                        ('deny', 'departure', ['nechci jet', 'nejedu', 'nechci odjíždět',
-                                                'nechci odjezd', 'nechci vyjet', 'nechci vyjíždět',
-                                                'nechci vyrážet', 'nechci vyrazit']),
-                        ('deny', 'arrival', ['nechci přijet', 'nechci přijíždět',
-                                                'nechci příjezd', 'nechci dorazit']),
-                        ('deny', '', ['ne', 'nechci']),
-                        ('inform', 'departure', ['TASK=find_connection',
-                                                 'odjezd', 'odjíždet', 'odjet', 'jedu',
-                                                 'vyrážím', 'vyrážet', 'vyrazit',
-                                                 'bych jel', 'bych jela', 'abych jel',
-                                                 'abych jela']),
-                        ('inform', 'arrival', ['příjezd', 'přijet', 'dorazit', 'abych přijel',
-                                               'abych přijela']),
-                        ('inform', '', [])]
+        test_context = [('confirm', 'departure',
+                         ['jede to', 'odjíždí to', 'je výchozí','má to odjezd', 'je odjezd'],
+                         []),
+                        ('confirm', 'arrival',
+                         ['přijede to', 'přijíždí to','má to příjezd', 'je příjezd'],
+                         []),
+                        ('confirm', '',
+                         ['je to', 'myslíte', 'myslíš'],
+                         []),
+                        ('deny', 'departure',
+                         ['nechci jet', 'nejedu', 'nechci odjíždět', 'nechci odjezd', 'nechci vyjet', 'nechci vyjíždět',
+                         'nechci vyrážet', 'nechci vyrazit'],
+                         []),
+                        ('deny', 'arrival',
+                         ['nechci přijet', 'nechci přijíždět', 'nechci příjezd', 'nechci dorazit'],
+                         []),
+                        ('deny', '',
+                         ['ne', 'nechci'],
+                         []),
+                        ('inform', 'departure',
+                         ['TASK=find_connection', 'odjezd', 'odjíždet', 'odjíždí', 'odjet',
+                         'jedu', 'jede', 'vyrážím', 'vyrážet', 'vyrazit', 'bych jel', 'bych jela', 'bych jet',
+                         'abych jel', 'abych jela', 'jak se dostanu', 'kdy jede', 'jede nějaká',
+                         'jede nějaký', 'VEHICLE=tram'],
+                         ['příjezd', 'přijet', 'dorazit', 'abych přijel', 'abych přijela', 'chci být', 'chtěl bych být']),
+                        ('inform', 'arrival',
+                         ['příjezd', 'přijet', 'dorazit', 'abych přijel', 'abych přijela', 'chci být', 'chtěl bych být'],
+                         []),
+                        ('inform', '',
+                         [],
+                         []),
+        ]
 
         last_time = 0
         for i, w in enumerate(u):
@@ -236,8 +249,10 @@ class PTICSHDCSLU(SLUInterface):
                     time_rel = True
 
                 if time_abs or time_rel:
-                    for act_type, time_type, phrases in test_context:
-                        if any_phrase_in(u, phrases):
+                    for act_type, time_type, phrases_pos, phrases_neg in test_context:
+                        print u
+                        print act_type, time_type, phrases_pos, phrases_neg
+                        if any_phrase_in(u, phrases_pos) and not any_phrase_in(u, phrases_neg):
                             break
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                     cn.add(1.0, DialogueActItem(act_type, slot, value))
@@ -477,7 +492,8 @@ class PTICSHDCSLU(SLUInterface):
             if all_words_in(u, 'jak dlouho') and any_word_in(u, "jede pojede trvá trvat"):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
-        if all_words_in(u, 'kolik je hodin'):
+        if all_words_in(u, 'kolik je hodin') or \
+            all_words_in(u, 'kolik máme hodin'):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if any_word_in(u, ["kolik", "jsou", "je"]) and \

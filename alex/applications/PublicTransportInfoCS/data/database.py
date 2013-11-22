@@ -14,7 +14,8 @@ __all__ = ['database']
 database = {
     "task": {
         "find_connection": ["najít spojení", "najít spoj", "zjistit spojení",
-                            "zjistit spoj", "hledám spojení", 'spojení', 'spoj', 'chci jet'],
+                            "zjistit spoj", "hledám spojení", 'spojení', 'spoj',
+                            'chci jet'],
         "find_platform": ["najít nastupště", "zjistit nástupiště", ],
         'weather': ['počasí', 'jak bude', 'jak je'],
     },
