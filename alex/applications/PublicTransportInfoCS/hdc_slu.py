@@ -250,8 +250,8 @@ class PTICSHDCSLU(SLUInterface):
 
                 if time_abs or time_rel:
                     for act_type, time_type, phrases_pos, phrases_neg in test_context:
-                        print u
-                        print act_type, time_type, phrases_pos, phrases_neg
+                        #print u
+                        #print act_type, time_type, phrases_pos, phrases_neg
                         if any_phrase_in(u, phrases_pos) and not any_phrase_in(u, phrases_neg):
                             break
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
