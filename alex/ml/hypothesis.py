@@ -50,8 +50,7 @@ class NBList(Hypothesis):
         return unicode(self).encode('ascii', 'replace')
 
     def __unicode__(self):
-        return '\n'.join('{p:.3f} {fact}'.format(p=prob, fact=unicode(fact))
-                         for prob, fact in self.n_best)
+        return '\n'.join('{p:.3f} {fact}'.format(p=prob, fact=unicode(fact)) for prob, fact in self.n_best)
 
     def __len__(self):
         return len(self.n_best)
