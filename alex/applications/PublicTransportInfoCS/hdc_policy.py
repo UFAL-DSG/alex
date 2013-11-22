@@ -91,7 +91,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         # all slots changed by a user in the last turn
-        changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['change_prob'])
+        changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['accept_prob'])
 
 
         if self.debug:
@@ -170,12 +170,16 @@ class PTICSHDCPolicy(DialoguePolicy):
             dialogue_state["ludait"].reset()
 
         elif slots_tobe_selected:
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
             # select between two values for a slot that is not certain
-            res_da = self.select_info(slots_tobe_confirmed)
+            res_da.extend(self.select_info(slots_tobe_confirmed))
 
         elif slots_tobe_confirmed:
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
             # confirm all slots that are not certain
-            res_da = self.confirm_info(slots_tobe_confirmed)
+            res_da.extend(self.confirm_info(slots_tobe_confirmed))
 
         elif 'current_time' in slots_being_requested:
             # Respond to questions about current weather
@@ -184,13 +188,20 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # topic-dependent
         elif dialogue_state['lta_task'].test('weather', self.accept_prob):
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
+
             # talk about weather
-            res_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                             accepted_slots, changed_slots)
+            w_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
+                                           accepted_slots, changed_slots)
+            res_da.extend(w_da)
         else:
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
             # talk about public transport
-            res_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                                accepted_slots, changed_slots)
+            t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
+                                              accepted_slots, changed_slots)
+            res_da.extend(t_da)
 
         self.last_system_dialogue_act = res_da
 
@@ -230,8 +241,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_confirmed_info(slots_being_confirmed, ds)
 
         else:
-            # implicitly confirm all changed slots
-            res_da = self.get_iconfirm_info(changed_slots)
+            res_da = DialogueAct()
             # request all unknown information
             req_da = self.request_more_info(ds, accepted_slots)
             if len(req_da) == 0:
@@ -262,8 +272,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
         # request the weather
         weather = self.weather.get_weather(weather_time_int, daily)
+
         # return the result
         res_da = DialogueAct()
+
         # time
         if weather_time_int:
             if time_rel != 'none':
@@ -505,12 +517,12 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da.extend(DialogueAct('request(departure_time)'))
         elif 'from_stop' not in accepted_slots and \
                 ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].most_probable_value() == '*') and \
+                ds['centre_direction'].mpv() == '*') and \
                 randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
         elif 'to_stop' not in accepted_slots and \
                 ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].most_probable_value() == '*') and \
+                ds['centre_direction'].mpv() == '*') and \
                 randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
         elif 'from_stop' not in accepted_slots and \

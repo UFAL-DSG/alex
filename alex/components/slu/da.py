@@ -728,6 +728,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         for dai_hyp in reversed(self.cn):
             yield dai_hyp
 
+    def items(self):
+        return self.cn
+
     @staticmethod
     def _combine_new(prob1, prob2):
         return prob2
@@ -939,8 +942,6 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         res = []
         for cn_item in self.cn:
             nda = DialogueAct()
-            print type(cn_item)
-            print cn_item
             nda.append(cn_item[1])
 
             res += [(cn_item[0], nda)]
@@ -983,8 +984,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
                 closed_hyp[current_hyp_index] = current_prob
 
-                # print "current_prob, current_hyp_index:", current_prob,
-                # current_hyp_index
+                #print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
                 for hyp_index in self.get_next_worse_candidates(current_hyp_index):
                     prob = self.get_prob(hyp_index)

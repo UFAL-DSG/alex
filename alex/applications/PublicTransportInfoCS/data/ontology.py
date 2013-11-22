@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 ontology = {
     'slots': {
         'silence': set([]),
+        'ludait': set([]),
         'task': set(['find_connection', 'find_platform', 'weather']),
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
@@ -26,6 +27,7 @@ ontology = {
 
     'slot_attributes': {
         'silence_time': [],
+        'ludait': [],
         'task': [
             'user_informs',
             #'user_requests', 'user_confirms',
@@ -171,25 +173,25 @@ ontology = {
         # this is performed by converting dialogue acts into inform acts
         'lta_time': {
             # the following means, every time I talk about the time, it supports the value time in slot time_sel
-           'time': [('','^time$',''),],
+            'time': [('', '^time$', ''), ],
             # the following means, every time I talk about the time_rel, it supports the value time_rel in slot time_sel
-           'time_rel': [('','^time_rel$',''),],
-           # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
-           # slot
+            'time_rel': [('', '^time_rel$', ''), ],
+            # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
+            # slot
         },
         'lta_date': {
-           'date': [('','^date$',''),],
-           'date_rel': [('','^date_rel$',''),],
+            'date': [('', '^date$', ''), ],
+            'date_rel': [('', '^date_rel$', ''), ],
         },
         'lta_departure_time': {
-           'departure_time': [('','^departure_time$',''),],
-           'departure_time_rel': [('','^departure_time_rel$',''),],
+            'departure_time': [('', '^departure_time$', ''), ],
+            'departure_time_rel': [('', '^departure_time_rel$', ''), ],
         },
         'lta_task': {
-           'weather': [('','^task$','^weather$'),],
-           'find_connection': [('','^task$','^find_connection$'),('','^departure_',''),('','^arrival_',''),
-                               ('','^from_stop$',''), ('','^to_stop$',''),
-                               ('','^duration$','')],
+            'weather': [('', '^task$', '^weather$'), ],
+            'find_connection': [('', '^task$', '^find_connection$'), ('', '^departure_', ''), ('', '^arrival_', ''),
+                                ('', '^from_stop$', ''), ('', '^to_stop$', ''),
+                                ('', '^duration$', '')],
         },
     },
 }

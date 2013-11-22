@@ -13,6 +13,7 @@ import xml.dom.minidom
 import socket
 
 from datetime import datetime
+from collections import defaultdict
 
 from alex.utils.mproc import global_lock
 from alex.utils.exdec import catch_ioerror
@@ -569,15 +570,6 @@ class SessionLogger(object):
                 sl.appendChild(doc.createTextNode(unicode(slot_value)))
 
         self.close_session_xml(doc)
-
-    @global_lock(lock)
-    @catch_ioerror
-    def belief_state(self, speaker, bstate):
-        """ Adds the belief state to the log.
-
-        This is an alex extension.
-        """
-        raise SessionLoggerException("Not implemented")
 
     def external_data_file(self, ftype, fname):
         """ Adds a link to an external data file (such as Google directions).
