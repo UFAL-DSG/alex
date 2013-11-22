@@ -205,7 +205,6 @@ class PTICSHDCSLU(SLUInterface):
                                                 'nechci vyrážet', 'nechci vyrazit']),
                         ('deny', 'arrival', ['nechci přijet', 'nechci přijíždět',
                                                 'nechci příjezd', 'nechci dorazit']),
-                        ('deny', 'weather', ['nechci TASK=weather', 'nechci vědět TASK=weather']),
                         ('deny', '', ['ne', 'nechci']),
                         ('inform', 'departure', ['TASK=find_connection',
                                                  'odjezd', 'odjíždet', 'odjet', 'jedu',
@@ -214,7 +213,6 @@ class PTICSHDCSLU(SLUInterface):
                                                  'abych jela']),
                         ('inform', 'arrival', ['příjezd', 'přijet', 'dorazit', 'abych přijel',
                                                'abych přijela']),
-                        ('inform', 'weather', ['TASK=weather']),
                         ('inform', '', [])]
 
         last_time = 0
