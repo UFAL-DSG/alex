@@ -110,7 +110,7 @@ class D3DiscreteValue(DiscreteValue):
         max_prob = -1.0
         max_value = None
         for value, prob in self.values.iteritems():
-            if prob >= max_prob:
+            if prob >= max_prob and (value != 'none' or max_value is None):
                 max_prob = prob
                 max_value = value
 
