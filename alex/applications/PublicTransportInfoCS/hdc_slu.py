@@ -59,8 +59,8 @@ class PTICSHDCSLU(SLUInterface):
         preps_to = set(["k", "do", "konec", "na", "konečná", "koncová", "cílová", "cíl", "výstupní"])
         preps_via = set(["přes", ])
 
-        fillers_from = set(["start", "stojím", "jsem" ])
-        fillers_to = set(["cíl", ])
+        fillers_from = set(["start", "stojím", "jsem"])
+        fillers_to = set(["cíl", "chci"])
         fillers_via = set([])
 
         u = abutterance
@@ -236,12 +236,12 @@ class PTICSHDCSLU(SLUInterface):
 
                 if time_abs or time_rel:
                     for act_type, time_type, phrases in test_context:
-                        if any_phrase_in(u, phrases):
+                        if any_phrase_in(u[last_time:i], phrases):
                             break
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                     cn.add(1.0, DialogueActItem(act_type, slot, value))
 
-                last_time = i
+                last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.

@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 from database import database
 import codecs
+import os
 
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
@@ -54,6 +55,14 @@ ontology = {
             #'system_informs', 'system_requests',
             'system_confirms', 'system_iconfirms',
             #'system_selects',
+        ],
+        'from_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'to_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
         ],
         'departure_time': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -234,11 +243,12 @@ def load_compatible_values(fname, slot1, slot2):
             val_slot1, val_slot2 = line.strip().split('\t')
             # add to list of compatible values in both directions
             subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot1, set())
-            ontology['compatible_values'][slot1 + '_' + slot2] = subset
+            ontology['compatible_values'][slot1 + '_' + slot2][val_slot1] = subset
             subset.add(val_slot2)
-            subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot2, set())
-            ontology['compatible_values'][slot2 + '_' + slot1] = subset
+            subset = ontology['compatible_values'][slot2 + '_' + slot1].get(val_slot2, set())
+            ontology['compatible_values'][slot2 + '_' + slot1][val_slot2] = subset
             subset.add(val_slot1)
 
 
-load_compatible_values(CITIES_STOPS_FNAME, 'city', 'stop')
+dirname = os.path.dirname(os.path.abspath(__file__))
+load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
