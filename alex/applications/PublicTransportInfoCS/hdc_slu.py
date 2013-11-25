@@ -541,14 +541,14 @@ class PTICSHDCSLU(SLUInterface):
                 not any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if any_word_in(u, 'druhé druhá druhou dva')and \
+            if any_word_in(u, 'druhé druhá druhý druhou dva')and \
                 not any_word_in(u, 'třetí čtvrtá čtvrtý další'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
 
             if any_word_in(u, 'třetí tři'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "3"))
 
-            if any_word_in(u, 'čtvrté čtvrtá čtvrtou čtyři'):
+            if any_word_in(u, 'čtvrté čtvrtá čtvrtý čtvrtou čtyři'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
             if any_word_in(u, "poslední znovu znova opakovat zopakovat zopakujte") and \

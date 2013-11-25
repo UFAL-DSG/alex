@@ -14,11 +14,11 @@ ontology = {
         'departure_time': set(['now', '7:00', ]),
         'departure_time_rel': set(['00:05']),
         'arrival_time': set([]),
-        'arrvial_time_rel': set(['00:05']),
+        'arrival_time_rel': set(['00:05']),
         'duration': set([]),
         'ampm': set(['morning', 'am', 'pm', 'evening', 'night']),
-        'departure_date': set([]),
-        'departure_date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
+        'date': set([]),
+        'date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
         'num_transfers': set([]),
         'vehicle': set(["bus", "tram", "metro", "train", "cable_car", "ferry", ]),
@@ -26,6 +26,7 @@ ontology = {
     },
 
     'slot_attributes': {
+        'silence': [],
         'silence_time': [],
         'ludait': [],
         'task': [
@@ -72,7 +73,7 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
             'absolute_time',
         ],
-         'arrival_time_rel': [
+        'arrival_time_rel': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
             #'system_requests',
@@ -128,8 +129,12 @@ ontology = {
             'system_confirms', 'system_iconfirms', 'system_selects',
         ],
         'alternative': [
-            'system_informs',
             'user_informs',
+            'system_informs',
+            #'system_requests',
+            'system_confirms',
+            #'system_iconfirms',
+            #'system_selects',
         ],
         'current_time': [
             'system_informs',
@@ -209,4 +214,4 @@ add_slot_values_from_database('departure_time', 'time')
 add_slot_values_from_database('departure_time_rel', 'time_rel')
 add_slot_values_from_database('arrival_time', 'time')
 add_slot_values_from_database('arrival_time_rel', 'time_rel')
-add_slot_values_from_database('departure_date_rel', 'date_rel')
+add_slot_values_from_database('date_rel', 'date_rel')

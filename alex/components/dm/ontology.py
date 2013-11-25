@@ -59,6 +59,12 @@ class Ontology(object):
         """
         return [slot for slot in self.ontology['slots'] if 'system_confirms' in self.ontology['slot_attributes'][slot]]
 
+    @lru_cache(maxsize=10)
+    def slots_system_selects(self):
+        """ Return all slots the system can request.
+        """
+        return [slot for slot in self.ontology['slots'] if 'system_selects' in self.ontology['slot_attributes'][slot]]
+
     @lru_cache(maxsize=1000)
     def last_talked_about(self, dat, name, value):
         """Returns a list of slots and values that should be used to for tracking about what was talked about recently,
