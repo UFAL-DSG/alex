@@ -93,7 +93,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots changed by a user in the last turn
         changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['accept_prob'])
 
-
         if self.debug:
             s = []
             s.append('PTICSHDCPolicy - Slot stats')
