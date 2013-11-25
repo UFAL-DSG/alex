@@ -3,7 +3,7 @@ Alex Dialogue Systems Framework
 
 Description
 -----------------
-The Alex Dialogue Systems Framework is named after the famous parrot Alex: http://en.wikipedia.org/wiki/Alex_(parrot)
+The Alex Dialogue Systems Framework is named after the famous parrot Alex: `Wikipedia Alex, the parrot <http://en.wikipedia.org/wiki/Alex_(parrot)>`_
 
 This framework is being developed by the dialogue systems group at UFAL - http://ufal.mff.cuni.cz/ -
 the Institute of Formal and Applied Linguistics, Faculty of Mathematics and Physics, Charles University in Prague,
@@ -34,7 +34,7 @@ Implemented features:
 
 Features implemented in different repositories:
 
-- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform
+- transcription and semantic annotation of collected phone calls using the Crowdflower crowdsourcing platform: https://github.com/UFAL-DSG/django-crowdflower-annotations
 
 Missing features:
 
@@ -53,7 +53,7 @@ is for every person different!
 
 Development process
 -------------------
-Anyone can contribute to the project as long as he or she agrees to the publishing his contributions under the APACHE 2.0
+Anyone can contribute to the project as long as he or she agrees to publish the contributions under the APACHE 2.0
 license.
 
 If you are a core member of the development team, please do not make changes directly in the master branch. Please,

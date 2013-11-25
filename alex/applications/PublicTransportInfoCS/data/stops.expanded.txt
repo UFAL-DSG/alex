@@ -10,7 +10,7 @@ Bělohradská
 Bělohrady
 Vyšehrad;Vyšehradů;Vyšehrady
 Hostivař;Hostivaře
-Smíchov;Smíchova
+Smíchov;Smíchova;Smíchově
 Holešovice;Holešovic
 Chuchle;Chuchel
 Praha;Prahy;Prahu

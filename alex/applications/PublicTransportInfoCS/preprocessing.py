@@ -33,7 +33,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['ke'], ['k']),
             (['ku'], ['k']),
             (['ze'], ['z']),
-            (['se'], ['s']),
+            # (['se'], ['s']), # do not use this, FJ
             (['andělu'], ['anděla']),
             (['zvonařky'], ['zvonařka']),
             (['zvonařku'], ['zvonařka']),
@@ -62,6 +62,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['václava','havla'],      ['letiště','václava','havla']),
             (['ruzyňské','letiště'],   ['letiště','václava','havla']),
             (['letiště','v','ruzyni'], ['letiště','václava','havla']),
+            (['smíchovském'], ['smíchovské']),
         ]
 
     def normalise_utterance(self, utterance):

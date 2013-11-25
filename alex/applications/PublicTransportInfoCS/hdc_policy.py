@@ -361,7 +361,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in requested_slots:
-            if ds['route_alternative'] != "none":
+            if ds['route_alternative'] in [0, 1, 2, 3]:
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':
@@ -438,7 +438,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         return res_da
 
     def confirm_info(self, tobe_confirmed_slots):
-        """Return a DA containing confirming only one slot from the slot to be confirmed .
+        """Return a DA containing confirming only one slot from the slot to be confirmed.
+        Confirm the slot with the most probable value among all slots to be confirmed.
 
         :param tobe_confirmed_slots: A dictionary with keys for all slots \
                 that should be confirmed, along with their values
@@ -446,7 +447,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        for slot in tobe_confirmed_slots:
+        for prob, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
             if 'system_confirms' in self.ontology['slot_attributes'][slot]:
                 dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].mpv())
                 res_da.append(dai)

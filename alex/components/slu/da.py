@@ -960,16 +960,19 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         """
 
+        #print "cn", [(p, unicode(dai)) for p, dai in self.cn]
+
         open_hyp = []
         closed_hyp = {}
 
-        i = 0
-        for i, (p, dai) in enumerate(self.cn):
+        i = len(self.cn)
+        for n, (p, dai) in enumerate(self.cn):
             if p < 0.5:
+                i = n + 1
                 break
 
         # create index for the best hypothesis
-        best_hyp = tuple([0] * i + [1]*(len(self.cn)-i))
+        best_hyp = tuple([0] * i + [1] * (len(self.cn) - i))
         best_prob = self.get_prob(best_hyp)
         open_hyp.append((best_prob, best_hyp))
 

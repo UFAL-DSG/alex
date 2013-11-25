@@ -42,6 +42,12 @@ class DiscreteValue(object):
 
         return self.mph()[1]
 
+    def mpvp(self):
+        """The function returns the probability of the most probable value.
+        """
+
+        return self.mph()[0]
+
     def tmphs(self):
         """This function returns two most probable values and their probabilities.
 
@@ -56,6 +62,13 @@ class DiscreteValue(object):
         (prob1, val1), (prob2, val2) = self.tmphs()
 
         return (val1, val2)
+
+    def tmpvsp(self):
+        """The function returns probabilities of two most probable values in the slot.
+        """
+        (prob1, val1), (prob2, val2) = self.tmphs()
+
+        return (prob1, prob2)
 
     def explain(self, full=False, linear_prob=False):
         """This function prints the values and their probabilities for this node.
