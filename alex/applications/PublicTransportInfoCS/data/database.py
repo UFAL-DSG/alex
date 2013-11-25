@@ -15,9 +15,9 @@ database = {
     "task": {
         "find_connection": ["najít spojení", "najít spoj", "zjistit spojení",
                             "zjistit spoj", "hledám spojení", 'spojení', 'spoj',
-                            'chci jet'],
-        "find_platform": ["najít nastupště", "zjistit nástupiště", ],
-        'weather': ['počasí', 'jak bude', 'jak je'],
+                           ],
+        "find_platform": ["najít nástupště", "zjistit nástupiště", ],
+        'weather': ['počasí', ],
     },
     "time": {
         "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
