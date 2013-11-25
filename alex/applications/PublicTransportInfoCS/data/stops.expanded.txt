@@ -2523,7 +2523,7 @@ Vysoký Újezd , Kuchař , I { okres Praha - západ };Vysokého Újezda , Kucha�
 Vysoký Újezd { okres Benešov };Vysokého Újezda { okresu Benešov };Vysokýho Újezda { okresu Benešov };Vysokej Újezd { okres Benešov }
 Vysoký Újezd { okres Praha - západ };Vysokého Újezda { okresu Praha - západu };Vysokýho Újezda { okresu Praha - západu };Vysokej Újezd { okres Praha - západ }
 Vysoký Újezd , sokolovna { okres Praha - západ };Vysokého Újezda , sokolovny { okresu Praha - západu };Vysokýho Újezda , sokolovny { okresu Praha - západu };Vysoký Újezd , sokolovnu { okres Praha - západ };Vysokej Újezd , sokolovnu { okres Praha - západ }
-Výstaviště Holešovice
+Výstaviště Holešovice; Výstaviště
 Výstaviště Letňany
 Výtoň;Výtoně
 Výžerky
