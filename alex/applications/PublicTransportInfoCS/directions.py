@@ -148,7 +148,8 @@ class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
         self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
-    def get_directions(self, from_stop, to_stop, departure_time=None, arrival_time=None):
+    def get_directions(self, from_stop, to_stop, from_city, to_city,
+                       departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
         at the given time and date.
 
@@ -156,8 +157,8 @@ class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
         Setting the correct date is compulsory!
         """
         data = {
-            'origin': ('"zastávka %s", Praha, Česká republika' % from_stop).encode('utf-8'),
-            'destination': ('"zastávka %s", Praha, Česká republika' % to_stop).encode('utf-8'),
+            'origin': ('"zastávka %s", %s, Česká republika' % (from_stop, from_city)).encode('utf-8'),
+            'destination': ('"zastávka %s", %s, Česká republika' % (to_stop, to_city)).encode('utf-8'),
             'region': 'cz',
             'sensor': 'false',
             'alternatives': 'true',

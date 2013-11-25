@@ -91,3 +91,17 @@ class Ontology(object):
                     return True
         else:
             return False
+
+    @lru_cache(maxsize=100)
+    def get_compatible_vals(self, slot_pair, value):
+        """Given a slot pair (key to 'compatible_values' in ontology data), this returns the set of
+        compatible values for the given key. If there is no information about the given pair,
+        None is returned.
+
+        :param slot_pair: key to 'compatible_values' in ontology data
+        :param value: the subkey to check compatible values for
+        :rtype: set
+        """
+        if slot_pair in self.ontology['compatible_values']:
+            return self.ontology['compatible_values'][slot_pair].get(value, set())
+        return None

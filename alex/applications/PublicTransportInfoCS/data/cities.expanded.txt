@@ -4821,7 +4821,6 @@ Velká Buková;Velké Bukové;Velké Bukový;Velký Bukové;Velký Bukový;Velko
 Velká Bukovina;Velké Bukoviny;Velký Bukoviny;Velkou Bukovinu
 Velká Bystřice;Velké Bystřic;Velké Bystřice;Velké Bystřicí;Velký Bystřic;Velký Bystřice;Velký Bystřicí;Velkou Bystřice;Velkou Bystřici
 Velká Chmelištná;Velké Chmelištné;Velké Chmelištný;Velký Chmelištné;Velký Chmelištný;Velkou Chmelištnou
-Velká Chuchle;Velké Chuchle;Velký Chuchle;Velkou Chuchli
 Velká Chyška;Velké Chyšky;Velký Chyšky;Velkou Chyšku
 Velká Dobrá;Velké Dobrá;Velký Dobrá;Velkou Dobrá
 Velká Hleďsebe;Velké Hleďsebe;Velký Hleďsebe;Velkou Hleďsebi

@@ -240,11 +240,11 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         else:
             res_da = DialogueAct()
-            # request all unknown information
-            req_da = self.request_more_info(ds, accepted_slots)
+            # gather known information about the connection
+            req_da, conn_info = self.gather_connection_info(ds, accepted_slots)
             if len(req_da) == 0:
                 # we know everything we need -> start searching
-                res_da.extend(self.get_directions(ds, check_conflict=True))
+                res_da.extend(self.get_directions(ds, conn_info, check_conflict=True))
             else:
                 res_da.extend(req_da)
         return res_da
@@ -496,36 +496,86 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da.extend(iconf_da)
         return res_da
 
-    def request_more_info(self, ds, accepted_slots):
+    def get_default_stop_for_city(self, city):
+        """Return a `default' stop based on the city name (main bus/train station).
+
+        :param city: city name (unicode)
+        :rtype: unicode
+        """
+        stops = self.ontology.get_compatible_vals('city_stop', city)
+        for cand_stop_suffix in ['', 'hlavní nádraží', ', nádraží', ', autobusové stanoviště',
+                               ', železniční zastávka', ', železniční stanice']:
+            stop = ' '.join((city, cand_stop_suffix)).strip()
+            if stop in stops:
+                return stop
+        return None
+
+    def gather_connection_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
-        for traffic directions, or perform the search if no further information
-        is needed.
+        for traffic directions and a dictionary containing the known information.
+
+        If the request DA is empty, the search for directions may be commenced immediately.
 
         :param ds: The current dialogue state
-        :rtype: DialogueAct
+        :rtype: DialogueAct, dict
         """
         req_da = DialogueAct()
 
+        # retrieve the slot variables
+        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else None
+        to_stop_val = ds['to_stop'].mpv() if 'from_stop' in accepted_slots else None
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else None
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else None
+
+        # infer cities based on stops
+        from_cities, to_cities = None, None
+        if from_stop_val and not from_city_val:
+            from_cities = self.ontology.get_compatible_vals('stop_city', from_stop_val)
+            if len(from_cities) == 1:
+                from_city_val = from_cities.pop()
+        if to_stop_val and not to_city_val:
+            to_cities = self.ontology.get_compatible_vals('stop_city', to_stop_val)
+            if len(to_cities) == 1:
+                to_city_val = to_cities.pop()
+
+        # infer cities based on the other
+        if from_stop_val and not from_city_val and to_city_val in from_cities:
+            from_city_val = to_city_val
+        if to_stop_val and not to_city_val and from_city_val in to_cities:
+            to_city_val = from_city_val
+
+        # infer stops based on cities
+        if from_city_val and not from_stop_val:
+            from_stop_val = self.get_default_stop_for_city(from_city_val)
+        if to_city_val and not to_stop_val:
+            to_stop_val = self.get_default_stop_for_city(to_city_val)
+
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
-        if 'from_stop' not in accepted_slots and 'to_stop' not in accepted_slots and \
-                ('departure_time' not in accepted_slots or 'time' not in accepted_slots) and \
-                randbool(10):
+        if not from_stop_val and not to_stop_val and ('departure_time' not in accepted_slots
+                or 'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif 'from_stop' not in accepted_slots and ('centre_direction' not in accepted_slots or
+        elif not from_stop_val and ('centre_direction' not in accepted_slots or
                 ds['centre_direction'].mpv() == '*') and randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif 'to_stop' not in accepted_slots and ('centre_direction' not in accepted_slots or
+        elif not to_stop_val and ('centre_direction' not in accepted_slots or
                 ds['centre_direction'].mpv() == '*') and randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif 'from_stop' not in accepted_slots and 'to_stop' not in accepted_slots and randbool(3):
+        elif not from_stop_val and not to_stop_val and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif 'from_stop' not in accepted_slots:
+        elif not from_stop_val:
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif 'to_stop' not in accepted_slots:
+        elif not to_stop_val:
             req_da.extend(DialogueAct('request(to_stop)'))
+        elif not from_city_val:
+            req_da.extend(DialogueAct('request(from_city)'))
+        elif not to_city_val:
+            req_da.extend(DialogueAct('request(to_city)'))
 
-        return req_da
+        return req_da, {'from_stop': from_stop_val,
+                        'to_stop': to_stop_val,
+                        'from_city': from_city_val,
+                        'to_city': to_city_val}
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
@@ -665,7 +715,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct('inform(num_transfers="%d")' % n)
         return da
 
-    def get_directions(self, ds, route_type='true', check_conflict=False):
+    def get_directions(self, ds, conn_info, route_type='true', check_conflict=False):
         """Retrieve Google directions, save them to dialogue state and return
         corresponding DAs.
 
@@ -679,15 +729,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
         # check for route conflicts
-        from_stop_val = ds['from_stop'].mpv()
-        to_stop_val = ds['to_stop'].mpv()
-
-        if check_conflict and from_stop_val == to_stop_val:
+        if (check_conflict and (conn_info['from_stop'] == conn_info['to_stop'])
+                and (conn_info['from_city'] == conn_info['to_city'])):
             apology_da = DialogueAct()
             apology_da.extend(DialogueAct('apology()'))
             apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
-            apology_da.extend(DialogueAct("inform(from_stop='%s')" % from_stop_val))
-            apology_da.extend(DialogueAct("inform(to_stop='%s')" % to_stop_val))
+            apology_da.extend(DialogueAct("inform(from_stop='%s')" % conn_info['from_stop']))
+            apology_da.extend(DialogueAct("inform(to_stop='%s')" % conn_info['to_stop']))
             return apology_da
 
         # get dialogue state values
@@ -710,8 +758,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
 
         # retrieve Google directions
-        ds.directions = self.directions.get_directions(from_stop=from_stop_val,
-                                                       to_stop=to_stop_val,
+        ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
+                                                       to_stop=conn_info['to_stop'],
+                                                       from_city=conn_info['from_city'],
+                                                       to_city=conn_info['to_city'],
                                                        departure_time=departure_time_int,
                                                        arrival_time=arrival_time_int)
         return self.say_directions(ds, route_type)

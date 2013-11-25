@@ -1,6 +1,6 @@
 Strašnice;Strašnic
 Hradčany;Hradčan
-Roztoky;Roztok
+#Roztoky;Roztok
 Písnická;Písnickou;Písnické
 Mikulova;Mikulovi
 Letiště Václava Havla;Letišti Václava Havla
@@ -12,13 +12,12 @@ Vyšehrad;Vyšehradů;Vyšehrady
 Hostivař;Hostivaře
 Smíchov;Smíchova;Smíchově
 Holešovice;Holešovic
-Chuchle;Chuchel
-Praha;Prahy;Prahu
-Brno;Brna
-Plzeň;Plzně
-Olomouc;Olomouce;Olomouca
-Liberec;Liberce
-Pardubice;Pardubic
+#Praha;Prahy;Prahu
+#Brno;Brna
+#Plzeň;Plzně
+#Olomouc;Olomouce;Olomouca
+#Liberec;Liberce
+#Pardubice;Pardubic
 Barrandov;Barrandova;
 Zvonařka;Zvonařku;Zvonařky
 Žižkov;Žižkova
@@ -2372,7 +2371,7 @@ Veleň , U Pomníku;Veleně , U Pomníku
 Veletržní palác;Veletržního paláce
 Veliká Ves;Veliké Vsi;Veliký Vsi;Velikou Ves
 Velká Bučina;Velké Bučiny;Velký Bučiny;Velkou Bučinu
-Velká Chuchle;Velké Chuchle;Velký Chuchle;Velkou Chuchli
+Velká Chuchle;Velké Chuchle;Velký Chuchle;Velkou Chuchli;Chuchle;Chuchel;Chuchli
 Velká Lečice;Velké Lečice;Velký Lečice;Velkou Lečice
 Velká Ohrada;Velké Ohrady;Velký Ohrady;Velkou Ohradu
 Velké Popovice;Velkých Popovice;Velkejch Popovice;Velký Popovice
