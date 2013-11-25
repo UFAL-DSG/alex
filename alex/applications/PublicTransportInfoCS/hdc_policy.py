@@ -864,6 +864,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         if not 'route_alternative' in dialogue_state:
             # before something is offered
             if randbool(10):
+                res_da.append(DialogueActItem("help", "task", "weather"))
+            elif randbool(10):
+                res_da.append(DialogueActItem("help", "request", "current_time"))
+            elif randbool(10):
                 res_da.append(DialogueActItem("help", "inform", "hangup"))
             elif randbool(9):
                 res_da.append(DialogueActItem("help", "request", "help"))
