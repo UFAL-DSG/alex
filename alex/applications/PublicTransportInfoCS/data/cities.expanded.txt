@@ -625,7 +625,7 @@ Chocnějovice;Chocnějovic
 Chocomyšl
 Chodouň;Chodouně
 Chodouny
-Chodov;Chodova
+#Chodov;Chodova
 Chodová Planá;Chodové Planá;Chodový Planá;Chodovou Planá
 Chodovlice;Chodovlic
 Chodská Lhota;Chodské Lhoty;Chodský Lhoty;Chodskou Lhotu
@@ -735,7 +735,7 @@ Cikháj;Cikháje
 Čikov;Čikova
 Čilá;Čilé;Čilý;Čilou
 Čilec;Čilce
-Čím
+#Čím
 Čimelice;Čimelic
 Číměř;Číměře
 Čímice
@@ -847,7 +847,7 @@ Dobrá Voda u Českých Budějovic;Dobré Vody u Českých Budějovic;Dobrý Vod
 Dobrá Voda u Hořic;Dobré Vody u Hořic;Dobrý Vody u Hořic;Dobrou Vodu u Hořic
 Dobrá Voda u Pacova;Dobré Vody u Pacova;Dobrý Vody u Pacova;Dobrou Vodu u Pacova
 Dobrčice;Dobrčic
-Dobré;Dobrých;Dobrejch;Dobrý
+#Dobré;Dobrých;Dobrejch;Dobrý
 Dobřejovice
 Dobřeň;Dobřeně
 Dobřenice;Dobřenic
@@ -2678,7 +2678,7 @@ Miskovice;Miskovic
 Míškovice;Míškovic
 Míšov
 Mišovice;Mišovic
-Místo;Místa
+#Místo;Místa
 Mistřice;Mistřic
 Mistrovice;Mistrovic
 Mladá Boleslav;Mladé Boleslavi;Mladý Boleslavi;Mladou Boleslav
@@ -5253,7 +5253,7 @@ Zásada;Zásady;Zásadu
 Zásmuky;Zásmuk
 Zašová;Zašové;Zašový;Zašovou
 Zašovice
-Zastávka;Zastávky;Zastávku
+#Zastávka;Zastávky;Zastávku
 Zástřizly;Zástřizlů;Zástsřizel
 Žatčany;Žatčan
 Žatec;Žatce

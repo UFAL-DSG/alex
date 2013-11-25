@@ -296,6 +296,8 @@ def add_from_file(category_label, fname):
     is_expanded = 'expanded' in fname
     with codecs.open(os.path.join(dirname, fname), encoding='utf-8') as stops_file:
         for line in stops_file:
+            if line.startswith('#'):
+                continue
             val_name, val_surface_forms = preprocess_cl_line(line, expanded_format=is_expanded)
             for form in val_surface_forms:
                 db_add(category_label, val_name, form)

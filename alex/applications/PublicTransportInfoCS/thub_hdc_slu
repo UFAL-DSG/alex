@@ -1,5 +1,6 @@
 #!/bin/bash
 
-cd ..
+MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd $MYDIR/..
 
 ./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg

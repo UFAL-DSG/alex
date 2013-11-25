@@ -250,6 +250,8 @@ add_slot_values_from_database('departure_date_rel', 'date_rel')
 def load_compatible_values(fname, slot1, slot2):
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
+            if line.startswith('#'):
+                continue
             val_slot1, val_slot2 = line.strip().split('\t')
             # add to list of compatible values in both directions
             subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot1, set())

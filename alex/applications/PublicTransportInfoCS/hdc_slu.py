@@ -55,16 +55,16 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
-        phr_wp_types = {'from': set(['z', 'za', 'ze', 'od', 'začátek', 'začáteční',
-                                     'počáteční', 'počátek', 'výchozí', 'start', 'stojím na',
-                                     'jsem na', 'start na', 'stojím u', 'jsem u', 'start u',
-                                     'začátek na', 'začátek u']),
-                          'to': set(['k', 'do', 'konec', 'na', 'konečná', 'koncová',
-                                     'cílová', 'cíl', 'výstupní', 'cíl na', 'chci na']),
-                          'via': set(['přes', ])}
+        phr_wp_types = [('from', set(['z', 'za', 'ze', 'od', 'začátek', 'začáteční',
+                                      'počáteční', 'počátek', 'výchozí', 'start', 'stojím na',
+                                      'jsem na', 'start na', 'stojím u', 'jsem u', 'start u',
+                                      'začátek na', 'začátek u'])),
+                        ('to', set(['k', 'do', 'konec', 'na', 'konečná', 'koncová',
+                                    'cílová', 'cíl', 'výstupní', 'cíl na', 'chci na'])),
+                        ('via', set(['přes', ]))]
         # simple "ne" cannot be included as it colides with negation. "ne [,] chci je z Motola"
-        phr_dai_types = {'confirm': set(['jede to', 'odjíždí to', 'je výchozí']),
-                         'deny': set(['nechci', 'nejedu'])}
+        phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí'])),
+                         ('deny', set(['nechci', 'nejedu']))]
         self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types, phr_dai_types)
 
     def parse_city(self, abutterance, cn):
@@ -73,14 +73,14 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
-        phr_wp_types = {'from': set(['z', 'ze', 'od', 'začátek', 'začáteční',
-                                     'počáteční', 'počátek', 'výchozí', 'start',
-                                     'jsem v', 'stojím v', 'začátek v']),
-                          'to': set(['k', 'do', 'konec', 'na', 'končím',
-                                     'cíl', 'vystupuji', 'vystupuju']),
-                          'via': set(['přes', ])}
-        phr_dai_types = {'confirm': set(['jede to', 'odjíždí to', 'je výchozí']),
-                         'deny': set(['nechci', 'nejedu'])}
+        phr_wp_types = [('from', set(['z', 'ze', 'od', 'začátek', 'začáteční',
+                                      'počáteční', 'počátek', 'výchozí', 'start',
+                                      'jsem v', 'stojím v', 'začátek v'])),
+                        ('to', set(['k', 'do', 'konec', 'na', 'končím',
+                                    'cíl', 'vystupuji', 'vystupuju'])),
+                        ('via', set(['přes', ]))]
+        phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí'])),
+                         ('deny', set(['nechci', 'nejedu']))]
 
         self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_dai_types)
 
@@ -102,15 +102,15 @@ class PTICSHDCSLU(SLUInterface):
                 dai_type = 'inform'
 
                 # test short preceding context to find the stop type (from, to, via)
-                for cur_stop_type, phrases in phr_wp_types.iteritems():
-                    if any_phrase_in(u[max(last_wp_pos, i - 2):i], phrases):
-                        wp_types.add(cur_stop_type)
+                for cur_wp_type, phrases in phr_wp_types:
+                    if any_phrase_in(u[max(last_wp_pos, i - 3):i], phrases):
+                        wp_types.add(cur_wp_type)
                         break
-                # test short following context
+                # test short following context (0 = from, 1 = to, 2 = via)
                 if not wp_types:
-                    if any_phrase_in(u[i:i + 3], phr_wp_types['from'] | phr_wp_types['via']):
+                    if any_phrase_in(u[i:i + 3], phr_wp_types[0][1] | phr_wp_types[2][1]):
                         wp_types.add('to')
-                    elif any_phrase_in(u[i:i + 3], phr_wp_types['to']):
+                    elif any_phrase_in(u[i:i + 3], phr_wp_types[1][1]):
                         wp_types.add('from')
                 # resolve context according to further preceding/following stop name (assuming from-to)
                 if not wp_types:
@@ -120,7 +120,7 @@ class PTICSHDCSLU(SLUInterface):
                         wp_types.add('from')
 
                 # test utterance type
-                for cur_dai_type, phrases in phr_dai_types.iteritems():
+                for cur_dai_type, phrases in phr_dai_types:
                     if any_phrase_in(u[last_wp_pos:i], phrases):
                         dai_type = cur_dai_type
                         break
@@ -135,6 +135,8 @@ class PTICSHDCSLU(SLUInterface):
                 # backoff 2: let the DM decide in context resolution
                 else:
                     cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
+
+                last_wp_pos = i + 1
 
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.
