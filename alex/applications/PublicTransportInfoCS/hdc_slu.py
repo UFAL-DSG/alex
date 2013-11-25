@@ -68,8 +68,12 @@ class PTICSHDCSLU(SLUInterface):
 
         confirm = lambda u: phrase_in(u, 'jede to') or phrase_in(u, 'odjíždí to') or phrase_in(u, 'je výchozí')
         # simple "ne" cannot be included as it colides with negation. "ne [,] chci je z Motola"
-        deny = lambda u: phrase_in(u, 'nechci') or phrase_in(u, 'nejedu')
-
+        deny = lambda u: phrase_in(u, 'nechci') \
+                             and not phrase_in(u, 'nechci ukončit hovor') \
+                             and not phrase_in(u, 'nechci to tak') \
+                             and not phrase_in(u, 'né to nechci') \
+                             and not phrase_in(u, 'ne to nechci') \
+                         or phrase_in(u, 'nejedu')
 
         last_stop = 0
         for i, w in enumerate(u):
@@ -218,8 +222,9 @@ class PTICSHDCSLU(SLUInterface):
                         ('inform', 'departure',
                          ['TASK=find_connection', 'odjezd', 'odjíždet', 'odjíždí', 'odjet',
                          'jedu', 'jede', 'vyrážím', 'vyrážet', 'vyrazit', 'bych jel', 'bych jela', 'bych jet',
+                         'bych tam jel', 'bych tam jela', 'bych tam jet',
                          'abych jel', 'abych jela', 'jak se dostanu', 'kdy jede', 'jede nějaká',
-                         'jede nějaký', 'VEHICLE=tram', 'chci jet'],
+                         'jede nějaký', 'VEHICLE=tram', 'chci jet', 'chtěl jet', 'chtěla jet'],
                          ['příjezd', 'přijet', 'dorazit', 'abych přijel', 'abych přijela', 'chci být', 'chtěl bych být']),
                         ('inform', 'arrival',
                          ['příjezd', 'přijet', 'dorazit', 'abych přijel', 'abych přijela', 'chci být', 'chtěl bych být'],
@@ -229,6 +234,12 @@ class PTICSHDCSLU(SLUInterface):
                          []),
         ]
 
+        count_times = 0
+        for i, w in enumerate(u):
+            if w.startswith("TIME="):
+                count_times += 1
+
+        last_time_type = ''
         last_time = 0
         for i, w in enumerate(u):
             if w.startswith("TIME="):
@@ -242,19 +253,31 @@ class PTICSHDCSLU(SLUInterface):
                     if u[i - 1] in preps_rel:
                         time_rel = True
 
+                if count_times > 1:
+                    j, k = last_time, i
+                else:
+                    j, k = 0, len(u)
+
                 if value == "now" and \
-                    not phrase_in(u, 'no a') and \
-                    not phrase_in(u, 'kolik je') and \
-                    not phrase_in(u, 'neslyším') and \
-                    not phrase_in(u, 'už mi neříká'):
+                    not phrase_in(u[j:k], 'no a') and \
+                    not phrase_in(u[j:k], 'kolik je') and \
+                    not phrase_in(u[j:k], 'neslyším') and \
+                    not phrase_in(u[j:k], 'už mi neříká'):
                     time_rel = True
 
                 if time_abs or time_rel:
                     for act_type, time_type, phrases_pos, phrases_neg in test_context:
                         #print u
                         #print act_type, time_type, phrases_pos, phrases_neg
-                        if any_phrase_in(u, phrases_pos) and not any_phrase_in(u, phrases_neg):
+                        if any_phrase_in(u[j:k], phrases_pos) and not any_phrase_in(u, phrases_neg):
                             break
+
+                    if count_times > 1 and not time_type:
+                        # use the previous type if there was time before this one
+                        time_type = last_time_type
+
+                    last_time_type = time_type
+
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                     cn.add(1.0, DialogueActItem(act_type, slot, value))
 
@@ -402,6 +425,7 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("affirm"))
 
         if any_word_in(u, "ne né nene nené") or \
+            phrase_in(u, 'nechci to tak') or \
             len(u) == 1 and any_word_in(u, "nejedu nechci") or \
             len(u) == 2 and all_words_in(u, "ano nechci") or \
             all_words_in(u, "to je špatně"):
@@ -424,7 +448,8 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("restart"))
 
 
-        if any_phrase_in(u ,['chci jet', 'chctěl bych jet', 'chctěla bych jet', 'chctěli bychom jet', 'chctěly bychom jet']):
+        if any_phrase_in(u ,['chci jet', 'chtěla jet', 'bych jet', 'bychom jet',
+                             'bych tam jet', ]):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
         if any_phrase_in(u ,['jak bude', 'jak je']):
@@ -530,7 +555,7 @@ class PTICSHDCSLU(SLUInterface):
                 not all_words_in(u, "předchozí"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if any_word_in(u, "další jiné jiná následující") or \
+            if any_word_in(u, "další jiné jiná následující pozdější") or \
                 phrase_in(u, "ještě jedno") or \
                 phrase_in(u, "ještě jednu"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
