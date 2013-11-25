@@ -80,7 +80,7 @@ class PTICSHDCSLU(SLUInterface):
 
         self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types)
 
-    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types, phr_dai_types):
+    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types):
         """Detects stops or cities in the input abstract utterance
         (called through parse_city or parse_stop).
 
@@ -92,8 +92,8 @@ class PTICSHDCSLU(SLUInterface):
 
         # simple "ne" cannot be included as it colides with negation. "ne [,] chci je z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
-                         ('deny', set(['nechci', 'nejedu']), set('nechci ukončit hovor', 'nechci to tak',
-                                                                 'né to nechci', 'ne to nechci'))]
+                         ('deny', set(['nechci', 'nejedu']), set(['nechci ukončit hovor', 'nechci to tak',
+                                                                 'né to nechci', 'ne to nechci']))]
         last_wp_pos = 0
         for i, w in enumerate(u):
             if w.startswith(wp_id):
