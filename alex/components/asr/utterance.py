@@ -114,10 +114,11 @@ def save_utterances(file_name, utt, encoding='UTF-8'):
     Saves a dictionary of utterances in the wave as key format into a file.
 
     :param file_name: name of the target file
-    :param utt: a dictionary with the utterances where the keys are the names of teh corresponding wave files
+    :param utt: a dictionary with the utterances where the keys are the names of the corresponding wave files
     :return: None
     """
     save_wavaskey(file_name, utt, encoding)
+
 
 class UtteranceException(SLUException):
     pass
@@ -187,7 +188,6 @@ class Utterance(object):
 
     def __getitem__(self, idx):
         return self._utterance[idx]
-
 
     def __iter__(self):
         for word in self._utterance:
