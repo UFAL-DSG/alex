@@ -513,6 +513,7 @@ class PTICSHDCPolicy(DialoguePolicy):
     def gather_connection_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
         for traffic directions and a dictionary containing the known information.
+        Infers city names based on stop names and vice versa.
 
         If the request DA is empty, the search for directions may be commenced immediately.
 
@@ -549,6 +550,9 @@ class PTICSHDCPolicy(DialoguePolicy):
             from_stop_val = self.get_default_stop_for_city(from_city_val)
         if to_city_val and not to_stop_val:
             to_stop_val = self.get_default_stop_for_city(to_city_val)
+
+        # TODO maybe check if the city and the stop are compatible?
+        # now we just pass it all to Google and see if it can deal with it, which may lead to weird results
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just too confusing for me. FJ

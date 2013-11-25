@@ -1,25 +1,29 @@
+#
+# PID ( Praha a okolí );# PID ( Prahy a okolí );# PID ( Prahu a okolí )
+#
+Výstaviště
 Strašnice;Strašnic
 Hradčany;Hradčan
-#Roztoky;Roztok
-Písnická;Písnickou;Písnické
-Mikulova;Mikulovi
-Letiště Václava Havla;Letišti Václava Havla
+# Roztoky;# Roztok
+Písnická;Písnické;Písnický;Písnickou
+Mikulova;Mikulovy;Mikulovu
+Letiště Václava Havla
 Vinohrady;Vinohrad
-Vinohradská
+Vinohradská;Vinohradské;Vinohradský;Vinohradskou
 Bělohradská
-Bělohrady
-Vyšehrad;Vyšehradů;Vyšehrady
+Bělohrady;Bělohradů
 Hostivař;Hostivaře
-Smíchov;Smíchova;Smíchově
+# Praha;# Prahy;# Prahu
+# Brno;# Brna
+# Plzeň;# Plzně
+# Olomouc;# Olomouce
+# Liberec;# Liberce
+# Pardubice;# Pardubic
+# Chuchle;# Chuchli
+Smíchov;Smíchova
 Holešovice;Holešovic
-#Praha;Prahy;Prahu
-#Brno;Brna
-#Plzeň;Plzně
-#Olomouc;Olomouce;Olomouca
-#Liberec;Liberce
-#Pardubice;Pardubic
-Barrandov;Barrandova;
-Zvonařka;Zvonařku;Zvonařky
+Barrandov;Barrandova
+Zvonařka;Zvonařky;Zvonařku
 Žižkov;Žižkova
 Stromovka;Stromovky;Stromovku
 Albertov;Albertova
@@ -308,8 +312,8 @@ Chýnovská;Chýnovské;Chýnovský;Chýnovskou
 Cibulka;Cibulky;Cibulku
 Cikánka;Cikánky;Cikánku
 Cílkova;Cílkovy;Cílkovu
-#Čím
-#Čím , Hrdlička;Čím , Hrdličky;Čím , Hrdličku
+Čím
+Čím , Hrdlička;Čím , Hrdličky;Čím , Hrdličku
 Čimice;Čimic
 Čimický háj;Čimického háje;Čimickýho háje;Čimickej háj
 Čínská;Čínské;Čínský;Čínskou
@@ -2371,7 +2375,7 @@ Veleň , U Pomníku;Veleně , U Pomníku
 Veletržní palác;Veletržního paláce
 Veliká Ves;Veliké Vsi;Veliký Vsi;Velikou Ves
 Velká Bučina;Velké Bučiny;Velký Bučiny;Velkou Bučinu
-Velká Chuchle;Velké Chuchle;Velký Chuchle;Velkou Chuchli;Chuchle;Chuchel;Chuchli
+Velká Chuchle;Velké Chuchle;Velký Chuchle;Velkou Chuchli
 Velká Lečice;Velké Lečice;Velký Lečice;Velkou Lečice
 Velká Ohrada;Velké Ohrady;Velký Ohrady;Velkou Ohradu
 Velké Popovice;Velkých Popovice;Velkejch Popovice;Velký Popovice
@@ -2522,7 +2526,7 @@ Vysoký Újezd , Kuchař , I { okres Praha - západ };Vysokého Újezda , Kucha�
 Vysoký Újezd { okres Benešov };Vysokého Újezda { okresu Benešov };Vysokýho Újezda { okresu Benešov };Vysokej Újezd { okres Benešov }
 Vysoký Újezd { okres Praha - západ };Vysokého Újezda { okresu Praha - západu };Vysokýho Újezda { okresu Praha - západu };Vysokej Újezd { okres Praha - západ }
 Vysoký Újezd , sokolovna { okres Praha - západ };Vysokého Újezda , sokolovny { okresu Praha - západu };Vysokýho Újezda , sokolovny { okresu Praha - západu };Vysoký Újezd , sokolovnu { okres Praha - západ };Vysokej Újezd , sokolovnu { okres Praha - západ }
-Výstaviště Holešovice; Výstaviště
+Výstaviště Holešovice
 Výstaviště Letňany
 Výtoň;Výtoně
 Výžerky
@@ -2653,3 +2657,501 @@ Zvole , Jílovská
 Zvoleněves;Zvoleněvse
 Zvole , Nová Zvole;Zvole , Nové Zvole;Zvole , Nový Zvole;Zvole , Novou Zvole
 Zvole , škola;Zvole , školy;Zvole , školu
+#
+# Brno;# Brna
+#
+Achtelky
+Akátky
+Anthropos;Anthroposu
+Antonína Procházky
+Antonínská;Antonínské;Antonínský;Antonínskou
+Arbesova;Arbesovy;Arbesovu
+Autobusové nádraží;Autobusového nádraží;Autobusovýho nádraží;Autobusový nádraží
+Bartákova;Bartákovy;Bartákovu
+Barvičova;Barvičovy;Barvičovu
+Bednářova;Bednářovy;Bednářovu
+Bellova;Bellovy;Bellovu
+Bieblova;Bieblovy;Bieblovu
+Blažkova;Blažkovy;Blažkovu
+Bohunická;Bohunické;Bohunický;Bohunickou
+Borodinova;Borodinovy;Borodinovu
+Bosonohy;Bosonoh
+Botanická;Botanické;Botanický;Botanickou
+Bořetická;Bořetické;Bořetický;Bořetickou
+Branka;Branky;Branku
+Brechtova;Brechtovy;Brechtovu
+Brněnky;Brněnek
+Bráfova;Bráfovy;Bráfovu
+Burianovo náměstí;Burianova náměstí
+Buzkova;Buzkovy;Buzkovu
+Bzenecká;Bzenecké;Bzenecký;Bzeneckou
+Bílovická;Bílovické;Bílovický;Bílovickou
+Bílá hora;Bílé hory;Bílý hory;Bílou horu
+Bělohorská;Bělohorské;Bělohorský;Bělohorskou
+Běloruská;Běloruské;Běloruský;Běloruskou
+Cacovická;Cacovické;Cacovický;Cacovickou
+Carrefour Královo Pole;Carrefour Králova Pole
+Carrefour Vídeňská;Carrefour Vídeňské;Carrefour Vídeňský;Carrefour Vídeňskou
+Celní;Celního
+Chaloupky;Chaloupek
+Charvatská
+Chrlice , nádraží;Chrlic , nádraží
+Chrlice , smyčka;Chrlic , smyčky;Chrlice , smyčku
+Chrlická;Chrlické;Chrlický;Chrlickou
+Chrlické náměstí;Chrlického náměstí;Chrlickýho náměstí;Chrlický náměstí
+Depo ČD;Depa ČD
+Divišova čtvrť;Divišovy čtvrtě;Divišovy čtvrti;Divišovu čtvrť
+Dobrovského
+Dohnalova;Dohnalovy;Dohnalovu
+Dolní Heršpice;Dolních Heršpic
+Drdy
+Drážní
+Dunajská;Dunajské;Dunajský;Dunajskou
+Dvorecká;Dvorecké;Dvorecký;Dvoreckou
+Dvorska , smyčka;Dvorska , smyčky;Dvorska , smyčku
+Díly;Dílů
+Dělnický dům;Dělnického domu;Dělnickýho domu;Dělnickej dům
+Dětská nemocnice;Dětské nemocnic;Dětské nemocnice;Dětské nemocnicí;Dětský nemocnic;Dětský nemocnice;Dětský nemocnicí;Dětskou nemocnice;Dětskou nemocnici
+Elplova
+Ečerova
+Faměrovo náměstí
+Filipova;Filipovy;Filipovu
+Filkukova
+Fillova;Fillovy;Fillovu
+Fügnerova;Fügnerovy;Fügnerovu
+Gajdošova;Gajdošovy;Gajdošovu
+Geislerova;Geislerovy;Geislerovu
+Glinkova;Glinkovy;Glinkovu
+Glocova
+Grohova;Grohovy;Grohovu
+Gruzínská;Gruzínské;Gruzínský;Gruzínskou
+Halasovo náměstí;Halasova náměstí
+Hanácká;Hanácké;Hanácký;Hanáckou
+Havránkova;Havránkovy;Havránkovu
+Haškova;Haškovy;Haškovu
+Heinrichova;Heinrichovy;Heinrichovu
+Heleny Malířové;Helen Malířové
+Heršpická;Heršpické;Heršpický;Heršpickou
+Hladíkova;Hladíkovy;Hladíkovu
+Hlavní;Hlavních
+Hlavní nádraží;Hlavního nádraží
+Hlaváčova;Hlaváčovy;Hlaváčovu
+Hluboká;Hluboké;Hluboký;Hlubokou
+Hněvkovského
+Holzova;Holzovy;Holzovu
+Holásecká
+Holásky
+Horní Heršpice;Horních Heršpic
+Horníkova;Horníkovy;Horníkovu
+Horova;Horovy;Horovu
+Horská;Horské;Horský;Horskou
+Horácké náměstí;Horáckého náměstí;Horáckýho náměstí;Horácký náměstí
+Houbalova;Houbalovy;Houbalovu
+Hoštická;Hoštické;Hoštický;Hoštickou
+Hrnčířská;Hrnčířské;Hrnčířský;Hrnčířskou
+Hudcova;Hudcovy;Hudcovu
+Humenná;Humenných;Humennejch;Humenný
+Husitská;Husitské;Husitský;Husitskou
+Hutařova;Hutařovy;Hutařovu
+Hviezdoslavova;Hviezdoslavovy;Hviezdoslavovu
+Hybešova;Hybešovy;Hybešovu
+Hájecká;Hájecké;Hájecký;Hájeckou
+Högrova;Högrovy;Högrovu
+Ikea;Ikey;Ikeji;Ikeu;Ikeju
+Ivanovice
+Ivanovice , Globus;Ivanovice , Glóbusu;Ivanovice , Globusu;Ivanovice , Glóbu;Ivanovice , Globu;Ivanovice , Glóbus
+Ivanovické náměstí;Ivanovického náměstí;Ivanovickýho náměstí;Ivanovický náměstí
+Jandáskova;Jandáskovy;Jandáskovu
+Janáčkovo divadlo;Janáčkova divadla
+Jarní , ČD;Jarního , ČD
+Jehnice;Jehnic;Jehnicí;Jehnici
+Jemelkova;Jemelkovy;Jemelkovu
+Jezerní;Jezerního
+Jindřichova;Jindřichovy;Jindřichovu
+Jiránkova;Jiránkovy;Jiránkovu
+Jugoslávská;Jugoslávské;Jugoslávský;Jugoslávskou
+Juliánov;Juliánova
+Jundrov;Jundrova
+Jundrov , hřiště;Jundrova , hřiště
+Jundrovská;Jundrovské;Jundrovský;Jundrovskou
+Jungmannova;Jungmannovy;Jungmannovu
+Jílkova;Jílkovy;Jílkovu
+Jírova;Jírovy;Jírovu
+Jírovcova;Jírovcovy;Jírovcovu
+Kamechy
+Kamenice;Kamenic;Kamenicí;Kamenici
+Kamenný vrch;Kamenného vrchu;Kamennýho vrchu;Kamennej vrch
+Kamenolom;Kamenolomu
+Kampelíkova;Kampelíkovy;Kampelíkovu
+Karlova;Karlovy;Karlovu
+Karolíny Světlé;Karolín Světlé
+Kartouzská;Kartouzské;Kartouzský;Kartouzskou
+Kejbaly
+Kleštínek
+Klicperova;Klicperovy;Klicperovu
+Kluchova;Kluchovy;Kluchovu
+Klusáčkova;Klusáčkovy;Klusáčkovu
+Kohoutovice , hájenka;Kohoutovic , hájenky;Kohoutovice , hájenku
+Kohoutovická;Kohoutovické;Kohoutovický;Kohoutovickou
+Kolejní;Kolejního
+Koliště
+Komenského náměstí
+Komárov;Komárova
+Komín , smyčka;Komína , smyčky;Komínu , smyčky;Komín , smyčku
+Komín , sídliště;Komína , sídliště;Komínu , sídliště
+Konečného náměstí
+Koniklecová
+Konopná;Konopné;Konopný;Konopnou
+Kopce;Kopců
+Kosmonautů
+Kostelní zmola;Kostelní zmoly;Kostelní zmolu
+Kotlanova
+Kounicovy koleje;Kounicových kolejí;Kounicovejch kolejí
+Kovářská;Kovářské;Kovářský;Kovářskou
+Kořískova
+Krejčího
+Krematorium;Krematoria
+Kristenova;Kristenovy;Kristenovu
+Kroměřížská;Kroměřížské;Kroměřížský;Kroměřížskou
+Kronova;Kronovy;Kronovu
+Králova;Královy;Královu
+Královka;Královky;Královku
+Královo Pole , nádraží;Králova Pole , nádraží
+Královopolská strojírna;Královopolské strojírny;Královopolský strojírny;Královopolskou strojírnu
+Krásného
+Kubelíkova;Kubelíkovy;Kubelíkovu
+Kubíčkova;Kubíčkovy;Kubíčkovu
+Kuldova
+Kulkova;Kulkovy;Kulkovu
+Kupkova;Kupkovy;Kupkovu
+Körnerova;Körnerovy;Körnerovu
+Křehlíkova
+Křivánkovo náměstí;Křivánkova náměstí
+Křídlovická
+Křížkovského
+Kšírova;Kšírovy;Kšírovu
+Labská;Labské;Labský;Labskou
+Langrova;Langrovy;Langrovu
+Laštůvkova;Laštůvkovy;Laštůvkovu
+Lesnická;Lesnické;Lesnický;Lesnickou
+Lesná;Lesné;Lesný;Lesnou
+Lesní;Lesního
+Lesní školka;Lesní školky;Lesní školku
+Letecká;Letecké;Letecký;Leteckou
+Letiště Tuřany
+Letovická;Letovické;Letovický;Letovickou
+Libušina třída;Libušiny třídy;Libušinu třídu
+Libušino údolí;Libušina údolí
+Lipová;Lipové;Lipový;Lipovou
+Loosova;Loosovy;Loosovu
+Lísky;Lísek
+Líšeň , hřbitov;Líšně , hřbitova
+Líšeňská;Líšeňské;Líšeňský;Líšeňskou
+Macháčkova;Macháčkovy;Macháčkovu
+Makovského náměstí
+Malečkova;Malečkovy;Malečkovu
+Malinovského náměstí
+Maloměřický most;Maloměřického mostu;Maloměřickýho mostu;Maloměřickej most
+Malá;Malé;Malý;Malou
+Malá Klajdovka;Malé Klajdovka;Malý Klajdovka;Malou Klajdovka
+Marie Majerové;Marii Majerové
+Marie Pujmanové;Marii Pujmanové
+Mariánské náměstí;Mariánského náměstí;Mariánskýho náměstí;Mariánský náměstí
+Mariánské údolí;Mariánského údolí;Mariánskýho údolí;Mariánský údolí
+Masarova
+Masná;Masné;Masný;Masnou
+Maříkova;Maříkovy;Maříkovu
+Medlánky;Medlánek
+Medlánky , škola;Medlánek , školy;Medlánky , školu
+Mendlovo náměstí;Mendlova náměstí
+Merhautova;Merhautovy;Merhautovu
+Mifkova
+Mikulovská;Mikulovské;Mikulovský;Mikulovskou
+Mikulčická;Mikulčické;Mikulčický;Mikulčickou
+Modřická;Modřické;Modřický;Modřickou
+Modřická cihelna;Modřické cihelny;Modřický cihelny;Modřickou cihelnu
+Mojmírovo náměstí;Mojmírova náměstí
+Mokrá Hora;Mokré Hory;Mokrý Hory;Mokrou Horu
+Molákova;Molákovy;Molákovu
+Moravanská;Moravanské;Moravanský;Moravanskou
+Moravanské lány;Moravanských lánů;Moravanskejch lánů;Moravanský lány
+Moravské náměstí;Moravského náměstí;Moravskýho náměstí;Moravský náměstí
+Mostecká;Mostecké;Mostecký;Mosteckou
+Mozolky
+Mošnova;Mošnovy;Mošnovu
+Mutěnická;Mutěnické;Mutěnický;Mutěnickou
+Muzeum dopravy;Muzea dopravy;Musea dopravy;Museum dopravy
+Myslivecký stadion;Mysliveckého stadiónu;Mysliveckého stadionu;Mysliveckýho stadiónu;Mysliveckýho stadionu;Myslivecký stadión;Mysliveckej stadión;Mysliveckej stadion
+Myslivna;Myslivny;Myslivnu
+Mácova;Mácovy;Mácovu
+Mírová;Mírové;Mírový;Mírovou
+Na kopcích
+Na kovárně
+Nemocnice Bohunice;Nemocnic Bohunice;Nemocnicí Bohunice;Nemocnici Bohunice
+Nemocnice u sv . Anny;Nemocnic u sv . Anny;Nemocnicí u sv . Anny
+Nerudova;Nerudovy;Nerudovu
+Netroufalky
+Neumannova;Neumannovy;Neumannovu
+Novolíšeňská;Novolíšeňské;Novolíšeňský;Novolíšeňskou
+Nové sady;Nových sad;Novejch sad;Nový sady
+Nové sady , smyčka;Nových sad , smyčky;Novejch sad , smyčky;Nové sady , smyčku;Nový sady , smyčku
+Nálepkova
+Náměstí 28 . dubna
+Náměstí 28 . října
+Náměstí Karla IV .
+Náměstí Míru
+Náměstí Republiky
+Náměstí Svornosti
+Obecká
+Obilní trh;Obilního trhu;Obilného trhu;Obilnýho trhu;Obilný trh;Obilnej trh
+Oblá;Oblé;Oblý;Oblou
+Obřanská , u školy;Obřanské , u školy;Obřanský , u školy;Obřanskou , u školy
+Obřanský most;Obřanského mostu;Obřanskýho mostu;Obřanskej most
+Obřany;Obřan
+Obřany , sídliště;Obřan , sídlišť
+Olbrachtovo náměstí;Olbrachtova náměstí
+Olšanského
+Ondrouškova;Ondrouškovy;Ondrouškovu
+Ondráčkova;Ondráčkovy;Ondráčkovu
+Optátova;Optátovy;Optátovu
+Osová;Osové;Osový;Osovou
+Otakara Ševčíka
+Ořechovská;Ořechovské;Ořechovský;Ořechovskou
+Ořešín;Ořešína
+Ořešínská
+Palackého náměstí
+Palackého vrch;Palackého vrchu
+Pavlovská
+Pavlíkova;Pavlíkovy;Pavlíkovu
+Petřvaldská;Petřvaldské;Petřvaldský;Petřvaldskou
+Pionýrská;Pionýrské;Pionýrský;Pionýrskou
+Pisárecká;Pisárecké;Pisárecký;Pisáreckou
+Pisárky;Pisárek
+Pod Borovníkem
+Pod Hradeckou
+Pod Jurankou
+Pod Mniší horou
+Pod nemocnicí
+Podlesí
+Podlomní
+Podolská;Podolské;Podolský;Podolskou
+Podsednická
+Podstránská
+Podveská;Podveské;Podveský;Podveskou
+Podzimní
+Poliklinika Lesná;Polikliniky Lesná;Polikliniku Lesná
+Poliklinika Židenice;Polikliniky Židenice;Polikliniku Židenice
+Polní
+Popelova;Popelovy;Popelovu
+Poříčí
+Pratecká
+Pražská;Pražské;Pražský;Pražskou
+Pražákova;Pražákovy;Pražákovu
+Pražákova , obchodní centrum;Pražákovy , obchodního centra;Pražákovu , obchodní centrum
+Preslova;Preslovy;Preslovu
+Prodloužená;Prodloužené;Prodloužený;Prodlouženou
+Provazníkova;Provazníkovy;Provazníkovu
+Proškovo náměstí;Proškova náměstí
+Prušánecká;Prušánecké;Prušánecký;Prušáneckou
+Psychiatrická léčebna;Psychiatrické léčebny;Psychiatrický léčebny;Psychiatrickou léčebnu
+Pálavské náměstí;Pálavského náměstí;Pálavskýho náměstí;Pálavský náměstí
+Přemyslovo náměstí;Přemyslova náměstí
+Přizřenice , smyčka;Přizřenice , smyčky;Přizřenice , smyčku
+Příjezdová;Příjezdové;Příjezdový;Příjezdovou
+Přístaviště
+Přívrat;Přívratu
+Přízřenice;Přízřenic
+Raisova;Raisovy;Raisovu
+Rakovec;Rakovce
+Rakovecká;Rakovecké;Rakovecký;Rakoveckou
+Revoluční
+Riviéra;Riviéry;Riviéru
+Rolencova
+Rotreklova;Rotreklovy;Rotreklovu
+Roviny;Rovin
+Rozárka;Rozárky;Rozárku
+Rybkova
+Ráječek;Ráječku
+Růženin dvůr;Růženina dvora
+Sadová;Sadové;Sadový;Sadovou
+Sazenice;Sazenic;Sazenicí;Sazenici
+Schodová;Schodové;Schodový;Schodovou
+Semilasso
+Shopping Park Brno;Shoppingu Park Brno
+Skalní;Skalního;Skalného;Skalnýho
+Skrejš
+Skácelova;Skácelovy;Skácelovu
+Slatina , nádraží;Slatiny , nádraží;Slatinu , nádraží
+Slatina , rozcestí;Slatiny , rozcestí;Slatinu , rozcestí
+Slatina , sídliště;Slatiny , sídliště;Slatinu , sídliště
+Slatina , závod;Slatiny , závodu;Slatinu , závod
+Slatina , závod , smyčka;Slatiny , závodu , smyčky;Slatinu , závod , smyčku
+Slatinka;Slatinky;Slatinku
+Slavíčkova;Slavíčkovy;Slavíčkovu
+Slovanské náměstí;Slovanského náměstí;Slovanskýho náměstí;Slovanský náměstí
+Slévárna Zetor;Slévárny Zetor;Slévárnu Zetor
+Smetanova;Smetanovy;Smetanovu
+Soběšice;Soběšic
+Sochorova;Sochorovy;Sochorovu
+Sokolnická;Sokolnické;Sokolnický;Sokolnickou
+Soukenická;Soukenické;Soukenický;Soukenickou
+Soukopova
+Spojovací;Spojovacích
+Sportovní;Sportovních
+Správa dálnic;Správy dálnic;Správu dálnic
+Spáčilova;Spáčilovy;Spáčilovu
+Srbská;Srbské;Srbský;Srbskou
+Stamicova;Stamicovy;Stamicovu
+Stará dálnice;Staré dálnic;Staré dálnice;Staré dálnicí;Starý dálnic;Starý dálnice;Starý dálnicí;Starou dálnice;Starou dálnici
+Stará nemocnice;Staré nemocnic;Staré nemocnice;Staré nemocnicí;Starý nemocnic;Starý nemocnice;Starý nemocnicí;Starou nemocnice;Starou nemocnici
+Stará osada;Staré osady;Starý osady;Starou osadu
+Staré letiště;Starého letiště;Starýho letiště;Starý letiště
+Staré Černovice;Starých Černovic;Starejch Černovic;Starý Černovice
+Starý Lískovec , smyčka;Starého Lískovce , smyčky;Starýho Lískovce , smyčky;Starý Lískovec , smyčku;Starej Lískovec , smyčku
+Stejskalova;Stejskalovy;Stejskalovu
+Strnadova;Strnadovy;Strnadovu
+Stránská skála;Stránské skála;Stránský skála;Stránskou skála
+Stránského
+Strážní;Strážního;Strážného;Strážnýho
+Sušilova;Sušilovy;Sušilovu
+Svah;Svahu
+Svatopetrská;Svatopetrské;Svatopetrský;Svatopetrskou
+Svatoplukova;Svatoplukovy;Svatoplukovu
+Svratecká;Svratecké;Svratecký;Svrateckou
+Talichova;Talichovy;Talichovu
+Technická;Technické;Technický;Technickou
+Technické muzeum;Technického muzea;Technického musea;Technickýho muzea;Technickýho musea;Technické museum;Technický muzeum;Technický museum
+Tererova
+Textilní kombinát;Textilního kombinátu
+Tkalcovská;Tkalcovské;Tkalcovský;Tkalcovskou
+Tomanova;Tomanovy;Tomanovu
+Tomkovo náměstí;Tomkova náměstí
+Topolky
+Tovární;Továrních
+Točná;Točné;Točný;Točnou
+Traťová;Traťové;Traťový;Traťovou
+Trávníčkova;Trávníčkovy;Trávníčkovu
+Tržní;Tržního;Tržného;Tržnýho;Tržné;Tržný
+Tuřany , smyčka;Tuřan , smyčky;Tuřany , smyčku
+Tvrdého
+Tylova;Tylovy;Tylovu
+Tábor;Táboru;Tábora
+U Luhu
+U borovice
+U buku
+U hřiště
+U jezírka
+U památníku
+U rozvodny
+U tunýlku
+U viaduktu
+U vodárny
+Ukrajinská;Ukrajinské;Ukrajinský;Ukrajinskou
+Uzavřená;Uzavřené;Uzavřený;Uzavřenou
+Uzbecká;Uzbecké;Uzbecký;Uzbeckou
+Učiliště
+V aleji
+V rejích
+Valašská;Valašské;Valašský;Valašskou
+Vaňkovo náměstí;Vaňkova náměstí
+Velatická;Velatické;Velatický;Velatickou
+Velká Klajdovka;Velké Klajdovka;Velký Klajdovka;Velkou Klajdovka
+Velodrom;Velodromu
+Venhudova
+Veslařská;Veslařské;Veslařský;Veslařskou
+Vinařská;Vinařské;Vinařský;Vinařskou
+Vinohradská;Vinohradské;Vinohradský;Vinohradskou
+Vlhká;Vlhké;Vlhký;Vlhkou
+Vlkova;Vlkovy;Vlkovu
+Vltavská;Vltavské;Vltavský;Vltavskou
+Vlárská;Vlárské;Vlárský;Vlárskou
+Vlčkova;Vlčkovy;Vlčkovu
+Vlčnovská
+Vojenská nemocnice;Vojenské nemocnic;Vojenské nemocnice;Vojenské nemocnicí;Vojenský nemocnic;Vojenský nemocnice;Vojenský nemocnicí;Vojenskou nemocnice;Vojenskou nemocnici
+Vojtova;Vojtovy;Vojtovu
+Vondrákova;Vondrákovy;Vondrákovu
+Vozovna Husovice;Vozovny Husovice;Vozovnu Husovice
+Vozovna Komín;Vozovny Komín;Vozovnu Komín
+Vozovna Medlánky;Vozovny Medlánky;Vozovnu Medlánky
+Vozovna Slatina;Vozovny Slatina;Vozovnu Slatina
+Voříškova;Voříškovy;Voříškovu
+Vrázova;Vrázovy;Vrázovu
+Vsetínská;Vsetínské;Vsetínský;Vsetínskou
+Vychodilova;Vychodilovy;Vychodilovu
+Vyhlídalova;Vyhlídalovy;Vyhlídalovu
+Václavská;Václavské;Václavský;Václavskou
+Vítězná;Vítězné;Vítězný;Vítěznou
+Výletní
+Výstaviště
+Všetičkova;Všetičkovy;Všetičkovu
+Wollmannova;Wollmannovy;Wollmannovu
+Za hřbitovem
+Za křížem
+Zahradníkova;Zahradníkovy;Zahradníkovu
+Zdráhalova;Zdráhalovy;Zdráhalovu
+Zemská knihovna;Zemské knihovny;Zemský knihovny;Zemskou knihovnu
+Zemědělská;Zemědělské;Zemědělský;Zemědělskou
+Zetor , silnice;Zetoru , silnic;Zetoru , silnicí
+Zetor , smyčka;Zetoru , smyčky;Zetor , smyčku
+Zimní I;Zimního I;Zimného I;Zimnýho I;Zimné I;Zimný I
+Zimní II;Zimního II;Zimného II;Zimnýho II;Zimné II;Zimný II
+Zimní stadion;Zimního stadiónu;Zimního stadionu;Zimného stadiónu;Zimného stadionu;Zimnýho stadiónu;Zimnýho stadionu;Zimní stadión;Zimný stadión;Zimný stadion;Zimnej stadión;Zimnej stadion
+Zoologická zahrada;Zoologické zahrady;Zoologický zahrady;Zoologickou zahradu
+Zvonařka;Zvonařky;Zvonařku
+Záhumenice;Záhumenic;Záhumenicí;Záhumenici
+Záhřebská;Záhřebské;Záhřebský;Záhřebskou
+Zámecká;Zámecké;Zámecký;Zámeckou
+Údolíček
+Ústav Kociánka;Ústavu Kociánka
+Ústřední hřbitov;Ústředního hřbitova;Ústředného hřbitova;Ústřednýho hřbitova;Ústředný hřbitov;Ústřednej hřbitov
+Ústřední hřbitov , smyčka;Ústředního hřbitova , smyčky;Ústředného hřbitova , smyčky;Ústřednýho hřbitova , smyčky;Ústřední hřbitov , smyčku;Ústředný hřbitov , smyčku;Ústřednej hřbitov , smyčku
+Útěchov;Útěchova
+Útěchov , rozcestí;Útěchova , rozcestí
+Útěchovská
+Úvoz;Úvozu
+Úzká;Úzké;Úzký;Úzkou
+Čechyňská;Čechyňské;Čechyňský;Čechyňskou
+Čejkovická;Čejkovické;Čejkovický;Čejkovickou
+Čermákova;Čermákovy;Čermákovu
+Černohorská;Černohorské;Černohorský;Černohorskou
+Černovická;Černovické;Černovický;Černovickou
+Černovičky
+Černého
+Červený kopec;Červeného kopce;Červenýho kopce;Červenej kopec
+Červený písek;Červeného písku;Červenýho písku;Červenej písek
+Červinkova;Červinkovy;Červinkovu
+Česká;České;Český;Českou
+Čtvery hony;Čtvera honů
+Čtvrtě;Čtvrtí;Čtvrti
+Čápkova;Čápkovy;Čápkovu
+Řezáčova;Řezáčovy;Řezáčovu
+Řečkovice;Řečkovic
+Řečkovice , hřbitov;Řečkovic , hřbitova
+Řečkovice , nádraží;Řečkovic , nádraží
+Řípská;Řípské;Řípský;Řípskou
+Šelepova;Šelepovy;Šelepovu
+Šilingrovo náměstí;Šilingrova náměstí
+Šimáčkova;Šimáčkovy;Šimáčkovu
+Škroupova;Škroupovy;Škroupovu
+Špačkova;Špačkovy;Špačkovu
+Šromova;Šromovy;Šromovu
+Štefánikova;Štefánikovy;Štefánikovu
+Štefánikova čtvrť;Štefánikovy čtvrtě;Štefánikovy čtvrti;Štefánikovu čtvrť
+Štouračova
+Štursova;Štursovy;Štursovu
+Štěpánkova;Štěpánkovy;Štěpánkovu
+Šumavská;Šumavské;Šumavský;Šumavskou
+Švermova;Švermovy;Švermovu
+Švestková;Švestkové;Švestkový;Švestkovou
+Šárka;Šárky;Šárku
+Žebětín;Žebětína
+Žebětín , rybník;Žebětína , rybníka;Žebětína , rybníku
+Žebětín , škola;Žebětína , školy;Žebětín , školu
+Žebětínská;Žebětínské;Žebětínský;Žebětínskou
+Železniční
+Železniční stavitelství;Železničního stavitelství
+Židenice , kasárna;Židenic , kasárna
+Žilkova;Žilkovy;Žilkovu
+Žitná;Žitné;Žitný;Žitnou
+Životského
+Žlutý kopec;Žlutého kopce;Žlutýho kopce;Žlutej kopec
