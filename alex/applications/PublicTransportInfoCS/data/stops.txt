@@ -1,7 +1,10 @@
+#
+# PID (Praha a okolí)
+#
 Výstaviště
 Strašnice
 Hradčany
-Roztoky
+#Roztoky
 Písnická
 Mikulova
 Letiště Václava Havla
@@ -10,13 +13,13 @@ Vinohradská
 Bělohradská
 Bělohrady
 Hostivař
-Praha
-Brno
-Plzeň
-Olomouc
-Liberec
-Pardubice
-Chuchle
+#Praha
+#Brno
+#Plzeň
+#Olomouc
+#Liberec
+#Pardubice
+#Chuchle
 Smíchov
 Holešovice
 Barrandov
@@ -2654,3 +2657,501 @@ Zvole, Jílovská
 Zvoleněves
 Zvole, Nová Zvole
 Zvole, škola
+#
+# Brno
+#
+Achtelky
+Akátky
+Anthropos
+Antonína Procházky
+Antonínská
+Arbesova
+Autobusové nádraží
+Bartákova
+Barvičova
+Bednářova
+Bellova
+Bieblova
+Blažkova
+Bohunická
+Borodinova
+Bosonohy
+Botanická
+Bořetická
+Branka
+Brechtova
+Brněnky
+Bráfova
+Burianovo náměstí
+Buzkova
+Bzenecká
+Bílovická
+Bílá hora
+Bělohorská
+Běloruská
+Cacovická
+Carrefour Královo Pole
+Carrefour Vídeňská
+Celní
+Chaloupky
+Charvatská
+Chrlice, nádraží
+Chrlice, smyčka
+Chrlická
+Chrlické náměstí
+Depo ČD
+Divišova čtvrť
+Dobrovského
+Dohnalova
+Dolní Heršpice
+Drdy
+Drážní
+Dunajská
+Dvorecká
+Dvorska, smyčka
+Díly
+Dělnický dům
+Dětská nemocnice
+Elplova
+Ečerova
+Faměrovo náměstí
+Filipova
+Filkukova
+Fillova
+Fügnerova
+Gajdošova
+Geislerova
+Glinkova
+Glocova
+Grohova
+Gruzínská
+Halasovo náměstí
+Hanácká
+Havránkova
+Haškova
+Heinrichova
+Heleny Malířové
+Heršpická
+Hladíkova
+Hlavní
+Hlavní nádraží
+Hlaváčova
+Hluboká
+Hněvkovského
+Holzova
+Holásecká
+Holásky
+Horní Heršpice
+Horníkova
+Horova
+Horská
+Horácké náměstí
+Houbalova
+Hoštická
+Hrnčířská
+Hudcova
+Humenná
+Husitská
+Hutařova
+Hviezdoslavova
+Hybešova
+Hájecká
+Högrova
+Ikea
+Ivanovice
+Ivanovice, Globus
+Ivanovické náměstí
+Jandáskova
+Janáčkovo divadlo
+Jarní, ČD
+Jehnice
+Jemelkova
+Jezerní
+Jindřichova
+Jiránkova
+Jugoslávská
+Juliánov
+Jundrov
+Jundrov, hřiště
+Jundrovská
+Jungmannova
+Jílkova
+Jírova
+Jírovcova
+Kamechy
+Kamenice
+Kamenný vrch
+Kamenolom
+Kampelíkova
+Karlova
+Karolíny Světlé
+Kartouzská
+Kejbaly
+Kleštínek
+Klicperova
+Kluchova
+Klusáčkova
+Kohoutovice, hájenka
+Kohoutovická
+Kolejní
+Koliště
+Komenského náměstí
+Komárov
+Komín, smyčka
+Komín, sídliště
+Konečného náměstí
+Koniklecová
+Konopná
+Kopce
+Kosmonautů
+Kostelní zmola
+Kotlanova
+Kounicovy koleje
+Kovářská
+Kořískova
+Krejčího
+Krematorium
+Kristenova
+Kroměřížská
+Kronova
+Králova
+Královka
+Královo Pole, nádraží
+Královopolská strojírna
+Krásného
+Kubelíkova
+Kubíčkova
+Kuldova
+Kulkova
+Kupkova
+Körnerova
+Křehlíkova
+Křivánkovo náměstí
+Křídlovická
+Křížkovského
+Kšírova
+Labská
+Langrova
+Laštůvkova
+Lesnická
+Lesná
+Lesní
+Lesní školka
+Letecká
+Letiště Tuřany
+Letovická
+Libušina třída
+Libušino údolí
+Lipová
+Loosova
+Lísky
+Líšeň, hřbitov
+Líšeňská
+Macháčkova
+Makovského náměstí
+Malečkova
+Malinovského náměstí
+Maloměřický most
+Malá
+Malá Klajdovka
+Marie Majerové
+Marie Pujmanové
+Mariánské náměstí
+Mariánské údolí
+Masarova
+Masná
+Maříkova
+Medlánky
+Medlánky, škola
+Mendlovo náměstí
+Merhautova
+Mifkova
+Mikulovská
+Mikulčická
+Modřická
+Modřická cihelna
+Mojmírovo náměstí
+Mokrá Hora
+Molákova
+Moravanská
+Moravanské lány
+Moravské náměstí
+Mostecká
+Mozolky
+Mošnova
+Mutěnická
+Muzeum dopravy
+Myslivecký stadion
+Myslivna
+Mácova
+Mírová
+Na kopcích
+Na kovárně
+Nemocnice Bohunice
+Nemocnice u sv. Anny
+Nerudova
+Netroufalky
+Neumannova
+Novolíšeňská
+Nové sady
+Nové sady, smyčka
+Nálepkova
+Náměstí 28.dubna
+Náměstí 28.října
+Náměstí Karla IV.
+Náměstí Míru
+Náměstí Republiky
+Náměstí Svornosti
+Obecká
+Obilní trh
+Oblá
+Obřanská, u školy
+Obřanský most
+Obřany
+Obřany, sídliště
+Olbrachtovo náměstí
+Olšanského
+Ondrouškova
+Ondráčkova
+Optátova
+Osová
+Otakara Ševčíka
+Ořechovská
+Ořešín
+Ořešínská
+Palackého náměstí
+Palackého vrch
+Pavlovská
+Pavlíkova
+Petřvaldská
+Pionýrská
+Pisárecká
+Pisárky
+Pod Borovníkem
+Pod Hradeckou
+Pod Jurankou
+Pod Mniší horou
+Pod nemocnicí
+Podlesí
+Podlomní
+Podolská
+Podsednická
+Podstránská
+Podveská
+Podzimní
+Poliklinika Lesná
+Poliklinika Židenice
+Polní
+Popelova
+Poříčí
+Pratecká
+Pražská
+Pražákova
+Pražákova, obchodní centrum
+Preslova
+Prodloužená
+Provazníkova
+Proškovo náměstí
+Prušánecká
+Psychiatrická léčebna
+Pálavské náměstí
+Přemyslovo náměstí
+Přizřenice, smyčka
+Příjezdová
+Přístaviště
+Přívrat
+Přízřenice
+Raisova
+Rakovec
+Rakovecká
+Revoluční
+Riviéra
+Rolencova
+Rotreklova
+Roviny
+Rozárka
+Rybkova
+Ráječek
+Růženin dvůr
+Sadová
+Sazenice
+Schodová
+Semilasso
+Shopping Park Brno
+Skalní
+Skrejš
+Skácelova
+Slatina, nádraží
+Slatina, rozcestí
+Slatina, sídliště
+Slatina, závod
+Slatina, závod, smyčka
+Slatinka
+Slavíčkova
+Slovanské náměstí
+Slévárna Zetor
+Smetanova
+Soběšice
+Sochorova
+Sokolnická
+Soukenická
+Soukopova
+Spojovací
+Sportovní
+Správa dálnic
+Spáčilova
+Srbská
+Stamicova
+Stará dálnice
+Stará nemocnice
+Stará osada
+Staré letiště
+Staré Černovice
+Starý Lískovec, smyčka
+Stejskalova
+Strnadova
+Stránská skála
+Stránského
+Strážní
+Sušilova
+Svah
+Svatopetrská
+Svatoplukova
+Svratecká
+Talichova
+Technická
+Technické muzeum
+Tererova
+Textilní kombinát
+Tkalcovská
+Tomanova
+Tomkovo náměstí
+Topolky
+Tovární
+Točná
+Traťová
+Trávníčkova
+Tržní
+Tuřany, smyčka
+Tvrdého
+Tylova
+Tábor
+U Luhu
+U borovice
+U buku
+U hřiště
+U jezírka
+U památníku
+U rozvodny
+U tunýlku
+U viaduktu
+U vodárny
+Ukrajinská
+Uzavřená
+Uzbecká
+Učiliště
+V aleji
+V rejích
+Valašská
+Vaňkovo náměstí
+Velatická
+Velká Klajdovka
+Velodrom
+Venhudova
+Veslařská
+Vinařská
+Vinohradská
+Vlhká
+Vlkova
+Vltavská
+Vlárská
+Vlčkova
+Vlčnovská
+Vojenská nemocnice
+Vojtova
+Vondrákova
+Vozovna Husovice
+Vozovna Komín
+Vozovna Medlánky
+Vozovna Slatina
+Voříškova
+Vrázova
+Vsetínská
+Vychodilova
+Vyhlídalova
+Václavská
+Vítězná
+Výletní
+Výstaviště
+Všetičkova
+Wollmannova
+Za hřbitovem
+Za křížem
+Zahradníkova
+Zdráhalova
+Zemská knihovna
+Zemědělská
+Zetor, silnice
+Zetor, smyčka
+Zimní I
+Zimní II
+Zimní stadion
+Zoologická zahrada
+Zvonařka
+Záhumenice
+Záhřebská
+Zámecká
+Údolíček
+Ústav Kociánka
+Ústřední hřbitov
+Ústřední hřbitov, smyčka
+Útěchov
+Útěchov, rozcestí
+Útěchovská
+Úvoz
+Úzká
+Čechyňská
+Čejkovická
+Čermákova
+Černohorská
+Černovická
+Černovičky
+Černého
+Červený kopec
+Červený písek
+Červinkova
+Česká
+Čtvery hony
+Čtvrtě
+Čápkova
+Řezáčova
+Řečkovice
+Řečkovice, hřbitov
+Řečkovice, nádraží
+Řípská
+Šelepova
+Šilingrovo náměstí
+Šimáčkova
+Škroupova
+Špačkova
+Šromova
+Štefánikova
+Štefánikova čtvrť
+Štouračova
+Štursova
+Štěpánkova
+Šumavská
+Švermova
+Švestková
+Šárka
+Žebětín
+Žebětín, rybník
+Žebětín, škola
+Žebětínská
+Železniční
+Železniční stavitelství
+Židenice, kasárna
+Žilkova
+Žitná
+Životského
+Žlutý kopec
