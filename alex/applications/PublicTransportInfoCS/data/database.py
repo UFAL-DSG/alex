@@ -52,6 +52,8 @@ database = {
         "evening": ["večer", "podvečer", ],
         "night": ["noc", "noci"],
     },
+    "city": {
+    },
 }
 
 NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
@@ -73,10 +75,8 @@ NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "�
 #   <value>; <phrase>; <phrase>; ...
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
-STOPS_FNAME = "stops.expanded.txt"  # this has been expanded to include
-                                    # other forms of the words; still very
-                                    # dirty, though
-#STOPS_FNAME = "stops.txt"
+STOPS_FNAME = "stops.expanded.txt"
+CITIES_FNAME = "cities.expanded.txt"
 
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
@@ -239,7 +239,7 @@ def add_db_time(hour, minute, format_str, replacements):
     db_add("time", time_val, format_str.format(**replacements))
 
 
-def preprocess_stops_line(line, expanded_format=False):
+def preprocess_cl_line(line, expanded_format=False):
     line = line.strip()
     if expanded_format:
         line = line.split(';')
@@ -286,15 +286,28 @@ def preprocess_stops_line(line, expanded_format=False):
     return name, forms
 
 
-def add_stops():
-    """Adds names of all stops as listed in `STOPS_FNAME' to the database."""
+def add_from_file(category_label, fname):
+    """Adds names of all category labels listed in the given file to the database.
+    If the file name contains `expanded', it is assumed that the file contains semicolon-separated
+    lists of other possible surface forms for each line.
+    """
     dirname = os.path.dirname(os.path.abspath(__file__))
-    is_expanded = 'expanded' in STOPS_FNAME
-    with codecs.open(os.path.join(dirname, STOPS_FNAME), encoding='utf-8') as stops_file:
+    is_expanded = 'expanded' in fname
+    with codecs.open(os.path.join(dirname, fname), encoding='utf-8') as stops_file:
         for line in stops_file:
-            stop_name, stop_surface_forms = preprocess_stops_line(line, expanded_format=is_expanded)
-            for form in stop_surface_forms:
-                db_add('stop', stop_name, form)
+            val_name, val_surface_forms = preprocess_cl_line(line, expanded_format=is_expanded)
+            for form in val_surface_forms:
+                db_add(category_label, val_name, form)
+
+
+def add_stops():
+    """Add stop names from the stops file."""
+    add_from_file('stop', STOPS_FNAME)
+
+
+def add_cities():
+    """Add city names from the cities file."""
+    add_from_file('city', CITIES_FNAME)
 
 
 def save_surface_forms(file_name):
@@ -331,6 +344,7 @@ def save_SRILM_classes(file_name):
 ########################################################################
 add_time()
 add_stops()
+add_cities()
 
 if len(sys.argv) > 1 and sys.argv[1] == "dump":
     save_surface_forms('database_surface_forms.txt')

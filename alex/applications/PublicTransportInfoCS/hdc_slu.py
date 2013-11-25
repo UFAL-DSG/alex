@@ -55,131 +55,84 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
-        preps_from = set(["z", "za", "ze", "od", "začátek", "začáteční", "počáteční", "počátek", "výchozí", "start"])
-        preps_to = set(["k", "do", "konec", "na", "konečná", "koncová", "cílová", "cíl", "výstupní"])
-        preps_via = set(["přes", ])
+        phr_wp_types = {'from': set(['z', 'za', 'ze', 'od', 'začátek', 'začáteční',
+                                     'počáteční', 'počátek', 'výchozí', 'start', 'stojím na',
+                                     'jsem na', 'start na', 'stojím u', 'jsem u', 'start u',
+                                     'začátek na', 'začátek u']),
+                          'to': set(['k', 'do', 'konec', 'na', 'konečná', 'koncová',
+                                     'cílová', 'cíl', 'výstupní', 'cíl na', 'chci na']),
+                          'via': set(['přes', ])}
+        phr_dai_types = {'confirm': set(['jede to', 'odjíždí to', 'je výchozí']),
+                         'deny': set(['nechci', 'ne', 'nejedu'])}
+        self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types, phr_dai_types)
 
-        fillers_from = set(["start", "stojím", "jsem"])
-        fillers_to = set(["cíl", "chci"])
-        fillers_via = set([])
+    def parse_city(self, abutterance, cn):
+        """ Detects stops in the input abstract utterance.
 
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+        phr_wp_types = {'from': set(['z', 'ze', 'od', 'začátek', 'začáteční',
+                                     'počáteční', 'počátek', 'výchozí', 'start',
+                                     'jsem v', 'stojím v', 'začátek v']),
+                          'to': set(['k', 'do', 'konec', 'na', 'končím',
+                                     'cíl', 'vystupuji', 'vystupuju']),
+                          'via': set(['přes', ])}
+        phr_dai_types = {'confirm': set(['jede to', 'odjíždí to', 'je výchozí']),
+                         'deny': set(['nechci', 'ne', 'nejedu'])}
+        self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_dai_types)
+
+    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types, phr_dai_types):
+        """Detects stops or cities in the input abstract utterance
+        (called through parse_city or parse_stop).
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
         u = abutterance
         N = len(u)
 
-        confirm = lambda u: phrase_in(u, 'jede to') or phrase_in(u, 'odjíždí to') or phrase_in(u, 'je výchozí')
-        deny = lambda u: phrase_in(u, 'nechci') or phrase_in(u, 'ne') or phrase_in(u, 'nejedu')
-
-        last_stop = 0
+        last_wp_pos = 0
         for i, w in enumerate(u):
-            if w.startswith("STOP="):
-                stop_name = w[5:]
-                from_stop = False
-                to_stop = False
-                via_stop = False
-                stop_decided = False
+            if w.startswith(wp_id):
+                wp_name = w[len(wp_id):]
+                wp_types = set()
+                dai_type = 'inform'
 
-                if stop_name == "Čím":
-                    # just ignore this stop
-                    continue
+                # test short preceding context to find the stop type (from, to, via)
+                for cur_stop_type, phrases in phr_wp_types.iteritems():
+                    if any_phrase_in(u[max(last_wp_pos, i - 2):i], phrases):
+                        wp_types.add(cur_stop_type)
+                        break
+                # test short following context
+                if not wp_types:
+                    if any_phrase_in(u[i:i + 3], phr_wp_types['from'] | phr_wp_types['via']):
+                        wp_types.add('to')
+                    elif any_phrase_in(u[i:i + 3], phr_wp_types['to']):
+                        wp_types.add('from')
+                # resolve context according to further preceding/following stop name (assuming from-to)
+                if not wp_types:
+                    if i >= 1 and u[i - 1].startswith(wp_id):
+                        wp_types.add('to')
+                    elif i <= N - 2 and u[i + 1].startswith(wp_id):
+                        wp_types.add('from')
 
-                if i >= 3:
-                    if not u[i - 2].startswith("STOP=") and not u[i - 1].startswith("STOP="):
-                        if u[i - 3] in fillers_from and u[i - 2] == 'na':
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in fillers_to and u[i - 2] == 'na':
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_from:
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_to:
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_via:
-                            via_stop = True
-                            stop_decided = True
+                # test utterance type
+                for cur_dai_type, phrases in phr_dai_types.iteritems():
+                    if any_phrase_in(u[last_wp_pos:i], phrases):
+                        dai_type = cur_dai_type
+                        break
 
-                if not stop_decided and i >= 2:
-                    if not u[i - 1].startswith("STOP="):
-                        if u[i - 2] in fillers_from and u[i - 1] == 'na':
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in fillers_to and u[i - 1] == 'na':
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_from:
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_to:
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_via:
-                            via_stop = True
-                            stop_decided = True
-
-                if not stop_decided and i >= 1:
-                    if u[i - 1] in preps_from:
-                        from_stop = True
-                        stop_decided = True
-                    elif u[i - 1] in preps_to:
-                        to_stop = True
-                        stop_decided = True
-                    elif u[i - 1] in preps_via:
-                        via_stop = True
-                        stop_decided = True
-
-                if not stop_decided:
-                    if i <= N - 3:
-                        if not u[i + 1].startswith("STOP="):
-                            if u[i + 2] in preps_from:
-                                to_stop = True
-                            elif u[i + 2] in preps_to:
-                                from_stop = True
-
-                    if i <= N - 2:
-                        if u[i + 1] in preps_from:
-                            to_stop = True
-                        elif u[i + 1] in preps_to:
-                            from_stop = True
-
-                if not from_stop and not to_stop:
-                    if 1 <= i:
-                        if u[i - 1].startswith('STOP'):
-                            to_stop = True
-
-                    if  i <= N - 2:
-                        if u[i + 1].startswith('STOP'):
-                            from_stop = True
-
-                if confirm(u[last_stop:i]):
-                    dat = "confirm"
-                elif deny(u[last_stop:i]):
-                    dat = "deny"
+                # add stop to confusion network (standard case: just single type is decided)
+                if len(wp_types) == 1:
+                    cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name))
+                # backoff 1: add both 'from' and 'to' stop slots
+                elif 'from' in wp_types and 'to' in wp_types:
+                    cn.add(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name))
+                    cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name))
+                # backoff 2: let the DM decide in context resolution
                 else:
-                    dat = "inform"
-
-                if from_stop and not to_stop and not via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "from_stop", stop_name))
-
-                if not from_stop and to_stop and not via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "to_stop", stop_name))
-
-                if not from_stop and not to_stop and via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "via_stop", stop_name))
-
-                # backoff 1: add both from and to stop slots
-                if from_stop and to_stop:
-                    cn.add(0.501, DialogueActItem(dat, "from_stop", stop_name))
-                    cn.add(0.499, DialogueActItem(dat, "to_stop", stop_name))
-
-                # backoff 2: we do not know what slot it belongs to, let the DM
-                # decide in the context resolution
-                if ((not from_stop and not to_stop and not via_stop) or \
-                        (from_stop and to_stop)):
-                    cn.add(1.0, DialogueActItem(dat, "", stop_name))
-
-                last_stop = i
+                    cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
 
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.
@@ -564,6 +517,8 @@ class PTICSHDCSLU(SLUInterface):
 
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
+        if 'CITY' in category_labels:
+            self.parse_city(abutterance, res_cn)
         if 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
         if 'DATE_REL' in category_labels:

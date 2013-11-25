@@ -17,6 +17,9 @@ ontology = {
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
+        'from_city': set([]),
+        'to_city': set([]),
+        'via_city': set([]),
         'departure_time': set(['now', '7:00', ]),
         'departure_time_rel': set(['00:05']),
         'arrival_time': set([]),
@@ -61,6 +64,10 @@ ontology = {
             'system_confirms', 'system_iconfirms',
         ],
         'to_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'via_city': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_confirms', 'system_iconfirms',
         ],
@@ -230,6 +237,9 @@ def add_slot_values_from_database(slot, category):
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
 add_slot_values_from_database('via_stop', 'stop')
+add_slot_values_from_database('from_city', 'city')
+add_slot_values_from_database('to_city', 'city')
+add_slot_values_from_database('via_city', 'city')
 add_slot_values_from_database('departure_time', 'time')
 add_slot_values_from_database('departure_time_rel', 'time_rel')
 add_slot_values_from_database('arrival_time', 'time')
