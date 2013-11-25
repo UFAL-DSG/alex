@@ -226,8 +226,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             ds["ludait"].reset()
 
         elif "alternative" in accepted_slots:
-            # Search for traffic direction and/or present the requested
-            # directions already found
+            # Search for traffic direction and/or present the requested directions already found
             res_da = self.get_requested_alternative(ds)
             ds["alternative"].reset()
 
@@ -508,26 +507,18 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # check all state variables and the output one request dialogue act
-        # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-        if 'from_stop' not in accepted_slots and \
-                'to_stop' not in accepted_slots and \
-                ('departure_time' not in accepted_slots or
-                 'time' not in accepted_slots) and \
+        # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
+        if 'from_stop' not in accepted_slots and 'to_stop' not in accepted_slots and \
+                ('departure_time' not in accepted_slots or 'time' not in accepted_slots) and \
                 randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif 'from_stop' not in accepted_slots and \
-                ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and \
-                randbool(9):
+        elif 'from_stop' not in accepted_slots and ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].mpv() == '*') and randbool(9):
             req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif 'to_stop' not in accepted_slots and \
-                ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and \
-                randbool(8):
+        elif 'to_stop' not in accepted_slots and ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].mpv() == '*') and randbool(8):
             req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif 'from_stop' not in accepted_slots and \
-                'to_stop' not in accepted_slots and \
-                randbool(3):
+        elif 'from_stop' not in accepted_slots and 'to_stop' not in accepted_slots and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
         elif 'from_stop' not in accepted_slots:
             req_da.extend(DialogueAct("request(from_stop)"))
