@@ -140,7 +140,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         template = re.sub(r'\{([^}/]+)/([^}]+)\}', store_repl, template)
 
         for slot, modif in slot_modif.iteritems():
-            if modif == 'C':
+            if modif == 'Cap1':
                 svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
         return template, svs_dict
 
