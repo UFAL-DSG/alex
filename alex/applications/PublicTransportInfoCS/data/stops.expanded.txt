@@ -2686,7 +2686,7 @@ Burianovo náměstí;Burianova náměstí
 Buzkova;Buzkovy;Buzkovu
 Bzenecká;Bzenecké;Bzenecký;Bzeneckou
 Bílovická;Bílovické;Bílovický;Bílovickou
-Bílá hora;Bílé hory;Bílý hory;Bílou horu
+Bílá Hora;Bílé Hory;Bílý Hory;Bílou Horu
 Bělohorská;Bělohorské;Bělohorský;Bělohorskou
 Běloruská;Běloruské;Běloruský;Běloruskou
 Cacovická;Cacovické;Cacovický;Cacovickou
