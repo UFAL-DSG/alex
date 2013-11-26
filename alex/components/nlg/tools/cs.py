@@ -147,7 +147,9 @@ class CzechTemplateNLGPostprocessing(TemplateNLGPostprocessing):
         super(CzechTemplateNLGPostprocessing, self).__init__()
 
     def postprocess(self, nlg_text):
-        return self.vocalize_prepos(nlg_text)
+        # vocalize Czech prepositions
+        nlg_text = self.vocalize_prepos(nlg_text)
+        return nlg_text
 
     def vocalize_prepos(self, text):
         """\
