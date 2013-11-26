@@ -98,7 +98,7 @@ ontology = {
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms',
-            #'system_selects', # until we have NLG pre-processing this is just too complex to implement
+            'system_selects',
         ],
         # not implemented yet
         'date': [
