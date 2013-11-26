@@ -5,6 +5,7 @@ import argparse
 import sys
 import numpy as np
 import datetime
+import random
 import lmj.cli
 import theanets
 
@@ -21,14 +22,14 @@ lmj.cli.enable_default_logging()
 
 """
 
-# the default values, these may be overwritten by teh script parameters
+# the default values, these may be overwritten by the script parameters
 
-max_frames = 100000
+max_frames = 10000
 max_files = 1000000
 max_frames_per_segment = 50
 trim_segments = 0
 max_epoch = 3
-hidden_units = 128
+hidden_units = 32
 last_frames = 0
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
@@ -37,22 +38,29 @@ hidden_dropouts=0
 weight_l2=0
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
-    mlf_sil = MLF(train_data_sil_aligned, max_files=max_files)
-    mlf_sil.filter_zero_segments()
-    # map all sp, _noise_, _laugh_, _inhale_ to sil
-    mlf_sil.sub('sp', 'sil')
-    mlf_sil.sub('_noise_', 'sil')
-    mlf_sil.sub('_laugh_', 'sil')
-    mlf_sil.sub('_inhale_', 'sil')
-    # map everything except of sil to speech
-    mlf_sil.sub('sil', 'speech', False)
-    mlf_sil.merge()
-    #mlf_sil.times_to_seconds()
-    mlf_sil.times_to_frames()
-    mlf_sil.trim_segments(trim_segments)
-    mlf_sil.shorten_segments(max_frames_per_segment)
+    """ Loads a MLF file and creates normalised MLF class.
 
-    return mlf_sil
+    :param train_data_sil_aligned:
+    :param max_files:
+    :param max_frames_per_segment:
+    :return:
+    """
+    mlf = MLF(train_data_sil_aligned, max_files=max_files)
+    mlf.filter_zero_segments()
+    # map all sp, _noise_, _laugh_, _inhale_ to sil
+    mlf.sub('sp', 'sil')
+    mlf.sub('_noise_', 'sil')
+    mlf.sub('_laugh_', 'sil')
+    mlf.sub('_inhale_', 'sil')
+    # map everything except of sil to speech
+    mlf.sub('sil', 'speech', False)
+    mlf.merge()
+    #mlf_sil.times_to_seconds()
+    mlf.times_to_frames()
+    mlf.trim_segments(trim_segments)
+    mlf.shorten_segments(max_frames_per_segment)
+
+    return mlf
 
 
 def get_accuracy(ds, a):
@@ -77,12 +85,20 @@ def get_accuracy(ds, a):
 
     return acc/n*100, sil/n*100
 
-def train_nn(mlf_speech, train_data_speech):
+def train_nn(speech_data, speech_alignment):
     vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=last_frames)
-    # vta.append_mlf(mlf_sil)
-    # vta.append_trn(train_data_sil)
-    vta.append_mlf(mlf_speech)
-    vta.append_trn(train_data_speech)
+    sil_count = 0
+    speech_count = 0
+    for sd, sa in zip(speech_data, speech_alignment):
+        mlf_speech = load_mlf(sa, max_files, max_frames_per_segment)
+        vta.append_mlf(mlf_speech)
+        vta.append_trn(sd)
+
+        sil_count += mlf_speech.count_length('sil')
+        speech_count += mlf_speech.count_length('speech')
+
+    print "The length of sil segments:    ", sil_count
+    print "The length of speech segments: ", speech_count
 
     mfcc = vta.__iter__().next()
 
@@ -114,7 +130,8 @@ def train_nn(mlf_speech, train_data_speech):
         if i > max_frames:
             break
 
-        if i < crossvalid_frames:
+        if random.random() < float(crossvalid_frames)/max_frames:
+            # sample validation (test) data
             crossvalid_x.append(frame)
             if label == "sil":
                 crossvalid_y.append(0)
@@ -132,7 +149,10 @@ def train_nn(mlf_speech, train_data_speech):
     crossvalid = [np.array(crossvalid_x), np.array(crossvalid_y).astype('int32')]
     train = [np.array(train_x), np.array(train_y).astype('int32')]
 
-    # print crossvalid
+    print
+    print "The length of training data: ", len(train_x)
+    print "The length of test data:     ", len(crossvalid_x)
+    print
 
     dc_acc = deque(maxlen=20)
     dt_acc = deque(maxlen=20)
@@ -228,22 +248,21 @@ def main():
     hidden_dropouts = args.hidden_dropouts
     weight_l2 = args.weight_l2
 
-    #train_data_sil = 'data_vad_sil/data/*.wav'
-    #train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
-    train_data_speech = 'data_voip_en/train/*.wav'
-    train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
+    # add all the training data
+    train_speech = []
+    train_speech_alignment = []
 
-    #mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
-    mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
+    train_speech.append('data_voip_en/train/*.wav')
+    train_speech_alignment.append('model_voip_en/aligned_best.mlf')
+
+    train_speech.append('data_voip_cs/train/*.wav')
+    train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
+
 
     print datetime.datetime.now()
-    # print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-    # print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
-    print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
-    print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
-    train_nn(mlf_speech, train_data_speech)
+    train_nn(train_speech, train_speech_alignment)
 
 
 if __name__ == "__main__":
