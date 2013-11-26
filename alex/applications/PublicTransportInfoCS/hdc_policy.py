@@ -66,6 +66,23 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                                                                         changed_slot=changed_slot))
                     break
 
+    def filter_iconfirms(self, da):
+        new_da = DialogueAct()
+        informs = []
+
+        for dai in da:
+            if dai.dat == 'inform':
+                informs.append((dai.name, dai.value))
+
+        for dai in da:
+            if dai.dat == 'iconfirm':
+                if (dai.name, dai.value) in informs:
+                    continue
+
+            new_da.append(dai)
+
+        return new_da
+
     def get_da(self, dialogue_state):
         """The main policy decisions are made here. For each action, some set of conditions must be met. These
          conditions depends on the action.
@@ -178,12 +195,14 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_iconfirm_info(changed_slots)
             # select between two values for a slot that is not certain
             res_da.extend(self.select_info(slots_tobe_confirmed))
+            res_da = self.filter_iconfirms(res_da)
 
         elif slots_tobe_confirmed:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # confirm all slots that are not certain
             res_da.extend(self.confirm_info(slots_tobe_confirmed))
+            res_da = self.filter_iconfirms(res_da)
 
         elif 'current_time' in slots_being_requested:
             # Respond to questions about current weather
@@ -199,6 +218,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             w_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                            accepted_slots, changed_slots)
             res_da.extend(w_da)
+            res_da = self.filter_iconfirms(res_da)
         else:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
@@ -206,6 +226,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                               accepted_slots, changed_slots)
             res_da.extend(t_da)
+            res_da = self.filter_iconfirms(res_da)
 
         self.last_system_dialogue_act = res_da
 

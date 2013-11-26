@@ -515,8 +515,7 @@ class DialogueAct(object):
 
         """
         if not isinstance(da, DialogueAct):
-            raise DialogueActException(
-                "DialogueAct can only be merged with another DialogueAct")
+            raise DialogueActException("DialogueAct can only be merged with another DialogueAct")
         self._dais.extend(da.dais)
         self.sort()
         return self

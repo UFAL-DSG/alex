@@ -401,7 +401,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         # processing the low probability DAIs first, emphasize the dialogue acts with high probability
         for prob, dai in sorted(user_da.items()):
             #print "#0 ", self.type
-            print "#1 SType:", prob, dai
+            #print "#1 SType:", prob, dai
             ##print "#51", self.slots
 
             if self.type == "MDP":
