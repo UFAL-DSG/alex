@@ -11,7 +11,7 @@ from alex.components.asr.utterance import Utterance
 from alex.utils.czech_stemmer import cz_stem
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
-
+import re
 
 class PTICSSLUPreprocessing(SLUPreprocessing):
     """
@@ -106,7 +106,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
             for slot in self.ontology['value_translation']:
                 self.translated_slots.add(slot)
 
-    def preprocess(self, svs_dict):
+    def preprocess(self, template, svs_dict):
         """Preprocess values to be filled into an NLG template.
         Spells out temperature and time expressions and translates some of the values
         to Czech.
@@ -114,6 +114,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         :param svs_dict: Slot-value dictionary
         :return: The same dictionary, with modified values
         """
+        # regular changes to slot values
         for slot, val in svs_dict.iteritems():
             # spell out time expressions
             if slot in self.rel_time_slots:
@@ -128,7 +129,20 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
             # translate some slot values (default to untranslated)
             elif slot in self.translated_slots:
                 svs_dict[slot] = self.translations[slot].get(val, val)
-        return svs_dict
+        # reflect changes to slot values stored in the template
+        slot_modif = {}
+
+        def store_repl(match):
+            slot, modif = match.groups()
+            slot_modif[slot] = modif
+            return '{' + slot + '}'
+
+        template = re.sub(r'\{([^}/]+)/([^}]+)\}', store_repl, template)
+
+        for slot, modif in slot_modif.iteritems():
+            if modif == 'C':
+                svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
+        return template, svs_dict
 
     HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
     HR_ENDING_DEFAULT = ''
