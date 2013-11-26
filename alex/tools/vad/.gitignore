@@ -2,3 +2,5 @@ data_*
 asr_*
 log*
 *.log
+model_*_cs
+model_*_en
