@@ -257,8 +257,7 @@ class AbstractTemplateNLG(object):
                 pass
             else:
                 # try to return exact match
-                self.last_utterance = \
-                        self.random_select(self.templates[unicode(da)])
+                self.last_utterance = self.random_select(self.templates[unicode(da)])
         except KeyError:
             # try to find a relaxed match
             svs = da.get_slots_and_values()
@@ -394,7 +393,7 @@ class TemplateNLG(AbstractTemplateNLG):
         """
         svs_dict = dict(svs)
         if self.preprocessing is not None:
-            svs_dict = self.preprocessing.preprocess(svs_dict)
+            tpl, svs_dict = self.preprocessing.preprocess(tpl, svs_dict)
         out_text = tpl.format(**svs_dict)
         if self.postprocessing is not None:
             return self.postprocessing.postprocess(out_text)
