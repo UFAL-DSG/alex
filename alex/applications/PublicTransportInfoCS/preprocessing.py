@@ -42,6 +42,8 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['barandov'], ['barrandov']),
             (['dejvic'], ['dejvická']),
             (['dejvice'], ['dejvická']),
+            (['kulaťák'], ['dejvická']),
+            (['kulaťáku'], ['dejvická']),
             (['litňanská'], ['letňanská']),
             (['palacké'], ['palackého']),
             (['ajpí', 'pavlova'],   ['i','p','pavlova']),
@@ -53,6 +55,8 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['ajpáku'],  ['i','p','pavlova']),
             (['ípák'],    ['i','p','pavlova']),
             (['ípáku'],   ['i','p','pavlova']),
+            (['pavlák'], ['i', 'p', 'pavlova']),
+            (['pavláku'], ['i', 'p', 'pavlova']),
             (['čaplinovo'], ['chaplinovo']),
             (['čaplinova'], ['chaplinova']),
             (['zologická'],   ['zoologická']),
@@ -63,6 +67,12 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['ruzyňské','letiště'],   ['letiště','václava','havla']),
             (['letiště','v','ruzyni'], ['letiště','václava','havla']),
             (['smíchovském'], ['smíchovské']),
+            (['mírák'], ['náměstí', 'míru']),
+            (['míráku'], ['náměstí', 'míru']),
+            (['václavák'], ['václavské', 'náměstí']),
+            (['václaváku'], ['václavské', 'náměstí']),
+            (['karlák'], ['karlovo', 'náměstí']),
+            (['karláku'], ['karlovo', 'náměstí']),
         ]
 
     def normalise_utterance(self, utterance):
