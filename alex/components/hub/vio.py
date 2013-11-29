@@ -638,6 +638,9 @@ class VoipIO(multiprocessing.Process):
     def make_call(self, remote_uri):
         """ Call provided URI. Check whether it is allowed.
         """
+
+        # *WARNING* pjsip only handle standard string, not UNICODE !
+        remote_uri = str(remote_uri)
         try:
             uri = remote_uri
             if is_phone_number_hash(uri):
