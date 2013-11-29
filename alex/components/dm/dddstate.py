@@ -110,14 +110,17 @@ class D3DiscreteValue(DiscreteValue):
         max_prob = -1.0
         max_value = None
         for value, prob in self.values.iteritems():
-            if prob >= max_prob and (value != 'none' or max_value is None):
+            if prob > max_prob or \
+               prob == max_prob and (max_value == 'none' or max_value is None):
+
                 max_prob = prob
                 max_value = value
 
         return (max_prob, max_value)
 
     def tmphs(self):
-        """This function returns two most probable values and their probabilities.
+        """This function returns two most probable values and their probabilities. If there are
+        multiple values with the same probability then it prefer non 'none' values.
 
         The function returns a tuple consisting of two tuples (probability, value).
         """
