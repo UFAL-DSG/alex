@@ -106,14 +106,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots that should be confirmed
         slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.accept_prob)
         #  filter out all the slots that are not defined by the ontology to be confirmed
-        slots_tobe_confirmed = {k:v for k,v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
+        slots_tobe_confirmed = {k: v for k, v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         #  filter out all the slots that are not defined by the ontology to be selected
-        slots_tobe_selected = {k:v for k,v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
+        slots_tobe_selected = {k: v for k, v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
         # all slots changed by a user in the last turn
         changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['accept_prob'])
-
 
         if self.debug:
             s = []
@@ -288,13 +287,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         time_rel = ds['time_rel'].mpv()
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
+        lta_time = ds['lta_time'].mpv()
 
         # interpret time
         daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
         # check if any time is set to distinguish current/prediction
         weather_time_int = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
-            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
+            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # request the weather
         weather = self.weather.get_weather(weather_time_int, daily)
 
@@ -473,7 +473,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        for prob, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
+        for _, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
             dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].mpv())
             res_da.append(dai)
             #confirm explicitly only one slot at the time
@@ -736,11 +736,15 @@ class PTICSHDCPolicy(DialoguePolicy):
         # interpret departure and arrival time
         departure_time_int, arrival_time_int = None, None
         if arrival_time != 'none' or arrival_time_rel != 'none':
-            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel)
+            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel,
+                                                   ds['lta_arrival_time'].mpv())
         else:
+            lta_departure_time = ds['lta_departure_time'].mpv()
+            lta_time = ds['lta_time'].mpv()
+            lta_time = lta_departure_time if lta_departure_time != 'none' else lta_time
             time_abs = departure_time if departure_time != 'none' else time
             time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
-            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
+            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
         # retrieve Google directions
         ds.directions = self.directions.get_directions(from_stop=from_stop_val,
@@ -832,10 +836,17 @@ class PTICSHDCPolicy(DialoguePolicy):
                           'evening': "18:00",
                           'night': "00:00"}
 
-    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel):
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time):
 
         # interpret dialogue state time
         now = datetime.now()
+
+        # use only last-talked-about time
+        if time_abs != 'none' and time_rel != 'none':
+            if lta_time == 'time_rel':
+                time_abs = 'none'
+            elif lta_time == 'time':
+                time_rel = 'none'
 
         # relative time
         if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
