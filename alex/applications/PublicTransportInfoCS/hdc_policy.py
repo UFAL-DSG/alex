@@ -841,11 +841,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         # interpret dialogue state time
         now = datetime.now()
 
-        # use only last-talked-about time
+        # use only last-talked-about time (of any type -- departure/arrival)
         if time_abs != 'none' and time_rel != 'none':
-            if lta_time == 'time_rel':
+            if lta_time.endswith('time_rel'):
                 time_abs = 'none'
-            elif lta_time == 'time':
+            elif lta_time.endswith('time'):
                 time_rel = 'none'
 
         # relative time
