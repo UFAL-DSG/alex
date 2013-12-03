@@ -20,9 +20,13 @@ from datetime import time as dttime
 
 
 def randbool(n):
+    """Randomly return True in 1 out of n cases.
+
+    :param n: Inverted chance of returning True
+    :rtype: Boolean
+    """
     if random.randint(1, n) == 1:
         return True
-
     return False
 
 
@@ -106,13 +110,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots that should be confirmed
         slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.accept_prob)
         #  filter out all the slots that are not defined by the ontology to be confirmed
-        slots_tobe_confirmed = {k:v for k,v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
+        slots_tobe_confirmed = {k:v for k, v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         #  filter out all the slots that are not defined by the ontology to be selected
-        slots_tobe_selected = {k:v for k,v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
+        slots_tobe_selected = {k:v for k, v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
         # all slots changed by a user in the last turn
-        changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['accept_prob'])
+        changed_slots = dialogue_state.get_changed_slots(self.accept_prob)
 
 
         if self.debug:
@@ -269,8 +273,11 @@ class PTICSHDCPolicy(DialoguePolicy):
             # request all unknown information
             req_da = self.request_more_info(ds, accepted_slots)
             if len(req_da) == 0:
-                # we know everything we need -> start searching
-                res_da = self.get_directions(ds, check_conflict=True)
+                if changed_slots:
+                    # we know everything we need -> start searching
+                    res_da = self.get_directions(ds, check_conflict=True)
+                else:
+                    res_da = self.backoff_action(ds)
             else:
                 res_da = req_da
 
@@ -281,6 +288,19 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         :param ds: The current dialogue state
         :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
+        """
+        res_da = None
+        if changed_slots:
+            res_da = self.get_weather(ds)
+        else:
+            res_da = self.backoff_action(ds)
+        return res_da
+
+    def get_weather(self, ds):
+        """Retrieve weather information according to the current dialogue state.
+
+        :param ds: The current dialogue state
         :rtype: DialogueAct
         """
         # get dialogue state values
@@ -321,6 +341,22 @@ class PTICSHDCPolicy(DialoguePolicy):
         # weather conditions
         res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
         return res_da
+
+    def backoff_action(self, ds):
+        """Generate a random backoff dialogue act in case we don't know what to do.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct
+        """
+        if randbool(6):
+            return self.get_limited_context_help(ds)
+        elif randbool(6):
+            return DialogueAct('reqmore()')
+        elif randbool(4):
+            return DialogueAct('notunderstood()')
+        elif randbool(3):
+            return DialogueAct('irepeat()')
+        return DialogueAct('silence()')
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for

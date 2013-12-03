@@ -563,8 +563,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
     def get_changed_slots(self, cha_prob):
         """Returns all slots that has changed from the previous turn. Because the change is determined by change in
-        probability for a particular value, the can be vary small changes. Therefore we will report only changes
-        for values with probability larger then some threshold.
+        probability for a particular value, there may be very small changes. Therefore, this will only report changes
+        for values with a probability larger than the given threshold.
+
+        :param cha_prob: minimum current probability of the most probable hypothesis to be reported
+        :rtype: dict
         """
         changed_slots = {}
 

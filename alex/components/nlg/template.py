@@ -22,7 +22,7 @@ class AbstractTemplateNLG(object):
 
     The generation (i.e. template filling) is left to the derived classes.
 
-    It implements numerous backoff strategies:
+    It implements numerous backoff_action strategies:
     1) it matches the exactly the input dialogue against the templates
     2) if it cannot find exact match, then it tries to find a generic template (slot-independent)
     3) if it cannot find a generic template, the it tries to compose
@@ -271,8 +271,8 @@ class AbstractTemplateNLG(object):
                     self.last_utterance = self.compose_utterance(da)
 
                 except TemplateNLGException:
-                    # nothing to do, I must backoff
-                    self.last_utterance = self.backoff(da)
+                    # nothing to do, I must backoff_action
+                    self.last_utterance = self.backoff_action(da)
 
         return self.last_utterance
 
@@ -334,7 +334,7 @@ class AbstractTemplateNLG(object):
                     except TemplateNLGException:
                         # nothing found: look for shorter templates
                         continue
-            if dax_utt is None:  # dummy backoff
+            if dax_utt is None:  # dummy backoff_action
                 dax_utt = unicode(da[sub_start])
                 dax_len = 1
             composed_utt.append(dax_utt)
@@ -348,11 +348,11 @@ class AbstractTemplateNLG(object):
         """
         raise NotImplementedError()
 
-    def backoff(self, da):
+    def backoff_action(self, da):
         """\
         Provide an alternative NLG template for the dialogue
         output which is not covered in the templates.
-        This serves as a backoff solution.
+        This serves as a backoff_action solution.
         This should be implemented in derived classes.
         """
         raise NotImplementedError()

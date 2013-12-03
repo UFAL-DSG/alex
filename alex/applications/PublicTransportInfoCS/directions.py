@@ -11,6 +11,7 @@ import json
 import os.path
 import codecs
 from alex.tools.apirequest import APIRequest
+from alex.utils.cache import lru_cache
 
 
 class Directions(object):
