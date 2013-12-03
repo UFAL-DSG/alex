@@ -801,10 +801,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         if not isinstance(dialogue_state['route_alternative'], int):
             dialogue_state['route_alternative'] = 0
 
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
-
-        # only 1 leg should be present in case we have no waypoints
-        steps = route.legs[0].steps
+        try:
+            # get the alternative we want to say now
+            route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+            # only 1 leg should be present in case we have no waypoints
+            steps = route.legs[0].steps
+        except IndexError:
+            # this will lead to apology that no route has been found
+            steps = []
 
         res = []
 
@@ -859,8 +863,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         # no route found: apologize
         if len(res) == 0:
             res.append('apology()')
-            res.append("inform(from_stop='%s')" % dialogue_state['from_stop'].mpv())
-            res.append("inform(to_stop='%s')" % dialogue_state['to_stop'].mpv())
+            res.append("inform(from_stop='%s')" % dialogue_state.directions.from_stop)
+            res.append("inform(to_stop='%s')" % dialogue_state.directions.to_stop)
 
         res_da = DialogueAct("&".join(res))
 

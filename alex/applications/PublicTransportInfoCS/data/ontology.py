@@ -31,7 +31,7 @@ ontology = {
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
         'num_transfers': set([]),
         'vehicle': set(["bus", "tram", "metro", "train", "cable_car", "ferry", ]),
-        'alternative': set(['dontcare', '1', '2', '2', '4', 'last', 'next', 'prev', ]),
+        'alternative': set(['dontcare', '1', '2', '3', '4', 'last', 'next', 'prev', ]),
     },
 
     'slot_attributes': {
@@ -119,7 +119,7 @@ ontology = {
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms',
-            #'system_selects', # until we have NLG pre-processing this is just too complex to implement
+            'system_selects',
         ],
         # not implemented yet
         'date': [
@@ -221,6 +221,7 @@ ontology = {
                                 ('', '^duration$', '')],
         },
     },
+
     'compatibility': {
         'stop_city': [
             'from_stop', 'to_stop', 'via_stop',
@@ -232,7 +233,42 @@ ontology = {
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},
-    }
+    },
+
+    # translation of the values for TTS output
+    'value_translation': {
+        'ampm': {
+            'morning': 'ráno',
+            'am': 'dopoledne',
+            'pm': 'odpoledne',
+            'evening': 'večer',
+            'night': 'v noci'
+        },
+        'vehicle': {
+            'BUS': 'autobusem',
+            'INTERCITY_BUS': 'meziměstským autobusem',
+            'TRAM': 'tramvají',
+            'SUBWAY': 'metrem',
+            'TRAIN': 'vlakem',
+            'CABLE_CAR': 'lanovkou',
+            'FERRY': 'přívozem',
+        },
+        'date_rel': {
+            'today': 'dnes',
+            'tomorrow': 'zítra',
+            'day_after_tomorrow': 'pozítří'
+        },
+        'alternative': {
+            'dontcare': 'libovolný',
+            '1': 'první',
+            '2': 'druhý',
+            '3': 'třetí',
+            '4': 'čtvrtý',
+            'last': 'poslední',
+            'next': 'předchozí',
+            'prev': 'následující',
+        }
+    },
 }
 
 

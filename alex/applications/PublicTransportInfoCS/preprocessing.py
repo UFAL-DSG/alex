@@ -11,7 +11,7 @@ from alex.components.asr.utterance import Utterance
 from alex.utils.czech_stemmer import cz_stem
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
-
+import re
 
 class PTICSSLUPreprocessing(SLUPreprocessing):
     """
@@ -42,27 +42,37 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
             (['barandov'], ['barrandov']),
             (['dejvic'], ['dejvická']),
             (['dejvice'], ['dejvická']),
+            (['kulaťák'], ['dejvická']),
+            (['kulaťáku'], ['dejvická']),
             (['litňanská'], ['letňanská']),
             (['palacké'], ['palackého']),
-            (['ajpí', 'pavlova'],   ['i','p','pavlova']),
-            (['aj','pí','pavlova'], ['i','p','pavlova']),
-            (['ípé','pa', 'pavlova'], ['i','p','pavlova']),
-            (['í','pé','pa', 'pavlova'], ['i','p','pavlova']),
-            (['i','p', 'pavlovy'], ['i','p','pavlova']),
-            (['ajpák'],   ['i','p','pavlova']),
-            (['ajpáku'],  ['i','p','pavlova']),
-            (['ípák'],    ['i','p','pavlova']),
-            (['ípáku'],   ['i','p','pavlova']),
+            (['ajpí', 'pavlova'], ['i', 'p', 'pavlova']),
+            (['aj', 'pí', 'pavlova'], ['i', 'p', 'pavlova']),
+            (['ípé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
+            (['í', 'pé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
+            (['i', 'p', 'pavlovy'], ['i', 'p', 'pavlova']),
+            (['ajpák'], ['i', 'p', 'pavlova']),
+            (['ajpáku'], ['i', 'p', 'pavlova']),
+            (['ípák'], ['i', 'p', 'pavlova']),
+            (['ípáku'], ['i', 'p', 'pavlova']),
+            (['pavlák'], ['i', 'p', 'pavlova']),
+            (['pavláku'], ['i', 'p', 'pavlova']),
             (['čaplinovo'], ['chaplinovo']),
             (['čaplinova'], ['chaplinova']),
-            (['zologická'],   ['zoologická']),
-            (['zoo','praha'], ['zoologická','zahrada']),
-            (['na','ruzyň'],           ['na','ruzyňské','letiště']),
-            (['václav','havel'],       ['letiště','václava','havla']),
-            (['václava','havla'],      ['letiště','václava','havla']),
-            (['ruzyňské','letiště'],   ['letiště','václava','havla']),
-            (['letiště','v','ruzyni'], ['letiště','václava','havla']),
+            (['zologická'], ['zoologická']),
+            (['zoo', 'praha'], ['zoologická', 'zahrada']),
+            (['na', 'ruzyň'], ['na', 'ruzyňské', 'letiště']),
+            (['václav', 'havel'], ['letiště', 'václava', 'havla']),
+            (['václava', 'havla'], ['letiště', 'václava', 'havla']),
+            (['ruzyňské', 'letiště'], ['letiště', 'václava', 'havla']),
+            (['letiště', 'v', 'ruzyni'], ['letiště', 'václava', 'havla']),
             (['smíchovském'], ['smíchovské']),
+            (['mírák'], ['náměstí', 'míru']),
+            (['míráku'], ['náměstí', 'míru']),
+            (['václavák'], ['václavské', 'náměstí']),
+            (['václaváku'], ['václavské', 'náměstí']),
+            (['karlák'], ['karlovo', 'náměstí']),
+            (['karláku'], ['karlovo', 'náměstí']),
         ]
 
     def normalise_utterance(self, utterance):
@@ -74,8 +84,8 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
 class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
     """Template NLG preprocessing routines for Czech public transport information.
 
-    This serves mainly for spelling out relative and absolute time expressions
-    in Czech.
+    This serves for spelling out relative and absolute time expressions,
+    as well as translating certain slot values into Czech.
     """
 
     def __init__(self, ontology):
@@ -86,6 +96,9 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         # keep track of temperature and temperature interval slots
         self.temp_slots = set()
         self.temp_int_slots = set()
+        # keep track of translated slots
+        self.translated_slots = set()
+        self.translations = {}
         # load their lists from the ontology
         if 'slot_attributes' in self.ontology:
             for slot in self.ontology['slot_attributes']:
@@ -97,19 +110,49 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
                     self.temp_slots.add(slot)
                 elif 'temperature_int' in self.ontology['slot_attributes'][slot]:
                     self.temp_int_slots.add(slot)
+        # load translations from the ontology
+        if 'value_translation' in self.ontology:
+            self.translations = self.ontology['value_translation']
+            for slot in self.ontology['value_translation']:
+                self.translated_slots.add(slot)
 
-    def preprocess(self, svs_dict):
-        # spell out time expressions, if applicable
+    def preprocess(self, template, svs_dict):
+        """Preprocess values to be filled into an NLG template.
+        Spells out temperature and time expressions and translates some of the values
+        to Czech.
+
+        :param svs_dict: Slot-value dictionary
+        :return: The same dictionary, with modified values
+        """
+        # regular changes to slot values
         for slot, val in svs_dict.iteritems():
+            # spell out time expressions
             if slot in self.rel_time_slots:
                 svs_dict[slot] = self.spell_time(val, relative=True)
             elif slot in self.abs_time_slots:
                 svs_dict[slot] = self.spell_time(val, relative=False)
+            # spell out temperature expressions
             elif slot in self.temp_slots:
                 svs_dict[slot] = self.spell_temperature(val, interval=False)
             elif slot in self.temp_int_slots:
                 svs_dict[slot] = self.spell_temperature(val, interval=True)
-        return svs_dict
+            # translate some slot values (default to untranslated)
+            elif slot in self.translated_slots:
+                svs_dict[slot] = self.translations[slot].get(val, val)
+        # reflect changes to slot values stored in the template
+        slot_modif = {}
+
+        def store_repl(match):
+            slot, modif = match.groups()
+            slot_modif[slot] = modif
+            return '{' + slot + '}'
+
+        template = re.sub(r'\{([^}/]+)/([^}]+)\}', store_repl, template)
+
+        for slot, modif in slot_modif.iteritems():
+            if modif == 'Cap1':
+                svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
+        return template, svs_dict
 
     HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
     HR_ENDING_DEFAULT = ''
