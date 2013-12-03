@@ -837,7 +837,12 @@ class PTICSHDCPolicy(DialoguePolicy):
                           'night': "00:00"}
 
     def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time):
+        """Interpret time, given current dialogue state most probable values for 
+        relative and absolute time and date, plus the corresponding last-talked-about value.
 
+        :return: the inferred time value
+        :rtype: datetime
+        """
         # interpret dialogue state time
         now = datetime.now()
 
