@@ -175,7 +175,7 @@ ontology = {
         ],
     },
     'last_talked_about': {
-        # introduces new slots as a marginalisation different inputs
+        # introduces new slots as a marginalisation of different inputs
         # this is performed by converting dialogue acts into inform acts
         'lta_time': {
             # the following means, every time I talk about the time, it supports the value time in slot time_sel
@@ -192,6 +192,12 @@ ontology = {
         'lta_departure_time': {
             'departure_time': [('', '^departure_time$', ''), ],
             'departure_time_rel': [('', '^departure_time_rel$', ''), ],
+            'time': [('', '^time$', ''), ],
+            'time_rel': [('', '^time_rel$', ''), ],
+        },
+        'lta_arrival_time': {
+            'arrival_time': [('', '^arrival_time$', ''), ],
+            'arrival_time_rel': [('', '^arrival_time_rel$', ''), ],
         },
         'lta_task': {
             'weather': [('', '^task$', '^weather$'), ],
