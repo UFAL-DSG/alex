@@ -37,8 +37,9 @@ def get_user_from_uri(uri):
     return p.group(1)
 
 phone_number_hash = {}
-def hash_remote_uri(remote_uri):
-#    return remote_uri
+def hash_remote_uri(cfg, remote_uri):
+    if not cfg['VoipIO']['phone_number_obfuscation']:
+        return remote_uri
     global phone_number_hash
 
     user = get_user_from_uri(remote_uri)
@@ -86,7 +87,7 @@ class AccountCallback(pj.AccountCallback):
 
         try:
             current_time = time.time()
-            remote_uri = hash_remote_uri(call.info().remote_uri)
+            remote_uri = hash_remote_uri(self.cfg, call.info().remote_uri)
 
             if not self.cfg['VoipIO']['reject_calls']:
                 if self.voipio.black_list[get_user_from_uri(remote_uri)] < current_time:
@@ -169,13 +170,13 @@ class CallCallback(pj.CallCallback):
                 self.system_logger.debug(
                     ("CallCallback::on_state : Call with {uri!s} is {st!s} last "
                      "code = {code!s} ({reas!s})").format(
-                        uri=hash_remote_uri(self.call.info().remote_uri),
+                        uri=hash_remote_uri(self.cfg, self.call.info().remote_uri),
                         st=self.call.info().state_text,
                         code=self.call.info().last_code,
                         reas=self.call.info().last_reason))
 
             if self.call.info().state == pj.CallState.CONNECTING:
-                self.voipio.on_call_connecting(hash_remote_uri(self.call.info().remote_uri))
+                self.voipio.on_call_connecting(hash_remote_uri(self.cfg, self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.CONFIRMED:
                 call_slot = self.call.info().conf_slot
@@ -218,7 +219,7 @@ class CallCallback(pj.CallCallback):
                 pj.Lib.instance().conf_connect(self.voipio.mem_player.port_slot, call_slot)
 
                 # Send the callback.
-                self.voipio.on_call_confirmed(hash_remote_uri(self.call.info().remote_uri))
+                self.voipio.on_call_confirmed(hash_remote_uri(self.cfg, self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.DISCONNECTED:
                 try:
@@ -242,7 +243,7 @@ class CallCallback(pj.CallCallback):
                     self.played_id = None
 
                 # Send the callback.
-                self.voipio.on_call_disconnected(hash_remote_uri(self.call.info().remote_uri))
+                self.voipio.on_call_disconnected(hash_remote_uri(self.cfg, self.call.info().remote_uri))
         except:
             self.voipio.close_event.set()
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the CallCallback class.')
@@ -252,7 +253,7 @@ class CallCallback(pj.CallCallback):
         try:
             if self.cfg['VoipIO']['debug']:
                 m = []
-                m.append("CallCallback::on_transfer_status : Call with %s " % hash_remote_uri(self.call.info().remote_uri))
+                m.append("CallCallback::on_transfer_status : Call with %s " % hash_remote_uri(self.cfg, self.call.info().remote_uri))
                 m.append("is %s " % self.call.info().state_text)
                 m.append("last code = %s " % self.call.info().last_code)
                 m.append("(%s)" % self.call.info().last_reason)
