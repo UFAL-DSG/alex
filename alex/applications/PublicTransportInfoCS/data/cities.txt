@@ -735,7 +735,7 @@ Cikháj
 Čikov
 Čilá
 Čilec
-Čím
+#Čím
 Čimelice
 Číměř
 Čímice

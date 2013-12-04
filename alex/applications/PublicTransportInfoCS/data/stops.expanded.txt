@@ -312,8 +312,8 @@ Chýnovská;Chýnovské;Chýnovský;Chýnovskou
 Cibulka;Cibulky;Cibulku
 Cikánka;Cikánky;Cikánku
 Cílkova;Cílkovy;Cílkovu
-Čím
-Čím , Hrdlička;Čím , Hrdličky;Čím , Hrdličku
+#Čím
+#Čím , Hrdlička;Čím , Hrdličky;Čím , Hrdličku
 Čimice;Čimic
 Čimický háj;Čimického háje;Čimickýho háje;Čimickej háj
 Čínská;Čínské;Čínský;Čínskou
