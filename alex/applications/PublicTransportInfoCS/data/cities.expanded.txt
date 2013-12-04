@@ -1980,7 +1980,7 @@ Králova Lhota;Královy Lhoty;Královu Lhotu
 Královec;Královce
 Kralovice;Kralovic
 Královice;Královic
-Královo Pole;Králova Pole
+#Královo Pole;Králova Pole
 Královské Poříčí;Královského Poříčí;Královskýho Poříčí;Královský Poříčí
 Kralupy nad Vltavou;Kralup nad Vltavou
 Králův Dvůr;Králova Dvora;Králuv Dvůr
@@ -2985,7 +2985,7 @@ Nové Město nad Metují;Nového Města nad Metují;Novýho Města nad Metují;N
 Nové Město na Moravě;Nového Města na Moravě;Novýho Města na Moravě;Nový Město na Moravě
 Nové Město pod Smrkem;Nového Města pod Smrkem;Novýho Města pod Smrkem;Nový Město pod Smrkem
 Nové Mitrovice;Nových Mitrovic;Novejch Mitrovic;Nový Mitrovice
-Nové Sady;Nových Sad;Novejch Sad;Nový Sady
+#Nové Sady;Nových Sad;Novejch Sad;Nový Sady
 Nové Sedlice;Nových Sedlic;Nových Sedlicí;Novejch Sedlic;Novejch Sedlicí;Nový Sedlice
 Nové Sedlo;Nového Sedla;Novýho Sedla;Nový Sedlo
 Nové Strašecí;Nového Strašecí;Novýho Strašecí;Nový Strašecí

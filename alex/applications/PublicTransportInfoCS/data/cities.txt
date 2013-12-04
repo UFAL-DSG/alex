@@ -1980,7 +1980,7 @@ Králova Lhota
 Královec
 Kralovice
 Královice
-Královo Pole
+#Královo Pole
 Královské Poříčí
 Kralupy nad Vltavou
 Králův Dvůr
@@ -2985,7 +2985,7 @@ Nové Město nad Metují
 Nové Město na Moravě
 Nové Město pod Smrkem
 Nové Mitrovice
-Nové Sady
+#Nové Sady
 Nové Sedlice
 Nové Sedlo
 Nové Strašecí
