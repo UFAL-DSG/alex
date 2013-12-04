@@ -20,9 +20,13 @@ from datetime import time as dttime
 
 
 def randbool(n):
+    """Randomly return True in 1 out of n cases.
+
+    :param n: Inverted chance of returning True
+    :rtype: Boolean
+    """
     if random.randint(1, n) == 1:
         return True
-
     return False
 
 
@@ -106,13 +110,15 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots that should be confirmed
         slots_tobe_confirmed = dialogue_state.get_slots_tobe_confirmed(self.policy_cfg['confirm_prob'], self.accept_prob)
         #  filter out all the slots that are not defined by the ontology to be confirmed
-        slots_tobe_confirmed = {k:v for k,v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
+        slots_tobe_confirmed = {k: v for k, v in slots_tobe_confirmed.items() if k in self.ontology.slots_system_confirms()}
         # all slots for which the policy can use ``select`` DAI
         slots_tobe_selected = dialogue_state.get_slots_tobe_selected(self.policy_cfg['select_prob'])
         #  filter out all the slots that are not defined by the ontology to be selected
-        slots_tobe_selected = {k:v for k,v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
+        slots_tobe_selected = {k: v for k, v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
         # all slots changed by a user in the last turn
-        changed_slots = dialogue_state.get_changed_slots(self.policy_cfg['accept_prob'])
+        changed_slots = dialogue_state.get_changed_slots(self.accept_prob)
+        # did the state changed at all?
+        state_changed = dialogue_state.state_changed(self.policy_cfg['min_change_prob'])
 
         if self.debug:
             s = []
@@ -127,6 +133,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             s.append("Slots to be confirmed:  %s" % unicode(slots_tobe_confirmed))
             s.append("Slots to be selected:   %s" % unicode(slots_tobe_selected))
             s.append("Changed slots:          %s" % unicode(changed_slots))
+            s.append("State changed?          %s" % unicode(state_changed))
             s = '\n'.join(s)
 
             self.system_logger.debug(s)
@@ -215,7 +222,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             # talk about weather
             w_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                           accepted_slots, changed_slots)
+                                           accepted_slots, changed_slots, state_changed)
             res_da.extend(w_da)
             res_da = self.filter_iconfirms(res_da)
         else:
@@ -223,7 +230,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_iconfirm_info(changed_slots)
             # talk about public transport
             t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                              accepted_slots, changed_slots)
+                                              accepted_slots, changed_slots, state_changed)
             res_da.extend(t_da)
             res_da = self.filter_iconfirms(res_da)
 
@@ -233,7 +240,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
 
-    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
+    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
+                              accepted_slots, changed_slots, state_changed):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
@@ -267,18 +275,35 @@ class PTICSHDCPolicy(DialoguePolicy):
             # gather known information about the connection
             req_da, conn_info = self.gather_connection_info(ds, accepted_slots)
             if len(req_da) == 0:
-                # we know everything we need -> start searching
-                res_da = self.get_directions(ds, conn_info, check_conflict=True)
+                if state_changed:
+                    # we know everything we need -> start searching
+                    res_da = self.get_directions(ds, conn_info, check_conflict=True)
+                else:
+                    res_da = self.backoff_action(ds)
             else:
                 res_da = req_da
 
         return res_da
 
-    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
+    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
+                           accepted_slots, changed_slots, state_changed):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
         :param requested_slots: The slots currently requested by the user
+        :rtype: DialogueAct
+        """
+        res_da = None
+        if state_changed:
+            res_da = self.get_weather(ds)
+        else:
+            res_da = self.backoff_action(ds)
+        return res_da
+
+    def get_weather(self, ds):
+        """Retrieve weather information according to the current dialogue state.
+
+        :param ds: The current dialogue state
         :rtype: DialogueAct
         """
         # get dialogue state values
@@ -286,13 +311,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         time_rel = ds['time_rel'].mpv()
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
+        lta_time = ds['lta_time'].mpv()
 
         # interpret time
         daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
         # check if any time is set to distinguish current/prediction
         weather_time_int = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
-            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
+            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # request the weather
         weather = self.weather.get_weather(weather_time_int, daily)
 
@@ -319,6 +345,22 @@ class PTICSHDCPolicy(DialoguePolicy):
         # weather conditions
         res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
         return res_da
+
+    def backoff_action(self, ds):
+        """Generate a random backoff dialogue act in case we don't know what to do.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct
+        """
+        if randbool(6):
+            return self.get_limited_context_help(ds)
+        elif randbool(5):
+            return DialogueAct('reqmore()')
+        elif randbool(4):
+            return DialogueAct('notunderstood()')
+        elif randbool(3):
+            return DialogueAct('irepeat()')
+        return DialogueAct('silence()')
 
     def get_an_alternative(self, ds):
         """Return an alternative route, if there is one, or ask for
@@ -471,7 +513,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        for prob, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
+        for _, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
             dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].mpv())
             res_da.append(dai)
             #confirm explicitly only one slot at the time
@@ -778,11 +820,15 @@ class PTICSHDCPolicy(DialoguePolicy):
         # interpret departure and arrival time
         departure_time_int, arrival_time_int = None, None
         if arrival_time != 'none' or arrival_time_rel != 'none':
-            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel)
+            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel,
+                                                   ds['lta_arrival_time'].mpv())
         else:
+            lta_departure_time = ds['lta_departure_time'].mpv()
+            lta_time = ds['lta_time'].mpv()
+            lta_time = lta_departure_time if lta_departure_time != 'none' else lta_time
             time_abs = departure_time if departure_time != 'none' else time
             time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
-            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel)
+            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
         # retrieve Google directions
         ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
@@ -876,10 +922,22 @@ class PTICSHDCPolicy(DialoguePolicy):
                           'evening': "18:00",
                           'night': "00:00"}
 
-    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel):
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time):
+        """Interpret time, given current dialogue state most probable values for
+        relative and absolute time and date, plus the corresponding last-talked-about value.
 
+        :return: the inferred time value
+        :rtype: datetime
+        """
         # interpret dialogue state time
         now = datetime.now()
+
+        # use only last-talked-about time (of any type -- departure/arrival)
+        if time_abs != 'none' and time_rel != 'none':
+            if lta_time.endswith('time_rel'):
+                time_abs = 'none'
+            elif lta_time.endswith('time'):
+                time_rel = 'none'
 
         # relative time
         if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
