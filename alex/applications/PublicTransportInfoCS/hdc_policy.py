@@ -117,7 +117,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         slots_tobe_selected = {k:v for k, v in slots_tobe_selected.items() if k in self.ontology.slots_system_selects()}
         # all slots changed by a user in the last turn
         changed_slots = dialogue_state.get_changed_slots(self.accept_prob)
-
+        # did the state changed at all?
+        state_changed = dialogue_state.state_changed(self.policy_cfg['min_change_prob'])
 
         if self.debug:
             s = []
@@ -132,6 +133,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             s.append("Slots to be confirmed:  %s" % unicode(slots_tobe_confirmed))
             s.append("Slots to be selected:   %s" % unicode(slots_tobe_selected))
             s.append("Changed slots:          %s" % unicode(changed_slots))
+            s.append("State changed?          %s" % unicode(state_changed))
             s = '\n'.join(s)
 
             self.system_logger.debug(s)
@@ -220,7 +222,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
             # talk about weather
             w_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                           accepted_slots, changed_slots)
+                                           accepted_slots, changed_slots, state_changed)
             res_da.extend(w_da)
             res_da = self.filter_iconfirms(res_da)
         else:
@@ -228,7 +230,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.get_iconfirm_info(changed_slots)
             # talk about public transport
             t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                              accepted_slots, changed_slots)
+                                              accepted_slots, changed_slots, state_changed)
             res_da.extend(t_da)
             res_da = self.filter_iconfirms(res_da)
 
@@ -238,7 +240,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
 
-    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
+    def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
+                              accepted_slots, changed_slots, state_changed):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
@@ -273,7 +276,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # request all unknown information
             req_da = self.request_more_info(ds, accepted_slots)
             if len(req_da) == 0:
-                if changed_slots:
+                if state_changed:
                     # we know everything we need -> start searching
                     res_da = self.get_directions(ds, check_conflict=True)
                 else:
@@ -283,7 +286,8 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return res_da
 
-    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed, accepted_slots, changed_slots):
+    def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
+                           accepted_slots, changed_slots, state_changed):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
@@ -291,7 +295,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
         res_da = None
-        if changed_slots:
+        if state_changed:
             res_da = self.get_weather(ds)
         else:
             res_da = self.backoff_action(ds)
@@ -350,7 +354,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         if randbool(6):
             return self.get_limited_context_help(ds)
-        elif randbool(6):
+        elif randbool(5):
             return DialogueAct('reqmore()')
         elif randbool(4):
             return DialogueAct('notunderstood()')
