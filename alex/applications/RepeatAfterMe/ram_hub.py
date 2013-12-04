@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 
 import multiprocessing
@@ -8,6 +9,7 @@ import random
 import cPickle as pickle
 import argparse
 import codecs
+import re
 
 import autopath
 
@@ -228,7 +230,15 @@ if __name__ == '__main__':
 
                     call_back_time = time.time() + cfg['RepeatAfterMe']['wait_time_before_calling_back']
                     # call back a default uri, if not defined call back the caller
-                    call_back_uri = cfg['RepeatAfterMe']['call_back_uri'] if ('call_back_uri' in cfg['RepeatAfterMe']) and cfg['RepeatAfterMe']['call_back_uri'] else command.parsed['remote_uri']
+                    if ('call_back_uri_subs' in cfg['RepeatAfterMe']) and cfg['RepeatAfterMe']['call_back_uri_subs']:
+                        ru = command.parsed['remote_uri']
+                        for pat, repl in cfg['RepeatAfterMe']['call_back_uri_subs']:
+                            ru = re.sub(pat, repl, ru)
+                        call_back_uri = ru
+                    elif ('call_back_uri' in cfg['RepeatAfterMe']) and cfg['RepeatAfterMe']['call_back_uri']:
+                        call_back_uri = cfg['RepeatAfterMe']['call_back_uri']
+                    else:
+                        call_back_uri = command.parsed['remote_uri']
 
                 if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                     cfg['Logging']['system_logger'].info(command)
