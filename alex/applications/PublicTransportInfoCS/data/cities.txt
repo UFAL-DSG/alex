@@ -625,7 +625,7 @@ Chocnějovice
 Chocomyšl
 Chodouň
 Chodouny
-Chodov
+#Chodov
 Chodová Planá
 Chodovlice
 Chodská Lhota
@@ -847,7 +847,7 @@ Dobrá Voda u Českých Budějovic
 Dobrá Voda u Hořic
 Dobrá Voda u Pacova
 Dobrčice
-Dobré
+#Dobré
 Dobřejovice
 Dobřeň
 Dobřenice
@@ -2678,7 +2678,7 @@ Miskovice
 Míškovice
 Míšov
 Mišovice
-Místo
+#Místo
 Mistřice
 Mistrovice
 Mladá Boleslav
@@ -4451,7 +4451,7 @@ Syrovátka
 Syrovice
 Syrovín
 Sytno
-Tábor
+#Tábor
 Tachlovice
 Tachov
 Tálín
@@ -4821,7 +4821,7 @@ Velká Buková
 Velká Bukovina
 Velká Bystřice
 Velká Chmelištná
-Velká Chuchle
+#Velká Chuchle
 Velká Chyška
 Velká Dobrá
 Velká Hleďsebe
@@ -5253,7 +5253,7 @@ Zásada
 Zásmuky
 Zašová
 Zašovice
-Zastávka
+#Zastávka
 Zástřizly
 Žatčany
 Žatec
