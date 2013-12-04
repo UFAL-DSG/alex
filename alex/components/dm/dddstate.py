@@ -11,9 +11,8 @@ from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBLi
 
 
 class D3DiscreteValue(DiscreteValue):
-    """ This is a simple implementation of probabilistic slot. It serves for the case of simple MDP approach or
-     UFAL DSTC 1.0 like dialogue state deterministic update.
-
+    """This is a simple implementation of a probabilistic slot. It serves for the case of simple MDP approach or
+    UFAL DSTC 1.0-like dialogue state deterministic update.
     """
 
     def __init__(self, values={}, name="", desc=""):
@@ -37,6 +36,9 @@ class D3DiscreteValue(DiscreteValue):
     def __getitem__(self, value):
         return self.values[value]
 
+    def get(self, value, default_prob):
+        return self.values.get(value, default_prob)
+
     def __iter__(self):
         return self.values.__iter__()
 
@@ -46,7 +48,7 @@ class D3DiscreteValue(DiscreteValue):
     def reset(self):
         self.values = defaultdict(float, {'none': 1.0, })
 
-    def set(self, value, prob = None):
+    def set(self, value, prob=None):
         """This function sets a probability of a specific value.
 
         *WARNING* This can lead to un-normalised probabilities.
@@ -67,7 +69,7 @@ class D3DiscreteValue(DiscreteValue):
             # this is a backup solution with unknown consequences
             n = len(self.values)
             for value in self.values:
-                self.values[value] = 1.0/n
+                self.values[value] = 1.0 / n
         else:
             for value in self.values:
                 self.values[value] /= s
@@ -91,16 +93,16 @@ class D3DiscreteValue(DiscreteValue):
         non_value_prob = sum([p for v, p in self.values.iteritems() if v != value])
 
         # first deny the value proportionally to the denied probability
-        self.set(value, (1.0 - dist_prob)*value_prob)
+        self.set(value, (1.0 - dist_prob) * value_prob)
 
         # second redistribute the denied probability mass to to other values proportionally to their own probability
         # if all other values have probability close to zero, then distribute the probability mass uniformly
         for v in self.values:
             if v != value:
                 if non_value_prob > 1e-9:
-                    self.add(v, dist_prob*value_prob*self.values[v]/non_value_prob)
+                    self.add(v, dist_prob * value_prob * self.values[v] / non_value_prob)
                 else:
-                    self.add(v, dist_prob*value_prob*1.0/(len(self.values) - 1))
+                    self.add(v, dist_prob * value_prob * 1.0 / (len(self.values) - 1))
 
     def mph(self):
         """The function returns the most probable value and its probability
@@ -120,9 +122,11 @@ class D3DiscreteValue(DiscreteValue):
 
     def tmphs(self):
         """This function returns two most probable values and their probabilities. If there are
-        multiple values with the same probability then it prefer non 'none' values.
+        multiple values with the same probability, it prefers non-'none' values.
 
         The function returns a tuple consisting of two tuples (probability, value).
+
+        :rtype: tuple
         """
 
         max_prob1 = -1.0
@@ -140,7 +144,7 @@ class D3DiscreteValue(DiscreteValue):
 
         return ((max_prob1, max_value1), (max_prob2, max_value2))
 
-    def test(self, test_value = None, test_prob = None, neg_val=False, neg_prob=False):
+    def test(self, test_value=None, test_prob=None, neg_val=False, neg_prob=False):
         """ Test the most probable value of the slot whether:
 
         1. the most probable value is equal to test_value and
@@ -201,21 +205,21 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         s = []
         s.append("D3State - Dialogue state content:")
         s.append("")
-        s.append("{slot:20} = {value}".format(slot="ludait",value=unicode(self.slots["ludait"])))
+        s.append("{slot:20} = {value}".format(slot="ludait", value=unicode(self.slots["ludait"])))
 
         for name in [sl for sl in sorted(self.slots) if not sl.startswith('ch_') and
                 not sl.startswith('sh_') and not sl.startswith('rh_') and not sl.startswith('lta_') and
                 not sl.startswith("ludait") and isinstance(self.slots[sl], D3DiscreteValue)]:
-            s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
+            s.append("{slot:20} = {value}".format(slot=name, value=unicode(self.slots[name])))
         s.append("")
 
         for prefix in ['lta_', 'rh_', 'ch_', 'sh_']:
             for name in [sl for sl in sorted(self.slots) if sl.startswith(prefix)]:
-                s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
+                s.append("{slot:20} = {value}".format(slot=name, value=unicode(self.slots[name])))
             s.append("")
 
         for name in [sl for sl in sorted(self.slots) if not isinstance(self.slots[sl], D3DiscreteValue)]:
-            s.append("{slot:20} = {value}".format(slot=name,value=unicode(self.slots[name])))
+            s.append("{slot:20} = {value}".format(slot=name, value=unicode(self.slots[name])))
 
         s.append("")
 
@@ -390,15 +394,15 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             for dai in system_da:
                 if dai.dat == "inform":
                     # set that the system already informed about the slot
-                    self.slots["rh_" + dai.name].set({"system-informed": 1.0,})
-                    self.slots["ch_" + dai.name].set({"system-informed": 1.0,})
-                    self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["rh_" + dai.name].set({"system-informed": 1.0, })
+                    self.slots["ch_" + dai.name].set({"system-informed": 1.0, })
+                    self.slots["sh_" + dai.name].set({"system-informed": 1.0, })
 
                 if dai.dat == "iconfirm":
                     # set that the system already informed about the slot
-                    self.slots["rh_" + dai.name].set({"system-informed": 1.0,})
-                    self.slots["ch_" + dai.name].set({"system-informed": 1.0,})
-                    self.slots["sh_" + dai.name].set({"system-informed": 1.0,})
+                    self.slots["rh_" + dai.name].set({"system-informed": 1.0, })
+                    self.slots["ch_" + dai.name].set({"system-informed": 1.0, })
+                    self.slots["sh_" + dai.name].set({"system-informed": 1.0, })
 
         # now process the user dialogue act
         # processing the low probability DAIs first, emphasize the dialogue acts with high probability
@@ -563,8 +567,11 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
     def get_changed_slots(self, cha_prob):
         """Returns all slots that has changed from the previous turn. Because the change is determined by change in
-        probability for a particular value, the can be vary small changes. Therefore we will report only changes
-        for values with probability larger then some threshold.
+        probability for a particular value, there may be very small changes. Therefore, this will only report changes
+        for values with a probability larger than the given threshold.
+
+        :param cha_prob: minimum current probability of the most probable hypothesis to be reported
+        :rtype: dict
         """
         changed_slots = {}
 
@@ -595,3 +602,38 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             return self.get_accepted_slots(cha_prob)
         else:
             return {}
+
+    def state_changed(self, cha_prob):
+        """Returns a boolean indicating whether the dialogue state changed significantly
+        since the last turn. True is returned if at least one slot has at least one value
+        whose probability has changed at least by the given threshold since last time.
+
+        :param cha_prob: minimum probability change to be reported
+        :rtype: Boolean
+        """
+        if len(self.turns) >= 2:
+            cur_slots = self.turns[-1][2]
+            prev_slots = self.turns[-2][2]
+
+            for slot in cur_slots:
+                if not isinstance(cur_slots[slot], D3DiscreteValue):
+                    continue
+
+                for value, cur_prob in cur_slots[slot].items():
+                    if value in ['none', 'system-informed', None]:
+                        continue
+                    prev_prob = prev_slots[slot].get(value, 0.0)
+                    if abs(cur_prob - prev_prob) > cha_prob:
+                        return True
+        elif len(self.turns) == 1:
+            slots = self.turns[-1][2]
+            for slot in slots:
+                if not isinstance(slots[slot], D3DiscreteValue):
+                    continue
+                prob, value = slots[slot].mph()
+                if value in ['none', 'system-informed', None]:
+                    continue
+                if prob > cha_prob:
+                    return True
+            pass
+        return False
