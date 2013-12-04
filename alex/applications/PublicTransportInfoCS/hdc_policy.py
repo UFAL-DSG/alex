@@ -589,7 +589,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # retrieve the slot variables
         from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else None
-        to_stop_val = ds['to_stop'].mpv() if 'from_stop' in accepted_slots else None
+        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else None
         from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else None
         to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else None
 
