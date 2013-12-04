@@ -3,7 +3,7 @@ Alex Dialogue Systems Framework
 
 Description
 -----------------
-The Alex Dialogue Systems Framework is named after the famous parrot Alex: `Wikipedia Alex, the parrot <http://en.wikipedia.org/wiki/Alex_(parrot)>`_
+The Alex Dialogue Systems Framework is named after `the famous parrot Alex <http://en.wikipedia.org/wiki/Alex_(parrot)>`_
 
 This framework is being developed by the dialogue systems group at UFAL - http://ufal.mff.cuni.cz/ -
 the Institute of Formal and Applied Linguistics, Faculty of Mathematics and Physics, Charles University in Prague,
