@@ -312,8 +312,8 @@ Chýnovská
 Cibulka
 Cikánka
 Cílkova
-Čím
-Čím, Hrdlička
+#Čím
+#Čím, Hrdlička
 Čimice
 Čimický háj
 Čínská
