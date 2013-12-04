@@ -120,7 +120,11 @@ class TextHub(Hub):
         nblist = UtteranceNBList()
         i = 1
         while i < 100:
-            l = raw_input("User %d:    " % i).decode('utf8')
+            l = raw_input("User %d:    " % i)
+            try:
+                l = l.decode('utf8')
+            except:  # if we use ipdb, it already gives us UTF-8-encoded input :-(
+                pass
             if l.startswith("."):
                 print
                 break
