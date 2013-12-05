@@ -103,6 +103,7 @@ class PTICSHDCSLU(SLUInterface):
 
                 # test short preceding context to find the stop type (from, to, via)
                 # start from a narrower context and expand up to 3 words left
+                # TODO be more efficient
                 for prec_context in xrange(1, 4):
                     for cur_wp_type, phrases in phr_wp_types:
                         if any_phrase_in(u[max(last_wp_pos, i - prec_context):i], phrases):
