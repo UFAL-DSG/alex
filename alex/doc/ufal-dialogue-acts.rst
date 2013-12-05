@@ -3,11 +3,6 @@ UFAL Dialogue act scheme
 
 The purpose of this document is to describe the structure and function of dialogue acts used in spoken dialogue systems developed at UFAL, MFF, UK, Czech Republic.
 
-
-Filip Jurcicek
-
-
-
 Definition of dialogue acts
 ===========================
 
@@ -152,7 +147,7 @@ This section presents examples of dialogue acts:
     restart()                       'can we start again please'
                                     'could we start again'
 
-    select(food="Chinese", food="Italian)   
+    select(food="Chinese")&select(food="Italian)   
                                     'do you want Chinese or Italian food'
 
     thankyou()                      'allright thank you then i'll have to look somewhere else'
@@ -208,7 +203,7 @@ An example dialogue form tourist information domain is in the following table:
 | User     | I want Italian.                    | ``inform(food="Italian")``     |
 |          |                                    |                                |
 +----------+------------------------------------+--------------------------------+
-| System   | Did you say Italian                | ``confirm(food="Italian")``    |
+| System   | Did you say Italian?               | ``confirm(food="Italian")``    |
 |          |                                    |                                |
 +----------+------------------------------------+--------------------------------+
 | User     | Yes                                | ``affirm()``                   |
@@ -259,7 +254,7 @@ From experience, it appears that the easiest approach to build a statistical par
 
 To build a data driven SLU, the following approach is recommended:
 
-#.  after some data is collected, e.g. a prototype of dialogue system using a handcrafted parser, the audio from the collected calls is transcribed (using humans) and then parsed using the handcrafted parser,
+#.  after some data is collected, e.g. a prototype of dialogue system using a handcrafted parser, the audio from the collected calls is manually transcribed and then parsed using the handcrafted parser,
 #.  the advantage of using automatic SLU annotations is that they are easy to obtain and reasonably accurate only several percent lower to what one can get from human annotators.
 #.  if better accuracy is needed then it is better to fix the automatic semantic annotation by humans,
 #.  then a data driven parser is trained using this annotation
@@ -278,81 +273,83 @@ Apendix A: UFAL Dialogue acts
 =============================
 
 
-+-----------------------+--------------------------------------------------------------------------------------+
-| Act                   | Description                                                                          |
-|                       |                                                                                      |
-+=======================+======================================================================================+
-| ``ack()``             | back channel – simple OK                                                             |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``affirm()``          | acknowledgement - simple "Yes"                                                       |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``apology()``         | apology for misunderstanding                                                         |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``bye()``             | end of dialogue                                                                      |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``canthearyou()``     | signalling problem with communication channel or that there is an unexpected silence |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``confirm(x=y)``      | confirm that x equals to y                                                           |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``iconfirm(x=y)``     | implicitly confirm that x equals to y                                                |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``deny(x=y)``         | denies some information, equivalent to ``inform(x != y)``                            |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``hangup()``          | end of call because someone hungup                                                   |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``hello()``           | start of dialogue                                                                    |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``help()``            | provide context sensitive help                                                       |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``inform(x=y)``       | inform x equals to y                                                                 |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``inform(name=none)`` | inform that “there is no such entity that ... “                                      |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``negate()``          | negation - simple “No”                                                               |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``notuderstood()``    | informs that the last input was not understood                                       |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``null()``            | silence, empty sentence, something that is not possible to interpret, does nothing   |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``repeat()``          | asks to                                                                              |
-|                       | repeat the last utterance                                                            |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``irepeat()``         | repeats the last uttered sentence by the system                                      |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``reqalts()``         | request for alternative options                                                      |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``reqmore()``         | request for more details bout the current option                                     |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``request(x)``        | request for information about x                                                      |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``restart()``         | restart the dialogue, forget all provided info                                       |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``select(x=y, x=z)``  | select between two values of the same slot                                           |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
-| ``thankyou()``        | simply thank you                                                                     |
-|                       |                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------+
++-----------------------------+--------------------------------------------------------------------------------------+
+| **Act**                     | **Description**                                                                      |
+|                             |                                                                                      |
++=============================+======================================================================================+
+| ``ack()``                   | back channel – simple OK                                                             |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``affirm()``                | acknowledgement - simple "Yes"                                                       |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``apology()``               | apology for misunderstanding                                                         |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``bye()``                   | end of a dialogue                                                                    |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``canthearyou()``           | signalling problem with communication channel or that there is an unexpected silence |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``confirm(x=y)``            | confirm that x equals to y                                                           |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``iconfirm(x=y)``           | implicitly confirm that x equals to y                                                |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``deny(x=y)``               | denies some information, equivalent to ``inform(x != y)``                            |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``hangup()``                | end of call because someone hungup                                                   |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``hello()``                 | start of a dialogue                                                                  |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``help()``                  | provide context sensitive help                                                       |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``inform(x=y)``             | inform x equals to y                                                                 |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``inform(name=none)``       | inform that “there is no such entity that ... “                                      |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``negate()``                | negation - simple “No”                                                               |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``notuderstood()``          | informs that the last input was not understood                                       |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``null()``                  | silence, empty sentence, something that is not possible to interpret, does nothing   |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``repeat()``                | asks to repeat the last utterance                                                    |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``irepeat()``               | repeats the last uttered sentence by the system                                      |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``reqalts()``               | request for alternative options                                                      |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``reqmore()``               | request for more details bout the current option                                     |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``request(x)``              | request for information about x                                                      |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``restart()``               | restart the dialogue, forget all provided info                                       |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``select(x=y)&select(x=z)`` | select between two values of the same slot                                           |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``silence()``               | user or the system does not say anything and remain silent                           |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
+| ``thankyou()``              | simply thank you                                                                     |
+|                             |                                                                                      |
++-----------------------------+--------------------------------------------------------------------------------------+
 
