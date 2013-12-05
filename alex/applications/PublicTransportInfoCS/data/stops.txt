@@ -1,31 +1,7 @@
 #
 # PID (Praha a okolí)
 #
-Výstaviště
-Strašnice
-Hradčany
 #Roztoky
-Písnická
-Mikulova
-Letiště Václava Havla
-Vinohrady
-Vinohradská
-Bělohradská
-Bělohrady
-Hostivař
-#Praha
-#Brno
-#Plzeň
-#Olomouc
-#Liberec
-#Pardubice
-#Chuchle
-Smíchov
-Holešovice
-Barrandov
-Zvonařka
-Žižkov
-Stromovka
 Albertov
 Ametystová
 Amforová
@@ -346,10 +322,10 @@ Davle, u Kiliána
 Davle, u pomníku
 Dědina
 Dědinova
-Dejvická
+Dejvická	Dejvice	Kulaťák
 Děkanka
 Dělnická
-Depo Hostivař
+Depo Hostivař	Hostivař
 Depo Kačerov
 Depo Zličín
 Dětská nemocnice Karlov
@@ -535,7 +511,7 @@ Hostýnská
 Hotel Golf
 Hovorčovice
 Hovorčovice, u kostela
-Hradčanská
+Hradčanská	Hradčany
 Hradešín
 Hradešín, Obecní úřad
 Hradešín, sklady Marca
@@ -707,7 +683,7 @@ Káraný, vodárna
 Karenova
 Karlík
 Karlínské náměstí
-Karlovo náměstí
+Karlovo náměstí	Karlák
 Karlovy lázně
 Karlštejn
 Karlštejnská
@@ -994,7 +970,7 @@ Lešanská
 Letecké muzeum
 Letecké opravny
 Letenské náměstí
-Letiště
+Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Letiště v Ruzyni
 Letňanská
 Letňany
 Lety
@@ -1003,7 +979,7 @@ Lety, Na Návsi
 Levského
 Lhota
 Lhotecký les
-Lhotka
+Lhotka	Písnická
 Libčice nad Vltavou
 Libčice nad Vltavou - Letky
 Liběchovská
@@ -1035,7 +1011,7 @@ Lichoceves, Noutonice
 Lidečská
 Lihovar
 Limuzská
-Lipanská
+Lipanská	Žižkov
 Lipany
 Lipence
 Lipnická
@@ -1248,7 +1224,7 @@ Nádraží Braník
 Nádraží Bubeneč
 Nádraží Čakovice
 Nádraží Dolní Počernice
-Nádraží Holešovice
+Nádraží Holešovice	Holešovice
 Nádraží Horní Měcholupy
 Nádraží Horní Počernice
 Nádraží Hostivař
@@ -1288,7 +1264,7 @@ Na Lukách
 Na Lysinách
 Náměstí Bratří Synků
 Náměstí Jiřího Berana
-Náměstí Míru
+Náměstí Míru	Mírák
 Náměstí Před Bateriemi
 Náměstí Republiky
 Náměstí U Lva
@@ -1952,7 +1928,7 @@ Sibiřské náměstí
 Sibřina
 Sibřina, Říčanská
 Sibřina, Stupice
-Sídliště Barrandov
+Sídliště Barrandov	Barrandov
 Sídliště Bohnice
 Sídliště Čakovice
 Sídliště Červený Vrch
@@ -2033,7 +2009,7 @@ Sluhy, rozcestí Brázdim
 Sluštice, škola
 Služská
 Smaragdová
-Smíchovské nádraží
+Smíchovské nádraží	Smíchov
 Smiřická
 Smržovská
 Šmukýřka
@@ -2111,7 +2087,7 @@ Strančice, Svojšovice
 Strančice, Všechromy
 Strančice, Všechromy, náves
 Strančice, železniční stanice
-Strašnická
+Strašnická	Strašnice
 Stratov
 Strážní
 Středokluky
@@ -2364,7 +2340,7 @@ U Zvonu
 Vackov
 Vackova
 Václavka
-Václavské náměstí
+Václavské náměstí	Václavák
 Vajgarská
 Valtická
 V Chotejně
@@ -2410,7 +2386,7 @@ Ve Žlíbku
 Vidoule
 Vinice
 Vinohradská tržnice
-Vinohradská vodárna
+Vinohradská vodárna	Vinohrady
 Vinohradské hřbitovy
 Vinopalnická
 Vinoř
@@ -2526,7 +2502,7 @@ Vysoký Újezd, Kuchař, I {okres Praha - západ}
 Vysoký Újezd {okres Benešov}
 Vysoký Újezd {okres Praha - západ}
 Vysoký Újezd, sokolovna {okres Praha - západ}
-Výstaviště Holešovice
+Výstaviště Holešovice	Výstaviště	Stromovka
 Výstaviště Letňany
 Výtoň
 Výžerky
@@ -2647,7 +2623,7 @@ Zlončice
 Zlonín
 Zlosyň
 Zmrzlík
-Zoologická zahrada
+Zoologická zahrada	Zoo Praha
 Žvahov
 Zvánovice
 Zvánovice, Kádov
