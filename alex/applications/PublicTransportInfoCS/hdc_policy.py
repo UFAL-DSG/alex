@@ -277,7 +277,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if len(req_da) == 0:
                 if state_changed:
                     # we know everything we need -> start searching
-                    res_da = self.get_directions(ds, conn_info, check_conflict=True)
+                    ds.conn_info = conn_info
+                    res_da = self.get_directions(ds, check_conflict=True)
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -787,7 +788,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct('inform(num_transfers="%d")' % n)
         return da
 
-    def get_directions(self, ds, conn_info, route_type='true', check_conflict=False):
+    def get_directions(self, ds, route_type='true', check_conflict=False):
         """Retrieve Google directions, save them to dialogue state and return
         corresponding DAs.
 
@@ -800,6 +801,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 destination stops are different and issue a warning DA if not.
         :rtype: DialogueAct
         """
+        conn_info = ds.conn_info
         # check for route conflicts
         if (check_conflict and (conn_info['from_stop'] == conn_info['to_stop'])
                 and (conn_info['from_city'] == conn_info['to_city'])):
