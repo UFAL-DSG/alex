@@ -259,7 +259,7 @@ From experience, it appears that the easiest approach to build a statistical par
 
 To build a data driven SLU, the following approach is recommended:
 
-#.  after some data is collected, e.g. a prototype of dialogue system using a handcrafted parser, the audio from the collected calls is transcribed (using humans) and then parsed using the handcrafted parser,
+#.  after some data is collected, e.g. a prototype of dialogue system using a handcrafted parser, the audio from the collected calls is manually transcribed and then parsed using the handcrafted parser,
 #.  the advantage of using automatic SLU annotations is that they are easy to obtain and reasonably accurate only several percent lower to what one can get from human annotators.
 #.  if better accuracy is needed then it is better to fix the automatic semantic annotation by humans,
 #.  then a data driven parser is trained using this annotation
