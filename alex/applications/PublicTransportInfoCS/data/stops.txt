@@ -3131,3 +3131,346 @@ Zámecká
 Žitná
 Životského
 Žlutý kopec
+#
+# Plzeň a okolí
+#
+Anglické nábřeží, Pražská
+Anglické nábřeží
+Barvínková
+Bílá Hora
+Bílá Hora, žel. st.	Bílá Hora, železniční stanice	Bílá Hora, nádraží
+Boettingerova
+Bolevec
+Bolevec, u žel. zast.	Bolevec, u železniční zastávky
+Bolevecká náves
+Borská pole, Folmavská
+Borská pole, Panasonic
+Borská pole, Teslova
+Bory
+Bory, Heyrovského
+Bory, NVÚ
+Božkov
+Brněnská
+Brojova
+Brožíkova
+Bručná
+Břeclavská
+Bukovec
+Bukovec, papírna
+Bušovice
+Bušovice, Sedlecko
+CAN, Husova
+CAN, Skvrňanská
+CAN, Tylova
+Částkova
+Částkova, Sušická
+Čechurov, rozcestí
+Černice
+Černice, K Cihelnám
+Černice, K Plzenci
+Černice, k Radyni
+Černice, nákupní zóna
+Černice, náves
+Černice, U hřiště
+Červený Hrádek
+Čisticí stanice
+ČSAO
+Divadlo J. K. Tyla	Divadlo Josefa Kajetána Tyla
+Dobrovského
+Dobrovského, Klatovská
+Dobřanská
+Domažlická, ČETRANS
+Doubravka, Na dlouhých
+Doubravka, Zábělská
+Doudlevce ETZ
+Dvořákova
+Dýšina
+Dýšina
+Dýšina, Armaturka
+Dýšina, generála Pattona
+Dýšina, náves
+Dýšina, Nová Huť
+Dýšina, Škoda Engineering
+Dýšina, u viaduktu
+Dýšina, u viaduktu
+Fakultní nemoc. Bory	Fakultní nemocnice Bory
+Fakultní nemoc. Lochotín	Fakultní nemocnice Lochotín
+Fialková
+Folmavská, rondel
+Francouzská
+Gambrinus
+Garáže
+Generála Lišky
+Gerská
+Gigant
+Goethova
+Habrmannova
+Habrmannovo náměstí
+Hlavní nádraží ČD, Americká
+Hlavní nádraží ČD, Sirková
+Hlavní nádraží ČD, Šumavská
+Hlavní nádraží ČD, U Ježíška
+Hodonínská
+Hokejová hala
+Hradiště
+Hřbitovní
+Husův park
+Chaty
+Chlumek
+Chodské náměstí
+Chotěšov, u školy
+Chotěšov, žel. st.	Chotěšov, železniční stanice	Chotěšov, nádraží
+Chrást, konečná
+Chrást, Lidový dům
+Chrást, rozvodna
+Chrást, u školy
+Chválenická
+II. poliklinika	Druhá poliklinika
+III. br., Domažlická	Třetí brána, Domažlická
+III. br., Vejprnická	Třetí brána, Vejprnická
+Internáty
+IV. poliklinika	Čtvrtá poliklinika
+Jateční
+Jatky
+Jedlová
+Jižní předměstí, Borská
+Jižní předměstí
+K nemocnici
+K Prokopávce
+K Řečišti
+Kalikova
+Karlov, sedlárna
+Karlovarská
+Ke dráze
+Ke Špitálskému lesu
+Koperníkova
+Košutka
+Košutka, Krašovská
+Koterov
+Kovošrot
+Kozolupy, I
+Kozolupy, u Jána
+Krejčíkova
+Křimice
+Křimice, Chebská
+Křimice, pošta 2
+Křimice, rozvodna
+Křimice, U zámku
+Křimická
+Kyšice
+Kyšice
+Kyšice, OÚ
+Lábkova
+Lék. fakulta, Karlovarská	Lékařská fakulta, Karlovarská
+Lék. fakulta, Lidická	Lékařská fakulta, Lidická
+Lék. fakulta, Lochotín	Lékařská fakulta, Lochotín
+Letkov
+Letkovská
+Letná
+Lhota
+Lhota, náves
+Lidická
+Liliová
+Líně
+Líně, Sulkov
+Litice, na návsi
+Litice, U školy
+Litice, Veveří
+Lobzy, Pod vrchem
+Lodní
+Macháčkova
+Macháčkova BUS
+Majakovského
+Malesice
+Malesická
+Malesická BUS
+Malická
+Malostranská
+Malý Bolevec
+Masarykovo náměstí
+Město Touškov
+Mikulášská
+Mikulášské náměstí
+Mlýnské nábřeží
+Mohylová
+Morseova
+Mozartova
+Mrakodrap
+Muzeum
+Na dlouhých
+Na Chmelnicích
+Na rampě
+Na rozcestí
+Na Rychtářce
+Na samotě
+Na spojce
+Nad Hrádkem
+Nad Zátiším
+Nákupní středisko
+Náměstí generála Píky
+Náměstí M. Horákové	Náměstí Milady Horákové
+Náměstí Míru
+Náměstí Republiky
+Náměstí Republiky, Dřevěná
+NC, Folmavská	Nákupní centrum, Folmavská
+Nemocnice Privamed
+Nová Hospoda
+Nová Ves, náves
+Obchodní
+Obchodní, rondel
+Okounová
+Okounová BUS
+Olšová
+Otýlie Beníškové
+Pampelišková
+Petřínská
+Pietas
+Plzeňka
+Pod Kyjovem
+Pod Záhorskem
+Pod zámečkem
+Podhájí
+Podnikatelská
+Podnikatelská, Daiho
+Podnikatelská, Vltava
+Prokopova
+Průmyslová
+Radčice
+Radčice, náves
+Radobyčice, Dlážděná
+Radobyčice, Podhájí
+Radobyčice, Sportovní
+Révová
+Rolnické náměstí
+Rondel
+Sady Pětatřicátníků
+Samaritská
+Severka
+Severka BUS
+Skautská
+Skvrňany, sídliště
+Skvrňany, Škoda VII.b.	Skvrňany, Škoda sedmá brána
+Sladkovského
+Sladkovského, HOSPIC
+Sladkovského, U Duhy
+Sladová
+Slovanská alej
+Slovanské údolí
+Slovany, n. M. Horákové	Slovany, náměstí Milady Horákové	Slovany, náměstí M. Horákové
+Slupská
+Smědčice
+Sokolovská
+Sokolská
+Solní, pošta
+SPŠD a S
+Stadion Lokomot.	Stadion Lokomotiva	Stadion Lokomotivy
+Staré letiště
+Starý Plzenec
+Starý Plzenec, Bezručova
+Starý Plzenec, Malá strana
+Starý Plzenec, Nad tratí
+Starý Plzenec, náměstí
+Starý Plzenec, Sedlec
+Starý Plzenec, Sedlec, rozc.	Starý Plzenec, Sedlec, rozcestí
+Starý Plzenec, u kravína
+Starý Plzenec, vilová čtvrť
+Starý Plzenec, zdrav. stř.	Starý Plzenec, zdravotní středisko
+Starý Plzenec, žel. st.	Starý Plzenec, železniční stanice	Starý Plzenec, nádraží
+Stav. stroje, Rokycanská	Stavební stroje, Rokycanská
+Stavební podnik
+Stavební stroje
+Studentská
+Studentská, Komenského
+Sukova
+Sulislavská
+Světovar
+Světovar BUS
+Světovar, Jasmínová
+Šimerova
+Škoda JS
+Škoda V. brána	Škoda pátá brána
+Škoda VII. brána	Škoda sedmá brána
+Škoda VIII. brána	Škoda osmá brána
+Šumavská
+Švihovská
+Těšínská
+Tleskačova
+Tomanova
+Třemošná
+Třemošná, Orlík
+Třemošná, ZŠ I	Třemošná, Základní škola jedna
+Tylova
+Tyršův most
+Tyršův sad
+U Apolla
+U Astry
+U Bouzků
+U Družby
+U Družby BUS
+U Gery
+U Gery, Lidická
+U hřbitova
+U kasáren
+U Kondrů
+U Nové Hospody
+U Pietasu
+U plynárny
+U Podhájí
+U Práce, Americká
+U Práce, Klatovská
+U Prazdroje
+U přehrady
+U přejezdu
+U Světovaru
+U teplárny
+U teplárny BUS
+U továrničky
+U trati
+Újezd, Hrádecká
+Újezd, rozcestí
+Újezd, Staroveská
+Újezd, V brance
+Ulice 17. listopadu
+Ulice B. Němcové	Ulice Boženy Němcové
+Ulice Družby
+Ulice K. Steinera	Ulice Karla Steinera
+Ulice T. Brzkové	Ulice Terezie Brzkové
+Ulice U školky
+Úněšovská, Globus
+Ústřední hřbitov I.
+Ústřední hřbitov II.
+V Ráji
+V sadech Pětatřicátníků
+V zahradách
+Valcha
+Valcha, nádraží
+Valcha, Sulkovská
+Valcha, u prodejny I.
+Valcha, u prodejny II.
+Vaníčkova
+Ve višňovce
+Vejprnice
+Vejprnice, bytovky
+Vejprnice, konečná
+Vejprnická, Internáty
+Vinice
+Vochov
+Vřesová
+Výstaviště
+Zábělá
+Zadní Roudná
+Zadní Skvrňany
+Západočeská univerzita
+Zátiší, Línská
+Zátiší, U hřbitova
+Zátiší, U panelárny
+Zbůch
+Zbůch, Starý důl rozc.	Zbůch, Starý důl rozcestí
+Zelenohorská
+Zimní stadion
+Zruč - Senec
+Zruč - Senec, rozc.	Zruč - Senec, rozcestí
+Zruč - Senec, u Drudíků
+Zruč - Senec, u pomníku
+Zruč - Senec, v koutě
+Zvon

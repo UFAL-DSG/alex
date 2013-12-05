@@ -258,6 +258,7 @@ ontology = {
             'TRAIN': 'vlakem',
             'CABLE_CAR': 'lanovkou',
             'FERRY': 'přívozem',
+            'TROLLEYBUS': 'trolejbusem',
         },
         'date_rel': {
             'today': 'dnes',

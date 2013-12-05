@@ -889,7 +889,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                          next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
-                    res.append("inform(duration=0:%02d)" % (step.duration / 60))
+                    #res.append("inform(duration=0:%02d)" % (step.duration / 60))
             # public transport
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)

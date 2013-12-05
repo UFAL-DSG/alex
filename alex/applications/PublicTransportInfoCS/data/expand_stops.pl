@@ -119,6 +119,7 @@ while ( my $line = <$in> ) {
             # merge all variants of the same case (+ avoid repeating)
             cartesian {
                 my $forms_str = join( ' ', @_ );
+                $forms_str =~ s/ ([\.,])/$1/g;  # avoid spaces before comma or period
                 push @cases, $forms_str if ( !grep { $_ eq $forms_str } @cases );
             }
             @forms;

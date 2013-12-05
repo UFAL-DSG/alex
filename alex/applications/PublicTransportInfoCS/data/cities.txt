@@ -246,7 +246,7 @@ Boršov
 Boršov nad Vltavou
 Bor u Skutče
 Borušov
-Bory
+#Bory
 Boseň
 Bošice
 Bošilec
@@ -1434,7 +1434,7 @@ Hrádek
 Hrádek nad Nisou
 Hradešice
 Hradešín
-Hradiště
+#Hradiště
 Hradištko
 Hranice
 Hraničné Petrovice
@@ -1573,7 +1573,7 @@ Javůrek
 Jedlá
 Jedlany
 Jedlí
-Jedlová
+#Jedlová
 Jedomělice
 Jedousov
 Jedovnice
@@ -2514,7 +2514,7 @@ Malé Kyšice
 Malenice
 Malenovice
 Malé Přítočno
-Malesice
+#Malesice
 Malešov
 Malešovice
 Malé Svatoňovice
@@ -3617,7 +3617,7 @@ Račín
 Račiněves
 Racková
 Rácovice
-Radčice
+#Radčice
 Radějov
 Radějovice
 Radenice
@@ -4056,7 +4056,7 @@ Sloup
 Sloupnice
 Sloupno
 Sloup v Čechách
-Slovany
+#Slovany
 Sloveč
 Slověnice
 Sluhy

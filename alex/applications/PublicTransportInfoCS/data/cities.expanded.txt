@@ -246,7 +246,6 @@ Boršov;Boršova;Boršovu;Boršově
 Boršov nad Vltavou;Boršova nad Vltavou;Boršovu nad Vltavou;Boršově nad Vltavou
 Bor u Skutče;Boru u Skutče
 Borušov;Borušova;Borušovu;Borušově
-Bory;Borů;Borům;Borum;Borech
 Boseň
 Bošice;Bošic;Bošicím;Bošicům;Bošicích
 Bošilec;Bošilce;Bošilci
@@ -1431,7 +1430,6 @@ Hrádek;Hrádku
 Hrádek nad Nisou;Hrádku nad Nisou
 Hradešice;Hradešic;Hradešicím;Hradešicům;Hradešicích
 Hradešín;Hradešína;Hradešínu;Hradešíně
-Hradiště;Hradišti
 Hradištko;Hradištka;Hradištku
 Hranice;Hranic;Hranicí;Hranicím;Hranici;Hranicích
 Hraničné Petrovice;Hraničných Petrovic;Hraničnejch Petrovic;Hraničným Petrovicím;Hraničným Petrovicům;Hraničnejm Petrovicím;Hraničnejm Petrovicům;Hraničný Petrovice;Hraničných Petrovicích;Hraničnejch Petrovicích
@@ -1570,7 +1568,6 @@ Javůrek;Javůrka;Javůrkovi;Javůrku
 Jedlá;Jedlé;Jedlý;Jedlou
 Jedlany
 Jedlí
-Jedlová;Jedlové;Jedlový;Jedlovou
 Jedomělice;Jedomělic;Jedomělicím;Jedomělicům;Jedomělicích
 Jedousov;Jedousova;Jedousovu;Jedousově
 Jedovnice;Jedovnic;Jedovnicím;Jedovnicům;Jedovnicích
@@ -2511,7 +2508,6 @@ Malé Kyšice;Malých Kyšic;Malejch Kyšic;Malým Kyšicím;Malým Kyšicům;Ma
 Malenice;Malenic;Malenicím;Malenicům;Malenicích
 Malenovice;Malenovic;Malenovicím;Malenovicům;Malenovicích
 Malé Přítočno;Malého Přítočna;Malýho Přítočna;Malému Přítočnu;Malýmu Přítočnu;Malý Přítočno;Malém Přítočně;Malém Přítočnu;Malým Přítočně;Malým Přítočnu;Malym Přítočně;Malym Přítočnu
-Malesice;Malesic;Malesicím;Malesicům;Malesicích
 Malešov;Malešova;Malešovu;Malešově
 Malešovice;Malešovic;Malešovicím;Malešovicům;Malešovicích
 Malé Svatoňovice;Malých Svatoňovic;Malejch Svatoňovic;Malým Svatoňovicím;Malým Svatoňovicům;Malejm Svatoňovicím;Malejm Svatoňovicům;Malý Svatoňovice;Malých Svatoňovicích;Malejch Svatoňovicích
@@ -3613,7 +3609,6 @@ Račín;Račína;Račínu;Račíně
 Račiněves;Račiněvsi
 Racková;Rackové;Rackový;Rackovou
 Rácovice;Rácovic;Rácovicím;Rácovicům;Rácovicích
-Radčice;Radčic;Radčicím;Radčicům;Radčicích
 Radějov;Radějova;Radějovu;Radějově
 Radějovice;Radějovic;Radějovicím;Radějovicům;Radějovicích
 Radenice;Radenic;Radenicím;Radenicům;Radenicích
@@ -4052,7 +4047,6 @@ Sloup;Sloupu;Sloupě
 Sloupnice;Sloupnic;Sloupnicí;Sloupnicím;Sloupnici;Sloupnicích
 Sloupno;Sloupna;Sloupnu;Sloupně
 Sloup v Čechách;Sloupu v Čechách;Sloupě v Čechách
-Slovany;Slovanů;Slovanům;Slovanum;Slovanech
 Sloveč;Slovči
 Slověnice;Slověnic;Slověnicím;Slověnicům;Slověnicích
 Sluhy;Sluh;Sluhám;Sluhách
