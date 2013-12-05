@@ -20,5 +20,5 @@ Original data sources
 
 * The plain list of stops in Prague (including the surrounding towns) has been obtained by running ``pdftotext`` on `this PDF from the PID website <http://www.ropid.cz/data/Galleries/70/100/d790_1_Seznam_zastavek_2013-07.pdf>`_ and manual cleaning.
 
-* The list of stops in Brno (not the surrounding towns) has been obtained from `this PDF <http://www.idsjmk.cz/cenik/historie/050901/Obce-zastavky.pdf>` (Note: a newer version is available and should be used).
+* The list of stops in Brno (not the surrounding towns) has been obtained from `this PDF <http://www.idsjmk.cz/cenik/historie/050901/Obce-zastavky.pdf>`_ (Note: a newer version is available and should be used).
 
