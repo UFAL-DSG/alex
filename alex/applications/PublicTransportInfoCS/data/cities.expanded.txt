@@ -2271,7 +2271,7 @@ Libel
 Libenice;Libenic;Libenicím;Libenicům;Libenicích
 Libeř;Libeře;Libeři
 Liberec;Liberce;Liberci
-Liberk;Liberka;Liberku;Liberce
+Liberk;Liberka;Liberku
 Liběšice;Liběšic;Liběšicím;Liběšicům;Liběšicích
 Libětice;Libětic;Liběticím;Liběticům;Liběticích
 Libež
