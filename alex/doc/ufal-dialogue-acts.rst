@@ -3,11 +3,6 @@ UFAL Dialogue act scheme
 
 The purpose of this document is to describe the structure and function of dialogue acts used in spoken dialogue systems developed at UFAL, MFF, UK, Czech Republic.
 
-
-Filip Jurcicek
-
-
-
 Definition of dialogue acts
 ===========================
 
@@ -152,7 +147,7 @@ This section presents examples of dialogue acts:
     restart()                       'can we start again please'
                                     'could we start again'
 
-    select(food="Chinese", food="Italian)   
+    select(food="Chinese")&select(food="Italian)   
                                     'do you want Chinese or Italian food'
 
     thankyou()                      'allright thank you then i'll have to look somewhere else'
@@ -330,8 +325,7 @@ Apendix A: UFAL Dialogue acts
 | ``null()``            | silence, empty sentence, something that is not possible to interpret, does nothing   |
 |                       |                                                                                      |
 +-----------------------+--------------------------------------------------------------------------------------+
-| ``repeat()``          | asks to                                                                              |
-|                       | repeat the last utterance                                                            |
+| ``repeat()``          | asks to repeat the last utterance                                                    |
 |                       |                                                                                      |
 +-----------------------+--------------------------------------------------------------------------------------+
 | ``irepeat()``         | repeats the last uttered sentence by the system                                      |
@@ -349,7 +343,10 @@ Apendix A: UFAL Dialogue acts
 | ``restart()``         | restart the dialogue, forget all provided info                                       |
 |                       |                                                                                      |
 +-----------------------+--------------------------------------------------------------------------------------+
-| ``select(x=y, x=z)``  | select between two values of the same slot                                           |
+| ``silence()``         | user or the system does not say anuthing and remain silent                           |
+|                       |                                                                                      |
++-----------------------+--------------------------------------------------------------------------------------+
+| ``select(x=y)&select(x=z)``  | select between two values of the same slot                                           |
 |                       |                                                                                      |
 +-----------------------+--------------------------------------------------------------------------------------+
 | ``thankyou()``        | simply thank you                                                                     |
