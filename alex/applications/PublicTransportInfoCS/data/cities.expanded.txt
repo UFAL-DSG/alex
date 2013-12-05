@@ -1974,7 +1974,6 @@ Králova Lhota;Královy Lhoty;Králově Lhotě;Královu Lhotu
 Královec;Královce;Královci
 Kralovice;Kralovic;Kralovicím;Kralovicům;Kralovicích
 Královice;Královic;Královicím;Královicům;Královicích
-Královo Pole;Králova Pole;Královu Poli;Králově Poli
 Královské Poříčí;Královského Poříčí;Královskýho Poříčí;Královskému Poříčí;Královskýmu Poříčí;Královský Poříčí;Královském Poříčí;Královským Poříčí;Královskym Poříčí
 Kralupy nad Vltavou;Kralup nad Vltavou;Kralupům nad Vltavou;Kralupum nad Vltavou;Kralupech nad Vltavou;Kralupách nad Vltavou
 Králův Dvůr;Králova Dvora;Královu Dvoru;Králuv Dvůr;Králově Dvoře;Králově Dvoru;Královu Dvoře
@@ -2977,7 +2976,6 @@ Nové Město nad Metují;Nového Města nad Metují;Novýho Města nad Metují;N
 Nové Město na Moravě;Nového Města na Moravě;Novýho Města na Moravě;Novému Městu na Moravě;Novýmu Městu na Moravě;Nový Město na Moravě;Novém Městě na Moravě;Novém Městu na Moravě;Novým Městě na Moravě;Novým Městu na Moravě;Novym Městě na Moravě;Novym Městu na Moravě
 Nové Město pod Smrkem;Nového Města pod Smrkem;Novýho Města pod Smrkem;Novému Městu pod Smrkem;Novýmu Městu pod Smrkem;Nový Město pod Smrkem;Novém Městě pod Smrkem;Novém Městu pod Smrkem;Novým Městě pod Smrkem;Novým Městu pod Smrkem;Novym Městě pod Smrkem;Novym Městu pod Smrkem
 Nové Mitrovice;Nových Mitrovic;Novejch Mitrovic;Novým Mitrovicím;Novejm Mitrovicím;Nový Mitrovice;Nových Mitrovicích;Novejch Mitrovicích
-Nové Sady;Nových Sad;Novejch Sad;Novým Sadám;Novejm Sadám;Nový Sady;Nových Sadách;Novejch Sadách
 Nové Sedlice;Nových Sedlic;Nových Sedlicí;Novejch Sedlic;Novejch Sedlicí;Novým Sedlicím;Novým Sedlicům;Novejm Sedlicím;Novejm Sedlicům;Nový Sedlice;Nových Sedlicích;Novejch Sedlicích
 Nové Sedlo;Nového Sedla;Novýho Sedla;Novému Sedlu;Novýmu Sedlu;Nový Sedlo;Novém Sedle;Novém Sedlu;Novým Sedle;Novým Sedlu;Novym Sedle;Novym Sedlu
 Nové Strašecí;Nového Strašecí;Novýho Strašecí;Novému Strašecí;Novýmu Strašecí;Nový Strašecí;Novém Strašecí;Novým Strašecí;Novym Strašecí
