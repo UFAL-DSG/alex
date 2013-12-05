@@ -569,7 +569,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: unicode
         """
         stops = self.ontology.get_compatible_vals('city_stop', city)
-        for cand_stop_name in [city, 'Hlavní nádraží']:
+        for cand_stop_name in [city, 'Hlavní nádraží', 'CAN, Husova']:
             if cand_stop_name in stops:
                 return cand_stop_name
         for cand_stop_suffix in ['hlavní nádraží', ', nádraží', ', autobusové stanoviště',
