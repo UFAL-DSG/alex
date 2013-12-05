@@ -102,9 +102,13 @@ class PTICSHDCSLU(SLUInterface):
                 dai_type = 'inform'
 
                 # test short preceding context to find the stop type (from, to, via)
-                for cur_wp_type, phrases in phr_wp_types:
-                    if any_phrase_in(u[max(last_wp_pos, i - 3):i], phrases):
-                        wp_types.add(cur_wp_type)
+                # start from a narrower context and expand up to 3 words left
+                for prec_context in xrange(1, 4):
+                    for cur_wp_type, phrases in phr_wp_types:
+                        if any_phrase_in(u[max(last_wp_pos, i - prec_context):i], phrases):
+                            wp_types.add(cur_wp_type)
+                            break
+                    if wp_types:
                         break
                 # test short following context (0 = from, 1 = to, 2 = via)
                 if not wp_types:
