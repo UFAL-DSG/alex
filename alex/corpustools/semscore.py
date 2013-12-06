@@ -53,14 +53,21 @@ def score_da(ref_da, test_da, daid):
             fp += 1.0
             statsp[ri]['fp'] += 1.0
 
-            print "DAid {daid} - extra   hyp {dai:<50s} in ref {da}".format(daid=daid, dai=i, da='&'.join(ref_da))
+
+            print """DAid {daid}
+in hyp da:      {hypda}
+is EXTRA dai:   {dai}
+in ref da:      {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da))
 
     for i in ref_da:
         ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0
-            print "DAid {daid} - missing hyp {dai:<50s} in ref {da}".format(daid=daid, dai=i, da='&'.join(ref_da))
+            print """DAid {daid}
+in hyp da:      {hypda}
+is MISSING dai: {dai}
+in ref da:      {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da))
 
     return tp, fp, fn, statsp
 
