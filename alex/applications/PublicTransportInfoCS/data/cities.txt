@@ -839,7 +839,7 @@ Dnešice
 Dobelice
 Dobev
 Dobkovice
-Dobrá
+#Dobrá
 Dobřany
 Dobratice
 Dobrá Voda

@@ -414,12 +414,13 @@ class PTICSHDCSLU(SLUInterface):
             not any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if any_word_in(u, "ne né nene nené") or \
-            phrase_in(u, 'nechci to tak') or \
-            len(u) == 1 and any_word_in(u, "nejedu nechci") or \
-            len(u) == 2 and all_words_in(u, "ano nechci") or \
-            all_words_in(u, "to je špatně"):
-            cn.add(1.0, DialogueActItem("negate"))
+        if not any_phrase_in(u, ['ne z',]):
+            if  any_word_in(u, "ne né nene nené") or \
+                 phrase_in(u, 'nechci to tak') or \
+                         len(u) == 1 and any_word_in(u, "nejedu nechci") or \
+                         len(u) == 2 and all_words_in(u, "ano nechci") or \
+                 all_words_in(u, "to je špatně"):
+                cn.add(1.0, DialogueActItem("negate"))
 
         if any_word_in(u, 'díky dikec děkuji dekuji děkuju děkují'):
             cn.add(1.0, DialogueActItem("thankyou"))
