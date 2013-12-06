@@ -2,4 +2,4 @@
 
 cd ..
 
-./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg
+./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg -t

@@ -16,6 +16,7 @@ from alex.components.hub import Hub
 from alex.components.slu.da import DialogueActConfusionNetwork
 from alex.components.slu.common import slu_factory
 from alex.components.nlg.common import nlg_factory, get_nlg_type
+from alex.components.tts.common import get_tts_type, tts_factory
 from alex.utils.config import Config
 from alex.utils.ui import getTerminalSize
 
@@ -33,12 +34,13 @@ class TextHub(Hub):
     """
     hub_type = "THub"
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, tts_preproc_output=False):
         super(TextHub, self).__init__(cfg)
 
         self.slu = None
         self.dm = None
         self.nlg = None
+        self.tts = None
 
         self.slu = slu_factory(cfg)
 
@@ -48,6 +50,10 @@ class TextHub(Hub):
 
         nlg_type = get_nlg_type(cfg)
         self.nlg = nlg_factory(nlg_type, cfg)
+
+        if tts_preproc_output:
+            tts_type = get_tts_type(cfg)
+            self.tts = tts_factory(tts_type, cfg)
 
     def parse_input_utt(self, l):
         """Converts a text including a dialogue act and its probability into
@@ -91,6 +97,8 @@ class TextHub(Hub):
     def output_sys_utt(self, utt):
         """Prints the system utterance to the output."""
         print "System:   ", utt
+        if self.tts is not None:
+            print "TTS-prep: ", self.tts.preprocessing.process(utt)
         print
 
     def output_usr_utt_nblist(self, utt_nblist):
@@ -229,6 +237,8 @@ if __name__ == '__main__':
                         help='additional configuration files')
     parser.add_argument('-s', action="append", dest="scripts", default=None,
                         help='automated scripts')
+    parser.add_argument('-t', '--tts-preprocessing', '--tts', dest='tts_preprocessing',
+                        action='store_true', help='output TTS preprocessing results')
     args = parser.parse_args()
 
     cfg = Config.load_configs(args.configs)
@@ -246,15 +256,15 @@ if __name__ == '__main__':
     cfg['Logging']['session_logger'].header(cfg['Logging']["system_name"], cfg['Logging']["version"])
     cfg['Logging']['session_logger'].input_source("text")
 
-    shub = TextHub(cfg)
+    thub = TextHub(cfg, args.tts_preprocessing)
 
     if args.scripts:
         for script in args.scripts:
             with open(script) as f_in:
                 for ln in f_in:
-                    shub.process_dm()
+                    thub.process_dm()
                     ln = ln.decode('utf8').strip()
                     print "SCRIPT: %s" % ln
-                    shub.process_utterance_hyp({'utt': Utterance(ln)})
+                    thub.process_utterance_hyp({'utt': Utterance(ln)})
 
-    shub.run()
+    thub.run()
