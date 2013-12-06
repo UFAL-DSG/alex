@@ -273,12 +273,13 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         else:
             # gather known information about the connection
-            req_da, conn_info = self.gather_connection_info(ds, accepted_slots)
+            req_da, iconfirm_da, conn_info = self.gather_connection_info(ds, accepted_slots)
             if len(req_da) == 0:
                 if state_changed:
                     # we know everything we need -> start searching
                     ds.conn_info = conn_info
-                    res_da = self.get_directions(ds, check_conflict=True)
+                    res_da = iconfirm_da
+                    res_da.extend(self.get_directions(ds, check_conflict=True))
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -599,14 +600,17 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # infer cities based on stops
         from_cities, to_cities = None, None
+        stop_city_inferred = False
         if from_stop_val and not from_city_val:
             from_cities = self.ontology.get_compatible_vals('stop_city', from_stop_val)
             if len(from_cities) == 1:
                 from_city_val = from_cities.pop()
+                stop_city_inferred = True
         if to_stop_val and not to_city_val:
             to_cities = self.ontology.get_compatible_vals('stop_city', to_stop_val)
             if len(to_cities) == 1:
                 to_city_val = to_cities.pop()
+                stop_city_inferred = True
 
         # infer cities based on the other
         if from_stop_val and not from_city_val and to_city_val in from_cities:
@@ -645,10 +649,16 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif not to_city_val:
             req_da.extend(DialogueAct('request(to_city)'))
 
-        return req_da, {'from_stop': from_stop_val,
-                        'to_stop': to_stop_val,
-                        'from_city': from_city_val,
-                        'to_city': to_city_val}
+        # generate implicit confirms if we inferred cities and they are not the same for both stops
+        iconfirm_da = DialogueAct()
+        if stop_city_inferred and len(req_da) == 0 and from_city_val != to_city_val:
+            iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
+            iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
+
+        return req_da, iconfirm_da, {'from_stop': from_stop_val,
+                                     'to_stop': to_stop_val,
+                                     'from_city': from_city_val,
+                                     'to_city': to_city_val}
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.

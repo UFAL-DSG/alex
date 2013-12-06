@@ -115,13 +115,11 @@ class AbstractTemplateNLG(object):
         if len(svs) == 0:
             rng = []
         elif len(svs) == 1:
-            rng = [1, ]
+            rng = [1]
         elif len(svs) == 2:
-            rng = [1, 2, ]
-        elif len(svs) == 3:
-            rng = [1, 2, 3, ]
+            rng = [1, 2]
         else:
-            rng = [1, 2, len(svs) - 1, len(svs)]
+            rng = [1, len(svs) - 1, len(svs)]
 
         for r in rng:
             for cmb in itertools.combinations(svs, r):
