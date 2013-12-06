@@ -30,16 +30,36 @@ def all_words_in(utterance, words):
 
 
 def phrase_in(utterance, words):
+    return phrase_pos(utterance, words) != -1
+
+
+def phrase_pos(utterance, words):
+    """Returns the position of the given phrase in the given utterance, or -1 if not found.
+
+    :rtype: int
+    """
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     words = words if not isinstance(words, basestring) else words.strip().split()
-    return words in utterance
+    return utterance.find(words)
+
+
+def first_phrase_span(utterance, phrases):
+    """Returns the span (start, end+1) of the first phrase from the given list
+    that is found in the utterance. Returns (-1, -1) if no phrase is found.
+
+    :param utterance: The utterance to search in
+    :param phrases: a list of phrases to be tried (in the given order)
+    :rtype: tuple
+    """
+    for phrase in phrases:
+        pos = phrase_pos(utterance, phrase)
+        if pos != -1:
+            return pos, pos + len(phrase)
+    return -1, -1
 
 
 def any_phrase_in(utterance, phrases):
-    for phrase in phrases:
-        if phrase_in(utterance, phrase):
-            return True
-    return False
+    return first_phrase_span(utterance, phrases) != (-1, -1)
 
 
 class PTICSHDCSLU(SLUInterface):
@@ -90,7 +110,7 @@ class PTICSHDCSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        # simple "ne" cannot be included as it colides with negation. "ne [,] chci je z Motola"
+        # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
                          ('deny', set(['nechci', 'nejedu']), set(['nechci ukončit hovor', 'nechci to tak',
                                                                  'né to nechci', 'ne to nechci']))]
@@ -103,14 +123,10 @@ class PTICSHDCSLU(SLUInterface):
 
                 # test short preceding context to find the stop type (from, to, via)
                 # start from a narrower context and expand up to 3 words left
-                # TODO be more efficient
-                for prec_context in xrange(1, 4):
-                    for cur_wp_type, phrases in phr_wp_types:
-                        if any_phrase_in(u[max(last_wp_pos, i - prec_context):i], phrases):
-                            wp_types.add(cur_wp_type)
-                            break
-                    if wp_types:
-                        break
+                wp_precontext = {}
+                for cur_wp_type, phrases in phr_wp_types:
+                    wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 3):i], phrases)
+                wp_types |= self._get_closest_wp_type(wp_precontext)
                 # test short following context (0 = from, 1 = to, 2 = via)
                 if not wp_types:
                     if any_phrase_in(u[i:i + 3], phr_wp_types[0][1] | phr_wp_types[2][1]):
@@ -142,6 +158,26 @@ class PTICSHDCSLU(SLUInterface):
                     cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
 
                 last_wp_pos = i + 1
+
+    def _get_closest_wp_type(self, wp_precontext):
+        """Finds the waypoint type that goes last in the context (if same end points are
+        encountered, the type with a longer span wins).
+
+        :param wp_precontext: Dictionary waypoint type -> span (start, end+1) in the preceding \
+            context of the waypoint mention
+        :returns: one-member set with the best type (if there is one with non-negative position), \
+            or empty set on failure
+        :rtype: set
+        """
+        best_type = None
+        best_pos = (-2, -1)
+        for cur_type, cur_pos in wp_precontext.iteritems():
+            if cur_pos[1] > best_pos[1] or cur_pos[1] == best_pos[1] and cur_pos[0] < best_pos[0]:
+                best_type = cur_type
+                best_pos = cur_pos
+        if best_type is not None:
+            return set([best_type])
+        return set()
 
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.

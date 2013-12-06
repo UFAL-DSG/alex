@@ -222,7 +222,7 @@ class Utterance(object):
         return index
 
     def find(self, phrase):
-        """Returns the word index of the start of first occurence of `phrase'
+        """Returns the word index of the start of first occurrence of `phrase'
         within this utterance. If none is found, returns -1.
 
         Arguments:
