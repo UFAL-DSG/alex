@@ -836,7 +836,7 @@ Dnešice;Dnešic;Dnešicím;Dnešicům;Dnešicích
 Dobelice;Dobelic;Dobelicím;Dobelicům;Dobelicích
 Dobev
 Dobkovice;Dobkovic;Dobkovicím;Dobkovicům;Dobkovicích
-Dobrá;Dobré;Dobrý;Dobrou
+#Dobrá;Dobré;Dobrý;Dobrou
 Dobřany;Dobřan;Dobřanům;Dobřanum;Dobřanech;Dobřanách
 Dobratice;Dobratic;Dobraticím;Dobraticům;Dobraticích
 Dobrá Voda;Dobré Vody;Dobrý Vody;Dobré Vodě;Dobrý Vodě;Dobrou Vodu

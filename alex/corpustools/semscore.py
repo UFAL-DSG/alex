@@ -35,7 +35,7 @@ def load_semantics(file_name):
 
     return semantics
 
-def score_da(ref_da, test_da):
+def score_da(ref_da, test_da, daid):
     """Computed according to http://en.wikipedia.org/wiki/Precision_and_recall"""
 
     tp = 0.0
@@ -53,11 +53,14 @@ def score_da(ref_da, test_da):
             fp += 1.0
             statsp[ri]['fp'] += 1.0
 
+            print "DAid {daid} - extra   hyp {dai:<50s} in ref {da}".format(daid=daid, dai=i, da='&'.join(ref_da))
+
     for i in ref_da:
         ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0
+            print "DAid {daid} - missing hyp {dai:<50s} in ref {da}".format(daid=daid, dai=i, da='&'.join(ref_da))
 
     return tp, fp, fn, statsp
 
@@ -69,7 +72,7 @@ def score_file(refsem, testsem):
     stats = defaultdict(lambda : defaultdict(float))
 
     for k in sorted(refsem):
-        tpp, fpp, fnp, statsp = score_da(refsem[k], testsem[k])
+        tpp, fpp, fnp, statsp = score_da(refsem[k], testsem[k], k)
         tp += tpp
         fp += fpp
         fn += fnp
