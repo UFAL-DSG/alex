@@ -210,7 +210,7 @@ bootstrap_0212.vaw => inform(from_city="Praha")&inform(from_stop="Florenc")&info
 bootstrap_0213.vaw => inform(to_city="Praha")&inform(to_stop="Hlavní nádraží")
 bootstrap_0214.vaw => inform(from_city="Liberec")
 bootstrap_0215.wav => inform(from_city="Plzeň")&inform(to_city="Praha")
-bootstrap_0216.wav => inform(from_city="Plzeň")&inform(to_city="Praha")
+bootstrap_0216.wav => inform(from_city="Plzeň")&inform(to_city="Praha")&inform(task="find_connection")
 bootstrap_0217.wav => deny(from_city="Plzeň")&inform(to_city="Praha")
 bootstrap_0218.wav => deny(from_city="Praha")&inform(to_city="Brno")
 bootstrap_0219.vaw => inform(from_city="Plzeň")&inform(to_city="Brno")

@@ -43,6 +43,7 @@ def score_da(ref_da, test_da, daid):
     fn = 0.0
 
     statsp = defaultdict(lambda : defaultdict(float))
+    epp = []
 
     for i in test_da:
         ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
@@ -53,23 +54,22 @@ def score_da(ref_da, test_da, daid):
             fp += 1.0
             statsp[ri]['fp'] += 1.0
 
-
-            print """DAid {daid}
-in hyp da:      {hypda}
-is EXTRA dai:   {dai}
-in ref da:      {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da))
+            epp.append("""DAid {daid}
+  in hyp da:                 {hypda}
+  is EXTRA dai:              {dai}
+  when compared with ref da: {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da)))
 
     for i in ref_da:
         ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0
-            print """DAid {daid}
-in hyp da:      {hypda}
-is MISSING dai: {dai}
-in ref da:      {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da))
+            epp.append("""DAid {daid}
+  in hyp da:                 {hypda}
+  is MISSING dai:            {dai}
+  when compared with ref da: {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da)))
 
-    return tp, fp, fn, statsp
+    return tp, fp, fn, statsp, epp
 
 def score_file(refsem, testsem):
     tp = 0.0
@@ -77,12 +77,15 @@ def score_file(refsem, testsem):
     fn = 0.0
 
     stats = defaultdict(lambda : defaultdict(float))
+    error_output = []
 
     for k in sorted(refsem):
-        tpp, fpp, fnp, statsp = score_da(refsem[k], testsem[k], k)
+        tpp, fpp, fnp, statsp, epp  = score_da(refsem[k], testsem[k], k)
         tp += tpp
         fp += fpp
         fn += fnp
+        if epp:
+            error_output += [''.join(epp),]
 
         for kk in statsp:
             for kkk in statsp[kk]:
@@ -105,18 +108,27 @@ def score_file(refsem, testsem):
         stats[k]['precision'] += 0.000001
         stats[k]['recall']    += 0.000001
 
-    return precision, recall, stats
+    return precision, recall, stats, '\n'.join(error_output)
 
-def score(fn_refsem, fn_testsem, item_level = False, outfile = sys.stdout):
+def score(fn_refsem, fn_testsem, item_level = False, detailed_error_output = False, outfile = sys.stdout):
     refsem  = load_semantics(fn_refsem)
     testsem = load_semantics(fn_testsem)
 
-    precision, recall, stats = score_file(refsem, testsem)
+    precision, recall, stats, error_output = score_file(refsem, testsem)
 
     outfile.write("Ref: {r}\n".format(r=fn_refsem))
     outfile.write("Tst: {t}\n".format(t=fn_testsem))
 
     outfile.write("The results are based on {num_das} DAs\n".format(num_das=len(refsem)))
+
+    outfile.write("-"*80)
+    outfile.write("\n")
+    outfile.write("Total precision: %6.2f" % precision)
+    outfile.write("\n")
+    outfile.write("Total recall:    %6.2f" % recall)
+    outfile.write("\n")
+    outfile.write("Total F-measure: %6.2f" % (2*precision*recall/(precision+recall), ))
+    outfile.write("\n")
 
     if item_level:
         outfile.write("-"*80)
@@ -134,12 +146,13 @@ def score(fn_refsem, fn_testsem, item_level = False, outfile = sys.stdout):
         outfile.write("-"*80)
         outfile.write("\n")
 
-    outfile.write("Total precision: %6.2f" % precision)
-    outfile.write("\n")
-    outfile.write("Total recall:    %6.2f" % recall)
-    outfile.write("\n")
-    outfile.write("Total F-measure: %6.2f" % (2*precision*recall/(precision+recall), ))
-    outfile.write("\n")
+
+    if detailed_error_output:
+        outfile.write("-"*80)
+        outfile.write("\n")
+        outfile.write(error_output)
+        outfile.write("-"*80)
+        outfile.write("\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -161,7 +174,9 @@ if __name__ == '__main__':
     parser.add_argument('refsem', action="store", help='a file with reference semantics')
     parser.add_argument('testsem', action="store", help='a file with tested semantics')
     parser.add_argument('-i', action="store_true", default=False, dest="item_level", help='print item level precision and recall')
+    parser.add_argument('-d', action="store_true", default=False, dest="detailed_error_output",
+                        help='print missing and extra hypothesis dialogue act items')
 
     args = parser.parse_args()
 
-    score(args.refsem, args.testsem, args.item_level)
+    score(args.refsem, args.testsem, args.item_level, args.detailed_error_output)
