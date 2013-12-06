@@ -1011,6 +1011,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
             elif not dialogue_state['to_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
+            else:
+                res_da.append(DialogueActItem("silence"))
         else:
             # we already offered a connection
             if randbool(4):
@@ -1027,5 +1029,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "request", "to_stop"))
             elif randbool(2):
                 res_da.append(DialogueActItem("help", "request", "num_transfers"))
+            else:
+                res_da.append(DialogueActItem("silence"))
 
         return res_da
