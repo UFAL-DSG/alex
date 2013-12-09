@@ -793,6 +793,7 @@ Jílové u Prahy	Jílové u Prahy, náměstí
 Jílové u Prahy	Jílové u Prahy, rozcestí Radlík
 Jílové u Prahy	Jílové u Prahy, učiliště
 Jílové u Prahy	Jílové u Prahy, Československé armády
+Jílové u Prahy	Luka pod Medníkem
 Kaliště	Kaliště
 Kaliště	Kaliště, Lensedly
 Kaliště	Kaliště, Poddubí
@@ -935,7 +936,6 @@ Krňany	Krňany, Závist, u Křížku
 Krňany	Krňany, bytovky
 Krňany	Krňany, obec
 Krňany	Krňany, rozcestí Třebsín
-Kublov	Kublov
 Kunice	Kunice
 Kunice	Kunice, Dolní Lomnice
 Kunice	Kunice, Dolní Lomnice, Chlum
@@ -956,7 +956,6 @@ Květnice	Květnice
 Květnice	Květnice, Na Ladech
 Květnice	Květnice, Za Mlýnem
 Květnice	Květnice, rozcestí
-Kyje	Kyje
 Kytín	Kytín, náves
 Kytín	Kytín, rozcestí
 Kytín	Kytín, u hřbitova
@@ -974,7 +973,6 @@ Lety	Lety
 Lety	Lety, K Libří
 Lety	Lety, Na Návsi
 Lhota	Lhota
-Lhotka	Lhotka
 #Liberec	Liberec
 Libeř	Libeř
 Libeř	Libeř, Libeň
@@ -988,14 +986,12 @@ Libiš	Libiš, Spolana 4
 Libiš	Libiš, autobusové stanoviště
 Libiš	Libiš, obec
 Libiš	Libiš, samoobsluha
-Libuš	Libuš
 Libčice nad Vltavou	Libčice nad Vltavou
 Libčice nad Vltavou	Libčice nad Vltavou - Letky
 Lichoceves	Lichoceves
 Lichoceves	Lichoceves, Noutonice
 Lipence	Lipence
 Liteň	Liteň
-Lochkov	Lochkov
 Loděnice	Loděnice
 Loděnice	Loděnice, Jánská, I
 Loděnice	Loděnice, Jánská, II
@@ -1004,8 +1000,6 @@ Lomy	Lomy
 Louňovice	Louňovice
 Louňovice	Louňovice, Na hrázi I
 Louňovice	Louňovice, Na hrázi II
-Luka	Luka
-Luka	Luka pod Medníkem
 Lužce	Lužce
 Lysolaje	Lysolaje
 Lysá nad Labem	Lysá nad Labem
@@ -1214,7 +1208,6 @@ Ondřejov	Ondřejov, Třemblat, rozcestí Zvánovice
 Ondřejov	Ondřejov, U pily
 Ondřejov	Ondřejov, hřbitov
 Ondřejov	Ondřejov, náměstí
-Opatov	Opatov
 Oplany	Oplany
 Oplany	Oplany, hájovna
 Ostrá	Ostrá
@@ -1478,7 +1471,6 @@ Praha	Hostivařské náměstí
 Praha	Hostýnská
 Praha	Hotel Golf
 Praha	Hradčanská
-Praha	Hradčany
 Praha	Hrazanská
 Praha	Hrnčíře
 Praha	Hrnčířský hřbitov
@@ -1645,6 +1637,7 @@ Praha	Královský letohrádek
 Praha	Krčská
 Praha	Krčský hřbitov
 Praha	Krňovická
+Praha	Kublov
 Praha	Kubánské náměstí
 Praha	Kuchyňka
 Praha	Kudrnova
@@ -1653,6 +1646,7 @@ Praha	Kunratická škola
 Praha	Kutnohorská
 Praha	Kvasinská
 Praha	Květnová
+Praha	Kyje
 Praha	Kyjský hřbitov
 Praha	Kyselova
 Praha	Křižíkova
@@ -1677,10 +1671,12 @@ Praha	Letňany
 Praha	Levského
 Praha	Lešanská
 Praha	Lhotecký les
+Praha	Lhotka
 Praha	Libeňská
 Praha	Libeňský most
 Praha	Libocká
 Praha	Libošovická
+Praha	Libuš
 Praha	Liběchovská
 Praha	Lidečská
 Praha	Lihovar
@@ -1694,9 +1690,11 @@ Praha	Litovický potok
 Praha	Livornská
 Praha	Lnářská
 Praha	Lobkovice
+Praha	Lochkov
 Praha	Lohenická
 Praha	Lomnická
 Praha	Lotyšská
+Praha	Luka
 Praha	Lukavecká
 Praha	Lužiny
 Praha	Ládví
@@ -1930,6 +1928,7 @@ Praha	Okrouhlická
 Praha	Olšanská
 Praha	Olšanské hřbitovy
 Praha	Olšanské náměstí
+Praha	Opatov
 Praha	Opálová
 Praha	Ordovická
 Praha	Orionka
@@ -2164,6 +2163,7 @@ Praha	Severozápadní
 Praha	Sezemická
 Praha	Sibeliova
 Praha	Sibiřské náměstí
+Praha	Skalka
 Praha	Skloněná
 Praha	Skládka Chabry
 Praha	Skládka Ďáblice
@@ -2173,6 +2173,7 @@ Praha	Slatinová
 Praha	Slatiňanská
 Praha	Slavia
 Praha	Slavínského
+Praha	Slivenec
 Praha	Slivenecká
 Praha	Slovinská
 Praha	Služská
@@ -2224,6 +2225,7 @@ Praha	Studenecká
 Praha	Střelničná
 Praha	Střibrná Skalice, náměstí
 Praha	Střížkov
+Praha	Suchdol
 Praha	Sudějovická
 Praha	Sulická
 Praha	Svatoplukova
@@ -2484,11 +2486,13 @@ Praha	Záhorského
 Praha	Zámky
 Praha	Zátišská
 Praha	Závodiště Chuchle
+Praha	Újezd
 Praha	Ústav mateřství
 Praha	Ústavy Akademie věd
 Praha	Ústřední
 Praha	Ústřední dílny DP
 Praha	ČSAD Smíchov
+Praha	Čakovice
 Praha	Čakovická
 Praha	Čakovický zámek
 Praha	Čechova čtvrť
@@ -2664,7 +2668,6 @@ Senohraby	Senohraby, železniční stanice
 Sibřina	Sibřina
 Sibřina	Sibřina, Stupice
 Sibřina	Sibřina, Říčanská
-Skalka	Skalka
 Skorkov	Skorkov, Otradovice
 Skorkov	Skorkov, Otradovice, křižovatka
 Skorkov	Skorkov, Podbrahy
@@ -2675,7 +2678,6 @@ Slapy	Slapy, Na Rovínku
 Slapy	Slapy, Na polesí
 Slapy	Slapy, motorest I
 Slapy	Slapy, motorest II
-Slivenec	Slivenec
 Sluhy	Sluhy
 Sluhy	Sluhy, Nad Hájem
 Sluhy	Sluhy, rozcestí Brázdim
@@ -2721,7 +2723,6 @@ Stříbrná Skalice	Stříbrná Skalice, U Konvalinků
 Stříbrná Skalice	Stříbrná Skalice, V Můstkách
 Stříbrná Skalice	Stříbrná Skalice, Vozlín
 Stříbrná Skalice	Stříbrná Skalice, železniční stanice
-Suchdol	Suchdol {obvod Praha 6}
 Suchdol	Suchdol {okres Kutná Hora}
 Suchdol	Suchdol, Vysoká, rozcestí {okres Kutná Hora}
 Sudovo Hlavno	Sudovo Hlavno
@@ -2974,7 +2975,6 @@ Závist	Závist
 Úholičky	Úholičky, V kopci
 Úhonice	Úhonice
 Úhonice	Úhonice, škola
-Újezd	Újezd
 Újezd	Újezd nad Lesy
 Újezdec	Újezdec
 Únětice	Únětice
@@ -3003,7 +3003,6 @@ Závist	Závist
 Úžice	Úžice, rozcestí Mělník {okres Kutná Hora}
 Úžice	Úžice, Čekánov, rozcestí {okres Kutná Hora}
 Úžice	Úžice, Červená Lhota {okres Mělník}
-Čakovice	Čakovice
 Čakovičky	Čakovičky
 Čelákovice	Čelákovice
 Čelákovice	Čelákovice - Jiřina

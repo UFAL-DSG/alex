@@ -404,7 +404,6 @@ Bukovník;Bukovníku
 Bukovno;Bukovna;Bukovnu;Bukovně
 Bukvice;Bukvic;Bukvicí;Bukvicím;Bukvici;Bukvicích
 Bulhary
-Bulovka;Bulovky;Bulovce;Bulovku
 Buřenice;Buřenic;Buřenicím;Buřenicům;Buřenicích
 Buš;Buše;Buši;Bušovi
 Bušanovice;Bušanovic;Bušanovicím;Bušanovicům;Bušanovicích
@@ -549,7 +548,6 @@ Cerhovice;Cerhovic;Cerhovicím;Cerhovicům;Cerhovicích
 Červený Hrádek;Červeného Hrádku;Červenýho Hrádku;Červenému Hrádku;Červenýmu Hrádku;Červenej Hrádek;Červeném Hrádku;Červeným Hrádku;Červenym Hrádku
 Červený Kostelec;Červeného Kostelce;Červenýho Kostelce;Červenému Kostelci;Červenýmu Kostelci;Červenej Kostelec;Červeném Kostelci;Červeným Kostelci;Červenym Kostelci
 Červený Újezd;Červeného Újezda;Červenýho Újezda;Červenému Újezdu;Červenýmu Újezdu;Červenej Újezd;Červeném Újezdě;Červeném Újezdu;Červeným Újezdě;Červeným Újezdu;Červenym Újezdě;Červenym Újezdu
-Česká;České;Český;Českou
 Česká Bělá;České Bělé;České Bělý;Český Bělé;Český Bělý;Českou Bělou
 Česká Bříza;České Břízy;Český Břízy;České Bříze;Český Bříze;Českou Břízu
 Česká Čermná;České Čermné;České Čermný;Český Čermné;Český Čermný;Českou Čermnou
@@ -1118,7 +1116,6 @@ Habry;Habrů;Habrům;Habrum;Habrech
 Hačky
 Hadravova Rosička;Hadravovy Rosičky;Hadravově Rosičce;Hadravovu Rosičku
 Hajany;Hajan;Hajanům;Hajanum;Hajanech;Hajanách
-Háje;Hájů;Hájům;Hájum;Hájích
 Hájek;Hájku
 Háje nad Jizerou;Hájů nad Jizerou;Hájům nad Jizerou;Hájum nad Jizerou;Hájích nad Jizerou
 Hajnice;Hajnic;Hajnicím;Hajnicům;Hajnicích
@@ -1271,12 +1268,11 @@ Hořice na Šumavě;Hořic na Šumavě;Hořicím na Šumavě;Hořicům na Šumav
 Hořičky;Hořiček;Hořičkám;Hořičkách
 Hořín;Hořína;Hořínu;Hoříně
 Hořiněves;Hořiněvsi
-Horka;Horky;Horce;Horku
+Horka;Horce;Horku
 Horka I;Horky I;Horkovi I;Horku I
 Horka II;Horky II;Horce II;Horku II
 Horka nad Moravou;Horky nad Moravou;Horkovi nad Moravou;Horku nad Moravou
 Horka u Staré Paky;Horky u Staré Paky;Horce u Staré Paky;Horku u Staré Paky
-Horky;Horek;Horkám;Horkách
 Horky nad Jizerou;Horek nad Jizerou;Horkám nad Jizerou;Horkách nad Jizerou
 Horní Bečva;Horní Bečvy;Horní Bečvě;Horní Bečvu
 Horní Bělá;Horní Bělé;Horní Bělý;Horní Bělou
@@ -1416,7 +1412,6 @@ Hrabůvka;Hrabůvky;Hrabůvce;Hrabůvku
 Hrabyně;Hrabyni
 Hracholusky;Hracholusk;Hracholuskám;Hracholuskách
 Hrachoviště;Hrachovištěte;Hrachovištěti
-Hradčany;Hradčan;Hradčanám;Hradčanách
 Hradčany - Kobeřice;Hradčan - Kobeřic;Hradčanám - Kobeřicím;Hradčanám - Kobeřicům;Hradčanách - Kobeřicích
 Hradce;Hradců;Hradcům;Hradcum;Hradcích
 Hradčovice;Hradčovic;Hradčovicím;Hradčovicům;Hradčovicích
@@ -1651,7 +1646,7 @@ Jirny;Jirn;Jirnům;Jirnum;Jirnech;Jirnách
 Jistebnice;Jistebnic;Jistebnicí;Jistebnicím;Jistebnici;Jistebnicích
 Jistebník;Jistebníku
 Jitkov;Jitkova;Jitkovu;Jitkově
-Jivina;Jiviny;Jivině;Jivinu
+Jivina;Jivině;Jivinu
 Jívka;Jívky;Jívce;Jívku
 Jivno;Jivna;Jivnu;Jivně
 Jívová;Jívové;Jívový;Jívovou
@@ -2089,7 +2084,6 @@ Kšely
 Kšice;Kšic;Kšicím;Kšicům;Kšicích
 Ktiš;Ktiše;Ktiši
 Ktová;Ktové;Ktový;Ktovou
-Kublov;Kublova;Kublovu;Kublově
 Kubova Huť;Kubovy Hutě;Kubovy Huti;Kubově Huti;Kubovu Huť
 Kubšice;Kubšic;Kubšicím;Kubšicům;Kubšicích
 Kučeř
@@ -2145,7 +2139,6 @@ Kvilda;Kvildy;Kvildě;Kvildu
 Kvílice;Kvílic;Kvílicím;Kvílicům;Kvílicích
 Kvítkov;Kvítkova;Kvítkovu;Kvítkově
 Kvítkovice;Kvítkovic;Kvítkovicím;Kvítkovicům;Kvítkovicích
-Kyje;Kyjů;Kyjům;Kyjum;Kyjích
 Kyjov;Kyjova;Kyjovu;Kyjově
 Kyjovice;Kyjovic;Kyjovicím;Kyjovicům;Kyjovicích
 Kynice
@@ -2241,7 +2234,6 @@ Lhota u Příbramě;Lhoty u Příbramě;Lhotě u Příbramě;Lhotu u Příbramě
 Lhota u Vsetína;Lhoty u Vsetína;Lhotě u Vsetína;Lhotu u Vsetína
 Lhota - Vlasenice;Lhoty - Vlasenic;Lhotě - Vlasenicím;Lhotu - Vlasenice;Lhotě - Vlasenicích
 Lhotice;Lhotic;Lhoticím;Lhoticům;Lhoticích
-Lhotka;Lhotky;Lhotce;Lhotku
 Lhotka nad Labem;Lhotky nad Labem;Lhotce nad Labem;Lhotku nad Labem
 Lhotka u Litultovic;Lhotky u Litultovic;Lhotce u Litultovic;Lhotku u Litultovic
 Lhotka u Radnic;Lhotky u Radnic;Lhotce u Radnic;Lhotku u Radnic
@@ -2305,7 +2297,6 @@ Librantice;Librantic;Libranticím;Libranticům;Libranticích
 Libřice;Libřic;Libřicím;Libřicům;Libřicích
 Libštát;Libštátu;Libštátě
 Libuň;Libuně;Libuni
-Libuš;Libuše;Libuši
 Libušín;Libušína;Libušínu;Libušíně
 Lichkov;Lichkova;Lichkovu;Lichkově
 Lichnov;Lichnova;Lichnovu;Lichnově
@@ -2380,7 +2371,6 @@ Lobendava;Lobendavy;Lobendavě;Lobendavu
 Lobodice;Lobodic;Lobodicím;Lobodicům;Lobodicích
 Ločenice;Ločenic;Ločenicím;Ločenicům;Ločenicích
 Lochenice;Lochenic;Lochenicím;Lochenicům;Lochenicích
-Lochkov;Lochkova;Lochkovu;Lochkově
 Lochousice;Lochousic;Lochousicím;Lochousicům;Lochousicích
 Lochovice;Lochovic;Lochovicím;Lochovicům;Lochovicích
 Loděnice;Loděnic;Loděnicí;Loděnicím;Loděnici;Loděnicích
@@ -2446,7 +2436,6 @@ Ludslavice;Ludslavic;Ludslavicím;Ludslavicům;Ludslavicích
 Ludvíkov;Ludvíkova;Ludvíkovu;Ludvíkově
 Ludvíkovice;Ludvíkovic;Ludvíkovicím;Ludvíkovicům;Ludvíkovicích
 Luhačovice;Luhačovic;Luhačovicím;Luhačovicům;Luhačovicích
-Luka;Luky;Luce;Luku
 Luká;Luké;Luký;Lukou
 Luka nad Jihlavou;Luky nad Jihlavou;Lukovi nad Jihlavou;Luku nad Jihlavou
 Lukavec;Lukavce;Lukavci
@@ -3019,7 +3008,6 @@ Občov;Občovu
 Obecnice;Obecnic;Obecnicí;Obecnicím;Obecnici;Obecnicům;Obecnicích
 Obědkovice;Obědkovic;Obědkovicím;Obědkovicům;Obědkovicích
 Obědovice;Obědovic;Obědovicím;Obědovicům;Obědovicích
-Obora;Obory;Oboře;Oboru
 Obořiště;Obořišti
 Oborná;Oborné;Oborný;Obornou
 Obory;Oborů;Oborům;Oborum;Oborech
@@ -3097,7 +3085,6 @@ Ondřejov;Ondřejova;Ondřejovu;Ondřejově
 Onomyšl
 Onšov;Onšova;Onšovu;Onšově
 Opařany;Opařan;Opařanům;Opařanum;Opařanech;Opařanách
-Opatov;Opatova;Opatovu;Opatově
 Opatovec;Opatovce;Opatovci
 Opatovice;Opatovic;Opatovicím;Opatovicům;Opatovicích
 Opatovice I;Opatovic I;Opatovicím I;Opatovicům I;Opatovicích I
@@ -3354,7 +3341,6 @@ Podhradní Lhota;Podhradní Lhoty;Podhradní Lhotě;Podhradní Lhotu
 Podivice;Podivic;Podivicím;Podivicům;Podivicích
 Podivín;Podivína;Podivínu;Podivíně
 Podkopná Lhota;Podkopné Lhoty;Podkopný Lhoty;Podkopné Lhotě;Podkopný Lhotě;Podkopnou Lhotu
-Podlesí
 Podlešín;Podlešína;Podlešínu;Podlešíně
 Podluhy;Podluh;Podluhám;Podluhách
 Podmoklany;Podmoklan;Podmoklanům;Podmoklanum;Podmoklanech;Podmoklanách
@@ -3645,7 +3631,6 @@ Radostín nad Oslavou;Radostína nad Oslavou;Radostínu nad Oslavou;Radostíně 
 Radostná pod Kozákovem;Radostné pod Kozákovem;Radostný pod Kozákovem;Radostnou pod Kozákovem
 Radostov
 Radotice;Radotic;Radoticím;Radoticům;Radoticích
-Radotín;Radotína;Radotínu;Radotíně
 Radovesice;Radovesic;Radovesicím;Radovesicům;Radovesicích
 Radovesnice I;Radovesnic I;Radovesnicím I;Radovesnicům I;Radovesnicích I
 Radovesnice II;Radovesnic II;Radovesnicím II;Radovesnicům II;Radovesnicích II
@@ -3965,7 +3950,6 @@ Skalice;Skalic;Skalicí;Skalicím;Skalici;Skalicích
 Skalice nad Svitavou;Skalic nad Svitavou;Skalicí nad Svitavou;Skalicím nad Svitavou;Skalicích nad Svitavou
 Skalice u České Lípy;Skalic u České Lípy;Skalicí u České Lípy;Skalicím u České Lípy;Skalici u České Lípy;Skalicích u České Lípy
 Skalička;Skaličky;Skaličce;Skaličku
-Skalka;Skalky;Skalce;Skalku
 Skalka u Doks;Skalky u Doks;Skalce u Doks;Skalku u Doks
 Skalná;Skalné;Skalný;Skalnou
 Skalsko;Skalska;Skalsa;Skalsku;Skalsu;Skalso
@@ -4039,7 +4023,6 @@ Slepotice;Slepotic;Slepoticím;Slepoticům;Slepoticích
 Slezská Ostrava;Slezské Ostravy;Slezský Ostravy;Slezské Ostravě;Slezský Ostravě;Slezskou Ostravu
 Slezské Pavlovice;Slezských Pavlovic;Slezskejch Pavlovic;Slezským Pavlovicím;Slezským Pavlovicům;Slezskejm Pavlovicím;Slezskejm Pavlovicům;Slezský Pavlovice;Slezských Pavlovicích;Slezskejch Pavlovicích
 Slezské Rudoltice;Slezských Rudoltic;Slezskejch Rudoltic;Slezským Rudolticím;Slezským Rudolticům;Slezskejm Rudolticím;Slezskejm Rudolticům;Slezský Rudoltice;Slezských Rudolticích;Slezskejch Rudolticích
-Slivenec;Slivence;Slivenci
 Slopné;Slopného;Slopnýho;Slopnému;Slopnýmu;Slopný;Slopném;Slopným;Slopnym
 Sloup;Sloupu;Sloupě
 Sloupnice;Sloupnic;Sloupnicí;Sloupnicím;Sloupnici;Sloupnicích
@@ -4333,7 +4316,6 @@ Stvolová;Stvolové;Stvolový;Stvolovou
 Suchá;Suché;Suchý;Suchou
 Suchá Lhota;Suché Lhoty;Suchý Lhoty;Suché Lhotě;Suchý Lhotě;Suchou Lhotu
 Suchá Loz;Suché Lozi;Suchý Lozi;Suchou Loz
-Suchdol;Suchdolu;Suchdola;Suchdole
 Suchdol nad Lužnicí;Suchdolu nad Lužnicí;Suchdola nad Lužnicí;Suchdole nad Lužnicí
 Suchdol nad Odrou;Suchdolu nad Odrou;Suchdola nad Odrou;Suchdole nad Odrou
 Suché Lazce;Suchých Lazců;Suchejch Lazců;Suchým Lazcům;Suchým Lazcím;Suchým Lazcum;Suchejm Lazcům;Suchejm Lazcím;Suchejm Lazcum;Suchý Lazce;Suchých Lazcích;Suchejch Lazcích
@@ -4575,7 +4557,6 @@ Trnov
 Trnová;Trnové;Trnový;Trnovou
 Trnovany;Trnovan;Trnovanům;Trnovanum;Trnovanech;Trnovanách
 Trnové Pole;Trnového Pole;Trnovýho Pole;Trnovému Poli;Trnovýmu Poli;Trnový Pole;Trnovém Poli;Trnovým Poli;Trnovym Poli
-Troja;Tróje;Troje;Tróji;Troji;Tróju;Troju
 Trojanovice;Trojanovic;Trojanovicím;Trojanovicům;Trojanovicích
 Trojovice;Trojovic;Trojovicím;Trojovicům;Trojovicích
 Trokavec;Trokavce;Trokavci
@@ -4669,7 +4650,6 @@ Uhřičice;Uhřičic;Uhřičicím;Uhřičicům;Uhřičicích
 Uhřínov;Uhřínova;Uhřínovu;Uhřínově
 Uhy;Uhů;Uhům;Uhum;Uzích;Uhách
 Ujčov;Ujčovu
-Újezd;Újezda;Újezdu;Újezdě
 Újezdec;Újezdce;Újezdci
 Újezdeček;Újezdečku;Újezdečka;Újezdečk;Újezdečce
 Újezd nade Mží;Újezda nade Mží;Újezdu nade Mží;Újezdě nade Mží
@@ -5263,7 +5243,6 @@ Zborovice;Zborovic;Zborovicím;Zborovicům;Zborovicích
 Zborovy;Zborovů;Zborovům;Zborovum;Zborovech
 Zbožíčko;Zbožíčka;Zbožíčku
 Zbrašín;Zbrašína;Zbrašínu;Zbrašíně
-Zbraslav;Zbraslavi
 Zbraslavec;Zbraslavce;Zbraslavci
 Zbraslavice;Zbraslavic;Zbraslavicím;Zbraslavicům;Zbraslavicích
 Zbůch;Zbůchu

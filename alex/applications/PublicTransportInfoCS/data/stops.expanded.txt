@@ -1228,7 +1228,7 @@ Nádraží Krč
 Nádraží Kyje
 Nádraží Libeň
 Nádraží Modřany
-Nádraží Radotín
+Nádraží Radotín;Radotín;Radotína;Radotínu;Radotíně
 Nádraží Ruzyně
 Nádraží Satalice
 Nádraží Strašnice
@@ -1236,7 +1236,7 @@ Nádraží Uhříněves
 Nádraží Veleslavín
 Nádraží Vršovice
 Nádraží Vysočany
-Nádraží Zbraslav
+Nádraží Zbraslav;Zbraslav;Zbraslavi
 Nad Rybníky
 Nad Trojou
 Nad Závistí
@@ -2206,7 +2206,7 @@ Třinecká;Třinecké;Třinecký;Třineckou
 Trnová;Trnové;Trnový;Trnovou
 Trnová, rozcestí;Trnové, rozcestí;Trnový, rozcestí;Trnovou, rozcestí
 Trnová, škola;Trnové, školy;Trnový, školy;Trnové, škole;Trnový, škole;Trnovou, školu
-Trojská;Troyské;Trojské;Troyský;Trojský;Troyskou;Trojskou
+Trojská;Troyské;Trojské;Troyský;Trojský;Troyskou;Trojskou;Troja;Troji;Trója;Tróji;Troje;Tróje
 Trutnovská;Trutnovské;Trutnovský;Trutnovskou
 Tuchoměřice;Tuchoměřic;Tuchoměřicím;Tuchoměřicům;Tuchoměřicích
 Tuchoměřice, Kněžívka;Tuchoměřic, Kněžívky;Tuchoměřicím, Kněžívce;Tuchoměřicům, Kněžívce;Tuchoměřice, Kněžívku;Tuchoměřicích, Kněžívce

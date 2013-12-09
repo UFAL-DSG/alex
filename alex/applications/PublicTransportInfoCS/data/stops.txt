@@ -1234,7 +1234,7 @@ Nádraží Krč
 Nádraží Kyje
 Nádraží Libeň
 Nádraží Modřany
-Nádraží Radotín
+Nádraží Radotín	Radotín
 Nádraží Ruzyně
 Nádraží Satalice
 Nádraží Strašnice
@@ -1242,7 +1242,7 @@ Nádraží Uhříněves
 Nádraží Veleslavín
 Nádraží Vršovice
 Nádraží Vysočany
-Nádraží Zbraslav
+Nádraží Zbraslav	Zbraslav
 Nad Rybníky
 Nad Trojou
 Nad Závistí
@@ -2212,7 +2212,7 @@ Třinecká
 Trnová
 Trnová, rozcestí
 Trnová, škola
-Trojská
+Trojská	Troja
 Trutnovská
 Tuchoměřice
 Tuchoměřice, Kněžívka

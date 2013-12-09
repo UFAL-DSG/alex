@@ -405,7 +405,7 @@ Bukovník
 Bukovno
 Bukvice
 Bulhary
-Bulovka
+#Bulovka
 Buřenice
 Buš
 Bušanovice
@@ -448,7 +448,7 @@ Bzová
 Čachrov
 Čakov
 Čaková
-Čakovice
+#Čakovice
 Čakovičky
 Čankovice
 Čáslav
@@ -550,7 +550,7 @@ Cerhovice
 Červený Hrádek
 Červený Kostelec
 Červený Újezd
-Česká
+#Česká
 Česká Bělá
 Česká Bříza
 Česká Čermná
@@ -1122,7 +1122,7 @@ Habry
 Hačky
 Hadravova Rosička
 Hajany
-Háje
+#Háje
 Hájek
 Háje nad Jizerou
 Hajnice
@@ -1280,7 +1280,7 @@ Horka I
 Horka II
 Horka nad Moravou
 Horka u Staré Paky
-Horky
+#Horky
 Horky nad Jizerou
 Horní Bečva
 Horní Bělá
@@ -1420,7 +1420,7 @@ Hrabůvka
 Hrabyně
 Hracholusky
 Hrachoviště
-Hradčany
+#Hradčany
 Hradčany - Kobeřice
 Hradce
 Hradčovice
@@ -2096,7 +2096,7 @@ Kšely
 Kšice
 Ktiš
 Ktová
-Kublov
+#Kublov
 Kubova Huť
 Kubšice
 Kučeř
@@ -2152,7 +2152,7 @@ Kvilda
 Kvílice
 Kvítkov
 Kvítkovice
-Kyje
+#Kyje
 Kyjov
 Kyjovice
 Kynice
@@ -2248,7 +2248,7 @@ Lhota u Příbramě
 Lhota u Vsetína
 Lhota - Vlasenice
 Lhotice
-Lhotka
+#Lhotka
 Lhotka nad Labem
 Lhotka u Litultovic
 Lhotka u Radnic
@@ -2312,7 +2312,7 @@ Librantice
 Libřice
 Libštát
 Libuň
-Libuš
+#Libuš
 Libušín
 Lichkov
 Lichnov
@@ -2387,7 +2387,7 @@ Lobendava
 Lobodice
 Ločenice
 Lochenice
-Lochkov
+#Lochkov
 Lochousice
 Lochovice
 Loděnice
@@ -2453,7 +2453,7 @@ Ludslavice
 Ludvíkov
 Ludvíkovice
 Luhačovice
-Luka
+#Luka
 Luká
 Luka nad Jihlavou
 Lukavec
@@ -3029,7 +3029,7 @@ Občov
 Obecnice
 Obědkovice
 Obědovice
-Obora
+#Obora
 Obořiště
 Oborná
 Obory
@@ -3107,7 +3107,7 @@ Ondřejov
 Onomyšl
 Onšov
 Opařany
-Opatov
+#Opatov
 Opatovec
 Opatovice
 Opatovice I
@@ -3364,7 +3364,7 @@ Podhradní Lhota
 Podivice
 Podivín
 Podkopná Lhota
-Podlesí
+#Podlesí
 Podlešín
 Podluhy
 Podmoklany
@@ -3373,7 +3373,7 @@ Podmoky
 Podmolí
 Podmyče
 Podolanka
-Podolí
+#Podolí
 Podolí I
 Podomí
 Podsedice
@@ -3656,7 +3656,7 @@ Radostín nad Oslavou
 Radostná pod Kozákovem
 Radostov
 Radotice
-Radotín
+#Radotín
 Radovesice
 Radovesnice I
 Radovesnice II
@@ -3976,7 +3976,7 @@ Skalice
 Skalice nad Svitavou
 Skalice u České Lípy
 Skalička
-Skalka
+#Skalka
 Skalka u Doks
 Skalná
 Skalsko
@@ -4050,7 +4050,7 @@ Slepotice
 Slezská Ostrava
 Slezské Pavlovice
 Slezské Rudoltice
-Slivenec
+#Slivenec
 Slopné
 Sloup
 Sloupnice
@@ -4345,7 +4345,7 @@ Stvolová
 Suchá
 Suchá Lhota
 Suchá Loz
-Suchdol
+#Suchdol
 Suchdol nad Lužnicí
 Suchdol nad Odrou
 Suché Lazce
@@ -4588,7 +4588,7 @@ Trnov
 Trnová
 Trnovany
 Trnové Pole
-Troja
+#Troja
 Trojanovice
 Trojovice
 Trokavec
@@ -4682,7 +4682,7 @@ Uhřičice
 Uhřínov
 Uhy
 Ujčov
-Újezd
+#Újezd
 Újezdec
 Újezdeček
 Újezd nade Mží
@@ -5278,7 +5278,7 @@ Zborovice
 Zborovy
 Zbožíčko
 Zbrašín
-Zbraslav
+#Zbraslav
 Zbraslavec
 Zbraslavice
 Zbůch
