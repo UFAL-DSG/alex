@@ -112,9 +112,11 @@ class PTICSHDCSLU(SLUInterface):
 
         # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
-                         ('deny', set(['nechci', 'nejedu']), set(['nechci ukončit hovor', 'nechci to tak',
-                                                                 'né to nechci', 'ne to nechci']))]
+                         ('deny',
+                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'ne k']),
+                          set(['nechci ukončit hovor', 'nechci to tak', 'né to nechci', 'ne to nechci']))]
         last_wp_pos = 0
+
         for i, w in enumerate(u):
             if w.startswith(wp_id):
                 wp_name = w[len(wp_id):]
@@ -125,7 +127,7 @@ class PTICSHDCSLU(SLUInterface):
                 # start from a narrower context and expand up to 3 words left
                 wp_precontext = {}
                 for cur_wp_type, phrases in phr_wp_types:
-                    wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 3):i], phrases)
+                    wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 5):i], phrases)
                 wp_types |= self._get_closest_wp_type(wp_precontext)
                 # test short following context (0 = from, 1 = to, 2 = via)
                 if not wp_types:
@@ -414,7 +416,7 @@ class PTICSHDCSLU(SLUInterface):
             not any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if not any_phrase_in(u, ['ne z',]):
+        if not any_phrase_in(u, ['ne z', ]):
             if  any_word_in(u, "ne né nene nené") or \
                  phrase_in(u, 'nechci to tak') or \
                          len(u) == 1 and any_word_in(u, "nejedu nechci") or \
