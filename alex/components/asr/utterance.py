@@ -6,6 +6,7 @@
 from __future__ import unicode_literals
 
 import copy
+import re
 from collections import namedtuple
 from itertools import izip, product
 from operator import add, itemgetter, mul
@@ -306,13 +307,21 @@ class Utterance(object):
         return (ret_utt, orig_pos) if return_startidx else ret_utt
 
     def replace_all(self, orig, replacement):
+        """Replace all occurrences of the given words with the replacement.
+        Only replaces at word boundaries.
+
+        :param orig: the original string to be replaced (as string or list of words)
+        :param replacement: the replacement (as string or list of words)
+        :rtype: Utterance
+        """
         if self.find(orig) == -1:
             return self
         if isinstance(orig, list):
             orig = u' '.join(orig)
         if isinstance(replacement, list):
             replacement = u' '.join(replacement)
-        return Utterance(unicode(self).replace(orig, replacement))
+        # using '\b' to ensure we are replacing only at whitespace
+        return Utterance(re.sub('\b' + re.escape(orig) + '\b', replacement, unicode(self)))
 
     def replace2(self, start, end, replacement):
         """
