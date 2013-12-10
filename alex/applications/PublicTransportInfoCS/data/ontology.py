@@ -20,6 +20,7 @@ ontology = {
         'from_city': set([]),
         'to_city': set([]),
         'via_city': set([]),
+        'in_city': set([]),
         'departure_time': set(['now', '7:00', ]),
         'departure_time_rel': set(['00:05']),
         'arrival_time': set([]),
@@ -69,6 +70,10 @@ ontology = {
             'system_confirms', 'system_iconfirms',
         ],
         'via_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'in_city': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_confirms', 'system_iconfirms',
         ],
@@ -233,12 +238,16 @@ ontology = {
             'from_stop', 'to_stop', 'via_stop',
         ],
         'city_stop': [
-            'from_city', 'to_city',
+            'from_city', 'to_city', 'via_city', 'in_city',
         ],
     },
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},
+    },
+
+    'default_values': {
+        'in_city': 'Praha',
     },
 
     # translation of the values for TTS output
@@ -289,6 +298,7 @@ add_slot_values_from_database('via_stop', 'stop')
 add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')
+add_slot_values_from_database('in_city', 'city')
 add_slot_values_from_database('departure_time', 'time')
 add_slot_values_from_database('departure_time_rel', 'time_rel')
 add_slot_values_from_database('arrival_time', 'time')

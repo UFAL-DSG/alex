@@ -110,3 +110,14 @@ class Ontology(object):
         if slot_pair in self.ontology['compatible_values']:
             return self.ontology['compatible_values'][slot_pair].get(value, set()).copy()
         return None
+
+    def get_default_value(self, slot):
+        """Given a slot name, get its default value (if set in the ontology). Returns None
+        if the default value is not set for the given slot.
+
+        :param slot: the name of the desired slot
+        :rtype: unicode
+        """
+        if slot in self.ontology['default_values']:
+            return self.ontology['default_values'][slot]
+        return None

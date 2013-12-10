@@ -133,7 +133,7 @@ class OpenWeatherMapWeather(Weather):
 class WeatherFinder(object):
     """Abstract ancestor for transit direction finders."""
 
-    def get_weather(self, time=None):
+    def get_weather(self, time=None, daily=False, place=None):
         """
         Retrieve the weather for the given time, or for now (if time is None).
 
@@ -143,20 +143,23 @@ class WeatherFinder(object):
 
 
 class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
-    """XXX"""
+    """Weather service using OpenWeatherMap (http://openweathermap.org)"""
 
     def __init__(self, cfg):
         WeatherFinder.__init__(self)
         APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
-    def get_weather(self, time=None, daily=False):
+    def get_weather(self, time=None, daily=False, place=None):
         """Get OpenWeatherMap weather information or forecast for the given time.
 
         The time/date should be given as a datetime.datetime object.
         """
+        # default to weather for Czech Rep.
+        place = place if place is not None else 'Czech Republic'
+        # set the place
         data = {
-            'q': 'Prague,CZE',
+            'q': (place + ',CZ').encode('utf-8'),
         }
         method = 'weather'
         if daily:
@@ -167,6 +170,8 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         self.system_logger.info("OpenWeatherMap request:\n" + method + ' + ' + str(data))
 
         page = urllib.urlopen(self.weather_url + method + '?' + urllib.urlencode(data))
+        if page.getcode() != 200:
+            return None
         response = json.load(page)
         self._log_response_json(response)
         weather = OpenWeatherMapWeather(response, time, daily)

@@ -98,9 +98,9 @@ class PTICSHDCSLU(SLUInterface):
                                     'cíl', 'vystupuji', 'vystupuju'])),
                         ('via', set(['přes', ]))]
 
-        self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types)
+        self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_in=['v', 've'])
 
-    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types):
+    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types, phr_in=None):
         """Detects stops or cities in the input abstract utterance
         (called through parse_city or parse_stop).
 
@@ -124,7 +124,6 @@ class PTICSHDCSLU(SLUInterface):
                 dai_type = 'inform'
 
                 # test short preceding context to find the stop type (from, to, via)
-                # start from a narrower context and expand up to 3 words left
                 wp_precontext = {}
                 for cur_wp_type, phrases in phr_wp_types:
                     wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 5):i], phrases)
@@ -135,12 +134,15 @@ class PTICSHDCSLU(SLUInterface):
                         wp_types.add('to')
                     elif any_phrase_in(u[i:i + 3], phr_wp_types[1][1]):
                         wp_types.add('from')
-                # resolve context according to further preceding/following stop name (assuming from-to)
+                # resolve context according to further preceding/following waypoint name (assuming from-to)
                 if not wp_types:
                     if i >= 1 and u[i - 1].startswith(wp_id):
                         wp_types.add('to')
                     elif i <= N - 2 and u[i + 1].startswith(wp_id):
                         wp_types.add('from')
+                # using 'in' slot if the previous checks did not work and we have phrases for 'in'
+                if not wp_types and phr_in is not None and any_phrase_in(u[max(last_wp_pos, i - 5): i], phr_in):
+                    wp_types.add('in')
 
                 # test utterance type
                 for cur_dai_type, phrases_pos, phrases_neg in phr_dai_types:
@@ -148,10 +150,10 @@ class PTICSHDCSLU(SLUInterface):
                         dai_type = cur_dai_type
                         break
 
-                # add stop to confusion network (standard case: just single type is decided)
+                # add waypoint to confusion network (standard case: just single type is decided)
                 if len(wp_types) == 1:
                     cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name))
-                # backoff 1: add both 'from' and 'to' stop slots
+                # backoff 1: add both 'from' and 'to' waypoint slots
                 elif 'from' in wp_types and 'to' in wp_types:
                     cn.add(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name))
                     cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name))
@@ -189,7 +191,6 @@ class PTICSHDCSLU(SLUInterface):
         """
 
         u = abutterance
-        N = len(u)
 
         preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
         preps_rel = set(["za", ])

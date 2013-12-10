@@ -314,6 +314,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
         lta_time = ds['lta_time'].mpv()
+        in_city = ds['in_city'].mpv()
+
+        # default city if no city is set
+        if in_city == 'none':
+            in_city = self.ontology.get_default_value('in_city')
 
         # interpret time
         daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
@@ -322,7 +327,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
             weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # request the weather
-        weather = self.weather.get_weather(weather_time_int, daily)
+        weather = self.weather.get_weather(weather_time_int, daily, in_city)
+        # check errors
+        if weather is None:
+            return DialogueAct('apology()&inform(in_city="%s")' % in_city)
 
         # return the result
         res_da = DialogueAct()
