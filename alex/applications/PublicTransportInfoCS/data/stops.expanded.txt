@@ -154,7 +154,7 @@ Brusnice;Brusnic;Brusnicí;Brusnicím;Brusnici;Brusnicích
 Bryksova;Bryksovy;Bryksově;Bryksovu
 Bubovice;Bubovic;Bubovicím;Bubovicům;Bubovicích
 Bubovice, Višňovka;Bubovic, Višňovky;Bubovicím, Višňovce;Bubovicům, Višňovce;Bubovice, Višňovku;Bubovicích, Višňovce
-Bucharova
+Bucharova;Bucharovy
 Budějovická;Budějovické;Budějovický;Budějovickou
 Budovec;Budovce;Budovci;Budovcovi
 Bulovka;Bulovky;Bulovce;Bulovku
@@ -550,7 +550,7 @@ Hydrologický ústav;Hydrologického ústavu;Hydrologickýho ústavu;Hydrologick
 IKEM
 Internacionální
 Invalidovna;Invalidovny;Invalidovně;Invalidovnu
-I. P. Pavlova
+I. P. Pavlova;I. P. Pavlovu;ÍPÉ PA Pavlova
 Italská;Italské;Italský;Italskou
 Jahodnice;Jahodnic;Jahodnicím;Jahodnicům;Jahodnicích
 Jahodnice II;Jahodnic II;Jahodnicím II;Jahodnicům II;Jahodnicích II
@@ -964,7 +964,7 @@ Lešanská;Lešanské;Lešanský;Lešanskou
 Letecké muzeum;Leteckého muzea;Leteckého musea;Leteckýho muzea;Leteckýho musea;Leteckému muzeu;Leteckému museu;Leteckýmu muzeu;Leteckýmu museu;Letecké museum;Letecký muzeum;Letecký museum;Leteckém muzeu;Leteckém museu;Leteckým muzeu;Leteckým museu;Leteckym muzeu;Leteckym museu
 Letecké opravny;Leteckých opraven;Leteckejch opraven;Leteckým opravnám;Leteckejm opravnám;Letecký opravny;Leteckých opravnách;Leteckejch opravnách
 Letenské náměstí;Letenského náměstí;Letenskýho náměstí;Letenskému náměstí;Letenskýmu náměstí;Letenský náměstí;Letenském náměstí;Letenským náměstí;Letenskym náměstí
-Letiště Václava Havla;Letišti Václava Havla;Praha Letiště;Prahy Letiště;Praze Letiště;Prahu Letiště;Letiště Praha;Letišti Praha;Letiště Ruzyně;Letišti Ruzyně;Ruzyňské Letiště;Ruzyňského Letiště;Ruzyňskýho Letiště;Ruzyňskému Letišti;Ruzyňskýmu Letišti;Ruzyňský Letiště;Ruzyňském Letišti;Ruzyňským Letišti;Ruzyňskym Letišti;Václav Havel;Václava Havel;Václavovi Havel;Václavu Havel;Letiště v Ruzyni;Letišti v Ruzyni
+Letiště Václava Havla;Letišti Václava Havla;Praha Letiště;Prahy Letiště;Praze Letiště;Prahu Letiště;Letiště Praha;Letišti Praha;Letiště Ruzyně;Letišti Ruzyně;Ruzyňské Letiště;Ruzyňského Letiště;Ruzyňskýho Letiště;Ruzyňskému Letišti;Ruzyňskýmu Letišti;Ruzyňský Letiště;Ruzyňském Letišti;Ruzyňským Letišti;Ruzyňskym Letišti;Václav Havel;Václava Havel;Václavovi Havel;Václavu Havel;Václava Havla;Letiště v Ruzyni;Letišti v Ruzyni;Letiště
 Letňanská;Letňanské;Letňanský;Letňanskou
 Letňany;Letňan;Letňanům;Letňanum;Letňanech;Letňanách
 Lety;Letů;Letům;Letum;Letech
@@ -1558,7 +1558,7 @@ Podhajská pole;Podhajské pole;Podhajský pole;Podhajskou pole
 Podhoří
 Pod Hradem
 Pod Jezerkou
-Pod Karlovem
+Pod Karlovem;Karlov;Karlova
 Pod Kesnerkou
 Pod Konvářkou
 Podkovářská;Podkovářské;Podkovářský;Podkovářskou
@@ -2016,10 +2016,10 @@ Spalovna Malešice;Spalovny Malešice;Spalovně Malešice;Spalovnu Malešice
 Sparta;Sparty;Spartě;Spartu
 Špejchar;Špejcharu;Špejchaře
 Šperlova;Šperlovy;Šperlově;Šperlovu
-Spiritka
+Spiritka;Spiritky
 Špitálka
 Špitálská;Špitálské;Špitálský;Špitálskou
-Spojovací;Spojovacích;Spojovacím;Spojovacim
+Spojovací;Spojovacích;Spojovacím;Spojovacim;Jarov;Jarova
 Spolská;Spolské;Spolský;Spolskou
 Spořická;Spořické;Spořický;Spořickou
 Spořilov;Spořilova;Spořilovu;Spořilově
@@ -2498,7 +2498,7 @@ Vysoký Újezd { okres Praha - západ };Vysokého Újezda { okresu Praha - zápa
 Vysoký Újezd, sokolovna { okres Praha - západ };Vysokého Újezda, sokolovny { okresu Praha - západu };Vysokýho Újezda, sokolovny { okresu Praha - západu };Vysokému Újezdu, sokolovně { okresu Praha - západu };Vysokýmu Újezdu, sokolovně { okresu Praha - západu };Vysoký Újezd, sokolovnu { okres Praha - západ };Vysokej Újezd, sokolovnu { okres Praha - západ };Vysokém Újezdě, sokolovně { okrese Praha - západě };Vysokém Újezdě, sokolovně { okrese Praha - západu };Vysokém Újezdě, sokolovně { okresu Praha - západě };Vysokém Újezdě, sokolovně { okresu Praha - západu };Vysokém Újezdu, sokolovně { okrese Praha - západě };Vysokém Újezdu, sokolovně { okrese Praha - západu };Vysokém Újezdu, sokolovně { okresu Praha - západě };Vysokém Újezdu, sokolovně { okresu Praha - západu };Vysokým Újezdě, sokolovně { okrese Praha - západě };Vysokým Újezdě, sokolovně { okrese Praha - západu };Vysokým Újezdě, sokolovně { okresu Praha - západě };Vysokým Újezdě, sokolovně { okresu Praha - západu };Vysokým Újezdu, sokolovně { okrese Praha - západě };Vysokým Újezdu, sokolovně { okrese Praha - západu };Vysokým Újezdu, sokolovně { okresu Praha - západě };Vysokým Újezdu, sokolovně { okresu Praha - západu };Vysokym Újezdě, sokolovně { okrese Praha - západě };Vysokym Újezdě, sokolovně { okrese Praha - západu };Vysokym Újezdě, sokolovně { okresu Praha - západě };Vysokym Újezdě, sokolovně { okresu Praha - západu };Vysokym Újezdu, sokolovně { okrese Praha - západě };Vysokym Újezdu, sokolovně { okrese Praha - západu };Vysokym Újezdu, sokolovně { okresu Praha - západě };Vysokym Újezdu, sokolovně { okresu Praha - západu }
 Výstaviště Holešovice;Výstavišti Holešovice;Výstaviště;Výstavišti;Stromovka;Stromovky;Stromovce;Stromovku
 Výstaviště Letňany;Výstavišti Letňany
-Výtoň;Výtoně;Výtoni
+Výtoň;Výtoně;Výtoni;Vyšehrad;Vyšehrady
 Výžerky
 Výžerky, rozcestí
 Výzkumné ústavy Běchovice;Výzkumných ústav Běchovice;Výzkumnejch ústav Běchovice;Výzkumným ústavám Běchovice;Výzkumnejm ústavám Běchovice;Výzkumný ústavy Běchovice;Výzkumných ústavách Běchovice;Výzkumnejch ústavách Běchovice
@@ -2565,7 +2565,7 @@ Zatáčka;Zatáčky;Zatáčce;Zatáčku
 Zátišská;Zátišské;Zátišský;Zátišskou
 Za Tratí
 Závist;Závisti
-Závodiště Chuchle;Závodišti Chuchle
+Závodiště Chuchle;Závodišti Chuchle;Chuchle;Chuchel
 Zborovská;Zborovské;Zborovský;Zborovskou
 Zborov - Strašnické divadlo;Zborova - Strašnického divadla;Zborova - Strašnickýho divadla;Zborovu - Strašnickému divadlu;Zborovu - Strašnickýmu divadlu;Zborov - Strašnický divadlo;Zborově - Strašnickém divadle;Zborově - Strašnickém divadlu;Zborově - Strašnickým divadle;Zborově - Strašnickým divadlu;Zborově - Strašnickym divadle;Zborově - Strašnickym divadlu;Zborovu - Strašnickém divadle;Zborovu - Strašnickém divadlu;Zborovu - Strašnickým divadle;Zborovu - Strašnickým divadlu;Zborovu - Strašnickym divadle;Zborovu - Strašnickym divadlu
 Zbraslavské náměstí;Zbraslavského náměstí;Zbraslavskýho náměstí;Zbraslavskému náměstí;Zbraslavskýmu náměstí;Zbraslavský náměstí;Zbraslavském náměstí;Zbraslavským náměstí;Zbraslavskym náměstí
@@ -2886,7 +2886,7 @@ Otakara Ševčíka
 Ořechovská;Ořechovské;Ořechovský;Ořechovskou
 Ořešín;Ořešína;Ořešínu;Ořešíně
 Ořešínská
-Palackého náměstí
+Palackého náměstí;Palacké náměstí
 Palackého vrch;Palackého vrchu
 Pavlovská;Pavlovské;Pavlovský;Pavlovskou
 Pavlíkova;Pavlíkovy;Pavlíkově;Pavlíkovu

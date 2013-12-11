@@ -1561,7 +1561,7 @@ Jaroslav
 Jaroslavice
 Jarošov
 Jarošov nad Nežárkou
-Jarov
+#Jarov
 Jarpice
 Jasenice
 Jasenná
@@ -1718,7 +1718,7 @@ Kařízek
 Karle
 Karlík
 Karlín
-Karlov
+#Karlov
 Karlova Studánka
 Karlova Ves
 Karlovice
@@ -2252,7 +2252,7 @@ Lhotice
 Lhotka nad Labem
 Lhotka u Litultovic
 Lhotka u Radnic
-Lhotky
+#Lhotky
 Lhotsko
 Lhoty u Potštejna
 Lhůta
@@ -2627,7 +2627,7 @@ Mikolajice
 Mikulášovice
 Mikulčice
 Mikuleč
-Mikulov
+#Mikulov
 Mikulovice
 Mikulůvka
 Milasín
@@ -3241,7 +3241,7 @@ Patokryje
 Pavlice
 Pavlíkov
 Pavlínov
-Pavlov
+#Pavlov
 Pavlovice
 Pavlovice u Kojetína
 Pavlovice u Přerova

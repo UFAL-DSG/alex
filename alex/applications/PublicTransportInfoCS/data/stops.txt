@@ -158,7 +158,7 @@ Brusnice
 Bryksova
 Bubovice
 Bubovice, Višňovka
-Bucharova
+Bucharova   Bucharovy
 Budějovická
 Budovec
 Bulovka
@@ -556,7 +556,7 @@ Hydrologický ústav
 IKEM
 Internacionální
 Invalidovna
-I.P.Pavlova
+I.P.Pavlova I.P.Pavlovu
 Italská
 Jahodnice
 Jahodnice II
@@ -970,7 +970,7 @@ Lešanská
 Letecké muzeum
 Letecké opravny
 Letenské náměstí
-Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Letiště v Ruzyni
+Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla    Letiště v Ruzyni    Letiště
 Letňanská
 Letňany
 Lety
@@ -1564,7 +1564,7 @@ Podhajská pole
 Podhoří
 Pod Hradem
 Pod Jezerkou
-Pod Karlovem
+Pod Karlovem    Karlov
 Pod Kesnerkou
 Pod Konvářkou
 Podkovářská
@@ -2022,10 +2022,10 @@ Spalovna Malešice
 Sparta
 Špejchar
 Šperlova
-Spiritka
+Spiritka    Spiritky
 Špitálka
 Špitálská
-Spojovací
+Spojovací   Jarov
 Spolská
 Spořická
 Spořilov
@@ -2504,7 +2504,7 @@ Vysoký Újezd {okres Praha - západ}
 Vysoký Újezd, sokolovna {okres Praha - západ}
 Výstaviště Holešovice	Výstaviště	Stromovka
 Výstaviště Letňany
-Výtoň
+Výtoň   Vyšehrad
 Výžerky
 Výžerky, rozcestí
 Výzkumné ústavy Běchovice
@@ -2571,7 +2571,7 @@ Zatáčka
 Zátišská
 Za Tratí
 Závist
-Závodiště Chuchle
+Závodiště Chuchle   Chuchle
 Zborovská
 Zborov - Strašnické divadlo
 Zbraslavské náměstí
@@ -2895,7 +2895,7 @@ Otakara Ševčíka
 Ořechovská
 Ořešín
 Ořešínská
-Palackého náměstí
+Palackého náměstí   Palacké náměstí
 Palackého vrch
 Pavlovská
 Pavlíkova

@@ -587,6 +587,7 @@ class PTICSHDCSLU(SLUInterface):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
+        #print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 

@@ -1551,7 +1551,7 @@ Jaroslav;Jaroslava;Jaroslavovi;Jaroslavu
 Jaroslavice;Jaroslavic;Jaroslavicím;Jaroslavicům;Jaroslavicích
 Jarošov;Jarošova;Jarošovu;Jarošově
 Jarošov nad Nežárkou;Jarošova nad Nežárkou;Jarošovu nad Nežárkou;Jarošově nad Nežárkou
-Jarov;Jarova;Jarovu;Jarově
+#Jarov;Jarova;Jarovu;Jarově
 Jarpice;Jarpic;Jarpicím;Jarpicům;Jarpicích
 Jasenice;Jasenic;Jasenicím;Jasenicích
 Jasenná;Jasenné;Jasenný;Jasennou
@@ -1707,7 +1707,7 @@ Kařízek;Kařízku
 Karle
 Karlík;Karlíka;Karlíkovi;Karlíku
 Karlín;Karlína;Karlínu;Karlíně
-Karlov;Karlova;Karlovu;Karlově
+#Karlov;Karlova;Karlovu;Karlově
 Karlova Studánka;Karlovy Studánky;Karlově Studánce;Karlovu Studánku
 Karlova Ves;Karlovy Vsi;Karlově Vsi;Karlovu Ves
 Karlovice;Karlovic;Karlovicím;Karlovicům;Karlovicích
@@ -2237,7 +2237,7 @@ Lhotice;Lhotic;Lhoticím;Lhoticům;Lhoticích
 Lhotka nad Labem;Lhotky nad Labem;Lhotce nad Labem;Lhotku nad Labem
 Lhotka u Litultovic;Lhotky u Litultovic;Lhotce u Litultovic;Lhotku u Litultovic
 Lhotka u Radnic;Lhotky u Radnic;Lhotce u Radnic;Lhotku u Radnic
-Lhotky;Lhotek;Lhotkám;Lhotkách
+#Lhotky;Lhotek;Lhotkám;Lhotkách
 Lhotsko;Lhotska;Lhotsku
 Lhoty u Potštejna;Lhot u Potštejna;Lhotám u Potštejna;Lhotách u Potštejna
 Lhůta;Lhůty;Lhůtě;Lhůtu
@@ -2608,7 +2608,7 @@ Mikolajice;Mikolajic;Mikolajicím;Mikolajicům;Mikolajicích
 Mikulášovice;Mikulášovic;Mikulášovicím;Mikulášovicům;Mikulášovicích
 Mikulčice;Mikulčic;Mikulčicím;Mikulčicům;Mikulčicích
 Mikuleč;Mikuleče;Mikuleči
-Mikulov;Mikulova;Mikulovu;Mikulově
+#Mikulov;Mikulova;Mikulovu;Mikulově
 Mikulovice;Mikulovic;Mikulovicím;Mikulovicům;Mikulovicích
 Mikulůvka;Mikulůvky;Mikulůvce;Mikulůvku
 Milasín
@@ -3218,7 +3218,7 @@ Patokryje;Patokryjí;Patokryjím;Patokryjích
 Pavlice;Pavlic;Pavlicím;Pavlicům;Pavlicích
 Pavlíkov;Pavlíkova;Pavlíkovu;Pavlíkově
 Pavlínov;Pavlínova;Pavlínovu;Pavlínově
-Pavlov;Pavlova;Pavlovu;Pavlově
+#Pavlov;Pavlova;Pavlovu;Pavlově
 Pavlovice;Pavlovic;Pavlovicím;Pavlovicům;Pavlovicích
 Pavlovice u Kojetína;Pavlovic u Kojetína;Pavlovicím u Kojetína;Pavlovicům u Kojetína;Pavlovicích u Kojetína
 Pavlovice u Přerova;Pavlovic u Přerova;Pavlovicím u Přerova;Pavlovicům u Přerova;Pavlovicích u Přerova
