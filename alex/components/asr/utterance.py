@@ -320,8 +320,9 @@ class Utterance(object):
             orig = u' '.join(orig)
         if isinstance(replacement, list):
             replacement = u' '.join(replacement)
-        # using '\b' to ensure we are replacing only at whitespace
-        return Utterance(re.sub('\b' + re.escape(orig) + '\b', replacement, unicode(self)))
+        # FJ (this does not work well): using '\b' to ensure we are replacing only at whitespace
+        # FJ a changed it
+        return Utterance(re.sub('(^|\s)' + re.escape(orig) + '($|\s)', ' '+replacement+' ', unicode(self)))
 
     def replace2(self, start, end, replacement):
         """
