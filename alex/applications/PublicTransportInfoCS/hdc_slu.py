@@ -446,7 +446,7 @@ class PTICSHDCSLU(SLUInterface):
                              'bych tam jet', ]):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
-        if any_phrase_in(u, ['jak bude', 'jak je']):
+        if any_phrase_in(u, ['jak bude', 'jak dnes bude', 'jak je']):
             cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
 
         if len(u.utterance) == 1 and any_word_in(u, 'centra centrum'):
