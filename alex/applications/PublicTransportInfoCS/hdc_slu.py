@@ -236,6 +236,7 @@ class PTICSHDCSLU(SLUInterface):
 
         last_time_type = ''
         last_time = 0
+
         for i, w in enumerate(u):
             if w.startswith("TIME="):
                 value = w[5:]
@@ -604,7 +605,7 @@ class PTICSHDCSLU(SLUInterface):
 
         #print 'After preprocessing: "{utt}".'.format(utt=abutterance)
         #print category_labels
-        #
+
         res_cn = DialogueActConfusionNetwork()
 
         if 'STOP' in category_labels:

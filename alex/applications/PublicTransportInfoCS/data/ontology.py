@@ -21,10 +21,12 @@ ontology = {
         'to_city': set([]),
         'via_city': set([]),
         'in_city': set([]),
-        'departure_time': set(['now', '7:00', ]),
-        'departure_time_rel': set(['00:05']),
+        'departure_time': set([]),
+        'departure_time_rel': set([]),
         'arrival_time': set([]),
-        'arrival_time_rel': set(['00:05']),
+        'arrival_time_rel': set([]),
+        'time': set([]),
+        'time_rel': set([]),
         'duration': set([]),
         'ampm': set(['morning', 'am', 'pm', 'evening', 'night']),
         'date': set([]),
@@ -288,9 +290,10 @@ ontology = {
 }
 
 
-def add_slot_values_from_database(slot, category):
+def add_slot_values_from_database(slot, category, exceptions=set()):
     for value in database.get(category, tuple()):
-        ontology['slots'][slot].add(value)
+        if value not in exceptions:
+            ontology['slots'][slot].add(value)
 
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
@@ -299,10 +302,12 @@ add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')
 add_slot_values_from_database('in_city', 'city')
-add_slot_values_from_database('departure_time', 'time')
-add_slot_values_from_database('departure_time_rel', 'time_rel')
-add_slot_values_from_database('arrival_time', 'time')
-add_slot_values_from_database('arrival_time_rel', 'time_rel')
+add_slot_values_from_database('departure_time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('departure_time_rel', 'time')
+add_slot_values_from_database('arrival_time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('arrival_time_rel', 'time')
+add_slot_values_from_database('time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('time_rel', 'time')
 add_slot_values_from_database('date_rel', 'date_rel')
 
 
