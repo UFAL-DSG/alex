@@ -269,7 +269,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         elif slots_being_confirmed:
             # inform about all slots being confirmed by the user
-            res_da = self.get_confirmed_info(slots_being_confirmed, ds)
+            res_da = self.get_confirmed_info(slots_being_confirmed, ds, accepted_slots)
 
         else:
             # gather known information about the connection
