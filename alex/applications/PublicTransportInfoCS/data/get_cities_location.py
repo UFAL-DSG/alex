@@ -27,7 +27,7 @@ from time import sleep
 def get_google_coords(city):
     """Retrieve (all possible) coordinates of a city using the Google Geocoding API."""
     data = {'sensor': 'false',
-            'address': (city + ',Czech Republic').encode('utf-8'),
+            'address': ('"obec %s",Czech Republic' % city).encode('utf-8'),
             'language': 'cs'}
     page = urllib.urlopen('http://maps.googleapis.com/maps/api/geocode/json?' +
                           urllib.urlencode(data))
