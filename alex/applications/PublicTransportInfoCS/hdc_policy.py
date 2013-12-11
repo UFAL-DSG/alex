@@ -17,7 +17,7 @@ from .directions import GooglePIDDirectionsFinder
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
-
+import re
 
 def randbool(n):
     """Randomly return True in 1 out of n cases.
@@ -961,6 +961,10 @@ class PTICSHDCPolicy(DialoguePolicy):
                 time_abs = 'none'
             elif lta_time.endswith('time'):
                 time_rel = 'none'
+
+        # remove bogus values (i.e. "now") from time_abs
+        if not re.match('[0-2][0-9]:[0-5][0-9]', time_abs):
+            time_abs = 'none'
 
         # relative time
         if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
