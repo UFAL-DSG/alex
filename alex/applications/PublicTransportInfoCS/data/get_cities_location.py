@@ -9,7 +9,8 @@ Usage:
 
 ./get_cities_locations.py [-d delay] [-l limit] [-a] cities_locations-in.tsv cities_locations-out.tsv
 
--d = delay between requests
+-d = delay between requests in seconds (will be extended by a random period
+        up to 1/2 of the original value)
 -l = limit maximum number of requests
 -a = retrieve all locations, even if they are set
 """
@@ -22,6 +23,7 @@ from getopt import getopt
 import json
 import urllib
 from time import sleep
+from random import random
 
 
 def get_google_coords(city):
@@ -93,5 +95,5 @@ if __name__ == '__main__':
                 line = line.split('\t', 1)[0]  # strip previous coordinates, if applicable
                 coords = get_google_coords(line)
                 requests += 1
-                sleep(delay)
+                sleep(delay + 0.5 * random() * delay)
                 print >> fh_out, line, '\t', '\t'.join(coords)
