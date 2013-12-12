@@ -326,26 +326,26 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da.append(DialogueActItem('iconfirm', 'in_city', in_city))
 
         # interpret time
-        daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
+        daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
         # check if any time is set to distinguish current/prediction
-        weather_time_int = None
+        weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
-            weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
+            weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # request the weather
-        weather = self.weather.get_weather(weather_time_int, daily, in_city)
+        weather = self.weather.get_weather(weather_ts, daily, in_city)
         # check errors
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")' % in_city)
-
         # time
-        if weather_time_int:
-            if time_rel != 'none':
+        if weather_ts:
+            if time_type == 'rel':
                 res_da.append(DialogueActItem('inform', 'time_rel', time_rel))
-            elif time_abs != 'none' or ampm != 'none':
-                res_da.append(DialogueActItem('inform', 'time',
-                                              '%d:%02d' % (weather_time_int.hour, weather_time_int.minute)))
-            if date_rel != 'none':
-                res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
+            else:
+                if time_abs != 'none' or ampm != 'none':
+                    res_da.append(DialogueActItem('inform', 'time',
+                                                  '%d:%02d' % (weather_ts.hour, weather_ts.minute)))
+                if date_rel != 'none':
+                    res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
         else:
             res_da.append(DialogueActItem('inform', 'time_rel', 'now'))
         # temperature
@@ -843,25 +843,25 @@ class PTICSHDCPolicy(DialoguePolicy):
         time_rel = ds['time_rel'].mpv()
 
         # interpret departure and arrival time
-        departure_time_int, arrival_time_int = None, None
+        departure_ts, arrival_ts = None, None
         if arrival_time != 'none' or arrival_time_rel != 'none':
-            arrival_time_int = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel,
-                                                   ds['lta_arrival_time'].mpv())
+            arrival_ts, _ = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel,
+                                                      ds['lta_arrival_time'].mpv())
         else:
             lta_departure_time = ds['lta_departure_time'].mpv()
             lta_time = ds['lta_time'].mpv()
             lta_time = lta_departure_time if lta_departure_time != 'none' else lta_time
             time_abs = departure_time if departure_time != 'none' else time
             time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
-            departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
+            departure_ts, _ = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
         # retrieve Google directions
         ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
                                                        to_stop=conn_info['to_stop'],
                                                        from_city=conn_info['from_city'],
                                                        to_city=conn_info['to_city'],
-                                                       departure_time=departure_time_int,
-                                                       arrival_time=arrival_time_int)
+                                                       departure_time=departure_ts,
+                                                       arrival_time=arrival_ts)
         return self.say_directions(ds, route_type)
 
     ORIGIN = 'ORIGIN'
@@ -951,33 +951,38 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Interpret time, given current dialogue state most probable values for
         relative and absolute time and date, plus the corresponding last-talked-about value.
 
-        :return: the inferred time value
-        :rtype: datetime
+        :return: the inferred time value + flag indicating the inferred time type ('abs' or 'rel')
+        :rtype: tuple(datetime, string)
         """
-        # interpret dialogue state time
         now = datetime.now()
 
         # use only last-talked-about time (of any type -- departure/arrival)
-        if time_abs != 'none' and time_rel != 'none':
+        if (time_abs != 'none' or date_rel != 'none') and time_rel != 'none':
             if lta_time.endswith('time_rel'):
                 time_abs = 'none'
-            elif lta_time.endswith('time'):
+                date_rel = 'none'
+            elif lta_time.endswith('time') or lta_time == 'date_rel':
                 time_rel = 'none'
 
         # remove bogus values (i.e. "now") from time_abs
-        if not re.match('[0-2][0-9]:[0-5][0-9]', time_abs):
+        if not re.match('^[0-2]?[0-9]:[0-5][0-9]$', time_abs):
             time_abs = 'none'
 
         # relative time
-        if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
+        if (time_abs == 'none' and time_ampm == 'none' and date_rel == 'none') or time_rel != 'none':
+            time_type = 'rel'
             time_abs = now
             if time_rel not in ['none', 'now']:
                 trel_parse = datetime.strptime(time_rel, "%H:%M")
                 time_abs += timedelta(hours=trel_parse.hour, minutes=trel_parse.minute)
-        # absolute time
+        # absolute time (with relative date)
         else:
-            if time_abs == 'none' and time_ampm != 'none':
-                time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
+            time_type = 'abs'
+            if time_abs == 'none':
+                if time_ampm != 'none':
+                    time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
+                elif date_rel != 'none':
+                    time_abs = "%02d:%02d" % (now.hour, now.minute)
             time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
@@ -997,21 +1002,19 @@ class PTICSHDCPolicy(DialoguePolicy):
                     # 'night' ~ 6pm till 5:59am
                     elif time_ampm == 'night' and time_hour >= 6:
                         time_hour = (time_hour + 12) % 24
-                # 12hr time + no AM/PM set: default to next 12hrs
-                elif now_hour > time_hour and now_hour < time_hour + 12:
+                # 12hr time + no AM/PM set + today or no date set: default to next 12hrs
+                elif date_rel in ['none', 'today'] and now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
             time_abs = datetime.combine(now, dttime(time_hour, time_parsed.minute))
-            # ds['time_abs'] = "%d:%.2d" % (time_abs.hour, time_abs.minute)
+            # relative date
+            if date_rel == 'tomorrow':
+                time_abs += timedelta(days=1)
+            elif date_rel == 'day_after_tomorrow':
+                time_abs += timedelta(days=2)
+            elif time_abs < now:
+                time_abs += timedelta(days=1)
 
-        # relative date
-        if date_rel == 'tomorrow':
-            time_abs += timedelta(days=1)
-        elif date_rel == 'day_after_tomorrow':
-            time_abs += timedelta(days=2)
-        elif time_abs < now:
-            time_abs += timedelta(days=1)
-
-        return time_abs
+        return time_abs, time_type
 
     def get_limited_context_help(self, dialogue_state):
         res_da = DialogueAct()

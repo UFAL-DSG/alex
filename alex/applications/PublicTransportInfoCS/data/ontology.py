@@ -212,6 +212,7 @@ ontology = {
             'time_rel': [('', '^time_rel$', ''), ],
             # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
             # slot
+            'date_rel': [('', '^date_rel$', '')],
         },
         'lta_date': {
             'date': [('', '^date$', ''), ],
@@ -222,10 +223,12 @@ ontology = {
             'departure_time_rel': [('', '^departure_time_rel$', ''), ],
             'time': [('', '^time$', ''), ],
             'time_rel': [('', '^time_rel$', ''), ],
+            'date_rel': [('', '^date_rel$', '')],
         },
         'lta_arrival_time': {
             'arrival_time': [('', '^arrival_time$', ''), ],
             'arrival_time_rel': [('', '^arrival_time_rel$', ''), ],
+            'date_rel': [('', '^date_rel$', '')],
         },
         'lta_task': {
             'weather': [('', '^task$', '^weather$'), ],
