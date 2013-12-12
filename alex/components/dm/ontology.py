@@ -97,3 +97,27 @@ class Ontology(object):
                     return True
         else:
             return False
+
+    def get_compatible_vals(self, slot_pair, value):
+        """Given a slot pair (key to 'compatible_values' in ontology data), this returns the set of
+        compatible values for the given key. If there is no information about the given pair,
+        None is returned.
+
+        :param slot_pair: key to 'compatible_values' in ontology data
+        :param value: the subkey to check compatible values for
+        :rtype: set
+        """
+        if slot_pair in self.ontology['compatible_values']:
+            return self.ontology['compatible_values'][slot_pair].get(value, set()).copy()
+        return None
+
+    def get_default_value(self, slot):
+        """Given a slot name, get its default value (if set in the ontology). Returns None
+        if the default value is not set for the given slot.
+
+        :param slot: the name of the desired slot
+        :rtype: unicode
+        """
+        if slot in self.ontology['default_values']:
+            return self.ontology['default_values'][slot]
+        return None

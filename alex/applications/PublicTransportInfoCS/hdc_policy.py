@@ -17,7 +17,7 @@ from .directions import GooglePIDDirectionsFinder
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
-
+import re
 
 def randbool(n):
     """Randomly return True in 1 out of n cases.
@@ -259,8 +259,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             ds["ludait"].reset()
 
         elif "alternative" in accepted_slots:
-            # Search for traffic direction and/or present the requested
-            # directions already found
+            # Search for traffic direction and/or present the requested directions already found
             res_da = self.get_requested_alternative(ds)
             ds["alternative"].reset()
 
@@ -270,15 +269,17 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         elif slots_being_confirmed:
             # inform about all slots being confirmed by the user
-            res_da = self.get_confirmed_info(slots_being_confirmed, ds)
+            res_da = self.get_confirmed_info(slots_being_confirmed, ds, accepted_slots)
 
         else:
-            # request all unknown information
-            req_da = self.request_more_info(ds, accepted_slots)
+            # gather known information about the connection
+            req_da, iconfirm_da, conn_info = self.gather_connection_info(ds, accepted_slots)
             if len(req_da) == 0:
                 if state_changed:
                     # we know everything we need -> start searching
-                    res_da = self.get_directions(ds, check_conflict=True)
+                    ds.conn_info = conn_info
+                    res_da = iconfirm_da
+                    res_da.extend(self.get_directions(ds, check_conflict=True))
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -313,6 +314,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
         lta_time = ds['lta_time'].mpv()
+        in_city = ds['in_city'].mpv()
+
+        # default city if no city is set
+        if in_city == 'none':
+            in_city = self.ontology.get_default_value('in_city')
 
         # interpret time
         daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
@@ -321,7 +327,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
             weather_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # request the weather
-        weather = self.weather.get_weather(weather_time_int, daily)
+        weather = self.weather.get_weather(weather_time_int, daily, in_city)
+        # check errors
+        if weather is None:
+            return DialogueAct('apology()&inform(in_city="%s")' % in_city)
 
         # return the result
         res_da = DialogueAct()
@@ -562,44 +571,102 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da.extend(iconf_da)
         return res_da
 
-    def request_more_info(self, ds, accepted_slots):
+    def get_default_stop_for_city(self, city):
+        """Return a `default' stop based on the city name (main bus/train station).
+
+        :param city: city name (unicode)
+        :rtype: unicode
+        """
+        stops = self.ontology.get_compatible_vals('city_stop', city)
+        for cand_stop_name in [city, 'Hlavní nádraží', 'CAN, Husova']:
+            if cand_stop_name in stops:
+                return cand_stop_name
+        for cand_stop_suffix in ['hlavní nádraží', ', nádraží', ', autobusové stanoviště',
+                               ', železniční zastávka', ', železniční stanice']:
+            stop = ' '.join((city, cand_stop_suffix)).strip()
+            if stop in stops:
+                return stop
+        return None
+
+    def gather_connection_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
-        for traffic directions, or perform the search if no further information
-        is needed.
+        for traffic directions and a dictionary containing the known information.
+        Infers city names based on stop names and vice versa.
+
+        If the request DA is empty, the search for directions may be commenced immediately.
 
         :param ds: The current dialogue state
-        :rtype: DialogueAct
+        :rtype: DialogueAct, dict
         """
         req_da = DialogueAct()
 
-        # check all state variables and the output one request dialogue act
-        # it just easier to have a list than a tree, the tree is just to confusing for me. FJ
-        if 'from_stop' not in accepted_slots and \
-                'to_stop' not in accepted_slots and \
-                ('departure_time' not in accepted_slots or
-                 'time' not in accepted_slots) and \
-                randbool(10):
-            req_da.extend(DialogueAct('request(departure_time)'))
-        elif 'from_stop' not in accepted_slots and \
-                ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and \
-                randbool(9):
-            req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif 'to_stop' not in accepted_slots and \
-                ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and \
-                randbool(8):
-            req_da.extend(DialogueAct('confirm(centre_direction="to")'))
-        elif 'from_stop' not in accepted_slots and \
-                'to_stop' not in accepted_slots and \
-                randbool(3):
-            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif 'from_stop' not in accepted_slots:
-            req_da.extend(DialogueAct("request(from_stop)"))
-        elif 'to_stop' not in accepted_slots:
-            req_da.extend(DialogueAct('request(to_stop)'))
+        # retrieve the slot variables
+        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else None
+        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else None
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else None
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else None
 
-        return req_da
+        # infer cities based on stops
+        from_cities, to_cities = None, None
+        stop_city_inferred = False
+        if from_stop_val and not from_city_val:
+            from_cities = self.ontology.get_compatible_vals('stop_city', from_stop_val)
+            if len(from_cities) == 1:
+                from_city_val = from_cities.pop()
+                stop_city_inferred = True
+        if to_stop_val and not to_city_val:
+            to_cities = self.ontology.get_compatible_vals('stop_city', to_stop_val)
+            if len(to_cities) == 1:
+                to_city_val = to_cities.pop()
+                stop_city_inferred = True
+
+        # infer cities based on the other
+        if from_stop_val and not from_city_val and to_city_val in from_cities:
+            from_city_val = to_city_val
+        if to_stop_val and not to_city_val and from_city_val in to_cities:
+            to_city_val = from_city_val
+
+        # infer stops based on cities
+        if from_city_val and not from_stop_val:
+            from_stop_val = self.get_default_stop_for_city(from_city_val)
+        if to_city_val and not to_stop_val:
+            to_stop_val = self.get_default_stop_for_city(to_city_val)
+
+        # TODO maybe check if the city and the stop are compatible?
+        # now we just pass it all to Google and see if it can deal with it, which may lead to weird results
+
+        # check all state variables and the output one request dialogue act
+        # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
+        if not from_stop_val and not to_stop_val and ('departure_time' not in accepted_slots
+                or 'time' not in accepted_slots) and randbool(10):
+            req_da.extend(DialogueAct('request(departure_time)'))
+        elif not from_stop_val and ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].mpv() == '*') and randbool(9):
+            req_da.extend(DialogueAct('confirm(centre_direction="from")'))
+        elif not to_stop_val and ('centre_direction' not in accepted_slots or
+                ds['centre_direction'].mpv() == '*') and randbool(8):
+            req_da.extend(DialogueAct('confirm(centre_direction="to")'))
+        elif not from_stop_val and not to_stop_val and randbool(3):
+            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+        elif not from_stop_val:
+            req_da.extend(DialogueAct("request(from_stop)"))
+        elif not to_stop_val:
+            req_da.extend(DialogueAct('request(to_stop)'))
+        elif not from_city_val:
+            req_da.extend(DialogueAct('request(from_city)'))
+        elif not to_city_val:
+            req_da.extend(DialogueAct('request(to_city)'))
+
+        # generate implicit confirms if we inferred cities and they are not the same for both stops
+        iconfirm_da = DialogueAct()
+        if stop_city_inferred and len(req_da) == 0 and from_city_val != to_city_val:
+            iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
+            iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
+
+        return req_da, iconfirm_da, {'from_stop': from_stop_val,
+                                     'to_stop': to_stop_val,
+                                     'from_city': from_city_val,
+                                     'to_city': to_city_val}
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
@@ -752,16 +819,15 @@ class PTICSHDCPolicy(DialoguePolicy):
                 destination stops are different and issue a warning DA if not.
         :rtype: DialogueAct
         """
+        conn_info = ds.conn_info
         # check for route conflicts
-        from_stop_val = ds['from_stop'].mpv()
-        to_stop_val = ds['to_stop'].mpv()
-
-        if check_conflict and from_stop_val == to_stop_val:
+        if (check_conflict and (conn_info['from_stop'] == conn_info['to_stop'])
+                and (conn_info['from_city'] == conn_info['to_city'])):
             apology_da = DialogueAct()
             apology_da.extend(DialogueAct('apology()'))
             apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
-            apology_da.extend(DialogueAct("inform(from_stop='%s')" % from_stop_val))
-            apology_da.extend(DialogueAct("inform(to_stop='%s')" % to_stop_val))
+            apology_da.extend(DialogueAct("inform(from_stop='%s')" % conn_info['from_stop']))
+            apology_da.extend(DialogueAct("inform(to_stop='%s')" % conn_info['to_stop']))
             return apology_da
 
         # get dialogue state values
@@ -788,8 +854,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             departure_time_int = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
         # retrieve Google directions
-        ds.directions = self.directions.get_directions(from_stop=from_stop_val,
-                                                       to_stop=to_stop_val,
+        ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
+                                                       to_stop=conn_info['to_stop'],
+                                                       from_city=conn_info['from_city'],
+                                                       to_city=conn_info['to_city'],
                                                        departure_time=departure_time_int,
                                                        arrival_time=arrival_time_int)
         return self.say_directions(ds, route_type)
@@ -844,7 +912,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                          next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
-                    res.append("inform(duration=0:%02d)" % (step.duration / 60))
+                    #res.append("inform(duration=0:%02d)" % (step.duration / 60))
             # public transport
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
@@ -893,6 +961,10 @@ class PTICSHDCPolicy(DialoguePolicy):
                 time_abs = 'none'
             elif lta_time.endswith('time'):
                 time_rel = 'none'
+
+        # remove bogus values (i.e. "now") from time_abs
+        if not re.match('[0-2][0-9]:[0-5][0-9]', time_abs):
+            time_abs = 'none'
 
         # relative time
         if (time_abs == 'none' and time_ampm == 'none') or time_rel != 'none':
@@ -961,6 +1033,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "inform", "from_stop"))
             elif not dialogue_state['to_stop'].test("none", self.accept_prob, neg_val=True):
                 res_da.append(DialogueActItem("help", "inform", "to_stop"))
+            else:
+                res_da.append(DialogueActItem("silence"))
         else:
             # we already offered a connection
             if randbool(4):
@@ -977,5 +1051,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("help", "request", "to_stop"))
             elif randbool(2):
                 res_da.append(DialogueActItem("help", "request", "num_transfers"))
+            else:
+                res_da.append(DialogueActItem("silence"))
 
         return res_da

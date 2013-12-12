@@ -260,7 +260,6 @@ class Abstracted(object):
     def make_other(cls, type_):
         return u'{t}-OTHER'.format(t=type_)
 
-
     def iter_typeval(self):
         """Iterates the abstracted items in self, yielding combined
         representations of the type and value of each such token.  An abstract

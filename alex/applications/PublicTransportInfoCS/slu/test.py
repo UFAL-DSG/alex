@@ -82,7 +82,7 @@ def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     save_wavaskey(fn_sem, parsed_das)
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
-    score(fn_reference, fn_sem, True, f)
+    score(fn_reference, fn_sem, True, True, f)
     f.close()
 
 def hdc_slu_test(fn_input, constructor, fn_reference):
@@ -149,7 +149,7 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
     save_wavaskey(fn_sem, parsed_das)
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
-    score(fn_reference, fn_sem, True, f)
+    score(fn_reference, fn_sem, True, True, f)
     f.close()
 
 if __name__ == "__main__":

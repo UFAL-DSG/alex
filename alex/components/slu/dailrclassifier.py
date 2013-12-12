@@ -141,18 +141,23 @@ class UtteranceFeatures(Features):
                     if i + k > len(utt):
                         break
 
-                    self.features[tuple(utt[i:i + k])] += 1.0
+                    # self.features[tuple(utt[i:i + k])] += 1.0
+                    self.features[tuple(utt[i:i + k])] = 1.0
 
         new_features = defaultdict(float)
         for f in self.features:
             if len(f) == 3:
-                new_features[(f[0], '*1', f[2])] += 1.0
+                # new_features[(f[0], '*1', f[2])] += 1.0
+                new_features[(f[0], '*1', f[2])] = 1.0
             if len(f) == 4:
-                new_features[(f[0], '*2', f[3])] += 1.0
+                # new_features[(f[0], '*2', f[3])] += 1.0
+                new_features[(f[0], '*2', f[3])] = 1.0
             if len(f) == 5:
-                new_features[(f[0], '*3', f[4])] += 1.0
+                # new_features[(f[0], '*3', f[4])] += 1.0
+                new_features[(f[0], '*3', f[4])] = 1.0
             if len(f) == 6:
-                new_features[(f[0], '*4', f[4])] += 1.0
+                # new_features[(f[0], '*4', f[4])] += 1.0
+                new_features[(f[0], '*4', f[4])] = 1.0
 
         for f in new_features:
             self.features[f] += new_features[f]

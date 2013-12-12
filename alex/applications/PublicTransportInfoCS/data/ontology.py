@@ -2,6 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from database import database
+import codecs
+import os
+
+# tab-separated file containing city + stop in that city, one per line
+CITIES_STOPS_FNAME = 'cities_stops.tsv'
 
 ontology = {
     'slots': {
@@ -11,10 +17,16 @@ ontology = {
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
-        'departure_time': set(['now', '7:00', ]),
-        'departure_time_rel': set(['00:05']),
+        'from_city': set([]),
+        'to_city': set([]),
+        'via_city': set([]),
+        'in_city': set([]),
+        'departure_time': set([]),
+        'departure_time_rel': set([]),
         'arrival_time': set([]),
-        'arrival_time_rel': set(['00:05']),
+        'arrival_time_rel': set([]),
+        'time': set([]),
+        'time_rel': set([]),
         'duration': set([]),
         'ampm': set(['morning', 'am', 'pm', 'evening', 'night']),
         'date': set([]),
@@ -50,6 +62,22 @@ ontology = {
             #'system_informs', 'system_requests',
             'system_confirms', 'system_iconfirms',
             #'system_selects',
+        ],
+        'from_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'to_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'via_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'in_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
         ],
         'departure_time': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -207,6 +235,23 @@ ontology = {
         },
     },
 
+    'compatibility': {
+        'stop_city': [
+            'from_stop', 'to_stop', 'via_stop',
+        ],
+        'city_stop': [
+            'from_city', 'to_city', 'via_city', 'in_city',
+        ],
+    },
+    'compatible_values': {
+        'stop_city': {},
+        'city_stop': {},
+    },
+
+    'default_values': {
+        'in_city': 'Praha',
+    },
+
     # translation of the values for TTS output
     'value_translation': {
         'ampm': {
@@ -224,6 +269,7 @@ ontology = {
             'TRAIN': 'vlakem',
             'CABLE_CAR': 'lanovkou',
             'FERRY': 'přívozem',
+            'TROLLEYBUS': 'trolejbusem',
         },
         'date_rel': {
             'today': 'dnes',
@@ -242,18 +288,43 @@ ontology = {
         }
     },
 }
-from database import database
 
 
-def add_slot_values_from_database(slot, category):
+def add_slot_values_from_database(slot, category, exceptions=set()):
     for value in database.get(category, tuple()):
-        ontology['slots'][slot].add(value)
+        if value not in exceptions:
+            ontology['slots'][slot].add(value)
 
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
 add_slot_values_from_database('via_stop', 'stop')
-add_slot_values_from_database('departure_time', 'time')
-add_slot_values_from_database('departure_time_rel', 'time_rel')
-add_slot_values_from_database('arrival_time', 'time')
-add_slot_values_from_database('arrival_time_rel', 'time_rel')
+add_slot_values_from_database('from_city', 'city')
+add_slot_values_from_database('to_city', 'city')
+add_slot_values_from_database('via_city', 'city')
+add_slot_values_from_database('in_city', 'city')
+add_slot_values_from_database('departure_time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('departure_time_rel', 'time')
+add_slot_values_from_database('arrival_time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('arrival_time_rel', 'time')
+add_slot_values_from_database('time', 'time', exceptions=set(['now']))
+add_slot_values_from_database('time_rel', 'time')
 add_slot_values_from_database('date_rel', 'date_rel')
+
+
+def load_compatible_values(fname, slot1, slot2):
+    with codecs.open(fname, 'r', 'UTF-8') as fh:
+        for line in fh:
+            if line.startswith('#'):
+                continue
+            val_slot1, val_slot2 = line.strip().split('\t')
+            # add to list of compatible values in both directions
+            subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot1, set())
+            ontology['compatible_values'][slot1 + '_' + slot2][val_slot1] = subset
+            subset.add(val_slot2)
+            subset = ontology['compatible_values'][slot2 + '_' + slot1].get(val_slot2, set())
+            ontology['compatible_values'][slot2 + '_' + slot1][val_slot2] = subset
+            subset.add(val_slot1)
+
+
+dirname = os.path.dirname(os.path.abspath(__file__))
+load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')

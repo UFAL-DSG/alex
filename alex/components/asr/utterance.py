@@ -6,6 +6,7 @@
 from __future__ import unicode_literals
 
 import copy
+import re
 from collections import namedtuple
 from itertools import izip, product
 from operator import add, itemgetter, mul
@@ -114,10 +115,11 @@ def save_utterances(file_name, utt, encoding='UTF-8'):
     Saves a dictionary of utterances in the wave as key format into a file.
 
     :param file_name: name of the target file
-    :param utt: a dictionary with the utterances where the keys are the names of teh corresponding wave files
+    :param utt: a dictionary with the utterances where the keys are the names of the corresponding wave files
     :return: None
     """
     save_wavaskey(file_name, utt, encoding)
+
 
 class UtteranceException(SLUException):
     pass
@@ -188,7 +190,6 @@ class Utterance(object):
     def __getitem__(self, idx):
         return self._utterance[idx]
 
-
     def __iter__(self):
         for word in self._utterance:
             yield word
@@ -222,7 +223,7 @@ class Utterance(object):
         return index
 
     def find(self, phrase):
-        """Returns the word index of the start of first occurence of `phrase'
+        """Returns the word index of the start of first occurrence of `phrase'
         within this utterance. If none is found, returns -1.
 
         Arguments:
@@ -306,13 +307,22 @@ class Utterance(object):
         return (ret_utt, orig_pos) if return_startidx else ret_utt
 
     def replace_all(self, orig, replacement):
+        """Replace all occurrences of the given words with the replacement.
+        Only replaces at word boundaries.
+
+        :param orig: the original string to be replaced (as string or list of words)
+        :param replacement: the replacement (as string or list of words)
+        :rtype: Utterance
+        """
         if self.find(orig) == -1:
             return self
         if isinstance(orig, list):
             orig = u' '.join(orig)
         if isinstance(replacement, list):
             replacement = u' '.join(replacement)
-        return Utterance(unicode(self).replace(orig, replacement))
+        # FJ (this does not work well): using '\b' to ensure we are replacing only at whitespace
+        # FJ a changed it
+        return Utterance(re.sub('(^|\s)' + re.escape(orig) + '($|\s)', ' '+replacement+' ', unicode(self)))
 
     def replace2(self, start, end, replacement):
         """

@@ -30,16 +30,36 @@ def all_words_in(utterance, words):
 
 
 def phrase_in(utterance, words):
+    return phrase_pos(utterance, words) != -1
+
+
+def phrase_pos(utterance, words):
+    """Returns the position of the given phrase in the given utterance, or -1 if not found.
+
+    :rtype: int
+    """
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     words = words if not isinstance(words, basestring) else words.strip().split()
-    return words in utterance
+    return utterance.find(words)
+
+
+def first_phrase_span(utterance, phrases):
+    """Returns the span (start, end+1) of the first phrase from the given list
+    that is found in the utterance. Returns (-1, -1) if no phrase is found.
+
+    :param utterance: The utterance to search in
+    :param phrases: a list of phrases to be tried (in the given order)
+    :rtype: tuple
+    """
+    for phrase in phrases:
+        pos = phrase_pos(utterance, phrase)
+        if pos != -1:
+            return pos, pos + len(phrase)
+    return -1, -1
 
 
 def any_phrase_in(utterance, phrases):
-    for phrase in phrases:
-        if phrase_in(utterance, phrase):
-            return True
-    return False
+    return first_phrase_span(utterance, phrases) != (-1, -1)
 
 
 class PTICSHDCSLU(SLUInterface):
@@ -55,137 +75,113 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
-        preps_from = set(["z", "za", "ze", "od", "začátek", "začáteční", "počáteční", "počátek", "výchozí", "start"])
-        preps_to = set(["k", "do", "konec", "na", "konečná", "koncová", "cílová", "cíl", "výstupní"])
-        preps_via = set(["přes", ])
+        phr_wp_types = [('from', set(['z', 'za', 'ze', 'od', 'začátek', 'začáteční',
+                                      'počáteční', 'počátek', 'výchozí', 'start', 'stojím na',
+                                      'jsem na', 'start na', 'stojím u', 'jsem u', 'start u',
+                                      'začátek na', 'začátek u'])),
+                        ('to', set(['k', 'do', 'konec', 'na', 'konečná', 'koncová',
+                                    'cílová', 'cíl', 'výstupní', 'cíl na', 'chci na'])),
+                        ('via', set(['přes', ]))]
 
-        fillers_from = set(["start", "stojím", "jsem" ])
-        fillers_to = set(["cíl", ])
-        fillers_via = set([])
+        self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types)
 
+    def parse_city(self, abutterance, cn):
+        """ Detects stops in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+        phr_wp_types = [('from', set(['z', 'ze', 'od', 'začátek', 'začáteční',
+                                      'počáteční', 'počátek', 'výchozí', 'start',
+                                      'jsem v', 'stojím v', 'začátek v'])),
+                        ('to', set(['k', 'do', 'konec', 'na', 'končím',
+                                    'cíl', 'vystupuji', 'vystupuju'])),
+                        ('via', set(['přes', ]))]
+
+        self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_in=['v', 've'])
+
+    def parse_waypoint(self, abutterance, cn, wp_id, wp_slot_suffix, phr_wp_types, phr_in=None):
+        """Detects stops or cities in the input abstract utterance
+        (called through parse_city or parse_stop).
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
         u = abutterance
         N = len(u)
 
-        confirm = lambda u: phrase_in(u, 'jede to') or phrase_in(u, 'odjíždí to') or phrase_in(u, 'je výchozí')
-        # simple "ne" cannot be included as it colides with negation. "ne [,] chci je z Motola"
-        deny = lambda u: phrase_in(u, 'nechci') \
-                             and not phrase_in(u, 'nechci ukončit hovor') \
-                             and not phrase_in(u, 'nechci to tak') \
-                             and not phrase_in(u, 'né to nechci') \
-                             and not phrase_in(u, 'ne to nechci') \
-                         or phrase_in(u, 'nejedu')
+        # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
+        phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
+                         ('deny',
+                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'ne k']),
+                          set(['nechci ukončit hovor', 'nechci to tak', 'né to nechci', 'ne to nechci']))]
+        last_wp_pos = 0
 
-        last_stop = 0
         for i, w in enumerate(u):
-            if w.startswith("STOP="):
-                stop_name = w[5:]
-                from_stop = False
-                to_stop = False
-                via_stop = False
-                stop_decided = False
+            if w.startswith(wp_id):
+                wp_name = w[len(wp_id):]
+                wp_types = set()
+                dai_type = 'inform'
 
-                if stop_name == "Čím":
-                    # just ignore this stop
-                    continue
+                # test short preceding context to find the stop type (from, to, via)
+                wp_precontext = {}
+                for cur_wp_type, phrases in phr_wp_types:
+                    wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 5):i], phrases)
+                wp_types |= self._get_closest_wp_type(wp_precontext)
+                # test short following context (0 = from, 1 = to, 2 = via)
+                if not wp_types:
+                    if any_phrase_in(u[i:i + 3], phr_wp_types[0][1] | phr_wp_types[2][1]):
+                        wp_types.add('to')
+                    elif any_phrase_in(u[i:i + 3], phr_wp_types[1][1]):
+                        wp_types.add('from')
+                # resolve context according to further preceding/following waypoint name (assuming from-to)
+                if not wp_types:
+                    if i >= 1 and u[i - 1].startswith(wp_id):
+                        wp_types.add('to')
+                    elif i <= N - 2 and u[i + 1].startswith(wp_id):
+                        wp_types.add('from')
+                # using 'in' slot if the previous checks did not work and we have phrases for 'in'
+                if not wp_types and phr_in is not None and any_phrase_in(u[max(last_wp_pos, i - 5): i], phr_in):
+                    wp_types.add('in')
 
-                if i >= 3:
-                    if not u[i - 2].startswith("STOP=") and not u[i - 1].startswith("STOP="):
-                        if u[i - 3] in fillers_from and u[i - 2] == 'na':
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in fillers_to and u[i - 2] == 'na':
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_from:
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_to:
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 3] in preps_via:
-                            via_stop = True
-                            stop_decided = True
+                # test utterance type
+                for cur_dai_type, phrases_pos, phrases_neg in phr_dai_types:
+                    if any_phrase_in(u[last_wp_pos:i], phrases_pos) and not any_phrase_in(u[last_wp_pos:i], phrases_neg):
+                        dai_type = cur_dai_type
+                        break
 
-                if not stop_decided and i >= 2:
-                    if not u[i - 1].startswith("STOP="):
-                        if u[i - 2] in fillers_from and u[i - 1] == 'na':
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in fillers_to and u[i - 1] == 'na':
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_from:
-                            from_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_to:
-                            to_stop = True
-                            stop_decided = True
-                        elif u[i - 2] in preps_via:
-                            via_stop = True
-                            stop_decided = True
-
-                if not stop_decided and i >= 1:
-                    if u[i - 1] in preps_from:
-                        from_stop = True
-                        stop_decided = True
-                    elif u[i - 1] in preps_to:
-                        to_stop = True
-                        stop_decided = True
-                    elif u[i - 1] in preps_via:
-                        via_stop = True
-                        stop_decided = True
-
-                if not stop_decided:
-                    if i <= N - 3:
-                        if not u[i + 1].startswith("STOP="):
-                            if u[i + 2] in preps_from:
-                                to_stop = True
-                            elif u[i + 2] in preps_to:
-                                from_stop = True
-
-                    if i <= N - 2:
-                        if u[i + 1] in preps_from:
-                            to_stop = True
-                        elif u[i + 1] in preps_to:
-                            from_stop = True
-
-                if not from_stop and not to_stop:
-                    if 1 <= i:
-                        if u[i - 1].startswith('STOP'):
-                            to_stop = True
-
-                    if  i <= N - 2:
-                        if u[i + 1].startswith('STOP'):
-                            from_stop = True
-
-                if confirm(u[last_stop:i]):
-                    dat = "confirm"
-                elif deny(u[last_stop:i]):
-                    dat = "deny"
+                # add waypoint to confusion network (standard case: just single type is decided)
+                if len(wp_types) == 1:
+                    cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name))
+                # backoff 1: add both 'from' and 'to' waypoint slots
+                elif 'from' in wp_types and 'to' in wp_types:
+                    cn.add(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name))
+                    cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name))
+                # backoff 2: let the DM decide in context resolution
                 else:
-                    dat = "inform"
+                    cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
 
-                if from_stop and not to_stop and not via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "from_stop", stop_name))
+                last_wp_pos = i + 1
 
-                if not from_stop and to_stop and not via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "to_stop", stop_name))
+    def _get_closest_wp_type(self, wp_precontext):
+        """Finds the waypoint type that goes last in the context (if same end points are
+        encountered, the type with a longer span wins).
 
-                if not from_stop and not to_stop and via_stop:
-                    cn.add(1.0, DialogueActItem(dat, "via_stop", stop_name))
-
-                # backoff 1: add both from and to stop slots
-                if from_stop and to_stop:
-                    cn.add(0.501, DialogueActItem(dat, "from_stop", stop_name))
-                    cn.add(0.499, DialogueActItem(dat, "to_stop", stop_name))
-
-                # backoff 2: we do not know what slot it belongs to, let the DM
-                # decide in the context resolution
-                if ((not from_stop and not to_stop and not via_stop) or \
-                        (from_stop and to_stop)):
-                    cn.add(1.0, DialogueActItem(dat, "", stop_name))
-
-                last_stop = i
+        :param wp_precontext: Dictionary waypoint type -> span (start, end+1) in the preceding \
+            context of the waypoint mention
+        :returns: one-member set with the best type (if there is one with non-negative position), \
+            or empty set on failure
+        :rtype: set
+        """
+        best_type = None
+        best_pos = (-2, -1)
+        for cur_type, cur_pos in wp_precontext.iteritems():
+            if cur_pos[1] > best_pos[1] or cur_pos[1] == best_pos[1] and cur_pos[0] < best_pos[0]:
+                best_type = cur_type
+                best_pos = cur_pos
+        if best_type is not None:
+            return set([best_type])
+        return set()
 
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.
@@ -195,16 +191,15 @@ class PTICSHDCSLU(SLUInterface):
         """
 
         u = abutterance
-        N = len(u)
 
         preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
         preps_rel = set(["za", ])
 
         test_context = [('confirm', 'departure',
-                         ['jede to', 'odjíždí to', 'je výchozí','má to odjezd', 'je odjezd'],
+                         ['jede to', 'odjíždí to', 'je výchozí', 'má to odjezd', 'je odjezd'],
                          []),
                         ('confirm', 'arrival',
-                         ['přijede to', 'přijíždí to','má to příjezd', 'je příjezd'],
+                         ['přijede to', 'přijíždí to', 'má to příjezd', 'je příjezd'],
                          []),
                         ('confirm', '',
                          ['je to', 'myslíte', 'myslíš'],
@@ -241,6 +236,7 @@ class PTICSHDCSLU(SLUInterface):
 
         last_time_type = ''
         last_time = 0
+
         for i, w in enumerate(u):
             if w.startswith("TIME="):
                 value = w[5:]
@@ -267,8 +263,6 @@ class PTICSHDCSLU(SLUInterface):
 
                 if time_abs or time_rel:
                     for act_type, time_type, phrases_pos, phrases_neg in test_context:
-                        #print u
-                        #print act_type, time_type, phrases_pos, phrases_neg
                         if any_phrase_in(u[j:k], phrases_pos) and not any_phrase_in(u, phrases_neg):
                             break
 
@@ -281,7 +275,7 @@ class PTICSHDCSLU(SLUInterface):
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                     cn.add(1.0, DialogueActItem(act_type, slot, value))
 
-                last_time = i
+                last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.
@@ -424,12 +418,13 @@ class PTICSHDCSLU(SLUInterface):
             not any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if any_word_in(u, "ne né nene nené") or \
-            phrase_in(u, 'nechci to tak') or \
-            len(u) == 1 and any_word_in(u, "nejedu nechci") or \
-            len(u) == 2 and all_words_in(u, "ano nechci") or \
-            all_words_in(u, "to je špatně"):
-            cn.add(1.0, DialogueActItem("negate"))
+        if not any_phrase_in(u, ['ne z', ]):
+            if  any_word_in(u, "ne né nene nené") or \
+                 phrase_in(u, 'nechci to tak') or \
+                         len(u) == 1 and any_word_in(u, "nejedu nechci") or \
+                         len(u) == 2 and all_words_in(u, "ano nechci") or \
+                 all_words_in(u, "to je špatně"):
+                cn.add(1.0, DialogueActItem("negate"))
 
         if any_word_in(u, 'díky dikec děkuji dekuji děkuju děkují'):
             cn.add(1.0, DialogueActItem("thankyou"))
@@ -447,12 +442,11 @@ class PTICSHDCSLU(SLUInterface):
             phrase_in(u, 'nový spoj') and not phrase_in(u, "spoj ze"):
             cn.add(1.0, DialogueActItem("restart"))
 
-
-        if any_phrase_in(u ,['chci jet', 'chtěla jet', 'bych jet', 'bychom jet',
+        if any_phrase_in(u, ['chci jet', 'chtěla jet', 'bych jet', 'bychom jet',
                              'bych tam jet', ]):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
-        if any_phrase_in(u ,['jak bude', 'jak je']):
+        if any_phrase_in(u, ['jak bude', 'jak dnes bude', 'jak je']):
             cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
 
         if len(u.utterance) == 1 and any_word_in(u, 'centra centrum'):
@@ -594,6 +588,7 @@ class PTICSHDCSLU(SLUInterface):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
+        #print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
@@ -611,11 +606,13 @@ class PTICSHDCSLU(SLUInterface):
 
         #print 'After preprocessing: "{utt}".'.format(utt=abutterance)
         #print category_labels
-        #
+
         res_cn = DialogueActConfusionNetwork()
 
         if 'STOP' in category_labels:
             self.parse_stop(abutterance, res_cn)
+        if 'CITY' in category_labels:
+            self.parse_city(abutterance, res_cn)
         if 'TIME' in category_labels:
             self.parse_time(abutterance, res_cn)
         if 'DATE_REL' in category_labels:

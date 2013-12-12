@@ -5,7 +5,11 @@
 A simple script for adding new utterances along with their semantics to
 bootstrap.sem and bootstrap.trn.
 
-It expects a file with tab-separated transcriptions + semantics (one
+Usage:
+
+./add_to_bootsrap < input.tsv
+
+The script expects input with tab-separated transcriptions + semantics (one
 utterance per line). It automatically generates the dummy 'bootstrap_XXXX.wav'
 identifiers and separates the transcription and semantics into two files.
 """
