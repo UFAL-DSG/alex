@@ -19,6 +19,7 @@ from datetime import datetime
 from datetime import time as dttime
 import re
 
+
 def randbool(n):
     """Randomly return True in 1 out of n cases.
 
@@ -316,9 +317,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         lta_time = ds['lta_time'].mpv()
         in_city = ds['in_city'].mpv()
 
+        # return the result
+        res_da = DialogueAct()
+
         # default city if no city is set
         if in_city == 'none':
             in_city = self.ontology.get_default_value('in_city')
+            res_da.append(DialogueActItem('iconfirm', 'in_city', in_city))
 
         # interpret time
         daily = (time_abs == 'none' and time_rel == 'none' and ampm == 'none' and date_rel != 'none')
@@ -331,9 +336,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         # check errors
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")' % in_city)
-
-        # return the result
-        res_da = DialogueAct()
 
         # time
         if weather_time_int:
