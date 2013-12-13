@@ -93,7 +93,11 @@ if __name__ == '__main__':
                 if line.startswith('#'):  # also work with commented-out cities
                     line = line[1:]
                 line = line.split('\t', 1)[0]  # strip previous coordinates, if applicable
-                coords = get_google_coords(line)
+                try:
+                    coords = get_google_coords(line)
+                    print >> fh_out, line, '\t', '\t'.join(coords)
+                except:
+                    print >> sys.stderr, ('!!ERROR:' + str(e) + ' -- cannot find city:' + line).encode('utf-8')
+                    print >> fh_out, line
                 requests += 1
                 sleep(delay + 0.5 * random() * delay)
-                print >> fh_out, line, '\t', '\t'.join(coords)
