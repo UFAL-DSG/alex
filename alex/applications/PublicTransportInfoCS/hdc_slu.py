@@ -254,11 +254,8 @@ class PTICSHDCSLU(SLUInterface):
                 else:
                     j, k = 0, len(u)
 
-                if value == "now" and \
-                    not phrase_in(u[j:k], 'no a') and \
-                    not phrase_in(u[j:k], 'kolik je') and \
-                    not phrase_in(u[j:k], 'neslyším') and \
-                    not phrase_in(u[j:k], 'už mi neříká'):
+                if value == "now" and not any_phrase_in(u[j:k], ['no a', 'kolik je',
+                                                                 'neslyším', 'už mi neříká']):
                     time_rel = True
 
                 if time_abs or time_rel:
