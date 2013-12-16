@@ -1486,7 +1486,7 @@ Ovčáry;Ovčár;Ovčárům;Ovčárum;Ovčárech;Ovčárách
 Ovčáry, Kopa, rozcestí;Ovčár, Kopy, rozcestí;Ovčárům, Kopě, rozcestí;Ovčárum, Kopě, rozcestí;Ovčáry, Kopu, rozcestí;Ovčárech, Kopě, rozcestí;Ovčárách, Kopě, rozcestí
 Ovčí hájek;Ovčího hájku;Ovčímu hájku;Ovčím hájku
 Paceřická;Paceřické;Paceřický;Paceřickou
-Palackého náměstí
+Palackého náměstí;Palacké náměstí
 Palmovka;Palmovky;Palmovce;Palmovku
 Palouček;Paloučku
 Panenské Břežany;Panenských Břežan;Panenskejch Břežan;Panenským Břežanům;Panenským Břežanum;Panenskejm Břežanům;Panenskejm Břežanum;Panenský Břežany;Panenských Břežanech;Panenských Břežanách;Panenskejch Břežanech;Panenskejch Břežanách
@@ -1781,7 +1781,7 @@ Rembrandtova;Rembrandtovy;Rembrandtově;Rembrandtovu
 Řezáčovo náměstí;Řezáčova náměstí;Řezáčovu náměstí;Řezáčově náměstí
 Říčanova;Říčanovy;Říčanově;Říčanovu
 Říčany;Říčan;Říčanům;Říčanum;Říčanech;Říčanách
-Říčany, 5. května;Říčan, 5. května;Říčanům, 5. května;Říčanum, 5. května;Říčanech, 5. května;Říčanách, 5. května
+Říčany, 5. května;Říčan, 5. května;Říčanům, 5. května;Říčanum, 5. května;Říčanech, 5. května;Říčanách, 5. května;Říčany, Pátého května;Říčan, Pátého května;Říčanům, Pátého května;Říčanum, Pátého května;Říčanech, Pátého května;Říčanách, Pátého května
 Říčany, Černokostelecká;Říčan, Černokostelecké;Říčan, Černokostelecký;Říčanům, Černokostelecké;Říčanům, Černokostelecký;Říčanum, Černokostelecké;Říčanum, Černokostelecký;Říčany, Černokosteleckou;Říčanech, Černokostelecké;Říčanech, Černokostelecký;Říčanách, Černokostelecké;Říčanách, Černokostelecký
 Říčany, Fibichova;Říčan, Fibichovy;Říčanům, Fibichově;Říčanum, Fibichově;Říčany, Fibichovu;Říčanech, Fibichově;Říčanách, Fibichově
 Říčany, hřbitov;Říčan, hřbitova;Říčanům, hřbitovu;Říčanum, hřbitovu;Říčanech, hřbitově;Říčanech, hřbitovu;Říčanách, hřbitově;Říčanách, hřbitovu
@@ -1796,7 +1796,7 @@ Rembrandtova;Rembrandtovy;Rembrandtově;Rembrandtovu
 Říčany, Olivovna;Říčan, Olivovna;Říčanům, Olivovna;Říčanum, Olivovna;Říčanech, Olivovna;Říčanách, Olivovna
 Říčany, Pacov;Říčan, Pacova;Říčanům, Pacovu;Říčanum, Pacovu;Říčanech, Pacově;Říčanech, Pacovu;Říčanách, Pacově;Říčanách, Pacovu
 Říčany, Pacov, Horní Pacov;Říčan, Pacova, Horního Pacova;Říčanům, Pacovu, Hornímu Pacovu;Říčanum, Pacovu, Hornímu Pacovu;Říčanech, Pacově, Horním Pacově;Říčanech, Pacově, Horním Pacovu;Říčanech, Pacově, Hornim Pacově;Říčanech, Pacově, Hornim Pacovu;Říčanech, Pacovu, Horním Pacově;Říčanech, Pacovu, Horním Pacovu;Říčanech, Pacovu, Hornim Pacově;Říčanech, Pacovu, Hornim Pacovu;Říčanách, Pacově, Horním Pacově;Říčanách, Pacově, Horním Pacovu;Říčanách, Pacově, Hornim Pacově;Říčanách, Pacově, Hornim Pacovu;Říčanách, Pacovu, Horním Pacově;Říčanách, Pacovu, Horním Pacovu;Říčanách, Pacovu, Hornim Pacově;Říčanách, Pacovu, Hornim Pacovu
-Říčany, park A. Švehly;Říčan, parku A. Švehly;Říčanům, parku A. Švehly;Říčanum, parku A. Švehly;Říčanech, parku A. Švehly;Říčanách, parku A. Švehly
+Říčany, park A. Švehly;Říčan, parku A. Švehly;Říčanům, parku A. Švehly;Říčanum, parku A. Švehly;Říčanech, parku A. Švehly;Říčanách, parku A. Švehly;Říčany, park Antonína Švehly;Říčan, parku Antonína Švehly;Říčanům, parku Antonína Švehly;Říčanum, parku Antonína Švehly;Říčanech, parku Antonína Švehly;Říčanách, parku Antonína Švehly
 Říčany, Pivoňková;Říčan, Pivoňkové;Říčan, Pivoňkový;Říčanům, Pivoňkové;Říčanům, Pivoňkový;Říčanum, Pivoňkové;Říčanum, Pivoňkový;Říčany, Pivoňkovou;Říčanech, Pivoňkové;Říčanech, Pivoňkový;Říčanách, Pivoňkové;Říčanách, Pivoňkový
 Říčany, Podhradí;Říčan, Podhradí;Říčanům, Podhradí;Říčanum, Podhradí;Říčanech, Podhradí;Říčanách, Podhradí
 Říčany, Pod Kavčí Skálou;Říčan, Pod Kavčí Skálou;Říčanům, Pod Kavčí Skálou;Říčanum, Pod Kavčí Skálou;Říčanech, Pod Kavčí Skálou;Říčanách, Pod Kavčí Skálou
@@ -1805,7 +1805,7 @@ Rembrandtova;Rembrandtovy;Rembrandtově;Rembrandtovu
 Říčany, průmyslový areál Černokostelecká;Říčan, průmyslového areálu Černokostelecká;Říčan, průmyslovýho areálu Černokostelecká;Říčanům, průmyslovému areálu Černokostelecká;Říčanům, průmyslovýmu areálu Černokostelecká;Říčanum, průmyslovému areálu Černokostelecká;Říčanum, průmyslovýmu areálu Černokostelecká;Říčany, průmyslovej areál Černokostelecká;Říčanech, průmyslovém areále Černokostelecká;Říčanech, průmyslovém areálu Černokostelecká;Říčanech, průmyslovým areále Černokostelecká;Říčanech, průmyslovým areálu Černokostelecká;Říčanech, průmyslovym areále Černokostelecká;Říčanech, průmyslovym areálu Černokostelecká;Říčanách, průmyslovém areále Černokostelecká;Říčanách, průmyslovém areálu Černokostelecká;Říčanách, průmyslovým areále Černokostelecká;Říčanách, průmyslovým areálu Černokostelecká;Říčanách, průmyslovym areále Černokostelecká;Říčanách, průmyslovym areálu Černokostelecká
 Říčany, Rychta;Říčan, Rychty;Říčanům, Rychtě;Říčanum, Rychtě;Říčany, Rychtu;Říčanech, Rychtě;Říčanách, Rychtě
 Říčany, sídliště Olivovna;Říčan, sídlišť Olivovna;Říčanům, sídlištím Olivovna;Říčanum, sídlištím Olivovna;Říčanech, sídlištích Olivovna;Říčanách, sídlištích Olivovna
-Říčany, Spojovací ZŠ;Říčan, Spojovacích ZŠ;Říčanům, Spojovacím ZŠ;Říčanům, Spojovacim ZŠ;Říčanum, Spojovacím ZŠ;Říčanum, Spojovacim ZŠ;Říčanech, Spojovacích ZŠ;Říčanách, Spojovacích ZŠ
+Říčany, Spojovací ZŠ;Říčan, Spojovacích ZŠ;Říčanům, Spojovacím ZŠ;Říčanům, Spojovacim ZŠ;Říčanum, Spojovacím ZŠ;Říčanum, Spojovacim ZŠ;Říčanech, Spojovacích ZŠ;Říčanách, Spojovacích ZŠ;Říčany, Spojovací základní škola;Říčan, Spojovací základní školy;Říčanům, Spojovací základní škole;Říčanum, Spojovací základní škole;Říčany, Spojovací základní školu;Říčanech, Spojovací základní škole;Říčanách, Spojovací základní škole
 Říčany, Štefánikova;Říčan, Štefánikovy;Říčanům, Štefánikově;Říčanum, Štefánikově;Říčany, Štefánikovu;Říčanech, Štefánikově;Říčanách, Štefánikově
 Říčany, Strašín;Říčan, Strašína;Říčanům, Strašínu;Říčanum, Strašínu;Říčanech, Strašíně;Říčanech, Strašínu;Říčanách, Strašíně;Říčanách, Strašínu
 Říčany, Strašín, restaurace;Říčan, Strašína, restaurace;Říčanům, Strašínu, restauraci;Říčanum, Strašínu, restauraci;Říčany, Strašín, restauraci;Říčanech, Strašíně, restauraci;Říčanech, Strašínu, restauraci;Říčanách, Strašíně, restauraci;Říčanách, Strašínu, restauraci
@@ -2345,7 +2345,7 @@ Veleň, U Pomníku;Veleně, U Pomníku;Veleni, U Pomníku
 Veletržní palác;Veletržního paláce;Veletržnímu paláci;Veletržním paláci;Veletržnim paláci
 Veliká Ves;Veliké Vsi;Veliký Vsi;Velikou Ves
 Velká Bučina;Velké Bučiny;Velký Bučiny;Velké Bučině;Velký Bučině;Velkou Bučinu
-Velká Chuchle;Velké Chuchle;Velký Chuchle;Velké Chuchli;Velký Chuchli;Velkou Chuchli
+Velká Chuchle;Velké Chuchle;Velký Chuchle;Velké Chuchli;Velký Chuchli;Velkou Chuchli;Chuchle;Chuchli
 Velká Lečice;Velké Lečic;Velký Lečic;Velké Lečicím;Velké Lečicům;Velký Lečicím;Velký Lečicům;Velkou Lečice;Velké Lečicích;Velký Lečicích
 Velká Ohrada;Velké Ohrady;Velký Ohrady;Velké Ohradě;Velký Ohradě;Velkou Ohradu
 Velké Popovice;Velkých Popovice;Velkejch Popovice;Velkým Popovice;Velkejm Popovice;Velký Popovice
@@ -2855,7 +2855,7 @@ Mírová;Mírové;Mírový;Mírovou
 Na kopcích
 Na kovárně
 Nemocnice Bohunice;Nemocnic Bohunice;Nemocnicí Bohunice;Nemocnicím Bohunice;Nemocnici Bohunice;Nemocnicích Bohunice
-Nemocnice u sv. Anny;Nemocnic u sv. Anny;Nemocnicí u sv. Anny;Nemocnicím u sv. Anny;Nemocnicích u sv. Anny
+Nemocnice u sv. Anny;Nemocnic u sv. Anny;Nemocnicí u sv. Anny;Nemocnicím u sv. Anny;Nemocnicích u sv. Anny;Nemocnice u svaté Anny;Nemocnic u svaté Anny;Nemocnicí u svaté Anny;Nemocnicím u svaté Anny;Nemocnici u svaté Anny;Nemocnicích u svaté Anny
 Nerudova;Nerudovy;Nerudově;Nerudovu
 Netroufalky
 Neumannova;Neumannovy;Neumannově;Neumannovu
@@ -2863,10 +2863,10 @@ Novolíšeňská;Novolíšeňské;Novolíšeňský;Novolíšeňskou
 Nové sady;Nových sad;Novejch sad;Novým sadám;Novejm sadám;Nový sady;Nových sadách;Novejch sadách
 Nové sady, smyčka;Nových sad, smyčky;Novejch sad, smyčky;Novým sadám, smyčce;Novejm sadám, smyčce;Nové sady, smyčku;Nový sady, smyčku;Nových sadách, smyčce;Novejch sadách, smyčce
 Nálepkova
-Náměstí 28. dubna
-Náměstí 28. října
-Náměstí Karla IV.
-Náměstí Míru
+Náměstí 28. dubna;Náměstí Dvacátého osmého dubna;Náměstí Osmadvacátého dubna
+Náměstí 28. října;Náměstí Dvacátého osmého října;Náměstí Osmadvacátého října
+Náměstí Karla IV.;Náměstí Karla čtvrtého
+Náměstí Míru;Mírák;Míráku
 Náměstí Republiky
 Náměstí Svornosti
 Obecká
@@ -2963,7 +2963,7 @@ Sochorova;Sochorovy;Sochorově;Sochorovu
 Sokolnická;Sokolnické;Sokolnický;Sokolnickou
 Soukenická;Soukenické;Soukenický;Soukenickou
 Soukopova
-Spojovací;Spojovacích;Spojovacím;Spojovacim
+Spojovací;Spojovacích;Spojovacím;Spojovacim;Jarov;Jarova
 Sportovní;Sportovních;Sportovním;Sportovnim
 Správa dálnic;Správy dálnic;Správě dálnic;Správu dálnic
 Spáčilova;Spáčilovy;Spáčilově;Spáčilovu
@@ -3063,7 +3063,7 @@ Zetor, smyčka;Zetoru, smyčky;Zetoru, smyčce;Zetor, smyčku
 Zimní I;Zimního I;Zimného I;Zimnýho I;Zimnímu I;Zimnému I;Zimnýmu I;Zimné I;Zimný I;Zimním I;Zimném I;Zimnim I;Zimným I;Zimnym I
 Zimní II;Zimního II;Zimného II;Zimnýho II;Zimnímu II;Zimnému II;Zimnýmu II;Zimné II;Zimný II;Zimním II;Zimném II;Zimnim II;Zimným II;Zimnym II
 Zimní stadion;Zimního stadiónu;Zimního stadionu;Zimného stadiónu;Zimného stadionu;Zimnýho stadiónu;Zimnýho stadionu;Zimnímu stadiónu;Zimnímu stadionu;Zimnému stadiónu;Zimnému stadionu;Zimnýmu stadiónu;Zimnýmu stadionu;Zimní stadión;Zimný stadión;Zimný stadion;Zimnej stadión;Zimnej stadion;Zimním stadióně;Zimním stadioně;Zimním stadiónu;Zimním stadionu;Zimném stadióně;Zimném stadioně;Zimném stadiónu;Zimném stadionu;Zimnim stadióně;Zimnim stadioně;Zimnim stadiónu;Zimnim stadionu;Zimným stadióně;Zimným stadioně;Zimným stadiónu;Zimným stadionu;Zimnym stadióně;Zimnym stadioně;Zimnym stadiónu;Zimnym stadionu
-Zoologická zahrada;Zoologické zahrady;Zoologický zahrady;Zoologické zahradě;Zoologický zahradě;Zoologickou zahradu
+Zoologická zahrada;Zoologické zahrady;Zoologický zahrady;Zoologické zahradě;Zoologický zahradě;Zoologickou zahradu;Zoo Praha;Zoo Prahy;Zoo Praze;Zoo Prahu
 Zvonařka;Zvonařky;Zvonařce;Zvonařku
 Záhumenice;Záhumenic;Záhumenicí;Záhumenicím;Záhumenici;Záhumenicích
 Záhřebská;Záhřebské;Záhřebský;Záhřebskou
@@ -3297,7 +3297,7 @@ Nad Zátiším
 Nákupní středisko;Nákupního střediska;Nákupnímu středisku;Nákupním středisku;Nákupnim středisku
 Náměstí generála Píky
 Náměstí M. Horákové;Náměstí Milady Horákové
-Náměstí Míru
+Náměstí Míru;Mírák;Míráku
 Náměstí Republiky
 Náměstí Republiky, Dřevěná;Náměstí Republiky, Dřevěné;Náměstí Republiky, Dřevěný;Náměstí Republiky, Dřevěnou
 NC, Folmavská;NC, Folmavské;NC, Folmavský;NC, Folmavskou;Nákupní centrum, Folmavská;Nákupního centra, Folmavské;Nákupního centra, Folmavský;Nákupnímu centru, Folmavské;Nákupnímu centru, Folmavský;Nákupní centrum, Folmavskou;Nákupním centru, Folmavské;Nákupním centru, Folmavský;Nákupnim centru, Folmavské;Nákupnim centru, Folmavský
@@ -3418,7 +3418,7 @@ U trati
 Újezd, rozcestí;Újezda, rozcestí;Újezdu, rozcestí;Újezdě, rozcestí
 Újezd, Staroveská;Újezda, Staroveské;Újezda, Staroveský;Újezdu, Staroveské;Újezdu, Staroveský;Újezd, Staroveskou;Újezdě, Staroveské;Újezdě, Staroveský
 Újezd, V brance;Újezda, V brance;Újezdu, V brance;Újezdě, V brance
-Ulice 17. listopadu;Ulic 17. listopadu;Ulicí 17. listopadu;Ulicím 17. listopadu;Ulici 17. listopadu;Ulicích 17. listopadu
+Ulice 17. listopadu;Ulic 17. listopadu;Ulicí 17. listopadu;Ulicím 17. listopadu;Ulici 17. listopadu;Ulicích 17. listopadu;Ulice Sedmnáctého listopadu;Ulic Sedmnáctého listopadu;Ulicí Sedmnáctého listopadu;Ulicím Sedmnáctého listopadu;Ulici Sedmnáctého listopadu;Ulicích Sedmnáctého listopadu
 Ulice B. Němcové;Ulic B. Němcové;Ulicí B. Němcové;Ulicím B. Němcové;Ulici B. Němcové;Ulicích B. Němcové;Ulice Boženy Němcové;Ulic Boženy Němcové;Ulicí Boženy Němcové;Ulicím Boženy Němcové;Ulici Boženy Němcové;Ulicích Boženy Němcové
 Ulice Družby;Ulic Družby;Ulicí Družby;Ulicím Družby;Ulici Družby;Ulicích Družby
 Ulice K. Steinera;Ulic K. Steinera;Ulicí K. Steinera;Ulicím K. Steinera;Ulici K. Steinera;Ulicích K. Steinera;Ulice Karla Steinera;Ulic Karla Steinera;Ulicí Karla Steinera;Ulicím Karla Steinera;Ulici Karla Steinera;Ulicích Karla Steinera
