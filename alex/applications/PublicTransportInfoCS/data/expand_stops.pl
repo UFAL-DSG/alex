@@ -12,9 +12,12 @@ use Treex::Core::Common;
 use Treex::Core::Scenario;
 use Treex::Core::Document;
 
+binmode(STDERR, ":utf8");
 
 my $cases_list = '1,2,4';
-GetOptions( 'cases|c=s' => \$cases_list );
+my $merge_with = undef;
+GetOptions( 'cases|c=s' => \$cases_list,
+            'merge-with|merge|m=s' => \$merge_with );
 
 if ( @ARGV != 2 ) {
     die("Usage: ./expand_stops.pl [--cases=1,2,4] stops.txt stops.expanded.txt\n");
@@ -30,6 +33,7 @@ my $scenario = Treex::Core::Scenario->new( { from_string => $scenario_string } )
 
 log_set_error_level('WARN');
 
+# Analyze one stop (input string) using Treex, return factored form|lemma|tag format as an array
 sub analyze_stop {
     my ($source_text) = @_;
     my $document = Treex::Core::Document->new();
@@ -50,6 +54,41 @@ sub analyze_stop {
     return \@analysis;    
 }
 
+# Given a factored form|lemma|tag array, return just forms
+sub analyzed_to_plain {
+    my @analyzed = @{ shift; };
+    my $str = join(' ', map { $_ =~ s/\|.*//; $_ } @analyzed);
+    $str =~ s/ ([\.,])/$1/g;
+    return $str;
+}
+
+#
+# MAIN
+#
+
+my %merge = ();
+
+# Load stop names and forms to be merged with the input
+if ($merge_with){
+    open( my $merge_in, '<:utf8', $merge_with );
+    while ( my $line = <$merge_in> ){
+        chomp $line;
+        my @variants = split /;/, $line;
+        my $main_stop_name = $variants[0];
+        # merge inflection forms for all repeating lines
+        if (defined($merge{$main_stop_name})){
+            my %var_hash = map { $_ => 1 } @{$merge{$main_stop_name}};
+            @variants = grep { not defined($var_hash{$_}) } @variants;
+            push @{$merge{$main_stop_name}}, @variants;
+        }
+        # first occurence of a line (normal case): just remember all
+        else {
+            $merge{$main_stop_name} = \@variants;
+        }
+    }
+    close($merge_in);
+}
+
 # Read each stop and try to inflect it in different cases
 my $line_ctr = 0;
 while ( my $line = <$in> ) {
@@ -64,12 +103,23 @@ while ( my $line = <$in> ) {
     if ($line_ctr % 10 == 0){
         print STDERR '.';
     }
-    my @cases;  # store all inflected form here
+    my @cases;  # store all inflected forms here
+
+    # analyze all variant names
+    my @variants = map { analyze_stop($_); } split(/\t/, $line);
+    my $main_stop_name = analyzed_to_plain($variants[0]);
     
+    # filter variants if already inflected
+    if (defined($merge{$main_stop_name})){
+        push @cases, @{$merge{$main_stop_name}};
+        my %merge_hash = map { $_ => 1 } @{$merge{$main_stop_name}};
+        @variants = grep { my $plainvar = analyzed_to_plain($_); not defined($merge_hash{$plainvar}); } @variants;
+    }
+
     # process all possible variant names of the given stop/city
-    foreach my $variant (split /\t/, $line){
+    foreach my $variant (@variants){
         
-        my @words = @{analyze_stop($variant)};
+        my @words = @$variant;
     
         # try all needed cases
         foreach my $case (split /[, ]/, $cases_list) {
@@ -104,7 +154,7 @@ while ( my $line = <$in> ) {
     
                     # fallback to uninflected (if form not found in the dictionary)
                     else {
-                        print STDERR "Cannot inflect: $form, $lemma, $tag\n";
+                        print STDERR "\nCannot inflect: $form, $lemma, $tag\n";
                         @newforms = ($form);
                     }
     
@@ -128,6 +178,7 @@ while ( my $line = <$in> ) {
     print {$out} join( ";", @cases ), "\n";
 }
 
+print STDERR "\n";
 
 __END__
 
@@ -144,9 +195,10 @@ morphological generator & tagger for Czech).
 
 =head1 USAGE
 
-./gen_stops.pl [--cases=1,2,4] stops.txt stops.expanded.txt
+./gen_stops.pl [--cases=1,2,4] [--merge=earlier-stops.expanded.txt] stops.txt stops.expanded.txt
 
-Cases default to 1,2,4 (nominative, genitive, accusative).
+Cases default to 1,2,4 (nominative, genitive, accusative). Use --merge for incremental merging
+(all earlier forms will be preserved, including additional hand-written ones).
 
 =head1 AUTHOR
 
