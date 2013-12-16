@@ -158,7 +158,7 @@ Brusnice
 Bryksova
 Bubovice
 Bubovice, Višňovka
-Bucharova   Bucharovy
+Bucharova
 Budějovická
 Budovec
 Bulovka
@@ -556,7 +556,7 @@ Hydrologický ústav
 IKEM
 Internacionální
 Invalidovna
-I.P.Pavlova I.P.Pavlovu
+I. P. Pavlova	I. P. Pavlovu
 Italská
 Jahodnice
 Jahodnice II
@@ -970,7 +970,7 @@ Lešanská
 Letecké muzeum
 Letecké opravny
 Letenské náměstí
-Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla    Letiště v Ruzyni    Letiště
+Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla	Letiště v Ruzyni	Letiště
 Letňanská
 Letňany
 Lety
@@ -1564,7 +1564,7 @@ Podhajská pole
 Podhoří
 Pod Hradem
 Pod Jezerkou
-Pod Karlovem    Karlov
+Pod Karlovem	Karlov
 Pod Kesnerkou
 Pod Konvářkou
 Podkovářská
@@ -1787,7 +1787,7 @@ Rembrandtova
 Řezáčovo náměstí
 Říčanova
 Říčany
-Říčany, 5. května
+Říčany, 5. května	Říčany, Pátého května
 Říčany, Černokostelecká
 Říčany, Fibichova
 Říčany, hřbitov
@@ -1802,7 +1802,7 @@ Rembrandtova
 Říčany, Olivovna
 Říčany, Pacov
 Říčany, Pacov, Horní Pacov
-Říčany, park A. Švehly
+Říčany, park A. Švehly	Říčany, park Antonína Švehly
 Říčany, Pivoňková
 Říčany, Podhradí
 Říčany, Pod Kavčí Skálou
@@ -1811,7 +1811,7 @@ Rembrandtova
 Říčany, průmyslový areál Černokostelecká
 Říčany, Rychta
 Říčany, sídliště Olivovna
-Říčany, Spojovací ZŠ
+Říčany, Spojovací ZŠ	Říčany, Spojovací základní škola
 Říčany, Štefánikova
 Říčany, Strašín
 Říčany, Strašín, restaurace
@@ -2022,10 +2022,10 @@ Spalovna Malešice
 Sparta
 Špejchar
 Šperlova
-Spiritka    Spiritky
+Spiritka
 Špitálka
 Špitálská
-Spojovací   Jarov
+Spojovací	Jarov
 Spolská
 Spořická
 Spořilov
@@ -2351,7 +2351,7 @@ Veleň, U Pomníku
 Veletržní palác
 Veliká Ves
 Velká Bučina
-Velká Chuchle
+Velká Chuchle	Chuchle
 Velká Lečice
 Velká Ohrada
 Velké Popovice
@@ -2504,7 +2504,7 @@ Vysoký Újezd {okres Praha - západ}
 Vysoký Újezd, sokolovna {okres Praha - západ}
 Výstaviště Holešovice	Výstaviště	Stromovka
 Výstaviště Letňany
-Výtoň   Vyšehrad
+Výtoň
 Výžerky
 Výžerky, rozcestí
 Výzkumné ústavy Běchovice
@@ -2571,7 +2571,7 @@ Zatáčka
 Zátišská
 Za Tratí
 Závist
-Závodiště Chuchle   Chuchle
+Závodiště Chuchle
 Zborovská
 Zborov - Strašnické divadlo
 Zbraslavské náměstí
@@ -2864,7 +2864,7 @@ Mírová
 Na kopcích
 Na kovárně
 Nemocnice Bohunice
-Nemocnice u sv. Anny
+Nemocnice u sv. Anny	Nemocnice u svaté Anny
 Nerudova
 Netroufalky
 Neumannova
@@ -2872,9 +2872,9 @@ Novolíšeňská
 Nové sady
 Nové sady, smyčka
 Nálepkova
-Náměstí 28.dubna
-Náměstí 28.října
-Náměstí Karla IV.
+Náměstí 28. dubna	Náměstí Dvacátého osmého dubna	Náměstí Osmadvacátého dubna
+Náměstí 28. října	Náměstí Dvacátého osmého října	Náměstí Osmadvacátého října
+Náměstí Karla IV.	Náměstí Karla čtvrtého
 Náměstí Míru
 Náměstí Republiky
 Náměstí Svornosti
@@ -2895,7 +2895,7 @@ Otakara Ševčíka
 Ořechovská
 Ořešín
 Ořešínská
-Palackého náměstí   Palacké náměstí
+Palackého náměstí	Palacké náměstí
 Palackého vrch
 Pavlovská
 Pavlíkova
@@ -3430,7 +3430,7 @@ U trati
 Újezd, rozcestí
 Újezd, Staroveská
 Újezd, V brance
-Ulice 17. listopadu
+Ulice 17. listopadu	Ulice Sedmnáctého listopadu
 Ulice B. Němcové	Ulice Boženy Němcové
 Ulice Družby
 Ulice K. Steinera	Ulice Karla Steinera
