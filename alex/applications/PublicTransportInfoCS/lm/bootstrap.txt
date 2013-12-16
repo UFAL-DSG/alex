@@ -125,3 +125,164 @@ Malostranské náměstí
 šest
 Anděl
 Malostranské náměstí
+v deset hodin
+Anděl
+Malostranské náměstí
+jedu do centra
+jedu z centra
+centrum
+chci první možnost
+chci druhou možnost
+chci třetí možnost
+chci čtvrtou možnost
+chci poslední možnost
+zopakovat
+opakovat
+opakuj
+znovu
+večer
+restart
+znovu od začátku
+reset
+nové zadání
+znova od začátku
+v devět hodin večer
+v šest hodin večer
+v jedenáct dopoledne
+ze zastávky strašnická přes malostranskou
+jaká je výchozí zastávka
+dobrý den chtěl bych být dneska v půl třetí na smíchově
+zastávka divoká šárka
+halo
+ano chci zopakovat
+čtvrté spojení
+do centra
+nový spoj
+kam že to jede
+želivecká strašnická
+do jaké zastávky to jede
+chtěl bych jet anděla
+přes malostranskou
+zastávky strašnická přes malostranskou
+ale řekněte mi možnost druhou
+florenc přestup na haló
+děkuju na shledanou
+kolik to má přestupů
+za půl hodiny
+jede to ze zastávky malostranské náměstí
+cíl malostranské náměstí
+ještě jednou
+výstupní stanice je anděl
+zítra
+_sil_
+_ehm_hmm_
+dobře počítá
+můžete mi říct následující spojení
+chtěl bych jet teď
+zopakovat možnost
+na shle
+řekněte mi ještě jednu možnost
+máte něco jiného
+děkuji na shledanou
+tak znova
+děkuji to stačí je to v pořádku
+z jaké zastávky
+chci být dnes ve čtrnáct třicet na smíchovském nádraží
+pomož
+potřebuji abyste mi pomohla
+chtěl bych jet dnes ve čtrnáct hodin ze zastávky na beránku do zastávky smíchovské nádraží
+náměstí republiky
+na shledanou děkuju
+a později
+díky
+stanice střížkov
+nashle
+na jakou zastávku to jede
+prosím poslední spoj
+to je zajímavý autobus tam jezdí tak to vyzkoušíme jinak ze zastávky šperlova do zastávky chodov
+holešovice do stanice novoborská
+následující
+kdy to jede
+za jak dlouho to jede
+kdy to tam bude
+za jak dlouho to tam bude
+jak dlouho to jede
+za jak dlouho to tam dorazí
+za jak dlouho to tam přijede
+za jak dlouho tam přijedu
+za jak dlouho tam budu
+za jak dlouho tam dojedu
+za jak dlouho tam dorazím
+za jak dlouho tam budem
+můžete mi pomoct
+kolik je hodin
+kolik máme hodin
+počasí
+jaké je počasí
+jak bude zítra
+jaké bude zítra počasí
+jak bude za pět hodin
+jaké bude večer počasí
+jak bude zítra dopoledne
+počasí zítra odpoledne
+chci počasí na zítra
+jak bude pozítří
+počasí na dnešek
+dnešní počasí
+řekni mi počasí na zítřek
+řekni mi jaké bude počasí v jedenáct hodin dopoledne
+řekni mi jaké bude počasí v jedenáct hodin dopoledne zítra
+chci předchozí možnost
+chci následující možnost
+chci první spoj
+chci druhý spoj
+chci třetí spoj
+chci čtvrtý spoj
+chci předchozí spoj
+chci následující spoj
+chci poslední spoj
+chci jet z Prahy do Brna
+z Brna
+Brno
+z Prahy z Florence do Brna na Hlavní nádraží
+do Prahy na Hlavní nádraží
+jedu z Liberce
+z Plzně do Prahy
+chci jet z Plzně do Brna
+nechci z Plzně chci z Brna
+ne z Prahy ale z Brna
+z Plzně vlastně z Brna
+ne nechci z Anděla ale chci ze zastávky Luka
+nechci z Muzea chci z Anděla
+chtěl bych jet z Plzně Košutka do Prahy na Muzeum
+potřeboval bych jet ze zastávku Košutka v Plzni na zastavku Bory
+musím se dostat ze zastávky Bory na zastávku Janáčkovo divadlo v Brně
+nechci z Plzně chtěl bych z Brna
+nechci z Prahy chtěl bych jet z Brna
+ne nechci jet z Olomouce
+ne nechci jet z Anděla
+ne
+z Brna
+chtěl bych jet ze zastávky Bory na zastávku Košutka Plzeň
+chci jet ze zastávky Bory na zastávku Košutka v Plzni
+nechci jet ze zastávky Košutka
+nechci jet na Bory
+jaké je teď počasí
+jaké je nyní počasí
+jaké je teď počasí v Praze
+jaké je nyní počasí v Liberci
+jaké bude dnes počasí
+jaké bude počasí zítra
+jaké bude dnes počasí v Praze
+jaké bude počasí v Liberci pozítří
+jaké bude pozítří počasí v Liberci
+jak dnes bude
+jak bude zítra
+jak je v Praze
+jak je v Plzni
+jak bude pozítří v Liberci
+jak je
+jak bude
+já chci jet teď
+teď
+nyní

@@ -275,7 +275,7 @@ if not os.path.exists(final_lm_tg):
     print cmd
     os.system(cmd)
 
-    cmd = "HBuild -A -T 1 -C ../../../tools/asr/common/configrawmit -u '<UNK>' -s '<s>' '</s>' -n %s -z %s %s" % \
+    cmd = "HBuild -A -T 1 -C ../../../tools/htk/common/configrawmit -u '<UNK>' -s '<s>' '</s>' -n %s -z %s %s" % \
           (final_lm_bg,
            final_lm_vocab,
            final_lm_bg_wdnet)
@@ -305,14 +305,14 @@ if not os.path.exists(final_lm_tg):
     print cmd
     os.system(cmd)
 
-    cmd = "perl ../../../tools/asr/bin/PhoneticTranscriptionCS.pl %s %s" % \
+    cmd = "perl ../../../tools/htk/bin/PhoneticTranscriptionCS.pl %s %s" % \
           (final_lm_vocab,
            final_lm_dict)
 
     print cmd
     os.system(cmd)
 
-    cmd = "perl ../../../tools/asr/bin/AddSp.pl %s 1 > %s " % \
+    cmd = "perl ../../../tools/htk/bin/AddSp.pl %s 1 > %s " % \
           (final_lm_dict,
           final_lm_dict_sp_sil)
 

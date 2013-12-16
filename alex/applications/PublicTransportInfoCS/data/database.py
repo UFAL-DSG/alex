@@ -318,6 +318,8 @@ def save_surface_forms(file_name):
     for k in database:
         for v in database[k]:
             for f in database[k][v]:
+                if re.search('\d', f):
+                    continue
                 surface_forms.append(f)
     surface_forms.sort()
 
@@ -333,6 +335,8 @@ def save_SRILM_classes(file_name):
     for k in database:
         for v in database[k]:
             for f in database[k][v]:
+                if re.search('\d', f):
+                    continue
                 surface_forms.append("CL_" + k.upper() + " " + f.upper())
     surface_forms.sort()
 
