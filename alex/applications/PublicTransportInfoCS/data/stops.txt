@@ -158,7 +158,7 @@ Brusnice
 Bryksova
 Bubovice
 Bubovice, Višňovka
-Bucharova	Bucharovy
+Bucharova
 Budějovická
 Budovec
 Bulovka
@@ -970,7 +970,7 @@ Lešanská
 Letecké muzeum
 Letecké opravny
 Letenské náměstí
-Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla    Letiště v Ruzyni    Letiště
+Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla	Letiště v Ruzyni	Letiště
 Letňanská
 Letňany
 Lety
@@ -2022,7 +2022,7 @@ Spalovna Malešice
 Sparta
 Špejchar
 Šperlova
-Spiritka	Spiritky
+Spiritka
 Špitálka
 Špitálská
 Spojovací	Jarov

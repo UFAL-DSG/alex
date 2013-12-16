@@ -154,7 +154,7 @@ Brusnice;Brusnic;Brusnicí;Brusnicím;Brusnici;Brusnicích
 Bryksova;Bryksovy;Bryksově;Bryksovu
 Bubovice;Bubovic;Bubovicím;Bubovicům;Bubovicích
 Bubovice, Višňovka;Bubovic, Višňovky;Bubovicím, Višňovce;Bubovicům, Višňovce;Bubovice, Višňovku;Bubovicích, Višňovce
-Bucharova;Bucharovy
+Bucharova;Bucharovy;Bucharovu
 Budějovická;Budějovické;Budějovický;Budějovickou
 Budovec;Budovce;Budovci;Budovcovi
 Bulovka;Bulovky;Bulovce;Bulovku
@@ -2016,7 +2016,7 @@ Spalovna Malešice;Spalovny Malešice;Spalovně Malešice;Spalovnu Malešice
 Sparta;Sparty;Spartě;Spartu
 Špejchar;Špejcharu;Špejchaře
 Šperlova;Šperlovy;Šperlově;Šperlovu
-Spiritka;Spiritky
+Spiritka;Spiritky;Spiritku
 Špitálka
 Špitálská;Špitálské;Špitálský;Špitálskou
 Spojovací;Spojovacích;Spojovacím;Spojovacim;Jarov;Jarova
