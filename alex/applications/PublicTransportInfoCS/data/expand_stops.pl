@@ -106,7 +106,7 @@ while ( my $line = <$in> ) {
     my @cases;  # store all inflected forms here
 
     # analyze all variant names
-    my @variants = map { analyze_stop($_); } split(/\t/, $line);
+    my @variants = map { analyze_stop($_); } split(/;/, $line);
     my $main_stop_name = analyzed_to_plain($variants[0]);
     
     # filter variants if already inflected

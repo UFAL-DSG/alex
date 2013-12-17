@@ -322,10 +322,10 @@ Davle, u Kiliána
 Davle, u pomníku
 Dědina
 Dědinova
-Dejvická	Dejvice	Kulaťák
+Dejvická; Dejvice; Kulaťák
 Děkanka
 Dělnická
-Depo Hostivař	Hostivař
+Depo Hostivař; Hostivař
 Depo Kačerov
 Depo Zličín
 Dětská nemocnice Karlov
@@ -511,7 +511,7 @@ Hostýnská
 Hotel Golf
 Hovorčovice
 Hovorčovice, u kostela
-Hradčanská	Hradčany
+Hradčanská; Hradčany
 Hradešín
 Hradešín, Obecní úřad
 Hradešín, sklady Marca
@@ -556,7 +556,7 @@ Hydrologický ústav
 IKEM
 Internacionální
 Invalidovna
-I. P. Pavlova	I. P. Pavlovu
+I. P. Pavlova; I. P. Pavlovu
 Italská
 Jahodnice
 Jahodnice II
@@ -683,7 +683,7 @@ Káraný, vodárna
 Karenova
 Karlík
 Karlínské náměstí
-Karlovo náměstí	Karlák
+Karlovo náměstí; Karlák
 Karlovy lázně
 Karlštejn
 Karlštejnská
@@ -970,7 +970,7 @@ Lešanská
 Letecké muzeum
 Letecké opravny
 Letenské náměstí
-Letiště Václava Havla	Praha Letiště	Letiště Praha	Letiště Ruzyně	Ruzyňské Letiště	Václav Havel	Václava Havla	Letiště v Ruzyni	Letiště
+Letiště Václava Havla; Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni; Letiště
 Letňanská
 Letňany
 Lety
@@ -979,7 +979,7 @@ Lety, Na Návsi
 Levského
 Lhota
 Lhotecký les
-Lhotka	Písnická
+Lhotka; Písnická
 Libčice nad Vltavou
 Libčice nad Vltavou - Letky
 Liběchovská
@@ -1011,7 +1011,7 @@ Lichoceves, Noutonice
 Lidečská
 Lihovar
 Limuzská
-Lipanská	Žižkov
+Lipanská; Žižkov
 Lipany
 Lipence
 Lipnická
@@ -1224,7 +1224,7 @@ Nádraží Braník
 Nádraží Bubeneč
 Nádraží Čakovice
 Nádraží Dolní Počernice
-Nádraží Holešovice	Holešovice
+Nádraží Holešovice; Holešovice
 Nádraží Horní Měcholupy
 Nádraží Horní Počernice
 Nádraží Hostivař
@@ -1234,7 +1234,7 @@ Nádraží Krč
 Nádraží Kyje
 Nádraží Libeň
 Nádraží Modřany
-Nádraží Radotín	Radotín
+Nádraží Radotín; Radotín
 Nádraží Ruzyně
 Nádraží Satalice
 Nádraží Strašnice
@@ -1242,7 +1242,7 @@ Nádraží Uhříněves
 Nádraží Veleslavín
 Nádraží Vršovice
 Nádraží Vysočany
-Nádraží Zbraslav	Zbraslav
+Nádraží Zbraslav; Zbraslav
 Nad Rybníky
 Nad Trojou
 Nad Závistí
@@ -1264,7 +1264,7 @@ Na Lukách
 Na Lysinách
 Náměstí Bratří Synků
 Náměstí Jiřího Berana
-Náměstí Míru	Mírák
+Náměstí Míru; Mírák
 Náměstí Před Bateriemi
 Náměstí Republiky
 Náměstí U Lva
@@ -1564,7 +1564,7 @@ Podhajská pole
 Podhoří
 Pod Hradem
 Pod Jezerkou
-Pod Karlovem	Karlov
+Pod Karlovem; Karlov
 Pod Kesnerkou
 Pod Konvářkou
 Podkovářská
@@ -1787,7 +1787,7 @@ Rembrandtova
 Řezáčovo náměstí
 Říčanova
 Říčany
-Říčany, 5. května	Říčany, Pátého května
+Říčany, 5. května; Říčany, Pátého května
 Říčany, Černokostelecká
 Říčany, Fibichova
 Říčany, hřbitov
@@ -1802,7 +1802,7 @@ Rembrandtova
 Říčany, Olivovna
 Říčany, Pacov
 Říčany, Pacov, Horní Pacov
-Říčany, park A. Švehly	Říčany, park Antonína Švehly
+Říčany, park A. Švehly; Říčany, park Antonína Švehly
 Říčany, Pivoňková
 Říčany, Podhradí
 Říčany, Pod Kavčí Skálou
@@ -1811,7 +1811,7 @@ Rembrandtova
 Říčany, průmyslový areál Černokostelecká
 Říčany, Rychta
 Říčany, sídliště Olivovna
-Říčany, Spojovací ZŠ	Říčany, Spojovací základní škola
+Říčany, Spojovací ZŠ; Říčany, Spojovací základní škola
 Říčany, Štefánikova
 Říčany, Strašín
 Říčany, Strašín, restaurace
@@ -1928,7 +1928,7 @@ Sibiřské náměstí
 Sibřina
 Sibřina, Říčanská
 Sibřina, Stupice
-Sídliště Barrandov	Barrandov
+Sídliště Barrandov; Barrandov
 Sídliště Bohnice
 Sídliště Čakovice
 Sídliště Červený Vrch
@@ -2009,7 +2009,7 @@ Sluhy, rozcestí Brázdim
 Sluštice, škola
 Služská
 Smaragdová
-Smíchovské nádraží	Smíchov
+Smíchovské nádraží; Smíchov
 Smiřická
 Smržovská
 Šmukýřka
@@ -2025,7 +2025,7 @@ Sparta
 Spiritka
 Špitálka
 Špitálská
-Spojovací	Jarov
+Spojovací; Jarov
 Spolská
 Spořická
 Spořilov
@@ -2087,7 +2087,7 @@ Strančice, Svojšovice
 Strančice, Všechromy
 Strančice, Všechromy, náves
 Strančice, železniční stanice
-Strašnická	Strašnice
+Strašnická; Strašnice
 Stratov
 Strážní
 Středokluky
@@ -2212,7 +2212,7 @@ Třinecká
 Trnová
 Trnová, rozcestí
 Trnová, škola
-Trojská	Troja
+Trojská; Troja
 Trutnovská
 Tuchoměřice
 Tuchoměřice, Kněžívka
@@ -2340,7 +2340,7 @@ U Zvonu
 Vackov
 Vackova
 Václavka
-Václavské náměstí	Václavák
+Václavské náměstí; Václavák
 Vajgarská
 Valtická
 V Chotejně
@@ -2351,7 +2351,7 @@ Veleň, U Pomníku
 Veletržní palác
 Veliká Ves
 Velká Bučina
-Velká Chuchle	Chuchle
+Velká Chuchle; Chuchle
 Velká Lečice
 Velká Ohrada
 Velké Popovice
@@ -2386,7 +2386,7 @@ Ve Žlíbku
 Vidoule
 Vinice
 Vinohradská tržnice
-Vinohradská vodárna	Vinohrady
+Vinohradská vodárna; Vinohrady
 Vinohradské hřbitovy
 Vinopalnická
 Vinoř
@@ -2502,7 +2502,7 @@ Vysoký Újezd, Kuchař, I {okres Praha - západ}
 Vysoký Újezd {okres Benešov}
 Vysoký Újezd {okres Praha - západ}
 Vysoký Újezd, sokolovna {okres Praha - západ}
-Výstaviště Holešovice	Výstaviště	Stromovka
+Výstaviště Holešovice; Výstaviště; Stromovka
 Výstaviště Letňany
 Výtoň
 Výžerky
@@ -2623,7 +2623,7 @@ Zlončice
 Zlonín
 Zlosyň
 Zmrzlík
-Zoologická zahrada	Zoo Praha
+Zoologická zahrada; Zoo Praha
 Žvahov
 Zvánovice
 Zvánovice, Kádov
@@ -2864,7 +2864,7 @@ Mírová
 Na kopcích
 Na kovárně
 Nemocnice Bohunice
-Nemocnice u sv. Anny	Nemocnice u svaté Anny
+Nemocnice u sv. Anny; Nemocnice u svaté Anny
 Nerudova
 Netroufalky
 Neumannova
@@ -2872,9 +2872,9 @@ Novolíšeňská
 Nové sady
 Nové sady, smyčka
 Nálepkova
-Náměstí 28. dubna	Náměstí Dvacátého osmého dubna	Náměstí Osmadvacátého dubna
-Náměstí 28. října	Náměstí Dvacátého osmého října	Náměstí Osmadvacátého října
-Náměstí Karla IV.	Náměstí Karla čtvrtého
+Náměstí 28. dubna; Náměstí Dvacátého osmého dubna; Náměstí Osmadvacátého dubna
+Náměstí 28. října; Náměstí Dvacátého osmého října; Náměstí Osmadvacátého října
+Náměstí Karla IV.; Náměstí Karla čtvrtého
 Náměstí Míru
 Náměstí Republiky
 Náměstí Svornosti
@@ -2895,7 +2895,7 @@ Otakara Ševčíka
 Ořechovská
 Ořešín
 Ořešínská
-Palackého náměstí	Palacké náměstí
+Palackého náměstí; Palacké náměstí
 Palackého vrch
 Pavlovská
 Pavlíkova
@@ -3138,10 +3138,10 @@ Anglické nábřeží, Pražská
 Anglické nábřeží
 Barvínková
 Bílá Hora
-Bílá Hora, žel. st.	Bílá Hora, železniční stanice	Bílá Hora, nádraží
+Bílá Hora, žel. st.; Bílá Hora, železniční stanice; Bílá Hora, nádraží
 Boettingerova
 Bolevec
-Bolevec, u žel. zast.	Bolevec, u železniční zastávky
+Bolevec, u žel. zast.; Bolevec, u železniční zastávky
 Bolevecká náves
 Borská pole, Folmavská
 Borská pole, Panasonic
@@ -3175,7 +3175,7 @@ CAN, Tylova
 Červený Hrádek
 Čisticí stanice
 ČSAO
-Divadlo J. K. Tyla	Divadlo Josefa Kajetána Tyla
+Divadlo J. K. Tyla; Divadlo Josefa Kajetána Tyla
 Dobrovského
 Dobrovského, Klatovská
 Dobřanská
@@ -3193,8 +3193,8 @@ Dýšina, Nová Huť
 Dýšina, Škoda Engineering
 Dýšina, u viaduktu
 Dýšina, u viaduktu
-Fakultní nemoc. Bory	Fakultní nemocnice Bory
-Fakultní nemoc. Lochotín	Fakultní nemocnice Lochotín
+Fakultní nemoc. Bory; Fakultní nemocnice Bory
+Fakultní nemoc. Lochotín; Fakultní nemocnice Lochotín
 Fialková
 Folmavská, rondel
 Francouzská
@@ -3219,17 +3219,17 @@ Chaty
 Chlumek
 Chodské náměstí
 Chotěšov, u školy
-Chotěšov, žel. st.	Chotěšov, železniční stanice	Chotěšov, nádraží
+Chotěšov, žel. st.; Chotěšov, železniční stanice; Chotěšov, nádraží
 Chrást, konečná
 Chrást, Lidový dům
 Chrást, rozvodna
 Chrást, u školy
 Chválenická
-II. poliklinika	Druhá poliklinika
-III. br., Domažlická	Třetí brána, Domažlická
-III. br., Vejprnická	Třetí brána, Vejprnická
+II. poliklinika; Druhá poliklinika
+III. br., Domažlická; Třetí brána, Domažlická
+III. br., Vejprnická; Třetí brána, Vejprnická
 Internáty
-IV. poliklinika	Čtvrtá poliklinika
+IV. poliklinika; Čtvrtá poliklinika
 Jateční
 Jatky
 Jedlová
@@ -3261,9 +3261,9 @@ Kyšice
 Kyšice
 Kyšice, OÚ
 Lábkova
-Lék. fakulta, Karlovarská	Lékařská fakulta, Karlovarská
-Lék. fakulta, Lidická	Lékařská fakulta, Lidická
-Lék. fakulta, Lochotín	Lékařská fakulta, Lochotín
+Lék. fakulta, Karlovarská; Lékařská fakulta, Karlovarská
+Lék. fakulta, Lidická; Lékařská fakulta, Lidická
+Lék. fakulta, Lochotín; Lékařská fakulta, Lochotín
 Letkov
 Letkovská
 Letná
@@ -3308,11 +3308,11 @@ Nad Hrádkem
 Nad Zátiším
 Nákupní středisko
 Náměstí generála Píky
-Náměstí M. Horákové	Náměstí Milady Horákové
+Náměstí M. Horákové; Náměstí Milady Horákové
 Náměstí Míru
 Náměstí Republiky
 Náměstí Republiky, Dřevěná
-NC, Folmavská	Nákupní centrum, Folmavská
+NC, Folmavská; Nákupní centrum, Folmavská
 Nemocnice Privamed
 Nová Hospoda
 Nová Ves, náves
@@ -3349,21 +3349,21 @@ Severka
 Severka BUS
 Skautská
 Skvrňany, sídliště
-Skvrňany, Škoda VII.b.	Skvrňany, Škoda sedmá brána
+Skvrňany, Škoda VII.b.; Skvrňany, Škoda sedmá brána
 Sladkovského
 Sladkovského, HOSPIC
 Sladkovského, U Duhy
 Sladová
 Slovanská alej
 Slovanské údolí
-Slovany, n. M. Horákové	Slovany, náměstí Milady Horákové	Slovany, náměstí M. Horákové
+Slovany, n. M. Horákové; Slovany, náměstí Milady Horákové; Slovany, náměstí M. Horákové
 Slupská
 Smědčice
 Sokolovská
 Sokolská
 Solní, pošta
 SPŠD a S
-Stadion Lokomot.	Stadion Lokomotiva	Stadion Lokomotivy
+Stadion Lokomot.; Stadion Lokomotiva; Stadion Lokomotivy
 Staré letiště
 Starý Plzenec
 Starý Plzenec, Bezručova
@@ -3371,12 +3371,12 @@ Starý Plzenec, Malá strana
 Starý Plzenec, Nad tratí
 Starý Plzenec, náměstí
 Starý Plzenec, Sedlec
-Starý Plzenec, Sedlec, rozc.	Starý Plzenec, Sedlec, rozcestí
+Starý Plzenec, Sedlec, rozc.; Starý Plzenec, Sedlec, rozcestí
 Starý Plzenec, u kravína
 Starý Plzenec, vilová čtvrť
-Starý Plzenec, zdrav. stř.	Starý Plzenec, zdravotní středisko
-Starý Plzenec, žel. st.	Starý Plzenec, železniční stanice	Starý Plzenec, nádraží
-Stav. stroje, Rokycanská	Stavební stroje, Rokycanská
+Starý Plzenec, zdrav. stř.; Starý Plzenec, zdravotní středisko
+Starý Plzenec, žel. st.; Starý Plzenec, železniční stanice; Starý Plzenec, nádraží
+Stav. stroje, Rokycanská; Stavební stroje, Rokycanská
 Stavební podnik
 Stavební stroje
 Studentská
@@ -3388,9 +3388,9 @@ Světovar BUS
 Světovar, Jasmínová
 Šimerova
 Škoda JS
-Škoda V. brána	Škoda pátá brána
-Škoda VII. brána	Škoda sedmá brána
-Škoda VIII. brána	Škoda osmá brána
+Škoda V. brána; Škoda pátá brána
+Škoda VII. brána; Škoda sedmá brána
+Škoda VIII. brána; Škoda osmá brána
 Šumavská
 Švihovská
 Těšínská
@@ -3398,7 +3398,7 @@ Tleskačova
 Tomanova
 Třemošná
 Třemošná, Orlík
-Třemošná, ZŠ I	Třemošná, Základní škola jedna
+Třemošná, ZŠ I; Třemošná, Základní škola jedna
 Tylova
 Tyršův most
 Tyršův sad
@@ -3430,11 +3430,11 @@ U trati
 Újezd, rozcestí
 Újezd, Staroveská
 Újezd, V brance
-Ulice 17. listopadu	Ulice Sedmnáctého listopadu
-Ulice B. Němcové	Ulice Boženy Němcové
+Ulice 17. listopadu; Ulice Sedmnáctého listopadu
+Ulice B. Němcové; Ulice Boženy Němcové
 Ulice Družby
-Ulice K. Steinera	Ulice Karla Steinera
-Ulice T. Brzkové	Ulice Terezie Brzkové
+Ulice K. Steinera; Ulice Karla Steinera
+Ulice T. Brzkové; Ulice Terezie Brzkové
 Ulice U školky
 Úněšovská, Globus
 Ústřední hřbitov I.
@@ -3465,11 +3465,11 @@ Zátiší, Línská
 Zátiší, U hřbitova
 Zátiší, U panelárny
 Zbůch
-Zbůch, Starý důl rozc.	Zbůch, Starý důl rozcestí
+Zbůch, Starý důl rozc.; Zbůch, Starý důl rozcestí
 Zelenohorská
 Zimní stadion
 Zruč - Senec
-Zruč - Senec, rozc.	Zruč - Senec, rozcestí
+Zruč - Senec, rozc.; Zruč - Senec, rozcestí
 Zruč - Senec, u Drudíků
 Zruč - Senec, u pomníku
 Zruč - Senec, v koutě
