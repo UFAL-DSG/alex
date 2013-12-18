@@ -331,8 +331,16 @@ class PTICSHDCPolicy(DialoguePolicy):
         weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
+        # find the coordinates of the city
+        city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
+        if city_addinfo:
+            # TODO: here we just take the first city of that name. We should do some
+            # resolution of cities with the same name in different districts
+            lon, lat = city_addinfo[0]['lon'], city_addinfo[0]['lat']
+        else:
+            lon, lat = None, None
         # request the weather
-        weather = self.weather.get_weather(weather_ts, daily, in_city)
+        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, lon=lon, lat=lat)
         # check errors
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")' % in_city)

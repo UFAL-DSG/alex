@@ -8,6 +8,9 @@ import os
 
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
+# tab-separated file containing city + all locations of the city/cities with this name
+# (as pipe-separated longitude, latitude, district, region)
+CITIES_LOCATION_FNAME = 'cities_locations.tsv'
 
 ontology = {
     'slots': {
@@ -255,6 +258,10 @@ ontology = {
         'in_city': 'Praha',
     },
 
+    'addinfo': {
+        'city': {},
+    },
+
     # translation of the values for TTS output
     'value_translation': {
         'ampm': {
@@ -331,3 +338,17 @@ def load_compatible_values(fname, slot1, slot2):
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
+
+def load_additional_information(fname, slot, keys):
+    with codecs.open(fname, 'r', 'UTF-8') as fh:
+        for line in fh:
+            if line.startswith('#') or not '\t' in line:
+                continue
+            data = line.strip().split('\t')
+            value, data = data[0], data[1:]
+            ontology['addinfo'][slot][value] = []
+            for data_point in data:
+                ontology['addinfo'][slot][value].append({add_key: add_val for add_key, add_val
+                                                         in zip(keys, data_point.split('|'))})
+
+load_additional_information(os.path.join(dirname, CITIES_LOCATION_FNAME), 'city', ['lon', 'lat', 'district', 'region'])

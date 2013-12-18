@@ -150,17 +150,22 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
-    def get_weather(self, time=None, daily=False, place=None):
+    def get_weather(self, time=None, daily=False, place=None, lat=None, lon=None):
         """Get OpenWeatherMap weather information or forecast for the given time.
 
         The time/date should be given as a datetime.datetime object.
         """
-        # default to weather for Czech Rep.
-        place = place if place is not None else 'Czech Republic'
-        # set the place
-        data = {
-            'q': (place + ',CZ').encode('utf-8'),
-        }
+        data = {}
+        # prefer using longitude and latitude, if they are set
+        if lat is not None and lon is not None:
+            data['lat'] = lat
+            data['lon'] = lon
+        else:
+            # default to weather for Czech Rep.
+            place = place if place is not None else 'Czech Republic'
+            # set the place
+            data['q'] = (place + ',CZ').encode('utf-8')
+
         method = 'weather'
         if daily:
             method = 'forecast/daily'
