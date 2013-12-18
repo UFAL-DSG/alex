@@ -95,7 +95,7 @@ if __name__ == '__main__':
                 line = line.split('\t', 1)[0]  # strip previous coordinates, if applicable
                 try:
                     coords = get_google_coords(line)
-                    print >> fh_out, line, '\t', '\t'.join(coords)
+                    print >> fh_out, line + '\t' + '\t'.join(coords)
                 except:
                     print >> sys.stderr, ('!!ERROR:' + str(e) + ' -- cannot find city:' + line).encode('utf-8')
                     print >> fh_out, line
