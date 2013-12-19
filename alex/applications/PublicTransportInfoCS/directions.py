@@ -266,11 +266,13 @@ class CRWSRouteStep(RouteStep):
                     self.line_name += ' ' + train_name
                 else:
                     self.line_name = ' '.join((train_type_shortcut, self.line_name, train_name))
-            elif self.vehicle in ['BUS', 'INTERCITY_BUS'] and re.match(r'[0-9]{6}', self.line_name):
-                self.line_name = self.line_name[0:3] + ' ' + self.line_name[3:6]
             # normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
+
+            self.departure_stop = self.departure_stop.replace(',,', ', ')
+            self.arrival_stop = self.arrival_stop.replace(',,', ', ')
+            self.headsign = self.headsign.replace(',,', ', ')
 
         elif self.travel_mode == self.MODE_WALKING:
             # input data in this case are only the amount of minutes needed for walking
