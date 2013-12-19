@@ -120,7 +120,7 @@ class GoogleASR():
     def hyp_out(self):
         """ This defines asynchronous interface for speech recognition.
 
-        Returns recognizers hypotheses about the input speech audio and a confusion network for the input.
+        Returns recognizers hypotheses about the input speech audio.
         """
         wav = b''.join(self.rec_buffer)
         self.rec_buffer = []
