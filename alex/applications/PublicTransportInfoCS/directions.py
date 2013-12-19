@@ -356,7 +356,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
     def __init__(self, cfg):
         DirectionsFinder.__init__(self)
-        APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
+        APIRequest.__init__(self, cfg, 'crws-directions', 'CRWS directions query')
         # create the client
         self.client = Client("http://crws.timetable.cz/CR.svc?wsdl")
         # obtain user information
