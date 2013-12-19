@@ -58,7 +58,9 @@ class APIRequest(object):
         fname = os.path.join(self.system_logger.get_session_dir_name(),
                              self.fname_prefix + '-{t}.json'.format(t=timestamp))
         fh = codecs.open(fname, 'w', 'UTF-8')
+        # dump to JSON (default for handling datetime objects)
         json.dump(data, fh, indent=4, separators=(',', ': '),
-                  ensure_ascii=False)
+                  ensure_ascii=False,
+                  default=lambda obj: obj.isoformat() if hasattr(obj, 'isoformat') else obj)
         fh.close()
         self.session_logger.external_data_file(self.logger_name, os.path.basename(fname))

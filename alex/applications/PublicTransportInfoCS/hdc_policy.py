@@ -13,7 +13,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GooglePIDDirectionsFinder
+from .directions import CRWSDirectionsFinder
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
@@ -37,7 +37,7 @@ class PTICSHDCPolicy(DialoguePolicy):
     def __init__(self, cfg, ontology):
         super(PTICSHDCPolicy, self).__init__(cfg, ontology)
 
-        self.directions = GooglePIDDirectionsFinder(cfg=cfg)
+        self.directions = CRWSDirectionsFinder(cfg=cfg)
         self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
 
         self.das = []
