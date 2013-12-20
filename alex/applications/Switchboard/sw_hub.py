@@ -444,7 +444,7 @@ if __name__ == '__main__':
                     if digit in ['*', '#']:
                         callee_entered = True
 
-                    if not callee_entered:
+                    if not callee_entered and digit in '0123456789':
                         callee_uri += digit
 
         if vio2_commands.poll():
