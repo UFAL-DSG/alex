@@ -58,6 +58,7 @@ class KaldiASR(object):
         """
         start = time.clock()
         self.decoder.frame_in(frame.payload)
+        self.logger.info('frame_in of %d frames' % (len(frame.payload) / 2))
         dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
         while dec_t > 0:
             dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
@@ -78,4 +79,8 @@ class KaldiASR(object):
             words = [self.wst[str(i)] for i in word_ids]
             nblist.add(w, Utterance(words))
         self.logger.info('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
+        if len(nbest) == 0:
+            self.logger.warning('hyp_out: empty hypothesis')
+            nblist.add(1.0, Utterance('Empty hypothesis: DEBUG'))
+
         return nblist
