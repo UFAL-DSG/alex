@@ -84,7 +84,7 @@ def play_intro(cfg, tts_commands, intro_id, last_intro_id):
     for i in range(len(cfg['Switchboard']['introduction'])):
         last_intro_id = str(intro_id)
         intro_id += 1
-        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, cfg['Switchboard']['introduction'][i]), 'HUB', 'TTS1'))
+        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, cfg['Switchboard']['introduction'][i]), 'HUB', 'TTS'))
 
     return intro_id, last_intro_id
 
