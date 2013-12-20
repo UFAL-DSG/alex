@@ -261,11 +261,7 @@ if __name__ == '__main__':
                 vio1_play.send(data)
 
         if call_back_time != -1 and call_back_time < time.time():
-            try:
-                vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
-            except VoipIOException as e:
-                print e
-                print 'Ignoring the previous exception'
+            vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
 
             call_back_time = -1
             call_back_uri = None
@@ -275,11 +271,7 @@ if __name__ == '__main__':
             m = cfg1['Switchboard']['calling'] + ' '.join(callee_uri)
             tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
 
-            try:
-                vio2_commands.send(Command('make_call(destination="%s")' % callee_uri, 'HUB', 'VoipIO2'))
-            except VoipIOException as e:
-                print e
-                print 'Ignoring the previous exception'
+            vio2_commands.send(Command('make_call(destination="%s")' % callee_uri, 'HUB', 'VoipIO2'))
 
             callee_uri = ''
 
