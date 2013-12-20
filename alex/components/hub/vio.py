@@ -243,7 +243,7 @@ class CallCallback(pj.CallCallback):
                     self.played_id = None
 
                 # Send the callback.
-                self.voipio.on_call_disconnected(hash_remote_uri(self.cfg, self.call.info().remote_uri))
+                self.voipio.on_call_disconnected(hash_remote_uri(self.cfg, self.call.info().remote_uri), self.call.info().last_code)
         except:
             self.voipio.close_event.set()
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the CallCallback class.')
@@ -739,7 +739,7 @@ class VoipIO(multiprocessing.Process):
         # send a message that the call is confirmed
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
 
-    def on_call_disconnected(self, remote_uri):
+    def on_call_disconnected(self, remote_uri, code):
         if self.cfg['VoipIO']['debug']:
             self.cfg['Logging']['system_logger'].debug("VoipIO::on_call_disconnected")
 
@@ -747,7 +747,7 @@ class VoipIO(multiprocessing.Process):
         self.audio_recording = False
 
         # send a message that the call is disconnected
-        self.commands.send(Command('call_disconnected(remote_uri="%s")' % get_user_from_uri(remote_uri), 'VoipIO', 'HUB'))
+        self.commands.send(Command('call_disconnected(remote_uri="%s", code="%s")' % (get_user_from_uri(remote_uri), str(code)), 'VoipIO', 'HUB'))
 
     def on_dtmf_digit(self, digits):
         if self.cfg['VoipIO']['debug']:

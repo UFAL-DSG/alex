@@ -12,8 +12,10 @@ import codecs
 import re
 
 import autopath
+from alex.components.hub.exceptions import VoipIOException
 
 from alex.components.hub.vio import VoipIO
+from alex.components.hub.vad import VAD
 from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
 from alex.utils.config import Config
@@ -122,6 +124,9 @@ if __name__ == '__main__':
     vio1_record, vio1_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
     vio1_play, vio1_child_play = multiprocessing.Pipe()          # I write in audio to be played
 
+    vad1_commands, vad1_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
+    vad1_audio_out, vad1_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+
     tts1_commands, tts1_child_commands = multiprocessing.Pipe()   # used to send commands to TTS
     tts1_text_in, tts1_child_text_in = multiprocessing.Pipe()     # used to send TTS text
 
@@ -129,30 +134,39 @@ if __name__ == '__main__':
     vio2_record, vio2_child_record = multiprocessing.Pipe()      # I read from this connection recorded audio
     vio2_play, vio2_child_play = multiprocessing.Pipe()          # I write in audio to be played
 
+    vad2_commands, vad2_child_commands = multiprocessing.Pipe()   # used to send commands to VAD
+    vad2_audio_out, vad2_child_audio_out = multiprocessing.Pipe() # used to read output audio from VAD
+
     tts2_commands, tts2_child_commands = multiprocessing.Pipe()   # used to send commands to TTS
     tts2_text_in, tts2_child_text_in = multiprocessing.Pipe()     # used to send TTS text
 
-    command_connections = [vio1_commands, tts1_commands, vio2_commands, tts2_commands]
+    command_connections = [vio1_commands, vad1_commands, tts1_commands, vio2_commands, vad2_commands, tts2_commands]
 
     non_command_connections = [vio1_record, vio1_child_record,
                                vio1_play, vio1_child_play,
+                               vad1_audio_out, vad1_child_audio_out,
                                tts1_text_in, tts1_child_text_in,
                                vio2_record, vio2_child_record,
                                vio2_play, vio2_child_play,
+                               vad2_audio_out, vad2_child_audio_out,
                                tts2_text_in, tts2_child_text_in]
 
     close_event = multiprocessing.Event()
 
     vio1 = VoipIO(cfg1, vio1_child_commands, vio1_child_record, vio1_child_play, close_event)
+    vad1 = VAD(cfg1, vad1_child_commands, vio1_record, vad1_child_audio_out, close_event)
     tts1 = TTS(cfg1, tts1_child_commands, tts1_child_text_in, vio1_play, close_event)
     vio2 = VoipIO(cfg2, vio2_child_commands, vio2_child_record, vio2_child_play, close_event)
+    vad2 = VAD(cfg2, vad2_child_commands, vio2_record, vad2_child_audio_out, close_event)
     tts2 = TTS(cfg2, tts2_child_commands, tts2_child_text_in, vio2_play, close_event)
 
 
     vio1.start()
+    vad1.start()
     tts1.start()
 
     vio2.start()
+    vad2.start()
     tts2.start()
 
     # init the system
@@ -167,7 +181,8 @@ if __name__ == '__main__':
     s_last_voice_activity_time1 = 0
     u_voice_activity1 = False
     u_last_voice_activity_time1 = 0
-    vio1_connect = False
+    vio_connect1 = False
+    hangup1 = False
 
     call_start2 = 0
     count_intro2 = 0
@@ -180,7 +195,8 @@ if __name__ == '__main__':
     s_last_voice_activity_time2 = 0
     u_voice_activity2 = False
     u_last_voice_activity_time2 = 0
-    vio2_connect = False
+    vio_connect2 = False
+    hangup2 = False
 
     callee_entered = False
     callee_uri = ''
@@ -222,30 +238,35 @@ if __name__ == '__main__':
     while 1:
         time.sleep(cfg1['Hub']['main_loop_sleep_time'])
 
-        while vio1_record.poll():
-            data = vio1_record.recv()
+        while vad1_audio_out.poll():
+            data = vad1_audio_out.recv()
 
-            if intro_played2 and not vio1_connect:
+            if intro_played2 and not vio_connect1:
                 vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
                             ('2', '', '', ''), 'HUB', 'VoipIO2'))
-                vio1_connect = True
+                vio_connect1 = True
 
             if intro_played2:
                 vio2_play.send(data)
 
-        while vio2_record.poll():
-            data = vio2_record.recv()
+        while vad2_audio_out.poll():
+            data = vad2_audio_out.recv()
 
-            if intro_played2 and not vio2_connect:
+            if intro_played2 and not vio_connect2:
                 vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
                             ('1', '', '', ''), 'HUB', 'VoipIO1'))
-                vio2_connect = True
+                vio_connect2 = True
 
             if intro_played1:
                 vio1_play.send(data)
 
         if call_back_time != -1 and call_back_time < time.time():
-            vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
+            try:
+                vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
+            except VoipIOException as e:
+                print e
+                print 'Ignoring the previous exception'
+
             call_back_time = -1
             call_back_uri = None
 
@@ -253,7 +274,11 @@ if __name__ == '__main__':
             m = cfg1['Switchboard']['calling'] + ' '.join(callee_uri)
             tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
 
-            vio2_commands.send(Command('make_call(destination="%s")' % callee_uri, 'HUB', 'VoipIO2'))
+            try:
+                vio2_commands.send(Command('make_call(destination="%s")' % callee_uri, 'HUB', 'VoipIO2'))
+            except VoipIOException as e:
+                print e
+                print 'Ignoring the previous exception'
 
             callee_uri = ''
 
@@ -347,6 +372,11 @@ if __name__ == '__main__':
                         s_last_voice_activity_time1 = 0
                         u_voice_activity1 = False
                         u_last_voice_activity_time1 = 0
+                        vio_connect1 = False
+                        hangup1 = False
+
+                        callee_entered = False
+                        callee_uri = ''
 
                         intro_id1, last_intro_id1 = play_intro(cfg1, tts1_commands, intro_id1, last_intro_id1)
 
@@ -368,6 +398,7 @@ if __name__ == '__main__':
                     remote_uri = command.parsed['remote_uri']
 
                     vio1_commands.send(Command('flush()', 'HUB', 'VoipIO1'))
+                    vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
                     tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
 
                     cfg1['Logging']['system_logger'].session_end()
@@ -386,9 +417,10 @@ if __name__ == '__main__':
 
                     intro_played1 = False
 
-                    vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
                     callee_entered = False
                     callee_uri = ''
+
+                    hangup2 = True
 
                 if command.parsed['__name__'] == "play_utterance_start":
                     cfg1['Logging']['system_logger'].info(command)
@@ -402,14 +434,13 @@ if __name__ == '__main__':
 
                     if command.parsed['user_id'] == last_intro_id1:
                         intro_played1 = True
-                        s_last_voice_activity_time1 = 0
 
                 if command.parsed['__name__'] == "dtmf_digit":
                     cfg1['Logging']['system_logger'].info(command)
 
                     digit = command.parsed['digit']
 
-                    if digit == '#':
+                    if digit in ['*', '#']:
                         callee_entered = True
 
                     if not callee_entered:
@@ -466,6 +497,8 @@ if __name__ == '__main__':
                     s_last_voice_activity_time2 = 0
                     u_voice_activity2 = False
                     u_last_voice_activity_time2 = 0
+                    vio_connect2 = False
+                    hangup2 = False
 
                     intro_id2, last_intro_id2 = play_intro(cfg2, tts2_commands, intro_id2, last_intro_id2)
 
@@ -473,8 +506,10 @@ if __name__ == '__main__':
                     cfg2['Logging']['system_logger'].info(command)
 
                     remote_uri = command.parsed['remote_uri']
+                    code = command.parsed['code']
 
                     vio2_commands.send(Command('flush()', 'HUB', 'VoipIO2'))
+                    vad2_commands.send(Command('flush()', 'HUB', 'VAD2'))
                     tts2_commands.send(Command('flush()', 'HUB', 'TTS2'))
 
                     cfg2['Logging']['system_logger'].session_end()
@@ -482,7 +517,12 @@ if __name__ == '__main__':
 
                     intro_played2 = False
 
-                    vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
+                    if code in ['486', '600', '603', '604', '606']:
+                        m = cfg1['Switchboard']['noanswer']
+                        tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
+
+                    hangup1 = True
+                    # vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
                 if command.parsed['__name__'] == "play_utterance_start":
                     cfg2['Logging']['system_logger'].info(command)
@@ -496,7 +536,28 @@ if __name__ == '__main__':
 
                     if command.parsed['user_id'] == last_intro_id2:
                         intro_played2 = True
-                        s_last_voice_activity_time2 = 0
+
+        if vad1_commands.poll():
+            command = vad1_commands.recv()
+            cfg1['Logging']['system_logger'].info(command)
+
+            if isinstance(command, Command):
+                if command.parsed['__name__'] == "speech_start":
+                    u_voice_activity = True
+                if command.parsed['__name__'] == "speech_end":
+                    u_voice_activity = False
+                    u_last_voice_activity_time = time.time()
+
+        if vad2_commands.poll():
+            command = vad2_commands.recv()
+            cfg2['Logging']['system_logger'].info(command)
+
+            if isinstance(command, Command):
+                if command.parsed['__name__'] == "speech_start":
+                    u_voice_activity = True
+                if command.parsed['__name__'] == "speech_end":
+                    u_voice_activity = False
+                    u_last_voice_activity_time = time.time()
 
         if tts1_commands.poll():
             command = tts1_commands.recv()
@@ -507,6 +568,16 @@ if __name__ == '__main__':
             cfg1['Logging']['system_logger'].info(command)
 
         current_time = time.time()
+
+        if hangup1 and s_voice_activity1 == False and s_last_voice_activity_time1 + 2.0 < current_time:
+            # we are ready to hangup only when all voice activity is finished
+            hangup1 = False
+            vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
+
+        if hangup2 and s_voice_activity2 == False and s_last_voice_activity_time2 + 2.0 < current_time:
+            # we are ready to hangup only when all voice activity is finished
+            hangup2 = False
+            vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
 
     #  print
     #  print intro_played, end_played
@@ -519,6 +590,7 @@ if __name__ == '__main__':
             reject_played1 = False
             vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
             vio1_commands.send(Command('flush()', 'HUB', 'VoipIO1'))
+            vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
             tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
 
         if intro_played1 and current_time - call_start1 > cfg1['Switchboard']['max_call_length'] and s_voice_activity1 == False:
@@ -533,6 +605,7 @@ if __name__ == '__main__':
                 # be careful it does not hangup immediately
                 vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
                 vio1_commands.send(Command('flush()', 'HUB', 'VoipIO1'))
+                vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
                 tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
 
         if intro_played2 and current_time - call_start1 > cfg2['Switchboard']['max_call_length'] and s_voice_activity1 == False:
@@ -547,6 +620,7 @@ if __name__ == '__main__':
                 # be careful it does not hangup immediately
                 vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
                 vio2_commands.send(Command('flush()', 'HUB', 'VoipIO2'))
+                vad2_commands.send(Command('flush()', 'HUB', 'VAD2'))
                 tts2_commands.send(Command('flush()', 'HUB', 'TTS2'))
 
         # if intro_played and \
@@ -571,7 +645,11 @@ if __name__ == '__main__':
 
     # stop processes
     vio1_commands.send(Command('stop()', 'HUB', 'VoipIO1'))
+    vad1_commands.send(Command('stop()', 'HUB', 'VAD1'))
     tts1_commands.send(Command('stop()', 'HUB', 'TTS1'))
+    vio2_commands.send(Command('stop()', 'HUB', 'VoipIO2'))
+    vad2_commands.send(Command('stop()', 'HUB', 'VAD2'))
+    tts2_commands.send(Command('stop()', 'HUB', 'TTS2'))
 
     # clean connections
     for c in command_connections:
@@ -588,3 +666,7 @@ if __name__ == '__main__':
     tts1.join()
     system_logger.debug('TTS1 stopped.')
 
+    vio2.join()
+    system_logger.debug('VoipIO2 stopped.')
+    tts2.join()
+    system_logger.debug('TTS2 stopped.')
