@@ -26,9 +26,11 @@ class KaldiASR(object):
         self.cfg = cfg
         kcfg = cfg['ASR']['Kaldi']
         self.wst = wst2dict(kcfg['wst'])
+        self.max_dec_frames = kcfg['max_dec_frames']
         # specify all other options in config
         argv = ("--config=%(config)s --verbose=%(verbose)d "
                 "%(model)s %(hclg)s %(silent_phones)s" % kcfg)
+        argv = argv.split()
         with open(kcfg['config']) as r:
             conf_opt = r.read()
             self.logger.info('argv: %s\nconfig: %s' % (argv, conf_opt))
