@@ -271,6 +271,7 @@ if __name__ == '__main__':
             call_back_uri = None
 
         if callee_entered and callee_uri:
+            s_voice_activity1 = True
             m = cfg1['Switchboard']['calling'] + ' '.join(callee_uri)
             tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
 
@@ -518,11 +519,11 @@ if __name__ == '__main__':
                     intro_played2 = False
 
                     if code in ['486', '600', '603', '604', '606']:
+                        s_voice_activity1 = True
                         m = cfg1['Switchboard']['noanswer']
                         tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
 
                     hangup1 = True
-                    # vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
                 if command.parsed['__name__'] == "play_utterance_start":
                     cfg2['Logging']['system_logger'].info(command)
@@ -569,6 +570,13 @@ if __name__ == '__main__':
 
         current_time = time.time()
 
+        # print
+        # print intro_played, end_played
+        # print s_voice_activity, u_voice_activity,
+        # print call_start,  current_time, u_last_voice_activity_time, s_last_voice_activity_time
+        # print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
+        # print hangup1, s_voice_activity1, s_last_voice_activity_time1, current_time
+
         if hangup1 and s_voice_activity1 == False and s_last_voice_activity_time1 + 2.0 < current_time:
             # we are ready to hangup only when all voice activity is finished
             hangup1 = False
@@ -578,12 +586,6 @@ if __name__ == '__main__':
             # we are ready to hangup only when all voice activity is finished
             hangup2 = False
             vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
-
-    #  print
-    #  print intro_played, end_played
-    #  print s_voice_activity, u_voice_activity,
-    #  print call_start,  current_time, u_last_voice_activity_time, s_last_voice_activity_time
-    #  print current_time - s_last_voice_activity_time > 5, u_last_voice_activity_time - s_last_voice_activity_time > 0
 
         if reject_played1 == True and s_voice_activity1 == False:
             # be careful it does not hangup immediately
@@ -622,26 +624,6 @@ if __name__ == '__main__':
                 vio2_commands.send(Command('flush()', 'HUB', 'VoipIO2'))
                 vad2_commands.send(Command('flush()', 'HUB', 'VAD2'))
                 tts2_commands.send(Command('flush()', 'HUB', 'TTS2'))
-
-        # if intro_played and \
-        #     s_voice_activity == False and \
-        #     u_voice_activity == False and \
-        #     current_time - s_last_voice_activity_time > 5 and current_time - u_last_voice_activity_time > 0.6:
-        #
-        #     s_voice_activity = True
-        #     s1 = ram()
-        #     tts1_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS1'))
-        #     s2 = sample_sentence(sample_sentences)
-        #     tts1_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS1'))
-        #
-        #     s = s1 + ' ' + s2
-        #
-        #     m = []
-        #     m.append('=' * 120)
-        #     m.append('Say: ' + s)
-        #     m.append('=' * 120)
-        #
-        #     cfg['Logging']['system_logger'].info('\n'.join(m))
 
     # stop processes
     vio1_commands.send(Command('stop()', 'HUB', 'VoipIO1'))
