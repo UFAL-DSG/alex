@@ -243,7 +243,7 @@ if __name__ == '__main__':
 
             if intro_played2 and not vio_connect1:
                 vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            ('2', '', '', ''), 'HUB', 'VoipIO2'))
+                            ('user2', '', '', ''), 'HUB', 'VoipIO2'))
                 vio_connect1 = True
 
             if intro_played2:
@@ -254,7 +254,7 @@ if __name__ == '__main__':
 
             if intro_played2 and not vio_connect2:
                 vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            ('1', '', '', ''), 'HUB', 'VoipIO1'))
+                            ('user1', '', '', ''), 'HUB', 'VoipIO1'))
                 vio_connect2 = True
 
             if intro_played1:
@@ -413,7 +413,7 @@ if __name__ == '__main__':
                     callee_entered = False
                     callee_uri = ''
 
-                    hangup2 = True
+                    vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
                 if command.parsed['__name__'] == "play_utterance_start":
                     cfg1['Logging']['system_logger'].info(command)
@@ -518,6 +518,8 @@ if __name__ == '__main__':
                         s_voice_activity1 = True
                         m = cfg1['Switchboard']['wrongnumber']
                         tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
+                    else:
+                        vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
                     hangup1 = True
 
@@ -591,35 +593,21 @@ if __name__ == '__main__':
             vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
             tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
 
-        if intro_played1 and current_time - call_start1 > cfg1['Switchboard']['max_call_length'] and s_voice_activity1 == False:
-            if not end_played1:
-                s_voice_activity1 = True
-                last_intro_id1 = str(intro_id1)
-                intro_id1 += 1
-                tts1_commands.send(Command('synthesize(text="%s")' % cfg1['Switchboard']['closing'], 'HUB', 'TTS1'))
-                end_played1 = True
-            else:
-                intro_played1 = False
-                # be careful it does not hangup immediately
-                vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
-                vio1_commands.send(Command('flush()', 'HUB', 'VoipIO1'))
-                vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
-                tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
+        if intro_played1 and current_time - call_start1 > cfg1['Switchboard']['max_call_length']:
+            intro_played1 = False
+            # be careful it does not hangup immediately
+            vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
+            vio1_commands.send(Command('flush()', 'HUB', 'VoipIO1'))
+            vad1_commands.send(Command('flush()', 'HUB', 'VAD1'))
+            tts1_commands.send(Command('flush()', 'HUB', 'TTS1'))
 
-        if intro_played2 and current_time - call_start1 > cfg2['Switchboard']['max_call_length'] and s_voice_activity1 == False:
-            if not end_played2:
-                s_voice_activity2 = True
-                last_intro_id2 = str(intro_id2)
-                intro_id2 += 1
-                tts2_commands.send(Command('synthesize(text="%s")' % cfg2['Switchboard']['closing'], 'HUB', 'TTS2'))
-                end_played2 = True
-            else:
-                intro_played2 = False
-                # be careful it does not hangup immediately
-                vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
-                vio2_commands.send(Command('flush()', 'HUB', 'VoipIO2'))
-                vad2_commands.send(Command('flush()', 'HUB', 'VAD2'))
-                tts2_commands.send(Command('flush()', 'HUB', 'TTS2'))
+        if intro_played2 and current_time - call_start1 > cfg1['Switchboard']['max_call_length']:
+            intro_played2 = False
+            # be careful it does not hangup immediately
+            vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO2'))
+            vio2_commands.send(Command('flush()', 'HUB', 'VoipIO2'))
+            vad2_commands.send(Command('flush()', 'HUB', 'VAD2'))
+            tts2_commands.send(Command('flush()', 'HUB', 'TTS2'))
 
     # stop processes
     vio1_commands.send(Command('stop()', 'HUB', 'VoipIO1'))
