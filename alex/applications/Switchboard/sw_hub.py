@@ -514,6 +514,10 @@ if __name__ == '__main__':
                         s_voice_activity1 = True
                         m = cfg1['Switchboard']['noanswer']
                         tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
+                    elif code in ['480', ]:
+                        s_voice_activity1 = True
+                        m = cfg1['Switchboard']['wrongnumber']
+                        tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
 
                     hangup1 = True
 
