@@ -371,7 +371,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # parse list of lists and get ID of cities list and stop names list
         self.city_list_id, self.stops_list_for_city = self._get_stop_list_ids()
 
-    def search_stop(self, stop_mask, city=None):
+    def search_stop(self, stop_mask, city=None, max_count=0, skip_count=0):
         return self.client.service.SearchGlobalListItemInfo(
             self.user_id,
             self.user_desc,
@@ -379,9 +379,9 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             self.stops_list_for_city.get(city, 0), # list ID (0 = all)
             stop_mask, # mask
             SEARCHMODE.EXACT | SEARCHMODE.USE_PRIORITY, # search mode
-            0, # max count
+            max_count, # max count
             REG.SMART, # return regions
-            0, # skip count
+            skip_count, # skip count
             TTLANG.ENGLISH # language
         )
 
@@ -450,7 +450,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 if cities_list is None:
                     if list_info['asName'][0] == 'města a obce':
                         cities_list = list_info['_iID']
-                matching = re.match(r'zastávky \(([^)]+)\)', list_info['asName'][0])
+                matching = re.match(r'(?:zastávky|stanice) \(([^)]+)\)', list_info['asName'][0])
                 if matching:
                     stop_lists[matching.group(1)] = list_info['_iID']
         return cities_list, stop_lists
