@@ -11,6 +11,7 @@ import json
 import os.path
 import codecs
 from alex.tools.apirequest import APIRequest
+from alex.utils.cache import lru_cache
 
 
 class Weather(object):
@@ -150,6 +151,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
+    @lru_cache(maxsize=10)
     def get_weather(self, time=None, daily=False, place=None, lat=None, lon=None):
         """Get OpenWeatherMap weather information or forecast for the given time.
 

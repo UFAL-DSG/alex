@@ -963,6 +963,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: tuple(datetime, string)
         """
         now = datetime.now()
+        now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
         if (time_abs != 'none' or date_rel != 'none') and time_rel != 'none':
