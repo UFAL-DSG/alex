@@ -32,7 +32,7 @@ export NOOOV="yes"
 
 # EveryN utterance is used for training 
 # everyN=3    ->   we use one third of data
-everyN=10
+everyN=1
 
 # Number of utterances used for training monophone models:
 # monoTrainData=150
