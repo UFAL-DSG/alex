@@ -11,6 +11,7 @@ import json
 import os.path
 import codecs
 from alex.tools.apirequest import APIRequest
+from alex.utils.cache import lru_cache
 
 
 class Directions(object):
@@ -148,6 +149,7 @@ class GooglePIDDirectionsFinder(DirectionsFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
         self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
+    @lru_cache(maxsize=10)
     def get_directions(self, from_stop, to_stop, from_city, to_city,
                        departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
