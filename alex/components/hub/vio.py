@@ -640,7 +640,7 @@ class VoipIO(multiprocessing.Process):
         """ Call provided URI. Check whether it is allowed.
         """
 
-        # *WARNING* pjsip only handle standard string, not UNICODE !
+        # *WARNING* pjsip only handles standard string, not UNICODE !
         remote_uri = str(remote_uri)
         try:
             uri = remote_uri
@@ -668,9 +668,13 @@ class VoipIO(multiprocessing.Process):
                 return self.call
             elif uri == "blocked":
                 if self.cfg['VoipIO']['debug']:
-                    self.cfg['Logging']['system_logger'].debug('VoipIO : Blocked call to a forbidden phone number - %s' % uri)
+                    self.cfg['Logging']['system_logger'].debug('VoipIO.make_call: Calling a blocked phone number - %s' % uri)
+                # send a message that the provided uri is blocked
+                self.commands.send(Command('blocked_uri(remote_uri="%s")' % remote_uri, 'VoipIO', 'HUB'))
             else:
-                raise VoipIOException('Making call to SIP URI which is not SIP URI - ' + uri)
+                self.cfg['Logging']['system_logger'].error('VoipIO.make_call: Calling SIP URI which is not recognised as valid SIP URI - %s' % uri)
+                # send a message that the provided uri is invalid
+                self.commands.send(Command('invalid_uri(remote_uri="%s")' % remote_uri, 'VoipIO', 'HUB'))
 
         except pj.Error as e:
             print "Exception: " + unicode(e)
