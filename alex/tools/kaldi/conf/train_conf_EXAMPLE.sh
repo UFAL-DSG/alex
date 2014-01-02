@@ -10,7 +10,7 @@ export test_sets="dev test"
 
 export LM_ORDER=2
 # Unset or empty ARPA_MODEL variable means that the script will build the LM itself
-export ARPA_MODEL="/ha/projects/vystadial/data/asr/cs/voip_fj/arpa_bigram"
+export ARPA_MODEL="/ha/projects/vystadial/data/asr/cs/voip/arpa_bigram"
 # unset ARPA_MODEL
 
 # Should I create and use 0-gram LM for decoding from testing data?
@@ -32,7 +32,7 @@ export NOOOV="yes"
 
 # EveryN utterance is used for training 
 # everyN=3    ->   we use one third of data
-everyN=1
+everyN=10
 
 # Number of utterances used for training monophone models:
 # monoTrainData=150

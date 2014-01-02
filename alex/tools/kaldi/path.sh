@@ -12,10 +12,9 @@ export PATH=$KALDI_ROOT/src/bin:$KALDI_ROOT/tools/openfst/bin:$KALDI_ROOT/tools/
 # creating symlinks to scripts which wraps kaldi binaries
 symlinks="$KALDI_ROOT/egs/wsj/s5/steps $KALDI_ROOT/egs/wsj/s5/utils"
 for syml in $symlinks ; do
-    if [ ! -e $name ] ; then
+    name=`basename $syml`
+    if [ ! -e "$syml" ] ; then
         ln -f -s "$syml"
-        name=`basename $syml`
-        export PATH="$name":$PATH
         if [ -e $name ] ; then
             echo "Created symlink $syml -> $name"
         else
@@ -23,6 +22,7 @@ for syml in $symlinks ; do
             exit 1
         fi
     fi
+    export PATH="$PWD/$name":$PATH
 done
 
 export IRSTLM=$KALDI_ROOT/tools/irstlm
