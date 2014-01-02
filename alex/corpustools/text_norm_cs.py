@@ -63,6 +63,10 @@ _nonspeech_map = {
         '(SQUEAK)',
         '(TVNOISE)',
         '<NOISE>',
+    ),
+    '_EXCLUDE_': (
+        '(UNINTELLIGIBLE)',
+        '(UNINT)',
     )
 }
 #}}}
@@ -72,7 +76,10 @@ for uscored, forms in _nonspeech_map.iteritems():
         _nonspeech_trl[form] = uscored
 
 # substitutions {{{
-_subst = [('JESLTI', 'JESTLI'),
+_subst = [
+          ('UNINTELLIGIBLE', '_EXCLUDE_'),
+          ('UNINT', '_EXCLUDE_'),
+          ('JESLTI', 'JESTLI'),
           ('NMŮŽU', 'NEMŮŽU'),
           ('_NOISE_KAM', '_NOISE_ KAM'),
           ('(NOISE)KAM', '_NOISE_ KAM'),
