@@ -13,7 +13,7 @@ export PATH=$KALDI_ROOT/src/bin:$KALDI_ROOT/tools/openfst/bin:$KALDI_ROOT/tools/
 symlinks="$KALDI_ROOT/egs/wsj/s5/steps $KALDI_ROOT/egs/wsj/s5/utils"
 for syml in $symlinks ; do
     name=`basename $syml`
-    if [ ! -e "$syml" ] ; then
+    if [ ! -e "$name" ] ; then
         ln -f -s "$syml"
         if [ -e $name ] ; then
             echo "Created symlink $syml -> $name"
