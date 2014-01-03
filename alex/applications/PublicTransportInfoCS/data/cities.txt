@@ -1073,7 +1073,7 @@ Dunice
 Dušejov
 Dušníky
 Dvakačovice
-Dvorce
+#Dvorce
 Dvory
 Dvory nad Lužnicí
 Dvůr Králové nad Labem
