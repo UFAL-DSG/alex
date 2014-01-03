@@ -42,17 +42,12 @@ if [[ ! -z "$ARPA_MODEL" ]] ; then
     echo "Using predefined LM in arpa format: ${ARPA_MODEL}"
 else
     echo "=== Building LM of order ${LM_ORDER}..."
-    [ -z "$IRSTLM" ] && echo "Set IRSTLM env variable for building LM" && exit 1;
     cut -d' ' -f2- data/train/text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
         grep -v '_INHALE_\|_LAUGH_\|_EHM_HMM_\|_NOISE_' \
         > $locdata/lm_train.txt
 
-    # Launching irstlm script; See tools/INSTALL for installing irstlm
-    builded_lm="$locdata/lm_phone_train_${LM_ORDER}.ilm.gz"
-    build-lm.sh -i "$locdata/lm_train.txt" -n ${LM_ORDER} -o $builded_lm
-    # Launching irstlm script; See tools/INSTALL for installing irstlm
-    compile-lm "$builded_lm" --text ${local_lm}_train_${LM_ORDER}.arpa
-
+    ngram-count -text $locdata/lm_train.txt -order ${LM_ORDER} \
+        -wbdiscount -interpolate -lm ${local_lm}_train_${LM_ORDER}.arpa
 fi
 
 if [ ! -z "${NOOOV}" ]; then
