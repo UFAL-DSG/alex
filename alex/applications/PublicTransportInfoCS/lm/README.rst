@@ -9,7 +9,7 @@ The data
 --------
 
 To build the domain specific language model, we use the approach described in :doc:`alex.applications.LANGUAGE_MODELLING`.
-So fat, we have collected this data:
+So far, we have collected this data:
 
 #. selected out-of-domain data - 1191 sentences
 #. bootstrap text - 128 sentences
