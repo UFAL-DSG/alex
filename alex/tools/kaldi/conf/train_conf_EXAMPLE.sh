@@ -42,7 +42,7 @@ unset monoTrainData  # use full data
 pdf=1200
 
 # Maximum number of Gaussians used for training
-gauss=41000
+gauss=19200
 
 # Cepstral Mean Normalisation: true/false
 cmn=false
