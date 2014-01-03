@@ -44,9 +44,8 @@ Before running the experiments, check that:
 
 * you have the Kaldi toolkit compiled: 
   http://sourceforge.net/projects/kaldi/.
-* you have IRSTLM compiled. (This is needed for building a language model 
-  unless you supply your own LM in the ARPA format.) See 
-  http://sourceforge.net/projects/irstlm/.
+* you have `SRILM <www.speech.sri.com/projects/srilm/>`_ compiled. (This is needed for building a language model)
+  unless you supply your own LM in the ARPA format.)
 * the ``run.sh`` script will see the Kaldi scripts and binaries.
   Check for example that ``$KALDI_ROOT/egs/wsj/s5/utils/parse_options.sh`` is valid path. 
 * links in the ``conf`` directory point to the right data and that the 
