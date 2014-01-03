@@ -48,7 +48,12 @@ _nonspeech_map = {
         '(SCRAPE)',
         '(STATIC)',
         '(SQUEAK)',
-        '(TVNOISE)')
+        '(TVNOISE)'
+    ),
+    '_EXCLUDE_': (
+        '(UNINTELLIGIBLE)',
+        '(UNINT)',
+    )
 }
 #}}}
 _nonspeech_trl = dict()
@@ -58,6 +63,8 @@ for uscored, forms in _nonspeech_map.iteritems():
 
 # substitutions {{{
 _subst = [
+          ('UNINTELLIGIBLE', '_EXCLUDE_'),
+          ('UNINT', '_EXCLUDE_'),
           ('11', 'ELEVEN'),
           ('24', 'TWENTY FOUR'),
           ('3', 'THREE'),
@@ -622,7 +629,6 @@ _subst = [
           ('WHERES', '_EXCLUDE_'),
           ('HK', '_EXCLUDE_'),
           ('CAF', '_EXCLUDE_'),
-          ('UNINTELLIGIBLE', '_EXCLUDE_'),
            ]
 #}}}
 for idx, tup in enumerate(_subst):
