@@ -34,7 +34,7 @@ Details
 * The files ``path.sh``, ``cmd.sh`` and  ``conf/*`` 
   contain configurations for the recipe.
 * Language model (LM) is either built from the training data using 
-  `SRILM <www.speech.sri.com/projects/srilm/>`_  or we supply one in 
+  `SRILM <http://www.speech.sri.com/projects/srilm/>`_  or we supply one in 
   the ARPA format.
 
 
@@ -44,7 +44,7 @@ Before running the experiments, check that:
 
 * you have the Kaldi toolkit compiled: 
   http://sourceforge.net/projects/kaldi/.
-* you have `SRILM <www.speech.sri.com/projects/srilm/>`_ compiled. (This is needed for building a language model)
+* you have `SRILM <http://www.speech.sri.com/projects/srilm/>`_ compiled. (This is needed for building a language model)
   unless you supply your own LM in the ARPA format.)
 * the ``run.sh`` script will see the Kaldi scripts and binaries.
   Check for example that ``$KALDI_ROOT/egs/wsj/s5/utils/parse_options.sh`` is valid path. 
