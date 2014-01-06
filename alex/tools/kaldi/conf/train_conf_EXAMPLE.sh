@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# NEED TO BE SET
 export KALDI_ROOT=/ha/work/people/oplatek/kaldi
 
 data_lang=cs
@@ -10,7 +9,7 @@ export test_sets="dev test"
 
 export LM_ORDER=2
 # Unset or empty ARPA_MODEL variable means that the script will build the LM itself
-export ARPA_MODEL="/ha/projects/vystadial/data/asr/${data_lang}/voip/arpa_bigram"
+export ARPA_MODEL="$DATA_ROOT/arpa_bigram"
 # unset ARPA_MODEL
 
 # Should I create and use 0-gram LM for decoding from testing data?
