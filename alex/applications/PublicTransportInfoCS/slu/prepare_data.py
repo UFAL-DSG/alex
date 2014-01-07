@@ -12,7 +12,7 @@ import sys
 
 import alex.utils.various as various
 
-from alex.corpustools.text_norm_cs import normalise_text
+from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.base import CategoryLabelDatabase
@@ -138,14 +138,15 @@ def main():
             t = normalise_text(t)
 
             a = various.get_text_from_xml_node(hyps[0])
+            a = normalise_semi_words(a)
 
-            # FIXME: We should be more tolerant and use more transcriptions
-            if t != '_NOISE_' and t != '_SIL_' and t != '_EHM_HMM_' and t != '_INHALE_' and t != '_LAUGH_' and \
-                ('-' in t or '_' in t or '(' in t) or \
-                'DOM Element:' in a:
+            if exclude_slu(t) or 'DOM Element:' in a:
                 print "Skipping transcription:", t
                 print "Skipping ASR output:   ", a
                 continue
+
+            # The silence does not have a label in the language model.
+            t = t.replace('_SIL_','')
 
             trn.append((wav_key, t))
 
@@ -156,16 +157,16 @@ def main():
             s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
             trn_hdc_sem.append((wav_key, s))
 
-            if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
-                # HDC SLU on 1 best ASR
-                a = various.get_text_from_xml_node(hyps[0])
-                a = normalise_semi_words(a)
+            # HDC SLU on 1 best ASR
+            a = various.get_text_from_xml_node(hyps[0])
+            a = normalise_semi_words(a)
 
-                asr.append((wav_key, a))
+            asr.append((wav_key, a))
 
-                s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
-                asr_hdc_sem.append((wav_key, s))
+            s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
+            asr_hdc_sem.append((wav_key, s))
 
+            if len(sys.argv) != 2 or sys.argv[1] != 'fast':
                 # HDC SLU on N best ASR
                 n = UtteranceNBList()
                 for h in hyps:
@@ -203,12 +204,14 @@ def main():
     save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem)
     save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)
 
-    if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
-        # all
-        save_wavaskey(fn_all_trn, dict(trn))
-        save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
-        save_wavaskey(fn_all_asr, dict(asr))
-        save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
+    # all
+    save_wavaskey(fn_all_trn, dict(trn))
+    save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
+
+    save_wavaskey(fn_all_asr, dict(asr))
+    save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
+
+    if len(sys.argv) != 2 or sys.argv[1] != 'fast':
         save_wavaskey(fn_all_nbl, dict(nbl))
         save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
 

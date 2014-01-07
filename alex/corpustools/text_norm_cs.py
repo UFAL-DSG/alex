@@ -317,6 +317,12 @@ def exclude_lm(text):
 
     return False
 
+def exclude_slu(text):
+    """
+    This function is used for determining whether the transcription can be used for training Spoken Language Understanding.
+    """
+    return exclude_lm(text)
+
 def exclude_by_dict(text, known_words):
     """
     Determines whether text is not good enough and should be excluded.

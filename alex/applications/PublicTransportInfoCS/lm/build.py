@@ -119,7 +119,7 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
                     continue
 
                 # The silence does not have a label in the language model.
-                t = t.replace('_SIL_','')
+                t = t.replace('_SIL_', '')
 
                 tt.append(t)
 
