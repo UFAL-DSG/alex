@@ -25,7 +25,7 @@ import autopath
 import alex.corpustools.lm as lm
 import alex.utils.various as various
 
-from alex.corpustools.text_norm_cs import normalise_text
+from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 
 
 bootstrap_text                  = "bootstrap.txt"
@@ -109,19 +109,19 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
         for turn in turns: 
             trans_list = turn.getElementsByTagName("asr_transcription")
 
-	    if trans_list:
-    		trans = trans_list[-1]
+            if trans_list:
+                trans = trans_list[-1]
 
                 t = various.get_text_from_xml_node(trans)
+                t = normalise_text(t)
 
-	        if '(unint)' in t:
-    	    	    continue
-        	if '(unit)' in t:
-            	    continue
-        	if '-' in t:
-            	    continue
+                if exclude_lm(t):
+                    continue
 
-        	tt.append(normalise_text(t))
+                # The silence does not have a label in the language model.
+                t = t.replace('_SIL_','')
+
+                tt.append(t)
 
     random.seed(0)
     random.shuffle(tt)
@@ -189,7 +189,7 @@ if not os.path.exists(indomain_data_text_trn_norm_tg_arpa):
 
 if not os.path.exists(indomain_data_text_trn_norm_tg_arpa_scoring):
     print
-    print "Soring general text data using the in-domain language model"
+    print "Scoring general text data using the in-domain language model"
     print "-"*120
     ###############################################################################################
     os.system("ngram -lm %s -classes %s -debug 1 -ppl %s | gzip > %s" % \
@@ -275,31 +275,29 @@ if not os.path.exists(final_lm_tg):
     print cmd
     os.system(cmd)
 
-    cmd = "HBuild -A -T 1 -C ../../../tools/htk/common/configrawmit -u '<UNK>' -s '<s>' '</s>' -n %s -z %s %s" % \
-          (final_lm_bg,
-           final_lm_vocab,
-           final_lm_bg_wdnet)
-
-    os.system(cmd)
-
-    cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' > %s && mv %s %s " % \
+    cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' | grep -v 'CL_' | grep -v '{' > %s && mv %s %s " % \
           (final_lm_vocab,
            final_lm_vocab+".tmp",
            final_lm_vocab+".tmp",
            final_lm_vocab)
-
     print cmd
     os.system(cmd)
+
+    cmd = "HBuild -A -T 1 -C ../../../tools/htk/common/configrawmit -u '<UNK>' -s '<s>' '</s>' -n %s -z %s %s" % \
+          (final_lm_bg,
+           final_lm_vocab,
+           final_lm_bg_wdnet)
+    print cmd
+    os.system(cmd)
+
 
     cmd = """
     echo "<s>	[] sil" > {dict} &&
     echo "</s>	[] sil" >> {dict} &&
-    echo "silence	sil" >> {dict} &&
     echo "_INHALE_	_inhale_" >> {dict} &&
     echo "_LAUGH_	_laugh_" >> {dict} &&
     echo "_EHM_HMM_	_ehm_hmm_" >> {dict} &&
     echo "_NOISE_	_noise_" >> {dict} &&
-    echo "_SIL_	sil" >> {dict}
     """.format(dict=final_lm_dict)
 
     print cmd
@@ -308,14 +306,12 @@ if not os.path.exists(final_lm_tg):
     cmd = "perl ../../../tools/htk/bin/PhoneticTranscriptionCS.pl %s %s" % \
           (final_lm_vocab,
            final_lm_dict)
-
     print cmd
     os.system(cmd)
 
     cmd = "perl ../../../tools/htk/bin/AddSp.pl %s 1 > %s " % \
           (final_lm_dict,
           final_lm_dict_sp_sil)
-
     print cmd
     os.system(cmd)
 

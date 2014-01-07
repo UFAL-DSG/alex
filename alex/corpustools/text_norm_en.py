@@ -713,6 +713,24 @@ def exclude_asr(text):
 
     return False
 
+def exclude_lm(text):
+    """
+    This function is used for determining whether the transcription can be used for Language Modeling.
+
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
+    """
+
+    if text.find('_EXCLUDE_') >= 0:
+        return True
+
+    for char in _excluded_characters:
+        if char in text  and char not in ['_']:
+            return True
+
+    return False
+
 def exclude_by_dict(text, known_words):
     """
     Determines whether text is not good enough and should be excluded.

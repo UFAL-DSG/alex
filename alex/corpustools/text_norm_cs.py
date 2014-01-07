@@ -83,6 +83,8 @@ _subst = [
           ('NMŮŽU', 'NEMŮŽU'),
           ('_NOISE_KAM', '_NOISE_ KAM'),
           ('(NOISE)KAM', '_NOISE_ KAM'),
+          ('_NOISE_VONO', '_NOISE_ VONO'),
+          ('(NOISE)VONO', '_NOISE_ VONO'),
           ('6E', ' '),
           ('OKEY', 'OK'),
           ('OKAY', 'OK'),
@@ -212,6 +214,7 @@ _subst = [
           ('ÍPÉ PAVLOVU', 'I P PAVLOVU'),
           ('ČAPLINOVO', 'CHAPLINOVO'),
           ('ČAPLINOVA', 'CHAPLINOVA'),
+          ('ČEPLINOVĚ', 'CHAPLINOVĚ'),
           ('DIVADLÓ', 'DIVADLO'),
           ('LETŇÁN', 'LETŇAN'),
           ]
@@ -293,6 +296,24 @@ def exclude_asr(text):
             return True
     if len(text) < 2:
         return True
+
+    return False
+
+def exclude_lm(text):
+    """
+    This function is used for determining whether the transcription can be used for Language Modeling.
+
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
+    """
+
+    if text.find('_EXCLUDE_') >= 0:
+        return True
+
+    for char in _excluded_characters:
+        if char in text  and char not in ['_']:
+            return True
 
     return False
 
