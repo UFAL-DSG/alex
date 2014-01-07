@@ -136,7 +136,7 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
             print u"  after normalisation:", transcription
         # exclude all transcriptions with non-speech events
         # the transcriptions provided Transcriber have too much _SIL_ and _NOISE_ etc. data, it is better to ignore it.
-        if norm_mod.exclude(transcription) or "_" in transcription:
+        if norm_mod.exclude_asr(transcription) or "_" in transcription:
             if verbose:
                 print u"  ...excluded"
             continue

@@ -694,14 +694,14 @@ def normalise_text(text):
 #}}}
 
 
-def exclude(text):
+def exclude_asr(text):
     """
-    Determines whether `text' is not good enough and should be excluded. "Good
-    enough" is defined as containing none of `_excluded_characters' and being
-    longer than one word.
+    This function is used for determining whether the transcription can be used for training ASR.
 
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
     """
-#{{{
     if text in ['_NOISE_', '_EHM_HMM_', '_INHALE_', '_LAUGH_']:
         return False
 
@@ -712,8 +712,6 @@ def exclude(text):
         return True
 
     return False
-#}}}
-
 
 def exclude_by_dict(text, known_words):
     """
