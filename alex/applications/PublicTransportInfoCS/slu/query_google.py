@@ -14,19 +14,25 @@ import autopath
 
 from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 
-utterances = load_wavaskey("all.trn", unicode, limit=100000)
 
-keys = list(utterances.keys())
-random.seed()
-random.shuffle(keys)
+def main():
+	utterances = load_wavaskey("all.trn", unicode, limit=100000)
 
-for k in keys:
-    if '_' in utterances[k]:
-        continue
+	keys = list(utterances.keys())
+	random.seed()
+	random.shuffle(keys)
 
-    url = 'www.google.cz/#q='+urllib.quote_plus(utterances[k].lower().encode('utf8'))
+	for k in keys:
+	    if '_' in utterances[k]:
+	        continue
 
-    browser = subprocess.Popen(['opera', '-nosession', '-nomail', '-noraise', '-geometry', '500x100+0+0', url])
-    time.sleep(random.randint(10, 200))
+	    url = 'www.google.cz/#q='+urllib.quote_plus(utterances[k].lower().encode('utf8'))
 
-    os.system('kill -9 {pid}'.format(pid=browser.pid))
+	    browser = subprocess.Popen(['opera', '-nosession', '-nomail', '-noraise', '-geometry', '500x100+0+0', url])
+	    time.sleep(random.randint(10, 200))
+
+	    os.system('kill -9 {pid}'.format(pid=browser.pid))
+
+
+if __name__ == '__main__':
+	main()

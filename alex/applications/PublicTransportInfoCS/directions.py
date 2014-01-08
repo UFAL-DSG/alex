@@ -93,20 +93,24 @@ class GoogleRouteLegStep(object):
                      'Florenc - B': 'Florenc',
                      'Florenc - C': 'Florenc'}
 
+    VEHICLE_TYPE_MAPPING = {'HEAVY_RAIL': 'TRAIN',
+                            'Train': 'TRAIN',
+                            'Long distance train': 'TRAIN'}
+
     def __init__(self, input_json):
         self.travel_mode = input_json['travel_mode']
 
         if self.travel_mode == self.MODE_TRANSIT:
 
-            self.departure_stop = input_json['transit_details']['departure_stop']['name']
-            self.departure_time = datetime.fromtimestamp(input_json['transit_details']
-                                                         ['departure_time']['value'])
-            self.arrival_stop = input_json['transit_details']['arrival_stop']['name']
-            self.arrival_time = datetime.fromtimestamp(input_json['transit_details']
-                                                       ['arrival_time']['value'])
-            self.headsign = input_json['transit_details']['headsign']
-            self.vehicle = input_json['transit_details']['line']['vehicle']['type']
-            self.line_name = input_json['transit_details']['line']['short_name']
+            data = input_json['transit_details']
+            self.departure_stop = data['departure_stop']['name']
+            self.departure_time = datetime.fromtimestamp(data['departure_time']['value'])
+            self.arrival_stop = data['arrival_stop']['name']
+            self.arrival_time = datetime.fromtimestamp(data['arrival_time']['value'])
+            self.headsign = data['headsign']
+            self.line_name = data['line']['short_name']
+            vehicle_type = data['line']['vehicle'].get('type', data['line']['vehicle']['name'])
+            self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type)
             # normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
