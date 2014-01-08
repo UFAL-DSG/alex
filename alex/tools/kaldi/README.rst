@@ -104,7 +104,7 @@ models, but also decoding.
 The acoustic models are evaluated during running the scripts and evaluation 
 reports are printed to the standard output.
 
-The `<local/results.py exp>`_ command extracts the results from the ``exp`` directory.
+The ``local/results.py exp`` command extracts the results from the ``exp`` directory.
 It is invoked at the end of the `<run.sh>`_ script and the results are 
 thereby stored to ``exp/results.log``.
 
