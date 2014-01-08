@@ -30,6 +30,9 @@ class Directions(object):
         self.to_city = to_city
         self.routes = []
 
+    def __getitem__(self, index):
+        return self.routes[index]
+
     def __len__(self):
         return len(self.routes)
 
@@ -191,11 +194,26 @@ class GoogleRouteLegStep(RouteStep):
 class CRWSDirections(Directions):
     """Traffic directions obtained from CR Web Service (CHAPS/IDOS)."""
 
-    def __init__(self, from_stop, to_stop, from_city=None, to_city=None, input_data={}):
+    def __init__(self, from_stop, to_stop, from_city=None, to_city=None,
+                 input_data={}, finder=None):
         super(CRWSDirections, self).__init__(from_stop, to_stop, from_city, to_city)
+        # remember finder and handle if we got them
+        if finder is not None:
+            self.handle = input_data._iHandle
+            self.finder = finder
+        # parse the connection information, if available
         if hasattr(input_data, 'oConnInfo'):
             for route in input_data.oConnInfo.aoConnections:
                 self.routes.append(CRWSRoute(route))
+
+    def __getitem__(self, index):
+        # try to load further data if it is missing
+        if index >= len(self) and self.finder and self.handle:
+            data = self.finder.get_directions_by_handle(self.handle, len(self), index + 1)
+            if hasattr(data, 'aoConnections'):
+                for route in data.aoConnections:
+                    self.routes.append(CRWSRoute(route))
+        return super(CRWSDirections, self).__getitem__(index)
 
 
 class CRWSRoute(Route):
@@ -394,6 +412,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     def search_city(self, city_mask):
         return self.search_stop(city_mask, self.city_list_id)
 
+    @lru_cache(maxsize=10)
     def get_directions(self, from_stop=None, to_stop=None, from_city=None, to_city=None,
                        departure_time=None, arrival_time=None):
         # find from and to objects
@@ -427,11 +446,11 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             None, # change
             ts, # timestamp of arrival or departure
             is_departure, # is departure? (or arrival)
-            None, # connection parameters
+            None, # search parameters (=use default)
             REMMASK.NONE,
             SEARCHMODE.NONE,
             0, # max objects count
-            self.max_connections_count, # max connections count
+            self.max_connections_count, # max connections count (-1 = only return handle)
             REG.SMART, # return regions
             TTINFODETAILS.ITEM,
             COOR.DEFAULT,
@@ -442,10 +461,29 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(from_stop, to_stop, from_city, to_city, response)
+        directions = CRWSDirections(from_stop, to_stop, from_city, to_city, response, self)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
+
+    def get_directions_by_handle(self, handle, listed, limit):
+        # request the connections from CRWS
+        response = self.client.service.GetConnectionsPage(
+            self.user_id,
+            self.user_desc,
+            self.default_comb_id,
+            handle,
+            0, # reference connection
+            False, # return connections before the reference ?
+            listed, # currently listed connections
+            limit, # maximum connection count
+            REMMASK.NONE,
+            COOR.DEFAULT,
+            "", # no substitutions, textual format
+            TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
+            TTLANG.ENGLISH)
+        self._log_response_json(_todict(response, '_origClassName'))
+        return response
 
     def _get_stop_list_ids(self):
         """Retrieve IDs of lists of stops for all available cities, plus the ID of the list of cities."""

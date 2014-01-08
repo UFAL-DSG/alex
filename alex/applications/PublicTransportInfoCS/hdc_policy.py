@@ -411,12 +411,12 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da.extend(self.get_directions(ds, "last"))
             elif ds_alternative == "next":
                 ds["route_alternative"] += 1
-
-                if ds['route_alternative'] == len(ds.directions):
+                try:
+                    ds.directions[ds['route_alternative']]
+                    res_da.extend(self.get_directions(ds, "next"))
+                except:
                     ds["route_alternative"] -= 1
                     res_da.append(DialogueActItem("inform", "found_directions", "no_next"))
-                else:
-                    res_da.extend(self.get_directions(ds, "next"))
 
             elif ds_alternative == "prev":
                 ds["route_alternative"] -= 1
@@ -695,7 +695,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         :rtype : DialogueAct
         """
-        route = ds.directions.routes[ds['route_alternative']]
+        route = ds.directions[ds['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -710,7 +710,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing about the destination stop of the last
         recommended connection.
         """
-        route = ds.directions.routes[ds['route_alternative']]
+        route = ds.directions[ds['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
@@ -724,7 +724,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         :rtype : DialogueAct
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -737,7 +737,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing the user about the relative time until the
         last recommended connection departs.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -754,7 +754,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing about the arrival time the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
@@ -767,7 +767,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing about the relative arrival time the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
@@ -784,7 +784,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing about journey time to the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -810,7 +810,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing the user about the number of transfers in the
         last recommended connection.
         """
-        route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
@@ -882,7 +882,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         try:
             # get the alternative we want to say now
-            route = dialogue_state.directions.routes[dialogue_state['route_alternative']]
+            route = dialogue_state.directions[dialogue_state['route_alternative']]
             # only 1 leg should be present in case we have no waypoints
             steps = route.legs[0].steps
         except IndexError:
