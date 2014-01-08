@@ -7,12 +7,7 @@ import os.path
 import codecs
 import autopath
 
-from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
-from alex.components.slu.base import CategoryLabelDatabase
-from alex.components.slu.dailrclassifier import DAILogRegClassifier
-from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
-from alex.corpustools.semscore import score
 
 
 def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
@@ -28,6 +23,16 @@ def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     print "="*120
     print "Testing: ", fn_model, fn_input, fn_reference
     print "-"*120
+
+    from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
+    from alex.components.slu.base import CategoryLabelDatabase
+    from alex.components.slu.dailrclassifier import DAILogRegClassifier
+    from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
+    from alex.corpustools.semscore import score
+
+    cldb = CategoryLabelDatabase('../data/database.py')
+    preprocessing = PTICSSLUPreprocessing(cldb)
+    slu = DAILogRegClassifier(cldb, preprocessing)
 
     slu.load_model(fn_model)
 
@@ -149,11 +154,6 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
     f.close()
 
 if __name__ == "__main__":
-    cldb = CategoryLabelDatabase('../data/database.py')
-    preprocessing = PTICSSLUPreprocessing(cldb)
-    slu = DAILogRegClassifier(cldb, preprocessing)
-
-
     # cheating experiment on all data using models trained on all data
     hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')
     hdc_slu_test('./all.asr', Utterance, './all.trn.hdc.sem')
