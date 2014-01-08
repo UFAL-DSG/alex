@@ -14,10 +14,6 @@ from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 from alex.corpustools.semscore import score
 
-cldb = CategoryLabelDatabase('../data/database.py')
-preprocessing = PTICSSLUPreprocessing(cldb)
-slu = DAILogRegClassifier(cldb, preprocessing)
-
 
 def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     """
@@ -153,6 +149,10 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
     f.close()
 
 if __name__ == "__main__":
+    cldb = CategoryLabelDatabase('../data/database.py')
+    preprocessing = PTICSSLUPreprocessing(cldb)
+    slu = DAILogRegClassifier(cldb, preprocessing)
+
 
     # cheating experiment on all data using models trained on all data
     hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')

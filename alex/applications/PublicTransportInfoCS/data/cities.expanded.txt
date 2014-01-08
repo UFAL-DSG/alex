@@ -1067,7 +1067,7 @@ Dunice
 Dušejov;Dušejova;Dušejovu;Dušejově
 Dušníky;Dušník;Dušníkám;Dušníkách
 Dvakačovice;Dvakačovic;Dvakačovicím;Dvakačovicům;Dvakačovicích
-Dvorce;Dvorců;Dvorcům;Dvorcum;Dvorcích
+#Dvorce;Dvorců;Dvorcům;Dvorcum;Dvorcích
 Dvory;Dvorů;Dvorům;Dvorech
 Dvory nad Lužnicí;Dvorů nad Lužnicí;Dvorům nad Lužnicí;Dvorech nad Lužnicí
 Dvůr Králové nad Labem;Dvora Králové nad Labem;Dvoru Králové nad Labem;Dvoře Králové nad Labem

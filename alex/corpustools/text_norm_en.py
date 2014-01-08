@@ -48,7 +48,12 @@ _nonspeech_map = {
         '(SCRAPE)',
         '(STATIC)',
         '(SQUEAK)',
-        '(TVNOISE)')
+        '(TVNOISE)'
+    ),
+    '_EXCLUDE_': (
+        '(UNINTELLIGIBLE)',
+        '(UNINT)',
+    )
 }
 #}}}
 _nonspeech_trl = dict()
@@ -58,6 +63,8 @@ for uscored, forms in _nonspeech_map.iteritems():
 
 # substitutions {{{
 _subst = [
+          ('UNINTELLIGIBLE', '_EXCLUDE_'),
+          ('UNINT', '_EXCLUDE_'),
           ('11', 'ELEVEN'),
           ('24', 'TWENTY FOUR'),
           ('3', 'THREE'),
@@ -622,7 +629,6 @@ _subst = [
           ('WHERES', '_EXCLUDE_'),
           ('HK', '_EXCLUDE_'),
           ('CAF', '_EXCLUDE_'),
-          ('UNINTELLIGIBLE', '_EXCLUDE_'),
            ]
 #}}}
 for idx, tup in enumerate(_subst):
@@ -688,14 +694,14 @@ def normalise_text(text):
 #}}}
 
 
-def exclude(text):
+def exclude_asr(text):
     """
-    Determines whether `text' is not good enough and should be excluded. "Good
-    enough" is defined as containing none of `_excluded_characters' and being
-    longer than one word.
+    This function is used for determining whether the transcription can be used for training ASR.
 
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
     """
-#{{{
     if text in ['_NOISE_', '_EHM_HMM_', '_INHALE_', '_LAUGH_']:
         return False
 
@@ -706,8 +712,30 @@ def exclude(text):
         return True
 
     return False
-#}}}
 
+def exclude_lm(text):
+    """
+    This function is used for determining whether the transcription can be used for Language Modeling.
+
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
+    """
+
+    if text.find('_EXCLUDE_') >= 0:
+        return True
+
+    for char in _excluded_characters:
+        if char in text  and char not in ['_']:
+            return True
+
+    return False
+
+def exclude_slu(text):
+    """
+    This function is used for determining whether the transcription can be used for training Spoken Language Understanding.
+    """
+    return exclude_lm(text)
 
 def exclude_by_dict(text, known_words):
     """

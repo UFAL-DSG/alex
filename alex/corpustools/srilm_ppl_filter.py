@@ -40,23 +40,28 @@ def srilm_scores(d3):
 
     return text, WORDs, OOVs, ZPROBs, PPL
 
-f_in = sys.stdin
 
-for in_l in f_in:
-    in3.append(in_l)
+def main():
+  f_in = sys.stdin
 
-    try:
-        if 'zeroprobs' in in_l:
-            text, WORDs, OOVs, ZPROBs, PPL = srilm_scores(in3)
+  for in_l in f_in:
+      in3.append(in_l)
 
-            if WORDs >= min_words and \
-               WORDs <= max_words and  \
-               OOVs <= max_oovs and \
-               float(OOVs) / WORDs <= max_oovs_per and \
-               ZPROBs <= max_zprobs and \
-               PPL < max_ppl:
-                # print WORDs, OOVs, ZPROBs, PPL, ' '.join(text)
-                print ' '.join(text)
+      try:
+          if 'zeroprobs' in in_l:
+              text, WORDs, OOVs, ZPROBs, PPL = srilm_scores(in3)
 
-    except:
-        break
+              if WORDs >= min_words and \
+                 WORDs <= max_words and  \
+                 OOVs <= max_oovs and \
+                 float(OOVs) / WORDs <= max_oovs_per and \
+                 ZPROBs <= max_zprobs and \
+                 PPL < max_ppl:
+                  # print WORDs, OOVs, ZPROBs, PPL, ' '.join(text)
+                  print ' '.join(text)
+
+      except:
+          break
+
+if __name__ == '__main__':
+  main()

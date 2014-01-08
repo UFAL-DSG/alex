@@ -17,6 +17,7 @@ import pickle
 import gzip
 import re
 import sys
+from alex.utils.cache import lru_cache
 
 
 class Directions(object):
@@ -160,20 +161,24 @@ class GoogleRouteLeg(RouteLeg):
 
 class GoogleRouteLegStep(RouteStep):
 
+    VEHICLE_TYPE_MAPPING = {'HEAVY_RAIL': 'TRAIN',
+                            'Train': 'TRAIN',
+                            'Long distance train': 'TRAIN'}
+
     def __init__(self, input_json):
-        super(GoogleRouteLegStep, self).__init__(input_json['travel_mode'])
+        self.travel_mode = input_json['travel_mode']
 
         if self.travel_mode == self.MODE_TRANSIT:
 
-            self.departure_stop = input_json['transit_details']['departure_stop']['name']
-            self.departure_time = datetime.fromtimestamp(input_json['transit_details']
-                                                         ['departure_time']['value'])
-            self.arrival_stop = input_json['transit_details']['arrival_stop']['name']
-            self.arrival_time = datetime.fromtimestamp(input_json['transit_details']
-                                                       ['arrival_time']['value'])
-            self.headsign = input_json['transit_details']['headsign']
-            self.vehicle = input_json['transit_details']['line']['vehicle']['type']
-            self.line_name = input_json['transit_details']['line']['short_name']
+            data = input_json['transit_details']
+            self.departure_stop = data['departure_stop']['name']
+            self.departure_time = datetime.fromtimestamp(data['departure_time']['value'])
+            self.arrival_stop = data['arrival_stop']['name']
+            self.arrival_time = datetime.fromtimestamp(data['arrival_time']['value'])
+            self.headsign = data['headsign']
+            self.line_name = data['line']['short_name']
+            vehicle_type = data['line']['vehicle'].get('type', data['line']['vehicle']['name'])
+            self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type)
             # normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
@@ -287,6 +292,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
         self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
+    @lru_cache(maxsize=10)
     def get_directions(self, from_stop, to_stop, from_city, to_city,
                        departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
