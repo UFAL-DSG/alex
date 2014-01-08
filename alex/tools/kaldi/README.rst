@@ -7,7 +7,7 @@ These acoustic models can be used with the *Kaldi* decoders
 and especially with the Python wrapper of ``LatgenFasterDecoder``
 which is integrated with Alex.
 
-We build a different acoustic for a each language and acoustic condition 
+We build a different acoustic model for a each language and acoustic condition 
 pair – ``LANG_RCOND``. At this time, we provide two sets of scripts for 
 building English and Czech acoustic models using the VOIP data.
 
@@ -19,6 +19,8 @@ Summary
 * This KALDI recipe is based on Voxforge KALDI recipe 
   http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html.
 * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
+  Note: We recommend Kaldi fork `Pykaldi <http://github.com/UFAL-DSG/pykaldi>`_, 
+  because you will need it also for integrated Kaldi decoder to Alex.
 * Recipes deployed with the Kaldi toolkit are located at
   ``$KALDI_ROOT/egs/name_of_recipe/s[1-5]/``.  
   This recipe requires to set up ``$KALDI_ROOT`` variable 
@@ -43,13 +45,46 @@ Running experiments
 Before running the experiments, check that:
 
 * you have the Kaldi toolkit compiled: 
-  http://sourceforge.net/projects/kaldi/.
+  - http://github.com/UFAL-DSG/pykaldi (Recommended Kaldi fork, tested, necessary for further Alex integration)
+  - http://sourceforge.net/projects/kaldi/ (alternative, main Kaldi repository) 
+  - In order to compile Kaldi we suggest:
+
+.. code-block:: bash
+
+      # build openfst
+      pushd kaldi/tools
+      make openfst_tgt
+      popd
+
+.. code-block:: bash
+        
+      # download ATLAS headers
+      pushd kaldi/tools
+      make atlas
+      popd
+
+.. code-block:: bash
+
+      # generate Kaldi makefile ``kaldi.mk`` and compile Kaldi
+      pushd kaldi/src
+      ./configure
+      make && make test
+      popd
+
 * you have `SRILM <http://www.speech.sri.com/projects/srilm/>`_ compiled. (This is needed for building a language model)
   unless you supply your own LM in the ARPA format.)
-* the ``run.sh`` script will see the Kaldi scripts and binaries.
+
+.. code-block:: bash
+
+  pushd kaldi/tools
+  # download the srilm.tgz archive from http://www.speech.sri.com/projects/srilm/download.html
+  ./install_srilm.sh
+  pushd
+
+* the `<run.sh>`_ script will see the Kaldi scripts and binaries.
   Check for example that ``$KALDI_ROOT/egs/wsj/s5/utils/parse_options.sh`` is valid path. 
-* links in the ``conf`` directory point to the right data and that the 
-  setup fits your needs.
+* the symbolic links in the ``conf`` directory point to the right data 
+  and that the setup fits your needs.
 * in ``cmd.sh``, you switched to run the training on a SGE[*] grid if 
   required (disabled by default) and 
   ``njobs`` is less than number of your CPU cores.
@@ -64,13 +99,13 @@ the ``Results`` directory.
 
 Extracting the results and trained models
 -----------------------------------------
-The main script, ``run.sh``, performs not only training of the acoustic 
+The main script, `<run.sh>`_, performs not only training of the acoustic 
 models, but also decoding.
 The acoustic models are evaluated during running the scripts and evaluation 
 reports are printed to the standard output.
 
-The ``local/results.py exp`` command extracts the results from the ``exp`` directory.
-It is invoked at the end of the ``run.sh`` script and the results are 
+The `<local/results.py exp>`_ command extracts the results from the ``exp`` directory.
+It is invoked at the end of the `<run.sh>`_ script and the results are 
 thereby stored to ``exp/results.log``.
 
 If you want to use the trained acoustic model outside the prepared script,
@@ -79,7 +114,7 @@ http://kaldi.sourceforge.net/graph.html for general introduction to the FST
 framework in Kaldi.)
 
 The simplest way to start with decoding is to use the same LM which
-was used by the ``run.sh`` script.  Let's say you want to decode with 
+was used by the `<run.sh>`_ script.  Let's say you want to decode with 
 the acoustic model stored in ``exp/tri1``.
 Then you need just 3 files:
 
