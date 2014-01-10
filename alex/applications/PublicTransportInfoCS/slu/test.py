@@ -80,7 +80,7 @@ def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     else:
         fn_sem = os.path.basename(fn_input)+'.XXX.sem.out'
 
-    save_wavaskey(fn_sem, parsed_das)
+    save_wavaskey(fn_sem, parsed_das, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
     score(fn_reference, fn_sem, True, True, f)
@@ -147,7 +147,7 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
 
     fn_sem = os.path.basename(fn_input)+'.hdc.slu.sem.out'
 
-    save_wavaskey(fn_sem, parsed_das)
+    save_wavaskey(fn_sem, parsed_das, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
     score(fn_reference, fn_sem, True, True, f)
