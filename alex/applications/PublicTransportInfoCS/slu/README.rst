@@ -74,18 +74,21 @@ The current ASR performance computed on from the call logs is as follows:
     |==============================================================================================|
     |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
     |----------------------------------------------------------------------------------------------|
-    | Sum/Avg    |     2455     |   6072    |  55.02   |  16.78   |  28.19   |   1.45   |  46.43   |
+    | Sum/Avg    |     9111     |   24728   |  56.15   |  16.07   |  27.77   |   1.44   |  45.28   |
     |==============================================================================================|
 
 
-The used ASR decoder for the first 2455 sentences is Google.
+The results above were obtained using the Google ASR.
 
 Evaluation of the min number of feature counts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Probably due to small amount of data (about 2000 utterances), it is still beneficial to use features which appeared in
-the training data only two times.
+Using 9111 training examples, we found that pruning should be set to
 
+- min feature count = 3
+- min classifier count = 4
+
+to prevent over fitting.
 
 Cheating experiment: train and test on all data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
