@@ -53,6 +53,7 @@ def extractResults(path):
 
 
 class Table(object):
+
     def __init__(self, data=[], colnames=[]):
         self.data = data
         self.colnames = colnames
@@ -83,6 +84,7 @@ class Table(object):
 
 
 class LatexTable(Table):
+
     def __init__(self, data=[], colnames=[]):
         Table.__init__(self, data, colnames)
         nc = len(colnames)
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     c = conn.cursor()
     c.execute('''CREATE TABLE results (exp text, dataset text, lm_w int, wer float, ser float)''')
     c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?)', raw_d)
-    # # get all results sorted
+    # get all results sorted
     # c.execute("SELECT * FROM results ORDER BY exp, lm_w, dataset")
     # d = c.fetchall()
     # best experiment
@@ -141,19 +143,27 @@ if __name__ == "__main__":
     #     "SELECT exp, dataset, lm_w,  MIN(wer), ser FROM results GROUP BY exp, dataset ORDER BY exp, dataset")
     # d = c.fetchall()
     # traditional usage of devset
-    c.execute("SELECT exp, lm_w,  MIN(wer) FROM results WHERE dataset=='dev' GROUP BY exp")
+    dev_set_query = ("SELECT r.exp, r.lm_w, i.min_wer FROM results AS r "
+                     "INNER JOIN ( SELECT dataset, exp, MIN(wer) as min_wer FROM results WHERE dataset=='%s' GROUP BY exp) i "
+                     "ON r.exp==i.exp AND r.dataset==i.dataset AND r.wer <= i.min_wer")
+    c.execute(dev_set_query % 'dev')
+
+    min_dev = c.fetchall()
     d = []
-    for exp, lm_w, min_dev_wer in c.fetchall():
-        c.execute("SELECT * FROM results WHERE dataset='test' and exp='%s' and lm_w=%s" % (exp, lm_w))
+    for exp, lm_w, min_dev_wer in min_dev:
+        c.execute("SELECT * FROM results WHERE dataset='test' and exp='%s' and lm_w=%s" %
+                  (exp, lm_w))
         d.append(c.fetchone())  # there should be only one row
     t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
     print '%s\n==================' % str(t)
 
     # traditional usage of dev set with 0 grams
-    c.execute("SELECT exp, lm_w,  MIN(wer) FROM results WHERE dataset=='dev0' GROUP BY exp")
+    c.execute(dev_set_query % 'dev0')
+    min_dev0 = c.fetchall()
     d = []
-    for exp, lm_w, min_dev_wer in c.fetchall():
-        c.execute("SELECT * FROM results WHERE dataset='test0' and exp='%s' and lm_w=%s" % (exp, lm_w))
+    for exp, lm_w, min_dev_wer in min_dev0:
+        c.execute("SELECT * FROM results WHERE dataset='test0' and exp='%s' and lm_w=%s" %
+                  (exp, lm_w))
         d.append(c.fetchone())  # there should be only one row
     t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
     print '%s\n==================' % str(t)
