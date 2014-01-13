@@ -2,9 +2,11 @@ train.*
 dev.*
 test.*
 all.*
-uniq.*
+uniq.trn
+uniq.trn.sem
+uniq.trn.hdc.sem
 *.model
 *.model.all
 *.sem.out
 *.sem.out.score
-*.old
+

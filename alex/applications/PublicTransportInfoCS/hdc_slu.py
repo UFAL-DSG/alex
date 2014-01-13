@@ -114,7 +114,7 @@ class PTICSHDCSLU(SLUInterface):
         # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
                          ('deny',
-                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'ne k']),
+                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'ne k', 'nikoliv']),
                           set(['nechci ukončit hovor', 'nechci to tak', 'né to nechci', 'ne to nechci', 'nechci nápovědu',
                                'nechci chci', ]))]
         last_wp_pos = 0
@@ -217,7 +217,7 @@ class PTICSHDCSLU(SLUInterface):
                          ['ne', 'nechci'],
                          []),
                         ('inform', 'departure',
-                         ['TASK=find_connection', 'odjezd', 'odjíždet', 'odjíždí', 'odjet',
+                         ['TASK=find_connection', 'odjezd', 'odjíždet', 'odjíždět', 'odjíždět v', 'odjíždí', 'odjet',
                          'jedu', 'jede', 'vyrážím', 'vyrážet', 'vyrazit', 'bych jel', 'bych jela', 'bych jet',
                          'bych tam jel', 'bych tam jela', 'bych tam jet',
                          'abych jel', 'abych jela', 'jak se dostanu', 'kdy jede', 'jede nějaká',
@@ -420,7 +420,7 @@ class PTICSHDCSLU(SLUInterface):
         if len(u) == 1 and any_word_in(u, "pardon pardón promiňte"):
             cn.add(1.0, DialogueActItem("apology"))
 
-        if not any_word_in(u, "nechci"):
+        if not any_word_in(u, "nechci děkuji"):
             if any_word_in(u, "nápověda nápovědu pomoc pomoct pomoci pomož pomohla pomohl pomůžete help nevím nevim") or \
                 all_words_in(u, 'co říct') or \
                 all_words_in(u, 'co zeptat'):
@@ -548,7 +548,8 @@ class PTICSHDCSLU(SLUInterface):
 
         if all_words_in(u, 'kolik je hodin') or \
             all_words_in(u, 'kolik máme hodin') or \
-            all_words_in(u, 'kolik je teď'):
+            all_words_in(u, 'kolik je teď') or \
+            all_words_in(u, 'kolik je teďka'):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if any_word_in(u, 'kolik jsou je') and \

@@ -1576,7 +1576,7 @@ Jeníkov;Jeníkova;Jeníkovu;Jeníkově
 Jeníkovice;Jeníkovic;Jeníkovicím;Jeníkovicům;Jeníkovicích
 Jenišov;Jenišova;Jenišovu;Jenišově
 Jenišovice;Jenišovic;Jenišovicím;Jenišovicům;Jenišovicích
-Jenštejn;Jenštejna;Jenštejnu;Jenštejně
+#Jenštejn;Jenštejna;Jenštejnu;Jenštejně
 Jeřice;Jeřic;Jeřicím;Jeřicům;Jeřicích
 Jeřišno;Jeřišna;Jeřišnu;Jeřišně
 Jeřmanice;Jeřmanic;Jeřmanicím;Jeřmanicům;Jeřmanicích
@@ -1749,7 +1749,7 @@ Kladno;Kladna;Kladnu;Kladně
 Kladruby;Kladrub;Kladrubům;Kladrubum;Kladrubech;Kladrubách
 Kladruby nad Labem;Kladrub nad Labem;Kladrubům nad Labem;Kladrubum nad Labem;Kladrubech nad Labem;Kladrubách nad Labem
 Klamoš;Klamoše;Klamoši
-Klánovice;Klánovic;Klánovicím;Klánovicům;Klánovicích
+#Klánovice;Klánovic;Klánovicím;Klánovicům;Klánovicích
 Klapý;Klapého;Klapýho;Klapému;Klapýmu;Klapém;Klapým;Klapym
 Klášter;Klášteru;Kláštera;Klášteře
 Klášterec nad Ohří;Klášterce nad Ohří;Klášterci nad Ohří
@@ -3330,7 +3330,7 @@ Podbořany;Podbořan;Podbořanům;Podbořanum;Podbořanech;Podbořanách
 Podbrdy
 Podbřezí
 Podbřežice;Podbřežic;Podbřežicím;Podbřežicům;Podbřežicích
-Poděbrady;Poděbrad;Poděbradům;Poděbradum;Poděbradech;Poděbradách
+#Poděbrady;Poděbrad;Poděbradům;Poděbradum;Poděbradech;Poděbradách
 Poděšín
 Poděvousy;Poděvous;Poděvousům;Poděvousum;Poděvousech;Poděvousách
 Podhořany u Ronova;Podhořan u Ronova;Podhořanům u Ronova;Podhořanum u Ronova;Podhořanech u Ronova;Podhořanách u Ronova
