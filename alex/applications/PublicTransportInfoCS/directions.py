@@ -524,13 +524,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         if len(new_comb_info) == 2:  # reply contains new data and timestamp
             last_date = new_comb_info[1]
             new_comb_info = _todict(new_comb_info[0][0], '_origClassName')
+            try:
+                fh = gzip.open(self.COMBINATION_INFO_FNAME, 'wb')
+                pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(new_comb_info)
+                pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(last_date)
+                fh.close()
+            except Exception as e:
+                print >> sys.stderr, e
         else:  # reply contains (old) timestamp only -- use cached data
             new_comb_info = comb_info
-        try:
-            fh = gzip.open(self.COMBINATION_INFO_FNAME, 'wb')
-            pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(new_comb_info)
-            pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(last_date)
-            fh.close()
-        except Exception as e:
-            print >> sys.stderr, e
         return new_comb_info
