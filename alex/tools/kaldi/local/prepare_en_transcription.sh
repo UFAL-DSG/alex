@@ -2,8 +2,8 @@
 
 source conf/train_conf.sh
 
-locdata=$1; shift
-locdict=$1; shift
+locdata=$1
+locdict=$2
 
 
 if [ ! -f $locdict/cmudict/cmudict.0.7a ]; then
@@ -24,10 +24,10 @@ gawk 'NR==FNR{words[$1]; next;} !($1 in words)' \
 
 gawk 'NR==FNR{words[$1]; next;} ($1 in words)' \
   $locdata/vocab-full.txt $locdict/cmudict-plain.txt |\
-  egrep -v '<.?s>' > $locdict/lexicon-iv.txt
+  egrep -v '<.?s>' > $locdict/lexicon.txt
 
 wc -l $locdict/vocab-oov.txt
-wc -l $locdict/lexicon-iv.txt
+wc -l $locdict/lexicon.txt
 
 ###  BEGIN SKIPPING GENERATING PRONUNCIACIONS FOR OOV WORDS ####
 # pyver=`python --version 2>&1 | sed -e 's:.*\([2-3]\.[0-9]\+\).*:\1:g'`

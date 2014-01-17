@@ -1,5 +1,4 @@
-#!/bin/sh
-
+#!/bin/bash
 # Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,22 +15,18 @@
 # limitations under the License. #
 
 
-DATE=`date +%F_%T.%N`
-name="${EXP_NAME}_${DATE}"
-target_dir="Results/$name"
+if [ ! -d "$DATA_ROOT" ]; then
+  echo "You need to set \"DATA_ROOT\" variable in your configs to point to the directory to host data"
+  exit 1
+fi
 
-# This is EXAMPLE SCRIPT you are ENCOURAGED TO CHANGE IT!
+# make sure that the directories exists
+mkdir -p "$MFCC_DIR"
+mkdir -p "exp"
+mkdir -p "data"
 
-# Collect the results
-
-echo TODO rewrite and fix to export_models.sh
-
-# local/results.py exp > exp/results.log
-# 
-# mkdir -p "$target_dir"
-# cp -rf exp  "$target_dir"
-# 
-# echo; echo "DATA successfully copied to $target_dir"; echo
-# 
-# echo "du -hs will tell you the size of stored settings"
-# du -hs $target_dir
+# Copy the current settings to exp directory
+cp -r conf exp
+cp cmd.sh path.sh exp/conf
+git log -1 > exp/conf/git_log_state.log
+git diff > exp/conf/git_diff_state.log

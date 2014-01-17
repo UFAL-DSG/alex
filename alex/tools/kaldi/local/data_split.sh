@@ -35,6 +35,7 @@
 # renice 20 $$
 
 every_n=1
+
 [ -f path.sh ] && . ./path.sh # source the path.
 . utils/parse_options.sh || exit 1;
 
@@ -48,11 +49,12 @@ if [ $# -eq 0 ] ; then
 fi
 
 DATA=$1
+locdata=$2
+
 
 echo "=== Starting initial Vystadial data preparation ..."
 echo "--- Making test/train data split from $DATA taking every $every_n recording..."
 
-locdata=data/local
 loctmp=$locdata/tmp
 rm -rf $loctmp >/dev/null 2>&1
 mkdir -p $locdata

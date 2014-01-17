@@ -22,7 +22,7 @@ gawk 'NR==FNR{words[$1]; next;} !($1 in words)' \
 
 gawk 'NR==FNR{words[$1]; next;} ($1 in words)' \
   $locdata/vocab-full.txt $locdict/cs_transcription.txt |\
-  egrep -v '<.?s>' > $locdict/lexicon-iv.txt
+  egrep -v '<.?s>' > $locdict/lexicon.txt
 
 wc -l $locdict/vocab-oov.txt
-wc -l $locdict/lexicon-iv.txt
+wc -l $locdict/lexicon.txt

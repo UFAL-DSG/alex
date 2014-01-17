@@ -1,13 +1,14 @@
 #!/bin/bash
 # Copyright 2012  Johns Hopkins University (Author: Daniel Povey)
+#           2014  Mff UK, UFAL (modification: Ondrej Platek)
 # Apache 2.0
 
 [ -f ./path.sh ] && . ./path.sh
 
 # begin configuration section.
 cmd=run.pl
-min_lmwt=9
-max_lmwt=20
+min_lmw=9
+max_lmw=20
 #end configuration section.
 
 [ -f ./path.sh ] && . ./path.sh
@@ -17,8 +18,8 @@ if [ $# -ne 3 ]; then
   echo "Usage: local/score.sh [--cmd (run.pl|queue.pl...)] <data-dir> <lang-dir|graph-dir> <decode-dir>"
   echo " Options:"
   echo "    --cmd (run.pl|queue.pl...)      # specify how to run the sub-processes."
-  echo "    --min_lmwt <int>                # minumum LM-weight for lattice rescoring "
-  echo "    --max_lmwt <int>                # maximum LM-weight for lattice rescoring "
+  echo "    --min_lmw <int>                # minumum LM-weight for lattice rescoring "
+  echo "    --max_lmw <int>                # maximum LM-weight for lattice rescoring "
   exit 1;
 fi
 
@@ -34,18 +35,17 @@ done
 
 mkdir -p $dir/scoring/log
 
-cat $data/text | sed 's:<NOISE>::g' | sed 's:<SPOKEN_NOISE>::g' > $dir/scoring/test_filt.txt
+cp $data/text $dir/scoring/test.txt
 
-$cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/best_path.LMWT.log \
-  lattice-best-path --lm-scale=LMWT --word-symbol-table=$symtab \
-    "ark:gunzip -c $dir/lat.*.gz|" ark,t:$dir/scoring/LMWT.tra || exit 1;
+$cmd LMW=$min_lmw:$max_lmw $dir/scoring/log/best_path.LMW.log \
+  lattice-best-path --lm-scale=LMW --word-symbol-table=$symtab \
+    "ark:gunzip -c $dir/lat.*.gz|" ark,t:$dir/scoring/LMW.tra || exit 1;
 
-# Note: the double level of quoting for the sed command
-$cmd LMWT=$min_lmwt:$max_lmwt $dir/scoring/log/score.LMWT.log \
-   cat $dir/scoring/LMWT.tra \| \
-    utils/int2sym.pl -f 2- $symtab \| sed 's:OOV::g' \| \
+$cmd LMW=$min_lmw:$max_lmw $dir/scoring/log/score.LMW.log \
+   cat $dir/scoring/LMW.tra \| \
+    utils/int2sym.pl -f 2- $symtab \| \
     compute-wer --text --mode=present \
-     ark:$dir/scoring/test_filt.txt  ark,p:- ">&" $dir/wer_LMWT || exit 1;
+     ark:$dir/scoring/test.txt  ark,p:- ">&" $dir/wer_LMW || exit 1;
 
 # Show results
 for f in $dir/wer_*; do echo $f; egrep  '(WER)|(SER)' < $f; done
