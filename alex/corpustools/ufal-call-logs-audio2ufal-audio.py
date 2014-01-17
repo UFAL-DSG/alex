@@ -52,7 +52,7 @@ _LANG2NORMALISATION_MOD = {
 
 
 from alex.corpustools.cued import find_wavs
-from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
+from alex.corpustools.text_norm_en import exclude_asr, exclude_by_dict, normalise_text
 
 
 def save_transcription(trs_fname, trs):
@@ -158,7 +158,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
             if known_words is not None:
                 excluded = exclude_by_dict(trs, known_words)
             else:
-                excluded = exclude(trs)
+                excluded = exclude_asr(trs)
             if excluded:
                 print "... excluded"
                 continue

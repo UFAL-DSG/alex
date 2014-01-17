@@ -20,8 +20,11 @@ The script generates the following files:
 - ``*.nbl``: contains ASR N-best results
 - ``*.nbl.hdc.sem``: contains automatic annotation from n-best ASR using handcrafted SLU
 
-The scripts accepts ``uniq`` parameter for fast generation of HDC SLU only transcriptions. It generates only HDC SLU
-output only for unique transcriptions. This is useful when tuning the HDC SLU.
+The scripts accepts ``--uniq`` parameter for fast generation of unique HDC SLU annotations.
+This is useful when tuning the HDC SLU.
+
+The scripts also accepts ``--fast`` parameter for fast approximate preparation of all data.
+It approximate HDC SLU output from N-best list by the output obtained by parsing 1-best ASR result.
 
 Building the models
 -------------------
@@ -71,18 +74,21 @@ The current ASR performance computed on from the call logs is as follows:
     |==============================================================================================|
     |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
     |----------------------------------------------------------------------------------------------|
-    | Sum/Avg    |     2455     |   6072    |  55.02   |  16.78   |  28.19   |   1.45   |  46.43   |
+    | Sum/Avg    |     9111     |   24728   |  56.15   |  16.07   |  27.77   |   1.44   |  45.28   |
     |==============================================================================================|
 
 
-The used ASR decoder for the first 2455 sentences is Google.
+The results above were obtained using the Google ASR.
 
 Evaluation of the min number of feature counts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Probably due to small amount of data (about 2000 utterances), it is still beneficial to use features which appeared in
-the training data only two times.
+Using 9111 training examples, we found that pruning should be set to
 
+- min feature count = 3
+- min classifier count = 4
+
+to prevent over fitting.
 
 Cheating experiment: train and test on all data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,158 +96,36 @@ Cheating experiment: train and test on all data
 Due to sparsity issue, the evaluation on proper test and dev sets suffers from sampling errors. Therefore, here
 we presents results when all data are used as training data and the metrics are evaluated on the training data!!!
 
-Using the ``./print_scores.sh`` one can get:
-
-::
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL ASR - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.asr.hdc.sem
-    The results are based on 2455 DAs
-    Total precision:  45.49
-    Total recall:     43.98
-    Total F-measure:  44.72
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL ASR - ASR model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.asr.model.asr.sem.out
-    The results are based on 2455 DAs
-    Total precision:  76.28
-    Total recall:     74.44
-    Total F-measure:  75.35
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL NBL - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.nbl.hdc.sem
-    The results are based on 2455 DAs
-    Total precision:  40.99
-    Total recall:     39.49
-    Total F-measure:  40.23
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL NBL - NBL model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.nbl.model.nbl.sem.out
-    The results are based on 2455 DAs
-    Total precision:  78.36
-    Total recall:     78.42
-    Total F-measure:  78.39
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL TRN - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.trn.hdc.sem
-    The results are based on 2455 DAs
-    Total precision: 100.00
-    Total recall:    100.00
-    Total F-measure: 100.00
-    ----------------------------------------------------------------------------------------------------------
-    DATA ALL TRN - TRN model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: all.trn.hdc.sem
-    Tst: all.trn.model.trn.sem.out
-    The results are based on 2455 DAs
-    Total precision:  98.62
-    Total recall:     98.51
-    Total F-measure:  98.57
+Using the ``./print_scores.sh`` one can get scores for assessing the quality of trained models. The results from
+experiments are stored in the ``old.scores.*`` files. Please look at the results marked as ``DATA ALL ASR - *``.
 
 If the automatic annotations were correct, we could conclude that the F-measure of the HDC SLU parser on 1-best
-is about 44.72 and on N-best is about 40.23 %. This is confusing as it looks like that the decoding from n-best lists
+is higher wne compared to F-measure on N-best%. This is confusing as it looks like that the decoding from n-best lists
 gives worse results when compared to decoding from 1-best ASR hypothesis.
 
 Evaluation of TRN model on test data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The TRN model is trained on transcriptions and evaluated on transcriptions from test data.
-
-::
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST TRN - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.trn.hdc.sem
-    The results are based on 246 DAs
-    Total precision: 100.00
-    Total recall:    100.00
-    Total F-measure: 100.00
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST TRN - TRN model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.trn.model.trn.sem.out
-    The results are based on 246 DAs
-    Total precision:  98.07
-    Total recall:     97.32
-    Total F-measure:  97.69
-
-One can see that the performance of the TRN model on TRN test data is **NOT** 100 % perfect. This is probably due to
-the mismatch between the train and test data sets. Once more training data will be available, we can expect better
-results.
+The TRN model is trained on transcriptions and evaluated on transcriptions from test data. Please look at the results
+marked as ``DATA TEST TRN - *``. One can see that the performance of the TRN model on TRN test data is **NOT**
+100 % perfect. This is probably due to the mismatch between the train and test data sets. Once more training data will
+be available, we can expect better results.
 
 Evaluation of ASR model on test data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ASR model is trained on 1-best ASR output and evaluated on the 1-best ASR output from test data.
-
-::
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST ASR - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.asr.hdc.sem
-    The results are based on 246 DAs
-    Total precision:  45.56
-    Total recall:     45.21
-    Total F-measure:  45.38
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST ASR - ASR model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.asr.model.asr.sem.out
-    The results are based on 246 DAs
-    Total precision:  67.98
-    Total recall:     65.90
-    Total F-measure:  66.93
-
-The **ASR model scores significantly better** on the ASR test data when compared to *the HDC SLU parser* when evaluated
-on the ASR data. The improvement is about 20 % in F-measure (absolute). This shows that SLU trained on the ASR data
-can be beneficial.
+The ASR model is trained on 1-best ASR output and evaluated on the 1-best ASR output from test data. Please look at
+the results marked as ``DATA TEST ASR - *``. The **ASR model scores significantly better** on the ASR test data when
+compared to *the HDC SLU parser* when evaluated on the ASR data. The improvement is about 20 % in F-measure (absolute).
+This shows that SLU trained on the ASR data can be beneficial.
 
 Evaluation of NBL model on test data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The NBL model is trained on N-best ASR output and evaluated on the N-best ASR from test data.
+The NBL model is trained on N-best ASR output and evaluated on the N-best ASR from test data. Please look at
+the results marked as ``DATA TEST NBL - *``. One can see that using nblists even from Google ASR can help; though
+only a little (about 1 %). When more data will be available, more test and more feature engineering can be done.
+However, we are more interested in extracting features from lattices or confusion networks.
 
-::
-
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST NBL - HDC SLU
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.nbl.hdc.sem
-    The results are based on 246 DAs
-    Total precision:  41.31
-    Total recall:     41.00
-    Total F-measure:  41.15
-    ----------------------------------------------------------------------------------------------------------
-    DATA TEST NBL - NBL model
-    ----------------------------------------------------------------------------------------------------------
-    Ref: test.trn.hdc.sem
-    Tst: test.nbl.model.nbl.sem.out
-    The results are based on 246 DAs
-    Total precision:  68.48
-    Total recall:     67.43
-    Total F-measure:  67.95
-
-One can see that using nblists even from Google ASR can help; though only a little (about 1 %). When more data will be
-available, more test and more feature engineering can be done. However, we are more interested in extracting features
-from lattices or confusion networks. Now, we have to wait for a working decoder generating *good* lattices.
-The OpenJulius decoder is not a suitable as it crashes unexpectedly and cannot be used in a real system.
+Now, we have to wait for a working decoder generating *good* lattices.
+The OpenJulius decoder is not a suitable as it crashes unexpectedly and therefore it cannot be used in a real system.

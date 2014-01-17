@@ -9,8 +9,11 @@ ASR
 The ASR can generate either:
 
 - a valid utterance
+- the ```` empty sentence word to denote that the input was silence
 - the ``_noise_`` word to denote that the input was some noise or other sound which is not a regular word
-- the ``_silence_`` word to denote that the input was silence
+- the ``_laugh_`` word to denote that the input was laugh
+- the ``_ehm_hmm_`` word to denote that the input was ehm or ehm sounds
+- the ``_inhale_`` word to denote that the input was inhale sound
 - the ``_other_`` word to denote that the input was something else that was lost during speech processing approximations
   such as N-best list enumeration or when the ASR did not provided any result. This is because we do not know what the
   input was and it can be both something important or worth ignoring. As such, it deserves special treatment in
@@ -29,9 +32,9 @@ The SLU can generate either:
 
 The SLU should map:
 
-- ``_noise_``, ``_inhale_`` and ``_laugh_`` to ``null()`` - noise can be ignored in general
-- ``_silence_`` and ``_sil_`` to ``silence()`` - silence will be processed in the DM
-- ``_other_`` and ``_ehm_hmm_`` to ``other()`` - other hypotheses will be handled by the DM, mostly by responding "I did not get that. Can
+- ```` to ``silence()`` - silence will be processed in the DM
+- ``_noise_``, ``_laugh_``, ``_ehm_hmm_``, and ``_inhale_`` to ``null()`` - noise can be ignored in general
+- ``_other_`` to ``other()`` - other hypotheses will be handled by the DM, mostly by responding "I did not get that. Can
   you ... ?"
 
 

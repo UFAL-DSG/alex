@@ -83,6 +83,8 @@ _subst = [
           ('NMŮŽU', 'NEMŮŽU'),
           ('_NOISE_KAM', '_NOISE_ KAM'),
           ('(NOISE)KAM', '_NOISE_ KAM'),
+          ('_NOISE_VONO', '_NOISE_ VONO'),
+          ('(NOISE)VONO', '_NOISE_ VONO'),
           ('6E', ' '),
           ('OKEY', 'OK'),
           ('OKAY', 'OK'),
@@ -212,8 +214,12 @@ _subst = [
           ('ÍPÉ PAVLOVU', 'I P PAVLOVU'),
           ('ČAPLINOVO', 'CHAPLINOVO'),
           ('ČAPLINOVA', 'CHAPLINOVA'),
+          ('ČEPLINOVĚ', 'CHAPLINOVĚ'),
           ('DIVADLÓ', 'DIVADLO'),
           ('LETŇÁN', 'LETŇAN'),
+          ('JÉT', 'JET'),
+          ('NÁ', 'NA'),
+          ('AMFÓROVÁ', 'AMFOROVÁ'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
@@ -277,14 +283,14 @@ def normalise_text(text):
 #}}}
 
 
-def exclude(text):
+def exclude_asr(text):
     """
-    Determines whether `text' is not good enough and should be excluded. "Good
-    enough" is defined as containing none of `_excluded_characters' and being
-    longer than one word.
+    This function is used for determining whether the transcription can be used for training ASR.
 
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
     """
-#{{{
     if text in ['_NOISE_', '_EHM_HMM_', '_INHALE_', '_LAUGH_']:
         return False
 
@@ -295,8 +301,30 @@ def exclude(text):
         return True
 
     return False
-#}}}
 
+def exclude_lm(text):
+    """
+    This function is used for determining whether the transcription can be used for Language Modeling.
+
+    Determines whether `text' is not good enough and should be excluded.
+    "Good enough" is defined as containing none of `_excluded_characters' and being
+    longer than one word.
+    """
+
+    if text.find('_EXCLUDE_') >= 0:
+        return True
+
+    for char in _excluded_characters:
+        if char in text  and char not in ['_']:
+            return True
+
+    return False
+
+def exclude_slu(text):
+    """
+    This function is used for determining whether the transcription can be used for training Spoken Language Understanding.
+    """
+    return exclude_lm(text)
 
 def exclude_by_dict(text, known_words):
     """

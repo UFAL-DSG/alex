@@ -12,12 +12,19 @@ import sys
 
 import alex.utils.various as various
 
-from alex.corpustools.text_norm_cs import normalise_text
+from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.base import CategoryLabelDatabase
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
+
+""" The script has two commands:
+
+--fast      it approximates SLU output on N-best lists by SLU output from 1-best
+--uniq      it generates only files with unique texts and their SLU HDC output
+
+"""
 
 def normalise_semi_words(txt):
     # normalise these semi-words
@@ -138,14 +145,15 @@ def main():
             t = normalise_text(t)
 
             a = various.get_text_from_xml_node(hyps[0])
+            a = normalise_semi_words(a)
 
-            # FIXME: We should be more tolerant and use more transcriptions
-            if t != '_NOISE_' and t != '_SIL_' and t != '_EHM_HMM_' and t != '_INHALE_' and t != '_LAUGH_' and \
-                ('-' in t or '_' in t or '(' in t) or \
-                'DOM Element:' in a:
+            if exclude_slu(t) or 'DOM Element:' in a:
                 print "Skipping transcription:", t
                 print "Skipping ASR output:   ", a
                 continue
+
+            # The silence does not have a label in the language model.
+            t = t.replace('_SIL_','')
 
             trn.append((wav_key, t))
 
@@ -156,7 +164,7 @@ def main():
             s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
             trn_hdc_sem.append((wav_key, s))
 
-            if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
+            if '--uniq' not in sys.argv:
                 # HDC SLU on 1 best ASR
                 a = various.get_text_from_xml_node(hyps[0])
                 a = normalise_semi_words(a)
@@ -179,7 +187,8 @@ def main():
 
                 nbl.append((wav_key, n.serialise()))
 
-                s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
+                if '--fast' not in sys.argv:
+                    s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
                 nbl_hdc_sem.append((wav_key, s))
 
             # there is no manual semantics in the transcriptions yet
@@ -200,17 +209,19 @@ def main():
             uniq_trn_sem[k] = v + " <=> " + unicode(sem[k])
 
     save_wavaskey(fn_uniq_trn, uniq_trn)
-    save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem)
+    save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
     save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)
 
-    if len(sys.argv) != 2 or sys.argv[1] != 'uniq':
-        # all
-        save_wavaskey(fn_all_trn, dict(trn))
-        save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem))
+    # all
+    save_wavaskey(fn_all_trn, dict(trn))
+    save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+
+    if '--uniq' not in sys.argv:
         save_wavaskey(fn_all_asr, dict(asr))
-        save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem))
+        save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+
         save_wavaskey(fn_all_nbl, dict(nbl))
-        save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem))
+        save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
 
         seed_value = 10
@@ -242,9 +253,9 @@ def main():
         dev_trn_hdc_sem = trn_hdc_sem[int(0.8*len(trn_hdc_sem)):int(0.9*len(trn_hdc_sem))]
         test_trn_hdc_sem = trn_hdc_sem[int(0.9*len(trn_hdc_sem)):]
 
-        save_wavaskey(fn_train_trn_hdc_sem, dict(train_trn_hdc_sem))
-        save_wavaskey(fn_dev_trn_hdc_sem, dict(dev_trn_hdc_sem))
-        save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem))
+        save_wavaskey(fn_train_trn_hdc_sem, dict(train_trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_dev_trn_hdc_sem, dict(dev_trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
         # asr
         train_asr = asr[:int(0.8*len(asr))]
@@ -260,9 +271,9 @@ def main():
         dev_asr_hdc_sem = asr_hdc_sem[int(0.8*len(asr_hdc_sem)):int(0.9*len(asr_hdc_sem))]
         test_asr_hdc_sem = asr_hdc_sem[int(0.9*len(asr_hdc_sem)):]
 
-        save_wavaskey(fn_train_asr_hdc_sem, dict(train_asr_hdc_sem))
-        save_wavaskey(fn_dev_asr_hdc_sem, dict(dev_asr_hdc_sem))
-        save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem))
+        save_wavaskey(fn_train_asr_hdc_sem, dict(train_asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_dev_asr_hdc_sem, dict(dev_asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
         # n-best lists
         train_nbl = nbl[:int(0.8*len(nbl))]
@@ -278,9 +289,9 @@ def main():
         dev_nbl_hdc_sem = nbl_hdc_sem[int(0.8*len(nbl_hdc_sem)):int(0.9*len(nbl_hdc_sem))]
         test_nbl_hdc_sem = nbl_hdc_sem[int(0.9*len(nbl_hdc_sem)):]
 
-        save_wavaskey(fn_train_nbl_hdc_sem, dict(train_nbl_hdc_sem))
-        save_wavaskey(fn_dev_nbl_hdc_sem, dict(dev_nbl_hdc_sem))
-        save_wavaskey(fn_test_nbl_hdc_sem, dict(test_nbl_hdc_sem))
+        save_wavaskey(fn_train_nbl_hdc_sem, dict(train_nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_dev_nbl_hdc_sem, dict(dev_nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_test_nbl_hdc_sem, dict(test_nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
 
 if __name__ == '__main__':

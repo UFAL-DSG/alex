@@ -16,7 +16,7 @@ if __name__ == "__main__":
     import autopath
 
 from alex.corpustools.cued import find_logs
-from alex.corpustools.text_norm_en import exclude, exclude_by_dict, normalise_text
+from alex.corpustools.text_norm_en import exclude_asr, exclude_by_dict, normalise_text
 from alex.utils.various import get_text_from_xml_node
 
 """
@@ -175,7 +175,7 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
                 if known_words is not None:
                     trs_excluded = exclude_by_dict(transcription, known_words)
                 else:
-                    trs_excluded = exclude(transcription)
+                    trs_excluded = exclude_asr(transcription)
                 if trs_excluded:
                     if verbose:
                         print 'Excluded transcription: "{trs}".'.format(
@@ -190,7 +190,7 @@ def extract_trns_sems_from_file(fname, verbose, fields=None, normalise=True,
                 if known_words is not None:
                     asr_excluded = exclude_by_dict(asrhyp, known_words)
                 else:
-                    asr_excluded = exclude(asrhyp)
+                    asr_excluded = exclude_asr(asrhyp)
                 if asr_excluded:
                     if verbose:
                         print 'Excluded ASR hypothesis: "{asr}".'.format(
