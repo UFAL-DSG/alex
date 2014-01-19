@@ -4,12 +4,12 @@ Building a SLU for the PTIcs domain
 Available data
 --------------
 
-At this moment there we have only data which were automatically generated using handcrafted SLU (HDC SLU) parser on the
+At this moment, we only have data which were automatically generated using our handcrafted SLU (HDC SLU) parser on the
 transcribed audio. In general, the quality of the automatic annotation is very good.
 
 The data can be prepared using the ``prapare_data.py`` script. It assumes that there exist the ``indomain_data`` directory
-with links to directories with ``asr_transcribed.xml`` files. Then it uses these files to extract transcriptions
-and generate automatic transcriptions using the PTICSHDCSLU parser from the ``hdc_slu.py`` file.
+with links to directories containing ``asr_transcribed.xml`` files. Then it uses these files to extract transcriptions
+and generate automatic SLU annotations using the PTICSHDCSLU parser from the ``hdc_slu.py`` file.
 
 The script generates the following files:
 
@@ -20,16 +20,16 @@ The script generates the following files:
 - ``*.nbl``: contains ASR N-best results
 - ``*.nbl.hdc.sem``: contains automatic annotation from n-best ASR using handcrafted SLU
 
-The scripts accepts ``--uniq`` parameter for fast generation of unique HDC SLU annotations.
+The script accepts ``--uniq`` parameter for fast generation of unique HDC SLU annotations.
 This is useful when tuning the HDC SLU.
 
-The scripts also accepts ``--fast`` parameter for fast approximate preparation of all data.
-It approximate HDC SLU output from N-best list by the output obtained by parsing 1-best ASR result.
+The script also accepts ``--fast`` parameter for fast approximate preparation of all data.
+It approximates the HDC SLU output from an N-best list using output obtained by parsing the 1-best ASR result.
 
 Building the models
 -------------------
 
-First, prepare the data. Link the directories with the domain data into the ``indomain_data`` directory. Then run the
+First, prepare the data. Link the directories with the in-domain data into the ``indomain_data`` directory. Then run the
 following command:
 
 ::
@@ -43,7 +43,7 @@ Second, train and test the models.
 
     ./train.py && ./test.py && ./test_bootstrap.py
 
-Third, look at the *.score files or compute the interesting scores by
+Third, look at the ``*.score`` files or compute the interesting scores by running:
 
 ::
 
@@ -80,15 +80,15 @@ The current ASR performance computed on from the call logs is as follows:
 
 The results above were obtained using the Google ASR.
 
-Evaluation of the min number of feature counts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Evaluation of the minimum number of feature counts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using 9111 training examples, we found that pruning should be set to
 
 - min feature count = 3
 - min classifier count = 4
 
-to prevent over fitting.
+to prevent overfitting.
 
 Cheating experiment: train and test on all data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
