@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright (c) 2013, Ondrej Platek, Ufal MFF UK <oplatek@ufal.mff.cuni.cz>
 #
@@ -15,23 +15,27 @@
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
 
+expdir=$1; shift
+tgtdir=$2; shift
 
-DATE=`date +%F_%T.%N`
-name="${EXP_NAME}_${DATE}"
-target_dir="Results/$name"
+tgtdir="$tgtdir/$name"
+date="`date +%F_%T.%N`"
+
+if [[ -d $tgtdir || -f $tgtdir ]] ; then
+    tgtdir="$tgtdir/backup_$date"
+fi
+
 
 # This is EXAMPLE SCRIPT you are ENCOURAGED TO CHANGE IT!
 
+mkdir -p "$tgtdir"
+cp -rf $expdir "$tgtdir"
+
 # Collect the results
 
-echo TODO rewrite and fix to export_models.sh
+local/results.py $EXP > "$tgtdir"/results.log
+echo "Date: $date" >> "$tgtdir"/results.log
+size=`du -hs "$tgtdir"`
+echo "Size of backup: $size" >> "$tgtdir"/results.log
 
-# local/results.py exp > exp/results.log
-# 
-# mkdir -p "$target_dir"
-# cp -rf exp  "$target_dir"
-# 
-# echo; echo "DATA successfully copied to $target_dir"; echo
-# 
-# echo "du -hs will tell you the size of stored settings"
-# du -hs $target_dir
+echo; echo "DATA successfully copied to $tgtdir"; echo

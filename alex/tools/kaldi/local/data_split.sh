@@ -20,7 +20,7 @@
 #   a) ${TYPE}_trans.txt: ID transcription capitalized! No interputction
 #   b) ${TYPE}_wav.scp: ID path2ID.wav 
 #   c) $TYPE.utt2spk: ID-recording ID-speaker
-#   d) $TYPE.spk2utt
+#   s) $TYPE.spk2utt
 #   e) $TYPE.spk2gender  all speakers are male
 # we have ID-recording = ID-speaker
 
@@ -40,66 +40,69 @@ every_n=1
 . utils/parse_options.sh || exit 1;
 
 
-msg="Usage: $0 [--every-n 30] <data-directory>";
-if [ $# -gt 1 ] ; then
-    echo "$msg"; exit 1;
-fi
-if [ $# -eq 0 ] ; then
-    echo "$msg"; exit 1;
+if [ $# -ne 4 ] ; then
+    echo "Usage: local/data_split.sh [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
+    exit 1;
 fi
 
-DATA=$1
-locdata=$2
+DATA=$1; shift
+locdata=$1; shift
+LMs=$1; shift
+test_sets=$1; shift
+tgt_dir=$1; shift
+
+echo "LMs $LMs  test_sets $test_sets"
 
 
 echo "=== Starting initial Vystadial data preparation ..."
 echo "--- Making test/train data split from $DATA taking every $every_n recording..."
 
-loctmp=$locdata/tmp
-rm -rf $loctmp >/dev/null 2>&1
 mkdir -p $locdata
-mkdir -p $loctmp
 
 i=0
-for d in $test_sets train ; do
-    ls $DATA/$d/ | sed -n /.*wav$/p |\
+for s in $test_sets train ; do
+    mkdir -p $locdata/$s
+    ls $DATA/$s/ | sed -n /.*wav$/p |\
     while read wav ; do
         ((i++)) # bash specific
         if [[ $i -ge $every_n ]] ; then
             i=0
-            pwav=$DATA/$d/$wav
-            trn=`cat $DATA/$d/$wav.trn`
-            echo "$wav $pwav" >> ${loctmp}/${d}_wav.scp.unsorted
-            echo "$wav $wav" >> ${loctmp}/${d}.utt2spk.unsorted
-            echo "$wav $wav" >> ${loctmp}/${d}.spk2utt.unsorted
-            echo "$wav $trn" >> ${loctmp}/${d}_trans.txt.unsorted
-            echo "$wav M" >> ${loctmp}/spk2gender.unsorted
+            pwav=$DATA/$s/$wav
+            trn=`cat $DATA/$s/$wav.trn`
+            echo "$wav $pwav" >> $locdata/$s/wav.scp
+            echo "$wav $wav" >> $locdata/$s/utt2spk
+            echo "$wav $wav" >> $locdata/$s/spk2utt
+            echo "$wav $trn" >> $locdata/$s/trans.txt
+            # Ignoring gender -> label all recordings as male
+            echo "$wav M" >> $locdata/spk2gender
         fi
     done # while read wav 
 
-    # Sorting
-    for unsorted in _wav.scp.unsorted _trans.txt.unsorted \
-        .spk2utt.unsorted .utt2spk.unsorted _wav.scp.unsorted
-    do
-       u="${d}${unsorted}"
-       s=`echo "$u" | sed -e s:.unsorted::`
-       sort "${loctmp}/$u" -k1 > "${locdata}/$s"
-    done # for unsorted
-
-    mkdir -p data/$d
-    cp $locdata/${d}_wav.scp data/$d/wav.scp || exit 1;
-    cp $locdata/${d}_trans.txt data/$d/text || exit 1;
-    cp $locdata/$d.spk2utt data/$d/spk2utt || exit 1;
-    cp $locdata/$d.utt2spk data/$d/utt2spk || exit 1;
-    if [[ ! -z "$TEST_ZERO_GRAMS" ]] ; then
-        mkdir -p data/${d}0
-        for f in wav.scp text spk2utt utt2spk ; do
-            cp data/$d/$f data/${d}0
-        done
-    fi
+    for f in wav.scp utt2spk spk2utt trans.txt ; do
+       sort "$locdata/$s/$f" -k1 -u -o "$locdata/$s/$f"  # sort in place
+    done # for f
 
 done # for in $test_sets train
 
-# set 1:1 relation for spk2utt: spk in $test_sets AND train
-sort "${loctmp}/spk2gender.unsorted" -k1 > "${locdata}/spk2gender" 
-utils/filter_scp.pl data/$d/spk2utt $locdata/spk2gender > data/$d/spk2gender || exit 1;
+echo "Set 1:1 relation for spk2utt: spk in $test_sets AND train, sort in place"
+sort "$locdata/spk2gender" -k1 -o "$locdata/spk2gender" 
+
+echo "--- Distributing the file lists to train and ($test_sets x $LMs) directories ..."
+mkdir -p $WORK/train
+cp $locdata/train/wav.scp $WORK/train/wav.scp || exit 1;
+cp $locdata/train/trans.txt $WORK/train/text || exit 1;
+cp $locdata/train/spk2utt $WORK/train/spk2utt || exit 1;
+cp $locdata/train/utt2spk $WORK/train/utt2spk || exit 1;
+utils/filter_scp.pl $WORK/train/spk2utt $locdata/spk2gender > $WORK/train/spk2gender || exit 1;
+
+for s in $test_sets ; do 
+    for lm in $LMs; do
+        tgt_dir=$WORK/${s}_`basename ${lm}`
+        mkdir -p $tgt_dir
+        cp $locdata/${s}/wav.scp $tgt_dir/wav.scp || exit 1;
+        cp $locdata/${s}/trans.txt $tgt_dir/text || exit 1;
+        cp $locdata/${s}/spk2utt $tgt_dir/spk2utt || exit 1;
+        cp $locdata/${s}/utt2spk $tgt_dir/utt2spk || exit 1;
+        utils/filter_scp.pl $tgt_dir/spk2utt $locdata/spk2gender > $tgt_dir/spk2gender || exit 1;
+    done
+done
