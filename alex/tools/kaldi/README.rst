@@ -16,8 +16,6 @@ condition ``LANG_RCOND`` as follows:
 
 Summary
 -------
-* This KALDI recipe is based on Voxforge KALDI recipe 
-  http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html.
 * Requires KALDI installation and Linux environment. (Tested on Ubuntu 10.04, 12.04 and 12.10.)
   Note: We recommend Kaldi fork `Pykaldi <http://github.com/UFAL-DSG/pykaldi>`_, 
   because you will need it also for integrated Kaldi decoder to Alex.
@@ -29,15 +27,13 @@ Summary
 
 Details
 -------
-* Our scripts prepare the data to the expected format to ``data`` directory.
-* Experiment files are stored to ``exp`` directory.
+* The basic settings can be changed at ``env_LANG_RCONG.sh``
+* Our scripts prepare the data to the expected format to ``$WORK`` directory.
+* Experiment files are stored to ``$EXP`` directory.
 * The symbolic links to ``$KALDI_ROOT/wsj/s5/utils`` and ``$KALDI_ROOT/wsj/s5/steps`` are automatically created.
-* The ``local`` directory contains scripts for data preparation.
-* The files ``path.sh``, ``cmd.sh`` and  ``conf/*`` 
-  contain configurations for the recipe.
+* The files ``path.sh``, ``cmd.sh`` are necessary to ``utils`` and ``steps`` scripts. Do not relocate them! 
 * Language model (LM) is either built from the training data using 
-  `SRILM <http://www.speech.sri.com/projects/srilm/>`_  or we supply one in 
-  the ARPA format.
+  `SRILM <http://www.speech.sri.com/projects/srilm/>`_  or specified in ``env_LANG_RCOND.sh``.
 
 
 Running experiments
@@ -81,55 +77,35 @@ Before running the experiments, check that:
   ./install_srilm.sh
   pushd
 
-* the `<run.sh>`_ script will see the Kaldi scripts and binaries.
+* the ``train_LANG_RCOND`` script will see the Kaldi scripts and binaries.
   Check for example that ``$KALDI_ROOT/egs/wsj/s5/utils/parse_options.sh`` is valid path. 
-* the symbolic links in the ``conf`` directory point to the right data 
-  and that the setup fits your needs.
 * in ``cmd.sh``, you switched to run the training on a SGE[*] grid if 
   required (disabled by default) and 
   ``njobs`` is less than number of your CPU cores.
 
-Start the recipe by running ``bash run.sh``.
-It will create ``mfcc``, ``data`` and ``exp`` directories.
-If any of them exists, it will ask you if you want them to be overwritten.
-After running the experiments, the ``exp`` directory will be backed up to 
-the ``Results`` directory.
+Start the recipe by running ``bash train_LANG_RCOND.sh``.
 
 .. [*] Sun Grid Engine
 
 Extracting the results and trained models
 -----------------------------------------
-The main script, `<run.sh>`_, performs not only training of the acoustic 
+The main script, ``bash train_LANG_RCOND.sh``, performs not only training of the acoustic 
 models, but also decoding.
 The acoustic models are evaluated during running the scripts and evaluation 
 reports are printed to the standard output.
 
-The ``local/results.py exp`` command extracts the results from the ``exp`` directory.
-It is invoked at the end of the `<run.sh>`_ script and the results are 
-thereby stored to ``exp/results.log``.
+The ``local/results.py exp`` command extracts the results from the ``$EXP`` directory.
+It is invoked at the end of the ``train_LANG_RCOND.sh`` script.
 
 If you want to use the trained acoustic model outside the prepared script,
 you need to build the ``HCLG`` decoding graph yourself.  (See 
 http://kaldi.sourceforge.net/graph.html for general introduction to the FST 
 framework in Kaldi.)
-
-The simplest way to start with decoding is to use the same LM which
-was used by the `<run.sh>`_ script.  Let's say you want to decode with 
-the acoustic model stored in ``exp/tri1``.
-Then you need just 3 files:
-
-----
-
-============================  ============================================================================
-``exp/tri1/graph/HCLG.fst``   # decoding graph
-``exp/tri1/graph/words.txt``  # Word symbol table, a mapping between words and integers which are decoded.
-``exp/tri1/final.mdl``        # trained acoustic model 
-============================  ============================================================================
-
-----
-
-The ``HCLG.fst`` decoding graph is created by ``utils/mkgraph.sh`` see ``run.sh`` for details.
+The ``HCLG.fst`` decoding graph is created by ``utils/mkgraph.sh``.
+See ``run.sh`` for details.
 
 Credits and license
 ------------------------
-The scripts are based on Voxforge KALDI recipe http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html . The original scripts as well as theses scripts are licensed under APACHE 2.0 license.
+The scripts were based on Voxforge KALDI recipe 
+http://vpanayotov.blogspot.cz/2012/07/voxforge-scripts-for-kaldi.html . 
+The original scripts as well as theses scripts are licensed under APACHE 2.0 license.

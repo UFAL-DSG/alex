@@ -1587,7 +1587,7 @@ Jeníkov
 Jeníkovice
 Jenišov
 Jenišovice
-Jenštejn
+#Jenštejn
 Jeřice
 Jeřišno
 Jeřmanice
@@ -1760,7 +1760,7 @@ Kladno
 Kladruby
 Kladruby nad Labem
 Klamoš
-Klánovice
+#Klánovice
 Klapý
 Klášter
 Klášterec nad Ohří
@@ -3353,7 +3353,7 @@ Podbořany
 Podbrdy
 Podbřezí
 Podbřežice
-Poděbrady
+#Poděbrady
 Poděšín
 Poděvousy
 Podhořany u Ronova

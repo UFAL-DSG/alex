@@ -14,19 +14,16 @@
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
 
-
-if [ ! -d "$DATA_ROOT" ]; then
-  echo "You need to set \"DATA_ROOT\" variable in your configs to point to the directory to host data"
-  exit 1
-fi
+LOCAL=$1
+MFCC=$2
+EXP=$3
 
 # make sure that the directories exists
-mkdir -p "$MFCC_DIR"
-mkdir -p "exp"
-mkdir -p "data"
+mkdir -p "$LOCAL"
+mkdir -p "$MFCC"
+mkdir -p "$EXP"
 
-# Copy the current settings to exp directory
-cp -r conf exp
-cp cmd.sh path.sh exp/conf
-git log -1 > exp/conf/git_log_state.log
-git diff > exp/conf/git_diff_state.log
+# Save the variables set up 
+(set -o posix ; set ) > $EXP/bash_vars.log
+git log -1 > $EXP/git_log_state.log
+git diff > $EXP/git_diff_state.log

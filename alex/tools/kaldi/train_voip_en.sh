@@ -3,7 +3,7 @@
 renice 20 $$
 
 # Load training parameters
-. ./env_voip_cs.sh
+. ./env_voip_en.sh
 
 . ./path.sh "$KALDI_ROOT"
 
@@ -23,7 +23,7 @@ local/data_split.sh --every_n $EVERY_N $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS
 local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
     $WORK/local/test/trans.txt  $WORK/local/lm "$LMs" || exit 1
 
-local/prepare_cs_transcription.sh $WORK/local $WORK/local/dict || exit 1
+local/prepare_en_transcription.sh $WORK/local $WORK/local/dict || exit 1
 
 local/create_phone_lists.sh $WORK/local $DICTIONARY $WORK/local/dict || exit 1
 

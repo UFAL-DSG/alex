@@ -22,31 +22,13 @@
 # _EHM_HMM_
 # _SIL_
 
-# TODO do I need vocab-full
 locdata=$1
 DICTIONARY=$2
 locdict=$3
 
-
 mkdir -p $locdata
-
-
-echo "=== Preparing the dictionary and phone lists..."
-
 mkdir -p $locdict
 
-if [ ! -z "$DICTIONARY" ]; then
-  echo; echo "Using predefined dictionary: ${DICTIONARY}"
-  echo "Throwing away first 2 rows."; echo
-  tail -n +3 $DICTIONARY | cut -f 1 > $locdata/vocab-full-raw.txt
-else
-  cut -d' ' -f2- data/train/text | tr ' ' '\n' > $locdata/vocab-full-raw.txt
-fi
-
-echo '</s>' >> $locdata/vocab-full-raw.txt
-# Removing from vocabulary _NOISE_, and  all '_' words
-cat $locdata/vocab-full-raw | grep -v '_' | \
-  sort -u > $locdata/vocab-full.txt
 
 echo "--- Prepare nonsilence phone lists ..."
 # We suppose only nonsilence_phones in lexicon right now
@@ -60,12 +42,10 @@ echo "_INHALE_ INH" >> $locdict/lexicon.txt
 echo "_LAUGH_ LAU" >> $locdict/lexicon.txt
 echo "_NOISE_ NOI" >> $locdict/lexicon.txt
 
-sort $locdict/lexicon.txt -o $locdict/lexicon.txt  # sort in place
+echo "--- Sorting lexicon in place..."
+sort $locdict/lexicon.txt -o $locdict/lexicon.txt
 
 echo "--- Prepare silence phone lists ..."
-# TODO In previous versions the silence phones
-# were in nonsilence phones
-# and it was not so bad TODO
 echo SIL > $locdict/silence_phones.txt
 echo EHM >> $locdict/silence_phones.txt
 echo INH >> $locdict/silence_phones.txt
@@ -77,4 +57,4 @@ echo SIL > $locdict/optional_silence.txt
 # Some downstream scripts expect this file exists, even if empty
 touch $locdict/extra_questions.txt
 
-echo "*** Dictionary preparation finished!"
+echo "*** Creating phone lists finished!"

@@ -7,12 +7,7 @@ import os.path
 import codecs
 import autopath
 
-from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
-from alex.components.slu.base import CategoryLabelDatabase
-from alex.components.slu.dailrclassifier import DAILogRegClassifier
-from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
-from alex.corpustools.semscore import score
 
 
 def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
@@ -28,6 +23,16 @@ def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     print "="*120
     print "Testing: ", fn_model, fn_input, fn_reference
     print "-"*120
+
+    from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
+    from alex.components.slu.base import CategoryLabelDatabase
+    from alex.components.slu.dailrclassifier import DAILogRegClassifier
+    from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
+    from alex.corpustools.semscore import score
+
+    cldb = CategoryLabelDatabase('../data/database.py')
+    preprocessing = PTICSSLUPreprocessing(cldb)
+    slu = DAILogRegClassifier(cldb, preprocessing)
 
     slu.load_model(fn_model)
 
@@ -75,7 +80,7 @@ def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     else:
         fn_sem = os.path.basename(fn_input)+'.XXX.sem.out'
 
-    save_wavaskey(fn_sem, parsed_das)
+    save_wavaskey(fn_sem, parsed_das, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
     score(fn_reference, fn_sem, True, True, f)
@@ -142,18 +147,13 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
 
     fn_sem = os.path.basename(fn_input)+'.hdc.slu.sem.out'
 
-    save_wavaskey(fn_sem, parsed_das)
+    save_wavaskey(fn_sem, parsed_das, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
     f = codecs.open(os.path.basename(fn_sem)+'.score', 'w+', encoding='UTF-8')
     score(fn_reference, fn_sem, True, True, f)
     f.close()
 
 if __name__ == "__main__":
-    cldb = CategoryLabelDatabase('../data/database.py')
-    preprocessing = PTICSSLUPreprocessing(cldb)
-    slu = DAILogRegClassifier(cldb, preprocessing)
-
-
     # cheating experiment on all data using models trained on all data
     hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')
     hdc_slu_test('./all.asr', Utterance, './all.trn.hdc.sem')
