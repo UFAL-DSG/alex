@@ -13,7 +13,7 @@ export EXP=`pwd`/model_voip_cs/exp
 
 # Specify paths to arpa models. Paths may not contain spaces.
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
-export LMs="$DATA_ROOT/arpa_bigram build0"
+export LMs="build0 build2"
 
 # Use path to prebuilt dictionary or 'build' command in order to build dictionary
 # export DICTIONARY="../../resources/lm/caminfo/dict"
