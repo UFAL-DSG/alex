@@ -57,15 +57,16 @@ def load_wavaskey(fname, constructor, limit=None, encoding='UTF-8'):
                 pass
     return ret_dict
 
-def save_wavaskey(fname, in_dict, encoding='UTF-8'):
+def save_wavaskey(fname, in_dict, encoding='UTF-8', trans = lambda x: x):
     """
     Saves a dictionary of objects in the wave as key format into a file.
 
     :param file_name: name of the target file
     :param utt: a dictionary with the objects where the keys are the names of teh corresponding wave files
+    :parma trans: a function which can transform a saved object
     :return: None
     """
 
     with codecs.open(fname, 'w', encoding=encoding) as outfile:
         for key in sorted(in_dict):
-            outfile.write('{key} => {obj}\n'.format(key=key, obj=in_dict[key]))
+            outfile.write('{key} => {obj}\n'.format(key=key, obj=trans(in_dict[key])))

@@ -208,7 +208,7 @@ class Utterance(object):
 
     # TODO cache(1)
     def index(self, phrase):
-        """Returns the word index of the start of first occurence of `phrase'
+        """Returns the word index of the start of first occurrence of `phrase'
         within this utterance. If none is found, ValueError is raised.
 
         Arguments:
