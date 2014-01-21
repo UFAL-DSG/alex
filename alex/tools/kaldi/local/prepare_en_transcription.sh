@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source conf/train_conf.sh
-
 locdata=$1
 locdict=$2
 
@@ -58,4 +56,3 @@ wc -l $locdict/lexicon.txt
 # echo "--- Preparing pronunciations for OOV words ..."
 # python tools/g2p/lib/python${pyver}/site-packages/g2p.py \
 #   --model=conf/g2p_model --apply $locdict/vocab-oov.txt > $locdict/lexicon-oov.txt
-
