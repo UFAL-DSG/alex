@@ -41,9 +41,7 @@ for lm in $LMs ; do
       utils/eps2disambig.pl | utils/s2eps.pl | fstcompile --isymbols=$tgt/words.txt \
         --osymbols=$tgt/words.txt  --keep_isymbols=false --keep_osymbols=false | \
       fstrmepsilon > $tgt/G.fst
-    ls -al $tgt/G.fst
     fstisstochastic $tgt/G.fst
-    ls -al $tgt/G.fst
     # The output is like:
     # 9.14233e-05 -0.259833
     # we do expect the first of these 2 numbers to be close to zero (the second is

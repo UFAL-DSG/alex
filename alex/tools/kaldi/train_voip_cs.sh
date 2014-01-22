@@ -25,7 +25,7 @@ local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
 
 local/prepare_cs_transcription.sh $WORK/local $WORK/local/dict || exit 1
 
-local/create_phone_lists.sh $WORK/local $DICTIONARY $WORK/local/dict || exit 1
+local/create_phone_lists.sh $WORK/local/dict || exit 1
 
 utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
 

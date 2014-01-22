@@ -22,13 +22,7 @@
 # _EHM_HMM_
 # _SIL_
 
-locdata=$1
-DICTIONARY=$2
-locdict=$3
-
-mkdir -p $locdata
-mkdir -p $locdict
-
+locdict=$1; shift
 
 echo "--- Prepare nonsilence phone lists ..."
 # We suppose only nonsilence_phones in lexicon right now
