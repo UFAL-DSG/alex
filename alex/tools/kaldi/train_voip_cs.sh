@@ -131,27 +131,19 @@ for s in $TEST_SETS ; do
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir}
+    # Note: change --iter option to select the best model. 4.mdl == final.mdl 
     echo "Decode MMI on top of LDA+MLLT."
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi/decode_it4_${tgt_dir}
-    steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-      --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi/decode_it3_${tgt_dir}
     echo "Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir};
-    steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-      --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it3_${tgt_dir}
     echo "Decode MPE."
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mpe/decode_it4_${tgt_dir} || exit 1;
-    steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-      --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mpe/decode_it3_${tgt_dir} || exit 1;
   done
 done
 

@@ -131,11 +131,12 @@ if __name__ == "__main__":
 
     conn = sqlite3.connect(':memory:')
     c = conn.cursor()
-    c.execute('''CREATE TABLE results (exp text, dataset text, lm text, lm_w int, wer float, ser float)''')
+    c.execute(
+        '''CREATE TABLE results (exp text, dataset text, lm text, lm_w int, wer float, ser float)''')
     c.executemany('INSERT INTO results VALUES (?, ?, ?, ?, ?, ?)', raw_d)
 
-    # get all results sorted
-    # c.execute("SELECT * FROM results ORDER BY exp, lm_w, lm,  dataset")
+    # # get all results sorted
+    # c.execute("SELECT * FROM results ORDER BY exp, dataset, lm, lm_w")
     # d = c.fetchall()
     # t = Table(data=d, colnames=['exp', 'set', 'lm', 'LMW', 'WER', 'SER'])
     # print '%s\n==================' % str(t)
@@ -153,16 +154,18 @@ if __name__ == "__main__":
     # traditional usage of devset
     dev_set_query = ("SELECT r.exp, r.lm, r.lm_w, i.min_wer FROM results AS r "
                      "INNER JOIN ( SELECT dataset, exp, lm, MIN(wer) as min_wer "
-                     "           FROM results WHERE dataset='%s' GROUP BY exp, lm) i "
+                     "           FROM results WHERE dataset=? GROUP BY exp, lm) i "
                      "ON r.exp=i.exp AND r.lm=i.lm AND r.dataset=i.dataset AND r.wer <= i.min_wer")
-    c.execute(dev_set_query % 'dev')
+    c.execute(dev_set_query, ('dev',))
 
     min_dev = c.fetchall()
     d = []
     for exp, lm, lm_w, min_dev_wer in min_dev:
         c.execute(("SELECT * FROM results WHERE "
-                   "dataset='test' AND exp='%s' AND lm='%s' AND lm_w=%s"
-                   % (exp, lm, lm_w)))
-        d.append(c.fetchone())  # there should be only one row
+                   "dataset='test' AND exp=? AND lm=? AND lm_w=?"),
+                  (exp, lm, lm_w))
+        x = c.fetchall()
+        assert (len(x) == 1), "One row should be extracted."
+        d.append(x)
     t = Table(data=d, colnames=['exp', 'set', 'LMW', 'WER', 'SER'])
     print '%s\n==================' % str(t)
