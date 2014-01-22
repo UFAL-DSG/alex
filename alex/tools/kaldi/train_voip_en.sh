@@ -122,36 +122,36 @@ for s in $TEST_SETS ; do
     echo "Decode tri1"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri1/graph_${lm} $WORK/$s $EXP/tri1/decode_${s}
+      $EXP/tri1/graph_${lm} $WORK/$tgt_dir $EXP/tri1/decode_${tgt_dir}
     echo "Decode tri2a"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2a/graph_${lm} $WORK/$s $EXP/tri2a/decode_${s}
+      $EXP/tri2a/graph_${lm} $WORK/$tgt_dir $EXP/tri2a/decode_${tgt_dir}
     echo "Decode tri2b [LDA+MLLT]"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b/decode_${s}
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir}
     echo "Decode MMI on top of LDA+MLLT."
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mmi/decode_it4_${s}
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi/decode_it4_${tgt_dir}
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mmi/decode_it3_${s}
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi/decode_it3_${tgt_dir}
     echo "Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${s};
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir};
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it3_$s
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it3_${tgt_dir}
     echo "Decode MPE."
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mpe/decode_it4_$s || exit 1;
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mpe/decode_it4_${tgt_dir} || exit 1;
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 3 --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$s $EXP/tri2b_mpe/decode_it3_$s || exit 1;
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mpe/decode_it3_${tgt_dir} || exit 1;
   done
 done
 
