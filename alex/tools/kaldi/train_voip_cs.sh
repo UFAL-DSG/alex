@@ -113,12 +113,12 @@ for s in $TEST_SETS ; do
     lm=`basename "$lm"`
     tgt_dir=${s}_`basename "$lm"`
     echo "Monophone decoding"
-    # note: steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+    # Note: steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
     # calls the command line once for each test,
     # and afterwards averages the WERs into (in this case $EXP/mono/decode/)
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/mono/graph_${lm} $WORK/$tgt_dir $EXP/mono/decode_${tgt_dir}
+      $EXP/mono/graph_${lm} $WORK/${tgt_dir} $EXP/mono/decode_${tgt_dir}
     echo "Decode tri1"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
