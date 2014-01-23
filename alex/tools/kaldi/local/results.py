@@ -165,7 +165,7 @@ if __name__ == "__main__":
     min_dev_un = [(e, lm, lmw) for ((e, lm), lmw) in
                   dict([((e, lm), lmw) for e, lm, lmw in min_dev]).items()]
     # sort according LM -> sort results according experiment & LMs
-    min_dev_un.sort(key=lambda x: x[2])
+    min_dev_un.sort(key=lambda x: (x[1], x[0]))
 
     # extract corresponding test results to dev set
     d = []
