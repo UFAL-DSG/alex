@@ -27,10 +27,15 @@ class KaldiASR(object):
         self.logger = cfg['Logging']['system_logger']
         self.cfg = cfg
         kcfg = cfg['ASR']['Kaldi']
+        if os.path.isfile(kcfg['silent_phones']):
+            # replace the path of the file with its content
+            with open(kcfg['silent_phones'], 'r') as r:
+                kcfg['silent_phones'] = r.read()
 
         self.debug = kcfg['debug']
         self.wst = wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
+
         # specify all other options in config
         argv = ("--config=%(config)s --verbose=%(verbose)d "
                 "%(model)s %(hclg)s %(silent_phones)s" % kcfg)
@@ -86,12 +91,12 @@ class KaldiASR(object):
         nbest = lattice_to_nbest(lat, n=5)
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
-            words = ' '.join([self.wst[str(i)] for i in word_ids])
+            words = u' '.join([self.wst[i] for i in word_ids])
+            self.logger.debug(words)
             nblist.add(w, Utterance(words))
 
         # Log
         if len(nbest) == 0:
-            self.logger.warning('hyp_out: empty hypothesis')
             nblist.add(1.0, Utterance('Empty hypothesis: DEBUG'))
         if self.debug:
             output_file_name = os.path.join(

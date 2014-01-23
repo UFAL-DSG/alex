@@ -175,6 +175,7 @@ echo ""
 echo "Copying required files to target directory $dir"
 echo ""
 
+cp $model $dir || exit 1;
 cp $hclg/HCLG.fst $dir || exit 1;
 cp $lang/words.txt $dir || exit 1;
 cp $lang/phones/silence.csl $dir || exit 1;
