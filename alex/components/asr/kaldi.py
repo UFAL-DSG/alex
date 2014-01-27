@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # author: Ondrej Platek
+from __future__ import unicode_literals
+
+from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
 from pykaldi.utils import wst2dict, lattice_to_nbest
@@ -11,11 +13,10 @@ except ImportError as e:
     # FIXME PYTHONPATH I can change : sys.path insert into(0,)
     raise KaldiSetupException('%s\nTry setting PYTHONPATH or LD_LIBRARY_PATH' % e.message)
 import time
-from datetime import datetime
 import os
 
 
-class KaldiASR(object):
+class KaldiASR(ASRInterface):
 
     """ Wraps Kaldi lattice decoder,
 
@@ -24,15 +25,13 @@ class KaldiASR(object):
     """
 
     def __init__(self, cfg):
-        self.logger = cfg['Logging']['system_logger']
-        self.cfg = cfg
-        kcfg = cfg['ASR']['Kaldi']
+        super(KaldiASR, self).__init__(cfg)
+        kcfg = self.cfg['ASR']['Kaldi']
         if os.path.isfile(kcfg['silent_phones']):
             # replace the path of the file with its content
             with open(kcfg['silent_phones'], 'r') as r:
                 kcfg['silent_phones'] = r.read()
 
-        self.debug = kcfg['debug']
         self.wst = wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
 
@@ -42,7 +41,7 @@ class KaldiASR(object):
         argv = argv.split()
         with open(kcfg['config']) as r:
             conf_opt = r.read()
-            self.logger.info('argv: %s\nconfig: %s' % (argv, conf_opt))
+            self.syslog.info('argv: %s\nconfig: %s' % (argv, conf_opt))
 
         self.decoder = PyGmmLatgenWrapper()
         self.decoder.setup(argv)
@@ -66,13 +65,13 @@ class KaldiASR(object):
         """
         frame_total, start = 0, time.clock()
         self.decoder.frame_in(frame.payload)
-        self.logger.debug('frame_in of %d frames' % (len(frame.payload) / 2))
+        self.syslog.debug('frame_in of %d frames' % (len(frame.payload) / 2))
         dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
         while dec_t > 0:
             frame_total += dec_t
             dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
         if (frame_total > 0):
-            self.logger.debug('Forward decoding of %d frames in %s secs' % (
+            self.syslog.debug('Forward decoding of %d frames in %s secs' % (
                 frame_total, str(time.clock() - start)))
         return self
 
@@ -92,18 +91,14 @@ class KaldiASR(object):
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
-            self.logger.debug(words)
+            self.syslog.debug(words)
             nblist.add(w, Utterance(words))
 
         # Log
         if len(nbest) == 0:
-            nblist.add(1.0, Utterance('Empty hypothesis: DEBUG'))
-        if self.debug:
-            output_file_name = os.path.join(
-                self.logger.get_session_dir_name(),
-                '%s.fst' % str(datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')))
-            lat.write(output_file_name)
-        self.logger.info('utterance "probability" is %f' % utt_prob)
-        self.logger.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
+            nblist.add(1.0, Utterance('Empty hypothesis: Kaldi __FAIL__'))
+
+        self.syslog.info('utterance "probability" is %f' % utt_prob)
+        self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
 
         return nblist

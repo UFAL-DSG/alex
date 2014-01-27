@@ -28,7 +28,7 @@ def slu_factory(cfg, slu_type=None):
     """
 
     #This new and simple factory code.
-    if slu_type == None:
+    if slu_type is None:
         slu_type = get_slu_type(cfg)
 
     if inspect.isclass(slu_type) and issubclass(slu_type, DAILogRegClassifier):

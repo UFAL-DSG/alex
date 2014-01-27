@@ -9,9 +9,7 @@ if __name__ == "__main__":
 
 import multiprocessing
 import time
-
-import alex.components.asr.google as GASR
-import alex.components.asr.julius as JASR
+from alex.components.asr.common import asr_factory
 
 from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
@@ -23,6 +21,7 @@ from alex.utils.procname import set_proc_name
 
 
 class ASR(multiprocessing.Process):
+
     """
     ASR recognizes input audio and returns an N-best list hypothesis or
     a confusion network.
@@ -65,17 +64,8 @@ class ASR(multiprocessing.Process):
         self.asr_hypotheses_out = asr_hypotheses_out
         self.close_event = close_event
 
-        self.asr = None
-        if self.cfg['ASR']['type'] == 'Google':
-            self.asr = GASR.GoogleASR(cfg)
-        elif self.cfg['ASR']['type'] == 'Julius':
-            self.asr = JASR.JuliusASR(cfg)
-        elif self.cfg['ASR']['type'] == 'Kaldi':
-            import alex.components.asr.kaldi as KASR
-            self.asr = KASR.KaldiASR(cfg)
-        else:
-            raise ASRException(
-                'Unsupported ASR engine: %s' % (self.cfg['ASR']['type'], ))
+        # Load the ASR
+        self.asr = asr_factory(cfg)
 
         self.system_logger = self.cfg['Logging']['system_logger']
         self.session_logger = self.cfg['Logging']['session_logger']
