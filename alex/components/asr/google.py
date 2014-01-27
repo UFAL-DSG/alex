@@ -4,7 +4,6 @@
 #this cannot be used with GASR
 #from __future__ import unicode_literals
 
-import urllib
 import urllib2
 import json
 
