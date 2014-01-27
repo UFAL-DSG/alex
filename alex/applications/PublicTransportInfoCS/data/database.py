@@ -16,7 +16,7 @@ database = {
         "find_connection": ["najít spojení", "najít spoj", "zjistit spojení",
                             "zjistit spoj", "hledám spojení", 'spojení', 'spoj',
                            ],
-        "find_platform": ["najít nástupště", "zjistit nástupiště", ],
+        "find_platform": ["najít nástupiště", "zjistit nástupiště", ],
         'weather': ['počasí', ],
     },
     "time": {
