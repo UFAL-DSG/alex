@@ -11,9 +11,69 @@ Usage:
 """
 
 from __future__ import unicode_literals
-from logging import codecs
+import codecs
 import sys
 from getopt import getopt
+
+
+def load_list(filename, suppress_comments=False, cols=1):
+    data = []
+    with codecs.open(filename, 'r', 'UTF-8') as fh_in:
+        for line in fh_in:
+            line = line.strip()
+            # handle comments (strip or skip)
+            if line.startswith('#'):
+                if suppress_comments:
+                    line = line.lstrip('#')
+                else:
+                    continue
+            # handle columns -- convert to arrays, delete superfluous
+            line = line.split("\t")
+            line = line[:cols]
+            if len(line) == 1:
+                data.append(line[0])
+            else:
+                data.append(line)
+    return data
+
+
+def get_city_for_stop(cities, stop, main_city):
+    # stop is a city by itself
+    if stop in cities:
+        return stop
+    # try to split by ',' and '-'
+    for sepchar in [',', '-', ';', ' u ', ' nad ', ' pod ', ' v ', 'zastávka', 'město', '{', 'hlavní nádraží', 'hl. n.']:
+        if sepchar in stop:
+            prefix, _ = [x.strip() for x in stop.split(sepchar, 1)]
+            if prefix in cities:
+                return prefix
+    # fallback to main city or store in list of unresolved
+    if main_city is not None:
+        return main_city
+    else:
+        return None
+
+
+def add_cities_to_stops(cities, stops, main_city):
+
+    mapping = {}
+    unresolved = []
+
+    def add_to_mapping(city, stop):
+        entry = mapping.get(city, set())
+        entry.add(stop)
+        mapping[city] = entry
+
+    # process list of stops
+    for stop in stops:
+        city = get_city_for_stop(cities, stop, main_city)
+        if city:
+            add_to_mapping(city, stop)
+        else:
+            unresolved.append(stop)
+    # return the result
+    return mapping, unresolved
+
 
 def main():
     opts, files = getopt(sys.argv[1:], 'd:')
@@ -23,53 +83,31 @@ def main():
             main_city = arg
 
     # sanity check
-    if len(files) != 3 or main_city is None:
+    if len(files) != 3:
         sys.exit(__doc__)
 
+    # initialization
     file_stops, file_cities, file_out = files
-    cities = set()
-    mapping = {}
+    stderr = codecs.getwriter('UTF-8')(sys.stderr)
 
-    with codecs.open(file_cities, 'r', 'UTF-8') as fh_in:
-        for line in fh_in:
-            line = line.strip()
-            cities.add(line)
+    # load list of cities
+    cities = set(load_list(file_cities, suppress_comments=True))
+    # load list of stops
+    stops = load_list(file_stops, cols=1)
 
+    mapping, unresolved = add_cities_to_stops(cities, stops, main_city)
 
-    def add_to_mapping(city, stop):
-        entry = mapping.get(city, set())
-        entry.add(stop)
-        mapping[city] = entry
-
-    with codecs.open(file_stops, 'r', 'UTF-8') as fh_in:
-        for line in fh_in:
-            line = line.strip()
-            if "\t" in line:
-                line, _ = line.split("\t", 1)
-            stop = line
-            # stop is a city by itself
-            if stop in cities:
-                add_to_mapping(stop, stop)
-                continue
-            # try to split by ',' and '-'
-            found = False
-            for sepchar in [',', '-', ' u ', ' nad ', ' pod ', 'zastávka', 'město', '{', 'hlavní nádraží', 'hl. n.']:
-                if sepchar in stop:
-                    prefix, suffix = [x.strip() for x in line.split(sepchar, 1)]
-                    if prefix in cities:
-                        add_to_mapping(prefix, stop)
-                        found = True
-                        break
-            if found:
-                continue
-            # fallback to Prague
-            add_to_mapping('Praha', stop)
-
+    # write the result
     with codecs.open(file_out, 'w', 'UTF-8') as fh_out:
         for city in sorted(mapping.keys()):
             for stop in sorted(mapping[city]):
                 print >> fh_out, city + "\t" + stop
 
+    # print any errors
+    if unresolved:
+        print >> stderr, 'Could not resolve:'
+        for stop in unresolved:
+            print >> stderr, stop
 
 if __name__ == '__main__':
     main()
