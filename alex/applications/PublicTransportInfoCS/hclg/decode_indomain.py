@@ -10,7 +10,6 @@ import os
 import xml.dom.minidom
 import fnmatch
 import argparse
-# import codecs
 
 import autopath
 
@@ -19,7 +18,7 @@ from alex.utils.config import Config
 from alex.components.asr.common import asr_factory
 from alex.corpustools.text_norm_cs import normalise_text, exclude_asr
 from alex.corpustools.wavaskey import save_wavaskey
-from alex.corpustools.asrscore import score_file
+from alex.corpustools.asrscore import score
 
 
 def main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg):
@@ -28,11 +27,12 @@ def main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg):
 
     print 'Collecting files under %s with glob %s' % (indomain_data_dir, glob)
     files = []
-# for root, dirnames, filenames in os.walk(indomain_data_dir, followlinks=True):
-#     for filename in fnmatch.filter(filenames, glob):
-#         files.append(os.path.join(root, filename))
-    files = [
-        '/ha/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/part1/2013-06-27-09-33-25.116055-CEST-00420221914256/asr_transcribed.xml']
+    for root, dirnames, filenames in os.walk(indomain_data_dir, followlinks=True):
+        for filename in fnmatch.filter(filenames, glob):
+            files.append(os.path.join(root, filename))
+
+    # files = [
+    #     '/ha/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/part1/2013-06-27-09-33-25.116055-CEST-00420221914256/asr_transcribed.xml']  # DEBUG example
 
     trn, dec = [], []
     for fn in files:
@@ -82,7 +82,7 @@ def main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg):
 
     save_wavaskey(file_trn_lst, trn_dict)
     save_wavaskey(file_dec_lst, dec_dict)
-    score_file(file_trn_lst, file_dec_lst)
+    score(file_trn_lst, file_dec_lst)
 
 
 if __name__ == '__main__':
