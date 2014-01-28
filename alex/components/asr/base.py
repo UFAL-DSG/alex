@@ -5,7 +5,8 @@ from __future__ import unicode_literals
 
 import autopath
 from alex.components.asr.exceptions import ASRException
-from alex.utils import load_wav
+from alex.utils.audio import load_wav
+from alex.components.hub.messages import Frame
 
 
 class ASRInterface(object):
@@ -57,7 +58,8 @@ class ASRInterface(object):
         return self.hyp_out()
 
     def rec_wav_file(self, wav_path):
-        pcm = load_wav(wav_path)
-        res = self.rec_wave(pcm)
+        pcm = load_wav(self.cfg, wav_path)
+        frame = Frame(pcm)
+        res = self.rec_wave(frame)
         self.flush()
         return res
