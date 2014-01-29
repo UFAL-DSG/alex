@@ -7,21 +7,66 @@ and runs the Kaldi decoding using the AM and HCLG graph from models directory
 """
 
 import os
+import errno
 import xml.dom.minidom
 import fnmatch
 import argparse
+import time
+from math import sqrt
 
 import autopath
 
 import alex.utils.various as various
 from alex.utils.config import Config
+from alex.utils.audio import wav_duration
 from alex.components.asr.common import asr_factory
-from alex.corpustools.text_norm_cs import normalise_text, exclude_asr
+from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey
-from alex.corpustools.asrscore import score
+from alex.corpustools.asrscore import score_file, score
 
 
-def main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg):
+def compute_save_stat(outdir, trn, dec, wav_len, dec_len):
+    trn_dict = dict(trn)
+    dec_dict = dict(dec)
+    wavlen_dict = dict(wav_len)
+    declen_dict = dict(dec_len)
+
+    reference = os.path.join(outdir, 'ref_trn.txt')
+    hypothesis = os.path.join(outdir, 'dec_trn.txt')
+    save_wavaskey(reference, trn_dict)
+    save_wavaskey(hypothesis, dec_dict)
+    save_wavaskey(os.path.join(outdir, 'wavlen.txt'), wavlen_dict)
+    save_wavaskey(os.path.join(outdir, 'dec_duration.txt'), declen_dict)
+
+    rtf, d_tot, w_tot = [], 0, 0
+    for k in declen_dict.keys():
+        w, d = wavlen_dict[k], declen_dict[k]
+        d_tot, w_tot = d_tot + d, w_tot + w
+        rtf.append(float(d) / w)
+    rtf_global = float(d_tot) / w_tot
+
+    mean = sum(rtf) / len(rtf)
+    var = sum([r * r for r in rtf]) / len(rtf) - (mean * mean)
+    print """
+    Computing 0.95 confidence interval ~= mean +- 2*std_dev for Gauss distribution
+    RTF 0.95 confidence interval assuming Gaus distribution %(mean)f +- %(stdv)f
+    Global RTF: %(rtfglob)f""" % {'rtfglob': rtf_global, 'mean': mean, 'stdv': 2 * sqrt(var)}
+
+    score(reference, hypothesis)
+    # corr, sub, dels, ins, wer, nwords = score_file(trn_dict, dec_dict)
+
+    # print """
+    # Please note that the scoring is implicitly ignoring all non-speech events.
+
+    # |==============================================================================================|
+    # |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
+    # |----------------------------------------------------------------------------------------------|
+    # | Sum/Avg    |{num_sents:^14}|{num_words:^11.0f}|{corr:^10.2f}|{sub:^10.2f}|{dels:^10.2f}|{ins:^10.2f}|{wer:^10.2f}|
+    # |==============================================================================================|
+    # """.format(num_sents=len(trn_dict), num_words=nwords, corr=corr, sub=sub, dels=dels, ins=ins, wer=wer)
+
+
+def main(indomain_data_dir, outdir, cfg):
     glob = 'asr_transcribed.xml'
     asr = asr_factory(cfg)
 
@@ -31,58 +76,68 @@ def main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg):
         for filename in fnmatch.filter(filenames, glob):
             files.append(os.path.join(root, filename))
 
+    # # DEBUG example
     # files = [
-    #     '/ha/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/part1/2013-06-27-09-33-25.116055-CEST-00420221914256/asr_transcribed.xml']  # DEBUG example
+    #     '/ha/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/part1/2013-06-27-09-33-25.116055-CEST-00420221914256/asr_transcribed.xml']
 
-    trn, dec = [], []
-    for fn in files:
-        doc = xml.dom.minidom.parse(fn)
-        turns = doc.getElementsByTagName("turn")
-        f_dir = os.path.dirname(fn)
+    try:
+        trn, dec, dec_len, wav_len = [], [], [], []
+        for fn in files:
+            doc = xml.dom.minidom.parse(fn)
+            turns = doc.getElementsByTagName("turn")
+            f_dir = os.path.dirname(fn)
 
-        for turn in turns:
-            if turn.getAttribute('speaker') != 'user':
-                continue
+            for turn in turns:
+                if turn.getAttribute('speaker') != 'user':
+                    continue
 
-            recs = turn.getElementsByTagName("rec")
-            trans = turn.getElementsByTagName("asr_transcription")
+                recs = turn.getElementsByTagName("rec")
+                trans = turn.getElementsByTagName("asr_transcription")
 
-            if len(recs) != 1:
-                print "Skipping a turn {turn} in file: {fn} - recs: {recs}".format(turn=turn.getAttribute('turn_number'), fn=fn, recs=len(recs))
-                continue
+                if len(recs) != 1:
+                    print "Skipping a turn {turn} in file: {fn} - recs: {recs}".format(turn=turn.getAttribute('turn_number'), fn=fn, recs=len(recs))
+                    continue
 
-            if len(trans) == 0:
-                print "Skipping a turn in {fn} - trans: {trans}".format(fn=fn, trans=len(trans))
-                continue
+                if len(trans) == 0:
+                    print "Skipping a turn in {fn} - trans: {trans}".format(fn=fn, trans=len(trans))
+                    continue
 
-            wav_file = recs[0].getAttribute('fname')
-            # FIXME: Check whether the last transcription is really the best! FJ
-            t = various.get_text_from_xml_node(trans[-1])
-            t = normalise_text(t)
+                wav_file = recs[0].getAttribute('fname')
+                # FIXME: Check whether the last transcription is really the best! FJ
+                t = various.get_text_from_xml_node(trans[-1])
+                t = normalise_text(t)
 
-            if exclude_asr(t):
-                continue
+                if exclude_lm(t):
+                    continue
 
-            # TODO is it still valid? OP
-            # The silence does not have a label in the language model.
-            t = t.replace('_SIL_', '')
-            trn.append((wav_file, t))
+                # TODO is it still valid? OP
+                # The silence does not have a label in the language model.
+                t = t.replace('_SIL_', '')
+                trn.append((wav_file, t))
 
-            wav_path = os.path.join(f_dir, wav_file)
-            dec_trans = asr.rec_wav_file(wav_path)
-            best = unicode(dec_trans.get_best())
-            dec.append((wav_file, best))
+                wav_path = os.path.join(f_dir, wav_file)
+                start = time.clock()
+                dec_trans = asr.rec_wav_file(wav_path)
+                dec_dur = time.clock() - start
+                dec_len.append((wav_file, dec_dur))
+                best = unicode(dec_trans.get_best())
+                dec.append((wav_file, best))
+                wav_dur = wav_duration(wav_path)
+                wav_len.append((wav_file, wav_dur))
 
-            print 'Decoded %s' % str(wav_path)
-            print 'reference %s' % t
-            print 'decoded %s' % best
-
-    trn_dict = dict(trn)
-    dec_dict = dict(dec)
-
-    save_wavaskey(file_trn_lst, trn_dict)
-    save_wavaskey(file_dec_lst, dec_dict)
-    score(file_trn_lst, file_dec_lst)
+                print 'Wav file  %s' % str(wav_path)
+                print 'Reference %s' % t
+                print 'Decoded   %s' % best
+                print 'Wav dur %.2f' % wav_dur
+                print 'Dec dur %.2f' % dec_dur
+    except Exception as e:
+        print 'PARTIAL RESULTS were saved to %s' % outdir
+        print e
+        import ipdb
+        ipdb.set_trace()
+        raise e
+    finally:
+        compute_save_stat(outdir, trn, dec, wav_len, dec_len)
 
 
 if __name__ == '__main__':
@@ -91,11 +146,27 @@ if __name__ == '__main__':
         description=""" TODO """)
 
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
+    parser.add_argument('indomain_data_dir',
+                        help='Directory which should contain symlinks or directories with transcribed ASR')
+    parser.add_argument('-o', '--out-dir', default='decoded',
+                        help='The computed statistics are saved the out-dir directory')
+    parser.add_argument('-f', '--force', type=bool, default=False,
+                        nargs='?', help='If out-dir exists write the results there anyway')
     args = parser.parse_args()
 
-    cfg = Config.load_configs(args.configs)
-    indomain_data_dir = "indomain_data"
-    file_trn_lst = 'file_trn.txt'
-    file_dec_lst = 'file_dec.txt'
+    if os.path.exists(args.out_dir):
+        if not args.force:
+            print "\nThe directory '%s' already exists!\n" % args.out_dir
+            parser.print_usage()
+            parser.exit()
+    else:
+        # create the dir
+        try:
+            os.makedirs(args.out_dir)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST or os.path.isdir(args.out_dir):
+                raise exc
 
-    main(indomain_data_dir, file_trn_lst, file_dec_lst, cfg)
+    cfg = Config.load_configs(args.configs)
+
+    main(args.indomain_data_dir, args.out_dir, cfg)
