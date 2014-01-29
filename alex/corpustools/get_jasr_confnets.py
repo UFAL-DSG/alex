@@ -36,6 +36,8 @@ import sys
 from time import sleep
 import traceback
 
+import autopath
+
 from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
