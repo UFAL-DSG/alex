@@ -36,13 +36,15 @@ import sys
 from time import sleep
 import traceback
 
+import autopath
+
 from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
 from alex.corpustools.cued import find_with_ignorelist
 from alex.utils.audio import load_wav
 from alex.utils.config import Config
-from alex.utils.io import GrepFilter
+from alex.utils.fs import GrepFilter
 
 DEBUG = False
 # DEBUG = True
