@@ -4,6 +4,8 @@ renice 20 $$
 
 # Load training parameters
 . ./env_voip_en.sh
+# Source optional config if exists
+[ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
 
 . ./path.sh "$KALDI_ROOT"
 
@@ -16,7 +18,7 @@ renice 20 $$
 #######################################################################
 
 echo " Copy the configuration files to $EXP directory."
-local/save_check.sh $WORK/local $WORK/mfcc $EXP || exit 1;
+local/save_check.sh $EXP $WORK/*  || exit 1;
 
 local/data_split.sh --every_n $EVERY_N $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
 
@@ -63,7 +65,7 @@ echo "Train tri1 [first triphone pass]"
 steps/train_deltas.sh --cmd "$train_cmd" \
   $pdf $gauss $WORK/train $WORK/lang $EXP/mono_ali $EXP/tri1 || exit 1;
 
-draw-tree $WORK/lang/phones.txt $EXP/tri1/tree | dot -Tsvg -Gsize=8,10.5  > graph.svg
+# draw-tree $WORK/lang/phones.txt $EXP/tri1/tree | dot -Tsvg -Gsize=8,10.5  > graph.svg
 
 echo "Align tri1"
 steps/align_si.sh --nj $njobs --cmd "$train_cmd" \
@@ -131,7 +133,7 @@ for s in $TEST_SETS ; do
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir}
-    # Note: change --iter option to select the best model. 4.mdl == final.mdl 
+    # Note: change --iter option to select the best model. 4.mdl == final.mdl
     echo "Decode MMI on top of LDA+MLLT."
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
@@ -151,5 +153,4 @@ done
 echo "Successfully trained and evaluated all the experiments"
 local/results.py $EXP | tee $EXP/results.log
 
-local/export_models.sh $WORK/models $EXP/tri2b
-# local/backup.sh $WORK/exp `PWD`/Results
+local/export_models.sh $TGT_MODELS $EXP $WORK/lang

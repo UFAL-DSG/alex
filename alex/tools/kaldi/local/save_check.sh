@@ -14,16 +14,36 @@
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
 
-LOCAL=$1
-MFCC=$2
-EXP=$3
+EXP=$1
 
 # make sure that the directories exists
-mkdir -p "$LOCAL"
-mkdir -p "$MFCC"
-mkdir -p "$EXP"
+conflict=""
+for d in $@ ; do
+    if [ -d $d ] || [ -f $d ] ; then
+        conflict="$conflict $d"
+    fi
+done
+
+if [[ ! -z conflict ]] ; then
+    echo "Running new experiment will create following directories."
+    echo "Some of them already exists!"
+    echo ""
+    echo "Existing directories:"
+    for d in $conflict ; do 
+        echo "   $d"
+    done
+    read -p "Should I delete the conflicting directories NOW y/n?"
+    case $REPLY in
+        [Yy]* ) echo "Deleting $conflict directories"; rm -rf $conflict;;
+        * ) echo 'Keeping conflicting directories and exiting ...'; exit 1;;
+    esac
+fi
+
+for d in $@ ; do
+    mkdir -p $d
+done
 
 # Save the variables set up 
-(set -o posix ; set ) > $EXP/bash_vars.log
-git log -1 > $EXP/git_log_state.log
-git diff > $EXP/git_diff_state.log
+(set -o posix ; set ) > $EXP/experiment_bash_vars.log
+git log -1 > $EXP/alex_gitlog.log
+git diff > $EXP/alex_gitdiff.log

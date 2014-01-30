@@ -3,19 +3,23 @@
 locdata=$1
 locdict=$2
 
+cmu_dict=common/cmudict.0.7a
+cmu_ext=common/cmudict.ext
 
-if [ ! -f common/cmudict.0.7a ]; then
+mkdir -p $locdict
+
+if [ ! -f $cmudict ]; then
   echo "--- Downloading CMU dictionary ..."
   svn export http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict.0.7a \
-     common/cmudict.0.7a || exit 1;
+     $cmu_dict || exit 1;
 fi
 
 echo; echo "If common/cmudict.ext exists, add extra pronunciation to dictionary" ; echo
-cat common/cmudict.0.7a common/cmudict.ext > $locdict/cmudict_ext.txt
+cat $cmu_dict  $cmu_ext > $locdict/cmudict_ext.txt 2> /dev/null  # ignoring if no extension
 
 echo "--- Striping stress and pronunciation variant markers from cmudict ..."
-perl $locdict/cmudict/scripts/make_baseform.pl \
-  $locdict/cmudict_ext /dev/stdout |\
+perl local/make_baseform.pl \
+  $locdict/cmudict_ext.txt /dev/stdout |\
   sed -e 's:^\([^\s(]\+\)([0-9]\+)\(\s\+\)\(.*\):\1\2\3:' > $locdict/cmudict-plain.txt
 
 echo "--- Searching for OOV words ..."
