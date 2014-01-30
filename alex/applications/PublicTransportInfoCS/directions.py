@@ -5,11 +5,9 @@ from __future__ import unicode_literals
 
 import urllib
 from datetime import datetime
-from datetime import time as dttime
+import os.path
 import time
 import json
-import os.path
-import codecs
 from alex.tools.apirequest import APIRequest
 from suds.client import Client
 from crws_enums import *
@@ -17,6 +15,7 @@ import pickle
 import gzip
 import re
 import sys
+import codecs
 from alex.utils.cache import lru_cache
 
 
@@ -196,7 +195,13 @@ class CRWSDirections(Directions):
 
     def __init__(self, from_stop, to_stop, from_city=None, to_city=None,
                  input_data={}, finder=None):
+        # basic initialization
         super(CRWSDirections, self).__init__(from_stop, to_stop, from_city, to_city)
+        self.finder = None
+        self.handle = None
+        # appear totally empty in case of any errors
+        if hasattr(input_data, '_iResult') and input_data._iResult != 0:
+            return
         # remember finder and handle if we got them
         if finder is not None:
             self.handle = input_data._iHandle
@@ -204,7 +209,7 @@ class CRWSDirections(Directions):
         # parse the connection information, if available
         if hasattr(input_data, 'oConnInfo'):
             for route in input_data.oConnInfo.aoConnections:
-                self.routes.append(CRWSRoute(route))
+                self.routes.append(CRWSRoute(route, self.finder))
 
     def __getitem__(self, index):
         # try to load further data if it is missing
@@ -212,21 +217,21 @@ class CRWSDirections(Directions):
             data = self.finder.get_directions_by_handle(self.handle, len(self), index + 1)
             if hasattr(data, 'aoConnections'):
                 for route in data.aoConnections:
-                    self.routes.append(CRWSRoute(route))
+                    self.routes.append(CRWSRoute(route, self.finder))
         return super(CRWSDirections, self).__getitem__(index)
 
 
 class CRWSRoute(Route):
 
-    def __init__(self, input_data):
+    def __init__(self, input_data, finder=None):
         super(CRWSRoute, self).__init__()
         # only one leg currently
-        self.legs.append(CRWSRouteLeg(input_data))
+        self.legs.append(CRWSRouteLeg(input_data, finder))
 
 
 class CRWSRouteLeg(RouteLeg):
 
-    def __init__(self, input_data):
+    def __init__(self, input_data, finder=None):
         super(CRWSRouteLeg, self).__init__()
         for step in input_data.aoTrains:
             # treat walking steps separately
@@ -234,7 +239,7 @@ class CRWSRouteLeg(RouteLeg):
             if hasattr(step, '_iLinkDist'):
                 self.steps.append(CRWSRouteStep(CRWSRouteStep.MODE_WALKING, step._iLinkDist))
             # normal transit steps
-            self.steps.append(CRWSRouteStep(CRWSRouteStep.MODE_TRANSIT, step))
+            self.steps.append(CRWSRouteStep(CRWSRouteStep.MODE_TRANSIT, step, finder))
 
 
 class CRWSRouteStep(RouteStep):
@@ -265,7 +270,7 @@ class CRWSRouteStep(RouteStep):
                             'trolleybus': 'TROLLEYBUS',
                             'ship': 'FERRY', }
 
-    def __init__(self, travel_mode, input_data):
+    def __init__(self, travel_mode, input_data, finder=None):
         super(CRWSRouteStep, self).__init__(travel_mode)
 
         if self.travel_mode == self.MODE_TRANSIT:
@@ -289,7 +294,12 @@ class CRWSRouteStep(RouteStep):
                     self.line_name += ' ' + train_name
                 else:
                     self.line_name = ' '.join((train_type_shortcut, self.line_name, train_name))
-            # normalize some stops' names
+            # if finder is present, use its mapping to convert stop names into pronounceable form
+            if finder is not None:
+                self.departure_stop = finder.reverse_mapping.get(self.departure_stop, self.departure_stop)
+                self.arrival_stop = finder.reverse_mapping.get(self.arrival_stop, self.arrival_stop)
+                self.headsign = finder.reverse_mapping.get(self.headsign, self.headsign)
+            # further normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
 
@@ -379,6 +389,8 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
     # file name for caching 'Combination Info'
     COMBINATION_INFO_FNAME = 'crws_combination.pickle.gz'
+    # name of the file containing city + stop -> IDOS-list + IDOS-stop mapping
+    CONVERSION_FNAME = 'data/idos_map.tsv'
 
     def __init__(self, cfg):
         DirectionsFinder.__init__(self)
@@ -389,11 +401,14 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         self.user_id = cfg['CRWS']['user_id']
         self.user_desc = cfg['CRWS']['user_desc']
         self.max_connections_count = cfg['CRWS']['max_connections_count']
+        self.file_dir = os.path.dirname(os.path.abspath(__file__))
         # renew list of lists
         self.combinations = self._load_combination_info()
         self.default_comb_id = self.combinations[0]['_sID']
         # parse list of lists and get ID of cities list and stop names list
         self.city_list_id, self.stops_list_for_city = self._get_stop_list_ids()
+        # load mapping from ALEX stops to IDOS stops and back
+        self.mapping, self.reverse_mapping = self._load_stops_mapping()
 
     def search_stop(self, stop_mask, city=None, max_count=0, skip_count=0):
         return self.client.service.SearchGlobalListItemInfo(
@@ -415,6 +430,11 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     @lru_cache(maxsize=10)
     def get_directions(self, from_stop=None, to_stop=None, from_city=None, to_city=None,
                        departure_time=None, arrival_time=None):
+        # try to map from-to to IDOS identifiers, default to originals
+        self.system_logger.info("ALEX: %s -- %s, %s -- %s" % (from_stop, from_city, to_stop, to_city))
+        from_city, from_stop = self.mapping.get((from_city, from_stop), (from_city, from_stop))
+        to_city, to_stop = self.mapping.get((to_city, to_stop), (to_city, to_stop))
+        self.system_logger.info("IDOS: %s -- %s,  %s -- %s" % (from_stop, from_city, to_stop, to_city))
         # find from and to objects
         from_obj = None
         to_obj = None
@@ -503,7 +523,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         """Get a list of accessible object lists (cached using pickles)."""
         # try to load cached data, set cached date to -Inf on failure
         try:
-            fh = gzip.open(self.COMBINATION_INFO_FNAME, 'r')
+            fh = gzip.open(os.path.join(self.file_dir, self.COMBINATION_INFO_FNAME), 'r')
             unpickler = pickle.Unpickler(fh)
             comb_info = unpickler.load()
             last_date = unpickler.load()
@@ -525,7 +545,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             last_date = new_comb_info[1]
             new_comb_info = _todict(new_comb_info[0][0], '_origClassName')
             try:
-                fh = gzip.open(self.COMBINATION_INFO_FNAME, 'wb')
+                fh = gzip.open(os.path.join(self.file_dir, self.COMBINATION_INFO_FNAME), 'wb')
                 pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(new_comb_info)
                 pickle.Pickler(fh, pickle.HIGHEST_PROTOCOL).dump(last_date)
                 fh.close()
@@ -534,3 +554,22 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         else:  # reply contains (old) timestamp only -- use cached data
             new_comb_info = comb_info
         return new_comb_info
+
+    def _load_stops_mapping(self):
+        """Load the mapping from ALEX stops format (city + pronounceable name) into IDOS
+        format (IDOS list + IDOS name including abbreviations and whatever rubbish).
+        Also creates a reverse mapping of stop names, so that pronounceable names are
+        returned.
+
+        @rtype: tuple
+        @return: Mapping (city, stop) -> (idos_list, idos_stop), mapping (idos_stop) -> (stop)
+        """
+        mapping = {}
+        reverse_mapping = {}
+        with codecs.open(os.path.join(self.file_dir, self.CONVERSION_FNAME), 'r', 'UTF-8') as fh:
+            for line in fh:
+                line = line.strip()
+                city, stop, idos_list, idos_stop = line.split("\t")
+                mapping[(city, stop)] = (idos_list, idos_stop)
+                reverse_mapping[idos_stop] = stop
+        return mapping, reverse_mapping
