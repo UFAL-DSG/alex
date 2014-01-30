@@ -18,7 +18,6 @@ import os
 import xml.dom.minidom
 import glob
 import codecs
-import random
 
 import autopath
 
@@ -26,48 +25,50 @@ import alex.corpustools.lm as lm
 import alex.utils.various as various
 
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
-
+from alex.corpustools.wavaskey import save_wavaskey
 
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
 indomain_data_dir               = "indomain_data"
 gen_data                        = lm.download_general_LM_data('cs')
 
+fn_pt_trn                       = "reference_transcription_trn.txt"
+fn_pt_dev                       = "reference_transcription_dev.txt"
+
 gen_data_norm                   = '01_gen_data_norm.txt.gz'
-gen_data_norm_selected          = '04_gen_data_norm.selected.txt'
 
-indomain_data_text_trn                          = "06_indomain_data_trn.txt"
-indomain_data_text_trn_norm                     = "07_indomain_data_trn_norm.txt"
-indomain_data_text_trn_norm_vocab               = "07_indomain_data_trn_norm.txt.vocab"
-indomain_data_text_trn_norm_count1              = "07_indomain_data_trn_norm.txt.count1"
-indomain_data_text_trn_norm_pg_arpa             = "07_indomain_data_trn_norm.txt.pg.arpa"
-indomain_data_text_trn_norm_cls                 = "07_indomain_data_trn_norm_cls.txt"
-indomain_data_text_trn_norm_cls_classes         = "07_indomain_data_trn_norm_cls.classes"
-indomain_data_text_trn_norm_cls_vocab           = "08_indomain_data_trn_norm_cls.vocab"
-indomain_data_text_trn_norm_cls_count1          = "09_indomain_data_trn_norm_cls.count1"
-indomain_data_text_trn_norm_cls_pg_arpa         = "10_indomain_data_trn_norm_cls.pg.arpa"
-indomain_data_text_trn_norm_cls_pg_arpa_scoring = "10_indomain_data_trn_norm_cls.pg.arpa.gen_scoring.gz"
+indomain_data_text_trn                              = "04_indomain_data_trn.txt"
+indomain_data_text_trn_norm                         = "04_indomain_data_trn_norm.txt"
 
-indomain_data_text_dev                      = "11_indomain_data_dev.txt"
-indomain_data_text_dev_norm                 = "12_indomain_data_dev_norm.txt"
-indomain_data_text_dev_norm_cls             = "12_indomain_data_dev_norm_cls.txt"
-indomain_data_text_dev_norm_cls_classes     = "12_indomain_data_dev_norm_cls.classes"
-indomain_data_text_dev_norm_cls_vocab       = "13_indomain_data_dev_norm_cls.vocab"
-indomain_data_text_dev_norm_cls_pg_arpa     = "14_indomain_data_dev_norm_cls.pg.arpa"
+indomain_data_text_dev                              = "05_indomain_data_dev.txt"
+indomain_data_text_dev_norm                         = "05_indomain_data_dev_norm.txt"
 
+indomain_data_text_trn_norm_vocab                   = "06_indomain_data_trn_norm.txt.vocab"
+indomain_data_text_trn_norm_count1                  = "06_indomain_data_trn_norm.txt.count1"
+indomain_data_text_trn_norm_pg_arpa                 = "06_indomain_data_trn_norm.txt.pg.arpa"
+
+indomain_data_text_trn_norm_cls                     = "07_indomain_data_trn_norm_cls.txt"
+indomain_data_text_trn_norm_cls_classes             = "07_indomain_data_trn_norm_cls.classes"
+indomain_data_text_trn_norm_cls_vocab               = "07_indomain_data_trn_norm_cls.vocab"
+indomain_data_text_trn_norm_cls_count1              = "07_indomain_data_trn_norm_cls.count1"
+indomain_data_text_trn_norm_cls_pg_arpa             = "07_indomain_data_trn_norm_cls.pg.arpa"
+
+indomain_data_text_trn_norm_cls_pg_arpa_scoring     = "10_indomain_data_trn_norm_cls.pg.arpa.gen_scoring.gz"
+
+gen_data_norm_selected                              = '11_gen_data_norm.selected.txt'
 
 extended_data_text_trn_norm                         = "20_extended_data_trn_norm.txt"
-extended_data_text_trn_norm_cls                     = "21_extended_data_trn_norm_cls.txt"
-extended_data_text_trn_norm_cls_classes             = "22_extended_data_trn_norm_cls.classes"
-extended_data_text_trn_norm_cls_vocab               = "23_extended_data_trn_norm_cls.vocab"
-extended_data_text_trn_norm_cls_count1              = "24_extended_data_trn_norm_cls.count1"
-extended_data_text_trn_norm_cls_pg_arpa             = "25_extended_data_trn_norm_cls.pg.arpa"
+extended_data_text_trn_norm_cls                     = "20_extended_data_trn_norm_cls.txt"
+extended_data_text_trn_norm_cls_classes             = "20_extended_data_trn_norm_cls.classes"
+extended_data_text_trn_norm_cls_vocab               = "20_extended_data_trn_norm_cls.vocab"
+extended_data_text_trn_norm_cls_count1              = "20_extended_data_trn_norm_cls.count1"
+extended_data_text_trn_norm_cls_pg_arpa             = "20_extended_data_trn_norm_cls.pg.arpa"
 extended_data_text_trn_norm_cls_pg_arpa_filtered    = "25_extended_data_trn_norm_cls.filtered.pg.arpa"
 
 expanded_lm_vocab       = "26_expanded.vocab"
 expanded_lm_pg          = "26_expanded.pg.arpa"
 
-mixing_weight           = "0.8"
+mixing_weight           = "0.7"
 mixed_lm_vocab          = "27_mixed.vocab"
 mixed_lm_pg             = "27_mixed.pg.arpa"
 
@@ -112,12 +113,14 @@ if not os.path.exists(indomain_data_text_trn_norm):
     files = various.flatten(files)
 
     tt = []
+    pt = []
     for fn in files:
 #            print "Processing:", fn
         doc = xml.dom.minidom.parse(fn)
         turns = doc.getElementsByTagName("turn")
         
-        for turn in turns: 
+        for turn in turns:
+            recs_list = turn.getElementsByTagName("rec")
             trans_list = turn.getElementsByTagName("asr_transcription")
 
             if trans_list:
@@ -134,48 +137,31 @@ if not os.path.exists(indomain_data_text_trn_norm):
 
                 tt.append(t)
 
-    random.seed(0)
-    random.shuffle(tt)
-    t_train = tt[:int(0.5*len(tt))]
-    t_dev = tt[int(0.5*len(tt)):]
+                wav_file = recs_list[0].getAttribute('fname')
+                wav_path = os.path.realpath(os.path.join(os.path.dirname(fn), wav_file))
+
+                pt.append((wav_path, t))
+
+    t_train = tt[:int(0.9*len(tt))]
+    t_dev = tt[int(0.9*len(tt)):]
 
     with codecs.open(indomain_data_text_trn,"w", "UTF-8") as w:
         w.write('\n'.join(t_train))
     with codecs.open(indomain_data_text_dev,"w", "UTF-8") as w:
         w.write('\n'.join(t_dev))
 
+    pt_train = pt[:int(0.9*len(pt))]
+    pt_dev = pt[int(0.9*len(pt)):]
+
+    save_wavaskey(fn_pt_trn, dict(pt_train))
+    save_wavaskey(fn_pt_dev, dict(pt_dev))
+
     # train data
-    # ! I am mixing in also the dev data, which is cheating! however it simply solves the OOV problem on dev set, and also it provides a better LM
-    # problem is that I cannot say whether I really improve the LM by mixing-in the general data.
-    cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+    cmd = r"cat %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
           (bootstrap_text,
            indomain_data_text_trn,
-           indomain_data_text_dev,
            "'",
            indomain_data_text_trn_norm)
-
-    print cmd
-    os.system(cmd)
-
-if not os.path.exists(indomain_data_text_trn_norm_cls_pg_arpa):
-    print "Generating class-based 5-gram in-domain language model from in-domain data"
-    print "-"*120
-    ###############################################################################################
-    # convert surface forms to classes
-    cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
-          (indomain_data_text_trn_norm_cls_classes,
-           classes,
-           indomain_data_text_trn_norm,
-           indomain_data_text_trn_norm_cls)
-
-    print cmd
-    os.system(cmd)
-
-    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -interpolate -memuse -lm %s" % \
-          (indomain_data_text_trn_norm_cls,
-           indomain_data_text_trn_norm_cls_vocab,
-           indomain_data_text_trn_norm_cls_count1,
-           indomain_data_text_trn_norm_cls_pg_arpa)
 
     print cmd
     os.system(cmd)
@@ -188,20 +174,26 @@ if not os.path.exists(indomain_data_text_trn_norm_cls_pg_arpa):
     print cmd
     os.system(cmd)
 
+if not os.path.exists(indomain_data_text_trn_norm_cls_pg_arpa):
+    print "Generating class-based 5-gram language model from trn in-domain data"
+    print "-"*120
+    ###############################################################################################
     # convert surface forms to classes
-    cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s  > %s" % \
-          (indomain_data_text_dev_norm_cls_classes,
+    cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
+          (indomain_data_text_trn_norm_cls_classes,
            classes,
-           indomain_data_text_dev_norm,
-           indomain_data_text_dev_norm_cls)
+           indomain_data_text_trn_norm,
+           indomain_data_text_trn_norm_cls)
 
     print cmd
     os.system(cmd)
 
-    cmd = "ngram-count -text %s -write-vocab %s -order 5 -wbdiscount -interpolate -memuse -lm %s" % \
-          (indomain_data_text_dev_norm_cls,
-           indomain_data_text_dev_norm_cls_vocab,
-           indomain_data_text_dev_norm_cls_pg_arpa)
+    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
+          (indomain_data_text_trn_norm_cls,
+           indomain_data_text_trn_norm_cls_vocab,
+           indomain_data_text_trn_norm_cls_count1,
+           indomain_data_text_trn_norm_cls_pg_arpa)
+
     print cmd
     os.system(cmd)
 
@@ -209,7 +201,7 @@ if not os.path.exists(indomain_data_text_trn_norm_pg_arpa):
     print
     print "Generating full 5-gram in-domain language model from in-domain data"
     print "-"*120
-    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -interpolate -memuse -lm %s" % \
+    cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
           (indomain_data_text_trn_norm,
            indomain_data_text_trn_norm_vocab,
            indomain_data_text_trn_norm_count1,
@@ -243,6 +235,7 @@ if not os.path.exists(extended_data_text_trn_norm_cls_pg_arpa):
     print "-"*120
     ###############################################################################################
     cmd = r"cat %s %s > %s" % (indomain_data_text_trn_norm, gen_data_norm_selected, extended_data_text_trn_norm)
+    # cmd = r"cat %s > %s" % (indomain_data_text_trn_norm, extended_data_text_trn_norm)
     print cmd
     os.system(cmd)
 
@@ -256,7 +249,7 @@ if not os.path.exists(extended_data_text_trn_norm_cls_pg_arpa):
     print cmd
     os.system(cmd)
 
-    cmd = "ngram-count -text %s -vocab %s -limit-vocab -write-vocab %s -write1 %s -order 5 -wbdiscount -interpolate -memuse -lm %s" % \
+    cmd = "ngram-count -text %s -vocab %s -limit-vocab -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
           (extended_data_text_trn_norm_cls,
            indomain_data_text_trn_norm_cls_vocab,
            extended_data_text_trn_norm_cls_vocab,
@@ -273,7 +266,7 @@ if not os.path.exists(extended_data_text_trn_norm_cls_pg_arpa):
     print cmd
     os.system(cmd)
 
-    cmd = "ngram -lm %s -order 5 -renorm -write-lm %s" % \
+    cmd = "ngram -lm %s -order 5 -write-lm %s -renorm" % \
           (extended_data_text_trn_norm_cls_pg_arpa_filtered,
            extended_data_text_trn_norm_cls_pg_arpa_filtered)
 
@@ -375,68 +368,90 @@ print
 print "Test language models"
 
 print "-"*120
-print "Indomain class-based dev 5-gram LM on dev in-domain data."
+print "Class-based trn 5-gram LM on trn data."
 print "-"*120
-os.system("ngram -lm %s -classes %s -order 5 -ppl %s" % (indomain_data_text_dev_norm_cls_pg_arpa,
-                                                         indomain_data_text_dev_norm_cls_classes,
-                                                         indomain_data_text_dev_norm))
+os.system("ngram -lm %s -classes %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_cls_pg_arpa,
+                                                         indomain_data_text_trn_norm_cls_classes,
+                                                         indomain_data_text_trn_norm))
+print
+
+print "-"*120
+print "Full trn 5-gram LM on trn data."
+print "-"*120
+os.system("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_trn_norm))
+print
 print
 
 
 print "-"*120
-print "Indomain class-based trn 5-gram LM on dev in-domain data."
+print "Class-based trn 5-gram LM on dev data."
 print "-"*120
-os.system("ngram -lm %s -classes %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_cls_pg_arpa,
+os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (indomain_data_text_trn_norm_cls_pg_arpa,
                                                          indomain_data_text_trn_norm_cls_classes,
                                                          indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Extended class-based trn 5-gram LM on dev in-domain data."
+print "Extended class-based trn 5-gram LM on dev data."
 print "-"*120
-os.system("ngram -lm %s -classes %s -order 5 -ppl %s" % (extended_data_text_trn_norm_cls_pg_arpa_filtered,
+os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa,
                                                          extended_data_text_trn_norm_cls_classes,
                                                          indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Full trn 5-gram LM on dev in-domain data."
+print "Extended filtered class-based trn 5-gram LM on dev data."
+print "-"*120
+os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa_filtered,
+                                                         extended_data_text_trn_norm_cls_classes,
+                                                         indomain_data_text_dev_norm))
+print
+
+
+print "-"*120
+print "Expanded class-based trn 5-gram LM on dev data."
+print "-"*120
+os.system("ngram -lm %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (expanded_lm_pg, indomain_data_text_dev_norm))
+print
+
+print "-"*120
+print "Full trn 5-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Mixed trn 5-gram LM on dev in-domain data."
+print "Mixed trn 5-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -order 5 -ppl %s" % (mixed_lm_pg, indomain_data_text_dev_norm))
 print
 
 print "-"*120
-print "Final 5-gram LM on dev in-domain data."
+print "Final 5-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -order 5 -ppl %s" % (final_lm_pg, indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Final 4-gram LM on dev in-domain data."
+print "Final 4-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Final 3-gram LM on dev in-domain data."
+print "Final 3-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
 print
 
 
 print "-"*120
-print "Final 2-gram LM on dev in-domain data."
+print "Final 2-gram LM on dev data."
 print "-"*120
 os.system("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
 print
