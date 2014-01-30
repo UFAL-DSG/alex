@@ -15,16 +15,17 @@ Usage:
 """
 
 from __future__ import unicode_literals
+import autopath
 import sys
 import re
 from collections import defaultdict
 import itertools
 import codecs
 from ufal.morphodita import Tagger, Forms, TaggedLemmas, TokenRanges, Morpho, TaggedLemmasForms
+from alex.utils.config import online_update
 from alex.utils.various import remove_dups_stable
 from getopt import getopt
 
-stderr = codecs.getwriter('UTF-8')(sys.stderr)
 
 class Analyzer(object):
     """Morphodita analyzer/tagger wrapper."""
@@ -78,8 +79,10 @@ class ExpandStops(object):
         """
         self.stops = defaultdict(list)
         self.cases_list = cases_list
-        self.__analyzer = Analyzer('/home/odusek/work/tools/morphodita/models/czech-131023.tagger-best_accuracy')
-        self.__generator = Generator('/home/odusek/work/tools/morphodita/models/czech-131023.dict')
+        analyzer_model = online_update('applications/PublicTransportInfoCS/data/czech.tagger')
+        generator_model = online_update('applications/PublicTransportInfoCS/data/czech.dict')
+        self.__analyzer = Analyzer(analyzer_model)
+        self.__generator = Generator(generator_model)
 
     def save(self, fname):
         """Save all stops currently held in memory to a file."""
@@ -121,8 +124,9 @@ class ExpandStops(object):
                         self.stops[variants[0]] = list(remove_dups_stable(self.stops[variants[0]] +
                                                                           inflected))
                 ctr += 1
-                if ctr % 100 == 0:
-                    print >> sys.stderr, '.'
+                if ctr % 1000 == 0:
+                    print >> sys.stderr, '.',
+        print >> sys.stderr
 
     def __inflect_word(self, word, case, prev_tag):
         """Inflect one word in the given case (return a list of variants)."""
@@ -133,7 +137,8 @@ class ExpandStops(object):
             # change the case in the tag, allow all variants
             new_tag = re.sub(r'^(....)1(.*).$', r'\g<1>' + case + r'\g<2>?', tag)
             # -ice: test both sg. and pl. versions
-            if form.endswith('ice'):
+            if (form.endswith('ice') and form[0] == form[0].upper() and
+                    not re.match(r'(nemocnice|ulice)', form, re.IGNORECASE)):
                 new_tag = re.sub(r'^(...)S', r'\1[SP]', new_tag)
             # try inflecting, fallback to uninflected
             capitalized = form[0] == form[0].upper()
