@@ -5,9 +5,19 @@ import autopath
 
 from alex.utils.config import online_update
 
+# Description files
+online_update('resources/asr/voip_cs/kaldi/results.log')
+online_update('resources/asr/voip_cs/kaldi/experiment_bash_vars.log')
+online_update('resources/asr/voip_cs/kaldi/alex_gitlog.log')
+online_update('resources/asr/voip_cs/kaldi/alex_gitdiff.log')
 
-online_update('resources/asr/voip_cs/kaldi/HCLG.fst')
-online_update('resources/asr/voip_cs/kaldi/final.mat')
-online_update('resources/asr/voip_cs/kaldi/final.mdl')
+
+# Models
+online_update('resources/asr/voip_cs/kaldi/mfcc.conf')
+online_update('resources/asr/voip_cs/kaldi/tree')
 online_update('resources/asr/voip_cs/kaldi/words.txt')
 online_update('resources/asr/voip_cs/kaldi/silence.csl')
+online_update('resources/asr/voip_cs/kaldi/final.mat')
+online_update('resources/asr/voip_cs/kaldi/tri2a.mdl')
+online_update('resources/asr/voip_cs/kaldi/tri2b.mdl')
+online_update('resources/asr/voip_cs/kaldi/tri2b_mmi.mdl')

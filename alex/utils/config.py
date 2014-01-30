@@ -54,13 +54,16 @@ def callback_download_progress(blocks, block_size, total_size):
     else:
         current_size = min(blocks * block_size, total_size)
 
-    # number of dots on thermometer scale
-    avail_dots = width - 2
-    shaded_dots = int(math.floor(float(current_size) / total_size * avail_dots))
-    progress = '[' + '.' * shaded_dots + ' ' * (avail_dots - shaded_dots) + ']'
+    if total_size > 0:
+        # number of dots on thermometer scale
+        avail_dots = width - 2
+        shaded_dots = int(math.floor(float(current_size) / total_size * avail_dots))
+        progress = '[' + '.' * shaded_dots + ' ' * (avail_dots - shaded_dots) + ']'
 
-    if progress:
-        sys.stdout.write("\r" + progress)
+        if progress:
+            sys.stdout.write("\r" + progress)
+    else:
+        sys.stdout.write("\r The downloaded file is empty")
 
 def set_online_update_server(server_name):
     """

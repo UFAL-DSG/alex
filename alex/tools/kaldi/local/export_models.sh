@@ -16,27 +16,35 @@
 # limitations under the License. #
 
 tgt=$1; shift
+exp=$1; shift
+lang=$1; shift
 
 mkdir -p $tgt
+mkdir -p $tgt/lang
 
-for srcdir in "$@" ; do
-    name=`basename $srcdir`
-    tgtdir=$tgt/$name
-    mkdir -p $tgtdir
-    for f in final.mdl final.mat tree splice_opts ; do
-        # Some of the files may not exists. E.g. final.mat only for LDA
-        cp -f $srcdir/$f $tgtdir  2> /dev/null
-    done
+echo "--- Exporting models to $tgt ..."
 
-    for g in `ls -d $srcdir/graph*/` ; do
-        gb=`basename $g`
-        mkdir -p $tgtdir/$gb
-        for f in words.txt HCLG.fst phones.txt phones/silence.csl ; do
-            # Skipping some files some e.g. word_bounary.{int|txt}, ..
-            cp -f $g/$f $tgtdir/$gb 2> /dev/null
-        done
-    done
+# See local/save_check.sh  which saves the settings at the beginning for details
+cp -f $exp/alex_gitlog.log $exp/alex_gitdiff.log $exp/experiment_bash_vars.log $tgt
 
-done
+# Store also the results
+local/results.py $exp >  $tgt/results.log
 
 
+cp -f common/mfcc.conf $tgt 
+
+cp -f $exp/tri2a/final.mdl $tgt/tri2a.mdl
+cp -f $exp/tri2a/tree $tgt/tri2a.tree
+
+cp -f $exp/tri2b/final.mdl $tgt/tri2b.mdl
+cp -f $exp/tri2b/final.mat $tgt/tri2b.tree
+cp -f $exp/tri2b/final.mat $tgt/tri2b.mat
+
+cp -f $exp/tri2b_mmi_b*/final.mdl $tgt/tri2b_bmmi.mdl
+cp -f $exp/tri2b/final.mat $tgt/tri2b_bmmi.tree
+cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
+
+cp -f $lang/words.txt $lang/phones.txt $lang/phones/silence.csl $tgt/lang
+
+
+# FIXME do I need splice_opts for something?

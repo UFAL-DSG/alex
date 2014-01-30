@@ -10,6 +10,7 @@ import pysox
 import audioop
 import wave
 import subprocess
+import contextlib
 
 from os import remove, fdopen
 from tempfile import mkstemp
@@ -26,6 +27,14 @@ By convention, the variables storing audio in the default format will
 be named as "wav" or "wav_*".
 
 """
+
+
+def wav_duration(wav_file): 
+    with contextlib.closing(wave.open(wav_file,'r')) as f:
+        frames = f.getnframes() 
+        rate = f.getframerate() 
+        duration = frames / float(rate) 
+        return duration
 
 
 def load_wav(cfg, file_name):

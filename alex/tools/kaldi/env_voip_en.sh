@@ -6,10 +6,11 @@ export EVERY_N=1
 export TEST_SETS="dev test"
 
 # Directories set up
-export KALDI_ROOT=/ha/work/people/oplatek/kaldi
+export KALDI_ROOT=/ha/projects/vystadial/lib/pykaldi-kronos-build
 export DATA_ROOT=`pwd`/data_voip_en  # expects subdirectories train + $TEST_SETS
 export WORK=`pwd`/model_voip_en
 export EXP=`pwd`/model_voip_en/exp
+export TGT_MODELS=../../resources/asr/voip_en/kaldi/last
 
 # Specify paths to arpa models. Paths may not contain spaces.
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
