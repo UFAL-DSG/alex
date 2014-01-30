@@ -25,6 +25,7 @@ config = None
 
 online_update_server = "https://vystadial.ms.mff.cuni.cz/download/alex/"
 
+
 def as_project_path(path):
     return os.path.join(env.root(), path)
 
@@ -32,6 +33,7 @@ __current_size = 0  # global state variable, which exists solely as a
                     # workaround against Python 3.3.0 regression
                     # http://bugs.python.org/issue16409
                     # fixed in Python 3.3.1
+
 
 def callback_download_progress(blocks, block_size, total_size):
     """callback function for urlretrieve that is called when connection is
@@ -62,6 +64,7 @@ def callback_download_progress(blocks, block_size, total_size):
     if progress:
         sys.stdout.write("\r" + progress)
 
+
 def set_online_update_server(server_name):
     """
     Set the name of the online update server. This function can be used to change the server name from inside a
@@ -74,6 +77,7 @@ def set_online_update_server(server_name):
     global online_update_server
 
     online_update_server = server_name
+
 
 def online_update(file_name):
     """

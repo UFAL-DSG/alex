@@ -339,6 +339,7 @@ def load_compatible_values(fname, slot1, slot2):
 dirname = os.path.dirname(os.path.abspath(__file__))
 load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
 
+
 def load_additional_information(fname, slot, keys):
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
