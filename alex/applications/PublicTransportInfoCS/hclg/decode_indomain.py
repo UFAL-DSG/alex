@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from __future__ import unicode_literals
 
 """
 Extracts wavs from call logs
@@ -20,16 +21,28 @@ import alex.utils.various as various
 from alex.utils.config import Config
 from alex.utils.audio import wav_duration
 from alex.components.asr.common import asr_factory
+from alex.components.asr.utterance import Utterance
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
-from alex.corpustools.wavaskey import save_wavaskey
+from alex.corpustools.wavaskey import save_wavaskey, load_wavaskey
 from alex.corpustools.asrscore import score_file, score
 
 
-def compute_save_stat(outdir, trn, dec, wav_len, dec_len):
-    trn_dict = dict(trn)
-    dec_dict = dict(dec)
-    wavlen_dict = dict(wav_len)
-    declen_dict = dict(dec_len)
+def decode_info(asr, wav_path, reference=None):
+    start = time.clock()
+    dec_trans = asr.rec_wav_file(wav_path)
+    dec_dur = time.clock() - start
+    best = unicode(dec_trans.get_best())
+    wav_dur = wav_duration(wav_path)
+
+    print 'Wav file  %s' % str(wav_path)
+    print 'Reference %s' % reference
+    print 'Decoded   %s' % best
+    print 'Wav dur %.2f' % wav_dur
+    print 'Dec dur %.2f' % dec_dur
+    return best, dec_dur, wav_dur
+
+
+def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
 
     reference = os.path.join(outdir, 'ref_trn.txt')
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
@@ -66,7 +79,20 @@ def compute_save_stat(outdir, trn, dec, wav_len, dec_len):
     # """.format(num_sents=len(trn_dict), num_words=nwords, corr=corr, sub=sub, dels=dels, ins=ins, wer=wer)
 
 
-def main(indomain_data_dir, outdir, cfg):
+def decode_with_reference(reference, outdir, cfg):
+    asr = asr_factory(cfg)
+    trn_dict = load_wavaskey(reference, Utterance)
+    declen_dict, wavlen_dict, dec_dict = {}, {}, {}
+    for wav_path, reference in trn_dict.iteritems():
+        best, dec_dur, wav_dur = decode_info(asr, wav_path, reference)
+        dec_dict[wav_path] = best
+        wavlen_dict[wav_path] = wav_dur
+        declen_dict[wav_path] = dec_dur
+
+    compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
+
+
+def extract_from_xml(indomain_data_dir, outdir, cfg):
     glob = 'asr_transcribed.xml'
     asr = asr_factory(cfg)
 
@@ -76,7 +102,7 @@ def main(indomain_data_dir, outdir, cfg):
         for filename in fnmatch.filter(filenames, glob):
             files.append(os.path.join(root, filename))
 
-    # # DEBUG example
+    # DEBUG example
     # files = [
     #     '/ha/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/part1/2013-06-27-09-33-25.116055-CEST-00420221914256/asr_transcribed.xml']
 
@@ -116,28 +142,21 @@ def main(indomain_data_dir, outdir, cfg):
                 trn.append((wav_file, t))
 
                 wav_path = os.path.join(f_dir, wav_file)
-                start = time.clock()
-                dec_trans = asr.rec_wav_file(wav_path)
-                dec_dur = time.clock() - start
-                dec_len.append((wav_file, dec_dur))
-                best = unicode(dec_trans.get_best())
+                best, dec_dur, wav_dur = decode_info(asr, wav_path, t)
                 dec.append((wav_file, best))
-                wav_dur = wav_duration(wav_path)
                 wav_len.append((wav_file, wav_dur))
+                dec_len.append((wav_file, dec_dur))
 
-                print 'Wav file  %s' % str(wav_path)
-                print 'Reference %s' % t
-                print 'Decoded   %s' % best
-                print 'Wav dur %.2f' % wav_dur
-                print 'Dec dur %.2f' % dec_dur
     except Exception as e:
         print 'PARTIAL RESULTS were saved to %s' % outdir
         print e
-        import ipdb
-        ipdb.set_trace()
         raise e
     finally:
-        compute_save_stat(outdir, trn, dec, wav_len, dec_len)
+        trn_dict = dict(trn)
+        dec_dict = dict(dec)
+        wavlen_dict = dict(wav_len)
+        declen_dict = dict(dec_len)
+        compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
 
 
 if __name__ == '__main__':
@@ -146,12 +165,23 @@ if __name__ == '__main__':
         description=""" TODO """)
 
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
-    parser.add_argument('indomain_data_dir',
-                        help='Directory which should contain symlinks or directories with transcribed ASR')
     parser.add_argument('-o', '--out-dir', default='decoded',
                         help='The computed statistics are saved the out-dir directory')
     parser.add_argument('-f', '--force', type=bool, default=False,
                         nargs='?', help='If out-dir exists write the results there anyway')
+
+    subparsers = parser.add_subparsers(dest='command',
+                                       help='Either extract wav list from xml or expect reference and wavs')
+
+    parser_a = subparsers.add_parser(
+        'extract', help='extract wav from all asr_transcribed.xml in directory')
+    parser_a.add_argument('indomain_data_dir',
+                          help='Directory which should contain symlinks or directories with transcribed ASR')
+    parser_b = subparsers.add_parser(
+        'load', help='Load wav transcriptions and reference with full paths to wavs')
+    parser_b.add_argument(
+        'reference', help='Key value file: Keys contain paths to wav files. Values are reference transcriptions.')
+
     args = parser.parse_args()
 
     if os.path.exists(args.out_dir):
@@ -169,4 +199,9 @@ if __name__ == '__main__':
 
     cfg = Config.load_configs(args.configs)
 
-    main(args.indomain_data_dir, args.out_dir, cfg)
+    if args.command == 'extract':
+        extract_from_xml(args.indomain_data_dir, args.out_dir, cfg)
+    elif args.command == 'load':
+        decode_with_reference(args.reference, args.out_dir, cfg)
+    else:
+        raise Exception('Argparse mechanism failed: Should never happen')

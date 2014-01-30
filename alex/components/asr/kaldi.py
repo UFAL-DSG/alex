@@ -36,7 +36,7 @@ class KaldiASR(ASRInterface):
         self.max_dec_frames = kcfg['max_dec_frames']
 
         # specify all other options in config
-        argv = ("--config=%(config)s --verbose=%(verbose)d "
+        argv = ("--config=%(config)s --verbose=%(verbose)d %(extra_args)s "
                 "%(model)s %(hclg)s %(silent_phones)s" % kcfg)
         argv = argv.split()
         with open(kcfg['config']) as r:

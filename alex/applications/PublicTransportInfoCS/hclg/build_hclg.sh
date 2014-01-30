@@ -48,6 +48,7 @@ tree=$2
 dictionary=$3
 vocabulary=$4
 lm_arpa=$5
+oov_word=$9  # prepare_lang.sh <UNK>
 
 
 locdata=$6
@@ -57,7 +58,6 @@ hclg=$locdata/hclg
 lang=$7
 dir=$8
 
-oov_word=$9  # prepare_lang.sh <UNK>
 
 #######################################################################
 #                 End of param parsing - setting ENV                  #
@@ -90,6 +90,16 @@ done
 
 
 mkdir -p $locdata $locdict $tmpdir $lang $dir $hclg
+
+rm -f $dir/INFO_HCLG.txt
+cat <<EOF > $dir/INFO_HCLG.txt
+Acoustic model used $model
+Phonetic Decision tree $tree
+Dictionary $dictionary
+Vocabulary $vocabulary
+Language model model $lm_arpa
+OOV word $oov_word
+EOF
 
 cp $vocabulary $locdata/vocab-full-raw.txt
 echo '</s>' >> $locdata/vocab-full-raw.txt
@@ -165,7 +175,8 @@ echo "*** Succeeded in creating G.fst for $lang"
 echo ; echo "Running utils/prepare_lang.sh" ; echo
 
 
-cp $model $tree $locdata  # $locdata mus contain AM and phonetic DT
+cp $model $locdata/final.mdl  # $locdata mus contain AM and phonetic DT
+cp $tree $locdata/tree  # $locdata mus contain AM and phonetic DT
 utils/mkgraph.sh $lang $locdata $hclg || exit 1
 # to make const fst:
 # fstconvert --fst_type=const $dir/HCLG.fst $dir/HCLG_c.fst

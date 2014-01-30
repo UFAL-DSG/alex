@@ -20,7 +20,6 @@ exp=$1; shift
 lang=$1; shift
 
 mkdir -p $tgt
-mkdir -p $tgt/lang
 
 echo "--- Exporting models to $tgt ..."
 
@@ -44,7 +43,7 @@ cp -f $exp/tri2b_mmi_b*/final.mdl $tgt/tri2b_bmmi.mdl
 cp -f $exp/tri2b/final.mat $tgt/tri2b_bmmi.tree
 cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
 
-cp -f $lang/words.txt $lang/phones.txt $lang/phones/silence.csl $tgt/lang
+cp -f $lang/words.txt $lang/phones.txt $lang/phones/silence.csl $tgt
 
 
 # FIXME do I need splice_opts for something?
