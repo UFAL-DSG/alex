@@ -29,12 +29,12 @@ import codecs
 import sys
 import re
 from add_cities_to_stops import load_list, get_city_for_stop
+from alex.utils.various import remove_dups_stable
 
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
-    # clean the weird mess (request stop etc.)
-    (r' O$', r''),
-    (r';( *([vx§(BP]|MHD|WC))*$', r''),
+    # strip weird suffixes (request stop etc.)
+    (r';( *([wvx§\(\)\{\}ABPO#]|MHD|WC|CLO))*$', r''),
     # spacing around punctuation
     (r'\.([^0-9 ])', r'. \1'),
     (r'([A-ZÁČĎĚÉÍŇÓŘŠŤŮÚŽa-záčďěéíňóřšťůúž])\.([0-9])', r'\1. \2'),
@@ -177,7 +177,7 @@ ABBREV_RULES = [
     (r' žel\. přejezd($|;)', r' železniční přejezd\1'),
     (r' rozc\.([0-9])', r' rozcestí \1'),
     (r' rozc\.', r' rozcestí'),
-    (r' aut\. st\.($|;)', r' autobusové stanoviště\1'),
+    (r' aut\. st\.($|;)', [r' autobusové stanoviště\1', r' autobusová stanice\1']),
     (r' žel\. st\.', r' železniční stanice'),
     (r' žel\. zastávka', r' železniční zastávka'),
     (r' křiž\.($|;)', r' křižovatka\1'),
@@ -192,6 +192,7 @@ ABBREV_RULES = [
     (r' spín\. st\.($|;)', r' spínací stanice\1'),
     (r' pož\. zbroj\.($|;)', r' požární zbrojnice\1'),
     (r' has\. zbroj\.($|;)', r' hasičská zbrojnice\1'),
+    (r' \([vV]\)álc\. pl\.', r' \1álcovny plechu'),
     (r'\b([aA])ut\. nádr(\.|aží)', r'\1utobusové nádraží'),
     (r' nádr\.', r' nádraží'),
     (r' háj\.', r' hájovna'),
@@ -217,7 +218,8 @@ ABBREV_RULES = [
     (r' ([tT])ř\.', r' \1řída'),
     (r'(Branišovice.*)st\. silnice', r'\1státní silnice'),
     (r'Domin\. Paseky', r'Dominikální Paseky'),
-    (r'Mor\. Chrastová', r'Moravská Chrastová'),
+    (r'Mor\. (Chrastová|Ostrava)', r'Moravská \1'),
+    (r'Sl\. Ostrava', r'Slezská Ostrava'),
     (r'Marián\. údolí', r'Mariánské údolí'),
     (r'\bobch\. ([dD]omy)', r'obchodní \1'),
     (r'St\. Oldřůvky', r'Staré Oldřůvky'),
@@ -256,6 +258,7 @@ ABBREV_RULES = [
     (r'\bhl\. sil\.', r'hlavní silnice'),
     (r' hl\. (vstup|vchod|trať|vrátnice|brána|zastávka|silnice|přístav)', r' hlavní \1'),
     (r'st\. č\.', r'stanoviště číslo'),
+    (r'sil\. č(\.|íslo)', r'silnice číslo'),
     (r'č\. ([0-9])', r'číslo \1'),
     (r' ([pP])sych\. léčebna', r' \1sychiatrická léčebna'),
     (r' ([dD])om\. důch\.', r' \1omov důchodců'),
@@ -274,6 +277,7 @@ ABBREV_RULES = [
     (r' sanat\.', r' sanatorium'),
     (r' děts\. psych\. nemocnice', r' dětská psychiatrická nemocnice'),
     (r' automobilové záv\.', r' automobilové závody'),
+    (r' ([cC])hem\. závody', r' \1hemické závody'),
     (r' záv\.', r' závod'),
     (r' stroj\. závod', r' strojírenský závod'),
     (r' výzk\. ústav', r' výzkumný ústav'),
@@ -334,11 +338,20 @@ ABBREV_RULES = [
     (r'T\. Novákové', r'Terézy Novákové'),
     (r'V\. Lanny', r'Vojtěcha Lanny'),
     (r'V\. Nezvala', r'Vítězslava Nezvala'),
+    # IDOS probably won't handle these
+    (r'ObÚ', r'obecní úřad'),
+    (r' ZŠ(?=[,; ]|$)', [r' ZŠ', r' základní škola']),
+    (r' VŠ koleje', r' vysokoškolské koleje'),
+    (r' VŠ(?=[,; ]|$)', [r' VŠ', r' vysoká škola']),
+    (r' SPŠ(?=[,; ]|$)', [r' SPŠ', r' střední průmyslová škola']),
+    (r' SOU(?=[,; ]|$)', [r' SOU', r' střední odborné učiliště']),
     # fixing spacing
     (r' ,', r','),
     (r'-([^ ])', r'- \1'),
     (r'([^ ])-', r'\1 -'),
     (r' +', r' '),
+    # this is just to be sure: eliminate any stray ';' in data since it is the field separator
+    (r';', r','),
 ]
 
 # compile all regexes
@@ -346,9 +359,14 @@ ABBREV_RULES = [(re.compile(pattern), repl) for pattern, repl in ABBREV_RULES]
 
 
 def expand_abbrevs(stop_name):
-    for regex, repl in ABBREV_RULES:
-        stop_name = regex.sub(repl, stop_name)
-    return stop_name
+    variants = [stop_name]
+    for regex, repls in ABBREV_RULES:
+        if type(repls) == list:
+            variants = list(remove_dups_stable([regex.sub(repl, var)
+                                                for repl in repls for var in variants]))
+        else:
+            variants = [regex.sub(repls, var) for var in variants]
+    return variants[0], variants
 
 
 def main():
@@ -365,7 +383,7 @@ def main():
 
     # process the input
     for idos_list, idos_stop in in_stops:
-        stop = expand_abbrevs(idos_stop)
+        stop, variants = expand_abbrevs(idos_stop)
         # get the correct city (provide default for city transit only)
         city = get_city_for_stop(cities, stop,
                                  idos_list if idos_list not in ['vlak', 'bus'] else None)
@@ -375,18 +393,20 @@ def main():
             continue
         # strip city name from stop name for city transit
         if idos_list not in ['vlak', 'bus'] and stop.startswith(city + ','):
-            stop = stop[len(city):].strip(', ')
+            # we assume there are no variants within the city name itself
+            variants = [var[len(city):].strip(', ') for var in variants]
+            stop = variants[0]
 
-        out_list.append((idos_list, idos_stop, city, stop))
+        out_list.append((idos_list, idos_stop, city, stop, variants))
 
-    # write list of (unique) stops
-    stops_set = set([stop for _, _, _, stop in out_list])
+    # write list of (unique) stops, including all variants
+    stops_map = {stop: variants for _, _, _, stop, variants in out_list}
     with codecs.open(file_out_stops, 'w', 'UTF-8') as fh_out:
-        for stop in sorted(stops_set):
-            print >> fh_out, stop
+        for stop in sorted(stops_map.keys()):
+            print >> fh_out, '; '.join(stops_map[stop])
     # write city-stop mapping
     city_stop_map = {}
-    for _, _, city, stop in out_list:
+    for _, _, city, stop, _ in out_list:
         entry = city_stop_map.get(city, set())
         entry.add(stop)
         city_stop_map[city] = entry
@@ -396,7 +416,7 @@ def main():
                 print >> fh_out, city + "\t" + stop
     # write normal-to-IDOS mapping
     norm_idos_map = {}
-    for idos_list, idos_stop, city, stop in out_list:
+    for idos_list, idos_stop, city, stop, _ in out_list:
         norm_idos_map[(city, stop)] = (idos_list, idos_stop)
     with codecs.open(file_out_map, 'w', 'UTF-8') as fh_out:
         for (city, stop), (idos_list, idos_stop) in sorted(norm_idos_map.iteritems()):
