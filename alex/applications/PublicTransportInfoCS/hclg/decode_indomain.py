@@ -34,16 +34,22 @@ def decode_info(asr, wav_path, reference=None):
     best = unicode(dec_trans.get_best())
     wav_dur = wav_duration(wav_path)
 
-    print 'Wav file  %s' % str(wav_path)
-    print 'Reference %s' % reference
-    print 'Decoded   %s' % best
-    print 'Wav dur %.2f' % wav_dur
-    print 'Dec dur %.2f' % dec_dur
+    print "-"*120
+    print
+    print '    Wav file:  %s' % str(wav_path)
+    print
+    print '    Reference: %s' % reference
+    print '    Decoded:   %s' % best
+    print '    Wav dur:   %.2f' % wav_dur
+    print '    Dec dur:   %.2f' % dec_dur
+
+    print
+    print '    NBest list:'
+    print '    '+unicode(dec_trans).replace('\n','\n    ')
+
     return best, dec_dur, wav_dur
 
-
-def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
-
+def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
     reference = os.path.join(outdir, 'ref_trn.txt')
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
     save_wavaskey(reference, trn_dict)
@@ -60,10 +66,17 @@ def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
 
     mean = sum(rtf) / len(rtf)
     var = sum([r * r for r in rtf]) / len(rtf) - (mean * mean)
+    # computing 0.95 confidence interval ~= mean +- 2*std_dev for Gauss distribution
     print """
-    Computing 0.95 confidence interval ~= mean +- 2*std_dev for Gauss distribution
-    RTF 0.95 confidence interval assuming Gaus distribution %(mean)f +- %(stdv)f
-    Global RTF: %(rtfglob)f""" % {'rtfglob': rtf_global, 'mean': mean, 'stdv': 2 * sqrt(var)}
+    RT factor: %(mean)f +- %(stdv)f (95%% CI) (Global RTF: %(rtfglob)f)
+    """ % {'mean': mean, 'stdv': 2 * sqrt(var), 'rtfglob': rtf_global}
+
+def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
+
+    compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
+
+    reference = os.path.join(outdir, 'ref_trn.txt')
+    hypothesis = os.path.join(outdir, 'dec_trn.txt')
 
     score(reference, hypothesis)
     # corr, sub, dels, ins, wer, nwords = score_file(trn_dict, dec_dict)
@@ -83,11 +96,14 @@ def decode_with_reference(reference, outdir, cfg):
     asr = asr_factory(cfg)
     trn_dict = load_wavaskey(reference, Utterance)
     declen_dict, wavlen_dict, dec_dict = {}, {}, {}
+
     for wav_path, reference in trn_dict.iteritems():
         best, dec_dur, wav_dur = decode_info(asr, wav_path, reference)
         dec_dict[wav_path] = best
         wavlen_dict[wav_path] = wav_dur
         declen_dict[wav_path] = dec_dur
+
+        compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
 
     compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
 

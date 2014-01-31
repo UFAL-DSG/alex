@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # author: Ondrej Platek
+
 from __future__ import unicode_literals
+
+from math import exp
 
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
 from pykaldi.utils import wst2dict, lattice_to_nbest
+
 try:
     from pykaldi.decoders import PyGmmLatgenWrapper
 except ImportError as e:
@@ -65,14 +69,19 @@ class KaldiASR(ASRInterface):
         """
         frame_total, start = 0, time.clock()
         self.decoder.frame_in(frame.payload)
-        self.syslog.debug('frame_in of %d frames' % (len(frame.payload) / 2))
+
+        if self.cfg['ASR']['Kaldi']['debug']:
+            self.syslog.debug('frame_in of %d frames' % (len(frame.payload) / 2))
+
         dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
         while dec_t > 0:
             frame_total += dec_t
             dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
-        if (frame_total > 0):
-            self.syslog.debug('Forward decoding of %d frames in %s secs' % (
-                frame_total, str(time.clock() - start)))
+
+        if self.cfg['ASR']['Kaldi']['debug']:
+            if (frame_total > 0):
+                self.syslog.debug('Forward decoding of %d frames in %s secs' % (
+                    frame_total, str(time.clock() - start)))
         return self
 
     def hyp_out(self):
@@ -91,14 +100,20 @@ class KaldiASR(ASRInterface):
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
-            self.syslog.debug(words)
-            nblist.add(w, Utterance(words))
+
+            if self.cfg['ASR']['Kaldi']['debug']:
+                self.syslog.debug(words)
+
+            p = exp(-w)
+            if p > 0.0001:
+                nblist.add(p, Utterance(words))
 
         # Log
         if len(nbest) == 0:
             nblist.add(1.0, Utterance('Empty hypothesis: Kaldi __FAIL__'))
 
-        self.syslog.info('utterance "probability" is %f' % utt_prob)
-        self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
+        if self.cfg['ASR']['Kaldi']['debug']:
+            self.syslog.info('utterance "probability" is %f' % utt_prob)
+            self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
 
         return nblist
