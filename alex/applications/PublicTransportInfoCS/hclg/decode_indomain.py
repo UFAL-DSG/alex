@@ -14,6 +14,7 @@ import fnmatch
 import argparse
 import time
 from math import sqrt
+import numpy
 
 import autopath
 
@@ -58,18 +59,36 @@ def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
     save_wavaskey(os.path.join(outdir, 'dec_duration.txt'), declen_dict)
 
     rtf, d_tot, w_tot = [], 0, 0
+    delay = []
     for k in declen_dict.keys():
         w, d = wavlen_dict[k], declen_dict[k]
         d_tot, w_tot = d_tot + d, w_tot + w
         rtf.append(float(d) / w)
+        delay.append(float(d) - w if float(d) - w > 0.0 else 0.0)
     rtf_global = float(d_tot) / w_tot
 
-    mean = sum(rtf) / len(rtf)
-    var = sum([r * r for r in rtf]) / len(rtf) - (mean * mean)
-    # computing 0.95 confidence interval ~= mean +- 2*std_dev for Gauss distribution
-    print """
-    RT factor: %(mean)f +- %(stdv)f (95%% CI) (Global RTF: %(rtfglob)f)
-    """ % {'mean': mean, 'stdv': 2 * sqrt(var), 'rtfglob': rtf_global}
+    print
+    print """    # waws:              %d""" % len(rtf)
+    print """    Global RTF mean:     %(rtfglob)f""" % {'rtfglob': rtf_global}
+
+    try:
+        rtf.sort()
+        rm = rtf[int(len(rtf)*0.5)]
+        rc95 = rtf[int(len(rtf)*0.95)]
+
+        print """    RTF median:          %(median)f  RTF   < %(c95)f [in 95%%]""" % {'median': rm, 'c95': rc95}
+    except:
+        pass
+
+    try:
+        delay.sort()
+        dm = delay[int(len(delay)*0.5)]
+        dc95 = delay[int(len(delay)*0.95)]
+
+        print """    Delay median:        %(median)f  Delay < %(c95)f [in 95%%]
+    """ % {'median': dm, 'c95': dc95}
+    except:
+        pass
 
 def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
 
