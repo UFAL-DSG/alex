@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import autopath
+
+from alex.utils.config import online_update
+
+online_update('applications/PublicTransportInfoCS/data/cities.txt')
+online_update('applications/PublicTransportInfoCS/data/stops.txt')
+#online_update('applications/PublicTransportInfoCS/data/stops-idos.txt')
+online_update('applications/PublicTransportInfoCS/data/stops.expanded.txt')
+online_update('applications/PublicTransportInfoCS/data/cities_stops.tsv')
+online_update('applications/PublicTransportInfoCS/data/cities_locations.tsv')
+online_update('applications/PublicTransportInfoCS/data/idos_map.tsv')
