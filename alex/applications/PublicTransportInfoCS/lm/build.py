@@ -27,6 +27,7 @@ import alex.utils.various as various
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey
 
+train_data_size                 = 0.9
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
 indomain_data_dir               = "indomain_data"
@@ -68,7 +69,7 @@ extended_data_text_trn_norm_cls_pg_arpa_filtered    = "25_extended_data_trn_norm
 expanded_lm_vocab       = "26_expanded.vocab"
 expanded_lm_pg          = "26_expanded.pg.arpa"
 
-mixing_weight           = "0.7"
+mixing_weight           = "0.5"
 mixed_lm_vocab          = "27_mixed.vocab"
 mixed_lm_pg             = "27_mixed.pg.arpa"
 
@@ -142,8 +143,8 @@ if not os.path.exists(indomain_data_text_trn_norm):
 
                 pt.append((wav_path, t))
 
-    t_train = tt[:int(0.9*len(tt))]
-    t_dev = tt[int(0.9*len(tt)):]
+    t_train = tt[:int(train_data_size*len(tt))]
+    t_dev = tt[int(train_data_size*len(tt)):]
 
     with codecs.open(indomain_data_text_trn,"w", "UTF-8") as w:
         w.write('\n'.join(t_train))

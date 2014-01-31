@@ -15,7 +15,7 @@ tree=$mdl_dir/tri2a.tree  # decision phonetic tree
 lm_dir=../lm/
 dict=$lm_dir/final.dict  # phonetic dictionary
 vocab=$lm_dir/final.vocab
-LM=$lm_dir/final.tg.arpa  # LM in arpa format
+LM=$lm_dir/final.qg.arpa  # LM in arpa format
 
 # TODO ask before deleting
 rm -rf $tmpdir
