@@ -24,21 +24,23 @@ def score_file(reftext, testtext):
     ii, dd, ss, nn = 0.0, 0.0, 0.0, 0.0
 
     for utt_idx in sorted(reftext):
-	    
-        r = re.sub(ur"\b_\w+_\b",r"",str(reftext[utt_idx]),flags=re.UNICODE).lower().split()
-        t = re.sub(ur"\b_\w+_\b",r"",str(testtext[utt_idx]),flags=re.UNICODE).lower().split()
+        r = re.sub(ur"\b_\w+_\b",r"",unicode(reftext[utt_idx]).lower(),flags=re.UNICODE).split()
+        t = re.sub(ur"\b_\w+_\b",r"",unicode(testtext[utt_idx]).lower(),flags=re.UNICODE).split()
+#        r = unicode(reftext[utt_idx]).lower().split()
+#        t = unicode(testtext[utt_idx]).lower().split()
         i, d, s = min_edit_ops(t, r)
-
-        #print "Ref:", unicode(r)
-        #print "Tst:", unicode(t)
-        #print i, d, s
-        #print
 
         ii += i
         dd += d
         ss += s
 
         nn += len(r)
+
+#        print "Ref:", unicode(r)
+#        print "Tst:", unicode(t)
+#        print i, d, s, len(r)
+#        print ii, dd, ss, nn
+#        print
 
     return (nn-ss-dd)/nn*100, ss/nn*100, dd/nn*100, ii/nn*100, (ss+dd+ii)/nn*100, nn
 
