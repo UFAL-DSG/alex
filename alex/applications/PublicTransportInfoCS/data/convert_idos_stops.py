@@ -34,7 +34,7 @@ from alex.utils.various import remove_dups_stable
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
     # strip weird suffixes (request stop etc.)
-    (r';( *([wvx§\(\)\{\}ABPO#]|MHD|WC|CLO))*$', r''),
+    (r';( *([wvx§\(\)\{\}ABPO#]|MHD|WC|CLO))*$', r' '),
     # spacing around punctuation
     (r'\.([^0-9 ])', r'. \1'),
     (r'([A-ZÁČĎĚÉÍŇÓŘŠŤŮÚŽa-záčďěéíňóřšťůúž])\.([0-9])', r'\1. \2'),
@@ -177,14 +177,14 @@ ABBREV_RULES = [
     (r' žel\. přejezd($|;)', r' železniční přejezd\1'),
     (r' rozc\.([0-9])', r' rozcestí \1'),
     (r' rozc\.', r' rozcestí'),
-    (r'(^| )aut\. st\.(?=$|[;, ])', [r'\1autobusové stanoviště', r'\1autobusová stanice']),
+    (r' aut\. st\.(?=$|[;, ])', [r' autobusové stanoviště', r' autobusová stanice']),
     (r' žel\. st\.', r' železniční stanice'),
     (r' žel\. zastávka', r' železniční zastávka'),
     (r' křiž\.($|;)', r' křižovatka\1'),
     (r' nám\.([0-9])', r' náměstí \1'),
-    (r'(^| )([nN])ám\.', r'\1\2áměstí'),
+    (r' ([nN])ám\.', r' \1áměstí'),
     (r'([ -])vrát\.', r'\1vrátnice'),
-    (r'(^| )obch\. dům(?=$|[;, ])', r'\1obchodní dům'),
+    (r' obch\. dům(?=$|[;, ])', r' obchodní dům'),
     (r' obch\. ([dD])omy', r' obchodní domy'),
     (r' obch\. stř\.($|;)', r' obchodní středisko\1'),
     (r' zdrav\. stř\.($|;)', r' zdravotní středisko\1'),
@@ -199,14 +199,14 @@ ABBREV_RULES = [
     (r' host\.', r' hostinec'),
     (r' nem\. areál', r' nemocniční areál'),
     (r' peč\. služby', r' pečovatelské služby'),
-    (r'(^| )nem(?oc)?\.', r'\1nemocnice'),
+    (r' nem(?oc)?\.', r' nemocnice'),
     (r' koup\.($|;)', r' koupaliště\1'),
     (r' žel\. mostu', r' železničního mostu'),
     (r' zahr\. kolonie', r' zahrádkářská kolonie'),
     (r' rest\.', r' restaurace'),
     (r' sídl\.', r' sídliště'),
     (r' chat\. obl(\.|ast\b)', r' chatová oblast'),
-    (r'(^| )odb\.', r'\1odbočka'),
+    (r' odb\.', r' odbočka'),
     (r' ch\.', r' chata'),
     (r' ul\.', r' ulice'),
     (r' park\.', r' parkoviště'),
@@ -270,7 +270,7 @@ ABBREV_RULES = [
     (r' zem\. podnik', r' zemědělský podnik'),
     (r' zem\. stavby', r' zemědělské stavby'),
     (r' zem\. dům', r' zemský dům'),
-    (r'(^| )([nN])ábř\.', r'\1\2ábřeží'),
+    (r' ([nN])ábř\.', r' \1ábřeží'),
     (r' pom\.', r' pomník'),
     (r'\bprov\.', r'provozovna'),
     (r' k sanat\.', r' k sanatoriu'),
@@ -346,19 +346,19 @@ ABBREV_RULES = [
     (r' VŠ(?=[,; ]|$)', [r' VŠ', r' vysoká škola']),
     (r' SPŠ(?=[,; ]|$)', [r' SPŠ', r' střední průmyslová škola']),
     (r' SOU(?=[,; ]|$)', [r' SOU', r' střední odborné učiliště']),
-    (r'(^| )29\. [Dd]ubna', [r'\1Dvacátého devátého dubna', r'\1Devětadvacátého dubna']),
-    (r'(^| )22\. [Dd]ubna', [r'\1Dvacátého druhého dubna', r'\1Dvaadvacátého dubna']),
-    (r'(^| )28\. [Řř]íjna', [r'\1Dvacátého osmého října', r'\1Osmadvacátého října']),
-    (r'(^| )9\. [Kk]větna', r'\1Devátého května'),
-    (r'(^| )5\. [Kk]větna', r'\1Pátého května'),
-    (r'(^| )17\. [Ll]istopadu', r'\1Sedmnáctého listopadu'),
-    (r'(^| )1\. [mM]áje', r'\1Prvního máje'),
-    (r'(^| )1\. (ZŠ|základní škola|náměstí)', r'\1První \2'),
-    (r'(^| )2\. (ZŠ|základní škola)', r'\1Druhá \2'),
-    (r'(^| )3\. (ZŠ|základní škola)', r'\1Třetí \2'),
-    (r'(^| )14\. (ZŠ|základní škola)', r'\1Čtrnáctá \2'),
-    (r'(^| )18\. (ZŠ|základní škola)', r'\1Osmnáctá \2'),
-    (r'(^| )7\. [uU]lice', r'\1Sedmá ulice'),
+    (r' 29\. [Dd]ubna', [r' Dvacátého devátého dubna', r' Devětadvacátého dubna']),
+    (r' 22\. [Dd]ubna', [r' Dvacátého druhého dubna', r' Dvaadvacátého dubna']),
+    (r' 28\. [Řř]íjna', [r' Dvacátého osmého října', r' Osmadvacátého října']),
+    (r' 9\. [Kk]větna', r' Devátého května'),
+    (r' 5\. [Kk]větna', r' Pátého května'),
+    (r' 17\. [Ll]istopadu', r' Sedmnáctého listopadu'),
+    (r' 1\. [mM]áje', r' Prvního máje'),
+    (r' 1\. (ZŠ|základní škola|náměstí)', r' První \1'),
+    (r' 2\. (ZŠ|základní škola)', r' Druhá \1'),
+    (r' 3\. (ZŠ|základní škola)', r' Třetí \1'),
+    (r' 14\. (ZŠ|základní škola)', r' Čtrnáctá \1'),
+    (r' 18\. (ZŠ|základní škola)', r' Osmnáctá \1'),
+    (r' 7\. [uU]lice', r' Sedmá ulice'),
     # TODO this creates ambiguity in some cases, get rid of it:
     (r' (rozcestí|křižovatka) [0-9]\.[0-9]', r'\1'),
     # fixing spacing
@@ -375,13 +375,20 @@ ABBREV_RULES = [(re.compile(pattern), repl) for pattern, repl in ABBREV_RULES]
 
 
 def expand_abbrevs(stop_name):
-    variants = [stop_name]
+    # add spaces to have simpler regexes
+    variants = [' ' + stop_name + ' ']
+    # process all regexes
     for regex, repls in ABBREV_RULES:
+        # replacement variants
         if type(repls) == list:
             variants = list(remove_dups_stable([regex.sub(repl, var)
                                                 for repl in repls for var in variants]))
+        # just a single replacement
         else:
             variants = [regex.sub(repls, var) for var in variants]
+    # remove the added spaces
+    variants = [var.strip() for var in variants]
+    # return the result
     return variants[0], variants
 
 
