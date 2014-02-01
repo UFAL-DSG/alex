@@ -34,6 +34,7 @@ class KaldiASR(ASRInterface):
 
         self.wst = wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
+        self.n_best = kcfg['n_best']
 
         # specify all other options in config
         argv = ("--config=%(config)s --verbose=%(verbose)d %(extra_args)s "
@@ -87,7 +88,7 @@ class KaldiASR(ASRInterface):
         self.decoder.reset(keep_buffer_data=False)
 
         # Convert lattice to nblist
-        nbest = lattice_to_nbest(lat, n=5)
+        nbest = lattice_to_nbest(lat, self.n_best)
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
