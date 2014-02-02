@@ -34,7 +34,8 @@ from alex.utils.various import remove_dups_stable
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
     # strip weird suffixes (request stop etc.)
-    (r';( *([wvx§\(\)\{\}ABPO#]|MHD|WC|CLO))*$', r' '),
+    (r' [O#] $', r' '),
+    (r';( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))* $', r' '),
     # spacing around punctuation
     (r'\.([^0-9 ])', r'. \1'),
     (r'([A-ZÁČĎĚÉÍŇÓŘŠŤŮÚŽa-záčďěéíňóřšťůúž])\.([0-9])', r'\1. \2'),
@@ -114,7 +115,7 @@ ABBREV_RULES = [
     (r'Sv\. Antonína', r'Svatého Antonína'),
     (r'Sv\. Kříže', r'Svatého Kříže'),
     (r'Sv\. Maří', r'Svaté Maří'),
-    (r'([Ss])v\. Matouš([ ;,]|$)', r'Svatý Matouš'),
+    (r'([Ss])v\. Matouš(?=[;, ])', r'Svatý Matouš'),
     (r'Vrch\. Orlice', r'Vrchní Orlice'),
     (r'Svob\. Hory', r'Svobodné Hory'),
     (r'N\. Dědina', r'Nová Dědina'),
@@ -153,14 +154,14 @@ ABBREV_RULES = [
     (r'u Uh\. Hrad\.', r'u Uherského Hradiště'),
     (r'u Kar\. Varů', r'u Karlových Varů'),
     (r'zám\. zahrada', r'zámecká zahrada'),
-    (r' již\. z(ast)?\.$', r' jižní zastávka'),
-    (r' sev\. z(ast)?\.$', r' severní zastávka'),
-    (r' hor\. z(ast)?\.$', r' horní zastávka'),
-    (r' dol\. z(ast)?\.$', r' dolní zastávka'),
-    (r' z(ast)?\.$', r' zastávka'),
-    (r'm(\.|ístní) n\.$', r'místní nádraží'),
-    (r' předm\.$', r' předměstí'),
-    (r' bažant\.$', r' bažantnice'),
+    (r' již\. z(ast)?\.', r' jižní zastávka'),
+    (r' sev\. z(ast)?\.', r' severní zastávka'),
+    (r' hor\. z(ast)?\.', r' horní zastávka'),
+    (r' dol\. z(ast)?\.', r' dolní zastávka'),
+    (r' z(ast)?\.', r' zastávka'),
+    (r'm(\.|ístní) n\.', r'místní nádraží'),
+    (r' předm\.', r' předměstí'),
+    (r' bažant\.', r' bažantnice'),
     (r' hl\. n(ádr\.|ádraží|\.)', r' hlavní nádraží'),
     (r' dol(\.|ní) n\.', r' dolní nádraží'),
     (r' horní n\.', r' horní nádraží'),
@@ -170,42 +171,43 @@ ABBREV_RULES = [
     (r'Dol\.', r'Dolní'),
     (r' sev\. n\.', r' severní nádraží'),
     (r' k nádr\.', r' k nádraží'),
-    (r' m\.$', r' město'),
+    (r' nad $', r' nádraží'),
+    (r' m\. $', r' město'),
     (r' kult\. dům', r' kulturní dům'),
     (r' kult\. domu', r' kulturního domu'),
     (r' žel\. přejezdu', r' železničního přejezdu'),
-    (r' žel\. přejezd($|;)', r' železniční přejezd\1'),
+    (r' žel\. přejezd(?=[;, ])', r' železniční přejezd '),
     (r' rozc\.([0-9])', r' rozcestí \1'),
     (r' rozc\.', r' rozcestí'),
-    (r' aut\. st\.(?=$|[;, ])', [r' autobusové stanoviště', r' autobusová stanice']),
+    (r' aut\. st\.(?=[;, ])', [r' autobusové stanoviště', r' autobusová stanice']),
     (r' žel\. st\.', r' železniční stanice'),
     (r' žel\. zastávka', r' železniční zastávka'),
-    (r' křiž\.($|;)', r' křižovatka\1'),
+    (r' křiž\.', r' křižovatka'),
     (r' nám\.([0-9])', r' náměstí \1'),
     (r' ([nN])ám\.', r' \1áměstí'),
     (r'([ -])vrát\.', r'\1vrátnice'),
-    (r' obch\. dům(?=$|[;, ])', r' obchodní dům'),
+    (r' obch\. dům(?=[;, ])', r' obchodní dům'),
     (r' obch\. ([dD])omy', r' obchodní domy'),
-    (r' obch\. stř\.($|;)', r' obchodní středisko\1'),
-    (r' zdrav\. stř\.($|;)', r' zdravotní středisko\1'),
-    (r' čerp\. st\.($|;)', r' čerpací stanice\1'),
-    (r' spín\. st\.($|;)', r' spínací stanice\1'),
-    (r' pož\. zbroj\.($|;)', r' požární zbrojnice\1'),
-    (r' has\. zbroj\.($|;)', r' hasičská zbrojnice\1'),
+    (r' obch\. stř\.', r' obchodní středisko'),
+    (r' zdrav\. stř\.', [r' zdravotní středisko', r' zdravotnické středisko']),
+    (r' čerp\. st\.', r' čerpací stanice'),
+    (r' spín\. st\.', r' spínací stanice'),
+    (r' pož\. zbroj\.', r' požární zbrojnice'),
+    (r' has\. zbroj\.', r' hasičská zbrojnice'),
     (r' \([vV]\)álc\. pl\.', r' \1álcovny plechu'),
-    (r'\b([aA])ut\. nádr(\.|aží)', r'\1utobusové nádraží'),
+    (r' ([aA])ut\. nádr(\.|aží)', r'\1utobusové nádraží'),
     (r' nádr\.', r' nádraží'),
     (r' háj\.', r' hájovna'),
     (r' host\.', r' hostinec'),
     (r' nem\. areál', r' nemocniční areál'),
     (r' peč\. služby', r' pečovatelské služby'),
-    (r' nem(?oc)?\.', r' nemocnice'),
-    (r' koup\.($|;)', r' koupaliště\1'),
+    (r' nem(oc)?\.', r' nemocnice'),
+    (r' koup\.', r' koupaliště'),
     (r' žel\. mostu', r' železničního mostu'),
     (r' zahr\. kolonie', r' zahrádkářská kolonie'),
     (r' rest\.', r' restaurace'),
     (r' sídl\.', r' sídliště'),
-    (r' chat\. obl(\.|ast\b)', r' chatová oblast'),
+    (r' chat\. obl(\.|ast )', r' chatová oblast'),
     (r' odb\.', r' odbočka'),
     (r' ch\.', r' chata'),
     (r' ul\.', r' ulice'),
@@ -225,7 +227,7 @@ ABBREV_RULES = [
     (r'St\. Oldřůvky', r'Staré Oldřůvky'),
     (r'Vel\. Albrechticím', r'Velkým Albrechticím'),
     (r'Červ\. Lhota', r'Červená Lhota'),
-    (r'Sv\. Václav($|;)', r'Svatý Václav'),
+    (r'Sv\. Václav(?=[;, ])', r'Svatý Václav'),
     (r'\b([sS])v\. (Anny|Trojice)', r'\1vaté \2'),
     (r'\b([sS])v\. (Kateřina|Barbora)', r'\1vatá \2'),
     (r'\b([sS])v\. (J[aá]na|Mořice|Tomáše)', r'\1vatého \2'),
@@ -340,12 +342,12 @@ ABBREV_RULES = [
     (r'V\. Nezvala', r'Vítězslava Nezvala'),
     # IDOS probably won't handle these
     (r'ObÚ', r'obecní úřad'),
-    (r' ZŠ(?=[,; ]|$)', [r' ZŠ', r' základní škola']),
-    (r' MŠ(?=[,; ]|$)', [r' MŠ', r' mateřská škola']),
+    (r' ZŠ(?=[,; ])', [r' ZŠ', r' základní škola']),
+    (r' MŠ(?=[,; ])', [r' MŠ', r' mateřská škola']),
     (r' VŠ koleje', r' vysokoškolské koleje'),
-    (r' VŠ(?=[,; ]|$)', [r' VŠ', r' vysoká škola']),
-    (r' SPŠ(?=[,; ]|$)', [r' SPŠ', r' střední průmyslová škola']),
-    (r' SOU(?=[,; ]|$)', [r' SOU', r' střední odborné učiliště']),
+    (r' VŠ(?=[,; ])', [r' VŠ', r' vysoká škola']),
+    (r' SPŠ(?=[,; ])', [r' SPŠ', r' střední průmyslová škola']),
+    (r' SOU(?=[,; ])', [r' SOU', r' střední odborné učiliště']),
     (r' 29\. [Dd]ubna', [r' Dvacátého devátého dubna', r' Devětadvacátého dubna']),
     (r' 22\. [Dd]ubna', [r' Dvacátého druhého dubna', r' Dvaadvacátého dubna']),
     (r' 28\. [Řř]íjna', [r' Dvacátého osmého října', r' Osmadvacátého října']),
@@ -379,13 +381,17 @@ def expand_abbrevs(stop_name):
     variants = [' ' + stop_name + ' ']
     # process all regexes
     for regex, repls in ABBREV_RULES:
-        # replacement variants
-        if type(repls) == list:
-            variants = list(remove_dups_stable([regex.sub(repl, var)
-                                                for repl in repls for var in variants]))
-        # just a single replacement
-        else:
-            variants = [regex.sub(repls, var) for var in variants]
+        try:
+            # replacement variants
+            if type(repls) == list:
+                variants = list(remove_dups_stable([regex.sub(repl, var)
+                                                    for repl in repls for var in variants]))
+            # just a single replacement
+            else:
+                variants = [regex.sub(repls, var) for var in variants]
+        except Exception as e:
+            print >> sys.stderr, unicode(regex.pattern).encode('utf-8')
+            raise e
     # remove the added spaces
     variants = [var.strip() for var in variants]
     # return the result
