@@ -19,6 +19,7 @@
 # See http://kaldi.sourceforge.net/graph_recipe_test.html.
 # based on egs/voxforge script created by  Vassil Panayotov Copyright 2012, Apache 2.0
 
+source path.sh
 
 #  Alex specific parameters
 filter="<.?s>\|_SIL_\|_EHM_HMM_\|_INHALE\|_LAUGH_\|_NOISE_"
@@ -186,8 +187,10 @@ echo ""
 echo "Copying required files to target directory $dir"
 echo ""
 
+model_name=`basename $model`
+model_name=${model_name%.mdl}
 cp $model $dir || exit 1;
-cp $hclg/HCLG.fst $dir || exit 1;
+cp $hclg/HCLG.fst $dir/HCLG_${model_name} || exit 1;
 cp $lang/words.txt $dir || exit 1;
 cp $lang/phones/silence.csl $dir || exit 1;
 

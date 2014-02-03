@@ -233,7 +233,7 @@ if __name__ == '__main__':
             if exc.errno != errno.EEXIST or os.path.isdir(args.out_dir):
                 raise exc
 
-    cfg = Config.load_configs(args.configs)
+    cfg = Config.load_configs(args.configs, use_default=False)
 
     if args.command == 'extract':
         extract_from_xml(args.indomain_data_dir, args.out_dir, cfg)

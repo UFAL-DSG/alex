@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pykaldi_dir=/ha/work/people/oplatek/kaldi/src/pykaldi
+pykaldi_dir=/ha/projects/vystadial/lib/pykaldi-kronos-build/src/pykaldi
 export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH
 export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
 
