@@ -6,6 +6,7 @@
 
 import urllib2
 import json
+import os
 
 from os import remove
 from tempfile import mkstemp
@@ -73,10 +74,11 @@ class GoogleASR(ASRInterface):
             audio.save_flac(self.cfg, flac_file_name, wav)
             json_hypotheses = self.get_asr_hypotheses(flac_file_name)
         except (urllib2.HTTPError, urllib2.URLError) as e:
-            self.syslog.exception('GoogleASR HTTP/URL error: %e' % e)
+            self.syslog.exception('GoogleASR HTTP/URL error: %s' % unicode(e))
             json_hypotheses = [
                 [{'confidence': 1.0, 'utterance': '__google__ __asr__ __exception__'}, ], ]
         finally:
+            os.close(handle)
             remove(flac_file_name)
 
         try:

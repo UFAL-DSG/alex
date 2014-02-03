@@ -29,6 +29,7 @@ from alex.corpustools.asrscore import score_file, score
 
 
 def decode_info(asr, wav_path, reference=None):
+    time.sleep(0.2)
     start = time.clock()
     dec_trans = asr.rec_wav_file(wav_path)
     dec_dur = time.clock() - start

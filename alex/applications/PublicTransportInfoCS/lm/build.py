@@ -27,7 +27,7 @@ import alex.utils.various as various
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey
 
-train_data_size                 = 0.9
+train_data_size                 = 0.90
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
 indomain_data_dir               = "indomain_data"
@@ -151,8 +151,8 @@ if not os.path.exists(indomain_data_text_trn_norm):
     with codecs.open(indomain_data_text_dev,"w", "UTF-8") as w:
         w.write('\n'.join(t_dev))
 
-    pt_train = pt[:int(0.9*len(pt))]
-    pt_dev = pt[int(0.9*len(pt)):]
+    pt_train = pt[:int(train_data_size*len(pt))]
+    pt_dev = pt[int(train_data_size*len(pt)):]
 
     save_wavaskey(fn_pt_trn, dict(pt_train))
     save_wavaskey(fn_pt_dev, dict(pt_dev))
