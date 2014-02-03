@@ -190,7 +190,7 @@ echo ""
 model_name=`basename $model`
 model_name=${model_name%.mdl}
 cp $model $dir || exit 1;
-cp $hclg/HCLG.fst $dir/HCLG_${model_name} || exit 1;
+cp $hclg/HCLG.fst $dir/HCLG_${model_name}.fst || exit 1;
 cp $lang/words.txt $dir || exit 1;
 cp $lang/phones/silence.csl $dir || exit 1;
 

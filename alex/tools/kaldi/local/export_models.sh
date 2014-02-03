@@ -36,11 +36,11 @@ cp -f $exp/tri2a/final.mdl $tgt/tri2a.mdl
 cp -f $exp/tri2a/tree $tgt/tri2a.tree
 
 cp -f $exp/tri2b/final.mdl $tgt/tri2b.mdl
-cp -f $exp/tri2b/final.mat $tgt/tri2b.tree
+cp -f $exp/tri2b/tree $tgt/tri2b.tree
 cp -f $exp/tri2b/final.mat $tgt/tri2b.mat
 
 cp -f $exp/tri2b_mmi_b*/final.mdl $tgt/tri2b_bmmi.mdl
-cp -f $exp/tri2b/final.mat $tgt/tri2b_bmmi.tree
+cp -f $exp/tri2b/tree $tgt/tri2b_bmmi.tree
 cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
 
 cp -f $lang/words.txt $lang/phones.txt $lang/phones/silence.csl $tgt

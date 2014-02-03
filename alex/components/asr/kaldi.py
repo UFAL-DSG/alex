@@ -39,10 +39,12 @@ class KaldiASR(ASRInterface):
         self.wst = wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
         self.n_best = kcfg['n_best']
+        if not 'matrix' in kcfg:
+            kcfg['matrix'] = ''  # some models e.g. tri2a does not use matrix
 
         # specify all other options in config
         argv = ("--config=%(config)s --verbose=%(verbose)d %(extra_args)s "
-                "%(model)s %(hclg)s %(silent_phones)s" % kcfg)
+                "%(model)s %(hclg)s %(silent_phones)s %(matrix)s" % kcfg)
         argv = argv.split()
         with open(kcfg['config']) as r:
             conf_opt = r.read()
