@@ -25,16 +25,18 @@ Output:
 """
 
 from __future__ import unicode_literals
+import autopath
 import codecs
 import sys
 import re
 from add_cities_to_stops import load_list, get_city_for_stop
 from alex.utils.various import remove_dups_stable
 
+# a regex to strip weird stop name suffixes (request stop etc.)
+CLEAN_RULE = (r'(?: +O|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*)$', r'')
+
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
-    # strip weird suffixes (request stop etc.)
-    (r';( *([wvx§\(\)\{\}ABPO#]|MHD|WC|CLO))*$', r''),
     # spacing around punctuation
     (r'\.([^0-9 ])', r'. \1'),
     (r'([A-ZÁČĎĚÉÍŇÓŘŠŤŮÚŽa-záčďěéíňóřšťůúž])\.([0-9])', r'\1. \2'),
@@ -202,6 +204,7 @@ ABBREV_RULES = [
     (r' nem\.', r' nemocnice'),
     (r' koup\.($|;)', r' koupaliště\1'),
     (r' žel\. mostu', r' železničního mostu'),
+    (r' br\. pokladna', r' bratrská pokladna'),
     (r' zahr\. kolonie', r' zahrádkářská kolonie'),
     (r' rest\.', r' restaurace'),
     (r' sídl\.', r' sídliště'),
@@ -355,6 +358,7 @@ ABBREV_RULES = [
 ]
 
 # compile all regexes
+CLEAN_RULE = (re.compile(CLEAN_RULE[0]), CLEAN_RULE[1])
 ABBREV_RULES = [(re.compile(pattern), repl) for pattern, repl in ABBREV_RULES]
 
 
@@ -383,6 +387,9 @@ def main():
 
     # process the input
     for idos_list, idos_stop in in_stops:
+        # clean rubbish suffixes and expand all abbreviations 
+        # (resulting in one "canonical" name and possibly some variants)
+        idos_stop = CLEAN_RULE[0].sub(CLEAN_RULE[1], idos_stop)
         stop, variants = expand_abbrevs(idos_stop)
         # get the correct city (provide default for city transit only)
         city = get_city_for_stop(cities, stop,
