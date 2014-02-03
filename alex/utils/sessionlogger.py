@@ -130,6 +130,7 @@ class SessionLogger(object):
 
         s = '    ' + unicode(message)
         s = re.sub(r'\n', '\n    ', s)
+        s = re.sub(r'--', '- -', s)  # XML does not allow -- in comment mode
 
         return s + '\n'
 
