@@ -33,7 +33,7 @@ from add_cities_to_stops import load_list, get_city_for_stop
 from alex.utils.various import remove_dups_stable
 
 # a regex to strip weird stop name suffixes (request stop etc.)
-CLEAN_RULE = (r'(?: +O|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*)$', r'')
+CLEAN_RULE = (r'(?: +[O#]|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*)$', r'')
 
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
