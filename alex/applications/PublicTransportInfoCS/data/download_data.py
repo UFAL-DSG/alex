@@ -5,6 +5,9 @@ import autopath
 
 from alex.utils.config import online_update
 
+online_update('applications/PublicTransportInfoCS/data/czech.dict')
+online_update('applications/PublicTransportInfoCS/data/czech.tagger')
+
 #online_update('applications/PublicTransportInfoCS/data/stops-idos.txt')
 online_update('applications/PublicTransportInfoCS/data/cities.txt')
 online_update('applications/PublicTransportInfoCS/data/stops.txt')

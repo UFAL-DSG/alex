@@ -6,7 +6,7 @@ Expanding Czech stop/city names with inflection forms in all given morphological
 
 Usage:
 
-./expand_stops.py [-c 1,2,4] [-m previous.expanded.txt] stops.txt stops.expanded.txt
+./expand_stops.py [-c 1,2,4] [-m previous.expanded.txt] stops.txt [stops-2.txt ...] stops.expanded.txt
 
 -c = Required morphological cases (possible values: numbers 1-7, comma-separated).
         Defaults to 1,2,4 (nominative, genitive, accusative).
@@ -157,13 +157,15 @@ def main():
             cases = re.split('[, ]+', arg)
         elif opt == '-m':
             merge_file = arg
-    if len(files) != 2:
+    if len(files) < 2:
         sys.exit(__doc__)
-    in_file, out_file = files
+    in_files = files[:-1]
+    out_file = files[-1]
     es = ExpandStops(cases)
     if merge_file:
         es.load_file(merge_file)
-    es.expand_file(in_file)
+    for in_file in in_files:
+        es.expand_file(in_file)
     es.save(out_file)
 
 

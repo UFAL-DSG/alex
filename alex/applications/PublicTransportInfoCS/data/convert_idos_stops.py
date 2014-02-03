@@ -363,8 +363,8 @@ ABBREV_RULES = [
     (r' 14\. (ZŠ|základní škola)', r' Čtrnáctá \1'),
     (r' 18\. (ZŠ|základní škola)', r' Osmnáctá \1'),
     (r' 7\. [uU]lice', r' Sedmá ulice'),
-    # TODO this creates ambiguity in some cases, get rid of it:
-    (r' (rozcestí|křižovatka) [0-9]\.[0-9]', r'\1'),
+    # TODO this creates ambiguity in some cases
+    (r' (rozcestí|křižovatka) [0-9]\.[0-9]', r' \1'),
     # fixing spacing
     (r' ,', r','),
     (r'-([^ ])', r'- \1'),
