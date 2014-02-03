@@ -41,8 +41,14 @@ def get_city_for_stop(cities, stop, main_city):
     # stop is a city by itself
     if stop in cities:
         return stop
-    # try to split by ',' and '-'
-    for sepchar in [',', '-', ';', ' u ', ' nad ', ' pod ', ' v ', 'zastávka', 'město', '{', 'hlavní nádraží', 'hl. n.']:
+    # try to split by ',' and '-' + some names occuring in train stops where no punctuation is used
+    for sepchar in [',', '-', ';', ' u ', ' nad ', ' pod ', ' v ', ' ve ', 'zastávka', 'město', '{', 
+                    'hlavní nádraží', 'hl. n.', ' na ', 'klášter', 'obec', 'severní', 'jižní', 
+                    'západ', 'východ', 'jih', 'sever', 'západní', 'východní', 'centrum',
+                    'střed', 'zámecká zahrada', 'zálesí', 'kolonie', 'lázně', 'hlavní',
+                    'střelnice', 'bazén', 'koupaliště', 'předměstí', 'místní', 'zámek',
+                    'horní', 'dolní', 'Cihelna', 'jeskyně', 'dílny', 'rybník', 'bažantnice',
+                    'Masarykovo']:
         if sepchar in stop:
             prefix, _ = [x.strip() for x in stop.split(sepchar, 1)]
             if prefix in cities:
