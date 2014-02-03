@@ -112,6 +112,9 @@ class KaldiASR(ASRInterface):
         if len(nbest) == 0:
             nblist.add(1.0, Utterance('Empty hypothesis: Kaldi __FAIL__'))
 
+        nblist.merge()
+#        nblist.add_other()
+
         if self.cfg['ASR']['Kaldi']['debug']:
             self.syslog.info('utterance "probability" is %f' % utt_prob)
             self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))

@@ -635,7 +635,7 @@ class UtteranceNBList(ASRHypothesis, NBList):
         return self.get_best()
 
     def get_best(self):
-        if self.n_best[0][1] == '_other_':
+        if self.n_best[0][1] == '_other_' and len(self.n_best) > 1:
             return self.n_best[1][1]
         return self.n_best[0][1]
 
