@@ -2,6 +2,8 @@
 
 export KALDI_ROOT=/ha/projects/vystadial/lib/pykaldi-kronos-build
 
+source path.sh
+
 tmpdir=hclg_tmp_data
 localdir=$tmpdir/local # temporary directory
 langdir=$tmpdir/lang  # temporary directory for lexicon related files
@@ -15,7 +17,7 @@ tree=$am_dir/tri2a.tree  # decision phonetic tree
 lm_dir=../lm/
 dict=$lm_dir/final.dict  # phonetic dictionary
 vocab=$lm_dir/final.vocab
-LM=$lm_dir/final.tg.arpa  # LM in arpa format
+LM=$lm_dir/final.qg.arpa  # LM in arpa format
 
 # TODO ask before deleting
 rm -rf $tmpdir
