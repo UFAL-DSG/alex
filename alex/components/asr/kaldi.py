@@ -9,7 +9,7 @@ from math import exp
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
-from pykaldi.utils import wst2dict, lattice_to_nbest
+import pykaldi.utils
 
 try:
     from pykaldi.decoders import PyGmmLatgenWrapper
@@ -36,7 +36,7 @@ class KaldiASR(ASRInterface):
             with open(kcfg['silent_phones'], 'r') as r:
                 kcfg['silent_phones'] = r.read()
 
-        self.wst = wst2dict(kcfg['wst'])
+        self.wst = pykaldi.utils.wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
         self.n_best = kcfg['n_best']
         if not 'matrix' in kcfg:
@@ -95,11 +95,11 @@ class KaldiASR(ASRInterface):
 
         # Get hypothesis
         self.decoder.prune_final()
-        utt_prob, lat = self.decoder.get_lattice()
+        utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
         self.decoder.reset(keep_buffer_data=False)
 
         # Convert lattice to nblist
-        nbest = lattice_to_nbest(lat, self.n_best)
+        nbest = pykaldi.utils.lattice_to_nbest(lat, self.n_best)
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
@@ -119,7 +119,7 @@ class KaldiASR(ASRInterface):
 #        nblist.add_other()
 
         if self.cfg['ASR']['Kaldi']['debug']:
-            self.syslog.info('utterance "probability" is %f' % utt_prob)
+            self.syslog.info('utterance "likelihood" is %f' % utt_lik)
             self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
 
         return nblist
