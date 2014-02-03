@@ -35,7 +35,7 @@ class ASRInterface(object):
 
     def flush(self):
         """
-        Should reset the decoder immediatly in order to be ready for next recognition task
+        Should reset the decoder immediately in order to be ready for next recognition task
 
         """
         raise ASRException("Not implemented")

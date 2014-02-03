@@ -13,7 +13,6 @@ import xml.dom.minidom
 import fnmatch
 import argparse
 import time
-from math import sqrt
 import numpy
 
 import autopath
@@ -35,7 +34,6 @@ def decode_info(asr, wav_path, reference=None):
     print
     print '    Reference: %s' % reference
 
-    time.sleep(0.2)
     start = time.clock()
     dec_trans = asr.rec_wav_file(wav_path)
     dec_dur = time.clock() - start
