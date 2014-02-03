@@ -7,4 +7,3 @@ stops*.txt
 cities_stops.tsv
 cities_locations.tsv
 idos_map.tsv
-crws_combination.pickle.gz
