@@ -6,7 +6,7 @@ from alex.utils.config import online_update
 
 online_update('applications/PublicTransportInfoCS/hclg/models/INFO_HCLG.txt')
 
-online_update('applications/PublicTransportInfoCS/hclg/models/HCLG.fst')
-online_update('applications/PublicTransportInfoCS/hclg/models/final.mdl')
+online_update('applications/PublicTransportInfoCS/hclg/models/HCLG_tri2a.fst')
+online_update('applications/PublicTransportInfoCS/hclg/models/tri2a.mdl')
 online_update('applications/PublicTransportInfoCS/hclg/models/words.txt')
 online_update('applications/PublicTransportInfoCS/hclg/models/silence.csl')

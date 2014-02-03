@@ -29,6 +29,12 @@ from alex.corpustools.asrscore import score_file, score
 
 
 def decode_info(asr, wav_path, reference=None):
+    print "-"*120
+    print
+    print '    Wav file:  %s' % str(wav_path)
+    print
+    print '    Reference: %s' % reference
+
     time.sleep(0.2)
     start = time.clock()
     dec_trans = asr.rec_wav_file(wav_path)
@@ -36,11 +42,6 @@ def decode_info(asr, wav_path, reference=None):
     best = unicode(dec_trans.get_best())
     wav_dur = wav_duration(wav_path)
 
-    print "-"*120
-    print
-    print '    Wav file:  %s' % str(wav_path)
-    print
-    print '    Reference: %s' % reference
     print '    Decoded:   %s' % best
     print '    Wav dur:   %.2f' % wav_dur
     print '    Dec dur:   %.2f' % dec_dur
@@ -233,7 +234,7 @@ if __name__ == '__main__':
             if exc.errno != errno.EEXIST or os.path.isdir(args.out_dir):
                 raise exc
 
-    cfg = Config.load_configs(args.configs, use_default=False)
+    cfg = Config.load_configs(args.configs, use_default=True)
 
     if args.command == 'extract':
         extract_from_xml(args.indomain_data_dir, args.out_dir, cfg)
