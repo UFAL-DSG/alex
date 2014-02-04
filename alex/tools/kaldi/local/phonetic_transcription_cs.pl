@@ -76,6 +76,7 @@ sub exceptions {
     s/CAUSA/KAUZA/g;
     s/CELSIA/CELZIA/g;
     s/CHIL/ČIL/g;
+    s/^CHAPLIN/ČAPLIN/g;
     s/DANIH/DANYH/g;
     s/EFEKTIV/EFEKTYV/g;
     s/FINITI/FINYTY/g;
@@ -133,6 +134,7 @@ sub exceptions {
     s/MANIP/MANYP/g;
     s/MODERNI/MODERNY/g;
     s/^NE/NE!/g;
+    s/^NEWTON/ŇŮTON/g;
     s/^ODD/OD!D/g;
     s/^ODT/OT!T/g;
     s/^ODI(?=[^V])/ODY/g;
@@ -182,6 +184,7 @@ sub exceptions {
     s/UNIVER/UNYVER/g;
     s/VENTI/VENTY/g;
     s/VERTIK/VERTYK/g;
+    s/^WILSON/VILSON/g;
 }
 
 sub transcription {

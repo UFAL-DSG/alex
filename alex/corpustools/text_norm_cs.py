@@ -171,6 +171,7 @@ _subst = [
           ('NEVYDŽEL', 'NEVYDRŽEL'),
           ('NIČIM', 'NIČÍM'),
           ('NMŮŽU', 'NEMŮŽU'),
+          ('ŇÚTNOVA', 'NEWTONOVA'),
           ('_NOISE_KAM', '_NOISE_ KAM'),
           ('(NOISE)KAM', '_NOISE_ KAM'),
           ('_NOISE_VONO', '_NOISE_ VONO'),
