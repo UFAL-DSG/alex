@@ -108,15 +108,13 @@ class KaldiASR(ASRInterface):
                 self.syslog.debug(words)
 
             p = exp(-w)
-            if p > 0.0001:
-                nblist.add(p, Utterance(words))
+            nblist.add(p, Utterance(words))
 
         # Log
         if len(nbest) == 0:
             nblist.add(1.0, Utterance('Empty hypothesis: Kaldi __FAIL__'))
 
         nblist.merge()
-#        nblist.add_other()
 
         if self.cfg['ASR']['Kaldi']['debug']:
             self.syslog.info('utterance "likelihood" is %f' % utt_lik)

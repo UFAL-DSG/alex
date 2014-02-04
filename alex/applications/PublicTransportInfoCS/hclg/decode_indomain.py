@@ -27,6 +27,7 @@ from alex.corpustools.asrscore import score
 from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
+
 def rec_wav_file(asr, cfg, wav_path):
     pcm = load_wav(cfg, wav_path)
     frame = Frame(pcm)
@@ -40,6 +41,7 @@ def rec_wav_file(asr, cfg, wav_path):
     asr.flush()
 
     return res, rec_in_end - start, hyp_out_end - rec_in_end
+
 
 def decode_info(asr, cfg, wav_path, reference=None):
     print "-"*120
@@ -62,9 +64,10 @@ def decode_info(asr, cfg, wav_path, reference=None):
 
     print
     print '    NBest list:'
-    print '    '+unicode(dec_trans).replace('\n','\n    ')
+    print '    ' + u'\n    '.join(['%.5f %s' % (p, t) for p, t in dec_trans.n_best if p > 0.0001])
 
     return best, dec_dur, fw_dur, wav_dur
+
 
 def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
     reference = os.path.join(outdir, 'ref_trn.txt')
