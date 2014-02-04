@@ -18,39 +18,57 @@ import numpy
 import autopath
 
 import alex.utils.various as various
-from alex.utils.config import Config
-from alex.utils.audio import wav_duration
+
 from alex.components.asr.common import asr_factory
 from alex.components.asr.utterance import Utterance
+from alex.components.hub.messages import Frame
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey, load_wavaskey
 from alex.corpustools.asrscore import score_file, score
+from alex.utils.config import Config
+from alex.utils.audio import load_wav, wav_duration
 
+def rec_wav_file(asr, cfg, wav_path):
+    start = time.clock()
 
-def decode_info(asr, wav_path, reference=None):
+    pcm = load_wav(cfg, wav_path)
+    frame = Frame(pcm)
+
+    asr.rec_in(frame)
+    rec_in_end = time.clock()
+    res = asr.hyp_out()
+    hyp_out_end = time.clock()
+
+    asr.flush()
+
+    return res, rec_in_end - start, hyp_out_end - start
+
+def decode_info(asr, cfg, wav_path, reference=None):
     print "-"*120
     print
     print '    Wav file:  %s' % str(wav_path)
     print
     print '    Reference: %s' % reference
 
-    start = time.clock()
-    dec_trans = asr.rec_wav_file(wav_path)
-    dec_dur = time.clock() - start
-    best = unicode(dec_trans.get_best())
     wav_dur = wav_duration(wav_path)
+
+    dec_trans, rec_in_dur, hyp_out_dur = rec_wav_file(asr, cfg, wav_path)
+    fw_dur = rec_in_dur
+    dec_dur = max(rec_in_dur, wav_dur) + hyp_out_dur
+    best = unicode(dec_trans.get_best())
 
     print '    Decoded:   %s' % best
     print '    Wav dur:   %.2f' % wav_dur
     print '    Dec dur:   %.2f' % dec_dur
+    print '    FW dur:    %.2f' % fw_dur
 
     print
     print '    NBest list:'
     print '    '+unicode(dec_trans).replace('\n','\n    ')
 
-    return best, dec_dur, wav_dur
+    return best, dec_dur, fw_dur, wav_dur
 
-def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
+def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
     reference = os.path.join(outdir, 'ref_trn.txt')
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
     save_wavaskey(reference, trn_dict)
@@ -58,41 +76,67 @@ def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
     save_wavaskey(os.path.join(outdir, 'wavlen.txt'), wavlen_dict)
     save_wavaskey(os.path.join(outdir, 'dec_duration.txt'), declen_dict)
 
-    rtf, d_tot, w_tot = [], 0, 0
-    delay = []
+    rtf, latency, fw_rtf, fw_latency, d_tot, w_tot = [], [], [], [], 0, 0
     for k in declen_dict.keys():
-        w, d = wavlen_dict[k], declen_dict[k]
+        w, d, f = wavlen_dict[k], declen_dict[k], fwlen_dict[k]
         d_tot, w_tot = d_tot + d, w_tot + w
         rtf.append(float(d) / w)
-        delay.append(float(d) - w if float(d) - w > 0.0 else 0.0)
+        latency.append(float(d) - w)
+        fw_rtf.append(float(f) / w)
+        fw_latency.append(max(float(f) - w, 0))
     rtf_global = float(d_tot) / w_tot
 
     print
-    print """    # waws:              %d""" % len(rtf)
-    print """    Global RTF mean:     %(rtfglob)f""" % {'rtfglob': rtf_global}
+    print """    # waws:                  %d""" % len(rtf)
+    print """    Global RTF mean:         %(rtfglob)f""" % {'rtfglob': rtf_global}
 
     try:
         rtf.sort()
         rm = rtf[int(len(rtf)*0.5)]
         rc95 = rtf[int(len(rtf)*0.95)]
 
-        print """    RTF median:          %(median)f  RTF   < %(c95)f [in 95%%]""" % {'median': rm, 'c95': rc95}
+        print """    RTF median:              %(median)f  RTF       < %(c95)f [in 95%%]""" % {'median': rm, 'c95': rc95}
     except:
         pass
 
     try:
-        delay.sort()
-        dm = delay[int(len(delay)*0.5)]
-        dc95 = delay[int(len(delay)*0.95)]
+        fw_rtf.sort()
+        fm = fw_rtf[int(len(fw_rtf)*0.5)]
+        fc95 = fw_rtf[int(len(fw_rtf)*0.95)]
 
-        print """    Delay median:        %(median)f  Delay < %(c95)f [in 95%%]
-    """ % {'median': dm, 'c95': dc95}
+        print """    Forward RTF median:      %(median)f  FWRTF     < %(c95)f [in 95%%]""" % {'median': fm, 'c95': fc95}
     except:
         pass
 
-def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
+    try:
+        latency.sort()
+        lm = latency[int(len(latency)*0.5)]
+        lc95 = latency[int(len(latency)*0.95)]
 
-    compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
+        print """    Latency median:          %(median)f  Latency   < %(c95)f [in 95%%]""" % {'median': lm, 'c95': lc95}
+    except:
+        pass
+
+    try:
+        fw_latency.sort()
+        flm = fw_latency[int(len(fw_latency)*0.5)]
+        flc95 = fw_latency[int(len(fw_latency)*0.95)]
+
+        print """    Forward latency median:  %(median)f  FWLatency < %(c95)f [in 95%%]
+    """ % {'median': flm, 'c95': flc95}
+    except:
+        pass
+
+    try:
+        print "    95%RTF={rtf:0.2f} 95%FWRTF={fwrtf:0.2f} " \
+              "95%LAT={lat:0.2f} 95%FWLAT={fwlat:0.2f}".format(rtf=rc95, fwrtf=fc95, lat=lc95, fwlat=flc95)
+        print
+    except:
+        pass
+
+def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
+
+    compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
     reference = os.path.join(outdir, 'ref_trn.txt')
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
@@ -114,17 +158,18 @@ def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict):
 def decode_with_reference(reference, outdir, cfg):
     asr = asr_factory(cfg)
     trn_dict = load_wavaskey(reference, Utterance)
-    declen_dict, wavlen_dict, dec_dict = {}, {}, {}
+    declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
 
     for wav_path, reference in trn_dict.iteritems():
-        best, dec_dur, wav_dur = decode_info(asr, wav_path, reference)
+        best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, wav_path, reference)
         dec_dict[wav_path] = best
         wavlen_dict[wav_path] = wav_dur
         declen_dict[wav_path] = dec_dur
+        fwlen_dict[wav_path] = fw_dur
 
-        compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
+        compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
-    compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict)
+    compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
 
 def extract_from_xml(indomain_data_dir, outdir, cfg):
@@ -177,7 +222,7 @@ def extract_from_xml(indomain_data_dir, outdir, cfg):
                 trn.append((wav_file, t))
 
                 wav_path = os.path.join(f_dir, wav_file)
-                best, dec_dur, wav_dur = decode_info(asr, wav_path, t)
+                best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, wav_path, t)
                 dec.append((wav_file, best))
                 wav_len.append((wav_file, wav_dur))
                 dec_len.append((wav_file, dec_dur))
