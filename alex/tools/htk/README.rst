@@ -4,7 +4,7 @@ Building of acoustic models using HTK
 In this document, we describe building of acoustic models using the HTK toolkit using the provided scripts.
 These acoustic models can be used with the *OpenJulius* ASR decoder.
 
-We build a different acoustic for a each language and acoustic condition 
+We build a different acoustic model for a each language and acoustic condition 
 pair – ``LANG_RCOND``. At this time, we provide two sets of scripts for 
 building English and Czech acoustic models using the VOIP data.
 

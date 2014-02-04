@@ -15,15 +15,16 @@ import struct
 import subprocess
 import time
 import xml.dom.minidom
-
+from alex.components.asr.base import ASRInterface
 from alex.components.asr.exceptions import JuliusASRException, \
-        JuliusASRTimeoutException
+    JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, Utterance, \
     UtteranceConfusionNetwork
 from alex.utils.various import get_text_from_xml_node
 
 
-class JuliusASR(object):
+class JuliusASR(ASRInterface):
+
     """
     Uses Julius ASR service to recognize recorded audio.
 
@@ -34,9 +35,9 @@ class JuliusASR(object):
     """
 
     def __init__(self, cfg, popen_kwargs=dict()):
+        super(JuliusASR, self).__init__()
         self.recognition_on = False
 
-        self.cfg = cfg
         self.debug = cfg['ASR']['Julius'].get('debug', False)
         self.julius_server = None
         self.hostname = self.cfg['ASR']['Julius']['hostname']
@@ -51,7 +52,6 @@ class JuliusASR(object):
         self.msg_timeout = self.cfg['ASR']['Julius'].get('msg_timeout', 0.3)
         self.timeout = self.cfg['ASR']['Julius'].get('timeout', 2.0)
 
-        system_logger = self.cfg['Logging']['system_logger']
         try:
             if self.reuse_server:
                 # reinit hack for julius
@@ -59,40 +59,39 @@ class JuliusASR(object):
             if self.reuse_server and self.is_server_running():
                 # If we should reuse server and it is running, it's perfect
                 # and we will do nothing.
-                system_logger.debug("Brilliant, Julius is already running.")
+                self.syslog.debug("Brilliant, Julius is already running.")
                 self.open_adinnet()
                 return
             elif not self.reuse_server and self.is_server_running():
                 if os.path.isfile(self.pidfile):
                     self.kill_my_julius()
-                    system_logger.debug("I just commited murder, Julius is "
-                                        "dead!")
+                    self.syslog.debug("I just commited murder, Julius is dead!")
                 elif self.cfg['ASR']['Julius']['killall']:
                     self.kill_all_juliuses()
-                    system_logger.debug("I just killed ALL JULIŌS!")
+                    self.syslog.debug("I just killed ALL JULIŌS!")
 
-            system_logger.debug("Starting the Julius ASR server...")
+            self.syslog.debug("Starting the Julius ASR server...")
             self.start_server(popen_kwargs)
             if not self.wait():
                 raise JuliusASRTimeoutException(
                     'Could not wait for Julius to start up.')
 
-            system_logger.debug("Connected to Julius.")
+            self.syslog.debug("Connected to Julius.")
             if not self.wait(test=self.is_adinnet_open):
                 raise JuliusASRTimeoutException(
                     'Could not wait for adinnet to open.')
         except Exception as e:
-            system_logger.debug("There was a problem with starting the "
-                                "Julius ASR server: {msg!s}".format(msg=e))
+            self.syslog.debug("There was a problem with starting the "
+                              "Julius ASR server: {msg!s}".format(msg=e))
             if self.debug:
                 import sys
                 sys.excepthook(*sys.exc_info())
             # Always kill the Julius ASR server when there is a problem.
             if self.julius_server:
-                system_logger.debug("Killing the Julius ASR server!")
+                self.syslog.debug("Killing the Julius ASR server!")
                 self.julius_server.kill()
 
-            system_logger.debug("Exiting.")
+            self.syslog.debug("Exiting.")
             exit(0)
 
     def __del__(self):

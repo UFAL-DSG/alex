@@ -22,7 +22,7 @@ The criteria:
 
 min_words = 4
 max_words = 15
-max_ppl = 300
+max_ppl = 200
 max_oovs = 5
 max_oovs_per = 0.2
 max_zprobs = 2
