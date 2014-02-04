@@ -6,4 +6,4 @@ export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
 
 python download_models.py
 
-time ./decode_indomain.py -c kaldi_fj.cfg --f true -o decoded_kaldi  load ../lm/reference_transcription_dev.txt
+time ./decode_indomain.py -c kaldi.cfg --f true -o decoded_kaldi  load ../lm/reference_transcription_dev.txt
