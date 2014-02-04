@@ -29,15 +29,14 @@ from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
 def rec_wav_file(asr, cfg, wav_path):
-    start = time.clock()
-
     pcm = load_wav(cfg, wav_path)
     frame = Frame(pcm)
 
+    start = time.time()
     asr.rec_in(frame)
-    rec_in_end = time.clock()
+    rec_in_end = time.time()
     res = asr.hyp_out()
-    hyp_out_end = time.clock()
+    hyp_out_end = time.time()
 
     asr.flush()
 
