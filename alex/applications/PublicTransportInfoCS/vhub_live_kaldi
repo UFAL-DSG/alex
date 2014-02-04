@@ -1,0 +1,12 @@
+#!/bin/bash
+
+pykaldi_dir=/ha/work/people/oplatek/kaldi/src/pykaldi
+export LD_LIBRARY_PATH=$pykaldi_dir:$LD_LIBRARY_PATH
+export PYTHONPATH=$pykaldi_dir:$pykaldi_dir/pyfst:$PYTHONPATH
+
+pushd ..
+
+./vhub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_live.cfg ../resources/private/ext-800899998.cfg ./PublicTransportInfoCS/kaldi.cfg
+
+popd
+
