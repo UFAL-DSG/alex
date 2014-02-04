@@ -18,6 +18,7 @@ import os
 import xml.dom.minidom
 import glob
 import codecs
+import random
 
 import autopath
 
@@ -69,7 +70,7 @@ extended_data_text_trn_norm_cls_pg_arpa_filtered    = "25_extended_data_trn_norm
 expanded_lm_vocab       = "26_expanded.vocab"
 expanded_lm_pg          = "26_expanded.pg.arpa"
 
-mixing_weight           = "0.5"
+mixing_weight           = "0.7"
 mixed_lm_vocab          = "27_mixed.vocab"
 mixed_lm_pg             = "27_mixed.pg.arpa"
 
@@ -143,16 +144,23 @@ if not os.path.exists(indomain_data_text_trn_norm):
 
                 pt.append((wav_path, t))
 
-    t_train = tt[:int(train_data_size*len(tt))]
-    t_dev = tt[int(train_data_size*len(tt)):]
+    random.seed(10)
+    sf = [(a, b) for a, b in zip(tt, pt)]
+    random.shuffle(sf)
+
+    sf_train = sorted(sf[:int(train_data_size*len(sf))], key=lambda k: k[1][0])
+    sf_dev = sorted(sf[int(train_data_size*len(sf)):], key=lambda k: k[1][0])
+
+    t_train = [a for a, b in sf_train]
+    pt_train = [b for a, b in sf_train]
+
+    t_dev = [a for a, b in sf_dev]
+    pt_dev = [b for a, b in sf_dev]
 
     with codecs.open(indomain_data_text_trn,"w", "UTF-8") as w:
         w.write('\n'.join(t_train))
     with codecs.open(indomain_data_text_dev,"w", "UTF-8") as w:
         w.write('\n'.join(t_dev))
-
-    pt_train = pt[:int(train_data_size*len(pt))]
-    pt_dev = pt[int(train_data_size*len(pt)):]
 
     save_wavaskey(fn_pt_trn, dict(pt_train))
     save_wavaskey(fn_pt_dev, dict(pt_dev))
