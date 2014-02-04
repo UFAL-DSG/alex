@@ -61,7 +61,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     if isinstance(ds[ds_slot], float):
                         ds[ds_slot] = 0.0
                     elif isinstance(ds[ds_slot], int):
-                        ds[ds_slot] = 0.0
+                        ds[ds_slot] = 0
                     elif isinstance(ds[ds_slot], basestring):
                         ds[ds_slot] = "none"
                     else:
