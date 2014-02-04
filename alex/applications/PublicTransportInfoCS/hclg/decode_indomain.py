@@ -39,7 +39,7 @@ def rec_wav_file(asr, cfg, wav_path):
 
     asr.flush()
 
-    return res, rec_in_end - start, hyp_out_end - start
+    return res, rec_in_end - start, hyp_out_end - rec_in_end
 
 def decode_info(asr, cfg, wav_path, reference=None):
     print "-"*120

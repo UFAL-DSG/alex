@@ -91,7 +91,7 @@ class KaldiASR(ASRInterface):
         """ This defines asynchronous interface for speech recognition.
         Returns recognizers hypotheses about the input speech audio.
         """
-        start = time.clock()
+        start = time.time()
 
         # Get hypothesis
         self.decoder.prune_final()
@@ -120,6 +120,6 @@ class KaldiASR(ASRInterface):
 
         if self.cfg['ASR']['Kaldi']['debug']:
             self.syslog.info('utterance "likelihood" is %f' % utt_lik)
-            self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.clock() - start))
+            self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.time() - start))
 
         return nblist
