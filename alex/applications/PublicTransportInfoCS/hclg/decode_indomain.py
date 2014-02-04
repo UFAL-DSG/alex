@@ -13,7 +13,6 @@ import xml.dom.minidom
 import fnmatch
 import argparse
 import time
-import numpy
 
 import autopath
 
@@ -24,7 +23,7 @@ from alex.components.asr.utterance import Utterance
 from alex.components.hub.messages import Frame
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey, load_wavaskey
-from alex.corpustools.asrscore import score_file, score
+from alex.corpustools.asrscore import score
 from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
@@ -246,8 +245,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
     parser.add_argument('-o', '--out-dir', default='decoded',
                         help='The computed statistics are saved the out-dir directory')
-    parser.add_argument('-f', '--force', type=bool, default=False,
-                        nargs='?', help='If out-dir exists write the results there anyway')
+    parser.add_argument('-f', default=False, action='store_true',
+                        help='If out-dir exists write the results there anyway')
 
     subparsers = parser.add_subparsers(dest='command',
                                        help='Either extract wav list from xml or expect reference and wavs')
@@ -264,7 +263,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if os.path.exists(args.out_dir):
-        if not args.force:
+        if not args.f:
             print "\nThe directory '%s' already exists!\n" % args.out_dir
             parser.print_usage()
             parser.exit()
