@@ -44,48 +44,6 @@ To get latest versions of the following python packages, I recommend to run thes
   sudo easy_install nose
 
 
-In order to use Kaldi decoder,
-install ``pykaldi`` Python extension and build fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
-install patched ``OpenFST`` and ``pyfst`` from https://github.com/UFAL-DSG/pyfst.
-
-For building Kaldi library from ``pykaldi`` fork follow steps below:
-
-.. code-block:: bash
-
-  cd tools
-  make atlas   # Just downloads headers
-  make openfst_tgt  # Install patched OpenFST LOCALLY!
-  cd ../src
-  ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
-  make && make test
-  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
-
-In order to install patched ``OpenFST`` system wide,
-you need just to install the already built ``OpenFST`` library from previous step
-
-.. code-block:: bash
-
-    cd pykaldi/tools/openfst
-    ./configure  --prefix=/usr  # Sets the path to system wide installation directory
-    sudo make install  # Copies the already build libraries from installing Kaldi library step.
-
-
-Install ``pyfst`` by
-
-.. code-block:: bash
-
-    git clone https://github.com/UFAL-DSG/pyfst.git pyfst
-    sudo python setup.py install
-
-
-Finally the ``pykaldi`` wrapper around Kaldi decoders
-
-.. code-block:: bash
-
-    cd pykaldi/src/pykaldi
-    sudo python setup.py install
-
-
 Source code compiled packages
 -----------------------------
 
@@ -118,6 +76,52 @@ HTK
 ~~~~
 Get the latest HTK (3.4.1 tested) from http://htk.eng.cam.ac.uk/download.shtml . Build and install the HTK following
 the HTK's instructions.
+
+KALDI
+~~~~~
+In order to use Kaldi decoder, build ``pykaldi`` fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
+install patched ``OpenFST`` from ``pykaldi``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
+install ``pykaldi`` Python extension.
+
+First,  build Kaldi fork ``pykaldi`` as follows:
+
+.. code-block:: bash
+
+  git clone https://github.com/UFAL-DSG/pykaldi
+  cd pykaldi/tools
+  make atlas   # Just downloads headers
+  make openfst_tgt  # Install patched OpenFST LOCALLY!
+  cd ../src
+  ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
+  make && make test
+  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
+
+Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
+library from previous step:
+
+.. code-block:: bash
+
+    cd pykaldi/tools/openfst
+    ./configure  --prefix=/usr  # Sets the path to system wide installation directory
+    sudo make install  # Copies the already build libraries from installing Kaldi library step.
+
+
+Install ``pyfst`` by
+
+.. code-block:: bash
+
+    git clone https://github.com/UFAL-DSG/pyfst.git pyfst
+    cd pyfst
+    sudo python setup.py install
+
+
+Finally, install the ``pykaldi`` Python extension (a wrapper around Kaldi decoders):
+
+.. code-block:: bash
+
+    cd pykaldi/src/pykaldi
+    sudo python setup.py install
+
 
 SRILM
 ~~~~~
