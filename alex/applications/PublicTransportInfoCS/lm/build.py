@@ -70,7 +70,7 @@ extended_data_text_trn_norm_cls_pg_arpa_filtered    = "25_extended_data_trn_norm
 expanded_lm_vocab       = "26_expanded.vocab"
 expanded_lm_pg          = "26_expanded.pg.arpa"
 
-mixing_weight           = "0.7"
+mixing_weight           = "0.8"
 mixed_lm_vocab          = "27_mixed.vocab"
 mixed_lm_pg             = "27_mixed.pg.arpa"
 

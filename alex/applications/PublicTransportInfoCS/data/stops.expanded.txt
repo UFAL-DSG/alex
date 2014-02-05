@@ -550,7 +550,7 @@ Hydrologický ústav;Hydrologického ústavu;Hydrologickýho ústavu;Hydrologick
 IKEM
 Internacionální
 Invalidovna;Invalidovny;Invalidovně;Invalidovnu
-I. P. Pavlova;I. P. Pavlovu;ÍPÉ PA Pavlova
+I. P. Pavlova;I. P. Pavlovu
 Italská;Italské;Italský;Italskou
 Jahodnice;Jahodnic;Jahodnicím;Jahodnicům;Jahodnicích
 Jahodnice II;Jahodnic II;Jahodnicím II;Jahodnicům II;Jahodnicích II
