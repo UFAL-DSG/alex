@@ -103,7 +103,7 @@ library from previous step:
 
     cd pykaldi/tools/openfst
     ./configure  --prefix=/usr  # Sets the path to system wide installation directory
-    sudo make install  # Copies the already build libraries from installing Kaldi library step.
+    sudo make install  # Copies the already built and pathced libraries from 'make openfst_tgt' step.
 
 
 Install ``pyfst`` by
@@ -120,7 +120,7 @@ Finally, install the ``pykaldi`` Python extension (a wrapper around Kaldi decode
 .. code-block:: bash
 
     cd pykaldi/src/pykaldi
-    sudo python setup.py install
+    sudo make install
 
 
 SRILM
