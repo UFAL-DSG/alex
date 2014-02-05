@@ -110,6 +110,8 @@ Install ``pyfst`` by
 
 .. code-block:: bash
 
+    sudo pip install pystache
+    
     git clone https://github.com/UFAL-DSG/pyfst.git pyfst
     cd pyfst
     sudo python setup.py install
