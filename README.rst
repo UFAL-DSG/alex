@@ -19,7 +19,7 @@ The main goals are:
 Implemented features:
 
 - VOIP using ``PJSIP 2.1`` with some modifications
-- ASR using ``OpenJulius`` or ``GoogleASR``
+- ASR using ``OpenJulius``, ``GoogleASR``  or ``KALDI``
 - VAD using Gaussian Mixure Models or Feed-Forward Neural Networks
 - SLU using a set of logistic regression classifiers for detecting dialogue acts
 - DM using deterministic one best dialogue state tracking and handcrafted policies
