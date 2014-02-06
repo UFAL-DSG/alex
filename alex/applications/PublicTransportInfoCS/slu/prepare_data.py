@@ -14,10 +14,12 @@ import alex.utils.various as various
 
 from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
+from alex.components.asr.common import asr_factory
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.base import CategoryLabelDatabase
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
+from alex.utils.config import Config
 
 """ The script has two commands:
 
@@ -42,6 +44,8 @@ def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
     slu = PTICSHDCSLU(preprocessing)
+    cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
+    asr_rec = asr_factory(cfg)                    
 
     fn_uniq_trn = 'uniq.trn'
     fn_uniq_trn_hdc_sem = 'uniq.trn.hdc.sem'
@@ -103,6 +107,8 @@ def main():
     nbl_hdc_sem = []
 
     for fn in files[:100000]:
+        f_dir = os.path.dirname(fn)
+
         print "Processing:", fn
         doc = xml.dom.minidom.parse(fn)
         turns = doc.getElementsByTagName("turn")
@@ -140,16 +146,23 @@ def main():
                 continue
 
             wav_key = recs[0].getAttribute('fname')
+            wav_path = os.path.join(f_dir, wav_key)
+            
             # FIXME: Check whether the last transcription is really the best! FJ
             t = various.get_text_from_xml_node(trans[-1])
             t = normalise_text(t)
 
-            a = various.get_text_from_xml_node(hyps[0])
-            a = normalise_semi_words(a)
+            
+            if '--asr-log' not in sys.argv:
+                asr_rec_nbl = asr_rec.rec_wav_file(wav_path)
+                a = unicode(asr_rec_nbl.get_best())
+            else:  
+                a = various.get_text_from_xml_node(hyps[0])
+                a = normalise_semi_words(a)
 
             if exclude_slu(t) or 'DOM Element:' in a:
-                print "Skipping transcription:", t
-                print "Skipping ASR output:   ", a
+                print "Skipping transcription:", unicode(t)
+                print "Skipping ASR output:   ", unicode(a)
                 continue
 
             # The silence does not have a label in the language model.
@@ -166,8 +179,11 @@ def main():
 
             if '--uniq' not in sys.argv:
                 # HDC SLU on 1 best ASR
-                a = various.get_text_from_xml_node(hyps[0])
-                a = normalise_semi_words(a)
+                if '--asr-log' not in sys.argv:
+                    a = unicode(asr_rec_nbl.get_best())
+                else:  
+                    a = various.get_text_from_xml_node(hyps[0])
+                    a = normalise_semi_words(a)
 
                 asr.append((wav_key, a))
 
@@ -176,11 +192,16 @@ def main():
 
                 # HDC SLU on N best ASR
                 n = UtteranceNBList()
-                for h in hyps:
-                    txt = various.get_text_from_xml_node(h)
-                    txt = normalise_semi_words(txt)
+                if '--asr-log' not in sys.argv:
+                   n = asr_rec_nbl
+                   
+                   print 'ASR RECOGNITION NBLIST\n',unicode(n)
+                else:
+                    for h in hyps:
+                        txt = various.get_text_from_xml_node(h)
+                        txt = normalise_semi_words(txt)
 
-                    n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
+                        n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
 
                 n.merge()
                 n.normalise()

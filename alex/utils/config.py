@@ -373,7 +373,7 @@ class Config(object):
                      into self's one
         """
         # pylint: disable-msg=E0602
-        if type(other) is str:
+        if type(other) is str or type(other) is unicode:
             other = Config(other)
         self.update(other.config)
 

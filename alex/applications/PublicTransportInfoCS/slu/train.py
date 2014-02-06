@@ -62,8 +62,8 @@ def train(fn_model,
     slu.save_model(fn_model)
 
 def main():
-    min_feature_count = 3
     min_classifier_count = 4
+    min_feature_count = 3
 
     train('./dailogreg.trn.model.all', './all.trn', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
         min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
