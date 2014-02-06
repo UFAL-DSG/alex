@@ -17,6 +17,7 @@ import re
 import sys
 import codecs
 from alex.utils.cache import lru_cache
+from alex.utils.config import online_update, to_project_path
 
 
 class Directions(object):
@@ -561,9 +562,14 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         Also creates a reverse mapping of stop names, so that pronounceable names are
         returned.
 
+        Updates the mapping from the server if needed
+
         @rtype: tuple
         @return: Mapping (city, stop) -> (idos_list, idos_stop), mapping (idos_stop) -> (stop)
         """
+        # update the mapping file from the server
+        online_update(to_project_path(os.path.join(os.path.dirname(__file__), self.CONVERSION_FNAME)))
+        # load the mapping
         mapping = {}
         reverse_mapping = {}
         with codecs.open(os.path.join(self.file_dir, self.CONVERSION_FNAME), 'r', 'UTF-8') as fh:

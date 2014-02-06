@@ -5,12 +5,17 @@ from __future__ import unicode_literals
 from database import database
 import codecs
 import os
+from alex.utils.config import online_update, to_project_path
 
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
 # tab-separated file containing city + all locations of the city/cities with this name
 # (as pipe-separated longitude, latitude, district, region)
 CITIES_LOCATION_FNAME = 'cities_locations.tsv'
+
+# load new versions of the data files from the server
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATION_FNAME)))
 
 ontology = {
     'slots': {

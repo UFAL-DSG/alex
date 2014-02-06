@@ -35,6 +35,18 @@ __current_size = 0  # global state variable, which exists solely as a
                     # fixed in Python 3.3.1
 
 
+def to_project_path(path):
+    """Converts a relative or absoulute file system path to a path relative to project root."""
+    path = os.path.abspath(path)
+    root = env.root()
+    if not path.startswith(root):
+        raise Exception('Path is outside the root:' + path)
+    path = path[len(root):]
+    if path.startswith(os.path.sep):
+        return path[1:]
+    return path
+
+
 def callback_download_progress(blocks, block_size, total_size):
     """callback function for urlretrieve that is called when connection is
     created and when once for each block

@@ -7,6 +7,7 @@ import codecs
 import os
 import re
 import sys
+from alex.utils.config import online_update, to_project_path
 
 __all__ = ['database']
 
@@ -78,6 +79,10 @@ NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "�
 # form.
 STOPS_FNAME = "stops.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
+
+# load new stops & cities list from the server if needed
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
 
 _substs_lit = [
     ('\\bn\\.L\\.', ['nad Labem']),
