@@ -64,7 +64,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     if isinstance(ds[ds_slot], float):
                         ds[ds_slot] = 0.0
                     elif isinstance(ds[ds_slot], int):
-                        ds[ds_slot] = 0.0
+                        ds[ds_slot] = 0
                     elif isinstance(ds[ds_slot], basestring):
                         ds[ds_slot] = "none"
                     else:
@@ -204,7 +204,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # select between two values for a slot that is not certain
-            res_da.extend(self.select_info(slots_tobe_confirmed))
+            res_da.extend(self.select_info(slots_tobe_selected))
             res_da = self.filter_iconfirms(res_da)
 
         elif slots_tobe_confirmed:

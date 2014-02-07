@@ -1,89 +1,123 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 # author: Ondrej Platek
-from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork, Utterance
+
+from __future__ import unicode_literals
+
+from math import exp
+
+from alex.components.asr.base import ASRInterface
+from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
+import pykaldi.utils
+
 try:
-    from pykaldi.decoders.kaldi_decoders import NbListDecoder, ConfNetDecoder
+    from pykaldi.decoders import PyGmmLatgenWrapper
 except ImportError as e:
-    raise KaldiSetupException('%s\nTry setting PYTHONPATH' % e.message)
+    # FIXME PYTHONPATH I can change : sys.path insert into(0,)
+    raise KaldiSetupException('%s\nTry setting PYTHONPATH or LD_LIBRARY_PATH' % e.message)
+import time
+import os
 
 
-class KaldiASR(object):
-    '''
-    Just now it is empty stub with public interface
-    '''
-    # do not set up env. variables twice
-    _set_path_executed = False
+class KaldiASR(ASRInterface):
+
+    """ Wraps Kaldi lattice decoder,
+
+    which firstly decodes in forward direction and generate on demand lattice
+    by traversing pruned decoding graph backwards.
+    """
 
     def __init__(self, cfg):
-        self.logger = cfg['Logging']['system_logger']
-        self.cfg = cfg
-        Kcfg = cfg['ASR']['Kaldi']
-        self.debug = cfg['ASR'].get('debug', False)
+        super(KaldiASR, self).__init__(cfg)
+        kcfg = self.cfg['ASR']['Kaldi']
+        if os.path.isfile(kcfg['silent_phones']):
+            # replace the path of the file with its content
+            with open(kcfg['silent_phones'], 'r') as r:
+                kcfg['silent_phones'] = r.read()
 
-        self.setDecoderType(Kcfg['hypothesis_type'])
+        self.wst = pykaldi.utils.wst2dict(kcfg['wst'])
+        self.max_dec_frames = kcfg['max_dec_frames']
+        self.n_best = kcfg['n_best']
+        if not 'matrix' in kcfg:
+            kcfg['matrix'] = ''  # some models e.g. tri2a does not use matrix
 
-        self.model = Kcfg['model']
-        self.LM_scale = Kcfg['LM_scale']
-        self.lat_depth = Kcfg['lat_depth']
-        # etc: FIXME
-        # self.max_active
-        # self.beam
-        # self.latbeam
-        # self.acoustic_scale
-        # self.wst
-        # self.hclg
-        self.logger.info('debug:%r\nmodel:%s\nLM_scale:%f\nlat_depth:%d\n' % (
-            self.debug, self.model, self.LM_scale, self.lat_depth))
+        # specify all other options in config
+        argv = ("--config=%(config)s --verbose=%(verbose)d %(extra_args)s "
+                "%(model)s %(hclg)s %(silent_phones)s %(matrix)s" % kcfg)
+        argv = argv.split()
+        with open(kcfg['config']) as r:
+            conf_opt = r.read()
+            self.syslog.info('argv: %s\nconfig: %s' % (argv, conf_opt))
 
-    def setDecoderType(self, hyp_type):
-        if hyp_type == 'confnet':
-            self.decoder = ConfNetDecoder()
-            self.hyp_out = self._decode_confnet
-        elif hyp_type == 'nblist':
-            self.decoder = NbListDecoder()
-            self.hyp_out = self._decode_nblist
-        else:
-            raise KaldiSetupException("Not supported output type")
-
-    def _decode_confnet(self):
-        """@todo: Docstring for _decode_confnet
-
-        :arg1: @todo
-        :returns: Instance of UtteranceConfusionNetwork
-        """
-        cn = UtteranceConfusionNetwork()
-        return cn
-
-    def _decode_nblist(self):
-        """@todo: Docstring for _decode_nblist
-        :returns: instance of UtteranceNBList
-
-        """
-        dnb = self.decoder.decode()
-        nb = UtteranceNBList()
-        for prob, hyp in dnb:
-            nb.add(prob, Utterance(hyp))
-        return nb
+        self.decoder = PyGmmLatgenWrapper()
+        self.decoder.setup(argv)
 
     def flush(self):
         """
         Should reset Kaldi in order to be ready for next recognition task
         :returns: self - The instance of KaldiASR
         """
+        self.decoder.reset(keep_buffer_data=False)
         return self
 
     def rec_in(self, frame):
         """This defines asynchronous interface for speech recognition.
 
-        Call this input function with audio data belonging into one speech segment that should be recognized.
-
-        FIXME for now it just buffers the data.
+        Call this input function with audio data belonging into one speech segment
+        that should be recognized.
 
         :frame: @todo
         :returns: self - The instance of KaldiASR
         """
-        self.decoder.rec_in(frame.payload)
+        frame_total, start = 0, time.clock()
+        self.decoder.frame_in(frame.payload)
+
+        if self.cfg['ASR']['Kaldi']['debug']:
+            self.syslog.debug('frame_in of %d frames' % (len(frame.payload) / 2))
+
+        dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
+        while dec_t > 0:
+            frame_total += dec_t
+            dec_t = self.decoder.decode(max_frames=self.max_dec_frames)
+
+        if self.cfg['ASR']['Kaldi']['debug']:
+            if (frame_total > 0):
+                self.syslog.debug('Forward decoding of %d frames in %s secs' % (
+                    frame_total, str(time.clock() - start)))
         return self
+
+    def hyp_out(self):
+        """ This defines asynchronous interface for speech recognition.
+        Returns recognizers hypotheses about the input speech audio.
+        """
+        start = time.time()
+
+        # Get hypothesis
+        self.decoder.prune_final()
+        utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
+        self.decoder.reset(keep_buffer_data=False)
+
+        # Convert lattice to nblist
+        nbest = pykaldi.utils.lattice_to_nbest(lat, self.n_best)
+        nblist = UtteranceNBList()
+        for w, word_ids in nbest:
+            words = u' '.join([self.wst[i] for i in word_ids])
+
+            if self.cfg['ASR']['Kaldi']['debug']:
+                self.syslog.debug(words)
+
+            p = exp(-w)
+            nblist.add(p, Utterance(words))
+
+        # Log
+        if len(nbest) == 0:
+            nblist.add(1.0, Utterance('Empty hypothesis: Kaldi __FAIL__'))
+
+        nblist.merge()
+
+        if self.cfg['ASR']['Kaldi']['debug']:
+            self.syslog.info('utterance "likelihood" is %f' % utt_lik)
+            self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.time() - start))
+
+        return nblist

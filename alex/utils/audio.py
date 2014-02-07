@@ -10,6 +10,7 @@ import pysox
 import audioop
 import wave
 import subprocess
+import contextlib
 
 from os import remove, fdopen
 from tempfile import mkstemp
@@ -26,6 +27,14 @@ By convention, the variables storing audio in the default format will
 be named as "wav" or "wav_*".
 
 """
+
+
+def wav_duration(wav_file): 
+    with contextlib.closing(wave.open(wav_file,'r')) as f:
+        frames = f.getnframes() 
+        rate = f.getframerate() 
+        duration = frames / float(rate) 
+        return duration
 
 
 def load_wav(cfg, file_name):
@@ -131,8 +140,8 @@ def save_wav(cfg, file_name, wav):
         raise e
     else:
         wf.close()
-    return
 
+    return
 
 def save_flac(cfg, file_name, wav):
     """ Writes content of a audio string into a FLAC file. """
@@ -144,10 +153,11 @@ def save_flac(cfg, file_name, wav):
         save_wav(cfg, wav_file_name, wav)
         subprocess.call(['flac', '-f', wav_file_name, '-o', file_name], stderr=devnull)
     finally:
+        os.close(handle)
+        devnull.close()
         remove(wav_file_name)
 
     return
-
 
 def convert_mp3_to_wav(cfg, mp3_string):
     """

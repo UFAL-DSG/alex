@@ -132,7 +132,7 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-    database[category_label].setdefault(value, set()).add(form)
+    database[category_label].setdefault(value, set()).add(form.replace(' { ', ' ').replace(' } ', ' ').replace(' }', ''))
 
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
