@@ -29,11 +29,12 @@ import autopath
 import codecs
 import sys
 import re
+from collections import defaultdict
 from add_cities_to_stops import load_list, get_city_for_stop
 from alex.utils.various import remove_dups_stable
 
 # a regex to strip weird stop name suffixes (request stop etc.)
-CLEAN_RULE = (r'(?: +[O#]|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*)$', r'')
+CLEAN_RULE = (r'(?: +[O#]|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*|[\(-] *HR\.TARIF\.ZÓNY.*)$', r'')
 
 # regexes for abbreviation expansion (will be applied in this order)
 ABBREV_RULES = [
@@ -154,6 +155,7 @@ ABBREV_RULES = [
     (r'Vys\. Chvojno', r'Vysoké Chvojno'),
     (r'u Uh\. Hrad\.', r'u Uherského Hradiště'),
     (r'u Kar\. Varů', r'u Karlových Varů'),
+    (r'Zahr\. Město', r'Zahradní Město'),
     (r'zám\. zahrada', r'zámecká zahrada'),
     (r' již\. z(ast)?\.', r' jižní zastávka'),
     (r' sev\. z(ast)?\.', r' severní zastávka'),
@@ -181,7 +183,7 @@ ABBREV_RULES = [
     (r' rozc\.([0-9])', r' rozcestí \1'),
     (r' rozc\.', r' rozcestí'),
     (r' aut\. st\.(?=[;, ])', [r' autobusové stanoviště', r' autobusová stanice']),
-    (r' žel\. st\.', r' železniční stanice'),
+    (r' žel\. st(\.|anice)', r' železniční stanice'),
     (r' žel\. zastávka', r' železniční zastávka'),
     (r' křiž\.', r' křižovatka'),
     (r' nám\.([0-9])', r' náměstí \1'),
@@ -259,11 +261,12 @@ ABBREV_RULES = [
     (r'Vích\. Lhota', r'Víchovská Lhota'),
     (r'Přer\. stroj\.', r'Přerovské strojírny'),
     (r'prům\. oblast', r'průmyslová oblast'),
-    (r'\bhl\. sil\.', r'hlavní silnice'),
+    (r' hl\. sil\.', r' hlavní silnice'),
     (r' hl\. (vstup|vchod|trať|vrátnice|brána|zastávka|silnice|přístav)', r' hlavní \1'),
-    (r'st\. č\.', r'stanoviště číslo'),
-    (r'sil\. č(\.|íslo)', r'silnice číslo'),
-    (r'č\. ([0-9])', r'číslo \1'),
+    (r' st\. č\.', r' stanoviště číslo'),
+    (r' sil\. č(\.|íslo)', r' silnice číslo'),
+    (r' sil\.', r' silnice'),
+    (r' č\. ([0-9])', r' číslo \1'),
     (r' ([pP])sych\. léčebna', r' \1sychiatrická léčebna'),
     (r' ([dD])om\. důch\.', r' \1omov důchodců'),
     (r' obch\. centrum', r' obchodní centrum'),
@@ -304,6 +307,7 @@ ABBREV_RULES = [
     # names
     (r'A\. Dvořáka', r'Antonína Dvořáka'),
     (r'A\. Kratochvíla', r'Augusta Kratochvíla'),
+    (r'Alb\. Krejčího', r'Alberta Krejčího'),
     (r'A\. Škváry', r'Antonína Škváry'),
     (r'B\. Martinů', r'Bohuslava Martinů'),
     (r'B\. Němcové', r'Boženy Němcové'),
@@ -412,6 +416,7 @@ def main():
     cities = set(load_list(file_in_cities, suppress_comments=True))
     in_stops = load_list(file_in_stops, cols=2)
     out_list = []
+    exp_idos_lists = {}
 
     # process the input
     for idos_list, idos_stop in in_stops:
@@ -419,6 +424,8 @@ def main():
         # (resulting in one "canonical" name and possibly some variants)
         idos_stop = CLEAN_RULE[0].sub(CLEAN_RULE[1], idos_stop)
         stop, variants = expand_abbrevs(idos_stop)
+        if idos_list not in exp_idos_lists:
+            exp_idos_lists[idos_list] = expand_abbrevs(idos_list)[0]
         # get the correct city (provide default for city transit only)
         city = get_city_for_stop(cities, stop,
                                  idos_list if idos_list not in ['vlak', 'bus'] else None)
@@ -427,9 +434,9 @@ def main():
             print >> stderr, 'Could not resolve:', stop
             continue
         # strip city name from stop name for city transit
-        if idos_list not in ['vlak', 'bus'] and stop.startswith(city + ','):
+        if stop.startswith(exp_idos_lists[idos_list] + ','):
             # we assume there are no variants within the city name itself
-            variants = [var[len(city):].strip(', ') for var in variants]
+            variants = [var[len(exp_idos_lists[idos_list]):].strip(', ') for var in variants]
             stop = variants[0]
 
         out_list.append((idos_list, idos_stop, city, stop, variants))
