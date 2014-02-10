@@ -1,7 +1,7 @@
 utils
 steps
 data
-models
+models*
 hclg_tmp_data
 decoded_kaldi
 decoded_google
