@@ -277,14 +277,14 @@ ontology = {
             'night': 'v noci'
         },
         'vehicle': {
-            'BUS': 'autobusem',
-            'INTERCITY_BUS': 'meziměstským autobusem',
-            'TRAM': 'tramvají',
-            'SUBWAY': 'metrem',
-            'TRAIN': 'vlakem',
-            'CABLE_CAR': 'lanovkou',
-            'FERRY': 'přívozem',
-            'TROLLEYBUS': 'trolejbusem',
+            'bus': 'autobusem',
+            'intercity_bus': 'dálkovým autobusem',
+            'tram': 'tramvají',
+            'subway': 'metrem',
+            'train': 'vlakem',
+            'cable_car': 'lanovkou',
+            'ferry': 'přívozem',
+            'trolleybus': 'trolejbusem',
         },
         'date_rel': {
             'today': 'dnes',
