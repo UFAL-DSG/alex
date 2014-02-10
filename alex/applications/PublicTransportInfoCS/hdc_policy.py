@@ -375,11 +375,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-        if randbool(6):
+        if randbool(10):
             return self.get_limited_context_help(ds)
-        elif randbool(5):
+        elif randbool(9):
             return DialogueAct('reqmore()')
-        elif randbool(4):
+        elif randbool(8):
             return DialogueAct('notunderstood()')
         elif randbool(3):
             return DialogueAct('irepeat()')

@@ -4,3 +4,5 @@ steps
 utils
 mfcc
 steps
+*.log
+graph.svg
