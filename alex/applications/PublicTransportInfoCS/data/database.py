@@ -7,6 +7,9 @@ import codecs
 import os
 import re
 import sys
+
+import autopath
+
 from alex.utils.config import online_update, to_project_path
 
 __all__ = ['database']
@@ -132,8 +135,13 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-    database[category_label].setdefault(value, set()).add(form.replace(' { ', ' ').replace(' } ', ' ').replace(' }', ''))
+    for c in '{}+/&[]':
+        form = form.replace(' %s ' %c, ' ')
+        form = form.replace(' %s' %c, ' ')
+        form = form.replace('%s ' %c, ' ')
+    form = form.strip()
 
+    database[category_label].setdefault(value, set()).add(form)
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
