@@ -594,9 +594,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         for cand_stop_name in [city, 'Hlavní nádraží', 'CAN, Husova']:
             if cand_stop_name in stops:
                 return cand_stop_name
-        for cand_stop_suffix in ['hlavní nádraží', ', nádraží', ', autobusové stanoviště',
-                               ', železniční zastávka', ', železniční stanice']:
-            stop = ' '.join((city, cand_stop_suffix)).strip()
+        for cand_stop_suffix in [' hlavní nádraží', ' město', ' střed',
+                                 ', nádraží', ', autobusové stanoviště',
+                                 ', železniční zastávka', ', železniční stanice',
+                                 ', radnice', ', náměstí', ', centrum', ', obec',
+                                 ', náves', ', obecní úřad', ', škola', ', kostel',
+                                 ', rozcestí', ', hostinec']:
+            stop = city + cand_stop_suffix
             if stop in stops:
                 return stop
         return None

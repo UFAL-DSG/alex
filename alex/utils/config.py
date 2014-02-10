@@ -125,7 +125,7 @@ def online_update(file_name):
         print "-"*80
 
         # get filename for temp file in current directory
-        (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn + ".", )
+        (fd, tmpfile) = tempfile.mkstemp(".tmp", prefix=fn + ".",)
         os.close(fd)
         os.unlink(tmpfile)
 

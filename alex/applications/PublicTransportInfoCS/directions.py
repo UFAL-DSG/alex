@@ -515,7 +515,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 if cities_list is None:
                     if list_info['asName'][0] == 'města a obce':
                         cities_list = list_info['_iID']
-                matching = re.match(r'(?:zastávky|stanice) \(([^)]+)\)', list_info['asName'][0])
+                matching = re.match(r'^(?:zastávky|stanice) \(([^)]+)\)$', list_info['asName'][0])
                 if matching:
                     stop_lists[matching.group(1)] = list_info['_iID']
         return cities_list, stop_lists
