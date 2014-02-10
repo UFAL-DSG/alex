@@ -32,6 +32,7 @@ To get latest versions of the following python packages, I recommend to run thes
   sudo pip install --upgrade boto
   sudo pip install --upgrade pysox
   sudo pip install --upgrade jinja2
+  sudo pip install --upgrade suds
 
   # pykaldi
   sudo pip install --upgrade cython
