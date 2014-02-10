@@ -207,6 +207,8 @@ class CRWSDirections(Directions):
         if finder is not None:
             self.handle = input_data._iHandle
             self.finder = finder
+            self.from_stop = finder.reverse_mapping.get(self.from_stop, self.from_stop)
+            self.to_stop = finder.reverse_mapping.get(self.to_stop, self.to_stop)
         # parse the connection information, if available
         if hasattr(input_data, 'oConnInfo'):
             for route in input_data.oConnInfo.aoConnections:
