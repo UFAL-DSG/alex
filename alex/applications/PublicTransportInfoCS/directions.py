@@ -77,7 +77,7 @@ class RouteStep(object):
         arrival_stop
         arrival_time
         headsign       -- direction of the transit line
-        vehicle        -- type of the transit vehicle (TRAM, SUBWAY, BUS)
+        vehicle        -- type of the transit vehicle (tram, subway, bus)
         line_name      -- name or number of the transit line
 
     * For WALKING steps:
@@ -164,9 +164,9 @@ class GoogleRouteLeg(RouteLeg):
 
 class GoogleRouteLegStep(RouteStep):
 
-    VEHICLE_TYPE_MAPPING = {'HEAVY_RAIL': 'TRAIN',
-                            'Train': 'TRAIN',
-                            'Long distance train': 'TRAIN'}
+    VEHICLE_TYPE_MAPPING = {'HEAVY_RAIL': 'train',
+                            'Train': 'train',
+                            'Long distance train': 'train'}
 
     def __init__(self, input_json):
         self.travel_mode = input_json['travel_mode']
@@ -181,7 +181,7 @@ class GoogleRouteLegStep(RouteStep):
             self.headsign = data['headsign']
             self.line_name = data['line']['short_name']
             vehicle_type = data['line']['vehicle'].get('type', data['line']['vehicle']['name'])
-            self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type)
+            self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type.lower())
             # normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
@@ -247,31 +247,31 @@ class CRWSRouteLeg(RouteLeg):
 
 class CRWSRouteStep(RouteStep):
 
-    VEHICLE_TYPE_MAPPING = {'bus': 'BUS',
-                            'autobus': 'BUS',
-                            'local line': 'BUS',
-                            'long-distance line': 'INTERCITY_BUS',
-                            'international line': 'INTERCITY_BUS',
-                            'tram': 'TRAM',
-                            'tramvaj': 'TRAM',
-                            'metro': 'SUBWAY',
-                            'local train': 'TRAIN',
-                            'fast train': 'TRAIN',
-                            'Express': 'TRAIN',
-                            'Intercity': 'TRAIN',
-                            'Eurocity': 'TRAIN',
-                            'EuroNight': 'TRAIN',
-                            'SuperCity': 'TRAIN',
-                            'LEOExpress': 'TRAIN',
-                            'RegionalExpress': 'TRAIN',
-                            'Tanie Linie Kolejowe': 'TRAIN',
-                            'Regionalzug': 'TRAIN',
-                            'Express InterCity': 'TRAIN',
-                            'funicular': 'CABLE_CAR',
-                            'trolejbus': 'TROLLEYBUS',
-                            'trolley bus': 'TROLLEYBUS',
-                            'trolleybus': 'TROLLEYBUS',
-                            'ship': 'FERRY', }
+    VEHICLE_TYPE_MAPPING = {'bus': 'bus',
+                            'autobus': 'bus',
+                            'local line': 'bus',
+                            'long-distance line': 'intercity_bus',
+                            'international line': 'intercity_bus',
+                            'tram': 'tram',
+                            'tramvaj': 'tram',
+                            'metro': 'subway',
+                            'local train': 'train',
+                            'fast train': 'train',
+                            'Express': 'train',
+                            'Intercity': 'train',
+                            'Eurocity': 'train',
+                            'EuroNight': 'train',
+                            'SuperCity': 'train',
+                            'LEOExpress': 'train',
+                            'RegionalExpress': 'train',
+                            'Tanie Linie Kolejowe': 'train',
+                            'Regionalzug': 'train',
+                            'Express InterCity': 'train',
+                            'funicular': 'cable_car',
+                            'trolejbus': 'trolleybus',
+                            'trolley bus': 'trolleybus',
+                            'trolleybus': 'trolleybus',
+                            'ship': 'ferry', }
 
     def __init__(self, travel_mode, input_data, finder=None):
         super(CRWSRouteStep, self).__init__(travel_mode)
@@ -290,7 +290,7 @@ class CRWSRouteStep(RouteStep):
             self.vehicle = self.VEHICLE_TYPE_MAPPING[input_data.oTrainData.oInfo._sTypeName]
             self.line_name = input_data.oTrainData.oInfo._sNum1
             # add train names to line numbers
-            if self.vehicle == 'TRAIN':
+            if self.vehicle == 'train':
                 train_name = input_data.oTrainData.oInfo._sNum2
                 train_type_shortcut = input_data.oTrainData.oInfo._sType
                 if train_name.startswith(train_type_shortcut + ' '):
