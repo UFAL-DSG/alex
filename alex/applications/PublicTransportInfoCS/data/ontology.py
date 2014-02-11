@@ -208,6 +208,7 @@ ontology = {
             '^from_stop$', '^to_stop$', '^via_stop$',
             '^departure_time$', '^departure_time_rel$',
             '^arrival_time$', '^arrival_time_rel$',
+            '^to_city$', '^from_city$', '^via_city$',
         ],
     },
     'last_talked_about': {

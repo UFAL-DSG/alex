@@ -42,6 +42,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             directions_type = cfg['DM']['directions']['type']
         self.directions = directions_type(cfg=cfg)
         self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
+        self.infer_default_stops = directions_type == GoogleDirectionsFinder
 
         self.das = []
         self.last_system_dialogue_act = None
@@ -75,17 +76,32 @@ class PTICSHDCPolicy(DialoguePolicy):
                     break
 
     def filter_iconfirms(self, da):
+        """Filter implicit confirms if the same information is uttered in an inform
+        dialogue act item. Also filter implicit confirms for stop names equaling city names.
+
+        :param da: unfiltered dialogue act
+        :return: filtered dialogue act
+        """
         new_da = DialogueAct()
         informs = []
+        iconfirms = []
 
         for dai in da:
             if dai.dat == 'inform':
                 informs.append((dai.name, dai.value))
+            elif dai.dat == 'iconfirm':
+                iconfirms.append((dai.name, dai.value))
 
         for dai in da:
             if dai.dat == 'iconfirm':
+                # filter slots explicitly informed
                 if (dai.name, dai.value) in informs:
                     continue
+                # filter stop names that are the same as city names
+                elif dai.name.endswith('_stop'):
+                    city_dai = dai.name[:-4] + 'city'
+                    if (city_dai, dai.value) in informs or (city_dai, dai.value) in iconfirms:
+                        continue
 
             new_da.append(dai)
 
@@ -643,11 +659,19 @@ class PTICSHDCPolicy(DialoguePolicy):
         if to_stop_val and not to_city_val and from_city_val in to_cities:
             to_city_val = from_city_val
 
-        # infer stops based on cities
-        if from_city_val and not from_stop_val:
-            from_stop_val = self.get_default_stop_for_city(from_city_val)
-        if to_city_val and not to_stop_val:
-            to_stop_val = self.get_default_stop_for_city(to_city_val)
+        # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
+        if self.infer_default_stops:
+            if from_city_val and not from_stop_val:
+                from_stop_val = self.get_default_stop_for_city(from_city_val)
+            if to_city_val and not to_stop_val:
+                to_stop_val = self.get_default_stop_for_city(to_city_val)
+        else:
+            if (from_city_val and (not from_stop_val or from_stop_val == from_city_val) and
+                (not to_city_val or from_city_val != to_city_val)):
+                from_stop_val = '__ANY__'
+            if (to_city_val and (not to_stop_val or to_stop_val == to_city_val) and
+                (not from_city_val or from_city_val != to_city_val)):
+                to_stop_val = '__ANY__'
 
         # TODO maybe check if the city and the stop are compatible?
         # now we just pass it all to Google and see if it can deal with it, which may lead to weird results
@@ -667,6 +691,10 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da.extend(DialogueAct('request(from_city)'))
         elif not to_city_val:
             req_da.extend(DialogueAct('request(to_city)'))
+
+        # convert __ANY__ to None for further actions
+        from_stop_val = None if from_stop_val == '__ANY__' else from_stop_val
+        to_stop_val = None if to_stop_val == '__ANY__' else to_stop_val
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
