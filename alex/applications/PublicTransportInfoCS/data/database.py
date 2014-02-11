@@ -85,31 +85,6 @@ online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__fil
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
 
 _substs_lit = [
-    ('\\bn\\.L\\.', ['nad Labem']),
-    ('\\bn\\.Vlt\\.', ['nad Vltavou']),
-    ('žel\\.st\\.', ['železniční stanice']), # FIXME None would say this.
-                                              # Factorise.
-    ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
-    ('žel\\.zast\\.', ['železniční zastávka']),
-    ('[Kk]ult\\.dům', ['kulturní dům', 'kulturák']),
-    ('n\\.Č\\.[Ll]\\.', ['nad černými lesy']),
-    ('n\\.[Ll]\\.', ['nad lesy']),
-    ('St\\.Bol\\.', ['stará boleslav']),
-    ('\\brozc\\.', ['rozcestí']),
-    ('\\bnádr\\.', ['nádraží']),
-    ('\\bsídl\\.', ['sídliště']),
-    ('\\bnám\\.', ['náměstí']),
-    ('\\bnem\\.', ['nemocnice']),
-    ('\\bzdr\\.stř\\.', ['zdravotní středisko']),
-    ('\\bzdrav\\.stř\\.', ['zdravotní středisko']),
-    ('\\bhost\\.', ['hostinec']),
-    ('\\bháj\\.', ['hájovna']),
-    ('\\bkřiž\\.', ['křižovatka']),
-    ('\\bodb\\.', ['odbočka']),
-    ('\\bzast\\.', ['zastávka']),
-    ('\\bhl\\.sil\\.', ['hlavní silnice']),
-    ('\\bn\\.', ['nad']),
-    ('\\bp\\.', ['pod']),
     ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
     ('\\bI$', ['jedna']),
     ('\\bII\\b', ['dva']),
