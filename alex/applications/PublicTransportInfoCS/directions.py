@@ -217,10 +217,14 @@ class CRWSDirections(Directions):
     def __getitem__(self, index):
         # try to load further data if it is missing
         if index >= len(self) and self.finder and self.handle:
-            data = self.finder.get_directions_by_handle(self.handle, len(self), index + 1)
+            data = self.finder.get_directions_by_handle(self.handle, index + 1)
+            new_routes = []
             if hasattr(data, 'aoConnections'):
-                for route in data.aoConnections:
-                    self.routes.append(CRWSRoute(route, self.finder))
+                for route in data.aoConnections[len(self):]:
+                    new_routes.append(CRWSRoute(route, self.finder))
+            self.finder.system_logger.info("CRWS additional directions loaded:\n" +
+                                           '\n'.join([unicode(r) for r in new_routes]))
+            self.routes.extend(new_routes)
         return super(CRWSDirections, self).__getitem__(index)
 
     def __repr__(self):
@@ -267,7 +271,7 @@ class CRWSRouteStep(RouteStep):
                             'Eurocity': 'eurocity_train',
                             'EuroNight': 'euronight_train',
                             'SuperCity': 'supercity_train',
-                            'LEOExpress': 'leo_express_train',
+                            'LEOExpress': 'train',
                             'RegionalExpress': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',
                             'Regionalzug': 'local_train',
@@ -496,7 +500,10 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
         return directions
 
-    def get_directions_by_handle(self, handle, listed, limit):
+    def get_directions_by_handle(self, handle, limit):
+        """Retrieve additional routes for the given connection handle."""
+        self.system_logger.info(("CRWS Request for additional routes:\n\nHANDLE: %s, LIMIT: %d") %
+                                (str(handle), limit))
         # request the connections from CRWS
         response = self.client.service.GetConnectionsPage(
             self.user_id,
@@ -505,7 +512,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             handle,
             0, # reference connection
             False, # return connections before the reference ?
-            listed, # currently listed connections
+            0, # currently listed connections (it will return the earlier connections anyway, so we just ignore this)
             limit, # maximum connection count
             REMMASK.NONE,
             COOR.DEFAULT,
