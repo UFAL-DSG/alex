@@ -273,6 +273,7 @@ class CRWSRouteStep(RouteStep):
                             'SuperCity': 'supercity_train',
                             'LEOExpress': 'train',
                             'RegionalExpress': 'regional_fast_train',
+                            'semi fast train': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',
                             'Regionalzug': 'local_train',
                             'Express InterCity': 'intercity_train',
