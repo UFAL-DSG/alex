@@ -657,12 +657,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         if not from_stop_val and not to_stop_val and ('departure_time' not in accepted_slots
                 or 'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif not from_stop_val and ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and randbool(9):
-            req_da.extend(DialogueAct('confirm(centre_direction="from")'))
-        elif not to_stop_val and ('centre_direction' not in accepted_slots or
-                ds['centre_direction'].mpv() == '*') and randbool(8):
-            req_da.extend(DialogueAct('confirm(centre_direction="to")'))
         elif not from_stop_val and not to_stop_val and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
         elif not from_stop_val:
