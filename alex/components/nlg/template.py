@@ -109,7 +109,6 @@ class AbstractTemplateNLG(object):
         of the slots are substituted with a generic value.
         """
         tpl = None
-
         # try to find increasingly generic templates
         # limit the complexity of the search
         if len(svs) == 0:
@@ -325,6 +324,7 @@ class AbstractTemplateNLG(object):
                     # try to find an exact match
                     dax_utt = self.random_select(self.templates[unicode(dax)])
                     dax_len = sub_len
+                    break
                 except KeyError:
                     # try to find a relaxed match
                     svsx = dax.get_slots_and_values()
