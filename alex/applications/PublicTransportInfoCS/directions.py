@@ -223,6 +223,11 @@ class CRWSDirections(Directions):
                     self.routes.append(CRWSRoute(route, self.finder))
         return super(CRWSDirections, self).__getitem__(index)
 
+    def __repr__(self):
+        if not self.routes and self.finder is not None:
+            return '(async search in progress)'
+        return super(CRWSDirections, self).__repr__()
+
 
 class CRWSRoute(Route):
 
@@ -255,18 +260,18 @@ class CRWSRouteStep(RouteStep):
                             'tram': 'tram',
                             'tramvaj': 'tram',
                             'metro': 'subway',
-                            'local train': 'train',
-                            'fast train': 'train',
-                            'Express': 'train',
-                            'Intercity': 'train',
-                            'Eurocity': 'train',
-                            'EuroNight': 'train',
-                            'SuperCity': 'train',
-                            'LEOExpress': 'train',
-                            'RegionalExpress': 'train',
+                            'local train': 'local_train',
+                            'fast train': 'fast_train',
+                            'Express': 'express_train',
+                            'Intercity': 'intercity_train',
+                            'Eurocity': 'eurocity_train',
+                            'EuroNight': 'euronight_train',
+                            'SuperCity': 'supercity_train',
+                            'LEOExpress': 'leo_express_train',
+                            'RegionalExpress': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',
-                            'Regionalzug': 'train',
-                            'Express InterCity': 'train',
+                            'Regionalzug': 'local_train',
+                            'Express InterCity': 'intercity_train',
                             'funicular': 'cable_car',
                             'trolejbus': 'trolleybus',
                             'trolley bus': 'trolleybus',
@@ -289,14 +294,16 @@ class CRWSRouteStep(RouteStep):
             self.headsign = data_final_stop.oStation._sName
             self.vehicle = self.VEHICLE_TYPE_MAPPING[input_data.oTrainData.oInfo._sTypeName]
             self.line_name = input_data.oTrainData.oInfo._sNum1
-            # add train names to line numbers
-            if self.vehicle == 'train':
-                train_name = input_data.oTrainData.oInfo._sNum2
-                train_type_shortcut = input_data.oTrainData.oInfo._sType
-                if train_name.startswith(train_type_shortcut + ' '):
-                    self.line_name += ' ' + train_name
-                else:
-                    self.line_name = ' '.join((train_type_shortcut, self.line_name, train_name))
+            # ignore bus line numbers if they are too long
+            if self.vehicle in ['bus', 'intercity_bus'] and len(self.line_name) > 4:
+                self.line_name = ''
+            # replace train numbers with names (e.g. 'Hutník', 'Pendolino' etc.) or nothing
+            if self.vehicle.endswith('train'):
+                self.line_name = input_data.oTrainData.oInfo._sNum2 or ''
+                if self.line_name:  # strip train type shortcut if it's contained in the name
+                    train_type_shortcut = input_data.oTrainData.oInfo._sType
+                    if self.line_name.startswith(train_type_shortcut + ' '):
+                        self.line_name = self.line_name[len(train_type_shortcut) + 1:]
             # if finder is present, use its mapping to convert stop names into pronounceable form
             if finder is not None:
                 self.departure_stop = finder.reverse_mapping.get(self.departure_stop, self.departure_stop)
