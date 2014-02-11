@@ -348,6 +348,7 @@ ABBREV_RULES = [
     (r'V\. Nezvala', r'Vítězslava Nezvala'),
     # IDOS probably won't handle these
     (r'ObÚ', r'obecní úřad'),
+    (r' dílny DP ', [r' dílny dopravního podniku ', r' dílny DP ']),
     (r' ZŠ(?=[,; ])', [r' ZŠ', r' základní škola']),
     (r' MŠ(?=[,; ])', [r' MŠ', r' mateřská škola']),
     (r' VŠ koleje', r' vysokoškolské koleje'),
@@ -384,6 +385,8 @@ ABBREV_RULES = [(re.compile(pattern), repl) for pattern, repl in ABBREV_RULES]
 
 
 def expand_abbrevs(stop_name):
+    """Apply all abreviation expansions to the given stop name, all resulting variant names,
+    starting with the 'main' variant."""
     # add spaces to have simpler regexes
     variants = [' ' + stop_name + ' ']
     # process all regexes
@@ -402,7 +405,16 @@ def expand_abbrevs(stop_name):
     # remove the added spaces
     variants = [var.strip() for var in variants]
     # return the result
-    return variants[0], variants
+    return variants
+
+
+CASING_MAP = {}
+
+
+def unify_casing(stop_name):
+    """Unify casing of a stop name (if a second stop of the same name is encountered, let it
+    have the same casing as the first one)."""
+    return CASING_MAP.setdefault(stop_name.lower(), stop_name.upper()[0] + stop_name[1:])
 
 
 def main():
@@ -420,26 +432,27 @@ def main():
 
     # process the input
     for idos_list, idos_stop in in_stops:
-        # clean rubbish suffixes and expand all abbreviations 
+        # clean rubbish suffixes and expand all abbreviations
         # (resulting in one "canonical" name and possibly some variants)
         idos_stop = CLEAN_RULE[0].sub(CLEAN_RULE[1], idos_stop)
-        stop, variants = expand_abbrevs(idos_stop)
+        variants = expand_abbrevs(idos_stop)
         if idos_list not in exp_idos_lists:
             exp_idos_lists[idos_list] = expand_abbrevs(idos_list)[0]
         # get the correct city (provide default for city transit only)
-        city = get_city_for_stop(cities, stop,
+        city = get_city_for_stop(cities, variants[0],
                                  idos_list if idos_list not in ['vlak', 'bus'] else None)
         # print any errors encountered
         if not city:
-            print >> stderr, 'Could not resolve:', stop
+            print >> stderr, 'Could not resolve:', variants[0]
             continue
         # strip city name from stop name for city transit
-        if stop.startswith(exp_idos_lists[idos_list] + ','):
+        if variants[0].startswith(exp_idos_lists[idos_list] + ','):
             # we assume there are no variants within the city name itself
             variants = [var[len(exp_idos_lists[idos_list]):].strip(', ') for var in variants]
-            stop = variants[0]
-
-        out_list.append((idos_list, idos_stop, city, stop, variants))
+        # normalize casing (use first-encountered casing with uppercased first letter)
+        variants = [unify_casing(var) for var in variants]
+        # add the result to the output list
+        out_list.append((idos_list, idos_stop, city, variants[0], variants))
 
     # write list of (unique) stops, including all variants
     stops_map = {stop: variants for _, _, _, stop, variants in out_list}
