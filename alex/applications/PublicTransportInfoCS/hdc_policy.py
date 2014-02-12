@@ -634,41 +634,43 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # retrieve the slot variables
-        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else None
-        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else None
-        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else None
-        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else None
+        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else 'none'
+        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
 
         # infer cities based on stops
         from_cities, to_cities = None, None
         stop_city_inferred = False
-        if from_stop_val and not from_city_val:
+        if from_stop_val != 'none' and from_city_val == 'none':
             from_cities = self.ontology.get_compatible_vals('stop_city', from_stop_val)
             if len(from_cities) == 1:
                 from_city_val = from_cities.pop()
                 stop_city_inferred = True
-        if to_stop_val and not to_city_val:
+        if to_stop_val != 'none' and to_city_val == 'none':
             to_cities = self.ontology.get_compatible_vals('stop_city', to_stop_val)
             if len(to_cities) == 1:
                 to_city_val = to_cities.pop()
                 stop_city_inferred = True
 
         # infer cities based on the other
-        if from_stop_val and not from_city_val and to_city_val in from_cities:
+        if from_stop_val != 'none' and from_city_val == 'none' and to_city_val in from_cities:
             from_city_val = to_city_val
-        if to_stop_val and not to_city_val and from_city_val in to_cities:
+        if to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
             to_city_val = from_city_val
 
         # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
         if self.infer_default_stops:
-            if from_city_val and not from_stop_val:
+            if from_city_val != 'none' and from_stop_val == 'none':
                 from_stop_val = self.get_default_stop_for_city(from_city_val)
-            if to_city_val and not to_stop_val:
+            if to_city_val != 'none' and to_stop_val == 'none':
                 to_stop_val = self.get_default_stop_for_city(to_city_val)
         else:
-            if from_city_val and not from_stop_val and (not to_city_val or from_city_val != to_city_val):
+            if from_city_val != 'none' and from_stop_val == 'none' and (to_city_val == 'none' or
+                                                                        from_city_val != to_city_val):
                 from_stop_val = '__ANY__'
-            if to_city_val and not to_stop_val and (not from_city_val or from_city_val != to_city_val):
+            if to_city_val != 'none' and to_stop_val == 'none' and (from_city_val == 'none' or
+                                                                    from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
 
         # TODO maybe check if the city and the stop are compatible?
@@ -676,29 +678,29 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
-        if not from_stop_val and not to_stop_val and ('departure_time' not in accepted_slots
-                or 'time' not in accepted_slots) and randbool(10):
+        if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
+                                                                  'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif not from_stop_val and not to_stop_val and randbool(3):
+        elif from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif not from_stop_val:
+        elif from_stop_val == 'none':
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif not to_stop_val:
+        elif to_stop_val == 'none':
             req_da.extend(DialogueAct('request(to_stop)'))
-        elif not from_city_val:
+        elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
-        elif not to_city_val:
+        elif to_city_val == 'none':
             req_da.extend(DialogueAct('request(to_city)'))
-
-        # convert __ANY__ to None for further actions
-        from_stop_val = None if from_stop_val == '__ANY__' else from_stop_val
-        to_stop_val = None if to_stop_val == '__ANY__' else to_stop_val
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
         if stop_city_inferred and len(req_da) == 0 and from_city_val != to_city_val:
             iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
             iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
+
+        # return the result, converting '__ANY__' and 'none' to None
+        from_stop_val = None if from_stop_val in ['__ANY__', 'none'] else from_stop_val
+        to_stop_val = None if to_stop_val in ['__ANY__', 'none'] else to_stop_val
 
         return req_da, iconfirm_da, {'from_stop': from_stop_val,
                                      'to_stop': to_stop_val,
@@ -890,7 +892,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
             departure_ts, _ = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
-        # retrieve Google directions
+        # retrieve transit directions
         ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
                                                        to_stop=conn_info['to_stop'],
                                                        from_city=conn_info['from_city'],
