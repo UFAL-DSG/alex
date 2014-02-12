@@ -666,11 +666,9 @@ class PTICSHDCPolicy(DialoguePolicy):
             if to_city_val and not to_stop_val:
                 to_stop_val = self.get_default_stop_for_city(to_city_val)
         else:
-            if (from_city_val and (not from_stop_val or from_stop_val == from_city_val) and
-                (not to_city_val or from_city_val != to_city_val)):
+            if from_city_val and not from_stop_val and (not to_city_val or from_city_val != to_city_val):
                 from_stop_val = '__ANY__'
-            if (to_city_val and (not to_stop_val or to_stop_val == to_city_val) and
-                (not from_city_val or from_city_val != to_city_val)):
+            if to_city_val and not to_stop_val and (not from_city_val or from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
 
         # TODO maybe check if the city and the stop are compatible?
@@ -971,8 +969,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         # no route found: apologize
         if len(res) == 0:
             res.append('apology()')
-            res.append("inform(from_stop='%s')" % dialogue_state.directions.from_stop)
-            res.append("inform(to_stop='%s')" % dialogue_state.directions.to_stop)
+            if dialogue_state.directions.from_city != dialogue_state.directions.to_city:
+                res.append("inform(from_city='%s')" % dialogue_state.directions.from_city)
+            if dialogue_state.directions.from_stop is not None:
+                res.append("inform(from_stop='%s')" % dialogue_state.directions.from_stop)
+            if dialogue_state.directions.from_city != dialogue_state.directions.to_city:
+                res.append("inform(to_city='%s')" % dialogue_state.directions.to_city)
+            if dialogue_state.directions.to_stop is not None:
+                res.append("inform(to_stop='%s')" % dialogue_state.directions.to_stop)
 
         res_da = DialogueAct("&".join(res))
 

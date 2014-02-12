@@ -124,6 +124,7 @@ ABBREV_RULES = [
     (r'M\. Beranov', r'Malý Beranov'),
     (r'V\. Beranov', r'Velký Beranov'),
     (r'Mar\. Údolí', r'Mariánské Údolí'),
+    (r'u Mor\. Budějovic', r'u Moravských Budějovic'),
     (r'St\. Paky', r'Staré Paky'),
     (r'Sl\. Předm\.', r'Slezské Předměstí'),
     (r'Jablonec nad J\.', r'Jablonec nad Jizerou'),
@@ -417,6 +418,27 @@ def unify_casing(stop_name):
     return CASING_MAP.setdefault(stop_name.lower(), stop_name.upper()[0] + stop_name[1:])
 
 
+# '>' = add to the end, '<' = add to the beginning
+ADDITIONS = {'bus': ['>(bus)', '>autobus', '<zastávka', '<stanice',
+                     '<zastávka autobusu', '<stanice autobusu',
+                     '>autobusová zastávka', '>autobusová stanice'],
+             'vlak': ['>(vlak)', '<zastávka', '<stanice', '>nádraží', '>vlakové nádraží'],
+             'MHD': ['>(MHD)', '<zastávka', '<stanice', '<zastávka MHD']}
+
+
+def unambig_variants(variants, idos_list):
+    """Create 'unambiguos' variants for a stop name that equals a city name, depending
+    on the type of the stop (bus, train or city public transit)."""
+    # get the right additions list
+    additions = ADDITIONS.get(idos_list, ADDITIONS['MHD'])
+    if len(variants) > 1:  # this should never happen, but if it does, issue a warning
+        print >> sys.stderr, 'Discarded variants of %s: %s' % (variants[0], '; '.join(variants[1:]))
+    # create the final list of variants
+    stop_name = variants[0]
+    return [stop_name + ' ' + add[1:] if add[0] == '>' else add[1:] + ' ' + stop_name
+            for add in additions]
+
+
 def main():
     # initialize
     files = sys.argv[1:]
@@ -440,11 +462,15 @@ def main():
             exp_idos_lists[idos_list] = expand_abbrevs(idos_list)[0]
         # get the correct city (provide default for city transit only)
         city = get_city_for_stop(cities, variants[0],
-                                 idos_list if idos_list not in ['vlak', 'bus'] else None)
+                                 exp_idos_lists[idos_list]
+                                 if idos_list not in ['vlak', 'bus'] else None)
         # print any errors encountered
         if not city:
             print >> stderr, 'Could not resolve:', variants[0]
             continue
+        # make stop names that equal city names unambiguous
+        if city in variants:
+            variants = unambig_variants(variants, idos_list)
         # strip city name from stop name for city transit
         if variants[0].startswith(exp_idos_lists[idos_list] + ','):
             # we assume there are no variants within the city name itself

@@ -594,5 +594,6 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 line = line.strip()
                 city, stop, idos_list, idos_stop = line.split("\t")
                 mapping[(city, stop)] = (idos_list, idos_stop)
+                stop = re.sub(r'\((MHD|bus|vlak)\)$', r'', stop)  # ignore ALEX-specific additions to stop names
                 reverse_mapping[idos_stop] = stop
         return mapping, reverse_mapping
