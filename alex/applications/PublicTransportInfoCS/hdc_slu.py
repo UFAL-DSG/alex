@@ -455,7 +455,7 @@ class PTICSHDCSLU(SLUInterface):
             not any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
 
-        if any_word_in(u, "od začít") and any_word_in(u, "začátku znova znovu") or \
+        if any_word_in(u, "od začít začneme začněme začni začněte") and any_word_in(u, "začátku znova znovu") or \
             any_word_in(u, "reset resetuj restart restartuj") or \
             phrase_in(u, 'nové spojení') and not phrase_in(u, 'spojení ze') or \
             phrase_in(u, 'nový spojení') and not phrase_in(u, 'spojení ze') or \
@@ -552,8 +552,9 @@ class PTICSHDCSLU(SLUInterface):
             all_words_in(u, 'kolik je teďka'):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
-        if any_word_in(u, 'kolik jsou je') and \
-            any_word_in(u, 'přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků') and \
+        if any_word_in(u, 'kolik počet kolikrát jsou je') and \
+            any_word_in(u, 'přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků ' +
+                        'přestupovat přestupuju přestupuji') and \
             not any_word_in(u, 'čas času'):
             cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
