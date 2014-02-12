@@ -20,14 +20,35 @@ from alex.utils.cache import lru_cache
 from alex.utils.config import online_update, to_project_path
 
 
-class Directions(object):
+class Waypoints(object):
+    """Holder for starting and ending point of travel."""
+
+    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None):
+        self.from_city = from_city
+        self.from_stop = from_stop if from_stop not in ['__ANY__', 'none'] else None
+        self.to_city = to_city
+        self.to_stop = to_stop if to_stop not in ['__ANY__', 'none'] else None
+
+    def get_minimal_info(self):
+        """Return minimal waypoints information
+        in the form of a stringified inform() dialogue act."""
+        res = []
+        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):
+            res.append("inform(from_city='%s')" % self.from_city)
+        if self.from_stop is not None:
+            res.append("inform(from_stop='%s')" % self.from_stop)
+        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):
+            res.append("inform(to_city='%s')" % self.to_city)
+        if self.to_stop is not None:
+            res.append("inform(to_stop='%s')" % self.to_stop)
+        return '&'.join(res)
+
+
+class Directions(Waypoints):
     """Ancestor class for transit directions, consisting of several routes."""
 
-    def __init__(self, from_stop=None, to_stop=None, from_city=None, to_city=None):
-        self.from_stop = from_stop
-        self.to_stop = to_stop
-        self.from_city = from_city
-        self.to_city = to_city
+    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None):
+        super(Directions, self).__init__(from_city, from_stop, to_city, to_stop)
         self.routes = []
 
     def __getitem__(self, index):
@@ -126,7 +147,7 @@ class RouteStep(object):
 class DirectionsFinder(object):
     """Abstract ancestor for transit direction finders."""
 
-    def get_directions(self, from_stop, to_stop, from_city, to_city,
+    def get_directions(self, from_city, from_stop, to_city, to_stop,
                        departure_time=None, arrival_time=None):
         """
         Retrieve the transit directions from the given stop to the given stop
@@ -140,8 +161,8 @@ class DirectionsFinder(object):
 class GoogleDirections(Directions):
     """Traffic directions obtained from Google Maps API."""
 
-    def __init__(self, from_stop, to_stop, from_city=None, to_city=None, input_json={}):
-        super(GoogleDirections, self).__init__(from_stop, to_stop, from_city, to_city)
+    def __init__(self, from_city, from_stop, to_city, to_stop, input_json={}):
+        super(GoogleDirections, self).__init__(from_city, from_stop, to_city, to_stop)
         for route in input_json['routes']:
             self.routes.append(GoogleRoute(route))
 
@@ -194,10 +215,9 @@ class GoogleRouteLegStep(RouteStep):
 class CRWSDirections(Directions):
     """Traffic directions obtained from CR Web Service (CHAPS/IDOS)."""
 
-    def __init__(self, from_stop, to_stop, from_city=None, to_city=None,
-                 input_data={}, finder=None):
+    def __init__(self, from_city, from_stop, to_city, to_stop, input_data={}, finder=None):
         # basic initialization
-        super(CRWSDirections, self).__init__(from_stop, to_stop, from_city, to_city)
+        super(CRWSDirections, self).__init__(from_city, from_stop, to_city, to_stop)
         self.finder = None
         self.handle = None
         # appear totally empty in case of any errors
@@ -336,8 +356,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
 
     @lru_cache(maxsize=10)
-    def get_directions(self, from_stop, to_stop, from_city, to_city,
-                       departure_time=None, arrival_time=None):
+    def get_directions(self, waypoints, departure_time=None, arrival_time=None):
         """Get Google maps transit directions between the given stops
         at the given time and date.
 
@@ -345,8 +364,10 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         Setting the correct date is compulsory!
         """
         data = {
-            'origin': ('"zastávka %s", %s, Česká republika' % (from_stop, from_city)).encode('utf-8'),
-            'destination': ('"zastávka %s", %s, Česká republika' % (to_stop, to_city)).encode('utf-8'),
+            'origin': ('"zastávka %s", %s, Česká republika' %
+                       (waypoints.from_stop, waypoints.from_city)).encode('utf-8'),
+            'destination': ('"zastávka %s", %s, Česká republika' %
+                            (waypoints.to_stop, waypoints.to_city)).encode('utf-8'),
             'region': 'cz',
             'sensor': 'false',
             'alternatives': 'true',
@@ -364,7 +385,8 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         response = json.load(page)
         self._log_response_json(response)
 
-        directions = GoogleDirections(from_stop, to_stop, from_city, to_city, response)
+        directions = GoogleDirections(waypoints.from_city, waypoints.from_stop,
+                                      waypoints.to_city, waypoints.to_stop, response)
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
@@ -443,12 +465,15 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         return self.search_stop(city_mask, self.city_list_id)
 
     @lru_cache(maxsize=10)
-    def get_directions(self, from_stop=None, to_stop=None, from_city=None, to_city=None,
-                       departure_time=None, arrival_time=None):
+    def get_directions(self, waypoints, departure_time=None, arrival_time=None):
         # try to map from-to to IDOS identifiers, default to originals
-        self.system_logger.info("ALEX: %s -- %s, %s -- %s" % (from_stop, from_city, to_stop, to_city))
-        from_city, from_stop = self.mapping.get((from_city, from_stop), (from_city, from_stop))
-        to_city, to_stop = self.mapping.get((to_city, to_stop), (to_city, to_stop))
+        self.system_logger.info("ALEX: %s -- %s, %s -- %s" %
+                                (waypoints.from_stop, waypoints.from_city,
+                                 waypoints.to_stop, waypoints.to_city))
+        from_city, from_stop = self.mapping.get((waypoints.from_city, waypoints.from_stop),
+                                                (waypoints.from_city, waypoints.from_stop))
+        to_city, to_stop = self.mapping.get((waypoints.to_city, waypoints.to_stop),
+                                            (waypoints.to_city, waypoints.to_stop))
         self.system_logger.info("IDOS: %s -- %s,  %s -- %s" % (from_stop, from_city, to_stop, to_city))
         # find from and to objects
         from_obj = None
@@ -496,7 +521,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(from_stop, to_stop, from_city, to_city, response, self)
+        directions = CRWSDirections(from_city, from_stop, to_city, to_stop, response, self)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
@@ -594,5 +619,6 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 line = line.strip()
                 city, stop, idos_list, idos_stop = line.split("\t")
                 mapping[(city, stop)] = (idos_list, idos_stop)
+                stop = re.sub(r'\((MHD|bus|vlak)\)$', r'', stop)  # ignore ALEX-specific additions to stop names
                 reverse_mapping[idos_stop] = stop
         return mapping, reverse_mapping

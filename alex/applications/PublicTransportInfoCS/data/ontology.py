@@ -210,6 +210,9 @@ ontology = {
             '^arrival_time$', '^arrival_time_rel$',
             '^to_city$', '^from_city$', '^via_city$',
         ],
+        'from_stop': ['^from_city$'],
+        'to_stop': ['^to_city$'],
+        'via_stop': ['^via_city$'],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation of different inputs

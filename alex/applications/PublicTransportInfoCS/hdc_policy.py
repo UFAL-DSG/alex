@@ -13,7 +13,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder
+from .directions import GoogleDirectionsFinder, Waypoints
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
@@ -102,6 +102,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                     city_dai = dai.name[:-4] + 'city'
                     if (city_dai, dai.value) in informs or (city_dai, dai.value) in iconfirms:
                         continue
+                # filter mistakenly added iconfirms that have an unset value
+                elif dai.value == 'none':
+                    continue
 
             new_da.append(dai)
 
@@ -634,67 +637,60 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # retrieve the slot variables
-        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else None
-        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else None
-        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else None
-        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else None
+        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else 'none'
+        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
 
         # infer cities based on stops
         from_cities, to_cities = None, None
         stop_city_inferred = False
-        if from_stop_val and not from_city_val:
+        if from_stop_val != 'none' and from_city_val == 'none':
             from_cities = self.ontology.get_compatible_vals('stop_city', from_stop_val)
             if len(from_cities) == 1:
                 from_city_val = from_cities.pop()
                 stop_city_inferred = True
-        if to_stop_val and not to_city_val:
+        if to_stop_val != 'none' and to_city_val == 'none':
             to_cities = self.ontology.get_compatible_vals('stop_city', to_stop_val)
             if len(to_cities) == 1:
                 to_city_val = to_cities.pop()
                 stop_city_inferred = True
 
         # infer cities based on the other
-        if from_stop_val and not from_city_val and to_city_val in from_cities:
+        if from_stop_val != 'none' and from_city_val == 'none' and to_city_val in from_cities:
             from_city_val = to_city_val
-        if to_stop_val and not to_city_val and from_city_val in to_cities:
+        if to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
             to_city_val = from_city_val
 
         # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
         if self.infer_default_stops:
-            if from_city_val and not from_stop_val:
+            if from_city_val != 'none' and from_stop_val == 'none':
                 from_stop_val = self.get_default_stop_for_city(from_city_val)
-            if to_city_val and not to_stop_val:
+            if to_city_val != 'none' and to_stop_val == 'none':
                 to_stop_val = self.get_default_stop_for_city(to_city_val)
         else:
-            if (from_city_val and (not from_stop_val or from_stop_val == from_city_val) and
-                (not to_city_val or from_city_val != to_city_val)):
+            if from_city_val != 'none' and from_stop_val == 'none' and (to_city_val == 'none' or
+                                                                        from_city_val != to_city_val):
                 from_stop_val = '__ANY__'
-            if (to_city_val and (not to_stop_val or to_stop_val == to_city_val) and
-                (not from_city_val or from_city_val != to_city_val)):
+            if to_city_val != 'none' and to_stop_val == 'none' and (from_city_val == 'none' or
+                                                                    from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
-
-        # TODO maybe check if the city and the stop are compatible?
-        # now we just pass it all to Google and see if it can deal with it, which may lead to weird results
 
         # check all state variables and the output one request dialogue act
         # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
-        if not from_stop_val and not to_stop_val and ('departure_time' not in accepted_slots
-                or 'time' not in accepted_slots) and randbool(10):
+        if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
+                                                                  'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif not from_stop_val and not to_stop_val and randbool(3):
+        elif from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
             req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif not from_stop_val:
+        elif from_stop_val == 'none':
             req_da.extend(DialogueAct("request(from_stop)"))
-        elif not to_stop_val:
+        elif to_stop_val == 'none':
             req_da.extend(DialogueAct('request(to_stop)'))
-        elif not from_city_val:
+        elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
-        elif not to_city_val:
+        elif to_city_val == 'none':
             req_da.extend(DialogueAct('request(to_city)'))
-
-        # convert __ANY__ to None for further actions
-        from_stop_val = None if from_stop_val == '__ANY__' else from_stop_val
-        to_stop_val = None if to_stop_val == '__ANY__' else to_stop_val
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
@@ -702,10 +698,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
             iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
 
-        return req_da, iconfirm_da, {'from_stop': from_stop_val,
-                                     'to_stop': to_stop_val,
-                                     'from_city': from_city_val,
-                                     'to_city': to_city_val}
+        return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val)
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
@@ -845,6 +838,33 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct('inform(num_transfers="%d")' % n)
         return da
 
+    def check_directions_conflict(self, wp):
+        """Check for conflicts in the given waypoints. Return an apology() DA if the origin and
+        the destination are the same, or if a city is not compatible with the corresponding stop.
+
+        :param wp: wayponts of the user's connection query
+        :rtype: DialogueAct
+        :return: apology dialogue act in case of conflict, or None
+        """
+        # origin and destination are the same
+        if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
+            apology_da = DialogueAct('apology()&inform(stops_conflict="thesame")')
+            apology_da.extend(DialogueAct(wp.get_minimal_info()))
+            return apology_da
+        # origin stop incompatible with origin city
+        elif not self.ontology.is_compatible('city_stop', wp.from_city, wp.from_stop):
+            apology_da = DialogueAct('apology()&inform(stops_conflict="incompatible")')
+            apology_da.extend(DialogueAct('inform(from_city="%s")&inform(from_stop="%s")' %
+                                          (wp.from_city, wp.from_stop)))
+            return apology_da
+        # destination stop incompatible with destination city
+        elif not self.ontology.is_compatible('city_stop', wp.to_city, wp.to_stop):
+            apology_da = DialogueAct('apology()&inform(stops_conflict="incompatible")')
+            apology_da.extend(DialogueAct('inform(to_city="%s")&inform(to_stop="%s")' %
+                                          (wp.to_city, wp.to_stop)))
+            return apology_da
+        return None
+
     def get_directions(self, ds, route_type='true', check_conflict=False):
         """Retrieve Google directions, save them to dialogue state and return
         corresponding DAs.
@@ -860,14 +880,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         conn_info = ds.conn_info
         # check for route conflicts
-        if (check_conflict and (conn_info['from_stop'] == conn_info['to_stop'])
-                and (conn_info['from_city'] == conn_info['to_city'])):
-            apology_da = DialogueAct()
-            apology_da.extend(DialogueAct('apology()'))
-            apology_da.extend(DialogueAct('inform(stops_conflict="thesame")'))
-            apology_da.extend(DialogueAct("inform(from_stop='%s')" % conn_info['from_stop']))
-            apology_da.extend(DialogueAct("inform(to_stop='%s')" % conn_info['to_stop']))
-            return apology_da
+        if check_conflict:
+            apology_da = self.check_directions_conflict(conn_info)
+            if apology_da is not None:
+                return apology_da
 
         # get dialogue state values
         departure_time = ds['departure_time'].mpv()
@@ -892,11 +908,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             time_rel = departure_time_rel if departure_time_rel != 'none' else time_rel
             departure_ts, _ = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
-        # retrieve Google directions
-        ds.directions = self.directions.get_directions(from_stop=conn_info['from_stop'],
-                                                       to_stop=conn_info['to_stop'],
-                                                       from_city=conn_info['from_city'],
-                                                       to_city=conn_info['to_city'],
+        # retrieve transit directions
+        ds.directions = self.directions.get_directions(conn_info,
                                                        departure_time=departure_ts,
                                                        arrival_time=arrival_ts)
         return self.say_directions(ds, route_type)
@@ -971,8 +984,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         # no route found: apologize
         if len(res) == 0:
             res.append('apology()')
-            res.append("inform(from_stop='%s')" % dialogue_state.directions.from_stop)
-            res.append("inform(to_stop='%s')" % dialogue_state.directions.to_stop)
+            res.append(dialogue_state.directions.get_minimal_info())
 
         res_da = DialogueAct("&".join(res))
 
