@@ -60,6 +60,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param changed_slots: slots changed in the last turn
         """
         for ds_slot in ds:
+            if ds_slot in changed_slots:
+                # do not reset a slot which just changed
+                continue
+                
             for changed_slot in changed_slots:
                 if self.ontology.reset_on_change(ds_slot, changed_slot):
                     if isinstance(ds[ds_slot], float):
