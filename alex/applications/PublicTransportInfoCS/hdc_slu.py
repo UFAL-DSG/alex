@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 
+import copy
+
 from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
@@ -64,6 +66,50 @@ def any_phrase_in(utterance, phrases):
 class PTICSHDCSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
+        self.cldb = self.preprocessing.cldb
+
+    def abstract_utterance(self, utterance):
+        """
+        Return a list of possible abstractions of the utterance.
+
+        :param utterance: an Utterance instance
+        :return: a list of abstracted utterance, form, value, category label tuples
+        """
+
+        abs_utts = copy.deepcopy(utterance)
+        category_labels = set()
+
+        start = 0
+        while start < len(utterance):
+            end = len(utterance)
+            while end > start:
+                f = tuple(utterance[start:end])
+                #print start, end
+                #print f
+
+                if f in self.cldb.form2value2cl:
+                    for v in self.cldb.form2value2cl[f]:
+                        for c in self.cldb.form2value2cl[f][v]:
+                            abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
+
+                            category_labels.add(c.upper())
+                            break
+                        else:
+                            continue
+
+                        break
+
+                    #print f
+
+                    # skip all substring for this form
+                    start = end
+                    break
+                end -= 1
+            else:
+                start += 1
+
+
+        return abs_utts, category_labels
 
     def __repr__(self):
         return "PTICSHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
@@ -74,6 +120,8 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
+
+        # regular parsing
         phr_wp_types = [('from', set(['z', 'za', 'ze', 'od', 'začátek', 'začáteční',
                                       'počáteční', 'počátek', 'výchozí', 'start', 'stojím na',
                                       'jsem na', 'start na', 'stojím u', 'jsem u', 'start u',
@@ -90,6 +138,8 @@ class PTICSHDCSLU(SLUInterface):
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
         """
+
+        # regular parsing
         phr_wp_types = [('from', set(['z', 'ze', 'od', 'začátek', 'začáteční',
                                       'počáteční', 'počátek', 'výchozí', 'start',
                                       'jsem v', 'stojím v', 'začátek v'])),
@@ -407,7 +457,7 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'jiný jiné jiná jiného'):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená začátku opakuji'):
+        if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená začátku opakuji začneme začněme začni začněte'):
             if (any_word_in(u, 'zopakovat opakovat znova znovu opakuj zopakuj zopakujte') or
                 phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
@@ -470,22 +520,6 @@ class PTICSHDCSLU(SLUInterface):
 
         if any_phrase_in(u, ['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
             cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
-
-        if len(u.utterance) == 1 and any_word_in(u, 'centra centrum'):
-            # we do not know whether to or from and it must be one of them
-            cn.add(1.0, DialogueActItem('inform', 'centre_direction', '*'))
-
-        if phrase_in(u, 'z centra') and not any_word_in(u, 'ne nejedu nechci'):
-            cn.add(1.0, DialogueActItem('inform', 'centre_direction', 'from'))
-
-        if phrase_in(u, 'do centra') and not any_word_in(u, 'ne nejedu nechci'):
-            cn.add(1.0, DialogueActItem('inform', 'centre_direction', 'to'))
-
-        if phrase_in(u, 'z centra') and any_word_in(u, 'ne nejedu nechci'):
-            cn.add(1.0, DialogueActItem('deny', 'centre_direction', 'from'))
-
-        if phrase_in(u, 'do centra') and any_word_in(u, 'ne nejedu nechci'):
-            cn.add(1.0, DialogueActItem('deny', 'centre_direction', 'to'))
 
         if all_words_in(u, 'od to jede') or \
             all_words_in(u, 'z jake jede') or \
@@ -610,7 +644,7 @@ class PTICSHDCSLU(SLUInterface):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
-        #print 'Parsing utterance "{utt}".'.format(utt=utterance)
+        # print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
@@ -618,7 +652,7 @@ class PTICSHDCSLU(SLUInterface):
             # the text normalisation
             utterance = self.preprocessing.normalise_utterance(utterance)
 
-            abutterance, category_labels = self.preprocessing.values2category_labels_in_utterance(utterance)
+            abutterance, category_labels = self.abstract_utterance(utterance)
 
             if verbose:
                 print 'After preprocessing: "{utt}".'.format(utt=abutterance)
@@ -626,8 +660,18 @@ class PTICSHDCSLU(SLUInterface):
         else:
             category_labels = dict()
 
-        #print 'After preprocessing: "{utt}".'.format(utt=abutterance)
-        #print category_labels
+        # handle false positive alarms of abstraction
+        abutterance = abutterance.replace(('STOP=Výstupní', 'stanice', 'je'), ('výstupní', 'stanice', 'je'))
+        abutterance = abutterance.replace(('STOP=Nová','spojení'), ('nové', 'spojení',))
+        abutterance = abutterance.replace(('STOP=Nová','zadání'), ('nové', 'zadání',))
+        abutterance = abutterance.replace(('STOP=Nová','TASK=find_connection'), ('nový', 'TASK=find_connection',))
+        abutterance = abutterance.replace(('z', 'CITY=Liberk',), ('z', 'CITY=Liberec',))
+        abutterance = abutterance.replace(('do', 'CITY=Liberk',), ('do', 'CITY=Liberec',))
+        abutterance = abutterance.replace(('v', 'STOP=Praga',), ('v', 'CITY=Praha',))
+        category_labels.add('CITY')
+
+        # print 'After preprocessing: "{utt}".'.format(utt=abutterance)
+        # print category_labels
 
         res_cn = DialogueActConfusionNetwork()
 

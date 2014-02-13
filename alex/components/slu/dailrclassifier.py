@@ -188,8 +188,8 @@ class DAILogRegClassifier(SLUInterface):
 
     def __init__(self, cldb, preprocessing, features_size=4, *args, **kwargs):
         self.features_size = features_size
-        self.preprocessing = preprocessing
         self.cldb = cldb
+        self.preprocessing = preprocessing
 
     def __repr__(self):
         r = "DAILogRegClassifier({cldb},{preprocessing},{features_size})"\

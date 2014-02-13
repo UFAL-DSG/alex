@@ -251,6 +251,23 @@ def add_cities():
     add_from_file('city', CITIES_FNAME)
 
 
+def save_c2v2f(file_name):
+    c2v2f = []
+    for k in database:
+        for v in database[k]:
+            for f in database[k][v]:
+                if re.search('\d', f):
+                    continue
+                c2v2f.append((k, v, f))
+
+    c2v2f.sort()
+
+    # save the database vocabulary - all the surface forms
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
+        for x in c2v2f:
+            f.write(' => '.join(x))
+            f.write('\n')
+
 def save_surface_forms(file_name):
     surface_forms = []
     for k in database:
@@ -291,6 +308,7 @@ add_time()
 add_stops()
 add_cities()
 
-if len(sys.argv) > 1 and sys.argv[1] == "dump":
+if "dump" in sys.argv or "--dump" in sys.argv:
+    save_c2v2f('database_c2v2f.txt')
     save_surface_forms('database_surface_forms.txt')
     save_SRILM_classes('database_SRILM_classes.txt')
