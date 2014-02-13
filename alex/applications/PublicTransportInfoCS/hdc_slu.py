@@ -644,7 +644,7 @@ class PTICSHDCSLU(SLUInterface):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
-        print 'Parsing utterance "{utt}".'.format(utt=utterance)
+        # print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
@@ -670,8 +670,8 @@ class PTICSHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('v', 'STOP=Praga',), ('v', 'CITY=Praha',))
         category_labels.add('CITY')
 
-        print 'After preprocessing: "{utt}".'.format(utt=abutterance)
-        print category_labels
+        # print 'After preprocessing: "{utt}".'.format(utt=abutterance)
+        # print category_labels
 
         res_cn = DialogueActConfusionNetwork()
 
