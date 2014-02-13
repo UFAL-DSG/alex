@@ -883,6 +883,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         if check_conflict:
             apology_da = self.check_directions_conflict(conn_info)
             if apology_da is not None:
+                if 'route_alternative' in ds:
+                    ds.directions = None
+                    del ds['route_alternative']
                 return apology_da
 
         # get dialogue state values
