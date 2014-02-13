@@ -63,7 +63,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             if ds_slot in changed_slots:
                 # do not reset a slot which just changed
                 continue
-                
+
             for changed_slot in changed_slots:
                 if self.ontology.reset_on_change(ds_slot, changed_slot):
                     if isinstance(ds[ds_slot], float):
@@ -98,8 +98,8 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         for dai in da:
             if dai.dat == 'iconfirm':
-                # filter slots explicitly informed
-                if (dai.name, dai.value) in informs:
+                # filter slots explicitly informed, filter repeating
+                if (dai.name, dai.value) in informs or (dai.name, dai.value) in iconfirms:
                     continue
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
@@ -107,7 +107,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     if (city_dai, dai.value) in informs or (city_dai, dai.value) in iconfirms:
                         continue
                 # filter mistakenly added iconfirms that have an unset value
-                elif dai.value == 'none':
+                elif dai.value == 'none' or dai.value is None:
                     continue
 
             new_da.append(dai)
