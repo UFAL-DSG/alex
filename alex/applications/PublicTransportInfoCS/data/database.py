@@ -100,7 +100,7 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-    for c in '{}+/&[]':
+    for c in '{}+/&[],-':
         form = form.replace(' %s ' % c, ' ')
         form = form.replace(' %s' % c, ' ')
         form = form.replace('%s ' % c, ' ')
