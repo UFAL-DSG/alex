@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 """
 Convert stops gathered from the IDOS portal into structures accepted by the
 PublicTransportInfoCS application.
@@ -29,9 +28,10 @@ import autopath
 import codecs
 import sys
 import re
-from collections import defaultdict
 from add_cities_to_stops import load_list, get_city_for_stop
 from alex.utils.various import remove_dups_stable
+from alex.components.nlg.tools.cs import word_for_number
+
 
 # a regex to strip weird stop name suffixes (request stop etc.)
 CLEAN_RULE = (r'(?: +[O#]|;( *([wvx§\(\)\{\}ABP#]|MHD|WC|CLO))*|[\(-] *HR\.TARIF\.ZÓNY.*)$', r'')
@@ -102,7 +102,7 @@ ABBREV_RULES = [
     (r'p\. Land\.', r'pod Landštejnem'),
     (r'p\. Oreb\.', r'pod Orebem'),
     (r'p\. Ondřej\.', r'pod Ondřejníkem'),
-    (r' p\. ', r' pod '),
+    (r' p\. (?=[^ ])', r' pod '),
     (r' v Jiz\. h\.', r' v Jizerských horách'),
     (r'Vel\. Těšany', r'Velké Těšany'),
     (r'([^ ])-([^ ])', r'\1 - \2'),
@@ -157,6 +157,7 @@ ABBREV_RULES = [
     (r'u Uh\. Hrad\.', r'u Uherského Hradiště'),
     (r'u Kar\. Varů', r'u Karlových Varů'),
     (r'Zahr\. Město', r'Zahradní Město'),
+    (r'Dl\. louka', r'Dlouhá louka'),
     (r'zám\. zahrada', r'zámecká zahrada'),
     (r' již\. z(ast)?\.', r' jižní zastávka'),
     (r' sev\. z(ast)?\.', r' severní zastávka'),
@@ -183,7 +184,9 @@ ABBREV_RULES = [
     (r' žel\. přejezd(?=[;, ])', r' železniční přejezd '),
     (r' rozc\.([0-9])', r' rozcestí \1'),
     (r' rozc\.', r' rozcestí'),
-    (r' aut\. st\.(?=[;, ])', [r' autobusové stanoviště', r' autobusová stanice']),
+    (r' aut\. st\.(?=[;, ])', [r' autobusové stanoviště', r' autobusová stanice',
+                               r' autobusové nádraží']),
+    (r' ([Aa])ut\. stanoviště ', r' \1utobusové stanoviště '),
     (r' žel\. st(\.|anice)', r' železniční stanice'),
     (r' žel\. zastávka', r' železniční zastávka'),
     (r' křiž\.', r' křižovatka'),
@@ -218,13 +221,14 @@ ABBREV_RULES = [
     (r' ul\.', r' ulice'),
     (r' park\.', r' parkoviště'),
     (r' ŽD vrát\.', r' ŽD vrátnice'),
-    (r' Kop\. myslivna', r'Kopce myslivna'),
-    (r' keramické záv\.', r'keramické závody'),
-    (r' stř\. ZD', r'středisko ZD'),
+    (r' Kop\. myslivna', r' Kopce myslivna'),
+    (r' keramické záv\.', r' keramické závody'),
+    (r' stř\. ZD', r' středisko ZD'),
     (r' rekr\. stř\.', r' rekreační středisko'),
     (r' ([tT])ř\.', r' \1řída'),
     (r'(Branišovice.*)st\. silnice', r'\1státní silnice'),
     (r'Domin\. Paseky', r'Dominikální Paseky'),
+    (r' SLEZSKÉ PŘ\. ', r' Slezské Předměstí '),
     (r'Mor\. (Chrastová|Ostrava)', r'Moravská \1'),
     (r'Sl\. Ostrava', r'Slezská Ostrava'),
     (r'Marián\. údolí', r'Mariánské údolí'),
@@ -291,6 +295,7 @@ ABBREV_RULES = [
     (r' výzk\. ústav', r' výzkumný ústav'),
     (r' st\. statek', r' státní statek'),
     (r' prům\. zóna', r' průmyslová zóna'),
+    (r' [Čč][Ss]\. (armády|brigády) ', r' Československé \1 '),
     (r' hot\.', r' hotel'),
     (r'Bílá hora', r'Bílá Hora'), # has different casing in different cities
     # titles
@@ -356,21 +361,57 @@ ABBREV_RULES = [
     (r' VŠ(?=[,; ])', [r' VŠ', r' vysoká škola']),
     (r' SPŠ(?=[,; ])', [r' SPŠ', r' střední průmyslová škola']),
     (r' SOU(?=[,; ])', [r' SOU', r' střední odborné učiliště']),
-    (r' 29\. [Dd]ubna', [r' Dvacátého devátého dubna', r' Devětadvacátého dubna']),
-    (r' 22\. [Dd]ubna', [r' Dvacátého druhého dubna', r' Dvaadvacátého dubna']),
-    (r' 28\. [Řř]íjna', [r' Dvacátého osmého října', r' Osmadvacátého října']),
-    (r' 9\. [Kk]větna', r' Devátého května'),
-    (r' 5\. [Kk]větna', r' Pátého května'),
-    (r' 17\. [Ll]istopadu', r' Sedmnáctého listopadu'),
     (r' 1\. [mM]áje', r' Prvního máje'),
-    (r' 1\. (ZŠ|základní škola|náměstí)', r' První \1'),
-    (r' 2\. (ZŠ|základní škola)', r' Druhá \1'),
-    (r' 3\. (ZŠ|základní škola)', r' Třetí \1'),
+    (r' 3\. ([Kk]větna) ', r' Třetího \1 '),
+    (r' 4\. ([Kk]větna) ', r' Čtvrtého \1 '),
+    (r' 5\. [Kk]větna', r' Pátého května'),
+    (r' 6\. ([Kk]větna) ', r' Šestého \1 '),
+    (r' 8\. ([Kk]větna) ', r' Osmého \1 '),
+    (r' 9\. [Kk]větna', r' Devátého května'),
+    (r' 17\. [Ll]istopadu', r' Sedmnáctého listopadu'),
+    (r' 22\. [Dd]ubna', [r' Dvacátého druhého dubna', r' Dvaadvacátého dubna']),
+    (r' 28\. ([Dd]ubna|[Řř]íjna) ', [r' Dvacátého osmého \1 ', r' Osmadvacátého \1 ']),
+    (r' 29\. [Dd]ubna', [r' Dvacátého devátého dubna', r' Devětadvacátého dubna']),
+    (r' 1\. (ZŠ|základní škola|náměstí|[čČ]eskoslovenské|BS|díl)', r' První \1'),
+    (r' 2\. (ZŠ|základní škola|etapa) ', r' Druhá \1 '),
+    (r' 3\. (ZŠ|základní škola|vrátnice)', r' Třetí \1'),
+    (r' 4\. (ZŠ|základní škola|vrátnice)', r' Čtvrtá \1'),
+    (r' 5\. ([Kk]věten) ', r' Pátý \1 '),
+    (r' 6\. (ZŠ|základní škola)', r' Šestá \1'),
+    (r' 7\. ([uU]lice)', r' Sedmá \1 '),
+    (r' 8\. ([uU]lice|ZŠ|základní škola)', r' Osmá \1 '),
     (r' 14\. (ZŠ|základní škola)', r' Čtrnáctá \1'),
     (r' 18\. (ZŠ|základní škola)', r' Osmnáctá \1'),
-    (r' 7\. [uU]lice', r' Sedmá ulice'),
+    (r' Karla IV. ', r' Karla Čtvrtého '),
+    (r' I\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' První \1 '),
+    (r' I\.?(?:[ ,])', [r' jedna', r' římská jedna']),
+    (r' II\. (?:pásmo|p\.?) $', r' druhé pásmo '),
+    (r' II\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Druhá \1 '),
+    (r' II\.?(?:[ ,])', [r' dvě', r' římská dvě']),
+    (r' II\. (odboje) ', r' Druhého \1 '),
+    (r' III\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Třetí \1 '),
+    (r' III\.?(?:[ ,])', [r' tři', r' římská tři']),
+    (r' IV\.?(?:[ ,])', [r' čtyři', r' římská čtyři']),
+    (r' V\.?(?:[ ,])', [r' pět', r' římská pět']),
+    (r' VI\.?(?:[ ,])', [r' šest', r' římská šest']),
+    (r' VII\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Sedmá \1 '),
+    (r' VII\.?(?:[ ,])', [r' sedm', r' římská sedm']),
+    (r' VIII\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Osmá \1 '),
+    (r' VIII\.?(?:[ ,])', [r' osm', r' římská osm']),
+    (r' IX\.? $', [r' devět ', r' římská devět ']),
+    (r' X\.? $', [r' deset ', r' římská deset ']),
+    (r' XI\.? $', [r' jedenáct ', r' římská jedenáct ']),
+    (r' XII\.? $', [r' dvanáct ', r' římská dvanáct ']),
+    (r' XVII\.? $', [r' sedmnáct ', r' římská sedmnáct ']),
+    (r' D2 ', r' D Dvě '),
+    (r' D3 ', r' D Tři '),
+    (r' D8 ', r' D Osm '),
+    (r' G2 ', r' G Dvě '),
+    (r' Metra 2,', r'Metra dvě,'),
+    (r' 1\)', r' jedna)'),
+    (r' 2\)', r' dvě)'),
     # TODO this creates ambiguity in some cases
-    (r' (rozcestí|křižovatka) [0-9]\.[0-9]', r' \1'),
+    (r' ((?:rozcestí|křižovatka)(?: .*)?) [0-9]\.[0-9]', r' \1'),
     # fixing spacing
     (r' ,', r','),
     (r'-([^ ])', r'- \1'),
@@ -383,6 +424,26 @@ ABBREV_RULES = [
 # compile all regexes
 CLEAN_RULE = (re.compile(CLEAN_RULE[0]), CLEAN_RULE[1])
 ABBREV_RULES = [(re.compile(pattern), repl) for pattern, repl in ABBREV_RULES]
+
+NUM_FINDER = re.compile(' [0-9]+ ')
+NUM_TOKEN = re.compile('^[0-9]+$')
+
+
+def expand_numbers(stop_name):
+    """Spell out all numbers that appear as separate tokens in the word (separated by spaces)."""
+    tokens = []
+    for token in stop_name.split(' '):
+        if NUM_TOKEN.match(token):
+            try:
+                num_word = word_for_number(int(token), 'F1')
+                if token.startswith('0') and len(token) > 1:
+                    tokens.append('nula')
+                tokens.append(num_word)
+            except:
+                tokens.append(token)
+        else:
+            tokens.append(token)
+    return ' '.join(tokens)
 
 
 def expand_abbrevs(stop_name):
@@ -403,27 +464,41 @@ def expand_abbrevs(stop_name):
         except Exception as e:
             print >> sys.stderr, unicode(regex.pattern).encode('utf-8')
             raise e
+    # keep the first variant as "canonical", to be used in SLU, DM, and NLG
+    stop_name = variants[0]
+    # process numbers in variants
+    if NUM_FINDER.search(stop_name):
+        variants = [expand_numbers(var) for var in variants]
     # remove the added spaces
+    stop_name = stop_name.strip()
     variants = [var.strip() for var in variants]
     # return the result
-    return variants
+    return stop_name, variants
 
 
-CASING_MAP = {}
+UNIF_MAP = {}
+UNIF_RULES = [(r'[\.,;\-–\(\)\[\]\{\}]', r' '),
+              (r' +', r' ')]
+UNIF_RULES = [(re.compile(pattern), repl) for pattern, repl in UNIF_RULES]
 
 
-def unify_casing(stop_name):
+def unify_casing_and_punct(stop_name):
     """Unify casing of a stop name (if a second stop of the same name is encountered, let it
     have the same casing as the first one)."""
-    return CASING_MAP.setdefault(stop_name.lower(), stop_name.upper()[0] + stop_name[1:])
+    # unify punctuation
+    unif_name = stop_name
+    for pattern, repl in UNIF_RULES:
+        unif_name = pattern.sub(repl, unif_name)
+    # unify casing, uppercase first character by default
+    return UNIF_MAP.setdefault(unif_name.lower(), stop_name.upper()[0] + stop_name[1:])
 
 
 # '>' = add to the end, '<' = add to the beginning
-ADDITIONS = {'bus': ['>(bus)', '>autobus', '<zastávka', '<stanice',
+ADDITIONS = {'bus': ['>(bus)', '>autobus',
                      '<zastávka autobusu', '<stanice autobusu',
                      '>autobusová zastávka', '>autobusová stanice'],
-             'vlak': ['>(vlak)', '<zastávka', '<stanice', '>nádraží', '>vlakové nádraží'],
-             'MHD': ['>(MHD)', '<zastávka', '<stanice', '<zastávka MHD']}
+             'vlak': ['>(vlak)', '>nádraží', '<nádraží', '>vlakové nádraží'],
+             'MHD': ['>(MHD)', '<zastávka MHD']}
 
 
 def unambig_variants(variants, idos_list):
@@ -432,7 +507,8 @@ def unambig_variants(variants, idos_list):
     # get the right additions list
     additions = ADDITIONS.get(idos_list, ADDITIONS['MHD'])
     if len(variants) > 1:  # this should never happen, but if it does, issue a warning
-        print >> sys.stderr, 'Discarded variants of %s: %s' % (variants[0], '; '.join(variants[1:]))
+        print >> sys.stderr, ('Discarded variants of %s: %s' %
+                              (variants[0], '; '.join(variants[1:]))).encode('utf-8')
     # create the final list of variants
     stop_name = variants[0]
     return [stop_name + ' ' + add[1:] if add[0] == '>' else add[1:] + ' ' + stop_name
@@ -454,37 +530,39 @@ def main():
 
     # process the input
     for idos_list, idos_stop in in_stops:
-        # clean rubbish suffixes and expand all abbreviations
-        # (resulting in one "canonical" name and possibly some variants)
+        # clean rubbish suffixes and expand all abbreviations,
+        # resulting in one "canonical" name and all surface forms (not yet inflected)
         idos_stop = CLEAN_RULE[0].sub(CLEAN_RULE[1], idos_stop)
-        variants = expand_abbrevs(idos_stop)
+        stop, forms = expand_abbrevs(idos_stop)
         if idos_list not in exp_idos_lists:
             exp_idos_lists[idos_list] = expand_abbrevs(idos_list)[0]
         # get the correct city (provide default for city transit only)
-        city = get_city_for_stop(cities, variants[0],
+        city = get_city_for_stop(cities, stop,
                                  exp_idos_lists[idos_list]
                                  if idos_list not in ['vlak', 'bus'] else None)
         # print any errors encountered
         if not city:
-            print >> stderr, 'Could not resolve:', variants[0]
+            print >> stderr, 'Could not resolve:', stop
             continue
         # make stop names that equal city names unambiguous
-        if city in variants:
-            variants = unambig_variants(variants, idos_list)
+        if stop == city:
+            forms = unambig_variants(forms, idos_list)
         # strip city name from stop name for city transit
-        if variants[0].startswith(exp_idos_lists[idos_list] + ','):
+        if stop.startswith(exp_idos_lists[idos_list] + ','):
             # we assume there are no variants within the city name itself
-            variants = [var[len(exp_idos_lists[idos_list]):].strip(', ') for var in variants]
-        # normalize casing (use first-encountered casing with uppercased first letter)
-        variants = [unify_casing(var) for var in variants]
+            stop = stop[len(exp_idos_lists[idos_list]):].strip(', ')
+            forms = [var[len(exp_idos_lists[idos_list]):].strip(', ') for var in forms]
+        # normalize casing and punctuation
+        stop = unify_casing_and_punct(stop)
+        forms = [unify_casing_and_punct(form) for form in forms]
         # add the result to the output list
-        out_list.append((idos_list, idos_stop, city, variants[0], variants))
+        out_list.append((idos_list, idos_stop, city, stop, forms))
 
-    # write list of (unique) stops, including all variants
-    stops_map = {stop: variants for _, _, _, stop, variants in out_list}
+    # write list of (unique) stops, including all forms
+    stops_map = {stop: forms for _, _, _, stop, forms in out_list}
     with codecs.open(file_out_stops, 'w', 'UTF-8') as fh_out:
         for stop in sorted(stops_map.keys()):
-            print >> fh_out, '; '.join(stops_map[stop])
+            print >> fh_out, stop + "\t" + '; '.join(stops_map[stop])
     # write city-stop mapping
     city_stop_map = {}
     for _, _, city, stop, _ in out_list:

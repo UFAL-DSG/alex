@@ -6,12 +6,14 @@ Expanding Czech stop/city names with inflection forms in all given morphological
 
 Usage:
 
-./expand_stops.py [-c 1,2,4] [-m previous.expanded.txt] stops.txt [stops-2.txt ...] stops.expanded.txt
+./expand_stops.py [-c 1,2,4] [-l] [-p] [-m previous.expanded.txt] stops.txt [stops-2.txt ...] stops.expanded.txt
 
 -c = Required morphological cases (possible values: numbers 1-7, comma-separated).
         Defaults to 1,2,4 (nominative, genitive, accusative).
 -m = Add previously expanded stops. Only stop name variants NOT found in the previously
         expanded file are expanded to speed up the process and preserve hand-written forms.
+-p = Strip punctuation off surface forms
+-l = Lowercase surface forms
 """
 
 from __future__ import unicode_literals
@@ -71,7 +73,7 @@ class Generator(object):
 class ExpandStops(object):
     """This handles inflecting stop names into all desired cases in Czech."""
 
-    def __init__(self, cases_list):
+    def __init__(self, cases_list, strip_punct, lowercase_forms):
         """Initialize the expander object, initialize the morphological analyzer and generator.
 
         @param cases_list: List of cases (given as strings) to be used for generation \
@@ -79,6 +81,16 @@ class ExpandStops(object):
         """
         self.stops = defaultdict(list)
         self.cases_list = cases_list
+        # initialize postprocessing
+        postprocess_func = ((lambda text: re.sub(r' ([\.,])', r'\1', text))
+                            if not strip_punct
+                            else (lambda text: re.sub(r' [\.,\-–\(\)\{\}\[\];]( |$)', r'\1', text)))
+        if lowercase_forms:
+            lc_func = lambda text: postprocess_func(text).lower()
+            self.__postprocess_func = lc_func
+        else:
+            self.__postprocess_func = postprocess_func
+        # initialize morphology
         analyzer_model = online_update('applications/PublicTransportInfoCS/data/czech.tagger')
         generator_model = online_update('applications/PublicTransportInfoCS/data/czech.dict')
         self.__analyzer = Analyzer(analyzer_model)
@@ -88,15 +100,29 @@ class ExpandStops(object):
         """Save all stops currently held in memory to a file."""
         with codecs.open(fname, 'w', 'UTF-8') as f_out:
             for stop_name in sorted(self.stops.keys()):
+                f_out.write(stop_name + "\t")
                 f_out.write('; '.join(self.stops[stop_name]))
                 f_out.write("\n")
+
+    def parse_line(self, line):
+        """Load one line from the input file (tab-separated main form or
+        implicit main form supported)."""
+        if '\t' not in line:
+            stop = None
+            variants = line
+        else:
+            stop, variants = line.split('\t')
+        variants = [var.strip() for var in variants.split(';')]
+        if stop is None:
+            stop = variants[0]
+        return stop, variants
 
     def load_file(self, fname):
         """Just load a list of stops from a file and store it in memory."""
         with codecs.open(fname, 'r', 'UTF-8') as f_in:
             for line in f_in:
-                variants = [var.strip() for var in line.split(';')]
-                self.stops[variants[0]] = list(remove_dups_stable(variants + self.stops[variants[0]]))
+                stop, variants = self.parse_line(line)
+                self.stops[stop] = list(remove_dups_stable(variants + self.stops[stop]))
 
     def expand_file(self, fname):
         """Load a list of stops from a file and expand it."""
@@ -104,9 +130,9 @@ class ExpandStops(object):
             ctr = 0
             for line in f_in:
                 # load variant names for a stop
-                variants = [var.strip() for var in line.split(';')]
+                stop, variants = self.parse_line(line)
                 # skip those that needn't be inflected any more
-                to_inflect = [var for var in variants if not var in self.stops[variants[0]]]
+                to_inflect = [var for var in variants if not var in self.stops[stop]]
                 # inflect the rest
                 for variant in to_inflect:
                     words = self.__analyzer.analyze(variant)
@@ -118,11 +144,10 @@ class ExpandStops(object):
                             forms.append(self.__inflect_word(word, case, prev_tag))
                             prev_tag = word[2]
                         # use all possible combinations if there are more variants for this case
-                        inflected = map(lambda var: re.sub(r' ([\.,])', r'\1', var),
+                        inflected = map(self.__postprocess_func,
                                         remove_dups_stable([' '.join(var)
                                                             for var in itertools.product(*forms)]))
-                        self.stops[variants[0]] = list(remove_dups_stable(self.stops[variants[0]] +
-                                                                          inflected))
+                        self.stops[stop] = list(remove_dups_stable(self.stops[stop] + inflected))
                 ctr += 1
                 if ctr % 1000 == 0:
                     print >> sys.stderr, '.',
@@ -132,13 +157,16 @@ class ExpandStops(object):
         """Inflect one word in the given case (return a list of variants)."""
         form, lemma, tag = word
         # inflect each word in nominative not following a noun in nominative
-        # (if current case is not nominative)
-        if re.match(r'^....1', tag) and not re.match(r'^NN..1', prev_tag) and case != '1':
+        # (if current case is not nominative), avoid numbers
+        if (re.match(r'^[^C]...1', tag) and
+            not re.match(r'^NN..1', prev_tag) and
+            not form in ['římská'] and
+            case != '1'):
             # change the case in the tag, allow all variants
             new_tag = re.sub(r'^(....)1(.*).$', r'\g<1>' + case + r'\g<2>?', tag)
             # -ice: test both sg. and pl. versions
             if (form.endswith('ice') and form[0] == form[0].upper() and
-                    not re.match(r'(nemocnice|ulice)', form, re.IGNORECASE)):
+                    not re.match(r'(nemocnice|ulice|vrátnice)', form, re.IGNORECASE)):
                 new_tag = re.sub(r'^(...)S', r'\1[SP]', new_tag)
             # try inflecting, fallback to uninflected
             capitalized = form[0] == form[0].upper()
@@ -151,17 +179,23 @@ class ExpandStops(object):
 def main():
     cases = ['1', '2', '4']
     merge_file = None
-    opts, files = getopt(sys.argv[1:], 'c:m:')
+    strip_punct = False
+    lowercase_forms = False
+    opts, files = getopt(sys.argv[1:], 'c:m:pl')
     for opt, arg in opts:
         if opt == '-c':
             cases = re.split('[, ]+', arg)
         elif opt == '-m':
             merge_file = arg
+        elif opt == '-p':
+            strip_punct = True
+        elif opt == '-l':
+            lowercase_forms = True
     if len(files) < 2:
         sys.exit(__doc__)
     in_files = files[:-1]
     out_file = files[-1]
-    es = ExpandStops(cases)
+    es = ExpandStops(cases, strip_punct, lowercase_forms)
     if merge_file:
         es.load_file(merge_file)
     for in_file in in_files:

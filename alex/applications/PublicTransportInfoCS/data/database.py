@@ -87,18 +87,6 @@ CITIES_FNAME = "cities.expanded.txt"
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
 
-_substs_lit = [
-    ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
-    ('\\bI$', ['jedna']),
-    ('\\bII\\b', ['dva']),
-    ('\\bD1\\b', ['dé jedna']),
-    ('\\bD8\\b', ['dé osm']),
-]
-
-_substs = [(re.compile(regex), [val + ' ' for val in vals]) for (regex, vals) in _substs_lit]
-_num_rx = re.compile('[1-9][0-9]*')
-_num_rx_exh = re.compile('^[1-9][0-9]*$')
-
 
 def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
@@ -113,12 +101,13 @@ def db_add(category_label, value, form):
         database[category_label][value] = set(database[category_label][value])
 
     for c in '{}+/&[]':
-        form = form.replace(' %s ' %c, ' ')
-        form = form.replace(' %s' %c, ' ')
-        form = form.replace('%s ' %c, ' ')
+        form = form.replace(' %s ' % c, ' ')
+        form = form.replace(' %s' % c, ' ')
+        form = form.replace('%s ' % c, ' ')
     form = form.strip()
 
     database[category_label].setdefault(value, set()).add(form)
+
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
@@ -230,65 +219,24 @@ def add_db_time(hour, minute, format_str, replacements):
     db_add("time", time_val, format_str.format(**replacements))
 
 
-def preprocess_cl_line(line, expanded_format=False):
-    line = line.strip()
-    if expanded_format:
-        line = line.split(';')
-        name = line[0]
-        forms = line
-    else:
-        name = line
-        forms = [line, ]
-
-    # Do some basic pre-processing. Expand abbreviations.
-    new_forms = []
-    for form in forms:
-        new_form = form
-        for regex, subs in _substs:
-            if regex.search(form):
-                for sub in subs:
-                    new_form = regex.sub(sub, new_form)
-
-        new_forms.append(new_form)
-    forms = new_forms
-
-    # Spell out numerals.
-    if any(map(_num_rx.search, forms)):
-        old_names = forms
-        forms = list()
-        for name in old_names:
-            new_words = list()
-            for word in name.split():
-                if _num_rx_exh.match(word):
-                    try:
-                        new_words.append(spell_number(int(word)))
-                    except:
-                        new_words.append(word)
-                else:
-                    new_words.append(word)
-            forms.append(' '.join(new_words))
-
-    # Remove extra spaces, lowercase.
-    forms = [' '.join(form.replace(',', ' ').replace('-', ' ')
-                      .replace('(', ' ').replace(')', ' ').replace('5', ' ')
-                      .replace('0', ' ').replace('.', ' ').split()).lower()
-             for form in forms]
-
+def preprocess_cl_line(line):
+    """Process one line in the category label database file."""
+    name, forms = line.strip().split("\t")
+    forms = [form.strip() for form in forms.split(';')]
     return name, forms
 
 
 def add_from_file(category_label, fname):
-    """Adds names of all category labels listed in the given file to the database.
-    If the file name contains `expanded', it is assumed that the file contains semicolon-separated
-    lists of other possible surface forms for each line.
+    """Adds to the database names + surface forms of all category labels listed in the given file.
+    The file must contain the category lablel name + tab + semicolon-separated surface forms on each
+    line.
     """
     dirname = os.path.dirname(os.path.abspath(__file__))
-    is_expanded = 'expanded' in fname
     with codecs.open(os.path.join(dirname, fname), encoding='utf-8') as stops_file:
         for line in stops_file:
             if line.startswith('#'):
                 continue
-            val_name, val_surface_forms = preprocess_cl_line(line, expanded_format=is_expanded)
+            val_name, val_surface_forms = preprocess_cl_line(line)
             for form in val_surface_forms:
                 db_add(category_label, val_name, form)
 
