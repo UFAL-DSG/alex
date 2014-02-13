@@ -102,6 +102,8 @@ _num_rx_exh = re.compile('^[1-9][0-9]*$')
 
 def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
+    category_label = category_label.strip()
+    value = value.strip()
     form = form.strip()
 
     if len(value) == 0 or len(form) == 0:
