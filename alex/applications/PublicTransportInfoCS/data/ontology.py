@@ -210,16 +210,16 @@ ontology = {
             '^arrival_time$', '^arrival_time_rel$',
             '^to_city$', '^from_city$', '^via_city$',
         ],
-        'from_stop': ['^from_city$'],
-        'to_stop': ['^to_city$'],
-        'via_stop': ['^via_city$'],
+#        'from_stop': ['^from_city$'],
+#        'to_stop': ['^to_city$'],
+#        'via_stop': ['^via_city$'],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation of different inputs
         # this is performed by converting dialogue acts into inform acts
         'lta_time': {
             # the following means, every time I talk about the time, it supports the value time in slot time_sel
-            'time': [('', '^time$', ''), ],
+            'time': [('^(inform|confirm|request|select)$', '^time$', ''), ],
             # the following means, every time I talk about the time_rel, it supports the value time_rel in slot time_sel
             'time_rel': [('', '^time_rel$', ''), ],
             # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
@@ -233,7 +233,7 @@ ontology = {
         'lta_departure_time': {
             'departure_time': [('', '^departure_time$', ''), ],
             'departure_time_rel': [('', '^departure_time_rel$', ''), ],
-            'time': [('', '^time$', ''), ],
+            'time': [('^(inform|confirm|request|select)$', '^time$', ''), ],
             'time_rel': [('', '^time_rel$', ''), ],
             'date_rel': [('', '^date_rel$', '')],
         },
