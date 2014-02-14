@@ -31,7 +31,7 @@ Jiráskovo náměstí	Jiráskovém náměstí
 Spiritka	Spiritky; Spiritku
 Dvorce	Žluté Lázně
 Hradčanská	Hradčanské Náměstí
-Motol	Motol nemocnice
+Nemocnice Motol	Motol nemocnice
 Dědina	Sídliště Dědina
 Nemocnice Krč	Krčská nemocnice
 Nádraží Modřany	Modřany
