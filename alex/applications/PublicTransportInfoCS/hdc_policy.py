@@ -919,13 +919,20 @@ class PTICSHDCPolicy(DialoguePolicy):
         ds.directions = self.directions.get_directions(conn_info,
                                                        departure_time=departure_ts,
                                                        arrival_time=arrival_ts)
-        return self.say_directions(ds, route_type)
+        return self.process_directions_for_output(ds, route_type)
 
     ORIGIN = 'ORIGIN'
     DESTIN = 'FINAL_DEST'
 
-    def say_directions(self, dialogue_state, route_type):
-        """Return DAs for the directions in the current dialogue state."""
+    def process_directions_for_output(self, dialogue_state, route_type):
+        """Return DAs for the directions in the current dialogue state.
+        If the directions are not valid (nothing found), delete their object from the
+        dialogue state and return apology DAs.
+
+        :param dialogue_state: the current dialogue state
+        :param route_type: the route type requested by the user ("last", "next" etc.)
+        :rtype: DialogueAct
+        """
         if not isinstance(dialogue_state['route_alternative'], int):
             dialogue_state['route_alternative'] = 0
 
@@ -937,6 +944,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         except IndexError:
             # this will lead to apology that no route has been found
             steps = []
+            ds.directions = None
+            del ds['route_alternative']
 
         res = []
 
