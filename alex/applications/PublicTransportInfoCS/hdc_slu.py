@@ -633,8 +633,9 @@ class PTICSHDCSLU(SLUInterface):
         if len(u) == 1 and any_word_in(u, "předchozí před"):
             cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if phrase_in(u, "jako ve dne"):
+        if any_phrase_in(u, ["jako v dne", "jako ve dne"]):
             cn.add(1.0, DialogueActItem('inform', 'ampm', 'pm'))
+
 
     def parse_1_best(self, obs, verbose=False):
         """Parse an utterance into a dialogue act."""
@@ -661,6 +662,8 @@ class PTICSHDCSLU(SLUInterface):
             category_labels = dict()
 
         # handle false positive alarms of abstraction
+        abutterance = abutterance.replace(('TIME=now','bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
+        abutterance = abutterance.replace(('STOP=Čím','se'), ('čím', 'se',))
         abutterance = abutterance.replace(('STOP=Výstupní', 'stanice', 'je'), ('výstupní', 'stanice', 'je'))
         abutterance = abutterance.replace(('STOP=Nová','spojení'), ('nové', 'spojení',))
         abutterance = abutterance.replace(('STOP=Nová','zadání'), ('nové', 'zadání',))
