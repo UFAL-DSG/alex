@@ -84,7 +84,7 @@ class ExpandStops(object):
         # initialize postprocessing
         postprocess_func = ((lambda text: re.sub(r' ([\.,])', r'\1', text))
                             if not strip_punct
-                            else (lambda text: re.sub(r' [\.,\-–\(\)\{\}\[\];]( |$)', r'\1', text)))
+                            else (lambda text: re.sub(r' [\.,\-–\(\)\{\}\[\];](?: [\.,\-–\(\)\{\}\[\];])*( |$)', r'\1', text)))
         if lowercase_forms:
             lc_func = lambda text: postprocess_func(text).lower()
             self.__postprocess_func = lc_func
@@ -121,6 +121,8 @@ class ExpandStops(object):
         """Just load a list of stops from a file and store it in memory."""
         with codecs.open(fname, 'r', 'UTF-8') as f_in:
             for line in f_in:
+                if line.startswith('#'):  # skip comments
+                    continue
                 stop, variants = self.parse_line(line)
                 self.stops[stop] = list(remove_dups_stable(variants + self.stops[stop]))
 
@@ -129,6 +131,8 @@ class ExpandStops(object):
         with codecs.open(fname, 'r', 'UTF-8') as f_in:
             ctr = 0
             for line in f_in:
+                if line.startswith('#'):  # skip comments
+                    continue
                 # load variant names for a stop
                 stop, variants = self.parse_line(line)
                 # skip those that needn't be inflected any more

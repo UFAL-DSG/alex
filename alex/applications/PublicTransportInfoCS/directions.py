@@ -466,7 +466,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         return self.search_stop(city_mask, self.city_list_id)
 
     @lru_cache(maxsize=10)
-    def get_directions(self, waypoints, departure_time=None, arrival_time=None):
+    def get_directions(self, waypoints, departure_time=None, arrival_time=None, parameters=None):
         # try to map from-to to IDOS identifiers, default to originals
         self.system_logger.info("ALEX: %s -- %s, %s -- %s" %
                                 (waypoints.from_stop, waypoints.from_city,
@@ -507,7 +507,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             None, # change
             ts, # timestamp of arrival or departure
             is_departure, # is departure? (or arrival)
-            None, # search parameters (=use default)
+            self._create_search_parameters(parameters), # search parameters (=use default)
             REMMASK.NONE,
             SEARCHMODE.NONE,
             0, # max objects count
@@ -623,3 +623,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 stop = re.sub(r'\((MHD|bus|vlak)\)$', r'', stop)  # ignore ALEX-specific additions to stop names
                 reverse_mapping[idos_stop] = stop
         return mapping, reverse_mapping
+
+    def _create_search_parameters(self, parameters):
+        params = self.client.factory.create('ConnectionParmsInfo')
+        # allow some walking at start and end of route
+        params._iMaxArcLengthFrom = 3
+        params._iMaxArcLengthTo = 3
+        params._iNodeFrom = 1
+        params._iNodeTo = 1
+        # TODO preferred connection type
+        return params
