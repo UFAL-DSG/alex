@@ -146,7 +146,7 @@ class PTICSHDCSLU(SLUInterface):
                         ('to', set(['k', 'do', 'konec', 'na', 'končím',
                                     'cíl', 'vystupuji', 'vystupuju'])),
                         ('via', set(['přes', ])),
-                        ('in', set(['pro', ])),
+                        ('in', set(['pro', 'po'])),
                        ]
 
         self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_in=['v', 've'])
@@ -668,6 +668,7 @@ class PTICSHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('z', 'CITY=Liberk',), ('z', 'CITY=Liberec',))
         abutterance = abutterance.replace(('do', 'CITY=Liberk',), ('do', 'CITY=Liberec',))
         abutterance = abutterance.replace(('v', 'STOP=Praga',), ('v', 'CITY=Praha',))
+        abutterance = abutterance.replace(('po', 'STOP=Praga', 'ale'), ('po', 'CITY=Praha',))
         category_labels.add('CITY')
 
         # print 'After preprocessing: "{utt}".'.format(utt=abutterance)
