@@ -7,3 +7,5 @@ cities.*.txt
 stops*.txt
 cities_stops.tsv
 idos_map.tsv
+errors.txt
+stops-idos.tsv
