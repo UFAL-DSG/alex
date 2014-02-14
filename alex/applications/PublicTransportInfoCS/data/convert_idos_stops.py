@@ -527,7 +527,8 @@ def main():
     file_in_cities, file_in_stops, file_out_stops, file_out_cs, file_out_map = files
     stderr = codecs.getwriter('UTF-8')(sys.stderr)
 
-    cities = set(load_list(file_in_cities, suppress_comments=True))
+    # cities = set(load_list(file_in_cities, suppress_comments=True))
+    cities = set(load_list(file_in_cities))
     in_stops = load_list(file_in_stops, cols=2)
     out_list = []
     exp_idos_lists = {}

@@ -3323,7 +3323,7 @@ Podbořany
 Podbrdy
 Podbřezí
 Podbřežice
-#Poděbrady
+Poděbrady
 Poděšín
 Poděvousy
 Podhořany u Ronova
@@ -4413,7 +4413,7 @@ Syrovátka
 Syrovice
 Syrovín
 Sytno
-#Tábor
+Tábor
 Tachlovice
 Tachov
 Tálín

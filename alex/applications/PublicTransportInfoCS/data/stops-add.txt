@@ -1,7 +1,7 @@
 Dejvická	Dejvice; Kulaťák
 Depo Hostivař	Hostivař
 Hradčanská	Hradčany
-I. P. Pavlova	I. P. Pavlovu
+I. P. Pavlova	I. P. Pavlovu; ÍPÁK
 Karlovo náměstí	Karlák
 Letiště Václava Havla	Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni
 Lhotka	Písnická
@@ -22,3 +22,4 @@ Vinohradská vodárna	Vinohrady
 Výstaviště Holešovice	Výstaviště; Stromovka
 Zoologická zahrada	Zoo Praha
 Palackého náměstí	Palacké náměstí
+Sídliště Bohnice	Bohnice
