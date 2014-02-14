@@ -204,6 +204,7 @@ ABBREV_RULES = [
     (r' pož\. zbroj\.', r' požární zbrojnice'),
     (r' has\. zbroj\.', r' hasičská zbrojnice'),
     (r' \([vV]\)álc\. pl\.', r' \1álcovny plechu'),
+    (r' u aut\. nádr(\.|aží)', r' u autobusového nádraží'),
     (r' ([aA])ut\. nádr(\.|aží)', r' \1utobusové nádraží'),
     (r' nádr\.', r' nádraží'),
     (r' háj\.', r' hájovna'),
@@ -387,7 +388,7 @@ ABBREV_RULES = [
     (r' 18\. (ZŠ|základní škola)', r' Osmnáctá \1'),
     (r' Karla IV. ', r' Karla Čtvrtého '),
     (r' I\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' První \1 '),
-    (r' I\.?(?=[ ,])', [r' jedna', r' římská jedna']),
+    (r' I\.?(?=,| (?:$|-|náměstí|rozcestí|lázně))', [r' jedna', r' římská jedna']),
     (r' II\. (?:pásmo|p\.?) $', r' druhé pásmo '),
     (r' II\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Druhá \1 '),
     (r' II\.?(?=[ ,])', [r' dvě', r' římská dvě']),
@@ -416,6 +417,7 @@ ABBREV_RULES = [
     # TODO this creates ambiguity in some cases
     (r' ((?:rozcestí|křižovatka|odbočka)(?: .*)?) [0-9]+\.[0-9]', r' \1'),
     (r' [0-9]+\.[0-9] $', r' '),
+    (r' \([A-Z]{2}\) $', r''), # strip county abbreviations
     # fixing spacing
     (r' ,', r','),
     (r'-([^ ])', r'- \1'),
