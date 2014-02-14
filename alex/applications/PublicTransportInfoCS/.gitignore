@@ -1,7 +1,2 @@
 call_db.pckl
 crws_combination.pickle.gz
-cities.*.txt
-stops.*.txt
-idos_map.tsv
-cities_locations.tsv
-cities_stops.tsv

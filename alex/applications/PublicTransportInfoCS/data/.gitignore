@@ -3,8 +3,7 @@ database_SRILM_*
 database_c2v2f*
 czech.tagger
 czech.dict
-cities*.txt
+cities.*.txt
 stops*.txt
 cities_stops.tsv
-cities_locations.tsv
 idos_map.tsv
