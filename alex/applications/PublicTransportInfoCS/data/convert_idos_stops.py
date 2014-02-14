@@ -204,7 +204,7 @@ ABBREV_RULES = [
     (r' pož\. zbroj\.', r' požární zbrojnice'),
     (r' has\. zbroj\.', r' hasičská zbrojnice'),
     (r' \([vV]\)álc\. pl\.', r' \1álcovny plechu'),
-    (r' ([aA])ut\. nádr(\.|aží)', r'\1utobusové nádraží'),
+    (r' ([aA])ut\. nádr(\.|aží)', r' \1utobusové nádraží'),
     (r' nádr\.', r' nádraží'),
     (r' háj\.', r' hájovna'),
     (r' host\.', r' hostinec'),
