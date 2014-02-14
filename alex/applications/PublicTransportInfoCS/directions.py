@@ -227,8 +227,8 @@ class CRWSDirections(Directions):
         if finder is not None:
             self.handle = input_data._iHandle
             self.finder = finder
-            self.from_stop = finder.reverse_mapping.get(self.from_stop, self.from_stop)
-            self.to_stop = finder.reverse_mapping.get(self.to_stop, self.to_stop)
+            self.from_stop = finder.get_stop_full_name(self.from_stop)
+            self.to_stop = finder.get_stop_full_name(self.to_stop)
         # parse the connection information, if available
         if hasattr(input_data, 'oConnInfo'):
             for route in input_data.oConnInfo.aoConnections:
@@ -332,9 +332,9 @@ class CRWSRouteStep(RouteStep):
                         self.line_name = self.line_name[len(train_type_shortcut) + 1:]
             # if finder is present, use its mapping to convert stop names into pronounceable form
             if finder is not None:
-                self.departure_stop = finder.reverse_mapping.get(self.departure_stop, self.departure_stop)
-                self.arrival_stop = finder.reverse_mapping.get(self.arrival_stop, self.arrival_stop)
-                self.headsign = finder.reverse_mapping.get(self.headsign, self.headsign)
+                self.departure_stop = finder.get_stop_full_name(self.departure_stop)
+                self.arrival_stop = finder.get_stop_full_name(self.arrival_stop)
+                self.headsign = finder.get_stop_full_name(self.headsign)
             # further normalize some stops' names
             self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
@@ -620,16 +620,31 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 line = line.strip()
                 city, stop, idos_list, idos_stop = line.split("\t")
                 mapping[(city, stop)] = (idos_list, idos_stop)
-                stop = re.sub(r'\((MHD|bus|vlak)\)$', r'', stop)  # ignore ALEX-specific additions to stop names
+                idos_stop = self._normalize_idos_name(idos_stop)
                 reverse_mapping[idos_stop] = stop
         return mapping, reverse_mapping
 
     def _create_search_parameters(self, parameters):
         params = self.client.factory.create('ConnectionParmsInfo')
         # allow some walking at start and end of route
-        params._iMaxArcLengthFrom = 3
-        params._iMaxArcLengthTo = 3
+        params._iMaxArcLengthFrom = 4
+        params._iMaxArcLengthTo = 4
         params._iNodeFrom = 1
         params._iNodeTo = 1
         # TODO preferred connection type
         return params
+
+    def _normalize_idos_name(self, idos_stop):
+        """Normalize a name of an IDOS stop by stripping punctuation and lowercasing, in order
+        to get a reverse mapping to a full name even if punctuation or casing differs."""
+        idos_stop = re.sub(r'[\.,\-–\(\)\{\}\[\];](?: [\.,\-–\(\)\{\}\[\];])*', r' ', ' ' + idos_stop + ' ').lower()
+        idos_stop = re.sub(r' +', r' ', idos_stop)
+        idos_stop = re.sub(r' (hl|hlavní) (n|nádr) ', r' hlavní nádraží ', idos_stop).strip()
+        return idos_stop
+
+    def get_stop_full_name(self, idos_stop):
+        """Try to obtain a full name from the reverse mapping of IDOS -> Alex; default to
+        the original name if not found."""
+        if idos_stop is None:
+            return None
+        return self.reverse_mapping.get(self._normalize_idos_name(idos_stop), idos_stop)
