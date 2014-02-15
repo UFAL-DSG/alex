@@ -34,5 +34,5 @@ export gauss=19200
 
 export train_mmi_boost=0.05
 
-export mmi_beam=13.0
-export mmi_lat_beam=7.0
+export mmi_beam=16.0
+export mmi_lat_beam=10.0
