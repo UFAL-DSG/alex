@@ -97,6 +97,10 @@ def db_add(category_label, value, form):
     if len(value) == 0 or len(form) == 0:
         return
 
+    if category_label == 'stop':
+        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
+            return
+            
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 

@@ -286,6 +286,12 @@ class Config(object):
         cfg_str = re.sub(r".*password.*",
                          "# this line was removed since it included a password",
                          cfg_str)
+        cfg_str = re.sub(r".*user_id.*",
+                         "# this line was removed since it included a password",
+                         cfg_str)
+        cfg_str = re.sub(r".*api_key.*",
+                         "# this line was removed since it included a password",
+                         cfg_str)
         return cfg_str
 
     @classmethod
