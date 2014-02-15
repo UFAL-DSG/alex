@@ -32,6 +32,7 @@ To get latest versions of the following python packages, I recommend to run thes
   sudo pip install --upgrade boto
   sudo pip install --upgrade pysox
   sudo pip install --upgrade jinja2
+  sudo pip install --upgrade suds
 
   # pykaldi
   sudo pip install --upgrade cython
@@ -152,6 +153,24 @@ then
   python setup-pjsuaxt.py install
 
 This will install the ``pjsuaxt`` library.
+
+Morfodita
+~~~~~~~~~
+
+Get the supported morfodita from GitHub.
+To install ``morfodita``, follow these instructions:
+
+.. code-block:: bash
+
+  git clone git@github.com:ufal/morphodita.git
+  cd morfodita/src
+  make
+  cd ../../bindings/python
+  make PYTHON_INCLUDE=/usr/include/python2.7/
+
+  cp -R ./ufal /usr/local/lib/python2.7/dist-packages
+  cp ./morphodita_python.so /usr/local/lib/python2.7/dist-packages
+
 
 OpenJulius
 ~~~~~~~~~~

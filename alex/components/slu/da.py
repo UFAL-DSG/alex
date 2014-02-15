@@ -352,7 +352,7 @@ class DialogueActItem(Abstracted):
                 # There is a slot name and a value.
                 self._name = name_val[0]
                 self._value = name_val[1]
-                if self._value[0] in ["'", '"']:
+                if self._value and self._value[0] in ["'", '"']:
                     self._value = self._value[1:-1]
             else:
                 raise DialogueActItemException(

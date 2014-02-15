@@ -82,3 +82,15 @@ def group_by(objects, attrs):
         key = tuple(getattr(obj, attr) for attr in attrs)
         groups.setdefault(key, []).append(obj)
     return groups
+
+
+def remove_dups_stable(l):
+    """Remove duplicates from a list but keep the ordering.
+
+    @return: Iterator over unique values in the list
+    """
+    seen = set()
+    for i in l:
+        if i not in seen:
+            yield i
+            seen.add(i)

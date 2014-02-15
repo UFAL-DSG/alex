@@ -46,7 +46,7 @@ def score_da(ref_da, test_da, daid):
     epp = []
 
     for i in test_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :)(]+")', r'\1="*"', i, flags=re.UNICODE)
         if i in ref_da:
             tp += 1.0
             statsp[ri]['tp'] += 1.0

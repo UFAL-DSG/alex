@@ -288,7 +288,7 @@ if not os.path.exists(expanded_lm_pg):
     print "-"*120
     ###############################################################################################
 
-    cmd = "ngram -lm %s -classes %s -order 5 -expand-classes 5 -write-vocab %s -write-lm %s -renorm" \
+    cmd = "ngram -lm %s -classes %s -order 5 -expand-classes 5 -write-vocab %s -write-lm %s -prune 0.000000001 -renorm" \
               % (extended_data_text_trn_norm_cls_pg_arpa_filtered,
                  extended_data_text_trn_norm_cls_classes,
                  expanded_lm_vocab,
