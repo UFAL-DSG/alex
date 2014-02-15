@@ -36,3 +36,6 @@ Dědina	Sídliště Dědina
 Nemocnice Krč	Krčská nemocnice
 Nádraží Modřany	Modřany
 Nové Sady	Nové St Sady; Nových Sadů
+Dlouhá Loučka, Plinkout, Jednota	Plinkout Jednota; Plinkout
+Dlouhá Loučka, Valšův Důl, točna	Dlouhá Loučka Valšův Důl
+Dlouhá Loučka, Valšův Důl, točna	Valšův Důl
