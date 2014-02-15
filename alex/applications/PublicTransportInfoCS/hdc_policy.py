@@ -945,7 +945,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # this will lead to apology that no route has been found
             steps = []
             ds.directions = None
-            del ds['route_alternative']
+            del dialogue_state['route_alternative']
 
         res = []
 
