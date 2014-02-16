@@ -396,7 +396,7 @@ ABBREV_RULES = [
     (r' III\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Třetí \1 '),
     (r' III\.?(?=[ ,])', [r' tři', r' římská tři']),
     (r' IV\.?(?=[ ,])', [r' čtyři', r' římská čtyři']),
-    (r' V\.?(?=[ ,])', [r' pět', r' římská pět']),
+    (r' V\.?(?=,| (?:$|-|náměstí|rozcestí|lázně))', [r' pět', r' římská pět']),
     (r' VI\.?(?=[ ,])', [r' šest', r' římská šest']),
     (r' VII\. (ZŠ|základní škola|brána|poliklinika|vrátnice) ', r' Sedmá \1 '),
     (r' VII\.?(?=[ ,])', [r' sedm', r' římská sedm']),
