@@ -1,5 +1,5 @@
-./data/upload_data.sh
-./hclg/upload_models.sh
-./lm/upload_models.sh
-./slu/upload_models.sh
+cd ./data && ./upload_data.sh && cd ..
+cd ./hclg && ./upload_models.sh  && cd ..
+cd ./lm && ./upload_models.sh  && cd ..
+cd ./slu && ./upload_models.sh  && cd ..
 
