@@ -285,6 +285,7 @@ class CRWSRouteStep(RouteStep):
                             'international line': 'intercity_bus',
                             'tram': 'tram',
                             'tramvaj': 'tram',
+                            'night line tram': 'night_tram',
                             'metro': 'subway',
                             'local train': 'local_train',
                             'fast train': 'fast_train',
@@ -632,7 +633,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         params._iMaxArcLengthTo = 4
         params._iNodeFrom = 1
         params._iNodeTo = 1
-        # TODO preferred connection type
+        # TODO preferred connection type (_aiTrTypeID), number of transfers (_iMaxChange)
         return params
 
     def _normalize_idos_name(self, idos_stop):

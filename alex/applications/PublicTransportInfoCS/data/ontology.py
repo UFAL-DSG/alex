@@ -283,7 +283,9 @@ ontology = {
         'vehicle': {
             'bus': 'autobusem',
             'intercity_bus': 'dálkovým autobusem',
+            'night_bus': 'nočním autobusem',
             'tram': 'tramvají',
+            'night_tram': 'noční tramvají',
             'subway': 'metrem',
             'train': 'vlakem',
             'cable_car': 'lanovkou',
