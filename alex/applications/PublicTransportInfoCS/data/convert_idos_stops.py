@@ -562,6 +562,10 @@ def main():
         # normalize casing and punctuation
         stop = unify_casing_and_punct(stop)
         forms = [unify_casing_and_punct(form) for form in forms]
+
+        if stop in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
+            continue
+
         # add the result to the output list
         out_list.append((idos_list, idos_stop, city, stop, forms))
 

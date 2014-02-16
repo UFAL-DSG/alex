@@ -90,25 +90,25 @@ online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__fil
 
 def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
-    category_label = category_label.strip()
-    value = value.strip()
-    form = form.strip()
+#    category_label = category_label.strip()
+#    value = value.strip()
+#    form = form.strip()
 
     if len(value) == 0 or len(form) == 0:
         return
 
-    if category_label == 'stop':
-        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
-            return
-            
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-    for c in '{}+/&[],-':
-        form = form.replace(' %s ' % c, ' ')
-        form = form.replace(' %s' % c, ' ')
-        form = form.replace('%s ' % c, ' ')
-    form = form.strip()
+#    if category_label == 'stop':
+#        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
+#            return
+            
+#    for c in '{}+/&[],-':
+#        form = form.replace(' %s ' % c, ' ')
+#        form = form.replace(' %s' % c, ' ')
+#        form = form.replace('%s ' % c, ' ')
+#    form = form.strip()
 
     database[category_label].setdefault(value, set()).add(form)
 

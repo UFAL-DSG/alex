@@ -84,7 +84,7 @@ class ExpandStops(object):
         # initialize postprocessing
         postprocess_func = ((lambda text: re.sub(r' ([\.,])', r'\1', text))
                             if not strip_punct
-                            else (lambda text: re.sub(r' [\.,\-–\(\)\{\}\[\];](?: [\.,\-–\(\)\{\}\[\];])*( |$)', r'\1', text)))
+                            else (lambda text: re.sub(r' [\.,\-–\(\)\{\}\[\];\\\/+&](?: [\.,\-–\(\)\{\}\[\];])*( |$)', r'\1', text)))
         if lowercase_forms:
             lc_func = lambda text: postprocess_func(text).lower()
             self.__postprocess_func = lc_func
