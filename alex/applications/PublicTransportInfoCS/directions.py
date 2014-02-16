@@ -524,7 +524,8 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(from_city, from_stop, to_city, to_stop, response, self)
+        directions = CRWSDirections(waypoints.from_city, from_stop,
+                                    waypoints.to_city, to_stop, response, self)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
