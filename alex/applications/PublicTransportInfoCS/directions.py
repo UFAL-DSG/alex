@@ -18,6 +18,7 @@ import sys
 import codecs
 from alex.utils.cache import lru_cache
 from alex.utils.config import online_update, to_project_path
+from alex.applications.PublicTransportInfoCS.data.convert_idos_stops import expand_abbrevs
 
 
 class Waypoints(object):
@@ -227,8 +228,6 @@ class CRWSDirections(Directions):
         if finder is not None:
             self.handle = input_data._iHandle
             self.finder = finder
-            self.from_stop = finder.get_stop_full_name(self.from_stop)
-            self.to_stop = finder.get_stop_full_name(self.to_stop)
         # parse the connection information, if available
         if hasattr(input_data, 'oConnInfo'):
             for route in input_data.oConnInfo.aoConnections:
@@ -524,8 +523,8 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(waypoints.from_city, from_stop,
-                                    waypoints.to_city, to_stop, response, self)
+        directions = CRWSDirections(waypoints.from_city, waypoints.from_stop,
+                                    waypoints.to_city, waypoints.to_stop, response, self)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
@@ -642,12 +641,14 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         to get a reverse mapping to a full name even if punctuation or casing differs."""
         idos_stop = re.sub(r'[\.,\-–\(\)\{\}\[\];](?: [\.,\-–\(\)\{\}\[\];])*', r' ', ' ' + idos_stop + ' ').lower()
         idos_stop = re.sub(r' +', r' ', idos_stop)
-        idos_stop = re.sub(r' (hl|hlavní) (n|nádr) ', r' hlavní nádraží ', idos_stop).strip()
         return idos_stop
 
     def get_stop_full_name(self, idos_stop):
-        """Try to obtain a full name from the reverse mapping of IDOS -> Alex; default to
-        the original name if not found."""
+        """Try to obtain a full name from the reverse mapping of IDOS -> Alex; run the abbreviation
+        expansion regexps if not found."""
         if idos_stop is None:
             return None
-        return self.reverse_mapping.get(self._normalize_idos_name(idos_stop), idos_stop)
+        stop_full_name = self.reverse_mapping.get(self._normalize_idos_name(idos_stop))
+        if stop_full_name is None:  # not found in the mapping --> expand abbreviations
+            stop_full_name, _ = expand_abbrevs(idos_stop)
+        return stop_full_name
