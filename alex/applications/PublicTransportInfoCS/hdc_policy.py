@@ -17,6 +17,7 @@ from .directions import GoogleDirectionsFinder, Waypoints
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
+from collections import defaultdict
 import re
 
 
@@ -88,18 +89,22 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         new_da = DialogueAct()
         informs = []
-        iconfirms = []
+        iconfirms = defaultdict(int)
 
         for dai in da:
             if dai.dat == 'inform':
                 informs.append((dai.name, dai.value))
             elif dai.dat == 'iconfirm':
-                iconfirms.append((dai.name, dai.value))
+                iconfirms[(dai.name, dai.value)] += 1
 
         for dai in da:
             if dai.dat == 'iconfirm':
-                # filter slots explicitly informed, filter repeating
-                if (dai.name, dai.value) in informs or (dai.name, dai.value) in iconfirms:
+                # filter slots explicitly informed
+                if (dai.name, dai.value) in informs:
+                    continue
+                # filter repeating iconfirms
+                elif iconfirms[dai.name, dai.value] > 1:
+                    iconfirms[dai.name, dai.value] -= 1
                     continue
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
