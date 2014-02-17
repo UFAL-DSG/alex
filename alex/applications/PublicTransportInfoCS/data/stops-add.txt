@@ -3,7 +3,7 @@ Depo Hostivař	Hostivař
 Hradčanská	Hradčany
 I. P. Pavlova	I. P. Pavlovy; I. P. Pavlova; I. P. Pavlovu; Ípák; Ípáku; Aj Pí Pavlova; Ajpí Pavlova; Ajpí Pavlovy; Ajpák; Ajpáku; Pavlák
 Karlovo náměstí	Karlák
-Letiště Václava Havla	Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni; Ruzyně; Ruzyň
+Letiště Václava Havla (Terminál dvě)	Letiště Václava Havla; Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni; Ruzyně; Ruzyň
 Lhotka	Písnická
 Lipanská	Žižkov
 Nádraží Holešovice	Holešovice
