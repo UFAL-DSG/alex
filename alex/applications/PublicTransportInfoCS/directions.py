@@ -651,4 +651,5 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         stop_full_name = self.reverse_mapping.get(self._normalize_idos_name(idos_stop))
         if stop_full_name is None:  # not found in the mapping --> expand abbreviations
             stop_full_name, _ = expand_abbrevs(idos_stop)
+            self.reverse_mapping[self._normalize_idos_name(idos_stop)] = stop_full_name
         return stop_full_name
