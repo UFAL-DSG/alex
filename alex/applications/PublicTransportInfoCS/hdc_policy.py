@@ -109,7 +109,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
                     city_dai = dai.name[:-4] + 'city'
-                    if (city_dai, dai.value) in informs or (city_dai, dai.value) in iconfirms:
+                    if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
                 # filter mistakenly added iconfirms that have an unset value
                 elif dai.value == 'none' or dai.value is None:
