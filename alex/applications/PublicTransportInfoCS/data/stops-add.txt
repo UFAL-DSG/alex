@@ -1,0 +1,41 @@
+Dejvická	Dejvice; Kulaťák
+Depo Hostivař	Hostivař
+Hradčanská	Hradčany
+I. P. Pavlova	I. P. Pavlovy; I. P. Pavlova; I. P. Pavlovu; Ípák; Ípáku; Aj Pí Pavlova; Ajpí Pavlova; Ajpí Pavlovy; Ajpák; Ajpáku; Pavlák
+Karlovo náměstí	Karlák
+Letiště Václava Havla (Terminál dvě)	Letiště Václava Havla; Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni; Ruzyně; Ruzyň
+Lhotka	Písnická
+Lipanská	Žižkov
+Nádraží Holešovice	Holešovice
+Nádraží Radotín	Radotín
+Nádraží Zbraslav	Zbraslav
+Náměstí Míru	Mírák
+Pod Karlovem	Karlov
+Sídliště Barrandov	Barrandov
+Smíchovské nádraží	Smíchov
+Spojovací	Jarov
+Strašnická	Strašnice
+Trojská	Troja
+Václavské náměstí	Václavák
+Velká Chuchle	Chuchle
+Vinohradská vodárna	Vinohrady
+Výstaviště Holešovice	Výstaviště; Stromovka
+Zoologická zahrada	Zoo Praha
+Palackého náměstí	Palacké náměstí
+Sídliště Bohnice	Bohnice
+Masarykovo nádraží	Masarykovo na nádraží
+Výtoň	Vyšehrady
+Plynárna Michle	Michelská Plynárna; Michelské Plynárny; Michelské Plynárně
+Nádraží Vršovice	Vršovické Nádraží
+Jiráskovo náměstí	Jiráskovém náměstí
+Spiritka	Spiritky; Spiritku
+Dvorce	Žluté Lázně
+Hradčanská	Hradčanské Náměstí
+Nemocnice Motol	Motol nemocnice
+Dědina	Sídliště Dědina
+Nemocnice Krč	Krčská nemocnice
+Nádraží Modřany	Modřany
+Nové Sady	Nové St Sady; Nových Sadů
+Dlouhá Loučka, Plinkout, Jednota	Plinkout Jednota; Plinkouta Jednota; Plinkout; Plinkouta
+Dlouhá Loučka, Valšův Důl, točna	Dlouhá Loučka Valšův Důl; Dlouhé Loučky Valšova Dolu
+Dlouhá Loučka, Valšův Důl, točna	Valšův Důl; Valšova Dolu; Valšovského Dolu; Valšovým Dolem 

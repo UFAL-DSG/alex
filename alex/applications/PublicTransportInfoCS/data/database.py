@@ -8,6 +8,10 @@ import os
 import re
 import sys
 
+import autopath
+
+from alex.utils.config import online_update, to_project_path
+
 __all__ = ['database']
 
 
@@ -79,47 +83,16 @@ NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "�
 STOPS_FNAME = "stops.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
 
-_substs_lit = [
-    ('\\bn\\.L\\.', ['nad Labem']),
-    ('\\bn\\.Vlt\\.', ['nad Vltavou']),
-    ('žel\\.st\\.', ['železniční stanice']), # FIXME None would say this.
-                                              # Factorise.
-    ('aut\\.st\\.', ['autobusová stanice', 'stanice autobusů']),
-    ('žel\\.zast\\.', ['železniční zastávka']),
-    ('[Kk]ult\\.dům', ['kulturní dům', 'kulturák']),
-    ('n\\.Č\\.[Ll]\\.', ['nad černými lesy']),
-    ('n\\.[Ll]\\.', ['nad lesy']),
-    ('St\\.Bol\\.', ['stará boleslav']),
-    ('\\brozc\\.', ['rozcestí']),
-    ('\\bnádr\\.', ['nádraží']),
-    ('\\bsídl\\.', ['sídliště']),
-    ('\\bnám\\.', ['náměstí']),
-    ('\\bnem\\.', ['nemocnice']),
-    ('\\bzdr\\.stř\\.', ['zdravotní středisko']),
-    ('\\bzdrav\\.stř\\.', ['zdravotní středisko']),
-    ('\\bhost\\.', ['hostinec']),
-    ('\\bháj\\.', ['hájovna']),
-    ('\\bkřiž\\.', ['křižovatka']),
-    ('\\bodb\\.', ['odbočka']),
-    ('\\bzast\\.', ['zastávka']),
-    ('\\bhl\\.sil\\.', ['hlavní silnice']),
-    ('\\bn\\.', ['nad']),
-    ('\\bp\\.', ['pod']),
-    ('\\b(\w)\\.', ['\\1']), # ideally uppercase...
-    ('\\bI$', ['jedna']),
-    ('\\bII\\b', ['dva']),
-    ('\\bD1\\b', ['dé jedna']),
-    ('\\bD8\\b', ['dé osm']),
-]
-
-_substs = [(re.compile(regex), [val + ' ' for val in vals]) for (regex, vals) in _substs_lit]
-_num_rx = re.compile('[1-9][0-9]*')
-_num_rx_exh = re.compile('^[1-9][0-9]*$')
+# load new stops & cities list from the server if needed
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
 
 
 def db_add(category_label, value, form):
     """A wrapper for adding a specified triple to the database."""
-    form = form.strip()
+#    category_label = category_label.strip()
+#    value = value.strip()
+#    form = form.strip()
 
     if len(value) == 0 or len(form) == 0:
         return
@@ -127,7 +100,17 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-    database[category_label].setdefault(value, set()).add(form.replace(' { ', ' ').replace(' } ', ' ').replace(' }', ''))
+#    if category_label == 'stop':
+#        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
+#            return
+            
+#    for c in '{}+/&[],-':
+#        form = form.replace(' %s ' % c, ' ')
+#        form = form.replace(' %s' % c, ' ')
+#        form = form.replace('%s ' % c, ' ')
+#    form = form.strip()
+
+    database[category_label].setdefault(value, set()).add(form)
 
 
 # TODO allow "jednadvacet" "dvaadvacet" etc.
@@ -240,65 +223,24 @@ def add_db_time(hour, minute, format_str, replacements):
     db_add("time", time_val, format_str.format(**replacements))
 
 
-def preprocess_cl_line(line, expanded_format=False):
-    line = line.strip()
-    if expanded_format:
-        line = line.split(';')
-        name = line[0]
-        forms = line
-    else:
-        name = line
-        forms = [line, ]
-
-    # Do some basic pre-processing. Expand abbreviations.
-    new_forms = []
-    for form in forms:
-        new_form = form
-        for regex, subs in _substs:
-            if regex.search(form):
-                for sub in subs:
-                    new_form = regex.sub(sub, new_form)
-
-        new_forms.append(new_form)
-    forms = new_forms
-
-    # Spell out numerals.
-    if any(map(_num_rx.search, forms)):
-        old_names = forms
-        forms = list()
-        for name in old_names:
-            new_words = list()
-            for word in name.split():
-                if _num_rx_exh.match(word):
-                    try:
-                        new_words.append(spell_number(int(word)))
-                    except:
-                        new_words.append(word)
-                else:
-                    new_words.append(word)
-            forms.append(' '.join(new_words))
-
-    # Remove extra spaces, lowercase.
-    forms = [' '.join(form.replace(',', ' ').replace('-', ' ')
-                      .replace('(', ' ').replace(')', ' ').replace('5', ' ')
-                      .replace('0', ' ').replace('.', ' ').split()).lower()
-             for form in forms]
-
+def preprocess_cl_line(line):
+    """Process one line in the category label database file."""
+    name, forms = line.strip().split("\t")
+    forms = [form.strip() for form in forms.split(';')]
     return name, forms
 
 
 def add_from_file(category_label, fname):
-    """Adds names of all category labels listed in the given file to the database.
-    If the file name contains `expanded', it is assumed that the file contains semicolon-separated
-    lists of other possible surface forms for each line.
+    """Adds to the database names + surface forms of all category labels listed in the given file.
+    The file must contain the category lablel name + tab + semicolon-separated surface forms on each
+    line.
     """
     dirname = os.path.dirname(os.path.abspath(__file__))
-    is_expanded = 'expanded' in fname
     with codecs.open(os.path.join(dirname, fname), encoding='utf-8') as stops_file:
         for line in stops_file:
             if line.startswith('#'):
                 continue
-            val_name, val_surface_forms = preprocess_cl_line(line, expanded_format=is_expanded)
+            val_name, val_surface_forms = preprocess_cl_line(line)
             for form in val_surface_forms:
                 db_add(category_label, val_name, form)
 
@@ -312,6 +254,23 @@ def add_cities():
     """Add city names from the cities file."""
     add_from_file('city', CITIES_FNAME)
 
+
+def save_c2v2f(file_name):
+    c2v2f = []
+    for k in database:
+        for v in database[k]:
+            for f in database[k][v]:
+                if re.search('\d', f):
+                    continue
+                c2v2f.append((k, v, f))
+
+    c2v2f.sort()
+
+    # save the database vocabulary - all the surface forms
+    with codecs.open(file_name, 'w', 'UTF-8') as f:
+        for x in c2v2f:
+            f.write(' => '.join(x))
+            f.write('\n')
 
 def save_surface_forms(file_name):
     surface_forms = []
@@ -353,6 +312,7 @@ add_time()
 add_stops()
 add_cities()
 
-if len(sys.argv) > 1 and sys.argv[1] == "dump":
+if "dump" in sys.argv or "--dump" in sys.argv:
+    save_c2v2f('database_c2v2f.txt')
     save_surface_forms('database_surface_forms.txt')
     save_SRILM_classes('database_SRILM_classes.txt')

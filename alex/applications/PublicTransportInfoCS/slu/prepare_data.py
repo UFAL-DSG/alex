@@ -25,7 +25,7 @@ from alex.utils.config import Config
 
 --fast      it approximates SLU output on N-best lists by SLU output from 1-best
 --uniq      it generates only files with unique texts and their SLU HDC output
-
+--asr-log   it uses the asr hypotheses from call logs
 """
 
 def normalise_semi_words(txt):

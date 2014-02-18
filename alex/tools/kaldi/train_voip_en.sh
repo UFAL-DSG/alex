@@ -85,6 +85,7 @@ steps/align_si.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
 
 echo "Train MMI on top of LDA+MLLT."
 steps/make_denlats.sh --run-cmn $cmn --nj $njobs --cmd "$train_cmd" \
+   --beam $mmi_beam --lattice-beam $mmi_lat_beam \
    $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1;
 steps/train_mmi.sh --run-cmn $cmn $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi || exit 1;
 

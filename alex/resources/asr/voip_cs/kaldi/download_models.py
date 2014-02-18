@@ -14,7 +14,9 @@ online_update('resources/asr/voip_cs/kaldi/alex_gitdiff.log')
 
 # Models
 online_update('resources/asr/voip_cs/kaldi/mfcc.conf')
+online_update('resources/asr/voip_cs/kaldi/phones.txt')
 online_update('resources/asr/voip_cs/kaldi/words.txt')
+online_update('resources/asr/voip_cs/kaldi/phones.txt')
 online_update('resources/asr/voip_cs/kaldi/silence.csl')
 online_update('resources/asr/voip_cs/kaldi/tri2a.mdl')
 online_update('resources/asr/voip_cs/kaldi/tri2a.tree')

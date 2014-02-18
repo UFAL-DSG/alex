@@ -5,12 +5,17 @@ from __future__ import unicode_literals
 from database import database
 import codecs
 import os
+from alex.utils.config import online_update, to_project_path
 
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
 # tab-separated file containing city + all locations of the city/cities with this name
 # (as pipe-separated longitude, latitude, district, region)
 CITIES_LOCATION_FNAME = 'cities_locations.tsv'
+
+# load new versions of the data files from the server
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATION_FNAME)))
 
 ontology = {
     'slots': {
@@ -203,14 +208,18 @@ ontology = {
             '^from_stop$', '^to_stop$', '^via_stop$',
             '^departure_time$', '^departure_time_rel$',
             '^arrival_time$', '^arrival_time_rel$',
+            '^to_city$', '^from_city$', '^via_city$',
         ],
+#        'from_stop': ['^from_city$'],
+#        'to_stop': ['^to_city$'],
+#        'via_stop': ['^via_city$'],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation of different inputs
         # this is performed by converting dialogue acts into inform acts
         'lta_time': {
             # the following means, every time I talk about the time, it supports the value time in slot time_sel
-            'time': [('', '^time$', ''), ],
+            'time': [('^(inform|confirm|request|select)$', '^time$', ''), ],
             # the following means, every time I talk about the time_rel, it supports the value time_rel in slot time_sel
             'time_rel': [('', '^time_rel$', ''), ],
             # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
@@ -224,7 +233,7 @@ ontology = {
         'lta_departure_time': {
             'departure_time': [('', '^departure_time$', ''), ],
             'departure_time_rel': [('', '^departure_time_rel$', ''), ],
-            'time': [('', '^time$', ''), ],
+            'time': [('^(inform|confirm|request|select)$', '^time$', ''), ],
             'time_rel': [('', '^time_rel$', ''), ],
             'date_rel': [('', '^date_rel$', '')],
         },
@@ -272,14 +281,16 @@ ontology = {
             'night': 'v noci'
         },
         'vehicle': {
-            'BUS': 'autobusem',
-            'INTERCITY_BUS': 'meziměstským autobusem',
-            'TRAM': 'tramvají',
-            'SUBWAY': 'metrem',
-            'TRAIN': 'vlakem',
-            'CABLE_CAR': 'lanovkou',
-            'FERRY': 'přívozem',
-            'TROLLEYBUS': 'trolejbusem',
+            'bus': 'autobusem',
+            'intercity_bus': 'dálkovým autobusem',
+            'night_bus': 'nočním autobusem',
+            'tram': 'tramvají',
+            'night_tram': 'noční tramvají',
+            'subway': 'metrem',
+            'train': 'vlakem',
+            'cable_car': 'lanovkou',
+            'ferry': 'přívozem',
+            'trolleybus': 'trolejbusem',
         },
         'date_rel': {
             'today': 'dnes',
@@ -338,6 +349,7 @@ def load_compatible_values(fname, slot1, slot2):
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
+
 
 def load_additional_information(fname, slot, keys):
     with codecs.open(fname, 'r', 'UTF-8') as fh:
