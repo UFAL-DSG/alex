@@ -37,6 +37,9 @@ echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
     steps/make_mfcc.sh --mfcc-config common/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
+    # Note --fake -> NO CMVN
+    steps/compute_cmvn_stats.sh --fake $WORK/local/$s \
+      $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
 done
 
 echo "Decoding is done for each pair (TEST_SET x LMs)"

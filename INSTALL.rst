@@ -110,7 +110,7 @@ Install ``pyfst`` by
 
 .. code-block:: bash
 
-    sudo pip install pystache
+    sudo pip install --upgrade pystache pyyaml cython
     
     git clone https://github.com/UFAL-DSG/pyfst.git pyfst
     cd pyfst
