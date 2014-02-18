@@ -228,6 +228,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     def __getitem__(self, key):
         return self.slots[key]
 
+    def __delitem__(self, key):
+        del self.slots[key]
+
     def __setitem__(self, key, value):
         self.slots[key] = value
 

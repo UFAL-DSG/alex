@@ -111,6 +111,20 @@ class Ontology(object):
             return self.ontology['compatible_values'][slot_pair].get(value, set()).copy()
         return None
 
+    def is_compatible(self, slot_pair, val1, val2):
+        """Given a slot pair and a pair of values, this tests whether the values are compatible.
+        If there is no information about the slot pair or the first value, returns False.
+        If the second value is None, returns always True (i.e. None is compatible with anything).
+
+        :param slot_pair: key to 'compatible_values' in ontology data
+        :param val1: value of the 1st slot
+        :param val2: value of the 2nd slot
+        :rtype: Boolean
+        """
+        if slot_pair in self.ontology['compatible_values']:
+            return val2 is None or val2 in self.ontology['compatible_values'][slot_pair].get(val1, set())
+        return False
+
     def get_default_value(self, slot):
         """Given a slot name, get its default value (if set in the ontology). Returns None
         if the default value is not set for the given slot.

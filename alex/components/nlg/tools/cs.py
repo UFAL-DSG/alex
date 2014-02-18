@@ -67,7 +67,14 @@ _NUMBERS = {0: 'nula', 1: 'jeden', 2: 'dva', 3: 'tři', 4: 'čtyři', 5: 'pět',
             15: 'patnáct', 16: 'šestnáct', 17: 'sedmnáct', 18: 'osmnáct',
             19: 'devatenáct', 20: 'dvacet', 30: 'třicet', 40: 'čtyřicet',
             50: 'padesát', 60: 'šedesát', 70: 'sedmdesát', 80: 'osmdesát',
-            90: 'devadesát', 100: 'sto'}
+            90: 'devadesát', 100: 'sto', 200: 'dvě stě', 300: 'tři sta',
+            400: 'čtyři sta', 500: 'pět set', 600: 'šest set', 700: 'sedm set',
+            800: 'osm set', 900: 'devět set', 1000: 'tisíc', 1100: 'jedenáct set',
+            1200: 'dvanáct set', 1300: 'třináct set', 1400: 'čtrnáct set',
+            1500: 'patnáct set', 1600: 'šestnáct set', 1700: 'sedmnáct set',
+            1800: 'osmnáct set', 1900: 'devatenáct set', 2000: 'dva tisíce',
+            3000: 'tři tisíce', 4000: 'čtyři tisíce', 5000: 'pět tisíc',
+            6000: 'šest tisíc', 7000: 'sedm tisíc', 8000: 'osm tisíc', 9000: 'devět tisíc'}
 
 
 _FORMS = {'jeden': {'jeden': ['M1', 'I1', 'M5', 'I5', 'I4'],
@@ -93,7 +100,15 @@ _FORMS = {'jeden': {'jeden': ['M1', 'I1', 'M5', 'I5', 'I4'],
                     'čtyř': ['2'],
                     'čtyřem': ['3'],
                     'čtyřech': ['6'],
-                    'čtyřmi': ['7']}}
+                    'čtyřmi': ['7']},
+          'sto': {'sto': ['1', '4', '5'],
+                  'sta': ['2'],
+                  'stu': ['3', '6'],
+                  'stem': ['7']},
+          'tisíc': {'tisíc': ['1', '4', '5'],
+                    'tisíce': ['2'],
+                    'tisíci': ['3', '6'],
+                    'tisícem': ['7']}}
 
 # inverted _FORMS
 _INFLECT = {}
@@ -109,6 +124,14 @@ def word_for_number(number, categ='M1'):
     Returns a word given a number 1-100 (in the given gender + case).
     Gender (M, I, F, N) and case (1-7) are given concatenated.
     """
+    # > 2000: composed of thousands and the rest (1000-2000 are composed of hunderds)
+    if number > 2000 and number % 1000 != 0:
+        return ' '.join((word_for_number((number / 1000) * 1000, categ),
+                         word_for_number(number % 1000, categ)))
+    # > 100: composed of hunderds and the rest
+    if number > 100 and number % 100 != 0:
+        return ' '.join((word_for_number((number / 100) * 100, categ),
+                         word_for_number(number % 100, categ)))
     # > 20: composed of tens and ones
     if number > 20 and number % 10 != 0:
         # 21, 31... - "1" has no declension
