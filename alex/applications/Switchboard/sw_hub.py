@@ -238,27 +238,28 @@ if __name__ == '__main__':
     while 1:
         time.sleep(cfg1['Hub']['main_loop_sleep_time'])
 
-        while vad1_audio_out.poll():
-            data = vad1_audio_out.recv()
+        while vad1_audio_out.poll() or vad2_audio_out.poll():
+            if vad1_audio_out.poll():
+                data = vad1_audio_out.recv()
 
-            if intro_played2 and not vio_connect1:
-                vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            ('user2', '', '', ''), 'HUB', 'VoipIO2'))
-                vio_connect1 = True
+                if intro_played2 and not vio_connect1:
+                    vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('user2', '', '', ''), 'HUB', 'VoipIO2'))
+                    vio_connect1 = True
 
-            if intro_played2:
-                vio2_play.send(data)
+                if intro_played2:
+                    vio2_play.send(data)
 
-        while vad2_audio_out.poll():
-            data = vad2_audio_out.recv()
+            if vad2_audio_out.poll():
+                data = vad2_audio_out.recv()
 
-            if intro_played2 and not vio_connect2:
-                vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            ('user1', '', '', ''), 'HUB', 'VoipIO1'))
-                vio_connect2 = True
+                if intro_played2 and not vio_connect2:
+                    vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('user1', '', '', ''), 'HUB', 'VoipIO1'))
+                    vio_connect2 = True
 
-            if intro_played1:
-                vio1_play.send(data)
+                if intro_played1:
+                    vio1_play.send(data)
 
         if call_back_time != -1 and call_back_time < time.time():
             vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
