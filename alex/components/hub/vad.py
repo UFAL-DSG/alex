@@ -18,7 +18,6 @@ import alex.components.vad.power as PVAD
 import alex.components.vad.gmm as GVAD
 import alex.components.vad.ffnn as NNVAD
 
-
 class VAD(multiprocessing.Process):
     """ VAD detects segments of speech in the audio stream.
 
@@ -159,6 +158,11 @@ class VAD(multiprocessing.Process):
                 if self.cfg['VAD']['debug']:
                     self.system_logger.debug("vad: %s change:%s" % (vad, change))
 
+                    if vad:
+                        self.system_logger.debug('+')
+                    else:
+                        self.system_logger.debug('-')
+
                 if change:
                     if change == 'speech':
                         # Create new wave file.
@@ -194,12 +198,6 @@ class VAD(multiprocessing.Process):
                         # Close the current wave file.
                         if self.wf:
                             self.wf.close()
-
-                if self.cfg['VAD']['debug']:
-                    if vad:
-                        self.system_logger.debug('+')
-                    else:
-                        self.system_logger.debug('-')
 
                 if vad:
                     while self.deque_audio_recorded_in:
@@ -252,15 +250,9 @@ class VAD(multiprocessing.Process):
                 # if self.session_logger.is_open:
                 # Process audio data.
                 try:
-                    self.read_write_audio()
-                except SessionClosedException as e:
-                    self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
-                # FIXME: Make the following test work.
-                # # Wait until a session has started.
-                # if self.session_logger.is_open:
-                # Process audio data.
-                try:
-                    self.read_write_audio()
+                    for i in range(self.cfg['VAD']['n_rwa']):
+                        # process at least n_rwa frames
+                        self.read_write_audio()
                 except SessionClosedException as e:
                     self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
         except:

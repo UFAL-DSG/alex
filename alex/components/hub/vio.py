@@ -23,7 +23,6 @@ from alex.utils.procname import set_proc_name
 # Logging callback
 logger = None
 
-
 @catch_ioerror
 def log_cb(level, str, len):
     if logger:
@@ -479,8 +478,7 @@ class VoipIO(multiprocessing.Process):
                 del_messages.append(frame_id)
 
         # delete the messages which were already sent
-        self.message_queue = [x for x in self.message_queue if x[1]
-                              not in del_messages]
+        self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
 
     def read_write_audio(self):
         """Send as much possible of the available data to the output and read as much as possible from the input.
@@ -846,7 +844,9 @@ class VoipIO(multiprocessing.Process):
                 self.send_pending_messages()
 
                 # process audio data
-                self.read_write_audio()
+                for i in range(self.cfg['VoipIO']['n_rwa']):
+                    # process at least n_rwa frames
+                    self.read_write_audio()
 
             # Shutdown the library
             self.transport = None
