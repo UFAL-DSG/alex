@@ -33,3 +33,4 @@ export pdf=1200
 export gauss=19200
 
 export train_mmi_boost=0.05
+export cmn=false  # No cmn statistics extraction is set up, so keep it false
