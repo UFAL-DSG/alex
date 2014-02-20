@@ -27,7 +27,7 @@ echo "--- Exporting models to $tgt ..."
 cp -f $exp/alex_gitlog.log $exp/alex_gitdiff.log $exp/experiment_bash_vars.log $tgt
 
 # Store also the results
-cp -f $exp/results.log >  $tgt/results.log 2> /dev/null
+cp -f $exp/results.log >  $tgt
 
 
 cp -f common/mfcc.conf $tgt 
@@ -43,7 +43,7 @@ cp -f $exp/tri2b_mmi_b*/final.mdl $tgt/tri2b_bmmi.mdl
 cp -f $exp/tri2b/tree $tgt/tri2b_bmmi.tree
 cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
 
-cp -f $lang/words.txt $lang/phones.txt $lang/phones/silence.csl $tgt
+cp -f $lang/phones.txt $lang/phones/silence.csl $tgt
 
 
 # FIXME do I need splice_opts for something?

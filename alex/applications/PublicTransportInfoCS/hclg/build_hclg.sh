@@ -25,9 +25,9 @@ source path.sh
 filter="<.?s>\|_SIL_\|_EHM_HMM_\|_INHALE\|_LAUGH_\|_NOISE_"
 
 
-if [[  $# -ne 9 ]]; then
+if [[  $# -ne 12 ]]; then
   echo; echo "Usage:"; echo
-  echo "build_hclg.sh <AM.mdl> <Dtree> <dict.txt> <vocab.txt> <LM.arpa> <local-tmp-dir> <out-lang-dir> <out-models-dir> <OOV>"
+  echo "build_hclg.sh <AM.mdl> <Dtree> <mfcc.conf> <matrix.mat> <silence.csl> <dict.txt> <vocab.txt> <LM.arpa> <local-tmp-dir> <out-lang-dir> <out-models-dir> <OOV>"
   echo "e.g.: build_hclg.sh final.mdl tree final.dict final.vocab final.bg.arpa data/local data/lang models '_SIL_'"
   echo ""
   echo "Set '\$KALDI_ROOT' variable before running the script'"
@@ -37,6 +37,10 @@ if [[  $# -ne 9 ]]; then
   echo "See http://kaldi.sourceforge.net/data_prep.html#data_prep_lang_creating and "
   echo "http://kaldi.sourceforge.net/graph_recipe_test.html for more info."
   echo ""
+  echo "Note: mfcc.conf, matrix.mat silence.csl are not needed for building HCLG,"
+  echo "but we just copied them in output directory"
+  echo "order to complete all the files needed for decoding!"
+  echo ""
   echo "options: "
   echo "     --filter 'LexiconGarbage1\|LexiconGarbage2'     # The arguments are grep out from dictionary and vocabulary"
   exit 1;
@@ -44,20 +48,25 @@ fi
 
 . utils/parse_options.sh
 
-model=$1
-tree=$2
-dictionary=$3
-vocabulary=$4
-lm_arpa=$5
-oov_word=$9  # prepare_lang.sh <UNK>
+model=$1; shift
+tree=$1; shift
 
+mfcc=$1; shift
+mat=$1; shift
+sil=$1; shift
 
-locdata=$6
+dictionary=$1; shift
+vocabulary=$1; shift
+lm_arpa=$1; shift
+
+locdata=$1; shift
 locdict=$locdata/dict
 tmpdir=$locdata/lang
 hclg=$locdata/hclg
-lang=$7
-dir=$8
+lang=$1; shift
+dir=$1; shift
+
+oov_word=$1; shift  # prepare_lang.sh <UNK>
 
 
 #######################################################################
@@ -189,7 +198,7 @@ echo ""
 
 model_name=`basename $model`
 model_name=${model_name%.mdl}
-cp $model $dir || exit 1;
+cp $model $mfcc $mat $sil $dir || exit 1;
 cp $hclg/HCLG.fst $dir/HCLG_${model_name}.fst || exit 1;
 cp $lang/words.txt $dir || exit 1;
 cp $lang/phones/silence.csl $dir || exit 1;
