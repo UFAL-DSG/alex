@@ -17,7 +17,9 @@ dict=$lm_dir/final.dict  # phonetic dictionary
 vocab=$lm_dir/final.vocab
 LM=$lm_dir/final.pg.arpa  # LM in arpa format
 
-# TODO ask before deleting
+mfcc=$am_dir/mfcc.conf
+sil=$am_dir/silence.csl
+
 rm -rf $tmpdir
 
 pushd $am_dir
@@ -27,4 +29,4 @@ pushd $lm_dir
 python download_models.py
 popd
 
-./build_hclg.sh $AM $tree $dict $vocab $LM $localdir $langdir $outputdir $oov
+./build_hclg.sh $AM $tree $mfcc $sil $dict $vocab $LM $localdir $langdir $outputdir $oov
