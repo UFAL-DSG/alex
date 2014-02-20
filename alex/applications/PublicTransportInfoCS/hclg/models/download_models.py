@@ -4,6 +4,7 @@ import autopath
 
 from alex.utils.config import online_update
 
+online_update('applications/PublicTransportInfoCS/hclg/models/mfcc.conf')
 online_update('applications/PublicTransportInfoCS/hclg/models/tri2b_bmmi.mdl')
 online_update('applications/PublicTransportInfoCS/hclg/models/tri2b_bmmi.tree')
 online_update('applications/PublicTransportInfoCS/hclg/models/tri2b_bmmi.mat')
