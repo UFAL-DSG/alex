@@ -9,6 +9,7 @@ from math import exp
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
+from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest
 import pykaldi.utils
 
 try:
@@ -99,7 +100,7 @@ class KaldiASR(ASRInterface):
         self.decoder.reset(keep_buffer_data=False)
 
         # Convert lattice to nblist
-        nbest = pykaldi.utils.lattice_to_nbest(lat, self.n_best)
+        nbest = lattice_to_nbest(lat, self.n_best)
         nblist = UtteranceNBList()
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
@@ -121,3 +122,16 @@ class KaldiASR(ASRInterface):
             self.syslog.debug('hyp_out: get_lattice+nbest in %s secs' % str(time.time() - start))
 
         return nblist
+
+    def word_post_out(self):
+        """ This defines asynchronous interface for speech recognition.
+        Returns recognizers hypotheses about the input speech audio.
+        """
+
+        # Get hypothesis
+        self.decoder.prune_final()
+        utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
+        self.decoder.reset(keep_buffer_data=False)
+
+        # Convert lattice to word nblist
+        return lattice_to_word_posterior_lists(lat, self.n_best)
