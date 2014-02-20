@@ -25,9 +25,9 @@ source path.sh
 filter="<.?s>\|_SIL_\|_EHM_HMM_\|_INHALE\|_LAUGH_\|_NOISE_"
 
 
-if [[  $# -ne 11 ]]; then
+if [[  $# -ne 12 ]]; then
   echo; echo "Usage:"; echo
-  echo "build_hclg.sh <AM.mdl> <Dtree> <mfcc.conf> <silence.csl> <dict.txt> <vocab.txt> <LM.arpa> <local-tmp-dir> <out-lang-dir> <out-models-dir> <OOV>"
+  echo "build_hclg.sh <AM.mdl> <Dtree> <mfcc.conf> <matrix.mat> <silence.csl> <dict.txt> <vocab.txt> <LM.arpa> <local-tmp-dir> <out-lang-dir> <out-models-dir> <OOV>"
   echo "e.g.: build_hclg.sh final.mdl tree final.dict final.vocab final.bg.arpa data/local data/lang models '_SIL_'"
   echo ""
   echo "Set '\$KALDI_ROOT' variable before running the script'"
@@ -37,7 +37,7 @@ if [[  $# -ne 11 ]]; then
   echo "See http://kaldi.sourceforge.net/data_prep.html#data_prep_lang_creating and "
   echo "http://kaldi.sourceforge.net/graph_recipe_test.html for more info."
   echo ""
-  echo "Note: mfcc.conf silence.csl are not needed for building HCLG,"
+  echo "Note: mfcc.conf, matrix.mat silence.csl are not needed for building HCLG,"
   echo "but we just copied them in output directory"
   echo "order to complete all the files needed for decoding!"
   echo ""
@@ -52,6 +52,7 @@ model=$1; shift
 tree=$1; shift
 
 mfcc=$1; shift
+mat=$1; shift
 sil=$1; shift
 
 dictionary=$1; shift
@@ -197,7 +198,7 @@ echo ""
 
 model_name=`basename $model`
 model_name=${model_name%.mdl}
-cp $model $mfcc $sil $dir || exit 1;
+cp $model $mfcc $mat $sil $dir || exit 1;
 cp $hclg/HCLG.fst $dir/HCLG_${model_name}.fst || exit 1;
 cp $lang/words.txt $dir || exit 1;
 cp $lang/phones/silence.csl $dir || exit 1;
