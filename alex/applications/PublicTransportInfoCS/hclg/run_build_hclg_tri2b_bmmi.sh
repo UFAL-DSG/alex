@@ -17,7 +17,6 @@ dict=$lm_dir/final.dict  # phonetic dictionary
 vocab=$lm_dir/final.vocab
 LM=$lm_dir/final.pg.arpa  # LM in arpa format
 
-# TODO ask before deleting
 rm -rf $tmpdir
 
 pushd $am_dir
