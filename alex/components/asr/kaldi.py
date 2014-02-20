@@ -9,7 +9,7 @@ from math import exp
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
-from alex.utils.fst import lattice_to_word_posterior_lists, lattice_to_nbest
+from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest
 import pykaldi.utils
 
 try:
