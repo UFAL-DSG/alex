@@ -852,7 +852,7 @@ class VoipIO(multiprocessing.Process):
 
                 d = time.time() - s
                 if d > 0.100:
-                    print "VIO t = {t:0.6f}".format(t=d)
+                    print "VIO t = {t:0.4f}".format(t=d)
 
             # Shutdown the library
             self.transport = None

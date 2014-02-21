@@ -276,7 +276,7 @@ class VAD(multiprocessing.Process):
 
                 d = time.time() - s
                 if d > 0.100:
-                    print "VAD t = {t:0.6f}".format(t=d)
+                    print "VAD t = {t:0.4f}".format(t=d)
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()

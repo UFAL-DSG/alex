@@ -251,12 +251,18 @@ class DM(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+                s = time.time()
+
                 # process all pending commands
                 if self.process_pending_commands():
                     return
 
                 # process the incoming SLU hypothesis
                 self.read_slu_hypotheses_write_dialogue_act()
+
+                d = time.time() - s
+                if d > 0.100:
+                    print "DM t = {t:0.4f}".format(t=d)
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the DM process.')
             self.close_event.set()

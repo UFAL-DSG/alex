@@ -236,7 +236,7 @@ class ASR(multiprocessing.Process):
 
                 d = time.time() - s
                 if d > 0.100:
-                    print "ASR t = {t:0.6f}".format(t=d)
+                    print "ASR t = {t:0.4f}".format(t=d)
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in ASR process.')
             self.close_event.set()
