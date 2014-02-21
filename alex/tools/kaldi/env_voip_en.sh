@@ -14,6 +14,8 @@ export TGT_MODELS=../../resources/asr/voip_en/kaldi/last
 
 # Specify paths to arpa models. Paths may not contain spaces.
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
+# Note: The LM file name should not contain underscore "_"! 
+# Otherwise the results will be reported without the LM with underscore."
 export LMs="build0 build2"
 
 # Use path to prebuilt dictionary or 'build' command in order to build dictionary
@@ -33,7 +35,9 @@ export pdf=1200
 export gauss=19200
 
 export train_mmi_boost=0.05
-export cmn=false  # No cmn statistics extraction is set up, so keep it false
 
 export mmi_beam=16.0
 export mmi_lat_beam=10.0
+
+# --fake -> NO CMVN; empty -> CMVN (pykaldi decoders can not handle CMVN -> fake)
+export fake="--fake"
