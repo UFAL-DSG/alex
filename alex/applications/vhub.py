@@ -274,14 +274,11 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "speech_start":
                             u_voice_activity = True
 
-                            self.cfg['Analytics'].track_event('vad', 'speech_start')
-
                             # interrupt the talking system
                             # this will be replaced with pausing the system when the necessary extension of pjsip
                             # is implemented
                             if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time:
                                 # if the system is still talking then flush the output
-                                self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 
                                 # when a user barge in into the output, all the output pipe line
@@ -293,7 +290,6 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "speech_end":
                             u_voice_activity = False
                             u_last_voice_activity_time = time.time()
-                            self.cfg['Analytics'].track_event('vad', 'speech_stop')
 
                         if command.parsed['__name__'] == "flushed":
                             # flush asr, when flushed, slu will be flushed
@@ -336,14 +332,12 @@ class VoipHub(Hub):
                         # record the time of the last system generated dialogue act
                         s_last_dm_activity_time = time.time()
                         number_of_turns += 1
-                        self.cfg['Analytics'].track_event('dm', 'da_generated')
 
                         if command.da != "silence()":
                             # if the DM generated non-silence dialogue act, then continue in processing it
 
                             if s_voice_activity and s_last_voice_activity_time + 0.02 < current_time:
                                 # if the system is still talking then flush the output
-                                self.cfg['Analytics'].track_event('vad', 'barge_in')
                                 self.cfg['Logging']['session_logger'].barge_in("system")
 
                                 # when a user barge in into the output, all the output pipe line
