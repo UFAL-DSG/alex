@@ -834,6 +834,8 @@ class VoipIO(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+                s = time.time()
+
                 self.recv_input_localy()
 
                 # process all pending commands
@@ -847,6 +849,10 @@ class VoipIO(multiprocessing.Process):
                 for i in range(self.cfg['VoipIO']['n_rwa']):
                     # process at least n_rwa frames
                     self.read_write_audio()
+
+                d = time.time() - s
+                if d > 0.100:
+                    print "VIO t = {t:0.6f}".format(t=d)
 
             # Shutdown the library
             self.transport = None

@@ -89,11 +89,11 @@ def async(func):
         Returns the created Thread object
 
         E.g.:
-        @run_async
+        @async
         def task1():
             do_something
 
-        @run_async
+        @async
         def task2():
             do_something_too
 
@@ -201,6 +201,7 @@ class SystemLogger(object):
         """
         
         #self.current_session_log_dir_name.value = ''
+        return
 
     # XXX: Returning the enclosing directory in case the session has been
     # closed may not be ideal. In some cases, it causes session logs to be
