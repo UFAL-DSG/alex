@@ -38,7 +38,7 @@ for s in train $TEST_SETS ; do
     steps/make_mfcc.sh --mfcc-config common/mfcc.conf --cmd \
       "$train_cmd" --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
     # Note --fake -> NO CMVN
-    steps/compute_cmvn_stats.sh --fake $WORK/local/$s \
+    steps/compute_cmvn_stats.sh $fake $WORK/local/$s \
       $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
 done
 
