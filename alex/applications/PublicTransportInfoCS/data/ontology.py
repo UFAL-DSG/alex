@@ -291,6 +291,7 @@ ontology = {
             'cable_car': 'lanovkou',
             'ferry': 'přívozem',
             'trolleybus': 'trolejbusem',
+            'substitute_traffic': 'náhradní dopravou',
         },
         'date_rel': {
             'today': 'dnes',
