@@ -242,7 +242,7 @@ class DM(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_DM")
+            set_proc_name("Alex_DM")
 
             while 1:
                 # Check the close event.

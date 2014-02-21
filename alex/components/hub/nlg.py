@@ -113,7 +113,7 @@ class NLG(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_NLG")
+            set_proc_name("Alex_NLG")
 
             while 1:
                 # Check the close event.

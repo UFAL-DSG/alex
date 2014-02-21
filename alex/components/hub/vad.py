@@ -39,7 +39,7 @@ class VAD(multiprocessing.Process):
 
     """
 
-    def __init__(self, cfg, commands, audio_recorded_in, audio_out, close_event):
+    def __init__(self, cfg, commands, audio_in, audio_out, close_event):
         multiprocessing.Process.__init__(self)
 
         self.cfg = cfg
@@ -47,8 +47,8 @@ class VAD(multiprocessing.Process):
         self.session_logger = cfg['Logging']['session_logger']
         self.commands = commands
         self.local_commands = deque()
-        self.audio_recorded_in = audio_recorded_in
-        self.local_audio_recorded_in = deque()
+        self.audio_in = audio_in
+        self.local_audio_in = deque()
         self.audio_out = audio_out
         self.close_event = close_event
 
@@ -70,13 +70,13 @@ class VAD(multiprocessing.Process):
             deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
         self.detection_window_sil = \
             deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
-        self.deque_audio_recorded_in = \
+        self.deque_audio_in = \
             deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
 
-    def recv_input_localy(self):
+    def recv_input_locally(self):
         """ Copy all input from input connections into local queue objects.
 
         This will prevent blocking the senders.
@@ -86,9 +86,9 @@ class VAD(multiprocessing.Process):
             command = self.commands.recv()
             self.local_commands.append(command)
 
-        while self.audio_recorded_in.poll():
-            frame = self.audio_recorded_in.recv()
-            self.local_audio_recorded_in.append(frame)
+        while self.audio_in.poll():
+            frame = self.audio_in.recv()
+            self.local_audio_in.append(frame)
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -117,12 +117,13 @@ class VAD(multiprocessing.Process):
 
                 if command.parsed['__name__'] == 'flush':
                     # discard all data in in input buffers
-                    while self.audio_recorded_in.poll():
-                        data_play = self.audio_recorded_in.recv()
+                    while self.audio_in.poll():
+                        data_play = self.audio_in.recv()
 
+                    self.local_audio_in.clear()
                     self.detection_window_speech.clear()
                     self.detection_window_sil.clear()
-                    self.deque_audio_recorded_in.clear()
+                    self.deque_audio_in.clear()
 
                     # reset other state variables
                     self.last_vad = False
@@ -160,16 +161,16 @@ class VAD(multiprocessing.Process):
 
     def read_write_audio(self):
         # read input audio
-        if self.local_audio_recorded_in:
-            if len(self.local_audio_recorded_in) > 10:
-                print "VAD unprocessed frames:", len(self.local_audio_recorded_in)
+        if self.local_audio_in:
+            if len(self.local_audio_in) > 10:
+                print "VAD unprocessed frames:", len(self.local_audio_in)
 
             # read recorded audio
-            data_rec = self.local_audio_recorded_in.popleft()
+            data_rec = self.local_audio_in.popleft()
 
             if isinstance(data_rec, Frame):
                 # buffer the recorded and played audio
-                self.deque_audio_recorded_in.append(data_rec)
+                self.deque_audio_in.append(data_rec)
 
                 decision = self.vad.decide(data_rec.payload)
                 vad, change = self.smoothe_decison(decision)
@@ -219,14 +220,14 @@ class VAD(multiprocessing.Process):
                             self.wf.close()
 
                 if vad:
-                    while self.deque_audio_recorded_in:
+                    while self.deque_audio_in:
                         # Send or save all potentially queued data.
                         #   - When there is change to speech, there will be
                         #     several frames of audio;
                         #   - If there is no change, then there will be only
                         #     one queued frame.
 
-                        data_rec = self.deque_audio_recorded_in.popleft()
+                        data_rec = self.deque_audio_in.popleft()
 
                         # Send the result.
                         self.audio_out.send(data_rec)
@@ -245,7 +246,7 @@ class VAD(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_VAD")
+            set_proc_name("Alex_VAD")
 
             while 1:
                 # Check the close event.
@@ -256,7 +257,7 @@ class VAD(multiprocessing.Process):
 
                 s = time.time()
 
-                self.recv_input_localy()
+                self.recv_input_locally()
 
                 # Process all pending commands.
                 if self.process_pending_commands():

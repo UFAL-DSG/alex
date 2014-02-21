@@ -131,7 +131,7 @@ class SLU(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_SLU")
+            set_proc_name("Alex_SLU")
 
             while 1:
                 # Check the close event.

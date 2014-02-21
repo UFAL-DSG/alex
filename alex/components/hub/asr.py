@@ -7,16 +7,15 @@ from __future__ import unicode_literals
 if __name__ == "__main__":
     import autopath
 
+from collections import deque
 import multiprocessing
 import time
-from alex.components.asr.common import asr_factory
 
+from alex.components.asr.common import asr_factory
 from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASRTimeoutException
-from alex.components.asr.utterance import UtteranceNBList, \
-    UtteranceConfusionNetwork
+from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.hub.messages import Command, Frame, ASRHyp
-
 from alex.utils.procname import set_proc_name
 
 
@@ -60,7 +59,9 @@ class ASR(multiprocessing.Process):
 
         self.cfg = cfg
         self.commands = commands
+        self.local_commands = deque()
         self.audio_in = audio_in
+        self.local_audio_in = deque()
         self.asr_hypotheses_out = asr_hypotheses_out
         self.close_event = close_event
 
@@ -69,6 +70,20 @@ class ASR(multiprocessing.Process):
 
         self.system_logger = self.cfg['Logging']['system_logger']
         self.session_logger = self.cfg['Logging']['session_logger']
+
+    def recv_input_locally(self):
+        """ Copy all input from input connections into local queue objects.
+
+        This will prevent blocking the senders.
+        """
+
+        while self.commands.poll():
+            command = self.commands.recv()
+            self.local_commands.append(command)
+
+        while self.audio_in.poll():
+            frame = self.audio_in.recv()
+            self.local_audio_in.append(frame)
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -81,8 +96,8 @@ class ASR(multiprocessing.Process):
         Returns True iff the process should terminate.
         """
 
-        while self.commands.poll():
-            command = self.commands.recv()
+        while self.local_commands:
+            command = self.local_commands.popleft()
             if self.cfg['ASR']['debug']:
                 self.system_logger.debug(command)
 
@@ -95,6 +110,7 @@ class ASR(multiprocessing.Process):
                     while self.audio_in.poll():
                         self.audio_in.recv()
 
+                    self.local_audio_in.clear()
                     self.asr.flush()
                     self.recognition_on = False
 
@@ -106,9 +122,12 @@ class ASR(multiprocessing.Process):
 
     def read_audio_write_asr_hypotheses(self):
         # Read input audio.
-        if self.audio_in.poll():
-            # Read recorded audio.
-            data_rec = self.audio_in.recv()
+        if self.local_audio_in:
+            if len(self.local_audio_in) > 40:
+                print "ASR unprocessed frames:", len(self.local_audio_in)
+
+            # read recorded audio
+            data_rec = self.local_audio_in.popleft()
 
             if isinstance(data_rec, Frame):
                 if self.recognition_on:
@@ -203,12 +222,21 @@ class ASR(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+                s = time.time()
+
+                self.recv_input_locally()
+
                 # Process all pending commands.
                 if self.process_pending_commands():
                     return
 
                 # Process audio data.
-                self.read_audio_write_asr_hypotheses()
+                for i in range(self.cfg['ASR']['n_rawa']):
+                    self.read_audio_write_asr_hypotheses()
+
+                d = time.time() - s
+                if d > 0.100:
+                    print "ASR t = {t:0.6f}".format(t=d)
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in ASR process.')
             self.close_event.set()
