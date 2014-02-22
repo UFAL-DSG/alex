@@ -255,7 +255,7 @@ class VAD(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                s = time.time()
+                s = (time.time(), time.clock())
 
                 self.recv_input_locally()
 
@@ -274,9 +274,9 @@ class VAD(multiprocessing.Process):
                 except SessionClosedException as e:
                     self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
 
-                d = time.time() - s
-                if d > 0.100:
-                    print "VAD t = {t:0.4f}".format(t=d)
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.100:
+                    print "VAD t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()

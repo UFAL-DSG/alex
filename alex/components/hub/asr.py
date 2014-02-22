@@ -222,7 +222,7 @@ class ASR(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                s = time.time()
+                s = (time.time(), time.clock())
 
                 self.recv_input_locally()
 
@@ -234,9 +234,9 @@ class ASR(multiprocessing.Process):
                 for i in range(self.cfg['ASR']['n_rawa']):
                     self.read_audio_write_asr_hypotheses()
 
-                d = time.time() - s
-                if d > 0.100:
-                    print "ASR t = {t:0.4f}".format(t=d)
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.100:
+                    print "ASR t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in ASR process.')
             self.close_event.set()

@@ -118,11 +118,11 @@ def mtime(name="Time",min_t=0.050):
     def decorator(user_function):
         @functools.wraps(user_function)
         def wrapper(*args, **kw):
-            s = time.time()
+            s = (time.time(), time.clock())
             r = user_function(*args, **kw)
-            d = time.time() - s
-            if d > min_t:
-                print "{name} t = {d:0.4f}".format(name=name, d=d)
+            d = (time.time() - s[0], time.clock() - s[1])
+            if d[0] > min_t:
+                print "{name} t = {t:0.4f} c = {c:0.4f}".format(name=name, t=d[0], c=d[1])
             return r
 
         return wrapper
