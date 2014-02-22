@@ -34,9 +34,8 @@ class SessionLogger(multiprocessing.Process):
     def __init__(self):
         multiprocessing.Process.__init__(self)
 
-        self._session_dir_name = multiprocessing.Array('c', ' ' * 1000)
-        self._session_dir_name.value = ''
-        self._session_start_time = multiprocessing.Value('d', time.time())
+        self._session_dir_name = ''
+        self._session_start_time = time.time()
         self._is_open = False   # whether the session is started
 
         # filename of the started recording
@@ -80,7 +79,7 @@ class SessionLogger(multiprocessing.Process):
 
         It is useful when constructing file and directory names.
         """
-        dt = time.time() - self._session_start_time.value
+        dt = time.time() - self._session_start_time
 
         return "%.3f" % dt
 
@@ -89,19 +88,17 @@ class SessionLogger(multiprocessing.Process):
         """ Records the target directory and creates the template call log.
         """
 
-        self._session_dir_name.value = output_dir
+        self._session_dir_name = output_dir
 
-        f = open(os.path.join(self._session_dir_name.value, 'session.xml'), "w", 0)
-        # fcntl.lockf(f, fcntl.LOCK_EX)
+        f = open(os.path.join(self._session_dir_name, 'session.xml'), "w", 0)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
 </dialogue>
 """)
         f.write('\n')
-        # fcntl.lockf(f, fcntl.LOCK_UN)
         f.close()
 
-        self._session_start_time.value = time.time()
+        self._session_start_time = time.time()
         self._is_open = True
 
     def _flush(self):
@@ -123,19 +120,8 @@ class SessionLogger(multiprocessing.Process):
         """
 
         self._flush()
-        #self.session_dir_name.value = ''
-        #self._is_open = False
-
-    def _get_session_dir_name(self):
-        """Returns the directory where all the session-related files should be
-        stored.  If the session is not open, it raises
-        a SessionClosedException.
-
-        """
-        if self._is_open:
-            return self._session_dir_name.value
-        else:
-            raise SessionClosedException("There is no directory for a session that has been closed.")
+        self._session_dir_name = ''
+        self._is_open = False
 
     def _cfg_formatter(self, message):
         """ Format the message - pretty print
@@ -153,7 +139,7 @@ class SessionLogger(multiprocessing.Process):
 
         """
 
-        self._f = open(os.path.join(self._session_dir_name.value, 'session.xml'), "r+", 0)
+        self._f = open(os.path.join(self._session_dir_name, 'session.xml'), "r+", 0)
         # fcntl.lockf(self._f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self._f)
@@ -384,7 +370,7 @@ class SessionLogger(multiprocessing.Process):
 
         self._close_session_xml(doc)
 
-        self._rec_started[fname] = wave.open(self.output_file_name, 'w')
+        self._rec_started[fname] = wave.open(os.path.join(self._session_dir_name, fname), 'w')
         self._rec_started[fname].setnchannels(1)
         self._rec_started[fname].setsampwidth(2)
         self._rec_started[fname].setframerate(self.cfg['Audio']['sample_rate'])
@@ -410,6 +396,8 @@ class SessionLogger(multiprocessing.Process):
                 break
         else:
             self._close_session_xml(doc)
+            self._rec_started[fname].close()
+            self._rec_started[fname] = None
             raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
 
         self._close_session_xml(doc)
@@ -626,11 +614,11 @@ class SessionLogger(multiprocessing.Process):
 
                     attr = '_'+key
                     try:
-                        print 'Calling: ', key
+                        # print 'Calling: ', key
                         cf = SessionLogger.__dict__[attr]
                         cf(self, *args, **kw)
                     except AttributeError:
-                        print("SessionLogger: unknown method", key)
+                        print "SessionLogger: unknown method", key
                         raise
                     except SessionLoggerException as e:
                         print "Exception when logging:", key, args, kw
@@ -640,7 +628,7 @@ class SessionLogger(multiprocessing.Process):
                             # try once again later
                             self.queue.put((key, args, kw))
         except:
-            print('Uncaught exception in the SessionLogger process.')
+            print 'Uncaught exception in the SessionLogger process.'
             self.close_event.set()
             raise
 

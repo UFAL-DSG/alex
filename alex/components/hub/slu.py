@@ -150,7 +150,7 @@ class SLU(multiprocessing.Process):
                 self.read_asr_hypotheses_write_slu_hypotheses()
 
                 d = (time.time() - s[0], time.clock() - s[1])
-                if d[0] > 0.100:
+                if d[0] > 0.200:
                     print "SLU t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
         except:
             self.cfg['Logging']['system_logger'].exception(

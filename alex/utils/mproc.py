@@ -147,9 +147,7 @@ class InstanceID(object):
 
 class SystemLogger(object):
     """
-    This is a multiprocessing-safe logger.  It should be used by all components
-    in Alex.
-
+    This is a multiprocessing-safe logger.  It should be used by all components in Alex.
     """
 
     lock = multiprocessing.RLock()
@@ -258,16 +256,6 @@ class SystemLogger(object):
             if (SystemLogger.levels[lvl] >= SystemLogger.levels[self.stdout_log_level]):
                 print self.formatter(lvl, message)
                 sys.stdout.flush()
-
-        # if self.output_dir:
-        #     if (SystemLogger.levels[lvl] >= SystemLogger.levels[self.file_log_level]):
-        #         # Log to the global log.
-        #         log_fname = os.path.join(self.output_dir, 'system.log')
-        #         with codecs.open(log_fname, "a+", encoding='utf8', buffering=0) as log_file:
-        #             fcntl.lockf(log_file, fcntl.LOCK_EX)
-        #             log_file.write(self.formatter(lvl, message))
-        #             log_file.write('\n')
-        #             fcntl.lockf(log_file, fcntl.LOCK_UN)
 
         if self.current_session_log_dir_name.value:
             if (session_system_log or SystemLogger.levels[lvl] >= SystemLogger.levels[self.file_log_level]):

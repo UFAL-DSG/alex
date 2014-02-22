@@ -169,6 +169,10 @@ if __name__ == '__main__':
     vad2.start()
     tts2.start()
 
+    cfg['Logging']['session_logger'].set_close_event(self.close_event)
+    cfg['Logging']['session_logger'].set_cfg(cfg)
+    cfg['Logging']['session_logger'].start()
+
     # init the system
     call_start1 = 0
     count_intro1 = 0

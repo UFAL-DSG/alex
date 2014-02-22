@@ -261,7 +261,7 @@ class DM(multiprocessing.Process):
                 self.read_slu_hypotheses_write_dialogue_act()
 
                 d = (time.time() - s[0], time.clock() - s[1])
-                if d[0] > 0.100:
+                if d[0] > 0.200:
                     print "DM t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the DM process.')
