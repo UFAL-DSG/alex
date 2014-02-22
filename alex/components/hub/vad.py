@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import deque
-from datetime import datetime
 import multiprocessing
-import os.path
 import os
 import time
-import wave
+
+from collections import deque
+from datetime import datetime
 
 from alex.components.asr.exceptions import ASRException
 from alex.components.hub.messages import Command, Frame
@@ -200,11 +199,6 @@ class VAD(multiprocessing.Process):
                         if self.cfg['VAD']['debug']:
                             self.system_logger.debug('Output file name: %s' % self.output_file_name)
 
-                        self.wf = wave.open(self.output_file_name, 'w')
-                        self.wf.setnchannels(1)
-                        self.wf.setsampwidth(2)
-                        self.wf.setframerate(self.cfg['Audio']['sample_rate'])
-
                     elif change == 'non-speech':
                         # Log the change.
                         # if self.session_logger.is_open:
@@ -216,8 +210,6 @@ class VAD(multiprocessing.Process):
                         self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
                         self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
                         # Close the current wave file.
-                        if self.wf:
-                            self.wf.close()
 
                 if vad:
                     while self.deque_audio_in:
@@ -231,18 +223,7 @@ class VAD(multiprocessing.Process):
 
                         # Send the result.
                         self.audio_out.send(data_rec)
-
-                        # If the wave file has already been closed,
-                        if self.wf._file is None:
-                            # Prevent the exception from being raised next
-                            # time (or try to achieve that).
-                            self.last_vad = False
-                            # Raise the exception.
-                            # FIXME: It should be a different one. It is not
-                            # the session file that is closed, but the wave
-                            # file.
-                            raise SessionClosedException("The output wave file has already been closed.")
-                        self.wf.writeframes(bytearray(data_rec))
+                        self.session_logger.rec_write(os.path.basename(self.output_file_name), data_rec)
 
     def run(self):
         try:

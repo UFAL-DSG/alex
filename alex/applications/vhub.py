@@ -93,6 +93,10 @@ class VoipHub(Hub):
             self.write_pid_file([['vio', vio.pid], ['vad', vad.pid], ['asr', asr.pid],
                                  ['slu', slu.pid], ['dm', dm.pid], ['nlg', nlg.pid], ['tts', tts.pid]])
 
+            cfg['Logging']['session_logger'].set_close_event(self.close_event)
+            cfg['Logging']['session_logger'].set_cfg(cfg)
+            cfg['Logging']['session_logger'].start()
+
             # init the system
             call_start = 0
             call_back_time = -1

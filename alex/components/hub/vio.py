@@ -185,21 +185,8 @@ class CallCallback(pj.CallCallback):
                 self.output_file_name_recorded = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.recorded.wav'.format(stamp=timestamp))
                 self.output_file_name_played = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.played.wav'.format(stamp=timestamp))
  
-                i = 0
-                while i < 20:
-                    i += 1
-                    try:
-                        # this can fail if the session.xml is not created yet
-                        self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
-                        self.session_logger.dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
-                    except IOError:
-                        # Sleep for a while to let others react to the previous
-                        # messages.
-                        time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-                        # Then try again.
-                        continue
-                    # Everything was OK, so exit the loop.
-                    break
+                self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+                self.session_logger.dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
 
                 # Create wave recorders.
                 self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
