@@ -129,13 +129,11 @@ class TTS(multiprocessing.Process):
             for frame in segment_wav:
                 self.audio_out.send(Frame(frame))
 
-        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s")' %
-                            (user_id, text, bn), 'TTS', 'AudioOut'))
+        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' % (user_id, text, bn), 'TTS', 'HUB'))
+        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
+                            (user_id, text, bn, log), 'TTS', 'AudioOut'))
 
-        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s",log="%s")' %
-                           (user_id, text, bn, log), 'TTS', 'HUB'))
-
-        save_wav(self.cfg, fname, b"".join(wav))
+        # save_wav(self.cfg, fname, b"".join(wav))
 
     def process_pending_commands(self):
         """Process all pending commands.

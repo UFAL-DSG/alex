@@ -474,18 +474,18 @@ class VoipIO(multiprocessing.Process):
         """
 
         if (self.local_audio_play and
-                (self.mem_player.get_write_available()
-                 > self.cfg['Audio']['samples_per_frame'] * 2)):
+                (self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame'] * 2)):
             # send a frame from input to be played
             data_play = self.local_audio_play.popleft()
 
             if self.audio_playing and isinstance(data_play, Frame):
                 if len(data_play) == self.cfg['Audio']['samples_per_frame'] * 2:
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
+                    self.cfg['Logging']['session_logger'].rec_write(self.audio_playing, data_play.payload)
 
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
-                    self.audio_playing = True
+                    self.audio_playing = data_play.parsed['fname']
                     self.message_queue.append(
                         (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
@@ -498,7 +498,7 @@ class VoipIO(multiprocessing.Process):
                         self.cfg['Logging']['system_logger'].exception(e)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
-                    self.audio_playing = False
+                    self.audio_playing = None
                     self.message_queue.append(
                         (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
