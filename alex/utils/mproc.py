@@ -112,7 +112,7 @@ def async(func):
 
     return async_func
 
-def mtime(name="Time",min_t=0.050):
+def mtime(name="Time",min_t=0.100):
     """This decorator measures the execution time of the decorated function.
     """
     def decorator(user_function):
@@ -277,37 +277,44 @@ class SystemLogger(object):
                     session_log_file.write('\n')
                     # fcntl.lockf(session_log_file, fcntl.LOCK_UN)
 
+    @async
     @mtime('syslog_info')
     @global_lock(lock)
     def info(self, message):
         self.log('INFO', message)
 
+    @async
     @mtime('syslog_debug')
     @global_lock(lock)
     def debug(self, message):
         self.log('DEBUG', message)
 
+    @async
     @mtime('syslog_warning')
     @global_lock(lock)
     def warning(self, message):
         self.log('WARNING', message)
 
+    @async
     @mtime('syslog_critical')
     @global_lock(lock)
     def critical(self, message):
         self.log('CRITICAL', message)
 
+    @async
     @mtime('syslog_exception')
     @global_lock(lock)
     def exception(self, message):
         tb = traceback.format_exc()
         self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb, 'utf8'))
 
+    @async
     @mtime('syslog_error')
     @global_lock(lock)
     def error(self, message):
         self.log('ERROR', message)
 
+    @async
     @mtime('syslog_session_system_log')
     @global_lock(lock)
     def session_system_log(self, message):
