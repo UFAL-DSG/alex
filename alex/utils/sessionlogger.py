@@ -15,7 +15,7 @@ import socket
 from datetime import datetime
 from collections import defaultdict
 
-from alex.utils.mproc import global_lock
+from alex.utils.mproc import global_lock, mtime
 from alex.utils.exdec import catch_ioerror
 from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 
@@ -66,6 +66,7 @@ class SessionLogger(object):
 
         return "%.3f" % dt
 
+    @mtime('seslog_session_start')
     @global_lock(lock)
     def session_start(self, output_dir):
         """ Records the target directory and creates the template call log.
@@ -74,13 +75,13 @@ class SessionLogger(object):
         self.session_dir_name.value = output_dir
 
         f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "w", 0)
-        fcntl.lockf(f, fcntl.LOCK_EX)
+        # fcntl.lockf(f, fcntl.LOCK_EX)
         f.write("""<?xml version="1.0" encoding="UTF-8"?>
 <dialogue>
 </dialogue>
 """)
         f.write('\n')
-        fcntl.lockf(f, fcntl.LOCK_UN)
+        # fcntl.lockf(f, fcntl.LOCK_UN)
         f.close()
 
         self.session_start_time.value = time.time()
@@ -91,6 +92,7 @@ class SessionLogger(object):
             self.rec_end(self.rec_started_filename)
             self.rec_started_filename = None
 
+    @mtime('seslog_session_end')
     @global_lock(lock)
     def session_end(self):
         """
@@ -141,7 +143,7 @@ class SessionLogger(object):
         """
 
         self.f = open(os.path.join(self.session_dir_name.value, 'session.xml'), "r+", 0)
-        fcntl.lockf(self.f, fcntl.LOCK_EX)
+        # fcntl.lockf(self.f, fcntl.LOCK_EX)
 
         doc = xml.dom.minidom.parse(self.f)
 
@@ -166,9 +168,10 @@ class SessionLogger(object):
 #        x = unicode(x, encoding='utf-8')
 
         self.f.write(x)
-        fcntl.lockf(self.f, fcntl.LOCK_UN)
+        # fcntl.lockf(self.f, fcntl.LOCK_UN)
         self.f.close()
 
+    @mtime('seslog_config')
     @global_lock(lock)
     @catch_ioerror
     def config(self, cfg):
@@ -187,6 +190,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_header')
     @global_lock(lock)
     @catch_ioerror
     def header(self, system_txt, version_txt):
@@ -210,6 +214,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_input_source')
     @global_lock(lock)
     @catch_ioerror
     def input_source(self, input_source):
@@ -223,6 +228,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_dialogue_rec_start')
     @global_lock(lock)
     # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_start(self, speaker, fname):
@@ -249,6 +255,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_dialogue_rec_end')
     @global_lock(lock)
     # @catch_ioerror - do not add! VIO catches the IOError
     def dialogue_rec_end(self, fname):
@@ -267,6 +274,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_evaluation')
     @global_lock(lock)
     @catch_ioerror
     def evaluation(self, num_turns, task_success, user_sat, score):
@@ -286,6 +294,7 @@ class SessionLogger(object):
 
         return 0
 
+    @mtime('seslog_turn')
     @global_lock(lock)
     @catch_ioerror
     def turn(self, speaker):
@@ -308,6 +317,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_dialogue_act')
     @global_lock(lock)
     @catch_ioerror
     def dialogue_act(self, speaker, dialogue_act):
@@ -328,6 +338,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_text')
     @global_lock(lock)
     @catch_ioerror
     def text(self, speaker, text, cost=None):
@@ -350,6 +361,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_rec_start')
     @global_lock(lock)
     @catch_ioerror
     def rec_start(self, speaker, fname):
@@ -373,6 +385,7 @@ class SessionLogger(object):
         self.rec_started_filename = fname
         self.close_session_xml(doc)
 
+    @mtime('seslog_rec_end')
     @global_lock(lock)
     @catch_ioerror
     def rec_end(self, fname):
@@ -405,6 +418,7 @@ class SessionLogger(object):
 
         return False
 
+    @mtime('seslog_asr')
     @global_lock(lock)
     @catch_ioerror
     def asr(self, speaker, fname, nblist, confnet=None):
@@ -443,6 +457,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_slu')
     @global_lock(lock)
     @catch_ioerror
     def slu(self, speaker, fname, nblist, confnet=None):
@@ -486,6 +501,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_barge_in')
     @global_lock(lock)
     @catch_ioerror
     def barge_in(self, speaker, tts_time=False, asr_time=False):
@@ -507,6 +523,7 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_hangup')
     @global_lock(lock)
     @catch_ioerror
     def hangup(self, speaker):
@@ -545,6 +562,7 @@ class SessionLogger(object):
             self.close_session_xml(doc)
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
+    @mtime('seslog_dialogue_state')
     @global_lock(lock)
     @catch_ioerror
     def dialogue_state(self, speaker, dstate):
@@ -572,6 +590,9 @@ class SessionLogger(object):
 
         self.close_session_xml(doc)
 
+    @mtime('seslog_external_data_file')
+    @global_lock(lock)
+    @catch_ioerror
     def external_data_file(self, ftype, fname):
         """ Adds a link to an external data file (such as Google directions).
         This will create an <external> link with appropriate "type" and "fname"

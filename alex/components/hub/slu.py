@@ -131,7 +131,7 @@ class SLU(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_SLU")
+            set_proc_name("Alex_SLU")
 
             while 1:
                 # Check the close event.
@@ -140,12 +140,18 @@ class SLU(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
+                s = time.time()
+
                 # process all pending commands
                 if self.process_pending_commands():
                     return
 
                 # process the incoming ASR hypotheses
                 self.read_asr_hypotheses_write_slu_hypotheses()
+
+                d = time.time() - s
+                if d > 0.100:
+                    print "SLU t = {t:0.4f}".format(t=d)
         except:
             self.cfg['Logging']['system_logger'].exception(
                 'Uncaught exception in SLU process.')

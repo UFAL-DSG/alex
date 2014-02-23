@@ -353,7 +353,7 @@ class VoipIO(multiprocessing.Process):
 
         self.black_list = defaultdict(int)
 
-    def recv_input_localy(self):
+    def recv_input_locally(self):
         """ Copy all input from input connections into local queue objects.
 
         This will prevent blocking the senders.
@@ -760,7 +760,7 @@ class VoipIO(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("alex_VIO")
+            set_proc_name("Alex_VIO")
 
             global logger
             logger = self.cfg['Logging']['system_logger']
@@ -834,7 +834,9 @@ class VoipIO(multiprocessing.Process):
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                self.recv_input_localy()
+                s = time.time()
+
+                self.recv_input_locally()
 
                 # process all pending commands
                 if self.process_pending_commands():
@@ -847,6 +849,10 @@ class VoipIO(multiprocessing.Process):
                 for i in range(self.cfg['VoipIO']['n_rwa']):
                     # process at least n_rwa frames
                     self.read_write_audio()
+
+                d = time.time() - s
+                if d > 0.100:
+                    print "VIO t = {t:0.4f}".format(t=d)
 
             # Shutdown the library
             self.transport = None
