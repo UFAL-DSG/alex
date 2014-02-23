@@ -45,6 +45,7 @@ done
 echo "Decoding is done for each pair (TEST_SET x LMs)"
 echo "Distribute the links to MFCC feats to all LM variations."
 cp $WORK/local/train/feats.scp $WORK/train/feats.scp
+cp $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
 for s in $TEST_SETS; do
   for lm in $LMs; do
     tgt_dir=${s}_`basename "$lm"`
