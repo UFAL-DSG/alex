@@ -208,15 +208,11 @@ class CallCallback(pj.CallCallback):
                 self.voipio.on_call_confirmed(hash_remote_uri(self.cfg, self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.DISCONNECTED:
-                try:
+                # call can be disconnected even if it was never connected (e.g. if it was ringing and never answered)
+                if self.output_file_name_played:
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_played))
+                if self.output_file_name_recorded:
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
-                except SessionLoggerException as e:
-                    # Please note that the session log is only created when the call is CONFIRMED.
-                    # Therefore, the session is not always created, for example, when call is only
-                    # in the state CONNECTING and it did not changed into the CONFIRMED state.
-                    print "SessionLoggerException:", e, " Exception pass"
-                    pass
 
                 self.voipio.call = None
 

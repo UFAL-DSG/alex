@@ -289,19 +289,16 @@ class SessionLogger(multiprocessing.Process):
     def _turn(self, speaker):
         """ Adds a new turn at the end of the dialogue element.
 
-        The turn_number for the speaker is automatically computed
-
-        FIXME: It can happen that the session.xml is already closed when this
-        function is called.
+        The turn_number for the speaker is automatically computed.
         """
         doc = self._open_session_xml()
         els = doc.getElementsByTagName("dialogue")
-        trns = self._turn_count(doc, speaker)
+        turn_number = self._turn_count(doc, speaker) + 1
 
         if els:
             turn = els[0].appendChild(doc.createElement("turn"))
             turn.setAttribute("speaker", speaker)
-            turn.setAttribute("turn_number", unicode(trns + 1))
+            turn.setAttribute("turn_number", unicode(turn_number))
             turn.setAttribute("time", self._get_time_str())
 
         self._close_session_xml(doc)
@@ -380,7 +377,10 @@ class SessionLogger(multiprocessing.Process):
     def _rec_write(self, fname, data_rec):
         """Write into open file recording.
         """
-        self._rec_started[fname].writeframes(bytearray(data_rec))
+        try:
+            self._rec_started[fname].writeframes(bytearray(data_rec))
+        except KeyError:
+            raise SessionLoggerException("rec_write: missing rec element %s" % fname)
 
     @mtime('seslog_rec_end')
     @catch_ioerror
@@ -614,9 +614,15 @@ class SessionLogger(multiprocessing.Process):
 
                     attr = '_'+key
                     try:
-                        # print 'Calling: ', key
+                        # if key != "rec_write":
+                        #     print 'Calling: ', key, [a for a in args if isinstance(a, basestring) and len(a) < 100]
                         cf = SessionLogger.__dict__[attr]
                         cf(self, *args, **kw)
+
+                        if key == 'session_end':
+                            # clear all pending commands
+                            while self.queue.empty() == False:
+                                self.queue.get()
                     except AttributeError:
                         print "SessionLogger: unknown method", key
                         raise

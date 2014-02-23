@@ -17,25 +17,8 @@ from alex.components.hub.exceptions import VoipIOException
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command
+from alex.components.hub.messages import Command, Frame
 from alex.utils.config import Config
-
-
-def load_sentences(file_name):
-    f = codecs.open(file_name, 'r', 'UTF-8')
-
-    r = []
-    for s in f:
-        s = s.strip()
-        r.append(s)
-
-    f.close()
-
-    return r
-
-
-def sample_sentence(l):
-    return random.choice(l)
 
 
 def load_database(file_name):
@@ -52,12 +35,10 @@ def load_database(file_name):
 
     return db
 
-
 def save_database(file_name, db):
     f = open(file_name, 'w+')
     pickle.dump(db, f)
     f.close()
-
 
 def get_stats(db, remote_uri):
     num_all_calls = 0
@@ -79,12 +60,12 @@ def get_stats(db, remote_uri):
 
     return num_all_calls, total_time, last24_num_calls, last24_total_time
 
-
 def play_intro(cfg, tts_commands, intro_id, last_intro_id):
+    cfg['Logging']['session_logger'].turn("system")
     for i in range(len(cfg['Switchboard']['introduction'])):
         last_intro_id = str(intro_id)
         intro_id += 1
-        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, cfg['Switchboard']['introduction'][i]), 'HUB', 'TTS'))
+        tts_commands.send(Command('synthesize(user_id="%s",text="%s",log="true")' % (last_intro_id, cfg['Switchboard']['introduction'][i]), 'HUB', 'TTS'))
 
     return intro_id, last_intro_id
 
@@ -243,6 +224,9 @@ if __name__ == '__main__':
     call_back_time = -1
     call_back_uri = None
 
+    tts1_fname = None
+    tts2_fname = None
+
     while 1:
         time.sleep(cfg1['Hub']['main_loop_sleep_time'])
 
@@ -250,24 +234,42 @@ if __name__ == '__main__':
             if vad1_audio_out.poll():
                 data = vad1_audio_out.recv()
 
-                if intro_played2 and not vio_connect1:
-                    vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                                ('user2', '', '', ''), 'HUB', 'VoipIO2'))
-                    vio_connect1 = True
-
                 if intro_played2:
-                    vio2_play.send(data)
+                    if isinstance(data, Command):
+                        if data.parsed['__name__'] == "speech_start":
+                            cfg2['Logging']['session_logger'].turn("system")
+                            time.sleep(0.001)
+                            tts2_fname = data.parsed['fname'].replace('vad','vpl')
+                            vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('system', '', tts2_fname, 'true'), 'HUB', 'VoipIO2'))
+                        elif data.parsed['__name__'] == "speech_end":
+                            tts2_fname = data.parsed['fname'].replace('vad','vpl')
+                            vio2_play.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('system', '', tts2_fname, 'true'), 'HUB', 'VoipIO2'))
+                            tts2_fname = None
+
+                    elif isinstance(data, Frame) and tts2_fname:
+                        vio2_play.send(data)
 
             if vad2_audio_out.poll():
                 data = vad2_audio_out.recv()
 
-                if intro_played2 and not vio_connect2:
-                    vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                                ('user1', '', '', ''), 'HUB', 'VoipIO1'))
-                    vio_connect2 = True
-
                 if intro_played1:
-                    vio1_play.send(data)
+                    if isinstance(data, Command):
+                        if data.parsed['__name__'] == "speech_start":
+                            cfg1['Logging']['session_logger'].turn("system")
+                            time.sleep(0.001)
+                            tts1_fname = data.parsed['fname'].replace('vad','vpl')
+                            vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('system', '', tts1_fname, 'true'), 'HUB', 'VoipIO1'))
+                        elif data.parsed['__name__'] == "speech_end":
+                            tts1_fname = data.parsed['fname'].replace('vad','vpl')
+                            vio1_play.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
+                                ('system', '', tts1_fname, 'true'), 'HUB', 'VoipIO1'))
+                            tts1_fname = None
+
+                    elif isinstance(data, Frame) and tts1_fname:
+                        vio1_play.send(data)
 
         if call_back_time != -1 and call_back_time < time.time():
             vio1_commands.send(Command('make_call(destination="%s")' % call_back_uri, 'HUB', 'VoipIO1'))
@@ -278,7 +280,8 @@ if __name__ == '__main__':
         if callee_entered and callee_uri:
             s_voice_activity1 = True
             m = cfg1['Switchboard']['calling'] + ' '.join(callee_uri)
-            tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
+            cfg1['Logging']['session_logger'].turn("system")
+            tts1_commands.send(Command('synthesize(text="%s",log="true")' % m, 'HUB', 'TTS1'))
 
             vio2_commands.send(Command('make_call(destination="%s")' % callee_uri, 'HUB', 'VoipIO2'))
 
@@ -358,7 +361,8 @@ if __name__ == '__main__':
                     if last24_num_calls > cfg1['Switchboard']['last24_max_num_calls'] or \
                             last24_total_time > cfg1['Switchboard']['last24_max_total_time']:
 
-                        tts1_commands.send(Command('synthesize(text="%s")' % cfg1['Switchboard']['rejected'], 'HUB', 'TTS1'))
+                        cfg1['Logging']['session_logger'].turn("system")
+                        tts1_commands.send(Command('synthesize(text="%s",log="true")' % cfg1['Switchboard']['rejected'], 'HUB', 'TTS1'))
                         reject_played1 = True
                         s_voice_activity1 = True
                         vio1_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time() + cfg1['Switchboard']['blacklist_for']), 'HUB', 'VoipIO1'))
@@ -517,19 +521,22 @@ if __name__ == '__main__':
                     cfg2['Logging']['system_logger'].session_end()
                     cfg2['Logging']['session_logger'].session_end()
 
-                    intro_played2 = False
-
-                    if code in ['486', '600', '603', '604', '606']:
+                    if intro_played2 and code in set(['603',]):
+                        vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
+                    elif code in set(['486', '600', '603', '604', '606',]):
                         s_voice_activity1 = True
                         m = cfg1['Switchboard']['noanswer']
-                        tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
-                    elif code in ['480', ]:
+                        cfg1['Logging']['session_logger'].turn("system")
+                        tts1_commands.send(Command('synthesize(text="%s",log="true")' % m, 'HUB', 'TTS1'))
+                    elif code in set(['480',]):
                         s_voice_activity1 = True
                         m = cfg1['Switchboard']['wrongnumber']
-                        tts1_commands.send(Command('synthesize(text="%s")' % m, 'HUB', 'TTS1'))
+                        cfg1['Logging']['session_logger'].turn("system")
+                        tts1_commands.send(Command('synthesize(text="%s",log="true")' % m, 'HUB', 'TTS1'))
                     else:
                         vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
+                    intro_played2 = False
                     hangup1 = True
 
                 if command.parsed['__name__'] == "play_utterance_start":

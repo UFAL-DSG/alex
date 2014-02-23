@@ -51,8 +51,7 @@ class VAD(multiprocessing.Process):
         self.audio_out = audio_out
         self.close_event = close_event
 
-        self.output_file_name = None
-        self.wf = None  # wave file for logging
+        self.vad_fname = None
 
         if self.cfg['VAD']['type'] == 'power':
             self.vad = PVAD.PowerVAD(cfg)
@@ -63,8 +62,7 @@ class VAD(multiprocessing.Process):
         else:
             raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
-        # stores information about each frame whether it was classified as
-        # speech or non speech
+        # stores information about each frame whether it was classified as speech or non speech
         self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
         self.detection_window_sil    = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
         self.deque_audio_in          = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
@@ -105,10 +103,6 @@ class VAD(multiprocessing.Process):
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == 'stop':
-                    # Stop recording and playing.
-                    if self.wf:
-                        self.wf.close()
-
                     return True
 
                 if command.parsed['__name__'] == 'flush':
@@ -172,41 +166,31 @@ class VAD(multiprocessing.Process):
                 vad, change = self.smoothe_decison(decision)
 
                 if self.cfg['VAD']['debug']:
-                    self.system_logger.debug("vad: %s change:%s" % (vad, change))
+                    self.system_logger.debug("vad: %s change: %s" % (vad, change))
 
                     if vad:
                         self.system_logger.debug('+')
                     else:
                         self.system_logger.debug('-')
 
-                if change:
-                    if change == 'speech':
-                        # Create new wave file.
-                        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-                        self.output_file_name = os.path.join(self.system_logger.get_session_dir_name(),
-                                                             'vad-{stamp}.wav'.format(stamp=timestamp))
+                if change == 'speech':
+                    # Create new wave file.
+                    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+                    self.vad_fname = 'vad-{stamp}.wav'.format(stamp=timestamp)
 
-                        self.session_logger.turn("user")
-                        self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
+                    self.session_logger.turn("user")
+                    self.session_logger.rec_start("user", self.vad_fname)
 
-                        # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
+                    # Inform both the parent and the consumer.
+                    self.audio_out.send(Command('speech_start(fname="%s")' % self.vad_fname, 'VAD', 'AudioIn'))
+                    self.commands.send(Command('speech_start(fname="%s")' % self.vad_fname, 'VAD', 'HUB'))
 
-                        if self.cfg['VAD']['debug']:
-                            self.system_logger.debug('Output file name: %s' % self.output_file_name)
+                elif change == 'non-speech':
+                    self.session_logger.rec_end(self.vad_fname)
 
-                    elif change == 'non-speech':
-                        # Log the change.
-                        # if self.session_logger.is_open:
-                        if self.cfg['VAD']['debug']:
-                            self.system_logger.debug('REC END Output file name: {out}'.format(out=self.output_file_name))
-                        self.session_logger.rec_end(os.path.basename(self.output_file_name))
-
-                        # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
-                        # Close the current wave file.
+                    # Inform both the parent and the consumer.
+                    self.audio_out.send(Command('speech_end(fname="%s")' % self.vad_fname, 'VAD', 'AudioIn'))
+                    self.commands.send(Command('speech_end(fname="%s")' % self.vad_fname, 'VAD', 'HUB'))
 
                 if vad:
                     while self.deque_audio_in:
@@ -220,7 +204,7 @@ class VAD(multiprocessing.Process):
 
                         # Send the result.
                         self.audio_out.send(data_rec)
-                        self.session_logger.rec_write(os.path.basename(self.output_file_name), data_rec)
+                        self.session_logger.rec_write(self.vad_fname, data_rec)
 
     def run(self):
         try:

@@ -145,11 +145,9 @@ class ASR(multiprocessing.Process):
 
                 # Check consistency of the input command.
                 if dr_speech_start:
-                    if ((not self.recognition_on
-                            and dr_speech_start != "speech_start")
+                    if ((not self.recognition_on and dr_speech_start != "speech_start")
                         or
-                        (self.recognition_on
-                            and dr_speech_start != "speech_end")):
+                        (self.recognition_on and dr_speech_start != "speech_end")):
                         msg = ('Commands received by the ASR component are '
                                'inconsistent (recognition_on: {rec}; the new '
                                'command: {cmd}').format(

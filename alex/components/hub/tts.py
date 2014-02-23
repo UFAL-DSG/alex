@@ -40,17 +40,6 @@ class TTS(multiprocessing.Process):
         tts_type = get_tts_type(cfg)
         self.tts = tts_factory(tts_type, cfg)
 
-    def get_wav_name(self):
-        """ Generates a new wave name for the TTS output.
-
-        Returns the full path and the base name.
-        """
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-        fname = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
-                             'tts-{stamp}.wav'.format(stamp=timestamp))
-
-        return fname, os.path.basename(fname)
-
     def parse_into_segments(self, text):
         segments = []
         last_split = 0
@@ -107,11 +96,12 @@ class TTS(multiprocessing.Process):
             text == ""
 
         wav = []
-        fname, bn = self.get_wav_name()
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        fname = 'tts-{stamp}.wav'.format(stamp=timestamp)
 
-        self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_start(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            (user_id, text, bn, log), 'TTS', 'AudioOut'))
+                            (user_id, text, fname, log), 'TTS', 'AudioOut'))
 
         segments = self.parse_into_segments(text)
 
@@ -129,11 +119,9 @@ class TTS(multiprocessing.Process):
             for frame in segment_wav:
                 self.audio_out.send(Frame(frame))
 
-        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' % (user_id, text, bn), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            (user_id, text, bn, log), 'TTS', 'AudioOut'))
-
-        # save_wav(self.cfg, fname, b"".join(wav))
+                            (user_id, text, fname, log), 'TTS', 'AudioOut'))
 
     def process_pending_commands(self):
         """Process all pending commands.
