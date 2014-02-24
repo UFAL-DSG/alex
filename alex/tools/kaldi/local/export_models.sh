@@ -27,7 +27,7 @@ echo "--- Exporting models to $tgt ..."
 cp -f $exp/alex_gitlog.log $exp/alex_gitdiff.log $exp/experiment_bash_vars.log $tgt
 
 # Store also the results
-cp -f $exp/results.log >  $tgt
+cp -f $exp/results.log $tgt/results.log
 
 
 cp -f common/mfcc.conf $tgt 
