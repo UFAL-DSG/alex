@@ -170,12 +170,12 @@ class AudioIO(multiprocessing.Process):
 
     def run(self):
         try:
+            set_proc_name("Alex_AIO")
+
             wf = wave.open(self.output_file_name, 'w')
             wf.setnchannels(2)
             wf.setsampwidth(2)
             wf.setframerate(self.cfg['Audio']['sample_rate'])
-
-            play_buffer_frames = 0
 
             p = pyaudio.PyAudio()
             # open stream
@@ -192,6 +192,7 @@ class AudioIO(multiprocessing.Process):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 # process all pending commands
@@ -200,7 +201,14 @@ class AudioIO(multiprocessing.Process):
 
                 # process audio data
                 self.read_write_audio(p, stream, wf, play_buffer)
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in AIO process.')
             self.close_event.set()
             raise
+
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()

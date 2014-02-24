@@ -967,7 +967,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         i = len(self.cn)
         for n, (p, dai) in enumerate(self.cn):
             if p < 0.5:
-                i = n + 1
+                i = n # + 1
                 break
 
         # create index for the best hypothesis

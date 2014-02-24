@@ -123,6 +123,7 @@ class VoipHub(Hub):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
@@ -420,13 +421,27 @@ class VoipHub(Hub):
                     c.recv()
 
             # wait for processes to stop
-            vio.join()
-            vad.join()
-            tts.join()
+            # do not join, because in case of exception the join will not be successful
+            # vio.join()
+            # vad.join()
+            # asr.join()
+            # slu.join()
+            # dm.join()
+            # nlg.join()
+            # tts.join()
+            #cfg['Logging']['session_logger'].join()
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in VHUB process.')
             self.close_event.set()
             raise
+
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()
 
 #########################################################################
 #########################################################################

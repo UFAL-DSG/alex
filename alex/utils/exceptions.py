@@ -8,6 +8,8 @@ class ConfigException(AlexException):
 class SessionLoggerException(AlexException):
     pass
 
+class SessionLoggerException(AlexException):
+    pass
 
 class SessionClosedException(AlexException):
     pass

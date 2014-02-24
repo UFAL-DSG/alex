@@ -835,7 +835,7 @@ class VoipIO(multiprocessing.Process):
 
                 d = (time.time() - s[0], time.clock() - s[1])
                 if d[0] > 0.200:
-                    print "VIO t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
+                    print "EXEC Time inner loop: VIO t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
 
             # Shutdown the library
             self.transport = None
@@ -844,6 +844,13 @@ class VoipIO(multiprocessing.Process):
             self.lib.destroy()
             self.lib = None
 
+        except KeyboardInterrupt:
+            self.lib.destroy()
+            self.lib = None
+
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.lib.destroy()
             self.lib = None

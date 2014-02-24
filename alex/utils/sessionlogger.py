@@ -14,7 +14,7 @@ import wave
 
 from datetime import datetime
 
-from alex.utils.mproc import mtime
+from alex.utils.mproc import etime
 from alex.utils.exdec import catch_ioerror
 from alex.utils.exceptions import SessionLoggerException, SessionClosedException
 from alex.utils.procname import set_proc_name
@@ -37,6 +37,7 @@ class SessionLogger(multiprocessing.Process):
         self._session_dir_name = ''
         self._session_start_time = time.time()
         self._is_open = False   # whether the session is started
+        self._doc = None
 
         # filename of the started recording
         self._rec_started = {}
@@ -56,7 +57,7 @@ class SessionLogger(multiprocessing.Process):
         """Queue all method calls for methods not known, Later the process will try to call these functions
         asynchronously.
         """
-        @mtime('SessionLoggerQueue: '+key)
+        @etime('SessionLoggerQueue: '+key)
         def queue(*args, **kw):
             # print "Queueing a call", key, args, kw
             self.queue.put((key, args, kw))
@@ -83,7 +84,7 @@ class SessionLogger(multiprocessing.Process):
 
         return "%.3f" % dt
 
-    @mtime('seslog_session_start')
+    @etime('seslog_session_start')
     def _session_start(self, output_dir):
         """ Records the target directory and creates the template call log.
         """
@@ -99,6 +100,7 @@ class SessionLogger(multiprocessing.Process):
         f.close()
 
         self._session_start_time = time.time()
+        self._read_session_xml()
         self._is_open = True
 
     def _flush(self):
@@ -108,7 +110,7 @@ class SessionLogger(multiprocessing.Process):
             if self._rec_started[f]:
                 self._rec_end(f)
 
-    @mtime('seslog_session_end')
+    @etime('seslog_session_end')
     def _session_end(self):
         """
         *WARNING: Deprecated* Disables logging into the session-specific directory.
@@ -120,7 +122,9 @@ class SessionLogger(multiprocessing.Process):
         """
 
         self._flush()
+        self._write_session_xml()
         self._session_dir_name = ''
+        self._doc = None
         self._is_open = False
 
     def _cfg_formatter(self, message):
@@ -133,95 +137,85 @@ class SessionLogger(multiprocessing.Process):
 
         return s + '\n'
 
-    def _open_session_xml(self):
-        """Opens the session xml file and locks it to prevent others from
-        modifying it.
-
+    def _read_session_xml(self):
+        """Opens the session xml file.
         """
+        with open(os.path.join(self._session_dir_name, 'session.xml'), "r+", 0) as f:
+            # fcntl.lockf(self._f, fcntl.LOCK_EX)
+            self._doc = xml.dom.minidom.parse(f)
+            # fcntl.lockf(f, fcntl.LOCK_UN)
 
-        self._f = open(os.path.join(self._session_dir_name, 'session.xml'), "r+", 0)
-        # fcntl.lockf(self._f, fcntl.LOCK_EX)
-
-        doc = xml.dom.minidom.parse(self._f)
-
-        return doc
-
-    def _close_session_xml(self, doc):
-        """Saves the doc document into the session xml file, unlocks and closes
-        the session xml file.
-
+    def _write_session_xml(self):
+        """Saves the self._doc self._document into the session xml file.
         """
+        with open(os.path.join(self._session_dir_name, 'session.xml'), "r+", 0) as f:
+            # fcntl.lockf(self._f, fcntl.LOCK_EX)
+            f.seek(0)
+            f.truncate(0)
 
-        self._f.seek(0)
-        self._f.truncate(0)
+            x = self._doc.toprettyxml(encoding='utf-8')
 
-        x = doc.toprettyxml(encoding='utf-8')
+            for i in range(5):
+                x = re.sub(r'\n\t*\n', '\n', x)
+                x = re.sub(r'\n *\n', '\n', x)
+    #            x = re.sub(r'>\n\t*(\w)', r'>\1', x)
+            x = re.sub(r'\t', '    ', x)
+    #        x = unicode(x, encoding='utf-8')
 
-        for i in range(5):
-            x = re.sub(r'\n\t*\n', '\n', x)
-            x = re.sub(r'\n *\n', '\n', x)
-#            x = re.sub(r'>\n\t*(\w)', r'>\1', x)
-        x = re.sub(r'\t', '    ', x)
-#        x = unicode(x, encoding='utf-8')
+            f.write(x)
+            # fcntl.lockf(f, fcntl.LOCK_UN)
 
-        self._f.write(x)
-        # fcntl.lockf(self._f, fcntl.LOCK_UN)
-        self._f.close()
-
-    @mtime('seslog_config')
+    @etime('seslog_config')
     @catch_ioerror
     def _config(self, cfg):
         """ Adds the config tag to the session log.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("dialogue")
+        els = self._doc.getElementsByTagName("dialogue")
 
         if els:
             if els[0].firstChild:
-                config = els[0].insertBefore(doc.createElement("config"), els[0].firstChild)
+                config = els[0].insertBefore(self._doc.createElement("config"), els[0].firstChild)
             else:
-                config = els[0].appendChild(doc.createElement("config"))
-            config.appendChild(doc.createComment(self._cfg_formatter(cfg)))
+                config = els[0].appendChild(self._doc.createElement("config"))
+            config.appendChild(self._doc.createComment(self._cfg_formatter(cfg)))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_header')
+    @etime('seslog_header')
     @catch_ioerror
     def _header(self, system_txt, version_txt):
         """ Adds host, date, system, and version info into the header element.
         The host and date will be derived automatically.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("dialogue")
+        els = self._doc.getElementsByTagName("dialogue")
 
         if els:
-            header = els[0].appendChild(doc.createElement("header"))
-            host = header.appendChild(doc.createElement("host"))
-            host.appendChild(doc.createTextNode(socket.gethostname()))
-            date = header.appendChild(doc.createElement("date"))
-            date.appendChild(doc.createTextNode(self._get_date_str()))
+            header = els[0].appendChild(self._doc.createElement("header"))
+            host = header.appendChild(self._doc.createElement("host"))
+            host.appendChild(self._doc.createTextNode(socket.gethostname()))
+            date = header.appendChild(self._doc.createElement("date"))
+            date.appendChild(self._doc.createTextNode(self._get_date_str()))
 
-            system = header.appendChild(doc.createElement("system"))
-            system.appendChild(doc.createTextNode(system_txt))
-            version = header.appendChild(doc.createElement("version"))
-            version.appendChild(doc.createTextNode(version_txt))
+            system = header.appendChild(self._doc.createElement("system"))
+            system.appendChild(self._doc.createTextNode(system_txt))
+            version = header.appendChild(self._doc.createElement("version"))
+            version.appendChild(self._doc.createTextNode(version_txt))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_input_source')
+    @etime('seslog_input_source')
     @catch_ioerror
     def _input_source(self, input_source):
         """Adds the input_source optional tag to the header."""
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("header")
+        els = self._doc.getElementsByTagName("header")
 
         if els:
-            i_s = els[0].appendChild(doc.createElement("input_source"))
+            i_s = els[0].appendChild(self._doc.createElement("input_source"))
             i_s.setAttribute("type", input_source)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_dialogue_rec_start')
+    @etime('seslog_dialogue_rec_start')
     # @catch_ioerror - do not add! VIO catches the IOError
     def _dialogue_rec_start(self, speaker, fname):
         """ Adds the optional recorded input/output element to the last
@@ -231,48 +225,48 @@ class SessionLogger(multiprocessing.Process):
         function is called.
 
         """
-        doc = self._open_session_xml()
+        if self._is_open:
+            els = self._doc.getElementsByTagName("dialogue")
 
-        els = doc.getElementsByTagName("dialogue")
+            if els:
+                da = els[0].appendChild(self._doc.createElement("dialogue_rec"))
+                if speaker:
+                    da.setAttribute("speaker", speaker)
+                da.setAttribute("fname", fname)
+                da.setAttribute("starttime", self._get_time_str())
+            else:
+                self._write_session_xml()
+                raise SessionLoggerException(("Missing dialogue element for %s speaker") % speaker)
 
-        if els:
-            da = els[0].appendChild(doc.createElement("dialogue_rec"))
-            if speaker:
-                da.setAttribute("speaker", speaker)
-            da.setAttribute("fname", fname)
-            da.setAttribute("starttime", self._get_time_str())
+            self._write_session_xml()
         else:
-            self._close_session_xml(doc)
-            raise SessionLoggerException(("Missing dialogue element for %s speaker") % speaker)
+            raise SessionClosedException()
 
-        self._close_session_xml(doc)
-
-    @mtime('seslog_dialogue_rec_end')
+    @etime('seslog_dialogue_rec_end')
     # @catch_ioerror - do not add! VIO catches the IOError
     def _dialogue_rec_end(self, fname):
         """ Stores the end time in the dialogue_rec element with fname file.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("dialogue_rec")
+        els = self._doc.getElementsByTagName("dialogue_rec")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("fname") == fname:
                 els[i].setAttribute("endtime", self._get_time_str())
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException("Missing dialogue_rec element for %s fname" % fname)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_evaluation')
+    @etime('seslog_evaluation')
     @catch_ioerror
     def _evaluation(self, num_turns, task_success, user_sat, score):
         """Adds the evaluation optional tag to the header."""
         raise SessionLoggerException("Not implemented")
 
-    def _turn_count(self, doc, speaker):
-        trns = doc.getElementsByTagName("turn")
+    def _turn_count(self, speaker):
+        trns = self._doc.getElementsByTagName("turn")
         counter = 0
 
         if trns:
@@ -284,95 +278,91 @@ class SessionLogger(multiprocessing.Process):
 
         return 0
 
-    @mtime('seslog_turn')
+    @etime('seslog_turn')
     @catch_ioerror
     def _turn(self, speaker):
         """ Adds a new turn at the end of the dialogue element.
 
         The turn_number for the speaker is automatically computed.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("dialogue")
-        turn_number = self._turn_count(doc, speaker) + 1
+        els = self._doc.getElementsByTagName("dialogue")
+        turn_number = self._turn_count(speaker) + 1
 
         if els:
-            turn = els[0].appendChild(doc.createElement("turn"))
+            turn = els[0].appendChild(self._doc.createElement("turn"))
             turn.setAttribute("speaker", speaker)
             turn.setAttribute("turn_number", unicode(turn_number))
             turn.setAttribute("time", self._get_time_str())
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_dialogue_act')
+    @etime('seslog_dialogue_act')
     @catch_ioerror
     def _dialogue_act(self, speaker, dialogue_act):
         """ Adds the dialogue_act element to the last "speaker" turn.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                da = els[i].appendChild(doc.createElement("dialogue_act"))
+                da = els[i].appendChild(self._doc.createElement("dialogue_act"))
                 da.setAttribute("time", self._get_time_str())
-                da.appendChild(doc.createTextNode(unicode(dialogue_act)))
+                da.appendChild(self._doc.createTextNode(unicode(dialogue_act)))
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_text')
+    @etime('seslog_text')
     @catch_ioerror
     def _text(self, speaker, text, cost=None):
         """ Adds the text (prompt) element to the last "speaker" turn.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                da = els[i].appendChild(doc.createElement("text"))
+                da = els[i].appendChild(self._doc.createElement("text"))
                 da.setAttribute("time", self._get_time_str())
                 if cost:
                     da.setAttribute("cost", unicode(cost))
-                da.appendChild(doc.createTextNode(unicode(text)))
+                da.appendChild(self._doc.createTextNode(unicode(text)))
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException("Missing turn element for {spkr} speaker".format(spkr=speaker))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_rec_start')
+    @etime('seslog_rec_start')
     @catch_ioerror
     def _rec_start(self, speaker, fname):
         """Adds the optional recorded input/output element to the last
         "speaker" turn.
 
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                da = els[i].appendChild(doc.createElement("rec"))
+                da = els[i].appendChild(self._doc.createElement("rec"))
                 da.setAttribute("fname", fname)
                 da.setAttribute("starttime", self._get_time_str())
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for the {spkr} speaker".format(spkr=speaker)))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
         self._rec_started[fname] = wave.open(os.path.join(self._session_dir_name, fname), 'w')
         self._rec_started[fname].setnchannels(1)
         self._rec_started[fname].setsampwidth(2)
         self._rec_started[fname].setframerate(self.cfg['Audio']['sample_rate'])
 
-    @mtime('seslog_rec_write')
+    @etime('seslog_rec_write')
     @catch_ioerror
     def _rec_write(self, fname, data_rec):
         """Write into open file recording.
@@ -382,25 +372,24 @@ class SessionLogger(multiprocessing.Process):
         except KeyError:
             raise SessionLoggerException("rec_write: missing rec element %s" % fname)
 
-    @mtime('seslog_rec_end')
+    @etime('seslog_rec_end')
     @catch_ioerror
     def _rec_end(self, fname):
         """ Stores the end time in the rec element with fname file.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("rec")
+        els = self._doc.getElementsByTagName("rec")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("fname") == fname:
                 els[i].setAttribute("endtime", self._get_time_str())
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             self._rec_started[fname].close()
             self._rec_started[fname] = None
             raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
         self._rec_started[fname].close()
         self._rec_started[fname] = None
 
@@ -416,45 +405,44 @@ class SessionLogger(multiprocessing.Process):
 
         return False
 
-    @mtime('seslog_asr')
+    @etime('seslog_asr')
     @catch_ioerror
     def _asr(self, speaker, fname, nblist, confnet=None):
         """ Adds the ASR nblist to the last speaker turn.
 
         alex Extension: It can also store the confusion network representation.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for el_idx in range(els.length - 1, -1, -1):
             if els[el_idx].getAttribute("speaker") == speaker and self._include_rec(els[el_idx], fname):
-                asr = els[el_idx].appendChild(doc.createElement("asr"))
+                asr = els[el_idx].appendChild(self._doc.createElement("asr"))
 
                 for prob, hyp in nblist:
-                    hyp_el = asr.appendChild(doc.createElement("hypothesis"))
+                    hyp_el = asr.appendChild(self._doc.createElement("hypothesis"))
                     hyp_el.setAttribute("p", "{0:.3f}".format(prob))
-                    hyp_el.appendChild(doc.createTextNode(unicode(hyp)))
+                    hyp_el.appendChild(self._doc.createTextNode(unicode(hyp)))
 
                 if confnet:
-                    cn = asr.appendChild(doc.createElement("confnet"))
+                    cn = asr.appendChild(self._doc.createElement("confnet"))
 
                     for alts in confnet:
                         was = cn.appendChild(
-                            doc.createElement("word_alternatives"))
+                            self._doc.createElement("word_alternatives"))
 
                         for prob, word in alts:
-                            wa = was.appendChild(doc.createElement("word"))
+                            wa = was.appendChild(self._doc.createElement("word"))
                             wa.setAttribute("p", "{0:.3f}".format(prob))
-                            wa.appendChild(doc.createTextNode(unicode(word)))
+                            wa.appendChild(self._doc.createTextNode(unicode(word)))
 
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_slu')
+    @etime('seslog_slu')
     @catch_ioerror
     def _slu(self, speaker, fname, nblist, confnet=None):
         """ Adds the slu nbest list to the last speaker turn.
@@ -463,49 +451,47 @@ class SessionLogger(multiprocessing.Process):
         The confnet must be an instance of DialogueActConfusionNetwork.
 
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker and self._include_rec(els[i], fname):
-                asr = els[i].appendChild(doc.createElement("slu"))
+                asr = els[i].appendChild(self._doc.createElement("slu"))
 
                 for p, h in nblist:
-                    hyp = asr.appendChild(doc.createElement("interpretation"))
+                    hyp = asr.appendChild(self._doc.createElement("interpretation"))
                     hyp.setAttribute("p", "%.3f" % p)
-                    hyp.appendChild(doc.createTextNode(unicode(h)))
+                    hyp.appendChild(self._doc.createTextNode(unicode(h)))
 
                 if confnet:
-                    cn = asr.appendChild(doc.createElement("confnet"))
+                    cn = asr.appendChild(self._doc.createElement("confnet"))
 
                     for p, dai in confnet:
-                        sas = cn.appendChild(doc.createElement("dai_alternatives"))
+                        sas = cn.appendChild(self._doc.createElement("dai_alternatives"))
 
-                        daia = sas.appendChild(doc.createElement("dai"))
+                        daia = sas.appendChild(self._doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % p)
-                        daia.appendChild(doc.createTextNode(unicode(dai)))
+                        daia.appendChild(self._doc.createTextNode(unicode(dai)))
 
-                        daia = sas.appendChild(doc.createElement("dai"))
+                        daia = sas.appendChild(self._doc.createElement("dai"))
                         daia.setAttribute("p", "%.3f" % (1 - p))
-                        daia.appendChild(doc.createTextNode("null()"))
+                        daia.appendChild(self._doc.createTextNode("null()"))
 
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_barge_in')
+    @etime('seslog_barge_in')
     @catch_ioerror
     def _barge_in(self, speaker, tts_time=False, asr_time=False):
         """Add the optional barge-in element to the last speaker turn."""
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                da = els[i].appendChild(doc.createElement("barge-in"))
+                da = els[i].appendChild(self._doc.createElement("barge-in"))
                 da.setAttribute("time", self._get_time_str())
                 if tts_time:
                     da.setAttribute("tts_time", self._get_time_str())
@@ -515,47 +501,46 @@ class SessionLogger(multiprocessing.Process):
         else:
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_hangup')
+    @etime('seslog_hangup')
     @catch_ioerror
     def _hangup(self, speaker):
         """ Adds the user hangup element to the last user turn.
         """
-        doc = self._open_session_xml()
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
-                els[i].appendChild(doc.createElement("hangup"))
+                els[i].appendChild(self._doc.createElement("hangup"))
                 break
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
     ########################################################################
     ## The following functions define functionality above what was set in ##
     ## SDC 2010 XML logging format.                                       ##
     ########################################################################
 
-    def _last_turn_element(self, doc, speaker):
+    def _last_turn_element(self, speaker):
         """ Finds the XML element in the given open XML session
         which corresponds to the last turn for the given speaker.
 
         Closes the XML and throws an exception if the element cannot be found.
         """
-        els = doc.getElementsByTagName("turn")
+        els = self._doc.getElementsByTagName("turn")
 
         for i in range(els.length - 1, -1, -1):
             if els[i].getAttribute("speaker") == speaker:
                 return els[i]
         else:
-            self._close_session_xml(doc)
+            self._write_session_xml()
             raise SessionLoggerException(("Missing turn element for %s speaker") % speaker)
 
-    @mtime('seslog_dialogue_state')
+    @etime('seslog_dialogue_state')
     @catch_ioerror
     def _dialogue_state(self, speaker, dstate):
         """ Adds the dialogue state to the log.
@@ -569,20 +554,19 @@ class SessionLogger(multiprocessing.Process):
         [ (slot_name1, slot_value1), (slot_name2, slot_value2), ...)
 
         """
-        doc = self._open_session_xml()
-        turn = self._last_turn_element(doc, speaker)
+        turn = self._last_turn_element(speaker)
 
         for state in dstate:
-            ds = turn.appendChild(doc.createElement("dialogue_state"))
+            ds = turn.appendChild(self._doc.createElement("dialogue_state"))
 
             for slot_name, slot_value in state:
-                sl = ds.appendChild(doc.createElement("slot"))
+                sl = ds.appendChild(self._doc.createElement("slot"))
                 sl.setAttribute("name", "%s" % slot_name)
-                sl.appendChild(doc.createTextNode(unicode(slot_value)))
+                sl.appendChild(self._doc.createTextNode(unicode(slot_value)))
 
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
-    @mtime('seslog_external_data_file')
+    @etime('seslog_external_data_file')
     @catch_ioerror
     def _external_data_file(self, ftype, fname):
         """ Adds a link to an external data file (such as Google directions).
@@ -591,12 +575,11 @@ class SessionLogger(multiprocessing.Process):
 
         This is an alex extension.
         """
-        doc = self._open_session_xml()
-        turn = self._last_turn_element(doc, "system")
-        el = turn.appendChild(doc.createElement("external"))
+        turn = self._last_turn_element("system")
+        el = turn.appendChild(self._doc.createElement("external"))
         el.setAttribute("type", ftype)
         el.setAttribute("fname", fname)
-        self._close_session_xml(doc)
+        self._write_session_xml()
 
     def run(self):
         try:
@@ -605,9 +588,12 @@ class SessionLogger(multiprocessing.Process):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+
+                s = (time.time(), time.clock())
 
                 if not self.queue.empty():
                     key, args, kw = self.queue.get()
@@ -625,16 +611,28 @@ class SessionLogger(multiprocessing.Process):
                                 self.queue.get()
                     except AttributeError:
                         print "SessionLogger: unknown method", key
+                        self.close_event.set()
                         raise
                     except SessionLoggerException as e:
                         print "Exception when logging:", key, args, kw
                         print e
-                    except IOError:
+                    except SessionClosedException:
                         if key == 'dialogue_rec_start':
                             # try once again later
                             self.queue.put((key, args, kw))
+
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.200:
+                    print "EXEC Time inner loop: SessionLogger t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             print 'Uncaught exception in the SessionLogger process.'
             self.close_event.set()
             raise
 
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()
