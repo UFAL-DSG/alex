@@ -623,7 +623,7 @@ class SessionLogger(multiprocessing.Process):
 
                 d = (time.time() - s[0], time.clock() - s[1])
                 if d[0] > 0.200:
-                    print "EXEC Time inner loop: SessionLogger t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
+                    print "EXEC Time inner loop: SessionLogger t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
 
         except KeyboardInterrupt:
             print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
