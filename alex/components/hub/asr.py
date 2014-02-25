@@ -126,6 +126,12 @@ class ASR(multiprocessing.Process):
             if len(self.local_audio_in) > 40:
                 print "ASR unprocessed frames:", len(self.local_audio_in)
 
+            if len(self.local_audio_in) > 200:
+                print "ASR too many unprocessed frames:", len(self.local_audio_in)
+                print "    skipping everything until the end of the segment:", len(self.local_audio_in)
+                while isinstance(self.local_audio_in[0], Frame):
+                    skip = self.local_audio_in.popleft()
+
             # read recorded audio
             data_rec = self.local_audio_in.popleft()
 
@@ -137,6 +143,20 @@ class ASR(multiprocessing.Process):
                 fname = None
 
                 if data_rec.parsed['__name__'] == "speech_start":
+                    # check whether there are more then one speech segments
+                    segments = [ cmd for cmd in self.local_audio_in
+                                 if isinstance(cmd, Command) and cmd.parsed['__name__'] == "speech_start"]
+                    if len(segments):
+                        # there are multiple unprocessed segments in the queue
+                        # remove all unprocessed segments except the last
+                        print "ASR too many unprocessed speech segments:", len(segments)
+                        print "    removed all segments but the last"
+                        removed_segments = 0
+                        while removed_segments < len(segments):
+                            data_rec = self.local_audio_in.popleft()
+                            if data_rec.parsed['__name__'] == "speech_start":
+                                removed_segments += 1
+
                     dr_speech_start = "speech_start"
                     fname = data_rec.parsed['fname']
                 elif data_rec.parsed['__name__'] == "speech_end":
