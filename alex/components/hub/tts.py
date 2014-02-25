@@ -44,9 +44,9 @@ class TTS(multiprocessing.Process):
         segments = []
         last_split = 0
         lc = [c for c in string.lowercase]
-        lc.extend('ěščřžýáíé')
+        lc.extend('ěščřžýáíéňťďůú')
         up = [c for c in string.uppercase]
-        up.extend('ĚŠČČŘŽÝÁÍÉ')
+        up.extend('ĚŠČŘŽÝÁÍÉŇŤĎŮÚ')
 
         for i in range(1, len(text)-2):
             if (text[i-1] in lc
