@@ -154,7 +154,7 @@ class ASR(multiprocessing.Process):
                         removed_segments = 0
                         while removed_segments < len(segments):
                             data_rec = self.local_audio_in.popleft()
-                            if data_rec.parsed['__name__'] == "speech_start":
+                            if isinstance(cmd, Command) and data_rec.parsed['__name__'] == "speech_start":
                                 removed_segments += 1
 
                     dr_speech_start = "speech_start"
