@@ -153,10 +153,12 @@ if __name__ == '__main__':
     cfg1['Logging']['session_logger'].set_close_event(close_event)
     cfg1['Logging']['session_logger'].set_cfg(cfg1)
     cfg1['Logging']['session_logger'].start()
+    cfg1['Logging']['session_logger'].cancel_join_thread()
 
     cfg2['Logging']['session_logger'].set_close_event(close_event)
     cfg2['Logging']['session_logger'].set_cfg(cfg2)
     cfg2['Logging']['session_logger'].start()
+    cfg2['Logging']['session_logger'].cancel_join_thread()
 
     # init the system
     call_start1 = 0

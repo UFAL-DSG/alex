@@ -50,6 +50,9 @@ class SessionLogger(multiprocessing.Process):
     def set_cfg(self, cfg):
         self.cfg = cfg
 
+    def cancel_join_thread(self):
+        self.queue.cancel_join_thread()
+
     def __repr__(self):
         return "SessionLogger()"
 

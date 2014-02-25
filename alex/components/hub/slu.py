@@ -132,6 +132,7 @@ class SLU(multiprocessing.Process):
     def run(self):
         try:
             set_proc_name("Alex_SLU")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             while 1:
                 # Check the close event.

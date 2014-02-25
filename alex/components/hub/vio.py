@@ -744,6 +744,7 @@ class VoipIO(multiprocessing.Process):
     def run(self):
         try:
             set_proc_name("Alex_VIO")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             global logger
             logger = self.cfg['Logging']['system_logger']
@@ -813,6 +814,7 @@ class VoipIO(multiprocessing.Process):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])

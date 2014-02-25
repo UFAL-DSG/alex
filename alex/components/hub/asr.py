@@ -71,6 +71,8 @@ class ASR(multiprocessing.Process):
         self.system_logger = self.cfg['Logging']['system_logger']
         self.session_logger = self.cfg['Logging']['session_logger']
 
+        self.recognition_on = False
+
     def recv_input_locally(self):
         """ Copy all input from input connections into local queue objects.
 
@@ -230,8 +232,8 @@ class ASR(multiprocessing.Process):
 
     def run(self):
         try:
-            self.recognition_on = False
             set_proc_name("Alex_ASR")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             while 1:
                 # Check the close event.

@@ -213,6 +213,8 @@ class VAD(multiprocessing.Process):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
+                    self.session_logger.cancel_join_thread()
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])

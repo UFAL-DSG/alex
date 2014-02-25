@@ -96,6 +96,7 @@ class VoipHub(Hub):
             cfg['Logging']['session_logger'].set_close_event(self.close_event)
             cfg['Logging']['session_logger'].set_cfg(cfg)
             cfg['Logging']['session_logger'].start()
+            cfg['Logging']['session_logger'].cancel_join_thread()
 
             # init the system
             call_start = 0
