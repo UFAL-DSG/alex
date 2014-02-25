@@ -568,18 +568,24 @@ class SessionLogger(multiprocessing.Process):
 
     @etime('seslog_external_data_file')
     @catch_ioerror
-    def _external_data_file(self, ftype, fname):
-        """ Adds a link to an external data file (such as Google directions).
+    def _external_data_file(self, ftype, fname, data=None):
+        """Writes data to an external file and adds a link to the log.
+
         This will create an <external> link with appropriate "type" and "fname"
-        attributes.
+        attributes. If the data is None, no file is created, just the link.
 
         This is an alex extension.
         """
+        # create the file link
         turn = self._last_turn_element("system")
         el = turn.appendChild(self._doc.createElement("external"))
         el.setAttribute("type", ftype)
-        el.setAttribute("fname", fname)
+        el.setAttribute("fname", os.path.basename(fname))
         self._write_session_xml()
+        # write the file data
+        if data is not None:
+            with open(fname, 'w') as fh:
+                fh.write(data)
 
     def run(self):
         try:
