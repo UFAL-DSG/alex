@@ -600,15 +600,14 @@ class SessionLogger(multiprocessing.Process):
 
                     attr = '_'+key
                     try:
+                        if not self._is_open and key != 'session_start':
+                            print "SessionLogger: calling method", key, "when the session is not open"
+                            continue
+
                         # if key != "rec_write":
                         #     print 'Calling: ', key, [a for a in args if isinstance(a, basestring) and len(a) < 100]
                         cf = SessionLogger.__dict__[attr]
                         cf(self, *args, **kw)
-
-                        if key == 'session_end':
-                            # clear all pending commands
-                            while self.queue.empty() == False:
-                                self.queue.get()
                     except AttributeError:
                         print "SessionLogger: unknown method", key
                         self.close_event.set()
