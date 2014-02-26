@@ -773,12 +773,26 @@ class PTICSHDCPolicy(DialoguePolicy):
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
-                da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 # construct relative time from now to departure
-                departure_time_rel = (step.departure_time - datetime.now()).seconds / 60
-                departure_time_rel_hrs, departure_time_rel_mins = divmod(departure_time_rel, 60)
-                da.append(DialogueActItem('inform', 'departure_time_rel',
-                                          '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
+                now = datetime.now()
+                now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
+                departure_time_rel = (step.departure_time - now)
+
+                # the connection was missed
+                if departure_time_rel.days < 0:
+                    da.append(DialogueActItem('apology'))
+                    da.append(DialogueActItem('inform', 'missed_connection', 'true'))
+                # the connection is right now
+                elif departure_time_rel.days == 0 and departure_time_rel.seconds == 0:
+                    da.append(DialogueActItem('inform', 'departure_time_rel', 'now'))
+                # future connections
+                else:
+                    da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
+                    departure_time_rel_hrs, departure_time_rel_mins = divmod(departure_time_rel.seconds / 60, 60)
+                    if departure_time_rel.days > 0:
+                        departure_time_rel_hrs += 24 * departure_time_rel.days
+                    da.append(DialogueActItem('inform', 'departure_time_rel',
+                                              '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
                 return da
 
     def req_arrival_time(self, dialogue_state):
