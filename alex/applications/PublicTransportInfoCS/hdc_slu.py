@@ -594,6 +594,10 @@ class PTICSHDCSLU(SLUInterface):
 
         if any_word_in(u, 'spoj spojení spoje možnost možnosti varianta alternativa cesta cestu cesty '
                           'zpoždění stažení nalezená'):
+            if any_word_in(u, 'libovolný') and \
+                not any_word_in(u, 'první jedna druhá druhý třetí čtvrtá čtvrtý'):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
+
             if any_word_in(u, 'první jedna') and \
                 not any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
