@@ -131,7 +131,7 @@ class ASR(multiprocessing.Process):
             if len(self.local_audio_in) > 200:
                 print "ASR too many unprocessed frames:", len(self.local_audio_in)
                 print "    skipping everything until the end of the segment:", len(self.local_audio_in)
-                while isinstance(self.local_audio_in[0], Frame):
+                while len(self.local_audio_in) > 2 and isinstance(self.local_audio_in[0], Frame):
                     skip = self.local_audio_in.popleft()
 
             # read recorded audio
