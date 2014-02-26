@@ -27,6 +27,7 @@ class SpeechtechTTS(TTSInterface):
         super(SpeechtechTTS, self).__init__(cfg)
         self.preprocessing = TTSPreprocessing(self.cfg, self.cfg['TTS']['SpeechTech']['preprocessing'])
 
+    @cache.lru_cache(10000)
     @cache.persistent_cache(True, 'SpeechtechTTS.get_tts_mp3.')
     def get_tts_mp3(self, voice, text):
         """ Access SpeechTech TTS service and get synthesized audio.
