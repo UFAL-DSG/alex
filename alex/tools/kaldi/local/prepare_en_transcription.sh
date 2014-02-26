@@ -8,7 +8,7 @@ cmu_ext=common/cmudict.ext
 
 mkdir -p $locdict
 
-if [ ! -f $cmudict ]; then
+if [ ! -f $cmu_dict ] ; then
   echo "--- Downloading CMU dictionary ..."
   svn export http://svn.code.sf.net/p/cmusphinx/code/trunk/cmudict/cmudict.0.7a \
      $cmu_dict || exit 1;
