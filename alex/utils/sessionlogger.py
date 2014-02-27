@@ -622,8 +622,12 @@ class SessionLogger(multiprocessing.Process):
                         self.close_event.set()
                         raise
                     except SessionLoggerException as e:
-                        print "Exception when logging:", key, args, kw
-                        print e
+                        if key == 'rec_write':
+                            print "Exception when logging:", key
+                            print e
+                        else:
+                            print "Exception when logging:", key, args, kw
+                            print e
                     except SessionClosedException:
                         if key == 'dialogue_rec_start':
                             # try once again later

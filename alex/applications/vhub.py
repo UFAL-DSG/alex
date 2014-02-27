@@ -162,7 +162,7 @@ class VoipHub(Hub):
                         if command.parsed['__name__'] == "rejected_call_from_blacklisted_uri":
                             remote_uri = command.parsed['remote_uri']
 
-                            num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
+                            num_all_calls, total_time, last_period_num_calls, last_period_total_time, last_period_num_short_calls = call_db.get_uri_stats(remote_uri)
 
                             m = []
                             m.append('')
@@ -171,6 +171,7 @@ class VoipHub(Hub):
                             m.append('-' * 120)
                             m.append('Total calls:                  %d' % num_all_calls)
                             m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                            m.append('Last period short calls:      %d' % last_period_num_short_calls)
                             m.append('Last period total calls:      %d' % last_period_num_calls)
                             m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
                             m.append('=' * 120)
@@ -184,7 +185,7 @@ class VoipHub(Hub):
 
                         if command.parsed['__name__'] == "call_confirmed":
                             remote_uri = command.parsed['remote_uri']
-                            num_all_calls, total_time, last_period_num_calls, last_period_total_time = call_db.get_uri_stats(remote_uri)
+                            num_all_calls, total_time, last_period_num_calls, last_period_total_time, last_period_num_short_calls  = call_db.get_uri_stats(remote_uri)
 
                             m = []
                             m.append('')
@@ -193,12 +194,14 @@ class VoipHub(Hub):
                             m.append('-' * 120)
                             m.append('Total calls:                  %d' % num_all_calls)
                             m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+                            m.append('Last period short calls:      %d' % last_period_num_short_calls)
                             m.append('Last period total calls:      %d' % last_period_num_calls)
                             m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
                             m.append('-' * 120)
 
                             if last_period_num_calls > self.cfg['VoipHub']['last_period_max_num_calls'] or \
-                                    last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time']:
+                                    last_period_total_time > self.cfg['VoipHub']['last_period_max_total_time'] or \
+                                    last_period_num_short_calls > self.cfg['VoipHub']['last_period_max_num_short_calls'] :
                                 # prepare for ending the call
                                 call_connected = True
 
@@ -211,7 +214,8 @@ class VoipHub(Hub):
                                 u_last_input_timeout = time.time()
                                 hangup = True
 
-                                tts_commands.send(Command('synthesize(text="%s",log="false")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
+                                self.cfg['Logging']['session_logger'].turn("system")
+                                tts_commands.send(Command('synthesize(text="%s",log="true")' % self.cfg['VoipHub']['limit_reached_message'], 'HUB', 'TTS'))
                                 vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri,
                                   time.time() + self.cfg['VoipHub']['blacklist_for']), 'HUB', 'VoipIO'))
                                 m.append('CALL REJECTED')

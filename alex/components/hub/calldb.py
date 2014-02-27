@@ -75,7 +75,7 @@ class CallDB(object):
         db = self.read_database()
 
         for remote_uri in db['calls_from_start_end_length']:
-            num_all_calls, total_time, last_period_num_calls, last_period_total_time = self.get_uri_stats(remote_uri)
+            num_all_calls, total_time, last_period_num_calls, last_period_total_time, last_period_num_short_calls = self.get_uri_stats(remote_uri)
 
             m = []
             m.append('')
@@ -84,6 +84,7 @@ class CallDB(object):
             m.append('-' * 120)
             m.append('Total calls:                  %d' % num_all_calls)
             m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+            m.append('Last period short calls:      %d' % last_period_num_short_calls)
             m.append('Last period total calls:      %d' % last_period_num_calls)
             m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
             m.append('-' * 120)
@@ -92,6 +93,27 @@ class CallDB(object):
             m.append('')
             self.cfg['Logging']['system_logger'].info('\n'.join(m))
 
+    def log_uri(self, remote_uri):
+        db = self.read_database()
+
+        num_all_calls, total_time, last_period_num_calls, last_period_total_time, last_period_num_short_calls = self.get_uri_stats(remote_uri)
+
+        m = []
+        m.append('')
+        m.append('=' * 120)
+        m.append('Remote SIP URI: %s' % remote_uri)
+        m.append('-' * 120)
+        m.append('Total calls:                  %d' % num_all_calls)
+        m.append('Total time (min):             %0.1f' % (total_time/60.0, ))
+        m.append('Last period short calls:      %d' % last_period_num_short_calls)
+        m.append('Last period total calls:      %d' % last_period_num_calls)
+        m.append('Last period total time (min): %0.1f' % (last_period_total_time/60.0, ))
+        m.append('-' * 120)
+
+        m.append('-' * 120)
+        m.append('')
+
+        return '\n'.join(m)
 
     def get_uri_stats(self, remote_uri):
         db = self.read_database()
@@ -100,6 +122,7 @@ class CallDB(object):
         total_time = 0
         last_period_num_calls = 0
         last_period_total_time = 0
+        last_period_num_short_calls = 0
 
         try:
             for s, e, l in db['calls_from_start_end_length'][remote_uri]:
@@ -111,11 +134,14 @@ class CallDB(object):
                     if s > time.time() - self.period:
                         last_period_num_calls += 1
                         last_period_total_time += l
+
+                        if l > 0 and l < self.cfg['VoipHub']['short_calls_time_duration']:
+                            last_period_num_short_calls += 1
         except:
             pass
 
 
-        return num_all_calls, total_time, last_period_num_calls, last_period_total_time
+        return num_all_calls, total_time, last_period_num_calls, last_period_total_time, last_period_num_short_calls
 
     def track_confirmed_call(self, remote_uri):
         db = self.open_database()
