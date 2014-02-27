@@ -75,6 +75,7 @@ Get the latest ``flite`` from http://www.festvox.org/flite/download.html and bui
 
 .. code-block:: bash
 
+  wget http://www.festvox.org/flite/packed/flite-1.4/flite-1.4-release.tar.bz2
   tar -xvjf flite-1.4-release.tar.bz2
   cd flite-1.4-release
   ./configure
