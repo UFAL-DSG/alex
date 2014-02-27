@@ -12,7 +12,7 @@ Ask the root on the computer to run:
 
 .. code-block:: bash
 
-  sudo apt-get install gfortran libatlas-base-dev portaudio19-dev \
+  sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
       flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev
 
 To get latest versions of the following python packages, I recommend to run these commands:
