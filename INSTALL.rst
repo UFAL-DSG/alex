@@ -13,7 +13,7 @@ Ask the root on the computer to run:
 .. code-block:: bash
 
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev \
-      flac speex sox mplayer libsqlite3-dev python-wxgtk2.8
+      flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev
 
 To get latest versions of the following python packages, I recommend to run these commands:
 
@@ -40,7 +40,6 @@ To get latest versions of the following python packages, I recommend to run thes
   sudo pip install --upgrade pyyaml
 
   sudo easy_install wget
-  sudo easy_install pymad
   sudo easy_install ipdb
   sudo easy_install nose
 
@@ -58,6 +57,17 @@ This version supports non-blocking audio.
   git clone https://github.com/bastibe/PyAudio.git
   cd PyAudio
   python ./setup.py install
+
+pymad
+~~~~~
+Get the latest version of ``pymad`` from https://github.com/pymad/pymad.
+
+.. code-block:: bash
+
+  git clone https://github.com/pymad/pymad.git
+  cd pymad/src
+  python ./setup.py install
+
 
 flite
 ~~~~~
