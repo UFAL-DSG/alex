@@ -93,6 +93,11 @@ class VoipHub(Hub):
             self.write_pid_file([['vio', vio.pid], ['vad', vad.pid], ['asr', asr.pid],
                                  ['slu', slu.pid], ['dm', dm.pid], ['nlg', nlg.pid], ['tts', tts.pid]])
 
+            cfg['Logging']['session_logger'].set_close_event(self.close_event)
+            cfg['Logging']['session_logger'].set_cfg(cfg)
+            cfg['Logging']['session_logger'].start()
+            cfg['Logging']['session_logger'].cancel_join_thread()
+
             # init the system
             call_start = 0
             call_back_time = -1
@@ -119,6 +124,7 @@ class VoipHub(Hub):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
@@ -416,13 +422,27 @@ class VoipHub(Hub):
                     c.recv()
 
             # wait for processes to stop
-            vio.join()
-            vad.join()
-            tts.join()
+            # do not join, because in case of exception the join will not be successful
+            # vio.join()
+            # vad.join()
+            # asr.join()
+            # slu.join()
+            # dm.join()
+            # nlg.join()
+            # tts.join()
+            #cfg['Logging']['session_logger'].join()
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in VHUB process.')
             self.close_event.set()
             raise
+
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()
 
 #########################################################################
 #########################################################################

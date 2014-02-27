@@ -915,7 +915,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                 wh[i] = 0
 
             if wh[i] >= 2:
-                # this generate inadmissible word hypothesis
+                # this generate inadmissible da hypothesis
                 # because there are only two alternatives - the DAI and the
                 # null() dialogue act
                 continue
@@ -964,16 +964,18 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         open_hyp = []
         closed_hyp = {}
 
-        i = len(self.cn)
-        for n, (p, dai) in enumerate(self.cn):
+        for j, (p, dai) in enumerate(self.cn):
             if p < 0.5:
-                i = n + 1
+                i = j
                 break
+        else:
+            i = len(self.cn)
 
         # create index for the best hypothesis
-        best_hyp = tuple([0] * i + [1] * (len(self.cn) - i))
+        best_hyp = tuple([0,] * i + [1,] * (len(self.cn) - i))
         best_prob = self.get_prob(best_hyp)
         open_hyp.append((best_prob, best_hyp))
+        # print "i, bp, bh", i, best_prob, best_hyp
 
         i = 0
         while open_hyp and i < n*100:
@@ -985,10 +987,10 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                 # process only those hypotheses which were not processed so far
 
                 closed_hyp[current_hyp_index] = current_prob
-
-                #print "current_prob, current_hyp_index:", current_prob, current_hyp_index
+                # print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
                 for hyp_index in self.get_next_worse_candidates(current_hyp_index):
+                    # print hyp_index
                     prob = self.get_prob(hyp_index)
                     open_hyp.append((prob, hyp_index))
 
@@ -999,6 +1001,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         nblist = DialogueActNBList()
         for idx in closed_hyp:
+            # print "p = ",closed_hyp[idx], "hyp = ", self.get_hyp_index_dialogue_act(idx)
             nblist.add(closed_hyp[idx], self.get_hyp_index_dialogue_act(idx))
 
         #print nblist

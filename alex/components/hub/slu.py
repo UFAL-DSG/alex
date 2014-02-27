@@ -132,10 +132,12 @@ class SLU(multiprocessing.Process):
     def run(self):
         try:
             set_proc_name("Alex_SLU")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
@@ -150,10 +152,17 @@ class SLU(multiprocessing.Process):
                 self.read_asr_hypotheses_write_slu_hypotheses()
 
                 d = (time.time() - s[0], time.clock() - s[1])
-                if d[0] > 0.100:
-                    print "SLU t = {t:0.4f} c = {c:0.4f}".format(t=d[0], c=d[1])
+                if d[0] > 0.200:
+                    print "EXEC Time inner loop: SLU t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
-            self.cfg['Logging']['system_logger'].exception(
-                'Uncaught exception in SLU process.')
+            self.cfg['Logging']['system_logger'].exception('Uncaught exception in SLU process.')
             self.close_event.set()
             raise
+
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()

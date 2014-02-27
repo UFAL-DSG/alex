@@ -40,24 +40,13 @@ class TTS(multiprocessing.Process):
         tts_type = get_tts_type(cfg)
         self.tts = tts_factory(tts_type, cfg)
 
-    def get_wav_name(self):
-        """ Generates a new wave name for the TTS output.
-
-        Returns the full path and the base name.
-        """
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-        fname = os.path.join(self.cfg['Logging']['system_logger'].get_session_dir_name(),
-                             'tts-{stamp}.wav'.format(stamp=timestamp))
-
-        return fname, os.path.basename(fname)
-
     def parse_into_segments(self, text):
         segments = []
         last_split = 0
         lc = [c for c in string.lowercase]
-        lc.extend('ěščřžýáíé')
+        lc.extend('ěščřžýáíéňťďůú')
         up = [c for c in string.uppercase]
-        up.extend('ĚŠČČŘŽÝÁÍÉ')
+        up.extend('ĚŠČŘŽÝÁÍÉŇŤĎŮÚ')
 
         for i in range(1, len(text)-2):
             if (text[i-1] in lc
@@ -107,11 +96,12 @@ class TTS(multiprocessing.Process):
             text == ""
 
         wav = []
-        fname, bn = self.get_wav_name()
+        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        fname = 'tts-{stamp}.wav'.format(stamp=timestamp)
 
-        self.commands.send(Command('tts_start(user_id="%s",text="%s")' % (user_id, text), 'TTS', 'HUB'))
+        self.commands.send(Command('tts_start(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
-                            (user_id, text, bn, log), 'TTS', 'AudioOut'))
+                            (user_id, text, fname, log), 'TTS', 'AudioOut'))
 
         segments = self.parse_into_segments(text)
 
@@ -129,13 +119,9 @@ class TTS(multiprocessing.Process):
             for frame in segment_wav:
                 self.audio_out.send(Frame(frame))
 
-        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s")' %
-                            (user_id, text, bn), 'TTS', 'AudioOut'))
-
-        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s",log="%s")' %
-                           (user_id, text, bn, log), 'TTS', 'HUB'))
-
-        save_wav(self.cfg, fname, b"".join(wav))
+        self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
+        self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
+                            (user_id, text, fname, log), 'TTS', 'AudioOut'))
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -185,15 +171,18 @@ class TTS(multiprocessing.Process):
 
     def run(self):
         try:
-            self.command = None
             set_proc_name("Alex_TTS")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+
+                s = (time.time(), time.clock())
 
                 # process all pending commands
                 if self.process_pending_commands():
@@ -201,8 +190,19 @@ class TTS(multiprocessing.Process):
 
                 # process audio data
                 self.read_text_write_audio()
+
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.200:
+                    print "EXEC Time inner loop: TTS t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the TTS process.')
             self.close_event.set()
             raise
 
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()

@@ -305,8 +305,8 @@ ontology = {
             '3': 'třetí',
             '4': 'čtvrtý',
             'last': 'poslední',
-            'next': 'předchozí',
-            'prev': 'následující',
+            'next': 'následující',
+            'prev': 'předchozí',
         }
     },
 }
