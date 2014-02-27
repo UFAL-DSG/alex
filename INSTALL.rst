@@ -174,9 +174,9 @@ To install ``morfodita``, follow these instructions:
 .. code-block:: bash
 
   git clone git@github.com:ufal/morphodita.git
-  cd morfodita/src
+  cd morphodita/src
   make
-  cd ../../bindings/python
+  cd ../bindings/python
   make PYTHON_INCLUDE=/usr/include/python2.7/
 
   cp -R ./ufal /usr/local/lib/python2.7/dist-packages
