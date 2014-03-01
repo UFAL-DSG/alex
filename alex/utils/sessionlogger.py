@@ -13,6 +13,7 @@ import socket
 import wave
 
 from datetime import datetime
+from collections import deque
 
 from alex.utils.mproc import etime
 from alex.utils.exdec import catch_ioerror
@@ -43,6 +44,7 @@ class SessionLogger(multiprocessing.Process):
         self._rec_started = {}
 
         self.queue = multiprocessing.Queue()
+        self._queue = deque()
 
     def set_close_event(self, close_event):
         self.close_event = close_event
@@ -63,7 +65,7 @@ class SessionLogger(multiprocessing.Process):
         @etime('SessionLoggerQueue: '+key)
         def queue(*args, **kw):
             # print "Queueing a call", key, args, kw
-            self.queue.put((key, args, kw))
+            self.queue.put((key, args, kw, time.time()))
 
         return queue
 
@@ -228,22 +230,19 @@ class SessionLogger(multiprocessing.Process):
         function is called.
 
         """
-        if self._is_open:
-            els = self._doc.getElementsByTagName("dialogue")
+        els = self._doc.getElementsByTagName("dialogue")
 
-            if els:
-                da = els[0].appendChild(self._doc.createElement("dialogue_rec"))
-                if speaker:
-                    da.setAttribute("speaker", speaker)
-                da.setAttribute("fname", fname)
-                da.setAttribute("starttime", self._get_time_str())
-            else:
-                self._write_session_xml()
-                raise SessionLoggerException(("Missing dialogue element for %s speaker") % speaker)
-
-            self._write_session_xml()
+        if els:
+            da = els[0].appendChild(self._doc.createElement("dialogue_rec"))
+            if speaker:
+                da.setAttribute("speaker", speaker)
+            da.setAttribute("fname", fname)
+            da.setAttribute("starttime", self._get_time_str())
         else:
-            raise SessionClosedException()
+            self._write_session_xml()
+            raise SessionLoggerException(("Missing dialogue element for %s speaker") % speaker)
+
+        self._write_session_xml()
 
     @etime('seslog_dialogue_rec_end')
     # @catch_ioerror - do not add! VIO catches the IOError
@@ -380,21 +379,21 @@ class SessionLogger(multiprocessing.Process):
     def _rec_end(self, fname):
         """ Stores the end time in the rec element with fname file.
         """
-        els = self._doc.getElementsByTagName("rec")
+        try:
+            els = self._doc.getElementsByTagName("rec")
 
-        for i in range(els.length - 1, -1, -1):
-            if els[i].getAttribute("fname") == fname:
-                els[i].setAttribute("endtime", self._get_time_str())
-                break
-        else:
+            for i in range(els.length - 1, -1, -1):
+                if els[i].getAttribute("fname") == fname:
+                    els[i].setAttribute("endtime", self._get_time_str())
+                    break
+            else:
+                raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
+
             self._write_session_xml()
             self._rec_started[fname].close()
             self._rec_started[fname] = None
-            raise SessionLoggerException(("Missing rec element for the {fname} fname.".format(fname=fname)))
-
-        self._write_session_xml()
-        self._rec_started[fname].close()
-        self._rec_started[fname] = None
+        except KeyError:
+            raise SessionLoggerException("rec_end: missing rec element %s" % fname)
 
     def _include_rec(self, turn, fname):
         if fname == "*":
@@ -593,6 +592,8 @@ class SessionLogger(multiprocessing.Process):
     def run(self):
         try:
             set_proc_name("Alex_SessionLogger")
+            last_session_start_time = 0
+            last_session_end_time = 0
 
             while 1:
                 # Check the close event.
@@ -604,34 +605,66 @@ class SessionLogger(multiprocessing.Process):
 
                 s = (time.time(), time.clock())
 
-                if not self.queue.empty():
-                    key, args, kw = self.queue.get()
+                while not self.queue.empty():
+                    self._queue.append(self.queue.get())
 
-                    attr = '_'+key
+                if len(self._queue):
+                    cmd, args, kw, cmd_time = self._queue.popleft()
+
+                    attr = '_'+cmd
                     try:
-                        if not self._is_open and key != 'session_start':
-                            print "SessionLogger: calling method", key, "when the session is not open"
-                            continue
+                        if cmd == 'session_start':
+                            last_session_start_time = time.time()
+                        elif cmd == 'session_end':
+                            last_session_start_time = time.time()
 
-                        # if key != "rec_write":
-                        #     print 'Calling: ', key, [a for a in args if isinstance(a, basestring) and len(a) < 100]
+
+                        if not self._is_open and cmd != 'session_start':
+                            session_start_found = False
+                            while time.time() - cmd_time < 3.0 and not session_start_found:
+                                # these are probably commands for the new un-opened session
+                                for i, (_cmd, _args, _kw, _cmd_time) in enumerate(self._queue):
+                                    if _cmd == 'session_start':
+                                        print "SessionLogger: finally found session start"
+                                        self._session_start(*_args,**_kw)
+                                        del self._queue[i]
+                                        session_start_found = True
+                                        break
+                                else:
+                                    time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+
+                            if not session_start_found and (last_session_end_time - cmd_time < 2.0):
+                                # just silently ignore because these are likely the be commands for the already
+                                # closed session
+
+                                print "SessionLogger: should be silent"
+                                print "SessionLogger: calling method", cmd, "when the session is not open"
+                                print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
+                                continue
+
+
+                            if not session_start_found:
+                                print "SessionLogger: no session start found"
+                                print "SessionLogger: calling method", cmd, "when the session is not open"
+                                print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
+                                continue
+
                         cf = SessionLogger.__dict__[attr]
                         cf(self, *args, **kw)
                     except AttributeError:
-                        print "SessionLogger: unknown method", key
+                        print "SessionLogger: unknown method", cmd
                         self.close_event.set()
                         raise
                     except SessionLoggerException as e:
-                        if key == 'rec_write':
-                            print "Exception when logging:", key
+                        if cmd == 'rec_write':
+                            print "Exception when logging:", cmd
                             print e
                         else:
-                            print "Exception when logging:", key, args, kw
+                            print "Exception when logging:", cmd, args, kw
                             print e
                     except SessionClosedException:
-                        if key == 'dialogue_rec_start':
-                            # try once again later
-                            self.queue.put((key, args, kw))
+                        print "Exception when logging:", cmd, args, kw
+                        print e
 
                 d = (time.time() - s[0], time.clock() - s[1])
                 if d[0] > 0.200:
