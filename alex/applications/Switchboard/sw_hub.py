@@ -398,6 +398,7 @@ def run(cfg1, cfg2):
                             pass
 
                         intro_played1 = False
+                        u_start1 = False
 
                         callee_entered = False
                         callee_uri = ''
@@ -514,6 +515,7 @@ def run(cfg1, cfg2):
                             vio1_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
 
                         intro_played2 = False
+                        u_start2 = False
                         hangup1 = True
 
                     if command.parsed['__name__'] == "play_utterance_start":
