@@ -481,7 +481,7 @@ def run(cfg1, cfg2):
                         u_last_voice_activity_time2 = 0
                         vio_connect2 = False
                         hangup2 = False
-                        u_start1 = False
+                        u_start2 = False
 
                         intro_id2, last_intro_id2 = play_intro(cfg2, tts2_commands, intro_id2, last_intro_id2)
 
