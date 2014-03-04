@@ -637,9 +637,9 @@ class SessionLogger(multiprocessing.Process):
                                 # just silently ignore because these are likely the be commands for the already
                                 # closed session
 
-                                print "SessionLogger: should be silent"
-                                print "SessionLogger: calling method", cmd, "when the session is not open"
-                                print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
+                                # print "SessionLogger: should be silent"
+                                # print "SessionLogger: calling method", cmd, "when the session is not open"
+                                # print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
                                 continue
 
 
