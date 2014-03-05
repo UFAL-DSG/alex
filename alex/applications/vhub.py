@@ -210,7 +210,7 @@ class VoipHub(Hub):
                                 s_voice_activity = True
                                 s_last_voice_activity_time = time.time()
                                 u_voice_activity = False
-                                u_last_voice_activity_time = 0
+                                u_last_voice_activity_time = time.time()
                                 u_last_input_timeout = time.time()
                                 hangup = True
 
@@ -229,7 +229,7 @@ class VoipHub(Hub):
                                 s_voice_activity = False
                                 s_last_voice_activity_time = 0
                                 u_voice_activity = False
-                                u_last_voice_activity_time = 0
+                                u_last_voice_activity_time = time.time()
                                 u_last_input_timeout = time.time()
                                 hangup = False
 
@@ -389,7 +389,7 @@ class VoipHub(Hub):
                     not s_voice_activity and not u_voice_activity and \
                     s_diff > self.cfg['DM']['input_timeout'] and \
                     u_diff > self.cfg['DM']['input_timeout'] and \
-                    current_time - u_last_input_timeout> self.cfg['DM']['input_timeout']:
+                    current_time - u_last_input_timeout > self.cfg['DM']['input_timeout']:
 
                     u_last_input_timeout = time.time()
                     dm_commands.send(Command('timeout(silence_time="%0.3f")' % min(s_diff, u_diff), 'HUB', 'DM'))
