@@ -13,6 +13,8 @@ import xml.dom.minidom
 import fnmatch
 import argparse
 import time
+import sys
+import codecs
 
 import autopath
 
@@ -27,6 +29,8 @@ from alex.corpustools.asrscore import score
 from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
+
+sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
 def rec_wav_file(asr, cfg, wav_path):
     pcm = load_wav(cfg, wav_path)

@@ -19,6 +19,7 @@ import xml.dom.minidom
 import glob
 import codecs
 import random
+import sys
 
 import autopath
 
@@ -28,7 +29,12 @@ import alex.utils.various as various
 from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey
 
-train_data_size                 = 0.90
+train_data_size                 = 0.8 ## changed from 0.9
+train_limit                     = 1.0
+
+if '--train-limit' in sys.argv:
+    train_limit = float(sys.argv[sys.argv.index('--train-limit')+1]) 
+
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
 indomain_data_dir               = "indomain_data"
@@ -148,8 +154,8 @@ if not os.path.exists(indomain_data_text_trn_norm):
     sf = [(a, b) for a, b in zip(tt, pt)]
     random.shuffle(sf)
 
-    sf_train = sorted(sf[:int(train_data_size*len(sf))], key=lambda k: k[1][0])
-    sf_dev = sorted(sf[int(train_data_size*len(sf)):], key=lambda k: k[1][0])
+    sf_train = sorted(sf[:int(train_limit*train_data_size*len(sf))], key=lambda k: k[1][0])
+    sf_dev = sorted(sf[int(0.9*len(sf)):], key=lambda k: k[1][0]) # FIXME -- dev=test, we discard 0.8-0.9 every time
 
     t_train = [a for a, b in sf_train]
     pt_train = [b for a, b in sf_train]

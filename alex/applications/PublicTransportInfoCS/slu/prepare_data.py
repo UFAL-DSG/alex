@@ -9,6 +9,7 @@ import xml.dom.minidom
 import random
 import autopath
 import sys
+import codecs
 
 import alex.utils.various as various
 
@@ -21,12 +22,16 @@ from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPrepro
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
 from alex.utils.config import Config
 
-""" The script has two commands:
+""" The script has the following parameters:
 
---fast      it approximates SLU output on N-best lists by SLU output from 1-best
---uniq      it generates only files with unique texts and their SLU HDC output
---asr-log   it uses the asr hypotheses from call logs
+--fast          it approximates SLU output on N-best lists by SLU output from 1-best
+--uniq          it generates only files with unique texts and their SLU HDC output
+--asr-log       it uses the asr hypotheses from call logs
+--train-limit   use just a part of the data for training (float 0.0-1.0)
 """
+
+
+sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
 def normalise_semi_words(txt):
     # normalise these semi-words
@@ -45,8 +50,12 @@ def main():
     preprocessing = PTICSSLUPreprocessing(cldb)
     slu = PTICSHDCSLU(preprocessing)
     cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
-    asr_rec = asr_factory(cfg)                    
+    asr_rec = asr_factory(cfg)
 
+    train_limit = 1.0
+    if '--train-limit' in sys.argv:
+        train_limit = float(sys.argv[sys.argv.index('--train-limit')+1])
+    
     fn_uniq_trn = 'uniq.trn'
     fn_uniq_trn_hdc_sem = 'uniq.trn.hdc.sem'
     fn_uniq_trn_sem = 'uniq.trn.sem'
@@ -261,7 +270,7 @@ def main():
         random.shuffle(nbl_hdc_sem)
 
         # trn
-        train_trn = trn[:int(0.8*len(trn))]
+        train_trn = trn[:int(0.8*train_limit*len(trn))]
         dev_trn = trn[int(0.8*len(trn)):int(0.9*len(trn))]
         test_trn = trn[int(0.9*len(trn)):]
 
@@ -270,7 +279,7 @@ def main():
         save_wavaskey(fn_test_trn, dict(test_trn))
 
         # trn_hdc_sem
-        train_trn_hdc_sem = trn_hdc_sem[:int(0.8*len(trn_hdc_sem))]
+        train_trn_hdc_sem = trn_hdc_sem[:int(0.8*train_limit*len(trn_hdc_sem))]
         dev_trn_hdc_sem = trn_hdc_sem[int(0.8*len(trn_hdc_sem)):int(0.9*len(trn_hdc_sem))]
         test_trn_hdc_sem = trn_hdc_sem[int(0.9*len(trn_hdc_sem)):]
 
@@ -279,7 +288,7 @@ def main():
         save_wavaskey(fn_test_trn_hdc_sem, dict(test_trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
         # asr
-        train_asr = asr[:int(0.8*len(asr))]
+        train_asr = asr[:int(0.8*train_limit*len(asr))]
         dev_asr = asr[int(0.8*len(asr)):int(0.9*len(asr))]
         test_asr = asr[int(0.9*len(asr)):]
 
@@ -288,7 +297,7 @@ def main():
         save_wavaskey(fn_test_asr, dict(test_asr))
 
         # asr_hdc_sem
-        train_asr_hdc_sem = asr_hdc_sem[:int(0.8*len(asr_hdc_sem))]
+        train_asr_hdc_sem = asr_hdc_sem[:int(0.8*train_limit*len(asr_hdc_sem))]
         dev_asr_hdc_sem = asr_hdc_sem[int(0.8*len(asr_hdc_sem)):int(0.9*len(asr_hdc_sem))]
         test_asr_hdc_sem = asr_hdc_sem[int(0.9*len(asr_hdc_sem)):]
 
@@ -297,7 +306,7 @@ def main():
         save_wavaskey(fn_test_asr_hdc_sem, dict(test_asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
         # n-best lists
-        train_nbl = nbl[:int(0.8*len(nbl))]
+        train_nbl = nbl[:int(0.8*train_limit*len(nbl))]
         dev_nbl = nbl[int(0.8*len(nbl)):int(0.9*len(nbl))]
         test_nbl = nbl[int(0.9*len(nbl)):]
 
@@ -306,7 +315,7 @@ def main():
         save_wavaskey(fn_test_nbl, dict(test_nbl))
 
         # nbl_hdc_sem
-        train_nbl_hdc_sem = nbl_hdc_sem[:int(0.8*len(nbl_hdc_sem))]
+        train_nbl_hdc_sem = nbl_hdc_sem[:int(0.8*train_limit*len(nbl_hdc_sem))]
         dev_nbl_hdc_sem = nbl_hdc_sem[int(0.8*len(nbl_hdc_sem)):int(0.9*len(nbl_hdc_sem))]
         test_nbl_hdc_sem = nbl_hdc_sem[int(0.9*len(nbl_hdc_sem)):]
 
