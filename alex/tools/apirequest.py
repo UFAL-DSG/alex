@@ -54,7 +54,7 @@ class APIRequest(object):
 
         :param data: The API response to be dumped as JSON.
         """
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        timestamp = datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f')
         fname = os.path.join(self.system_logger.get_session_dir_name(),
                              self.fname_prefix + '-{t}.json'.format(t=timestamp))
         # dump to JSON (default for handling datetime objects)

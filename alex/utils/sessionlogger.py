@@ -74,8 +74,7 @@ class SessionLogger(multiprocessing.Process):
 
         It is useful when constructing file and directory names.
         """
-        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        dt += " " + time.tzname[time.localtime().tm_isdst]
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + time.tzname[time.localtime().tm_isdst]
 
         return dt
 

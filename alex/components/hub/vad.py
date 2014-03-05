@@ -175,7 +175,7 @@ class VAD(multiprocessing.Process):
 
                 if change == 'speech':
                     # Create new wave file.
-                    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+                    timestamp = datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f')
                     self.vad_fname = 'vad-{stamp}.wav'.format(stamp=timestamp)
 
                     self.session_logger.turn("user")

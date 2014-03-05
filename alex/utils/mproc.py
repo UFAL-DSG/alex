@@ -188,7 +188,7 @@ class SystemLogger(object):
         It is useful in constructing file and directory names.
 
         """
-        return u'{dt}-{tz}'.format(dt=datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f'),
+        return u'{dt}-{tz}'.format(dt=datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f'),
             tz=time.tzname[time.localtime().tm_isdst])
 
     @global_lock(lock)

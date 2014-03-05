@@ -96,7 +96,7 @@ class TTS(multiprocessing.Process):
             text == ""
 
         wav = []
-        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+        timestamp = datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f')
         fname = 'tts-{stamp}.wav'.format(stamp=timestamp)
 
         self.commands.send(Command('tts_start(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
