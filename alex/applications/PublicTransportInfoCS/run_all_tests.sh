@@ -1,10 +1,11 @@
 #!/bin/bash
-
-
 if [ "$#" != 1 ]; then
-    echo "Usage: ./$0 <train-data-portion>"
+    echo "Usage: $0 <train-data-portion>"
     echo "Must be run from within PTICS directory on testing_acl"
+    exit 1
 fi
+
+set -e  # exit on any command fail
 
 cd data
 echo -e `date` '***********************************\nDATABASE DUMP' | tee -a ../training-log.txt
@@ -36,3 +37,4 @@ echo -e `date` '***********************************\nTESTING SLU (BOOTSTRAP)' | 
 
 echo -e `date` '***********************************\nDONE' | tee -a ../training-log.txt
 ./print_scores.sh | tee -a ../training-log.txt
+
