@@ -5,6 +5,9 @@ if [ "$#" != 1 ]; then
     exit 1
 fi
 
+ln -s /net/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/total lm/indomain_data
+ln -s /net/projects/vystadial/data/call-logs/2013-05-30-alex-aotb-prototype/total slu/indomain_data
+
 set -e  # exit on any command fail
 
 cd data
