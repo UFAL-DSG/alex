@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from collections import deque
-from datetime import datetime
 import multiprocessing
-import os.path
 import os
 import time
-import wave
+
+from collections import deque
+from datetime import datetime
 
 from alex.components.asr.exceptions import ASRException
 from alex.components.hub.messages import Command, Frame
@@ -52,8 +51,7 @@ class VAD(multiprocessing.Process):
         self.audio_out = audio_out
         self.close_event = close_event
 
-        self.output_file_name = None
-        self.wf = None  # wave file for logging
+        self.vad_fname = None
 
         if self.cfg['VAD']['type'] == 'power':
             self.vad = PVAD.PowerVAD(cfg)
@@ -64,14 +62,10 @@ class VAD(multiprocessing.Process):
         else:
             raise ASRException('Unsupported VAD engine: %s' % (self.cfg['VAD']['type'], ))
 
-        # stores information about each frame whether it was classified as
-        # speech or non speech
-        self.detection_window_speech = \
-            deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
-        self.detection_window_sil = \
-            deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
-        self.deque_audio_in = \
-            deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
+        # stores information about each frame whether it was classified as speech or non speech
+        self.detection_window_speech = deque(maxlen=self.cfg['VAD']['decision_frames_speech'])
+        self.detection_window_sil    = deque(maxlen=self.cfg['VAD']['decision_frames_sil'])
+        self.deque_audio_in          = deque(maxlen=self.cfg['VAD']['speech_buffer_frames'])
 
         # keeps last decision about whether there is speech or non speech
         self.last_vad = False
@@ -109,10 +103,6 @@ class VAD(multiprocessing.Process):
 
             if isinstance(command, Command):
                 if command.parsed['__name__'] == 'stop':
-                    # Stop recording and playing.
-                    if self.wf:
-                        self.wf.close()
-
                     return True
 
                 if command.parsed['__name__'] == 'flush':
@@ -176,48 +166,31 @@ class VAD(multiprocessing.Process):
                 vad, change = self.smoothe_decison(decision)
 
                 if self.cfg['VAD']['debug']:
-                    self.system_logger.debug("vad: %s change:%s" % (vad, change))
+                    self.system_logger.debug("vad: %s change: %s" % (vad, change))
 
                     if vad:
                         self.system_logger.debug('+')
                     else:
                         self.system_logger.debug('-')
 
-                if change:
-                    if change == 'speech':
-                        # Create new wave file.
-                        timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
-                        self.output_file_name = os.path.join(self.system_logger.get_session_dir_name(),
-                                                             'vad-{stamp}.wav'.format(stamp=timestamp))
+                if change == 'speech':
+                    # Create new wave file.
+                    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S.%f')
+                    self.vad_fname = 'vad-{stamp}.wav'.format(stamp=timestamp)
 
-                        self.session_logger.turn("user")
-                        self.session_logger.rec_start("user", os.path.basename(self.output_file_name))
+                    self.session_logger.turn("user")
+                    self.session_logger.rec_start("user", self.vad_fname)
 
-                        # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_start(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
+                    # Inform both the parent and the consumer.
+                    self.audio_out.send(Command('speech_start(fname="%s")' % self.vad_fname, 'VAD', 'AudioIn'))
+                    self.commands.send(Command('speech_start(fname="%s")' % self.vad_fname, 'VAD', 'HUB'))
 
-                        if self.cfg['VAD']['debug']:
-                            self.system_logger.debug('Output file name: %s' % self.output_file_name)
+                elif change == 'non-speech':
+                    self.session_logger.rec_end(self.vad_fname)
 
-                        self.wf = wave.open(self.output_file_name, 'w')
-                        self.wf.setnchannels(1)
-                        self.wf.setsampwidth(2)
-                        self.wf.setframerate(self.cfg['Audio']['sample_rate'])
-
-                    elif change == 'non-speech':
-                        # Log the change.
-                        # if self.session_logger.is_open:
-                        if self.cfg['VAD']['debug']:
-                            self.system_logger.debug('REC END Output file name: {out}'.format(out=self.output_file_name))
-                        self.session_logger.rec_end(os.path.basename(self.output_file_name))
-
-                        # Inform both the parent and the consumer.
-                        self.audio_out.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'AudioIn'))
-                        self.commands.send(Command('speech_end(fname="%s")' % os.path.basename(self.output_file_name), 'VAD', 'HUB'))
-                        # Close the current wave file.
-                        if self.wf:
-                            self.wf.close()
+                    # Inform both the parent and the consumer.
+                    self.audio_out.send(Command('speech_end(fname="%s")' % self.vad_fname, 'VAD', 'AudioIn'))
+                    self.commands.send(Command('speech_end(fname="%s")' % self.vad_fname, 'VAD', 'HUB'))
 
                 if vad:
                     while self.deque_audio_in:
@@ -231,31 +204,22 @@ class VAD(multiprocessing.Process):
 
                         # Send the result.
                         self.audio_out.send(data_rec)
-
-                        # If the wave file has already been closed,
-                        if self.wf._file is None:
-                            # Prevent the exception from being raised next
-                            # time (or try to achieve that).
-                            self.last_vad = False
-                            # Raise the exception.
-                            # FIXME: It should be a different one. It is not
-                            # the session file that is closed, but the wave
-                            # file.
-                            raise SessionClosedException("The output wave file has already been closed.")
-                        self.wf.writeframes(bytearray(data_rec))
+                        self.session_logger.rec_write(self.vad_fname, data_rec)
 
     def run(self):
         try:
             set_proc_name("Alex_VAD")
+            self.session_logger.cancel_join_thread()
 
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                s = time.time()
+                s = (time.time(), time.clock())
 
                 self.recv_input_locally()
 
@@ -274,9 +238,13 @@ class VAD(multiprocessing.Process):
                 except SessionClosedException as e:
                     self.system_logger.exception('VAD:read_write_audio: {ex!s}'.format(ex=e))
 
-                d = time.time() - s
-                if d > 0.100:
-                    print "VAD t = {t:0.4f}".format(t=d)
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.100:
+                    print "VAD t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in the VAD process.')
             self.close_event.set()

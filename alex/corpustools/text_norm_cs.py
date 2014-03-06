@@ -210,6 +210,7 @@ _subst = [
           ('PŘÍJMACÍ', 'PŘÍJÍMACÍ'),
           ('PŘÍJMANÉ', 'PŘÍJÍMANÉ'),
           ('PŘÍRUSTEK', 'PŘÍRŮSTEK'),
+          ('PRAZÉ', 'PRAZE'),
           ('PROSIM', 'PROSÍM'),
           ('PROTESTNANTY', 'PROTESTANTY'),
           ('RADSOT', 'RADOST'),

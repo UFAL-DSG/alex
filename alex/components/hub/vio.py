@@ -185,21 +185,8 @@ class CallCallback(pj.CallCallback):
                 self.output_file_name_recorded = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.recorded.wav'.format(stamp=timestamp))
                 self.output_file_name_played = os.path.join(self.system_logger.get_session_dir_name(),'all-{stamp}.played.wav'.format(stamp=timestamp))
  
-                i = 0
-                while i < 20:
-                    i += 1
-                    try:
-                        # this can fail if the session.xml is not created yet
-                        self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
-                        self.session_logger.dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
-                    except IOError:
-                        # Sleep for a while to let others react to the previous
-                        # messages.
-                        time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
-                        # Then try again.
-                        continue
-                    # Everything was OK, so exit the loop.
-                    break
+                self.session_logger.dialogue_rec_start("system", os.path.basename(self.output_file_name_played))
+                self.session_logger.dialogue_rec_start("user", os.path.basename(self.output_file_name_recorded))
 
                 # Create wave recorders.
                 self.recorded_id = pj.Lib.instance().create_recorder(self.output_file_name_recorded)
@@ -221,15 +208,11 @@ class CallCallback(pj.CallCallback):
                 self.voipio.on_call_confirmed(hash_remote_uri(self.cfg, self.call.info().remote_uri))
 
             if self.call.info().state == pj.CallState.DISCONNECTED:
-                try:
+                # call can be disconnected even if it was never connected (e.g. if it was ringing and never answered)
+                if self.output_file_name_played:
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_played))
+                if self.output_file_name_recorded:
                     self.session_logger.dialogue_rec_end(os.path.basename(self.output_file_name_recorded))
-                except SessionLoggerException as e:
-                    # Please note that the session log is only created when the call is CONFIRMED.
-                    # Therefore, the session is not always created, for example, when call is only
-                    # in the state CONNECTING and it did not changed into the CONFIRMED state.
-                    print "SessionLoggerException:", e, " Exception pass"
-                    pass
 
                 self.voipio.call = None
 
@@ -487,18 +470,18 @@ class VoipIO(multiprocessing.Process):
         """
 
         if (self.local_audio_play and
-                (self.mem_player.get_write_available()
-                 > self.cfg['Audio']['samples_per_frame'] * 2)):
+                (self.mem_player.get_write_available() > self.cfg['Audio']['samples_per_frame'] * 2)):
             # send a frame from input to be played
             data_play = self.local_audio_play.popleft()
 
             if self.audio_playing and isinstance(data_play, Frame):
                 if len(data_play) == self.cfg['Audio']['samples_per_frame'] * 2:
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
+                    self.cfg['Logging']['session_logger'].rec_write(self.audio_playing, data_play.payload)
 
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
-                    self.audio_playing = True
+                    self.audio_playing = data_play.parsed['fname']
                     self.message_queue.append(
                         (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
@@ -511,7 +494,7 @@ class VoipIO(multiprocessing.Process):
                         self.cfg['Logging']['system_logger'].exception(e)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
-                    self.audio_playing = False
+                    self.audio_playing = None
                     self.message_queue.append(
                         (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
@@ -761,6 +744,7 @@ class VoipIO(multiprocessing.Process):
     def run(self):
         try:
             set_proc_name("Alex_VIO")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             global logger
             logger = self.cfg['Logging']['system_logger']
@@ -830,11 +814,12 @@ class VoipIO(multiprocessing.Process):
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                s = time.time()
+                s = (time.time(), time.clock())
 
                 self.recv_input_locally()
 
@@ -850,9 +835,9 @@ class VoipIO(multiprocessing.Process):
                     # process at least n_rwa frames
                     self.read_write_audio()
 
-                d = time.time() - s
-                if d > 0.100:
-                    print "VIO t = {t:0.4f}".format(t=d)
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.200:
+                    print "EXEC Time inner loop: VIO t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
 
             # Shutdown the library
             self.transport = None
@@ -861,6 +846,13 @@ class VoipIO(multiprocessing.Process):
             self.lib.destroy()
             self.lib = None
 
+        except KeyboardInterrupt:
+            self.lib.destroy()
+            self.lib = None
+
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.lib.destroy()
             self.lib = None

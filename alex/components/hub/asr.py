@@ -71,6 +71,8 @@ class ASR(multiprocessing.Process):
         self.system_logger = self.cfg['Logging']['system_logger']
         self.session_logger = self.cfg['Logging']['session_logger']
 
+        self.recognition_on = False
+
     def recv_input_locally(self):
         """ Copy all input from input connections into local queue objects.
 
@@ -126,6 +128,12 @@ class ASR(multiprocessing.Process):
             if len(self.local_audio_in) > 40:
                 print "ASR unprocessed frames:", len(self.local_audio_in)
 
+            if len(self.local_audio_in) > 200:
+                print "ASR too many unprocessed frames:", len(self.local_audio_in)
+                print "    skipping everything until the end of the segment:", len(self.local_audio_in)
+                while len(self.local_audio_in) > 2 and isinstance(self.local_audio_in[0], Frame):
+                    skip = self.local_audio_in.popleft()
+
             # read recorded audio
             data_rec = self.local_audio_in.popleft()
 
@@ -137,6 +145,20 @@ class ASR(multiprocessing.Process):
                 fname = None
 
                 if data_rec.parsed['__name__'] == "speech_start":
+                    # check whether there are more then one speech segments
+                    segments = [ cmd for cmd in self.local_audio_in
+                                 if isinstance(cmd, Command) and cmd.parsed['__name__'] == "speech_start"]
+                    if len(segments):
+                        # there are multiple unprocessed segments in the queue
+                        # remove all unprocessed segments except the last
+                        print "ASR too many unprocessed speech segments:", len(segments)
+                        print "    removed all segments but the last"
+                        removed_segments = 0
+                        while removed_segments < len(segments):
+                            data_rec = self.local_audio_in.popleft()
+                            if isinstance(data_rec, Command) and data_rec.parsed['__name__'] == "speech_start":
+                                removed_segments += 1
+
                     dr_speech_start = "speech_start"
                     fname = data_rec.parsed['fname']
                 elif data_rec.parsed['__name__'] == "speech_end":
@@ -145,11 +167,9 @@ class ASR(multiprocessing.Process):
 
                 # Check consistency of the input command.
                 if dr_speech_start:
-                    if ((not self.recognition_on
-                            and dr_speech_start != "speech_start")
+                    if ((not self.recognition_on and dr_speech_start != "speech_start")
                         or
-                        (self.recognition_on
-                            and dr_speech_start != "speech_end")):
+                        (self.recognition_on and dr_speech_start != "speech_end")):
                         msg = ('Commands received by the ASR component are '
                                'inconsistent (recognition_on: {rec}; the new '
                                'command: {cmd}').format(
@@ -212,17 +232,18 @@ class ASR(multiprocessing.Process):
 
     def run(self):
         try:
-            self.recognition_on = False
             set_proc_name("Alex_ASR")
+            self.cfg['Logging']['session_logger'].cancel_join_thread()
 
             while 1:
                 # Check the close event.
                 if self.close_event.is_set():
+                    print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
                 time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-                s = time.time()
+                s = (time.time(), time.clock())
 
                 self.recv_input_locally()
 
@@ -234,10 +255,18 @@ class ASR(multiprocessing.Process):
                 for i in range(self.cfg['ASR']['n_rawa']):
                     self.read_audio_write_asr_hypotheses()
 
-                d = time.time() - s
-                if d > 0.100:
-                    print "ASR t = {t:0.4f}".format(t=d)
+                d = (time.time() - s[0], time.clock() - s[1])
+                if d[0] > 0.200:
+                    print "EXEC Time inner loop: ASR t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
+
+        except KeyboardInterrupt:
+            print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
+            self.close_event.set()
+            return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in ASR process.')
             self.close_event.set()
             raise
+
+        print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+        self.close_event.set()
