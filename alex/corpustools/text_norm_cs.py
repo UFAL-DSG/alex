@@ -11,6 +11,11 @@ import re
 
 __all__ = ['normalise_text', 'exclude', 'exclude_by_dict']
 
+_nonspeech_events = ['_SIL_', '_INHALE_', '_LAUGH_', '_EHM_HMM_', '_NOISE_', '_EXCLUDE_',]
+
+for idx, ne in enumerate(_nonspeech_events):
+    _nonspeech_events[idx] = (re.compile(r'((\b|\s){pat}(\b|\s))+'.format(pat=ne)), ' '+ne+' ')
+
 # nonspeech event transcriptions {{{
 _nonspeech_map = {
     '_SIL_': (
@@ -20,6 +25,7 @@ _nonspeech_map = {
         '<SILENCE>',
     ),
     '_INHALE_': (
+        '(INHALE)',
         '(BREATH)',
         '(BREATHING)',
         '(SNIFFING)',
@@ -31,6 +37,7 @@ _nonspeech_map = {
         '<LAUGH>',
     ),
     '_EHM_HMM_': (
+        '(EHM_HMM)',
         '(HESITATION)',
         '(HUM)',
         '<COUGH>',
@@ -41,6 +48,8 @@ _nonspeech_map = {
         '<EHM>',
     ),
     '_NOISE_': (
+        '(NOISE)',
+        '(NOISES)',
         '(COUCHING)',
         '(COUGH)',
         '(COUGHING)',
@@ -65,6 +74,9 @@ _nonspeech_map = {
         '<NOISE>',
     ),
     '_EXCLUDE_': (
+        '(EXCLUDE)',
+        '(PERSONAL)',
+        '(VULGARISM)',
         '(UNINTELLIGIBLE)',
         '(UNINT)',
     )
@@ -301,6 +313,10 @@ def normalise_text(text):
         for parenized, uscored in _nonspeech_trl.iteritems():
             text = text.replace(parenized, uscored)
         text = _more_spaces.sub(' ', text.strip())
+
+    for pat, sub in _nonspeech_events:
+        text = pat.sub(sub, text)
+    text = _more_spaces.sub(' ', text).strip()
 
     for char in '^':
         text = text.replace(char, '')
