@@ -1,6 +1,11 @@
 #!/bin/bash
 
 
+if [ "$#" != 1 ]; then
+    echo "Usage: ./$0 <train-data-portion>"
+    echo "Must be run from within PTICS directory on testing_acl"
+fi
+
 cd data
 echo -e `date` '***********************************\nDATABASE DUMP' | tee -a ../training-log.txt
 ./database.py dump
