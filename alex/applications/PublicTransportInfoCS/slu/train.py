@@ -11,6 +11,10 @@ from alex.components.slu.da import DialogueAct
 from alex.components.slu.base import CategoryLabelDatabase
 from alex.components.slu.dailrclassifier import DAILogRegClassifier
 from alex.corpustools.wavaskey import load_wavaskey
+import sys
+import codecs
+
+sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
 def increase_weight(d, weight):
     new_d = {}

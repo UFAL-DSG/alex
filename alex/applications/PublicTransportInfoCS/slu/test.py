@@ -6,9 +6,11 @@ from __future__ import unicode_literals
 import os.path
 import codecs
 import autopath
+import sys
 
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
+sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
 def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
     """
