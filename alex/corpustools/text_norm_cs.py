@@ -133,6 +133,7 @@ _subst = [
           ('HLAVNIM', 'HLAVNÍM'),
           ('HVĚZDÁ', 'HVĚZDNÁ'),
           ('INICIATIVNU', 'INICIATIVU'),
+          ('ÍPÉPAVLOVA', 'I P PAVLOVA'),
           ('Í PÉ PAVLOVA', 'I P PAVLOVA'),
           ('ÍPÉ PAVLOVA', 'I P PAVLOVA'),
           ('ÍPÉ PA PAVLOVA', 'I P PAVLOVA'),
