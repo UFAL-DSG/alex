@@ -62,6 +62,7 @@ while (<>) {
 sub exceptions {
     s/AA/A/g;
 
+    s/ADALBERTIN/ADALBERTÝN/g;
     s/AKTI/AKTY/g;
     s/ANTI/ANTY/g;
     s/ARKTI/ARKTY/g;
