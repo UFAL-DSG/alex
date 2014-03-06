@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-git checkout testing_acl
-
 cd data
 echo -e `date` '***********************************\nDATABASE DUMP' | tee -a ../training-log.txt
 ./database.py dump
