@@ -27,5 +27,5 @@ echo -e `date` '***********************************\nRUNNING DECODE' | tee -a ..
 
 cd ../slu
 echo -e `date` '***********************************\nPREPARING SLU DATA' | tee -a ../training-log-noshuffle.txt
-./prepare_data.py --train-limit --noshuffle $1 >> ../training-log-noshuffle.txt 2>&1
+./prepare_data.py --train-limit $1 --noshuffle >> ../training-log-noshuffle.txt 2>&1
 
