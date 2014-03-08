@@ -12,6 +12,10 @@ The training procedure is as follows:
 #. Select 1M sentences with lowest perplexity given the class based language model.
 #. Append the selected sentences to the training data generated in the 1. step.
 #. Re-build the class based language model.
+
+Parameters:
+--train-limit   = limit training data to a given portion
+--noshuffle     = do not shuffle train/test, use final section as testing
 """
 
 import os
@@ -150,9 +154,11 @@ if not os.path.exists(indomain_data_text_trn_norm):
 
                 pt.append((wav_path, t))
 
-    random.seed(10)
     sf = [(a, b) for a, b in zip(tt, pt)]
-    random.shuffle(sf)
+
+    if not '--noshuffle' in sys.argv:
+        random.seed(10)
+        random.shuffle(sf)
 
     sf_train = sorted(sf[:int(train_limit*train_data_size*len(sf))], key=lambda k: k[1][0])
     sf_dev = sorted(sf[int(0.9*len(sf)):], key=lambda k: k[1][0]) # FIXME -- dev=test, we discard 0.8-0.9 every time

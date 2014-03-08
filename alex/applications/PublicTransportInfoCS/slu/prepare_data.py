@@ -30,6 +30,7 @@ from alex.utils.config import Config
 --train-limit   use just a part of the data for training (float 0.0-1.0)
 --split-only    just splits preloaded all.* data
 --config        use the given ASR config file (defaults to ../kaldi.cfg)
+--noshuffle     do not shuffle data (use end section as testing)
 """
 
 
@@ -274,20 +275,21 @@ def main():
 
     if '--uniq' not in sys.argv:
 
-        seed_value = 10
+        if not '--noshuffle' in sys.argv:
+            seed_value = 10
 
-        random.seed(seed_value)
-        random.shuffle(trn)
-        random.seed(seed_value)
-        random.shuffle(trn_hdc_sem)
-        random.seed(seed_value)
-        random.shuffle(asr)
-        random.seed(seed_value)
-        random.shuffle(asr_hdc_sem)
-        random.seed(seed_value)
-        random.shuffle(nbl)
-        random.seed(seed_value)
-        random.shuffle(nbl_hdc_sem)
+            random.seed(seed_value)
+            random.shuffle(trn)
+            random.seed(seed_value)
+            random.shuffle(trn_hdc_sem)
+            random.seed(seed_value)
+            random.shuffle(asr)
+            random.seed(seed_value)
+            random.shuffle(asr_hdc_sem)
+            random.seed(seed_value)
+            random.shuffle(nbl)
+            random.seed(seed_value)
+            random.shuffle(nbl_hdc_sem)
 
         # trn
         train_trn = trn[:int(0.8*train_limit*len(trn))]
