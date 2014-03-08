@@ -28,6 +28,8 @@ from alex.utils.config import Config
 --uniq          it generates only files with unique texts and their SLU HDC output
 --asr-log       it uses the asr hypotheses from call logs
 --train-limit   use just a part of the data for training (float 0.0-1.0)
+--split-only    just splits preloaded all.* data
+--config        use the given ASR config file (defaults to ../kaldi.cfg)
 """
 
 
@@ -49,7 +51,10 @@ def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
     slu = PTICSHDCSLU(preprocessing)
-    cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
+    cfg_file = '../kaldi.cfg'
+    if '--config' in sys.argv:
+        cfg_file = sys.argv[sys.argv.index('--config')+1]
+    cfg = Config.load_configs([cfg_file,], use_default=True)
     asr_rec = asr_factory(cfg)
 
     train_limit = 1.0
@@ -94,165 +99,181 @@ def main():
 
     indomain_data_dir = "indomain_data"
 
-    print "Generating the SLU train and test data"
-    print "-"*120
-    ###############################################################################################
+    # loading the data to perform a train-test split
+    if '--split-only' in sys.argv:
+        
+        sem = load_wavaskey(fn_all_sem, DialogueAct)
+        trn = load_wavaskey(fn_all_trn, Utterance)  
+        trn_hdc_sem = load_wavaskey(fn_all_trn_hdc_sem, DialogueAct)
+        asr = load_wavaskey(fn_all_asr, Utterance)
+        asr_hdc_sem = load_wavaskey(fn_all_asr_hdc_sem, DialogueAct)
+        nbl = load_wavaskey(fn_all_nbl, UtteranceNBList)
+        nbl_hdc_sem = load_wavaskey(fn_all_nbl_hdc_sem, DialogueAct)
 
-    files = []
-    files.append(glob.glob(os.path.join(indomain_data_dir, 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data_dir, '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', 'asr_transcribed.xml')))
-    files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', '*', 'asr_transcribed.xml')))
-    files = various.flatten(files)
 
-    sem = []
-    trn = []
-    trn_hdc_sem = []
-    asr = []
-    asr_hdc_sem = []
-    nbl = []
-    nbl_hdc_sem = []
+    # actually running ASR and generating the data
+    else:
 
-    for fn in files[:100000]:
-        f_dir = os.path.dirname(fn)
+        print "Generating the SLU train and test data"
+        print "-"*120
+        ###############################################################################################
 
-        print "Processing:", fn
-        doc = xml.dom.minidom.parse(fn)
-        turns = doc.getElementsByTagName("turn")
+        files = []
+        files.append(glob.glob(os.path.join(indomain_data_dir, 'asr_transcribed.xml')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', 'asr_transcribed.xml')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', 'asr_transcribed.xml')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', 'asr_transcribed.xml')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', 'asr_transcribed.xml')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*', '*', '*', '*', 'asr_transcribed.xml')))
+        files = various.flatten(files)
 
-        for i, turn in enumerate(turns):
-            if turn.getAttribute('speaker') != 'user':
-                continue
+        sem = []
+        trn = []
+        trn_hdc_sem = []
+        asr = []
+        asr_hdc_sem = []
+        nbl = []
+        nbl_hdc_sem = []
 
-            recs = turn.getElementsByTagName("rec")
-            trans = turn.getElementsByTagName("asr_transcription")
-            asrs = turn.getElementsByTagName("asr")
+        for fn in files[:100000]:
+            f_dir = os.path.dirname(fn)
 
-            if len(recs) != 1:
-                print "Skipping a turn {turn} in file: {fn} - recs: {recs}".format(turn=i,fn=fn, recs=len(recs))
-                continue
+            print "Processing:", fn
+            doc = xml.dom.minidom.parse(fn)
+            turns = doc.getElementsByTagName("turn")
 
-            if len(asrs) == 0 and (i + 1) < len(turns):
-                next_asrs = turns[i+1].getElementsByTagName("asr")
-                if len(next_asrs) != 2:
-                    print "Skipping a turn {turn} in file: {fn} - asrs: {asrs} - next_asrs: {next_asrs}".format(turn=i, fn=fn, asrs=len(asrs), next_asrs=len(next_asrs))
+            for i, turn in enumerate(turns):
+                if turn.getAttribute('speaker') != 'user':
                     continue
-                print "Recovered from missing ASR output by using a delayed ASR output from the following turn of turn {turn}. File: {fn} - next_asrs: {asrs}".format(turn=i, fn=fn, asrs=len(next_asrs))
-                hyps = next_asrs[0].getElementsByTagName("hypothesis")
-            elif len(asrs) == 1:
-                hyps = asrs[0].getElementsByTagName("hypothesis")
-            elif len(asrs) == 2:
-                print "Recovered from EXTRA ASR outputs by using a the last ASR output from the turn. File: {fn} - asrs: {asrs}".format(fn=fn, asrs=len(asrs))
-                hyps = asrs[-1].getElementsByTagName("hypothesis")
-            else:
-                print "Skipping a turn {turn} in file {fn} - asrs: {asrs}".format(turn=i,fn=fn, asrs=len(asrs))
-                continue
 
-            if len(trans) == 0:
-                print "Skipping a turn in {fn} - trans: {trans}".format(fn=fn, trans=len(trans))
-                continue
+                recs = turn.getElementsByTagName("rec")
+                trans = turn.getElementsByTagName("asr_transcription")
+                asrs = turn.getElementsByTagName("asr")
 
-            wav_key = recs[0].getAttribute('fname')
-            wav_path = os.path.join(f_dir, wav_key)
-            
-            # FIXME: Check whether the last transcription is really the best! FJ
-            t = various.get_text_from_xml_node(trans[-1])
-            t = normalise_text(t)
+                if len(recs) != 1:
+                    print "Skipping a turn {turn} in file: {fn} - recs: {recs}".format(turn=i,fn=fn, recs=len(recs))
+                    continue
 
-            
-            if '--asr-log' not in sys.argv:
-                asr_rec_nbl = asr_rec.rec_wav_file(wav_path)
-                a = unicode(asr_rec_nbl.get_best())
-            else:  
-                a = various.get_text_from_xml_node(hyps[0])
-                a = normalise_semi_words(a)
+                if len(asrs) == 0 and (i + 1) < len(turns):
+                    next_asrs = turns[i+1].getElementsByTagName("asr")
+                    if len(next_asrs) != 2:
+                        print "Skipping a turn {turn} in file: {fn} - asrs: {asrs} - next_asrs: {next_asrs}".format(turn=i, fn=fn, asrs=len(asrs), next_asrs=len(next_asrs))
+                        continue
+                    print "Recovered from missing ASR output by using a delayed ASR output from the following turn of turn {turn}. File: {fn} - next_asrs: {asrs}".format(turn=i, fn=fn, asrs=len(next_asrs))
+                    hyps = next_asrs[0].getElementsByTagName("hypothesis")
+                elif len(asrs) == 1:
+                    hyps = asrs[0].getElementsByTagName("hypothesis")
+                elif len(asrs) == 2:
+                    print "Recovered from EXTRA ASR outputs by using a the last ASR output from the turn. File: {fn} - asrs: {asrs}".format(fn=fn, asrs=len(asrs))
+                    hyps = asrs[-1].getElementsByTagName("hypothesis")
+                else:
+                    print "Skipping a turn {turn} in file {fn} - asrs: {asrs}".format(turn=i,fn=fn, asrs=len(asrs))
+                    continue
 
-            if exclude_slu(t) or 'DOM Element:' in a:
-                print "Skipping transcription:", unicode(t)
-                print "Skipping ASR output:   ", unicode(a)
-                continue
+                if len(trans) == 0:
+                    print "Skipping a turn in {fn} - trans: {trans}".format(fn=fn, trans=len(trans))
+                    continue
 
-            # The silence does not have a label in the language model.
-            t = t.replace('_SIL_','')
+                wav_key = recs[0].getAttribute('fname')
+                wav_path = os.path.join(f_dir, wav_key)
+                
+                # FIXME: Check whether the last transcription is really the best! FJ
+                t = various.get_text_from_xml_node(trans[-1])
+                t = normalise_text(t)
 
-            trn.append((wav_key, t))
-
-            print "Parsing transcription:", unicode(t)
-            print "                  ASR:", unicode(a)
-
-            # HDC SLU on transcription
-            s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
-            trn_hdc_sem.append((wav_key, s))
-
-            if '--uniq' not in sys.argv:
-                # HDC SLU on 1 best ASR
+                
                 if '--asr-log' not in sys.argv:
+                    asr_rec_nbl = asr_rec.rec_wav_file(wav_path)
                     a = unicode(asr_rec_nbl.get_best())
                 else:  
                     a = various.get_text_from_xml_node(hyps[0])
                     a = normalise_semi_words(a)
 
-                asr.append((wav_key, a))
+                if exclude_slu(t) or 'DOM Element:' in a:
+                    print "Skipping transcription:", unicode(t)
+                    print "Skipping ASR output:   ", unicode(a)
+                    continue
 
-                s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
-                asr_hdc_sem.append((wav_key, s))
+                # The silence does not have a label in the language model.
+                t = t.replace('_SIL_','')
 
-                # HDC SLU on N best ASR
-                n = UtteranceNBList()
-                if '--asr-log' not in sys.argv:
-                   n = asr_rec_nbl
-                   
-                   print 'ASR RECOGNITION NBLIST\n',unicode(n)
-                else:
-                    for h in hyps:
-                        txt = various.get_text_from_xml_node(h)
-                        txt = normalise_semi_words(txt)
+                trn.append((wav_key, t))
 
-                        n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
+                print "Parsing transcription:", unicode(t)
+                print "                  ASR:", unicode(a)
 
-                n.merge()
-                n.normalise()
+                # HDC SLU on transcription
+                s = slu.parse_1_best({'utt':Utterance(t)}).get_best_da()
+                trn_hdc_sem.append((wav_key, s))
 
-                nbl.append((wav_key, n.serialise()))
+                if '--uniq' not in sys.argv:
+                    # HDC SLU on 1 best ASR
+                    if '--asr-log' not in sys.argv:
+                        a = unicode(asr_rec_nbl.get_best())
+                    else:  
+                        a = various.get_text_from_xml_node(hyps[0])
+                        a = normalise_semi_words(a)
 
-                if '--fast' not in sys.argv:
-                    s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
-                nbl_hdc_sem.append((wav_key, s))
+                    asr.append((wav_key, a))
 
-            # there is no manual semantics in the transcriptions yet
-            sem.append((wav_key, None))
+                    s = slu.parse_1_best({'utt':Utterance(a)}).get_best_da()
+                    asr_hdc_sem.append((wav_key, s))
+
+                    # HDC SLU on N best ASR
+                    n = UtteranceNBList()
+                    if '--asr-log' not in sys.argv:
+                       n = asr_rec_nbl
+                       
+                       print 'ASR RECOGNITION NBLIST\n',unicode(n)
+                    else:
+                        for h in hyps:
+                            txt = various.get_text_from_xml_node(h)
+                            txt = normalise_semi_words(txt)
+
+                            n.add(abs(float(h.getAttribute('p'))),Utterance(txt))
+
+                    n.merge()
+                    n.normalise()
+
+                    nbl.append((wav_key, n.serialise()))
+
+                    if '--fast' not in sys.argv:
+                        s = slu.parse_nblist({'utt_nbl':n}).get_best_da()
+                    nbl_hdc_sem.append((wav_key, s))
+
+                # there is no manual semantics in the transcriptions yet
+                sem.append((wav_key, None))
 
 
-    uniq_trn = {}
-    uniq_trn_hdc_sem = {}
-    uniq_trn_sem = {}
-    trn_set = set()
+        uniq_trn = {}
+        uniq_trn_hdc_sem = {}
+        uniq_trn_sem = {}
+        trn_set = set()
 
-    sem = dict(trn_hdc_sem)
-    for k, v in trn:
-        if not v in trn_set:
-            trn_set.add(v)
-            uniq_trn[k] = v
-            uniq_trn_hdc_sem[k] = sem[k]
-            uniq_trn_sem[k] = v + " <=> " + unicode(sem[k])
+        sem = dict(trn_hdc_sem)
+        for k, v in trn:
+            if not v in trn_set:
+                trn_set.add(v)
+                uniq_trn[k] = v
+                uniq_trn_hdc_sem[k] = sem[k]
+                uniq_trn_sem[k] = v + " <=> " + unicode(sem[k])
 
-    save_wavaskey(fn_uniq_trn, uniq_trn)
-    save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
-    save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)
+        save_wavaskey(fn_uniq_trn, uniq_trn)
+        save_wavaskey(fn_uniq_trn_hdc_sem, uniq_trn_hdc_sem, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)
 
-    # all
-    save_wavaskey(fn_all_trn, dict(trn))
-    save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+        # all
+        save_wavaskey(fn_all_trn, dict(trn))
+        save_wavaskey(fn_all_trn_hdc_sem, dict(trn_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+
+        if '--uniq' not in sys.argv:
+            save_wavaskey(fn_all_asr, dict(asr))
+            save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
+
+            save_wavaskey(fn_all_nbl, dict(nbl))
+            save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
     if '--uniq' not in sys.argv:
-        save_wavaskey(fn_all_asr, dict(asr))
-        save_wavaskey(fn_all_asr_hdc_sem, dict(asr_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
-
-        save_wavaskey(fn_all_nbl, dict(nbl))
-        save_wavaskey(fn_all_nbl_hdc_sem, dict(nbl_hdc_sem), trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
-
 
         seed_value = 10
 
