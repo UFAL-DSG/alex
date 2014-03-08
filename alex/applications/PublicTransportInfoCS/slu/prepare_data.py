@@ -14,7 +14,7 @@ import codecs
 import alex.utils.various as various
 
 from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
-from alex.corpustools.wavaskey import save_wavaskey
+from alex.corpustools.wavaskey import save_wavaskey, load_wavaskey
 from alex.components.asr.common import asr_factory
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.base import CategoryLabelDatabase
@@ -51,11 +51,6 @@ def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
     slu = PTICSHDCSLU(preprocessing)
-    cfg_file = '../kaldi.cfg'
-    if '--config' in sys.argv:
-        cfg_file = sys.argv[sys.argv.index('--config')+1]
-    cfg = Config.load_configs([cfg_file,], use_default=True)
-    asr_rec = asr_factory(cfg)
 
     train_limit = 1.0
     if '--train-limit' in sys.argv:
@@ -102,17 +97,21 @@ def main():
     # loading the data to perform a train-test split
     if '--split-only' in sys.argv:
         
-        sem = load_wavaskey(fn_all_sem, DialogueAct)
-        trn = load_wavaskey(fn_all_trn, Utterance)  
-        trn_hdc_sem = load_wavaskey(fn_all_trn_hdc_sem, DialogueAct)
-        asr = load_wavaskey(fn_all_asr, Utterance)
-        asr_hdc_sem = load_wavaskey(fn_all_asr_hdc_sem, DialogueAct)
-        nbl = load_wavaskey(fn_all_nbl, UtteranceNBList)
-        nbl_hdc_sem = load_wavaskey(fn_all_nbl_hdc_sem, DialogueAct)
+        trn = load_wavaskey(fn_all_trn, Utterance).items()
+        trn_hdc_sem = load_wavaskey(fn_all_trn_hdc_sem, unicode).items()
+        asr = load_wavaskey(fn_all_asr, Utterance).items()
+        asr_hdc_sem = load_wavaskey(fn_all_asr_hdc_sem, unicode).items()
+        nbl = load_wavaskey(fn_all_nbl, UtteranceNBList).items()
+        nbl_hdc_sem = load_wavaskey(fn_all_nbl_hdc_sem, unicode).items()
 
 
     # actually running ASR and generating the data
     else:
+        cfg_file = '../kaldi.cfg'
+        if '--config' in sys.argv:
+            cfg_file = sys.argv[sys.argv.index('--config')+1]
+        cfg = Config.load_configs([cfg_file,], use_default=True)
+        asr_rec = asr_factory(cfg)
 
         print "Generating the SLU train and test data"
         print "-"*120
