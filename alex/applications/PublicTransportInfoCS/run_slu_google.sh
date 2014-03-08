@@ -24,7 +24,7 @@ set -e  # exit on any command fail
 
 
 cd slu
-cp ~/work/alex-training_exp/alex_1/alex/applications/PublicTransportInfoCS/slu/all*{sem,trn,asr,nbl} .
+cp ~/work/alex-training_exp/google-asr-out/all*{sem,trn,asr,nbl} .
 echo -e `date` '***********************************\nPREPARING SLU DATA' | tee -a ../training-log-google.txt
 ./prepare_data.py --split-only --train-limit $1 >> ../training-log-google.txt 2>&1
 
