@@ -178,6 +178,7 @@ if __name__ == "__main__":
 
 
     #trained_slu_test('./dailogreg.asr.model', './dev.trn', Utterance, './dev.trn.hdc.sem')
+
     #trained_slu_test('./dailogreg.asr.model', './dev.asr', Utterance, './dev.trn.hdc.sem')
     #trained_slu_test('./dailogreg.asr.model', './dev.nbl', UtteranceNBList, './dev.trn.hdc.sem')
 
