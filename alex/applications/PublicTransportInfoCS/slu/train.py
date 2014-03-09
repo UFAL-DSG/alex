@@ -69,19 +69,19 @@ def main():
     min_classifier_count = 4
     min_feature_count = 3
 
-    train('./dailogreg.trn.model.all', './all.trn', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
-    train('./dailogreg.asr.model.all', './all.asr', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
-    train('./dailogreg.nbl.model.all', './all.nbl', UtteranceNBList, './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
+#    train('./dailogreg.trn.model.all', './all.trn', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+        #min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
+    #train('./dailogreg.asr.model.all', './all.asr', Utterance,       './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+        #min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
+    #train('./dailogreg.nbl.model.all', './all.nbl', UtteranceNBList, './all.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+        #min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
 
-    train('./dailogreg.trn.model', './train.trn', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
+#    train('./dailogreg.trn.model', './train.trn', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+#        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
     train('./dailogreg.asr.model', './train.asr', Utterance,       './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
         min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
-    train('./dailogreg.nbl.model', './train.nbl', UtteranceNBList, './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
-        min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
+#   train('./dailogreg.nbl.model', './train.nbl', UtteranceNBList, './train.trn.hdc.sem', './bootstrap.trn', './bootstrap.sem',
+#       min_feature_count = min_feature_count, min_classifier_count = min_classifier_count)
 
 
 if __name__ == '__main__':
