@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-import StringIO
-import mad
 import os
 import pyaudio
 import pysox
@@ -166,25 +164,25 @@ def convert_mp3_to_wav(cfg, mp3_string):
 
     """
 
-    mp3_file = StringIO.StringIO(mp3_string)
-    mf = mad.MadFile(mp3_file)
-    sample_rate = mf.samplerate()
-    # pymad always produce stereo pcm16 audio data
+    sample_rate = cfg['Audio']['sample_rate']
 
-    # read all the samples
-    chunk = 1024
-    wav = b''
-    wavPart = mf.read(chunk)
-    while wavPart:
-        wav += str(wavPart)
-        wavPart = mf.read(chunk)
+    # write the buffer to a temporary file
+    tmp1fh, tmp1path = mkstemp()
+    tmp1fh = fdopen(tmp1fh, 'wb')
+    tmp1fh.write(mp3_string)
+    tmp1fh.close()
 
-    # convert to mono and resample
-    wav_mono = audioop.tomono(wav, 2, 0.5, .5)
-    wav_resampled, state = audioop.ratecv(wav_mono, 2, 1, sample_rate, cfg['Audio']['sample_rate'], None)
+    # transform the temporary file using SoX (can't do this in memory :-()
+    tmp2fh, tmp2path = mkstemp()
+    sox_in = pysox.CSoxStream(tmp1path, fileType='mp3')
+    sox_out = pysox.CSoxStream(tmp2path, 'w', pysox.CSignalInfo(sample_rate, 1, 16), fileType='wav')
+    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect("rate", [str(sample_rate)]))
+    sox_chain.flow_effects()
+    sox_out.close()
 
-    return wav_resampled
-
+    # read the transformation results back to the buffer
+    return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
 def play(cfg, wav):
     # open the audio device

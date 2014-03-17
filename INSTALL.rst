@@ -58,17 +58,6 @@ This version supports non-blocking audio.
   cd PyAudio
   python ./setup.py install
 
-pymad
-~~~~~
-Get the latest version of ``pymad`` from https://github.com/pymad/pymad.
-
-.. code-block:: bash
-
-  git clone https://github.com/pymad/pymad.git
-  cd pymad/src
-  python ./setup.py install
-
-
 flite
 ~~~~~
 Get the latest ``flite`` from http://www.festvox.org/flite/download.html and build it by following the these commands:
