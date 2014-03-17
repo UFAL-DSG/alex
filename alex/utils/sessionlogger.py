@@ -74,8 +74,7 @@ class SessionLogger(multiprocessing.Process):
 
         It is useful when constructing file and directory names.
         """
-        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        dt += " " + time.tzname[time.localtime().tm_isdst]
+        dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + time.tzname[time.localtime().tm_isdst]
 
         return dt
 
@@ -637,9 +636,9 @@ class SessionLogger(multiprocessing.Process):
                                 # just silently ignore because these are likely the be commands for the already
                                 # closed session
 
-                                print "SessionLogger: should be silent"
-                                print "SessionLogger: calling method", cmd, "when the session is not open"
-                                print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
+                                # print "SessionLogger: should be silent"
+                                # print "SessionLogger: calling method", cmd, "when the session is not open"
+                                # print '             ', [a for a in args if isinstance(a, basestring) and len(a) < 80]
                                 continue
 
 
