@@ -24,7 +24,7 @@ for d in $@ ; do
     fi
 done
 
-if [[ ! -z conflict ]] ; then
+if [[ ! -z $conflict ]] ; then
     echo "Running new experiment will create following directories."
     echo "Some of them already exists!"
     echo ""
