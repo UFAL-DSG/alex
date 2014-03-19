@@ -52,8 +52,6 @@ _LANG2NORMALISATION_MOD = {
 
 
 from alex.corpustools.cued import find_wavs
-from alex.corpustools.text_norm_en import exclude_asr, exclude_by_dict, normalise_text
-
 
 def save_transcription(trs_fname, trs):
     """
@@ -86,7 +84,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
 
     # Import the appropriate normalisation module.
     norm_mod_name = _LANG2NORMALISATION_MOD[lang]
-    norm_mod = __import__(norm_mod_name, fromlist=('exclude', 'normalise_text'))
+    norm_mod = __import__(norm_mod_name, fromlist=( 'normalise_text', 'exclude_asr', 'exclude_by_dict'))
 
     # Parse the file.
     try:
@@ -151,14 +149,14 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
                 print "# f:", wav_basename
                 print "orig transcription:", trs.upper().strip()
 
-            trs = normalise_text(trs)
+            trs = norm_mod.normalise_text(trs)
             if verbose:
                 print "normalised trans:  ", trs
 
             if known_words is not None:
-                excluded = exclude_by_dict(trs, known_words)
+                excluded = norm_mod.exclude_by_dict(trs, known_words)
             else:
-                excluded = exclude_asr(trs)
+                excluded = norm_mod.exclude_asr(trs)
             if excluded:
                 print "... excluded"
                 continue
@@ -240,25 +238,6 @@ def convert(args):
     swapped = [os.path.split(fpath) for fpath in wav_paths]
     wav_mapping = {name: prefix for (prefix, name) in swapped}
     n_collisions = len(wav_paths) - len(wav_mapping)
-
-    # XXX Obsoleted since this should now be done by the `find_wavs' function
-    # itself.  Yes, it does not match basenames but whole paths, still it
-    # should work because all paths are normalised and absolutised.
-    #
-    # # Get basename for ignore files and we do NOT care about collisions
-    # # ignore_wav_mapping: wav basename -> path to call log dir
-    # swapped = [os.path.split(fpath) for fpath in ignore_wav_paths]
-    # ignore_wav_mapping = dict([(name, prefix) for (prefix, name) in swapped])
-    #
-    # # Delete ignore basenames from wav_mapping (if any pass through
-    # # ignore_paths and globs)
-    # for ignore_basename, ignore_prefix in ignore_wav_mapping.iteritems():
-    #     if ignore_basename in wav_mapping:
-    #         if verbose:
-    #             ignore_path = os.path.join(ignore_prefix, ignore_basename)
-    #             print 'Wav file SKIPPED:', ignore_path
-    #         # Removing the ignore_basename from wav_mapping
-    #         del wav_mapping[ignore_basename]
 
     # Get all transcription logs.
     n_notnorm_trss = 0
@@ -360,8 +339,7 @@ if __name__ == '__main__':
     arger.add_argument('-l', '--language',
                        default='cs',
                        metavar='CODE',
-                       help='Code of the language (e.g., "cs") of the '
-                            'transcriptions.')
+                       help='Code of the language (e.g., "cs", "en") of the transcriptions.')
     arger.add_argument('-w', '--word-list',
                        default='word_list',
                        metavar='FILE',
