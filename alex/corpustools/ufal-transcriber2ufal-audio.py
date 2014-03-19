@@ -126,17 +126,17 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
         transcription_file_name = tgt_wav_fname + '.trn'
 
         if verbose:
-            print u" #f: {tgt}; # s: {start}; # e: {end}; t: {trs}".format(
-                tgt=os.path.basename(tgt_wav_fname), start=starttime,
-                end=endtime, trs=transcription)
+            print u" #f: {tgt}; # s: {start}; # e: {end}".format(
+                tgt=os.path.basename(tgt_wav_fname), start=starttime, end=endtime)
+            print "orig transcription:", transcription.upper().strip()
 
         # Normalise
         transcription = norm_mod.normalise_text(transcription)
         if verbose:
-            print u"  after normalisation:", transcription
-        # exclude all transcriptions with non-speech events
-        # the transcriptions provided Transcriber have too much _SIL_ and _NOISE_ etc. data, it is better to ignore it.
-        if norm_mod.exclude_asr(transcription) or "_" in transcription:
+            print "normalised trans:  ", transcription
+
+        # exclude all transcriptions
+        if norm_mod.exclude_asr(transcription):
             if verbose:
                 print u"  ...excluded"
             continue
@@ -182,8 +182,7 @@ def convert(args):
 
     # Get all but the ignored transcriptions.
     if os.path.isdir(infname):
-        trs_paths = find(infname, '*.trs',
-                         ignore_globs=ignore_globs, ignore_paths=ignore_paths)
+        trs_paths = find(infname, '*.trs', ignore_globs=ignore_globs, ignore_paths=ignore_paths)
     else:
         trs_paths = list()
         with open(infname, 'r') as inlist:
