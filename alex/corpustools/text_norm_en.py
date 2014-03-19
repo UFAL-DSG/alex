@@ -663,9 +663,6 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
 
-_excluded_characters = ['_', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', 
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-
 _more_spaces = re.compile(r'\s{2,}')
 _sure_punct_rx = re.compile(r'[.?!",_]')
 _parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
@@ -675,7 +672,6 @@ def normalise_text(text):
     """
     Normalises the transcription.  This is the main function of this module.
     """
-#{{{
     text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
 
@@ -697,6 +693,7 @@ def normalise_text(text):
             text = text.replace(parenized, uscored)
         text = _more_spaces.sub(' ', text.strip())
 
+    # remove duplicate non-speech events
     for pat, sub in _nonspeech_events:
         text = pat.sub(sub, text)
     text = _more_spaces.sub(' ', text).strip()
@@ -705,8 +702,9 @@ def normalise_text(text):
         text = text.replace(char, '')
 
     return text
-#}}}
 
+_excluded_characters = ['=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def exclude_asr(text):
     """
@@ -716,12 +714,25 @@ def exclude_asr(text):
     "Good enough" is defined as containing none of `_excluded_characters' and being
     longer than one word.
     """
+    if '_EXCLUDE_' in text:
+        return True
+
+    if text in ['_SIL_', ]:
+        return True
+
     if text in ['_NOISE_', '_EHM_HMM_', '_INHALE_', '_LAUGH_']:
         return False
+
+    # allow for sentences with these non-speech events if mixed with text
+    for s in ['_NOISE_', '_INHALE_', '_LAUGH_']:
+        text = text.replace(s,'')
 
     for char in _excluded_characters:
         if char in text:
             return True
+    if '_' in text:
+        return True
+
     if len(text) < 2:
         return True
 
@@ -740,7 +751,7 @@ def exclude_lm(text):
         return True
 
     for char in _excluded_characters:
-        if char in text  and char not in ['_']:
+        if char in text:
             return True
 
     return False
