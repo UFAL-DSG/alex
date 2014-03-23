@@ -25,7 +25,7 @@ To test the system we use:
 - ``vhub_test_kaldi_nfs`` - default test version of our system deployed on our test extension, using KALDI ASR and logging to NFS
 
 
-Running the system without without the full UFAL access
+Running the system without the full UFAL access
 -------------------------------------------------------
 
 Users outside UFAL can run the system using the following commands:
