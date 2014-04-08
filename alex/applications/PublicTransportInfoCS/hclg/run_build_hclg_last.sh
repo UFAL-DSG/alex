@@ -9,6 +9,7 @@ localdir=$tmpdir/local # temporary directory
 langdir=$tmpdir/lang  # temporary directory for lexicon related files
 outputdir=models_last
 oov='_SIL_'  # OOV words will be mapped to $oov 
+#am_dir='../../../resources/asr/voip_cs/kaldi/last_2014-03-22'
 am_dir='../../../resources/asr/voip_cs/kaldi/last'
 AM=$am_dir/tri2b_bmmi.mdl   # acoustic model
 tree=$am_dir/tri2b_bmmi.tree  # decision phonetic tree

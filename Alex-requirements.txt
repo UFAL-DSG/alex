@@ -1,0 +1,26 @@
+numpy>=1.7.1
+scipy
+scikit-learn
+matplotlib
+
+pysqlite
+sqlalchemy
+pyga
+python-Levenshtein
+boto
+pysox
+jinja2
+suds
+
+# pykaldi
+cython
+pystache
+pyyaml
+
+# utilities
+wget
+ipdb
+nose
+
+
+# wxpython  -- can not be installed with pip
