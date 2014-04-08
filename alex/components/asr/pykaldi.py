@@ -5,20 +5,19 @@
 from __future__ import unicode_literals
 
 from math import exp
+import time
+import os
 
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
 from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest
-import kaldi.utils
 
+import kaldi.utils
 try:
     from kaldi.decoders import PyOnlineLatgenRecogniser
 except ImportError as e:
-    # FIXME PYTHONPATH I can change : sys.path insert into(0,)
     raise KaldiSetupException('%s\nTry setting PYTHONPATH or LD_LIBRARY_PATH' % e.message)
-import time
-import os
 
 
 class KaldiASR(ASRInterface):
