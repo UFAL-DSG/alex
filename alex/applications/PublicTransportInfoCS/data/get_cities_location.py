@@ -5,6 +5,7 @@
 A script that collects the locations of all the given cities using the Google
 Geocoding API.
 
+
 Usage:
 
 ./get_cities_locations.py [-d delay] [-l limit] [-a] cities_locations-in.tsv cities_locations-out.tsv
@@ -96,7 +97,7 @@ if __name__ == '__main__':
                 try:
                     coords = get_google_coords(line)
                     print >> fh_out, line + '\t' + '\t'.join(coords)
-                except:
+                except Exception as e:
                     print >> sys.stderr, ('!!ERROR:' + str(e) + ' -- cannot find city:' + line).encode('utf-8')
                     print >> fh_out, line
                 requests += 1
