@@ -1,5 +1,6 @@
 .. image:: alex/doc/alex-logo.png
     :alt: Alex logo
+
 Alex Dialogue Systems Framework
 =================================================
 

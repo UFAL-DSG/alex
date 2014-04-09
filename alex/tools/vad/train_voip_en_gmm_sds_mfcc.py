@@ -77,96 +77,96 @@ def train_gmm(name, vta):
     gmm.save_model('model_voip/vad_%s_sds_mfcc.gmm' % name)
     return
 
+if __name__ == '__main__':
+    train_data_sil = 'data_vad_sil/data/*.wav'
+    train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
-train_data_sil = 'data_vad_sil/data/*.wav'
-train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
+    train_data_speech = 'data_voip_en/train/*.wav'
+    train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-train_data_speech = 'data_voip_en/train/*.wav'
-train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
+    mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
+    mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
 
-mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
-mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
+    print datetime.datetime.now()
+    # print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+    # print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+    print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
+    print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
-print datetime.datetime.now()
-# print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-# print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
-print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
-print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
+    vta = MLFMFCCOnlineAlignedArray(usec0=False)
+    # vta.append_mlf(mlf_sil)
+    # vta.append_trn(train_data_sil)
+    vta.append_mlf(mlf_speech)
+    vta.append_trn(train_data_speech)
 
-vta = MLFMFCCOnlineAlignedArray(usec0=False)
-# vta.append_mlf(mlf_sil)
-# vta.append_trn(train_data_sil)
-vta.append_mlf(mlf_speech)
-vta.append_trn(train_data_speech)
+    print "Generating the MFCC features"
+    train = []
+    test = []
+    i = 0
+    for frame, label in vta:
+        if i % (n_max_frames / 10) == 0:
+            print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
 
-print "Generating the MFCC features"
-train = []
-test = []
-i = 0
-for frame, label in vta:
-    if i % (n_max_frames / 10) == 0:
-        print "Already processed: %.2f%% of data" % (100.0*i/n_max_frames)
-
-    if i > n_max_frames:
-        break
-
-
-    if i < n_crossvalid_frames:
-        test.append((frame, label))
-    else:
-        train.append((frame, label))
-
-    i += 1
-
-p_speech = Process(target=train_gmm, args=('speech',train))
-p_sil = Process(target=train_gmm, args=('sil', train))
-p_speech.start()
-p_sil.start()
-
-p_sil.join()
-print "Sil GMM training finished"
-print datetime.datetime.now()
-p_speech.join()
-print "Speech GMM training finished"
-print datetime.datetime.now()
-
-#train_speech_gmm()
-#train_sil_gmm()
+        if i > n_max_frames:
+            break
 
 
-print '-' * 120
-print 'VAD GMM test'
-print datetime.datetime.now()
-print '-' * 120
-gmm_speech = GMM(n_features=0)
-gmm_speech.load_model('model_voip/vad_speech_sds_mfcc.gmm')
-gmm_sil = GMM(n_features=0)
-gmm_sil.load_model('model_voip/vad_sil_sds_mfcc.gmm')
+        if i < n_crossvalid_frames:
+            test.append((frame, label))
+        else:
+            train.append((frame, label))
+
+        i += 1
+
+    p_speech = Process(target=train_gmm, args=('speech',train))
+    p_sil = Process(target=train_gmm, args=('sil', train))
+    p_speech.start()
+    p_sil.start()
+
+    p_sil.join()
+    print "Sil GMM training finished"
+    print datetime.datetime.now()
+    p_speech.join()
+    print "Speech GMM training finished"
+    print datetime.datetime.now()
+
+    #train_speech_gmm()
+    #train_sil_gmm()
 
 
-vta = test
+    print '-' * 120
+    print 'VAD GMM test'
+    print datetime.datetime.now()
+    print '-' * 120
+    gmm_speech = GMM(n_features=0)
+    gmm_speech.load_model('model_voip/vad_speech_sds_mfcc.gmm')
+    gmm_sil = GMM(n_features=0)
+    gmm_sil.load_model('model_voip/vad_sil_sds_mfcc.gmm')
 
-print "Length of test data:", len(vta)
-print datetime.datetime.now()
 
-accuracy = 0.0
-n = 0
-for frame, label in vta:
-    log_prob_speech = gmm_speech.score(frame)
-    log_prob_sil = gmm_sil.score(frame)
+    vta = test
 
-    ratio = log_prob_speech - log_prob_sil
-    if ratio >= 0:
-        rec_label = 'speech'
-    else:
-        rec_label = 'sil'
+    print "Length of test data:", len(vta)
+    print datetime.datetime.now()
 
-    if rec_label == label:
-        accuracy += 1.0
+    accuracy = 0.0
+    n = 0
+    for frame, label in vta:
+        log_prob_speech = gmm_speech.score(frame)
+        log_prob_sil = gmm_sil.score(frame)
 
-    n += 1
+        ratio = log_prob_speech - log_prob_sil
+        if ratio >= 0:
+            rec_label = 'speech'
+        else:
+            rec_label = 'sil'
 
-accuracy = accuracy * 100.0 / n
+        if rec_label == label:
+            accuracy += 1.0
 
-print "VAD accuracy : %0.3f%% " % accuracy
-print datetime.datetime.now()
+        n += 1
+
+    accuracy = accuracy * 100.0 / n
+
+    print "VAD accuracy : %0.3f%% " % accuracy
+    print datetime.datetime.now()

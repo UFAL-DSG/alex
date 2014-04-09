@@ -21,7 +21,7 @@ def asr_factory(cfg, asr_type=None):
     t = get_asr_type(cfg)
 
     if t == 'Kaldi':
-        from alex.components.asr.kaldi import KaldiASR
+        from alex.components.asr.pykaldi import KaldiASR
         asr = KaldiASR(cfg)
     elif t == 'Google':
         from alex.components.asr.google import GoogleASR

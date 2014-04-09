@@ -21,8 +21,7 @@ To get latest versions of the following python packages, I recommend to run this
 
   sudo pip install --upgrade -r Alex-requirements.txt
 
-See `Alex-requirements.txt <./Alex-requirements.txt>`_.
-
+See ``alex-dsg/alex-requirements.txt``.
 
 Source code compiled packages
 -----------------------------
