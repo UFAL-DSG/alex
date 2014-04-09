@@ -5,20 +5,19 @@
 from __future__ import unicode_literals
 
 from math import exp
+import time
+import os
 
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
 from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest
-import pykaldi.utils
 
+import kaldi.utils
 try:
-    from pykaldi.decoders import PyGmmLatgenWrapper
+    from kaldi.decoders import PyOnlineLatgenRecogniser
 except ImportError as e:
-    # FIXME PYTHONPATH I can change : sys.path insert into(0,)
     raise KaldiSetupException('%s\nTry setting PYTHONPATH or LD_LIBRARY_PATH' % e.message)
-import time
-import os
 
 
 class KaldiASR(ASRInterface):
@@ -37,7 +36,7 @@ class KaldiASR(ASRInterface):
             with open(kcfg['silent_phones'], 'r') as r:
                 kcfg['silent_phones'] = r.read()
 
-        self.wst = pykaldi.utils.wst2dict(kcfg['wst'])
+        self.wst = kaldi.utils.wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
         self.n_best = kcfg['n_best']
         if not 'matrix' in kcfg:
@@ -51,7 +50,7 @@ class KaldiASR(ASRInterface):
             conf_opt = r.read()
             self.syslog.info('argv: %s\nconfig: %s' % (argv, conf_opt))
 
-        self.decoder = PyGmmLatgenWrapper()
+        self.decoder = PyOnlineLatgenRecogniser()
         self.decoder.setup(argv)
 
     def flush(self):

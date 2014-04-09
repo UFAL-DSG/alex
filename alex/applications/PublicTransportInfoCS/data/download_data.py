@@ -5,14 +5,16 @@ import autopath
 
 from alex.utils.config import online_update
 
-online_update('applications/PublicTransportInfoCS/data/czech.dict')
-online_update('applications/PublicTransportInfoCS/data/czech.tagger')
+
+if __name__ == '__main__':
+    online_update('applications/PublicTransportInfoCS/data/czech.dict')
+    online_update('applications/PublicTransportInfoCS/data/czech.tagger')
 
 #online_update('applications/PublicTransportInfoCS/data/stops-idos.tsv')
 #online_update('applications/PublicTransportInfoCS/data/cities.txt')
-online_update('applications/PublicTransportInfoCS/data/stops.txt')
-online_update('applications/PublicTransportInfoCS/data/cities.expanded.txt')
-online_update('applications/PublicTransportInfoCS/data/stops.expanded.txt')
-online_update('applications/PublicTransportInfoCS/data/cities_stops.tsv')
+    online_update('applications/PublicTransportInfoCS/data/stops.txt')
+    online_update('applications/PublicTransportInfoCS/data/cities.expanded.txt')
+    online_update('applications/PublicTransportInfoCS/data/stops.expanded.txt')
+    online_update('applications/PublicTransportInfoCS/data/cities_stops.tsv')
 #online_update('applications/PublicTransportInfoCS/data/cities_locations.tsv')
-online_update('applications/PublicTransportInfoCS/data/idos_map.tsv')
+    online_update('applications/PublicTransportInfoCS/data/idos_map.tsv')

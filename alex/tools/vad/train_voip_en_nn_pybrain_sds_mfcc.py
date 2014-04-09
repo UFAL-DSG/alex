@@ -181,22 +181,21 @@ def train_nn():
 
 
 ##################################################
+if __name__ == '__main__':
 
-#train_data_sil = 'data_vad_sil/data/*.wav'
-#train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
+    # train_data_sil = 'data_vad_sil/data/*.wav'
+    # train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
-train_data_speech = 'data_voip_en/train/*.wav'
-train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
+    train_data_speech = 'data_voip_en/train/*.wav'
+    train_data_speech_aligned = 'asr_model_voip_en/aligned_best.mlf'
 
-#mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
-mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
+    # mlf_sil = load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment)
+    mlf_speech = load_mlf(train_data_speech_aligned, max_files, max_frames_per_segment)
 
-print datetime.datetime.now()
-# print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
-# print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
-print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
-print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
+    print datetime.datetime.now()
+    # print "The length of sil segments in sil:    ", mlf_sil.count_length('sil')
+    # print "The length of speech segments in sil: ", mlf_sil.count_length('speech')
+    print "The length of sil segments in speech:    ", mlf_speech.count_length('sil')
+    print "The length of speech segments in speech: ", mlf_speech.count_length('speech')
 
-
-train_nn()
-
+    train_nn()

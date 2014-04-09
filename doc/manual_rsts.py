@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 
-import glob
 import os.path
 import shutil
+import fnmatch
 
-root = '..'
+root = '../alex'
+
 
 def get_all_rsts(root='.'):
     """ Searches for all rst files under the root directory and the alex subdirectory.
@@ -19,28 +20,22 @@ def get_all_rsts(root='.'):
     :param root: the root directory form where the search begin
     :return: the sorted list of names of rst files
     """
-    f = []
-    f.extend(glob.glob(os.path.join(root, '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*', '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*', '*.rst')))
-    f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*', '*', '*.rst')))
-    # f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*', '*', '*', '*.rst')))
-    # f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*', '*', '*', '*', '*.rst')))
-    # f.extend(glob.glob(os.path.join(root,'alex', '*', '*', '*', '*', '*', '*', '*', '*', '*.rst'))
-
-    f.sort()
+    f, glob = set([]), '*.rst'
+    for root, dirnames, filenames in os.walk(root, followlinks=False):
+        for filename in fnmatch.filter(filenames, glob):
+            f.add(os.path.join(root, filename))
+    f = list(f)
+    # f.sort()
 
     for i in f:
-        shutil.copy2(i, os.path.join('_man_rst',i.replace('/','.').replace('...','')))
+        shutil.copy2(i, os.path.join('_man_rst', i.replace('/', '.').replace('...', '')))
 
     return f
 
-rsts = get_all_rsts(root)
+rsts = [os.path.join('..', f) for f in ['README.rst', 'INSTALL.rst']]
+rsts.extend(get_all_rsts(root))
 
-with open(os.path.join('_man_rst','index.rst'), 'w') as f:
+with open(os.path.join('_man_rst', 'index.rst'), 'w') as f:
     f.write('Index of manually written in source code tree documentation\n')
     f.write('===========================================================\n')
     f.write('.. toctree::\n')
@@ -48,5 +43,4 @@ with open(os.path.join('_man_rst','index.rst'), 'w') as f:
     f.write('   \n')
     for i in rsts:
         if 'alex' in i:
-            f.write('   %s\n' % i.replace('/','.').replace('...','').replace('.rst',''))
-
+            f.write('   %s\n' % i.replace('/', '.').replace('...', '').replace('.rst', ''))
