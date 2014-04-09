@@ -28,7 +28,10 @@ from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
 
-def rec_wav_file(asr, cfg, wav_path):
+def save_lattice(lat, output_dir, wav_path):
+    lat.write(os.path.join(output_dir, os.path.basename(wav_path).replace('wav','fst')))
+
+def rec_wav_file(asr, cfg, output_dir, wav_path):
     pcm = load_wav(cfg, wav_path)
     frame = Frame(pcm)
 
@@ -38,12 +41,14 @@ def rec_wav_file(asr, cfg, wav_path):
     res = asr.hyp_out()
     hyp_out_end = time.time()
 
+    save_lattice(asr.get_last_lattice(), output_dir, wav_path)
+
     asr.flush()
 
     return res, rec_in_end - start, hyp_out_end - rec_in_end
 
 
-def decode_info(asr, cfg, wav_path, reference=None):
+def decode_info(asr, cfg, output_dir, wav_path, reference=None):
     print "-"*120
     print
     print '    Wav file:  %s' % str(wav_path)
@@ -52,7 +57,7 @@ def decode_info(asr, cfg, wav_path, reference=None):
 
     wav_dur = wav_duration(wav_path)
 
-    dec_trans, rec_in_dur, hyp_out_dur = rec_wav_file(asr, cfg, wav_path)
+    dec_trans, rec_in_dur, hyp_out_dur = rec_wav_file(asr, cfg, output_dir, wav_path)
     fw_dur = rec_in_dur
     dec_dur = max(rec_in_dur, wav_dur) + hyp_out_dur
     best = unicode(dec_trans.get_best())
@@ -161,8 +166,8 @@ def decode_with_reference(reference, outdir, cfg):
     trn_dict = load_wavaskey(reference, Utterance)
     declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
 
-    for wav_path, reference in trn_dict.iteritems():
-        best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, wav_path, reference)
+    for wav_path, reference in sorted(trn_dict.items()):
+        best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, outdir, wav_path, reference)
         dec_dict[wav_path] = best
         wavlen_dict[wav_path] = wav_dur
         declen_dict[wav_path] = dec_dur
@@ -223,7 +228,7 @@ def extract_from_xml(indomain_data_dir, outdir, cfg):
                 trn.append((wav_file, t))
 
                 wav_path = os.path.join(f_dir, wav_file)
-                best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, wav_path, t)
+                best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, outdir, wav_path, t)
                 dec.append((wav_file, best))
                 wav_len.append((wav_file, wav_dur))
                 dec_len.append((wav_file, dec_dur))

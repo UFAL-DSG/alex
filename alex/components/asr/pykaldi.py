@@ -50,6 +50,8 @@ class KaldiASR(ASRInterface):
             conf_opt = r.read()
             self.syslog.info('argv: %s\nconfig: %s' % (argv, conf_opt))
 
+        self.last_lattice = None
+
         self.decoder = PyOnlineLatgenRecogniser()
         self.decoder.setup(argv)
 
@@ -96,6 +98,8 @@ class KaldiASR(ASRInterface):
         # Get hypothesis
         self.decoder.prune_final()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
+        self.last_lattice = lat
+
         self.decoder.reset(keep_buffer_data=False)
 
         # Convert lattice to nblist
@@ -130,7 +134,12 @@ class KaldiASR(ASRInterface):
         # Get hypothesis
         self.decoder.prune_final()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
+        self.last_lattice = lat
+
         self.decoder.reset(keep_buffer_data=False)
 
         # Convert lattice to word nblist
         return lattice_to_word_posterior_lists(lat, self.n_best)
+
+    def get_last_lattice(self):
+        return self.last_lattice
