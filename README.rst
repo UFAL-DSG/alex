@@ -81,12 +81,16 @@ changes in the topic branch. Then follow the instructions above, that is:
 Documentation
 -------------
 The documentation for this project is generated using Sphinx and its ``autodoc`` extension. Please document
-all your code as much as possible using the conventions which can be parsed by Sphinx. Also provide README style
-documentation describing the complete packages, applications, or preparation of data and models. The documentation can
-be and should be placed near the code and/or application to which it is the most
-relevant. For formatting the text, use reStructured (reSt) *wiki like* syntax. The advantage of reSt is that it is fairly
-readable in source format and it can be nicely rendered into HTML or PDF using Sphinx. Documents with the ``rst`` extension
-are automatically detected, included into the documentation, and an index page for these documents is created.
+all your code as much as possible using the conventions which can be parsed by Sphinx. 
+
+Also provide README style documentation describing the complete packages, applications, 
+or preparation of data and models. The documentation should be placed near the code 
+and/or application to which it is the most relevant. 
+For formatting the text, use reStructured (reSt) *wiki like* syntax. 
+The advantage of reSt is that it is fairly readable in source format 
+and it can be nicely rendered into HTML or PDF using Sphinx. 
+Documents with the ``rst`` extension are automatically detected, 
+included into the documentation, and an index page for these documents is created.
 
 Each document should start with a every descriptive title, e.g.:
 
@@ -112,6 +116,9 @@ More information on  how to write documentation is available at
 
 - `Quick cheatsheet for ReST and Sphinx <http://matplotlib.org/sampledoc/cheatsheet.html>`_
 - `More thorough documentation with code examples <http://packages.python.org/an_example_pypi_project/sphinx.html>`_
+- The docstrings should follow google (or sphinx or numpy) style. See examples: 
+    - http://sphinxcontrib-napoleon.readthedocs.org/en/latest/#google-vs-numpy
+    - http://sphinxcontrib-napoleon.readthedocs.org/en/latest/example_google.html#example-google
 
 
 To compile and see the documentation, you can:
