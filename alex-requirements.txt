@@ -21,6 +21,3 @@ pyyaml
 wget
 ipdb
 nose
-
-
-# wxpython  -- can not be installed with pip
