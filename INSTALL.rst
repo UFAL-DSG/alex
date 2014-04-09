@@ -15,11 +15,11 @@ Ask the root on the computer to run:
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
       flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev
 
-To get latest versions of the following python packages, I recommend to run this commands:
+To get latest versions of the following python packages, I recommend to run this command:
 
 .. code-block:: bash
 
-  sudo pip install --upgrade -r Alex-requirements.txt
+  sudo pip install --upgrade -r alex-requirements.txt
 
 See ``alex-dsg/alex-requirements.txt``.
 
