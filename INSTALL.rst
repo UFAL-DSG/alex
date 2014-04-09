@@ -15,34 +15,13 @@ Ask the root on the computer to run:
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
       flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev
 
-To get latest versions of the following python packages, I recommend to run these commands:
+To get latest versions of the following python packages, I recommend to run this command:
 
 .. code-block:: bash
 
-  sudo pip install --upgrade numpy     # We require 1.7.1
-  sudo pip install --upgrade scipy
-  sudo pip install --upgrade scikit-learn
-  sudo pip install --upgrade wxpython
-  sudo pip install --upgrade matplotlib
+  sudo pip install --upgrade -r alex-requirements.txt
 
-  sudo pip install --upgrade pysqlite
-  sudo pip install --upgrade sqlalchemy
-  sudo pip install --upgrade pyga
-  sudo pip install --upgrade python-Levenshtein
-  sudo pip install --upgrade boto
-  sudo pip install --upgrade pysox
-  sudo pip install --upgrade jinja2
-  sudo pip install --upgrade suds
-
-  # pykaldi
-  sudo pip install --upgrade cython
-  sudo pip install --upgrade pystache
-  sudo pip install --upgrade pyyaml
-
-  sudo easy_install wget
-  sudo easy_install ipdb
-  sudo easy_install nose
-
+See ``alex-dsg/alex-requirements.txt``.
 
 Source code compiled packages
 -----------------------------

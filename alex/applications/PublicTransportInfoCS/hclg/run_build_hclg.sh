@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export KALDI_ROOT=/ha/projects/vystadial/lib/pykaldi-kronos-build
+export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
 
 source path.sh
 
