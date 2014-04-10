@@ -8,7 +8,7 @@ sqlalchemy
 pyga
 python-Levenshtein
 boto
-pysox
+# pysox  # cannot be installed via pip
 jinja2
 suds
 
