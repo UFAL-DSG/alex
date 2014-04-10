@@ -20,3 +20,4 @@ pyyaml
 wget
 ipdb
 nose
+sphinxcontrib-napoleon
