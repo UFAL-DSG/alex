@@ -26,6 +26,16 @@ See ``alex-dsg/alex-requirements.txt``.
 Source code compiled packages
 -----------------------------
 
+pysox
+-----
+Get the latest ``pysox`` from https://pypi.python.org/pypi/pysox/0.3.6.alpha
+
+.. code-block:: bash
+  
+  cd pysox*
+  python setup.py build
+  python setup.py install
+
 pyAudio
 ~~~~~~~
 Get a special version of ``pyAudio`` from https://github.com/bastibe/PyAudio (bastibe-PyAudio-2a08fa7).
