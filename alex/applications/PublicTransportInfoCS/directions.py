@@ -494,7 +494,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         ts = departure_time or datetime.now()
         # a workaround for a daylight saving bug in SUDS, remove when fixed in SUDS
         # (see https://fedorahosted.org/suds/ticket/353).
-        if time.localtime().tm_isdst:
+        if time.localtime(time.mktime(ts.timetuple())).tm_isdst:
             ts -= timedelta(hours=1)
         if arrival_time is not None:
             is_departure = False
