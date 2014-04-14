@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 import urllib
-from datetime import datetime
+from datetime import datetime, timedelta
 import os.path
 import time
 import json
@@ -492,6 +492,10 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # handle times
         is_departure = True
         ts = departure_time or datetime.now()
+        # a workaround for a daylight saving bug in SUDS, remove when fixed in SUDS
+        # (see https://fedorahosted.org/suds/ticket/353).
+        if time.localtime(time.mktime(ts.timetuple())).tm_isdst:
+            ts -= timedelta(hours=1)
         if arrival_time is not None:
             is_departure = False
             ts = arrival_time
