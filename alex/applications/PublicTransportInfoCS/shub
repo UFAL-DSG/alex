@@ -2,4 +2,4 @@
 
 cd ..
 
-./shub.py -c ./PublicTransportInfoCS/ptics.cfg
+./shub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg

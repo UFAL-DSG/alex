@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd ..
+
+./vhub.py -c ./PublicTransportInfoEN/ptics.cfg ./PublicTransportInfoEN/ptics_live.cfg ../resources/private/ext-800899998b2.cfg

@@ -1,0 +1,1 @@
+scp dailogreg.asr.model  dailogreg.asr.model.all  dailogreg.nbl.model  dailogreg.nbl.model.all  dailogreg.trn.model  dailogreg.trn.model.all vystadial.ms.mff.cuni.cz:/var/www/download/alex/applications/PublicTransportInfoEN/slu
