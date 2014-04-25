@@ -468,13 +468,12 @@ class Ordered(object):
 
     def __shift_to_node(self, other, after, without_children=False):
         "Shift a node before or after another node in the ordering"
-        all_nodes = self.root.get_descendants(ordered=True)
+        all_nodes = self.root.get_descendants(ordered=True, add_self=True)
         # determine what's being moved
-        to_move = without_children and [self] or \
-                  self.get_descendants(ordered=True, add_self=True)
+        to_move = [self] if without_children else self.get_descendants(ordered=True, add_self=True)
         moving = set(to_move)
         # do the moving
-        cur_ord = 1
+        cur_ord = 0
         for node in all_nodes:
             # skip nodes moved, handle them when we're at the reference node
             if node in moving:
