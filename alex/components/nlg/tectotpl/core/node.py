@@ -130,36 +130,36 @@ class Node(object):
         (gathering all attributes of base classes)"""
         # Caching for classes
         # (since the output is always the same for the same class)
-        if not hasattr(self.__class__, '__attr_list_cache'):
-            self.__class__.__attr_list_cache = {}
+        myclass = self.__class__
+        if not hasattr(myclass, '__attr_list_cache'):
+            myclass.__attr_list_cache = {}
         # Not in cache -- must compute
-        if not (include_types, safe) in self.__class__.__attr_list_cache:
-            attrs = [attr for cls in
-                     self.__class__.__bases__ + (self.__class__,)
-                     for attr in cls.attrib]
+        if not (include_types, safe) in myclass.__attr_list_cache:
+            mybases = inspect.getmro(myclass)
+            attrs = [attr for cls in mybases if hasattr(cls, 'attrib') for attr in cls.attrib]
             if safe:
                 attrs = [(Node.__safe_name(attr), atype)
                          for attr, atype in attrs]
             if not include_types:
                 attrs = [attr for attr, atype in attrs]
-            self.__class__.__attr_list_cache[(include_types, safe)] = attrs
+            myclass.__attr_list_cache[(include_types, safe)] = attrs
         # Return the result from cache
-        return self.__class__.__attr_list_cache[(include_types, safe)]
+        return myclass.__attr_list_cache[(include_types, safe)]
 
     def get_ref_attr_list(self, split_nested=False):
         """Return a list of the attributes of the current class that
         contain references (splitting nested ones, if needed)"""
         # Caching for classes
         # (since the output is always the same for the same class)
-        if not hasattr(self.__class__, '__ref_attr_cache'):
-            self.__class__.__ref_attr_cache = {}
+        myclass = self.__class__
+        if not hasattr(myclass, '__ref_attr_cache'):
+            myclass.__ref_attr_cache = {}
         # Not in cache -- must compute
         if not split_nested in self.__class__.__ref_attr_cache:
-            attrs = [attr for cls in
-                     self.__class__.__bases__ + (self.__class__,)
-                     for attr in cls.ref_attrib]
+            mybases = inspect.getmro(myclass)
+            attrs = [attr for cls in mybases if hasattr(cls, 'ref_attrib') for attr in cls.ref_attrib]
             if not split_nested:
-                self.__class__.__ref_attr_cache[split_nested] = attrs
+                myclass.__ref_attr_cache[split_nested] = attrs
             else:
                 # unwind the attributes to a dictionary
                 attr_dict = {}
@@ -172,9 +172,9 @@ class Node(object):
                         if not isinstance(attr_dict.get(key), dict):
                             attr_dict[key] = {}
                         attr_dict[key][val] = True
-                self.__class__.__ref_attr_cache[split_nested] = attr_dict
+                myclass.__ref_attr_cache[split_nested] = attr_dict
         # Return the result from cache
-        return self.__class__.__ref_attr_cache[split_nested]
+        return myclass.__ref_attr_cache[split_nested]
 
     def get_attr(self, name):
         """Return the value of the given attribute.
