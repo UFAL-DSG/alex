@@ -23,7 +23,7 @@ from alex.utils.procname import set_proc_name
 
 class SessionLogger(multiprocessing.Process):
     """
-    This is a multiprocessing-safe logger. It should be used by the alex to log
+    This is a multiprocessing-safe logger. It should be used by Alex to log
     information according the SDC 2010 XML format.
 
     Date and times should also include time zone.

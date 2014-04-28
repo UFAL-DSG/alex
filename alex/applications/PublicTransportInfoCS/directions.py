@@ -327,7 +327,10 @@ class CRWSRouteStep(RouteStep):
                 self.line_name = ''
             # replace train numbers with names (e.g. 'Hutník', 'Pendolino' etc.) or nothing
             if self.vehicle.endswith('train'):
-                self.line_name = input_data.oTrainData.oInfo._sNum2 or ''
+                self.line_name = (input_data.oTrainData.oInfo._sNum2
+                                  if hasattr(input_data.oTrainData.oInfo, '_sNum2')
+                                  and input_data.oTrainData.oInfo
+                                  else '')
                 if self.line_name:  # strip train type shortcut if it's contained in the name
                     train_type_shortcut = input_data.oTrainData.oInfo._sType
                     if self.line_name.startswith(train_type_shortcut + ' '):
@@ -525,6 +528,9 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
             TTLANG.ENGLISH,
             0)
+        # (use this to log raw XML responses as returned by CRWS)
+        # # xml_response = unicode(self.client.last_received())
+        # # self.session_logger.external_data_file(ftype, fname, xml_response.encode('UTF-8'))
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
