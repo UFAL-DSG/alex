@@ -2,4 +2,4 @@
 
 cd ..
 
-./vhub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/private_ext.cfg  ./PublicTransportInfoCS/google.py
+./vhub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/private_ext.cfg  ./PublicTransportInfoCS/google.cfg
