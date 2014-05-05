@@ -76,7 +76,7 @@ First,  build Kaldi fork ``pykaldi`` as follows:
   cd ../src
   ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
   make && make test
-  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
+  cd onl-rec && make && make test  # Directory needed for pykaldi Python wrapper
 
 Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
 library from previous step:

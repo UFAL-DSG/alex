@@ -5,21 +5,27 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import os
-import codecs
 import json
 import sys
 
 
 class DummyLogger():
-    """A dummy logger implementation for debugging purposes that will just print to STDERR."""
+    """A dummy logger implementation for debugging purposes that will just print
+    to STDERR or whatever output stream it is given in the constructor."""
 
-    def __init__(self):
+    def __init__(self, stream=sys.stderr):
+        """\
+        @param stream: The output stream, defaults to sys.stderr
+        """
+        self.stream = stream
         pass
 
     def info(self, text):
-        print >> sys.stderr, text.encode('UTF-8')
+        print >> self.stream, text.encode('UTF-8')
 
-    def external_data_file(self, dummy1, dummy2):
+    def external_data_file(self, dummy1, dummy2, data):
+        print >> self.stream, data
+        self.stream.flush()
         pass
 
     def get_session_dir_name(self):
