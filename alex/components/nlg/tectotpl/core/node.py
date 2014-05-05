@@ -931,6 +931,34 @@ class T(Node, Ordered, EffectiveRelations, InClause):
     def gram_diathesis(self, value):
         self.set_attr('gram/diathesis', value)
 
+    def __eq__(self, other):
+        """Equality based on memory reference, IDs, and finally hashes.
+        TODO evaluate thoroughly"""
+        if self is other:  # same object (address)
+            return True
+        if self.id and other.id and self.id == other.id:  # same IDs
+            return True
+        return hash(self) == hash(other)  # same tree under different/no ID
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        """Return hash of the tree that is composed of t-lemmas, formemes,
+        and parent orders of all nodes in the tree (ordered)."""
+        return hash(unicode(self))
+
+    def __unicode__(self):
+        desc = self.get_descendants(add_self=1, ordered=1)
+        return ' '.join(['%d|%d|%s|%s' % (n.ord if n.ord is not None else -1,
+                                          n.parent.ord if n.parent else -1,
+                                          n.t_lemma,
+                                          n.formeme)
+                         for n in desc])
+
+    def __str__(self):
+        return unicode(self).encode('UTF-8', 'replace')
+
 
 class A(Node, Ordered, EffectiveRelations, InClause):
     "Representing an a-node"
