@@ -6,12 +6,13 @@ import __init__
 import alex.utils.audio as audio
 
 from alex.components.asr.google import GoogleASR
+from alex.utils.mproc import SystemLogger
 
 if __name__ == '__main__':
     print "Testing Google ASR service"
     print "=" * 120
     print
-    language = 'en'
+    language = 'cs'
     sample_rate = 16000
 
     print "Language:       ", language
@@ -23,20 +24,22 @@ if __name__ == '__main__':
         'sample_rate': sample_rate
         },
         'ASR': {
-        'Google': {
-            'debug': False,
-            'language': language
-        }
-        }
+            'Google': {
+                'debug': False,
+                'language': language,
+                'maxresults': 5,
+                'key': 'PRIVATE KEY'
+            }
+        },
+        'Logging': {
+            'system_logger': SystemLogger(stdout=True, output_dir='./call_logs'),
+        },
     }
 
     asr = GoogleASR(cfg)
 
     # testing audio
-    wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
-
-    print 'playing audio'
-    audio.play(cfg, wav)
+    wav = audio.load_wav(cfg, './resources/test.wav')
 
     print 'calling ASR'
     hyp = asr.recognize(wav)
