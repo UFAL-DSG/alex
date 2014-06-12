@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # author: Ondrej Platek
+"""
+Bringing Kaldi speech recogniser to alex ASRInterface
+"""
 
 from __future__ import unicode_literals
 
@@ -22,13 +25,19 @@ except ImportError as e:
 
 class KaldiASR(ASRInterface):
 
-    """ Wraps Kaldi lattice decoder,
+    """ Wraps Kaldi PyOnlineLatgenRecogniser,
 
     which firstly decodes in forward direction and generate on demand lattice
     by traversing pruned decoding graph backwards.
     """
 
     def __init__(self, cfg):
+        """
+        Create KaldiASR instance and sets it according configuration
+
+        Args:
+            cfg(dict): Alex configuration
+        """
         super(KaldiASR, self).__init__(cfg)
         kcfg = self.cfg['ASR']['Kaldi']
         if os.path.isfile(kcfg['silent_phones']):
@@ -59,20 +68,23 @@ class KaldiASR(ASRInterface):
 
     def flush(self):
         """
-        Should reset Kaldi in order to be ready for next recognition task
-        :returns: self - The instance of KaldiASR
+        Resets PyOnlineLatgenRecogniser in order to be ready for next recognition task
+
+        Returns:
+            self - The instance of KaldiASR
         """
         self.decoder.reset(keep_buffer_data=False)
         return self
 
     def rec_in(self, frame):
-        """This defines asynchronous interface for speech recognition.
+        """Queueing in audio chunk
 
-        Call this input function with audio data belonging into one speech segment
-        that should be recognized.
+        Defines asynchronous interface for speech recognition.
 
-        :frame: @todo
-        :returns: self - The instance of KaldiASR
+        Args:
+            frame(asr.components.hub.messages.Frame): store pcm payload
+        Returns:
+            self - The instance of KaldiASR
         """
         frame_total, start = 0, time.clock()
         self.decoder.frame_in(frame.payload)
@@ -93,7 +105,9 @@ class KaldiASR(ASRInterface):
 
     def hyp_out(self):
         """ This defines asynchronous interface for speech recognition.
-        Returns recognizers hypotheses about the input speech audio.
+
+        Returns:
+            ASR hypothesis about the input speech audio.
         """
         start = time.time()
 
@@ -134,7 +148,9 @@ class KaldiASR(ASRInterface):
 
     def word_post_out(self):
         """ This defines asynchronous interface for speech recognition.
-        Returns recognizers hypotheses about the input speech audio.
+
+        Returns:
+            ASR hypotheses in  about the input speech audio.
         """
 
         # Get hypothesis

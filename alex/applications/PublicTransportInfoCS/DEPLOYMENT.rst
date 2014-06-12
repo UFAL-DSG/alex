@@ -34,8 +34,8 @@ Users outside UFAL can run the system using the following commands:
 - ``vhub_private_ext_google_kaldi`` - default version of our system deployed on private extension specified in ``private_ext.cfg``, using Google TTS, Directions, and KALDI ASR, logging locally into ``../call_logs``
 
 If you want to test the system on your private extension, then modify the ``private_ext.cfg`` config. You must set your
-SIP domain including the port, user login, and password. Please make sure that you do not commit your login information
-into the repository.
+SIP domain including the port, user login, and password (You can obtain a free extension at http://www.sipgate.co.uk).
+Please make sure that you do not commit your login information into the repository.
 
 :: 
 

@@ -15,11 +15,13 @@ Ask the root on the computer to run:
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
       flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev
 
-To get latest versions of the following python packages, I recommend to run this command:
+To get latest versions of the following python packages, I recommend to run these commands:
 
 .. code-block:: bash
 
   sudo pip install --upgrade -r alex-requirements.txt
+  sudo easy_install pysox
+  
 
 See ``alex-dsg/alex-requirements.txt``.
 
@@ -74,7 +76,7 @@ First,  build Kaldi fork ``pykaldi`` as follows:
   cd ../src
   ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
   make && make test
-  cd dec-wrap && make && make test  # Directory needed for pykaldi Python wrapper
+  cd onl-rec && make && make test  # Directory needed for pykaldi Python wrapper
 
 Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
 library from previous step:

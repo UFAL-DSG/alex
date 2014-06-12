@@ -32,6 +32,17 @@ def save_lattice(lat, output_dir, wav_path):
     lat.write(os.path.join(output_dir, os.path.basename(wav_path).replace('wav','fst')))
 
 def rec_wav_file(asr, cfg, output_dir, wav_path):
+    """ Recognise speech in wav file and profile speech recognition.
+
+    The decoding and ASR output extraction times are estimated.
+
+    Args:
+        cfg (dict): Alex configuration with setting for speech recognition
+        wav_path (str): Path to Wave file which is recognised
+
+    Returns:
+        Tuple of decodeded ASR hypothesis, time of decoding, time of hypothesis extraction
+    """
     pcm = load_wav(cfg, wav_path)
     frame = Frame(pcm)
 
@@ -49,6 +60,14 @@ def rec_wav_file(asr, cfg, output_dir, wav_path):
 
 
 def decode_info(asr, cfg, output_dir, wav_path, reference=None):
+    """
+    Presents the statistics of wav speech recognition.
+
+    Args:
+        cfg(dict): Alex configuration file
+        wav_path(str): Path to Wave file which is recognised
+        reference(str, optional): Gold transcription of Wave file
+    """
     print "-"*120
     print
     print '    Wav file:  %s' % str(wav_path)
@@ -75,6 +94,18 @@ def decode_info(asr, cfg, output_dir, wav_path, reference=None):
 
 
 def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
+    """
+    Prints RTF statistics for decoding and (decoding + ASR extraction)
+
+    Args:
+        outdir(str): path to directory for the generated log files are saved.
+        trn_dict(dict): (Wave name, transcription) dictionary
+        dec_dict(dict): (Wave name, decoded transcription) dictionary
+        wavlen_dict(dict): (Wave name, Wave length) dictionary
+        declen_dict(dict): (Wave name, (decoding time + extraction time)) dictionary
+        fwlen_dict(dict): (Wave name, decoding time) dictionary
+    """
+
     reference = os.path.join(outdir, 'ref_trn.txt')
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
     save_wavaskey(reference, trn_dict)
@@ -140,7 +171,19 @@ def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwle
     except:
         pass
 
+
 def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
+    """
+    Save computed statistics e.g. WER, decoding length, wave length
+
+    Args:
+        outdir(str): path to directory for the generated log files are saved.
+        trn_dict(dict): (Wave name, transcription) dictionary
+        dec_dict(dict): (Wave name, decoded transcription) dictionary
+        wavlen_dict(dict): (Wave name, Wave length) dictionary
+        declen_dict(dict): (Wave name, (decoding time + extraction time)) dictionary
+        fwlen_dict(dict): (Wave name, decoding time) dictionary
+    """
 
     compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
@@ -162,6 +205,14 @@ def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwle
 
 
 def decode_with_reference(reference, outdir, cfg):
+    """
+    Launch the decoding
+
+    Args:
+        reference(str): Path to file with references in Alex reference format.
+        outdir(str): Path to directory where to save log files.
+        cfg(dict): Alex configuration file
+    """
     asr = asr_factory(cfg)
     trn_dict = load_wavaskey(reference, Utterance)
     declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
@@ -179,6 +230,14 @@ def decode_with_reference(reference, outdir, cfg):
 
 
 def extract_from_xml(indomain_data_dir, outdir, cfg):
+    """Extract transcription and Waves from xml
+
+    Args:
+        indomain_data_dir(path): path where the xml logs are stored
+        outdir: directory to save the references and wave, Wav file names pairs
+        cfg: Alex configuration
+    """
+
     glob = 'asr_transcribed.xml'
     asr = asr_factory(cfg)
 
