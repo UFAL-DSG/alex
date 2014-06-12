@@ -11,7 +11,7 @@ import os
 from alex.components.asr.base import ASRInterface
 from alex.components.asr.utterance import UtteranceNBList, Utterance
 from alex.components.asr.exceptions import KaldiSetupException
-from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest
+from alex.utils.lattice import lattice_to_word_posterior_lists, lattice_to_nbest, lattice_calibration
 
 import kaldi.utils
 try:
@@ -49,6 +49,8 @@ class KaldiASR(ASRInterface):
         with open(kcfg['config']) as r:
             conf_opt = r.read()
             self.syslog.info('argv: %s\nconfig: %s' % (argv, conf_opt))
+
+        self.calibration_table = kcfg['calibration_table'] if 'calibration_table' in kcfg else None
 
         self.last_lattice = None
 
@@ -98,13 +100,17 @@ class KaldiASR(ASRInterface):
         # Get hypothesis
         self.decoder.prune_final()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
-        self.last_lattice = lat
-
         self.decoder.reset(keep_buffer_data=False)
+
+        if self.calibration_table:
+            lat = lattice_calibration(lat, self.calibration_table)
+
+        self.last_lattice = lat
 
         # Convert lattice to nblist
         nbest = lattice_to_nbest(lat, self.n_best)
         nblist = UtteranceNBList()
+
         for w, word_ids in nbest:
             words = u' '.join([self.wst[i] for i in word_ids])
 
