@@ -14,7 +14,7 @@ It assumes that relevant binary fst(s) already exists. These can be computed usi
 It also assumes that exists all_trn.txt which can be produced by
 
 ::
-    cd ..\slu && cat reference_transcription_dev.txt reference_transcription_trn.txt > all_trn.txt
+    cat ../lm/reference_transcription_dev.txt ../lm/reference_transcription_trn.txt > decoded_kaldi/all_trn.txt
 
 Th
 
@@ -114,7 +114,7 @@ def scores_distribution(wp_2_match):
 
 def scores_equal_size_bins(wp_2_match):
 
-    max_n = 400
+    max_n = 100
     print "Split into equal size bins"
     wp_2_match_binned = split_to_bins(wp_2_match, len(wp_2_match)/max_n)
     # wp_2_match_binned[0][0][0] = 0.0
@@ -155,7 +155,7 @@ def scores_equal_size_bins(wp_2_match):
     sigma[-2] = 0.99
     sigma[-1] = 0.1
 
-    popt, pcov = curve_fit(sig1, xdata, ydata, sigma = sigma, p0 = [0.0, 0.0, 0.0, 0.0] )
+    popt, pcov = curve_fit(sig1, xdata, ydata, sigma = sigma, p0 = [0.0, 1.0, 0.0, 0.0] )
 
     print popt
 
@@ -240,9 +240,9 @@ if __name__ == '__main__':
     words = load_words('models/words.txt')
 
     wp_2_match = []
-    for fn in fst_fns:
+    for i, fn in enumerate(fst_fns):
         print '='*120
-        print fn
+        print i, fn
 
         ref = trn_dict[os.path.basename(fn).replace('fst','wav')]
         print unicode(ref)
