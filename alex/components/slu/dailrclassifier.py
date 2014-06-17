@@ -434,7 +434,7 @@ class DAILogRegClassifier(SLUInterface):
         feat = UtteranceFeatures(size=self.features_size)
 
         scale_p = [p for p, u in nblist]
-        scale_p[0] = 1.0
+        #scale_p[0] = 1.0
 
         for i, (p, u) in enumerate(nblist):
             feat.merge(self.get_features_in_utterance(u, fvc, fvcs), weight=scale_p[i])
