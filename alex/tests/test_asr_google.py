@@ -12,7 +12,7 @@ if __name__ == '__main__':
     print "Testing Google ASR service"
     print "=" * 120
     print
-    language = 'cs'
+    language = 'en'
     sample_rate = 16000
 
     print "Language:       ", language
@@ -39,10 +39,13 @@ if __name__ == '__main__':
     asr = GoogleASR(cfg)
 
     # testing audio
-    wav = audio.load_wav(cfg, './resources/test.wav')
+    wav = audio.load_wav(cfg, './resources/test16k-mono.wav')
 
     print 'calling ASR'
     hyp = asr.recognize(wav)
+
+    print 'expected hypothesis'
+    print "I'm looking for a bar"
 
     print 'hypotheses'
     print hyp
