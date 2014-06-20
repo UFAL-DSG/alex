@@ -106,9 +106,14 @@ def main():
     nbl = []
     nbl_hdc_sem = []
 
+    fcount = 0
+    tcount = 0
     for fn in files[:100000]:
         f_dir = os.path.dirname(fn)
 
+        print
+        print "File #", fcount
+        fcount += 1
         print "Processing:", fn
         doc = xml.dom.minidom.parse(fn)
         turns = doc.getElementsByTagName("turn")
@@ -170,6 +175,9 @@ def main():
 
             trn.append((wav_key, t))
 
+            print 
+            print "Transcritpiton #", tcount
+            tcount +=1 
             print "Parsing transcription:", unicode(t)
             print "                  ASR:", unicode(a)
 
