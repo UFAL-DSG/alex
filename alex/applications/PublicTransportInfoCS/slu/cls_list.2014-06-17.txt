@@ -1,0 +1,97 @@
+========================================================================================================================
+Classifiers detected in the training data
+------------------------------------------------------------------------------------------------------------------------
+Number of classifiers:  91
+------------------------------------------------------------------------------------------------------------------------
+                                   ack() = 118
+                                affirm() = 1124
+                               apology() = 99
+                                   bye() = 938
+                           canthearyou() = 230
+                 confirm(ampm="CL_AMPM") = 1
+       confirm(departure_time="CL_TIME") = 5
+            confirm(from_stop="CL_STOP") = 30
+             confirm(time_rel="CL_TIME") = 1
+              confirm(to_stop="CL_STOP") = 10
+           confirm(vehicle="CL_VEHICLE") = 1
+                        deny(="CL_STOP") = 5
+          deny(departure_time="CL_TIME") = 6
+      deny(departure_time_rel="CL_TIME") = 1
+               deny(from_city="CL_CITY") = 79
+               deny(from_stop="CL_STOP") = 89
+                 deny(in_city="CL_CITY") = 4
+                    deny(time="CL_TIME") = 10
+                deny(time_rel="CL_TIME") = 8
+                 deny(to_city="CL_CITY") = 14
+                 deny(to_stop="CL_STOP") = 39
+              deny(vehicle="CL_VEHICLE") = 5
+                                 hello() = 526
+                                  help() = 151
+                      inform(="CL_CITY") = 338
+                      inform(="CL_STOP") = 1376
+                        inform(="Flora") = 4
+                inform(="I. P. Pavlova") = 9
+           inform(="Nádraží Holešovice") = 4
+                        inform(="Praha") = 8
+                 inform(alternative="1") = 55
+                 inform(alternative="2") = 93
+                 inform(alternative="3") = 78
+                 inform(alternative="4") = 55
+              inform(alternative="last") = 189
+              inform(alternative="next") = 586
+              inform(alternative="prev") = 130
+                  inform(ampm="CL_AMPM") = 524
+                  inform(ampm="evening") = 6
+          inform(arrival_time="CL_TIME") = 55
+          inform(date_rel="CL_DATE_REL") = 555
+                inform(date_rel="today") = 5
+             inform(date_rel="tomorrow") = 8
+        inform(departure_time="CL_TIME") = 575
+    inform(departure_time_rel="CL_TIME") = 191
+        inform(departure_time_rel="now") = 5
+             inform(from_city="CL_CITY") = 589
+             inform(from_city="CL_STOP") = 1
+               inform(from_city="Praha") = 14
+               inform(from_stop="Anděl") = 4
+             inform(from_stop="CL_STOP") = 3357
+            inform(from_stop="Dejvická") = 6
+               inform(from_stop="Flora") = 7
+          inform(from_stop="Hradčanská") = 4
+       inform(from_stop="I. P. Pavlova") = 5
+              inform(from_stop="Můstek") = 5
+  inform(from_stop="Nádraží Holešovice") = 5
+                  inform(in_city="Brno") = 4
+               inform(in_city="CL_CITY") = 429
+                  inform(task="CL_TASK") = 2113
+          inform(task="find_connection") = 2308
+                  inform(task="weather") = 251
+                  inform(time="CL_TIME") = 228
+              inform(time_rel="CL_TIME") = 291
+                  inform(time_rel="now") = 27
+               inform(to_city="CL_CITY") = 550
+                 inform(to_city="Praha") = 6
+               inform(to_stop="CL_STOP") = 3053
+         inform(to_stop="I. P. Pavlova") = 5
+            inform(vehicle="CL_VEHICLE") = 509
+                   inform(vehicle="bus") = 6
+                 inform(vehicle="metro") = 10
+                 inform(vehicle="train") = 5
+              inform(via_city="CL_CITY") = 1
+              inform(via_stop="CL_STOP") = 48
+                                negate() = 710
+                         notunderstood() = 20
+                                repeat() = 314
+                               reqalts() = 25
+                   request(arrival_time) = 122
+               request(arrival_time_rel) = 119
+                   request(current_time) = 115
+                 request(departure_time) = 235
+             request(departure_time_rel) = 103
+                       request(duration) = 70
+                      request(from_stop) = 93
+                  request(num_transfers) = 150
+                        request(to_stop) = 114
+                               restart() = 237
+                               silence() = 97
+                              thankyou() = 812
+
