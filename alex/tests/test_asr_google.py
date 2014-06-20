@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import __init__
-
 import alex.utils.audio as audio
 
 from alex.components.asr.google import GoogleASR
+from alex.utils.config import Config
 from alex.utils.mproc import SystemLogger
 
 if __name__ == '__main__':
@@ -19,16 +19,17 @@ if __name__ == '__main__':
     print "Sample rate:    ", sample_rate
     print
 
-    cfg = {
+    c = {
         'Audio': {
-        'sample_rate': sample_rate
+            'sample_rate': sample_rate
         },
         'ASR': {
             'Google': {
                 'debug': False,
                 'language': language,
                 'maxresults': 5,
-                'key': 'PRIVATE KEY'
+# private default.cfg already has a valid key
+#                'key': 'PRIVATE KEY'
             }
         },
         'Logging': {
@@ -36,6 +37,10 @@ if __name__ == '__main__':
         },
     }
 
+    cfg = Config.load_configs(log=False)
+    cfg.update(c)
+    print unicode(cfg)
+    
     asr = GoogleASR(cfg)
 
     # testing audio
