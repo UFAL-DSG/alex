@@ -31,6 +31,7 @@ class GoogleASR(ASRInterface):
         super(GoogleASR, self).__init__(cfg)
         self.language = self.cfg['ASR']['Google']['language']
         self.maxresults = self.cfg['ASR']['Google']['maxresults']
+        self.key = self.cfg['ASR']['Google']['key']
         self.rec_buffer = []
 
     def flush(self):
@@ -42,8 +43,8 @@ class GoogleASR(ASRInterface):
         Note that the returned hypotheses are in JSON format.
 
         """
-        baseurl = "http://www.google.com/speech-api/v1/recognize?xjerr=1&client=chromium&lang=%s&maxresults=%d" % (
-            self.language, self.maxresults)
+        baseurl = "http://www.google.com/speech-api/v2/recognize?xjerr=1&client=chromium&lang=%s&maxresults=%d&key=%s" % (
+            self.language, self.maxresults, self.key)
 
         header = {"User-Agent": "Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11",
                   "Content-Type": "audio/x-flac; rate=%d" % self.cfg['Audio']['sample_rate']}
@@ -56,7 +57,11 @@ class GoogleASR(ASRInterface):
         if self.cfg['ASR']['Google']['debug']:
             print json_hypotheses
 
-        return json_hypotheses
+        for hypothesis in json_hypotheses.splitlines():
+            if '"final":true' in hypothesis:
+                return hypothesis
+
+        return '{"result":[]}'
 
     def recognize(self, wav):
         """ Produces hypotheses for the input audio data.
@@ -88,17 +93,16 @@ class GoogleASR(ASRInterface):
 
             nblist = UtteranceNBList()
 
-            if hyp['status'] == 0:
-                n = len(hyp['hypotheses'])
-                for i, h in enumerate(hyp['hypotheses']):
+            if len(hyp['result']) > 0:
+                hypotheses = hyp['result'][0]['alternative']
+                n = len(hypotheses)
+                for i, h in enumerate(hypotheses):
                     if i == 0:
-                        nblist.add(h['confidence'], Utterance(h['utterance']))
-                        conf1 = hyp['hypotheses'][0]['confidence']
+                        nblist.add(h['confidence'], Utterance(h['transcript']))
+                        conf1 = h['confidence']
                     else:
                         # guess the confX score
-                        nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['utterance']))
-            elif hyp['status'] == 5:
-                nblist.add(1.0, Utterance('_other_'))
+                        nblist.add((1.0-conf1)*(n-i)/(n-1.0)/(n-0.0)*2.0, Utterance(h['transcript']))
         except:
             nblist = UtteranceNBList()
 
