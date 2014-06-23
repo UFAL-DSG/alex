@@ -49,6 +49,7 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
         return utterance
 
 
+
 class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
     """Template NLG preprocessing routines for Czech public transport information.
 

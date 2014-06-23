@@ -30,7 +30,7 @@ def get_google_coords(city):
     """Retrieve (all possible) coordinates of a city using the Google Geocoding API."""
     data = {'sensor': 'false',
             'address': ('"obec %s",Czech Republic' % city).encode('utf-8'),
-            'language': 'cs'}
+            'language': 'en'}
     page = urllib.urlopen('http://maps.googleapis.com/maps/api/geocode/json?' +
                           urllib.urlencode(data))
     response = json.load(page)

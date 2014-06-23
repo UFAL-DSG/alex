@@ -17,61 +17,55 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "find_connection": ["najít spojení", "najít spoj", "zjistit spojení",
-                            "zjistit spoj", "hledám spojení", 'spojení', 'spoj',
+        "find_connection": ["find connection", "find out connection", "find link",
+                            "find out link", "looking for a connection", 'connection', 'link',
                            ],
-        "find_platform": ["najít nástupiště", "zjistit nástupiště", ],
-        'weather': ['počasí', ],
+        "find_platform": ["find platform", "find out platform", ],
+        'weather': ['weather', ],
     },
     "time": {
-        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
-        "0:01": ["minutu", ],
-        "0:15": ["čtvrt hodiny", ],
-        "0:30": ["půl hodiny", ],
-        "0:45": ["tři čtvrtě hodiny", ],
-        "1:00": ["hodinu", ],
+        "now": ["now", "at once", "immediately", "offhand", "at the moment", "at this time"],
+        "0:01": ["a minute", ],
+        "0:15": ["a quarter of an hour", ],
+        "0:30": ["a half an hour", ],
+        "0:45": ["a three quarters of an hour", ],
+        "1:00": ["an hour", ],
     },
     "date_rel": {
-        "today": ["dnes", "dneska",
-                  "dnešek", "dneška", "dnešku", "dneškem",
-                  "dnešní", "dnešnímu", "dnešního", "dnešním"],
-        "tomorrow": ["zítra", "zejtra",
-                     "zítřek", "zítřka", "zítřku", "zítřkem",
-                     "zítřejší", "zítřejšímu", "zítřejším", "zítřejšího"],
-        "day_after_tomorrow": ["pozítří", "pozejtří"],
+        "today": ["today", "this day", "todays", "this days"],
+        "tomorrow": ["tomorrow", "tomorrows", "morrow", "morrows"],
+        "day_after_tomorrow": ["day after tomorrow", "after tomorrow" ,"after tomorrows"],
     },
     "stop": {
     },
     "vehicle": {
-        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
-        "tram": ["tram", "tramvaj", "tramvajový", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "metro": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
-        "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
-        "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
-        "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
+        "bus": ["bus", "buses"],
+        "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms"],
+        "metro": ["metro", "sub", "subway", "tube", "underground"],
+        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "railstation", "speedtrain", "rail", "rails"],
+        "cable_car": ["cable car", "cablecar", "air railway"],
+        "ferry": ["ferry", "boat", "ferryboat"],
     },
     "ampm": {
-        "morning": ["ráno", "nadránem"],
-        "am": ["dopo", "dopoledne", ],
-        "pm": ["odpo", "odpoledne", ],
-        "evening": ["večer", "podvečer", ],
-        "night": ["noc", "noci"],
+        "morning": ["morning", "dawn"],
+        "am": ["am", "forenoon", ],
+        "pm": ["pm", "afternoon", ],
+        "evening": ["evening", "dusk", ],
+        "night": ["night", "nighttime"],
     },
     "city": {
     },
 }
 
-NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
-             "osm", "devět", ]
-NUMBERS_10 = ["", "deset", "dvacet", "třicet", "čtyřicet", "padesát",
-              "šedesát", ]
-NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
-                "patnáct", "šestnáct", "sedmnáct", "osmnáct", "devatenáct"]
-NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "šestý",
-               "sedmý", "osmý", "devátý", "desátý", "jedenáctý", "dvanáctý",
-               "třináctý", "čtrnáctý", "patnáctý", "šestnáctý", "sedmnáctý",
-               "osmnáctý", "devatenáctý", "dvacátý", "jednadvacátý",
-               "dvaadvacátý", "třiadvacátý"]
+NUMBERS_1 = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", ]
+NUMBERS_10 = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", ]
+NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen",
+                "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+NUMBERS_ORD = ["zero", "first", "second", "third", "fourth", "fifth", "sixth", # nultý - zero/prime?
+               "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
+               "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+               "eighteenth", "nineteenth", "twentieth", "twenty first",
+               "twenty second", "twenty third"]
 
 # name of the file with one stop per line, assumed to reside in the same
 # directory as this script

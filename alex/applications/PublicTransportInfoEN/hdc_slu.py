@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import copy
+import traceback
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
@@ -12,6 +13,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
+from uno import _uno_extract_printable_stacktrace
 
 
 def any_word_in(utterance, words):
@@ -631,8 +633,14 @@ class PTICSHDCSLU(SLUInterface):
         if any_phrase_in(u, ["by day", "of the day"]):
             cn.add(1.0, DialogueActItem('inform', 'ampm', 'pm'))
 
+    def printStackTrace(self):
+        print "______________________________________"
+        for line in traceback.format_stack():
+            print line.strip()
+        print "______________________________________"
 
     def parse_1_best(self, obs, verbose=False):
+
         """Parse an utterance into a dialogue act."""
         utterance = obs['utt']
 

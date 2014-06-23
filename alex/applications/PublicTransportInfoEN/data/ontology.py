@@ -22,9 +22,9 @@ ontology = {
         'silence': set([]),
         'ludait': set([]),
         'task': set(['find_connection', 'find_platform', 'weather']),
-        'from_stop': set(['Zličín', 'Anděl', ]),
-        'to_stop': set(['Zličín', 'Anděl', ]),
-        'via_stop': set(['Zličín', 'Anděl', ]),
+        'from_stop': set(['New Ark', 'Hoboken', ]),
+        'to_stop': set(['New Ark', 'Hoboken', ]),
+        'via_stop': set(['New Ark', 'Hoboken', ]),
         'from_city': set([]),
         'to_city': set([]),
         'via_city': set([]),
@@ -264,7 +264,7 @@ ontology = {
     },
 
     'default_values': {
-        'in_city': 'Praha',
+        'in_city': 'New York',
     },
 
     'addinfo': {
@@ -274,39 +274,39 @@ ontology = {
     # translation of the values for TTS output
     'value_translation': {
         'ampm': {
-            'morning': 'ráno',
-            'am': 'dopoledne',
-            'pm': 'odpoledne',
-            'evening': 'večer',
-            'night': 'v noci'
+            'morning': 'morning',
+            'am': 'forenoon',
+            'pm': 'afternoon',
+            'evening': 'evening',
+            'night': 'at night'
         },
         'vehicle': {
-            'bus': 'autobusem',
-            'intercity_bus': 'dálkovým autobusem',
-            'night_bus': 'nočním autobusem',
-            'tram': 'tramvají',
-            'night_tram': 'noční tramvají',
-            'subway': 'metrem',
-            'train': 'vlakem',
-            'cable_car': 'lanovkou',
-            'ferry': 'přívozem',
-            'trolleybus': 'trolejbusem',
-            'substitute_traffic': 'náhradní dopravou',
+            'bus': 'bus',
+            'intercity_bus': 'coach',
+            'night_bus': 'night bus',
+            'tram': 'tram',
+            'night_tram': 'night tram',
+            'subway': 'subway',
+            'train': 'train',
+            'cable_car': 'cable car',
+            'ferry': 'ferry',
+            'trolleybus': 'trolley',
+            'substitute_traffic': 'alternative transport',
         },
         'date_rel': {
-            'today': 'dnes',
-            'tomorrow': 'zítra',
-            'day_after_tomorrow': 'pozítří'
+            'today': 'today',
+            'tomorrow': 'tomorrow',
+            'day_after_tomorrow': 'day after tomorrow'
         },
         'alternative': {
-            'dontcare': 'libovolný',
-            '1': 'první',
-            '2': 'druhý',
-            '3': 'třetí',
-            '4': 'čtvrtý',
-            'last': 'poslední',
-            'next': 'následující',
-            'prev': 'předchozí',
+            'dontcare': 'arbitrary',
+            '1': 'first',
+            '2': 'second',
+            '3': 'third',
+            '4': 'fourth',
+            'last': 'last',
+            'next': 'next',
+            'prev': 'previous',
         }
     },
 }
@@ -350,7 +350,6 @@ def load_compatible_values(fname, slot1, slot2):
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
-
 
 def load_additional_information(fname, slot, keys):
     with codecs.open(fname, 'r', 'UTF-8') as fh:
