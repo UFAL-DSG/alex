@@ -10,9 +10,9 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList
 
 if __name__ == "__main__":
     # cheating experiment on all data using models trained on all data
-#    hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')
-#    hdc_slu_test('./all.asr', Utterance, './all.trn.hdc.sem')
-#    hdc_slu_test('./all.nbl', UtteranceNBList, './all.trn.hdc.sem')
+    hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')
+    hdc_slu_test('./all.asr', Utterance, './all.trn.hdc.sem')
+    hdc_slu_test('./all.nbl', UtteranceNBList, './all.trn.hdc.sem')
 
     # regular experiment evaluating models trained on training data and evaluated on deb and test data
     # **WARNING** due to data sparsity the metrics on the dev and test data fluctuate a lot
