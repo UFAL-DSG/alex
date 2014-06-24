@@ -17,6 +17,7 @@ import tempfile
 import shutil
 import math
 import urllib
+import urllib2
 
 import alex.utils.env as env
 from alex.utils.exceptions import ConfigException
@@ -94,6 +95,24 @@ def set_online_update_server(server_name):
     online_update_server = server_name
 
 
+
+__is_update_server_reachable = None
+
+def is_update_server_reachble():
+    global __is_update_server_reachable
+    global online_update_server
+
+    if __is_update_server_reachable is None:
+        try:
+            print "Testing connection to update server.."
+            urllib2.urlopen(online_update_server, timeout = 1)
+            __is_update_server_reachable = True
+        except urllib2.URLError as err:
+            print "Server", online_update_server, "not reachable!"
+            __is_update_server_reachable = False
+    return __is_update_server_reachable
+
+
 def online_update(file_name):
     """
     This function can download file from a default server if it is not available locally. The default server location
@@ -104,10 +123,15 @@ def online_update(file_name):
     :param fn: the file name which should be downloaded from the server
     :return: a file name of the local copy of the file downloaded from the server
     """
+
+    fn = as_project_path(file_name)
+
+    if not is_update_server_reachble():
+        return fn;
+
     url = online_update_server + file_name
     url_time = urllib.urlopen(url).info().getdate('Last-Modified')
 
-    fn = as_project_path(file_name)
 
     if url_time:
         url_time = time.mktime(url_time)
