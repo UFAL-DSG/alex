@@ -556,10 +556,10 @@ class PTICSHDCSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
         if not any_word_in(u, 'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
-            if all_words_in(u, "za jak dlouho") or \
+            if all_words_in(u, "za jak") and any_word_in(u, 'dlouho dlóho') or \
                 all_words_in(u, "za kolik minut jede") or \
                 all_words_in(u, "za kolik minut pojede") or \
-                all_words_in(u, "za jak dlouho pojede"):
+                all_words_in(u, "za jak pojede") and any_word_in(u, 'dlouho dlóho') :
                 cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if (all_words_in(u, 'kdy tam') and any_word_in(u, 'budu bude budem')) or \
@@ -570,15 +570,16 @@ class PTICSHDCSLU(SLUInterface):
                                                              'dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if all_words_in(u, 'za jak dlouho tam') and any_word_in(u, "budu bude budem přijedu přijede přijedem přijedete "
+        if all_words_in(u, 'za jak tam') and any_word_in(u, 'dlouho dlóho') and any_word_in(u, "budu bude budem přijedu přijede přijedem přijedete "
                                                                    "dojedu dorazí dorazím dorazíte") or \
-            all_words_in(u, 'za jak dlouho budu') and (any_word_in(u, "cílové stanici") or \
+            all_words_in(u, 'za jak budu') and any_word_in(u, 'dlouho dlóho') and (any_word_in(u, "cílové stanici") or \
                                                            any_word_in(u, "cílové zastávce") or \
                                                            any_word_in(u, 'cíli')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
-        if not any_word_in(u, 'za'):
-            if all_words_in(u, 'jak dlouho') and any_word_in(u, "jede pojede trvá trvat"):
+        if not any_word_in(u, 'za v'):
+            if all_words_in(u, 'jak') and any_word_in(u, 'dlouho dlóho') and any_word_in(u, "jede pojede trvá trvat") or \
+                all_words_in(u, "kolik minut") and any_word_in(u, "jede pojede trvá trvat"):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if all_words_in(u, 'kolik je hodin') or \
