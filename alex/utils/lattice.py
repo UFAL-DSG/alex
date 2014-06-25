@@ -8,7 +8,7 @@ Most of the functionality is related with Kaldi lattice decoder output.
 '''
 
 import fst
-
+from math import exp, log
 
 def fst_shortest_path_to_word_lists(fst_shortest):
     # There are n - eps arcs from 0 state which mark beginning of each list
@@ -86,3 +86,26 @@ def lattice_to_word_posterior_lists(lat, n=1):
     std_v = fst.StdVectorFst(lat)
     p = std_v.shortest_path(n)
     return fst_shortest_path_to_word_lists(p)
+
+def lattice_calibration(lat, calibration_table):
+    #print lat
+    def find_approx(weight):
+        for i, (min, max, p) in enumerate(calibration_table):
+            if min <= weight < max:
+                #print (weight, p),
+                return p
+
+        print "Lattice calibration warning: cannot map input score."
+        return weight
+
+    for state in lat.states:
+        cum = 0.0
+        for arc in state.arcs:
+            weight = exp(-float(arc.weight))
+            aprx = find_approx(weight)
+            cum +=aprx
+            arc.weight = fst.LogWeight(-log(aprx))
+
+        for arc in state.arcs:
+            arc.weight = fst.LogWeight( -log(exp(-float(arc.weight)) / cum) )
+    return lat

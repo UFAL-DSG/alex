@@ -467,7 +467,8 @@ class PTICSHDCSLU(SLUInterface):
             phrase_in(u, "zopakovat poslední větu"):
             cn.add(1.0, DialogueActItem("repeat"))
 
-        if len(u) == 1 and any_word_in(u, "pardon pardón promiňte"):
+        if len(u) == 1 and any_word_in(u, "pardon pardón promiňte promiň sorry") or \
+                phrase_in(u, 'omlouvám se'):
             cn.add(1.0, DialogueActItem("apology"))
 
         if not any_word_in(u, "nechci děkuji"):
