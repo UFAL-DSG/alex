@@ -29,7 +29,7 @@ hidden_units = 32
 hidden_layers = 4
 last_frames = 0
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
-usec0=1
+usec0=0
 hidden_dropouts=0
 
 method = 'rpropg'
