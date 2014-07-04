@@ -18,9 +18,10 @@ from alex.ml import ffnn
 
 """
 
+random.seed(0)
 # the default values, these may be overwritten by the script parameters
 
-max_frames = 1000000
+max_frames = 1000 #1000000
 max_files = 1000000
 max_frames_per_segment = 50
 trim_segments = 0
@@ -32,10 +33,19 @@ crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
 hidden_dropouts=0
 
-method = 'rpropg'
+#method = 'sg-fixedlr'
+#method = 'sg-rprop'
+#method = 'sg-adalr'
+method = 'ng-fixedlr'
+#method = 'ng-rprop'
+#method = 'ng-adalr'
+hact = 'tanh'
+#hact = 'sigmoid'
+#hact = 'softplus'
+#hact = 'relu'
 learning_rate = 5e-2
 weight_l2=1e-6
-batch_size=20000
+batch_size= 200 #20000
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     """ Loads a MLF file and creates normalised MLF class.
@@ -105,8 +115,9 @@ def train_nn(speech_data, speech_alignment):
     print "MFCC length:", len(mfcc[0])
     input_size = len(mfcc[0])
 
-    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, weight_l2 = weight_l2)
+    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
+    random.seed(0)
     print "Generating the cross-validation and train MFCC features"
     crossvalid_x = []
     crossvalid_y = []
@@ -160,8 +171,8 @@ def train_nn(speech_data, speech_alignment):
         t_acc, t_sil = get_accuracy(train_y, predictions_y)
 
         print
-        print "max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0 "
-        print max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
+        print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0 "
+        print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -192,21 +203,28 @@ def train_nn(speech_data, speech_alignment):
         # nn = ffnn.FFNN()
         # for w, b in zip(e.network.weights, e.network.biases):
         #      nn.add_layer(w.get_value(), b.get_value())
-        # nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nn" % \
+        # nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nnt" % \
         #                     (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0))
 
 
 ##################################################
 
 def main():
+    global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
-    global preconditioner, hidden_dropouts, weight_l2
+    global hidden_dropouts, weight_l2
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This program trains neural network VAD models using the theanets library.
       """)
 
+    parser.add_argument('--method', action="store", default=method, type=str,
+                        help='an optimisation method: default %s' % method)
+    parser.add_argument('--hact', action="store", default=hact, type=str,
+                        help='an hidden layers activation: default %s' % hact)
+    parser.add_argument('--batch_size', action="store", default=batch_size, type=int,
+                        help='a mini batch size: default %d' % batch_size)
     parser.add_argument('--max_frames', action="store", default=max_frames, type=int,
                         help='a number of frames used in training including the frames for the cross validation: default %d' % max_frames)
     parser.add_argument('--max_files', action="store", default=max_files, type=int,
@@ -231,6 +249,9 @@ def main():
     args = parser.parse_args()
     sys.argv = []
 
+    method = args.method
+    hact = args.hact
+    batch_size = args.batch_size
     max_frames = args.max_frames
     max_files = args.max_files
     max_frames_per_segment = args.max_frames_per_segment
@@ -259,6 +280,7 @@ def main():
 
     train_nn(train_speech, train_speech_alignment)
 
+    print datetime.datetime.now()
 
 if __name__ == "__main__":
     main()

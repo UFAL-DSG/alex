@@ -19,6 +19,8 @@ culinalg.init()
 
 from exceptions import FFNNException
 
+rng.seed(0)
+
 class FFNN(object):
     """ Implements simple feed-forward neural network with:
 
@@ -125,11 +127,22 @@ class TheanoFFNN(object):
       -- hidden layers - activation function tanh
       -- output layer - activation function softmax
     """
-    def __init__(self, n_inputs, n_hidden_units, n_hidden_layers, n_outputs, hidden_activation = T.tanh, weight_l2 = 1e-6):
+    def __init__(self, n_inputs, n_hidden_units, n_hidden_layers, n_outputs, hidden_activation = 'tanh', weight_l2 = 1e-6):
         self.n_inputs = n_inputs
         self.n_hidden_units = n_hidden_units
         self.n_hidden_layers = n_hidden_layers
-        self.hidden_activation = hidden_activation
+
+        if hidden_activation == 'tanh':
+            self.hidden_activation = T.tanh
+        elif hidden_activation == 'sigmoid':
+            self.hidden_activation = T.nnet.sigmoid
+        elif hidden_activation == 'softplus':
+            self.hidden_activation = T.nnet.softplus
+        elif hidden_activation == 'relu':
+            self.hidden_activation = lambda x: T.maximum(0, x)
+        else:
+            raise NotImplementedError
+
         self.n_outputs = n_outputs
         self.n_hidden_activation = hidden_activation
 
@@ -184,6 +197,7 @@ class TheanoFFNN(object):
 
 
         self.rprop_init()
+        self.adalr_init()
 
     def predict(self, data_x):
         res = []
@@ -192,16 +206,17 @@ class TheanoFFNN(object):
 
         return np.array(res)
 
-    def cudasolve(self, A, b, tol=1e-3):
+    def cudasolve(self, A, b, tol=1e-4):
         """ Conjugate gradient solver for dense system of linear equations.
 
             Ax = b
 
             Returns: x = A^(-1)b
         """
+
         N = len(b)
         b = b.reshape((N,1))
-        x = gpuarray.zeros_like(b)
+        x = b.copy()
         # print 'A', A.shape
         # print 'b', b.shape
         # print 'x', x.shape
@@ -247,12 +262,14 @@ class TheanoFFNN(object):
         self.old_grad = {}
         self.rprop_d = {}
 
-    def rprop(self, grad, id = 0):
+    def rprop(self, grad, id = 0, learning_rate = 0.1):
         if id not in self.old_grad:
             # new gradient, and we do not have old
             self.old_grad[id] = grad
-            self.rprop_d[id] = 1e-3*np.ones_like(grad)
-            return self.rprop_d[id]
+            learning_rate = 0.001
+            self.rprop_d[id] = learning_rate*np.ones_like(grad)
+            change = np.multiply(np.sign(grad), self.rprop_d[id])
+            return change
 
         for i in np.ndindex(grad.shape):
             # print i
@@ -272,11 +289,175 @@ class TheanoFFNN(object):
 
         return change
 
-    def train(self, data, method = 'ng', n_iters = 1, alpha = 1e-3, learning_rate = 0.1, batch_size = 100000):
+    def adalr_init(self):
+        self.d_max = 1e+2
+        self.d_min = 1e-6
+
+        self.n_plus = 1.2
+        self.n_minus = 0.5
+
+        self.old_grad = {}
+        self.rprop_d = {}
+
+    def adalr(self, grad, id = 0, learning_rate = 0.1):
+        if id not in self.old_grad:
+            # new gradient, and we do not have old
+            self.old_grad[id] = grad
+            self.rprop_d[id] = learning_rate*np.ones_like(grad)
+            change = np.multiply(grad, self.rprop_d[id])
+            return change
+
+        for i in np.ndindex(grad.shape):
+            # print i
+            if self.old_grad[id][i]*grad[i] > 0:
+                # directions agree
+                self.rprop_d[id][i] = min(self.rprop_d[id][i]*self.n_plus, self.d_max)
+            elif self.old_grad[id][i]*grad[i] < 0:
+                # directions disagree
+                self.rprop_d[id][i] = max(self.rprop_d[id][i]*self.n_minus, self.d_min)
+                grad[i] = 0
+
+        self.old_grad[id] = grad
+
+        change = np.multiply(grad, self.rprop_d[id])
+
+        #print change
+
+        return change
+
+    def sgrad_minibatch(self, data):
+        """ Standard gradient
+        :param data:
+        :return:
+        """
+        total_loss = 0.0
+
+        # Prepare accumulating variables for gradients of the parameters.
+        gradients = []
+        n_F = 0
+        for w, b in self. params:
+            w_s = w.shape.eval()
+            b_s = b.shape.eval()
+            tg_w = np.zeros(w_s, dtype=theano.config.floatX)
+            tg_b = np.zeros(b_s, dtype=theano.config.floatX)
+            gradients.append((tg_w, tg_b))
+
+            n_F += w_s[0]*w_s[1] + b_s[0]
+
+        t_cg = np.zeros(n_F, np.float32)
+
+        # Go through the data, compute gradient at each point and accumulate it.
+        l_cg = []
+        for ii, (t_x, t_y) in enumerate(zip(data[0], data[1])):
+            total_loss += self.f_loss(t_x, t_y)
+
+            for f_g_loss, (tg_w, tg_b) in zip(self.f_g_losses, gradients):
+                g_w, g_b = f_g_loss(t_x, t_y)
+                tg_w += g_w
+                tg_b += g_b
+
+        total_loss /= len(data[0])
+
+        for tg_w, tg_b in gradients:
+            tg_w /= len(data[0])
+            tg_b /= len(data[0])
+
+        return -total_loss, gradients
+
+    def ngrad_minibatch(self, data, alpha = 1e-3):
+        """ Natural gradient gradient
+        :param data:
+        :return:
+        """
+        total_loss = 0.0
+
+        # Prepare accumulating variables for gradients of the parameters.
+        gradients = []
+        n_F = 0
+        for w, b in self. params:
+            w_s = w.shape.eval()
+            b_s = b.shape.eval()
+            tg_w = np.zeros(w_s, dtype=theano.config.floatX)
+            tg_b = np.zeros(b_s, dtype=theano.config.floatX)
+            gradients.append((tg_w, tg_b))
+
+            n_F += w_s[0]*w_s[1] + b_s[0]
+
+        t_cg = np.zeros(n_F, np.float32)
+
+        # Go through the data, compute gradient at each point and accumulate it.
+        l_cg = []
+        for ii, (t_x, t_y) in enumerate(zip(data[0], data[1])):
+            total_loss += self.f_loss(t_x, t_y)
+
+            cg = []
+            for f_g_loss, (tg_w, tg_b) in zip(self.f_g_losses, gradients):
+                g_w, g_b = f_g_loss(t_x, t_y)
+
+                cg.append(g_w.flatten())
+                cg.append(g_b)
+
+
+            cg = np.concatenate(cg)
+            cg = cg.astype(np.float32)
+            l_cg.append(cg)
+            t_cg += cg
+
+        total_loss /= len(data[0])
+
+        t_cg /= len(data[0])
+
+        l_cg = np.vstack(l_cg)
+
+        # print '#2', l_cg.shape
+        # t_F = np.dot(l_cg.T , l_cg)
+        # t_F /= len(data[0])
+        # print '#3', t_F.shape
+        # t_F += alpha*np.identity(n_F)
+        #
+        # print '#4', t_F.shape
+        # t_ng = np.linalg.solve(t_F,t_cg)
+        # print '#5'
+
+        # print '2', l_cg.shape
+        gpu_t_cg = gpuarray.to_gpu(t_cg)
+        gpu_l_cg = gpuarray.to_gpu(l_cg)
+        gpu_t_F = culinalg.dot(gpu_l_cg, gpu_l_cg, transa='T')
+        gpu_t_F /= len(data[0])
+
+        # print '3'
+        gpu_identity = gpuarray.to_gpu(alpha*np.identity(n_F))
+        gpu_t_F += gpu_identity
+
+        # print '4', t_F.shape
+        gpu_t_ng = self.cudasolve(gpu_t_F, gpu_t_cg)
+        t_ng = gpu_t_ng.get()
+
+        # print '5'
+
+        ngradients = []
+        t_ng_i = 0
+        for tg_w, tg_b in gradients:
+            # save natural gradients
+            tg_w_s = tg_w.shape
+            tg_b_s = tg_b.shape
+
+            tng_w = t_ng[t_ng_i:t_ng_i+tg_w_s[0]*tg_w_s[1]]
+            tng_w = tng_w.reshape(tg_w_s)
+            t_ng_i = t_ng_i+tg_w_s[0]*tg_w_s[1]
+
+            tng_b = t_ng[t_ng_i:t_ng_i+tg_b_s[0]]
+            t_ng_i = t_ng_i+tg_b_s[0]
+
+            ngradients.append((tng_w, tng_b))
+
+        return -total_loss, ngradients
+
+    def train(self, data, method = 'ng', n_iters = 1, learning_rate = 0.1, batch_size = 100000):
         # Do batch-gradient descent to learn the parameters.
 
         data_all = data
-        if batch_size > 0 and batch_size < len(data_all[0]):
+        if batch_size > 0 and batch_size <= len(data_all[0]):
             n_minibatches = int(len(data_all[0]) / batch_size)
         else:
             n_minibatches = 1
@@ -290,109 +471,31 @@ class TheanoFFNN(object):
 
                 data = [data_x, data_y]
 
-                total_loss = 0.0
+                if 'sg-' in method:
+                    log_lik, gradients = self.sgrad_minibatch(data)
+                elif 'ng-' in method:
+                    log_lik, gradients = self.ngrad_minibatch(data)
+                else:
+                    print "Unknown gradient method"
+                    return
 
-                # Prepare accumulating variables for gradients of the parameters.
-                gradients = []
-                n_F = 0
-                for w, b in self. params:
-                    w_s = w.shape.eval()
-                    b_s = b.shape.eval()
-                    tg_w = np.zeros(w_s, dtype=theano.config.floatX)
-                    tg_b = np.zeros(b_s, dtype=theano.config.floatX)
-                    gradients.append((tg_w, tg_b))
+                print "iteration (%d)" % ni, "minibatch (%d)" % m, "log likelihood %.4f" % log_lik
 
-                    n_F += w_s[0]*w_s[1] + b_s[0]
-
-                t_cg = np.zeros(n_F, np.float32)
-
-                # Go through the data, compute gradient at each point and accumulate it.
-                l_cg = []
-                for ii, (t_x, t_y) in enumerate(zip(data[0], data[1])):
-                    total_loss += self.f_loss(t_x, t_y)
-
-                    cg = []
-                    for f_g_loss, (tg_w, tg_b) in zip(self.f_g_losses, gradients):
-                        g_w, g_b = f_g_loss(t_x, t_y)
-                        tg_w += g_w
-                        tg_b += g_b
-
-                        if method == 'ng':
-                            cg.append(g_w.flatten())
-                            cg.append(g_b)
-
-
-                    if method == 'ng':
-                        cg = np.concatenate(cg)
-                        cg = cg.astype(np.float32)
-                        l_cg.append(cg)
-                        t_cg += cg
-
-                total_loss /= len(data[0])
-
-                if method == 'g':
-                    for tg_w, tg_b in gradients:
-                        tg_w /= len(data[0])
-                        tg_b /= len(data[0])
-
-                if method == 'ng':
-                    t_cg /= len(data[0])
-
-                    l_cg = np.vstack(l_cg)
-
-                    # print '#2', l_cg.shape
-                    # t_F = np.dot(l_cg.T , l_cg)
-                    # t_F /= len(data[0])
-                    # print '#3', t_F.shape
-                    # t_F += alpha*np.identity(n_F)
-                    #
-                    # print '#4', t_F.shape
-                    # t_ng = np.linalg.solve(t_F,t_cg)
-                    # print '#5'
-
-                    # print '2', l_cg.shape
-                    gpu_t_cg = gpuarray.to_gpu(t_cg)
-                    gpu_l_cg = gpuarray.to_gpu(l_cg)
-                    gpu_t_F = culinalg.dot(gpu_l_cg, gpu_l_cg, transa='T')
-                    gpu_t_F /= len(data[0])
-                    #t_F = gpu_t_F.get()
-
-                    # print '3'
-                    gpu_identity = gpuarray.to_gpu(alpha*np.identity(n_F))
-                    gpu_t_F += gpu_identity
-
-                    # print '4', t_F.shape
-                    gpu_t_ng = self.cudasolve(gpu_t_F, gpu_t_cg)
-                    t_ng = gpu_t_ng.get()
-
-                    # print '5'
-
-
-                print "iteration (%d)" % ni, "minibatch (%d)" % m, "likelihood %.4f" % total_loss
-
-                t_ng_i = 0
                 # Update parameters.
                 for i, ((w, b), (tg_w, tg_b)) in enumerate(zip(self.params, gradients)):
-                    if method == 'ng':
-                        # ng update
-                        tg_w_s = tg_w.shape
-                        tg_b_s = tg_b.shape
-
-                        tng_w = t_ng[t_ng_i:t_ng_i+tg_w_s[0]*tg_w_s[1]]
-                        tng_w = tng_w.reshape(tg_w_s)
-                        t_ng_i = t_ng_i+tg_w_s[0]*tg_w_s[1]
-
-                        tng_b = t_ng[t_ng_i:t_ng_i+tg_b_s[0]]
-                        t_ng_i = t_ng_i+tg_b_s[0]
-
-                        w.set_value(w.get_value() - learning_rate * tng_w)
-                        b.set_value(b.get_value() - learning_rate * tng_b)
-                    elif method == 'g':
-                        # g update
+                    if 'fixedlr' in method:
+                        # gradient update
                         w.set_value(w.get_value() - learning_rate * tg_w)
                         b.set_value(b.get_value() - learning_rate * tg_b)
-                    elif method == 'rpropg':
-                        # RPROP- g update
-                        w.set_value(w.get_value() - self.rprop(tg_w, (i, 0)))
-                        b.set_value(b.get_value() - self.rprop(tg_b, (i, 1)))
+                    elif 'rprop' in method:
+                        # iRPROP- update
+                        w.set_value(w.get_value() - self.rprop(tg_w, (i, 0), learning_rate))
+                        b.set_value(b.get_value() - self.rprop(tg_b, (i, 1), learning_rate))
+                    elif 'adalr' in method:
+                        # iRPROP- update
+                        w.set_value(w.get_value() - self.adalr(tg_w, (i, 0), learning_rate))
+                        b.set_value(b.get_value() - self.adalr(tg_b, (i, 1), learning_rate))
+                    else:
+                        print "Unknown update method"
+                        return
 
