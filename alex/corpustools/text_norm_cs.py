@@ -263,6 +263,18 @@ _subst = [
           ('ZROVNOPRÁVĚNÍ', 'ZROVNOPRÁVNĚNÍ'),
           ('ZTRÁŽNÍKY', 'STRÁŽNÍKY'),
           ('ZVLÁŠTÍ', 'ZVLÁŠTNÍ'),
+          ('DOZADU_LAUGH_', 'DOZADU _LAUGH_'),
+          ('DOZADU(LAUGH)', 'DOZADU (LAUGH)'),
+          ('DOZADU<LAUGH>', 'DOZADU <LAUGH>'),
+          ('OZVAT_LAUGH_', 'OZVAT _LAUGH_'),
+          ('OZVAT(LAUGH)', 'OZVAT (LAUGH)'),
+          ('OZVAT<LAUGH>', 'OZVAT <LAUGH>'),
+          ('VENDY_LAUGH_', 'VENDY _LAUGH_'),
+          ('VENDY(LAUGH)', 'VENDY (LAUGH)'),
+          ('VENDY<LAUGH>', 'VENDY <LAUGH>'),
+          ('FŔST', '_EXCLUDE_'),
+          ('BRA', '_EXCLUDE_'),
+          ('ALÉÉ', 'ALÉ'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
