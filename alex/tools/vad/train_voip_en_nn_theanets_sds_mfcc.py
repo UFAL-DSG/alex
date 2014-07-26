@@ -22,6 +22,7 @@ lmj.cli.enable_default_logging()
 
 """
 
+#random.seed(1)
 # the default values, these may be overwritten by the script parameters
 
 max_frames = 10000
@@ -30,9 +31,12 @@ max_frames_per_segment = 50
 trim_segments = 0
 max_epoch = 3
 hidden_units = 32
-last_frames = 0
+last_frames = 3
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
+usedelta=False
+useacc=False
+mel_banks_only=1 # True
 preconditioner=0
 hidden_dropouts=0
 weight_l2=0
@@ -86,7 +90,7 @@ def get_accuracy(ds, a):
     return acc/n*100, sil/n*100
 
 def train_nn(speech_data, speech_alignment):
-    vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=last_frames)
+    vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=last_frames, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
     sil_count = 0
     speech_count = 0
     for sd, sa in zip(speech_data, speech_alignment):
@@ -117,6 +121,7 @@ def train_nn(speech_data, speech_alignment):
                             batch_size=500,
                             )
 
+    random.seed(0)
     print "Generating the cross-validation and train MFCC features"
     crossvalid_x = []
     crossvalid_y = []
@@ -124,6 +129,8 @@ def train_nn(speech_data, speech_alignment):
     train_y = []
     i = 0
     for frame, label in vta:
+        frame = frame - (10.0 if mel_banks_only else 0.0)
+        
         if i % (max_frames / 10) == 0:
             print "Already processed: %.2f%% of data" % (100.0*i/max_frames)
 
@@ -166,8 +173,8 @@ def train_nn(speech_data, speech_alignment):
         t_acc, t_sil = get_accuracy(train_y, predictions_y)
 
         print
-        print "max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, preconditioner, hidden_dropouts, weight_l2"
-        print max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, preconditioner, hidden_dropouts, weight_l2
+        print "max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only, preconditioner, hidden_dropouts, weight_l2"
+        print max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only, preconditioner, hidden_dropouts, weight_l2
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -194,8 +201,8 @@ def train_nn(speech_data, speech_alignment):
         nn = ffnn.FFNN()
         for w, b in zip(e.network.weights, e.network.biases):
              nn.add_layer(w.get_value(), b.get_value())
-        nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d.nn" % \
-                            (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0))
+        nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.nn" % \
+                            (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, usec0, usedelta, useacc, mel_banks_only))
 
 
 ##################################################
@@ -203,6 +210,7 @@ def train_nn(speech_data, speech_alignment):
 def main():
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
     global preconditioner, hidden_dropouts, weight_l2
+    global mel_banks_only
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -225,6 +233,8 @@ def main():
                         help='number of last frames: default %d' % last_frames)
     parser.add_argument('--usec0', action="store", default=usec0, type=int,
                         help='use c0 in mfcc: default %d' % usec0)
+    parser.add_argument('--mel_banks_only', action="store", default=mel_banks_only, type=int,
+                        help='use mel banks only instead of mfcc: default %d' % mel_banks_only)
     parser.add_argument('--preconditioner', action="store", default=preconditioner, type=int,
                         help='use preconditioner for HF optimization: default %d' % preconditioner)
     parser.add_argument('--hidden_dropouts', action="store", default=hidden_dropouts, type=float,
@@ -244,6 +254,7 @@ def main():
     last_frames = args.last_frames
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
     usec0 = args.usec0
+    mel_banks_only = args.mel_banks_only
     preconditioner = args.preconditioner
     hidden_dropouts = args.hidden_dropouts
     weight_l2 = args.weight_l2
