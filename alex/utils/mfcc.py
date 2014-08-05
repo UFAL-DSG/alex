@@ -142,7 +142,7 @@ class MFCCFrontEnd:
 
 #    print "SPS",power_spectrum.shape
         mel_spectrum = np.dot(power_spectrum, self.mel_filter_bank)
-	    # apply mel floor
+        # apply mel floor
         for i in range(len(mel_spectrum)):
             if mel_spectrum[i] < 1.0:
                 mel_spectrum[i] = 1.0
@@ -152,48 +152,48 @@ class MFCCFrontEnd:
             mfcc = mel_spectrum
             self.mfcc_queue.append(mel_spectrum)
         else:
-		    cepstrum = dct(mel_spectrum, type=2, norm='ortho')
-		    c0 = cepstrum[0]
-		    htk_cepstrum = cepstrum[1:self.numceps + 1]
-		    # cepstral liftering
-		    cep_lift_mfcc = self.cep_lift_weights * htk_cepstrum
+            cepstrum = dct(mel_spectrum, type=2, norm='ortho')
+            c0 = cepstrum[0]
+            htk_cepstrum = cepstrum[1:self.numceps + 1]
+            # cepstral liftering
+            cep_lift_mfcc = self.cep_lift_weights * htk_cepstrum
 
-		    if self.usec0:
-		        mfcc = np.append(cep_lift_mfcc, c0)
-		    else:
-		        mfcc = cep_lift_mfcc
+            if self.usec0:
+                mfcc = np.append(cep_lift_mfcc, c0)
+            else:
+                mfcc = cep_lift_mfcc
 
-		    # compute delta and acceleration coefficients if requested
-		    self.mfcc_queue.append(mfcc)
+            # compute delta and acceleration coefficients if requested
+            self.mfcc_queue.append(mfcc)
 
 #        print len(self.mfcc_queue)
 
-		    if self.usedelta:
+            if self.usedelta:
 #      print "LMQ", len(self.mfcc_queue)
-		        if len(self.mfcc_queue) >= 2:
-		            delta = np.zeros_like(mfcc)
-		            for i in range(1, len(self.mfcc_queue)):
-		                delta += self.mfcc_queue[i] - self.mfcc_queue[i - 1]
-		            delta /= len(self.mfcc_queue) - 1
+                if len(self.mfcc_queue) >= 2:
+                    delta = np.zeros_like(mfcc)
+                    for i in range(1, len(self.mfcc_queue)):
+                        delta += self.mfcc_queue[i] - self.mfcc_queue[i - 1]
+                    delta /= len(self.mfcc_queue) - 1
 
-		            self.mfcc_delta_queue.append(delta)
-		        else:
-		            delta = np.zeros_like(mfcc)
+                    self.mfcc_delta_queue.append(delta)
+                else:
+                    delta = np.zeros_like(mfcc)
 
-		    if self.useacc:
-		        if len(self.mfcc_delta_queue) >= 2:
-		            acc = np.zeros_like(mfcc)
-		            for i in range(1, len(self.mfcc_delta_queue)):
-		                acc += self.mfcc_delta_queue[i] - \
-		                    self.mfcc_delta_queue[i - 1]
-		            acc /= len(self.mfcc_delta_queue) - 1
-		        else:
-		            acc = np.zeros_like(mfcc)
+            if self.useacc:
+                if len(self.mfcc_delta_queue) >= 2:
+                    acc = np.zeros_like(mfcc)
+                    for i in range(1, len(self.mfcc_delta_queue)):
+                        acc += self.mfcc_delta_queue[i] - \
+                            self.mfcc_delta_queue[i - 1]
+                    acc /= len(self.mfcc_delta_queue) - 1
+                else:
+                    acc = np.zeros_like(mfcc)
 
-		    if self.usedelta:
-		        mfcc = np.append(mfcc, delta)
-		    if self.useacc:
-		        mfcc = np.append(mfcc, acc)
+            if self.usedelta:
+                mfcc = np.append(mfcc, delta)
+            if self.useacc:
+                mfcc = np.append(mfcc, acc)
 
         for i in range(self.n_last_frames):
             if len(self.mfcc_queue) > i + 1 :

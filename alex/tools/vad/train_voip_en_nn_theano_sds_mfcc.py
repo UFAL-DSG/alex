@@ -22,19 +22,21 @@ from alex.ml import ffnn
 random.seed(0)
 # the default values, these may be overwritten by the script parameters
 
-max_frames = 100000 #1000000
+max_frames = 1000000 #1000000
 max_files = 1000000
-max_frames_per_segment = 50
+max_frames_per_segment = 0
 trim_segments = 0
 max_epoch = 20
 hidden_units = 32
 hidden_layers = 4
-last_frames = 9
+last_frames = 15
+prev_frames = 15
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
 usedelta=False
 useacc=False
 mel_banks_only=1
+uselda = 0
 hidden_dropouts=0
 
 #method = 'sg-fixedlr'
@@ -47,13 +49,13 @@ hact = 'tanh'
 #hact = 'sigmoid'
 #hact = 'softplus'
 #hact = 'relu'
-learning_rate = 5e-2
-learning_rate_decay = 200.0
+learning_rate = 1e-2 # 5e-2
+learning_rate_decay = 100.0
 weight_l2=1e-6
-batch_size= 50000 
+batch_size= 500000 
 
-fetures_file_name = "model_voip/vad_sds_mfcc_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, 
+fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
+                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
                               usec0, usedelta, useacc, mel_banks_only)
 
 
@@ -82,6 +84,101 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
 
     return mlf
 
+def gen_features(speech_data, speech_alignment):
+    vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=0, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
+    sil_count = 0
+    speech_count = 0
+    for sd, sa in zip(speech_data, speech_alignment):
+        mlf_speech = load_mlf(sa, max_files, max_frames_per_segment)
+        vta.append_mlf(mlf_speech)
+        vta.append_trn(sd)
+
+        sil_count += mlf_speech.count_length('sil')
+        speech_count += mlf_speech.count_length('speech')
+
+    print "The length of sil segments:    ", sil_count
+    print "The length of speech segments: ", speech_count
+
+    mfcc = vta.__iter__().next()
+
+    print "Features vector length:", len(mfcc[0])
+    input_size = len(mfcc[0])
+
+    print "Generating the cross-validation and train features"
+    crossvalid_x = []
+    crossvalid_y = []
+    train_x = []
+    train_y = []
+    i = 0
+    samplingC = 0
+    for frame, label in vta:
+        # downcast
+        frame = frame.astype(np.float32)
+    #        frame = frame - (10.0 if mel_banks_only else 0.0)
+
+        if i % (max_frames / 10) == 0:
+            print "Already processed: %.2f%% of data" % (100.0*i/max_frames)
+
+        if i >= max_frames:
+            break
+
+
+        if samplingC > 0 or float(len(crossvalid_x)) / (len(train_x)+1) < float(crossvalid_frames)/max_frames:
+            if not samplingC:
+                samplingC = int(crossvalid_frames*0.05)
+            # sample validation (test) data
+            crossvalid_x.append(frame)
+            if label == "sil":
+                crossvalid_y.append(0)
+            else:
+                crossvalid_y.append(1)
+                
+            samplingC -= 1
+        else:
+            train_x.append(frame)
+            if label == "sil":
+                train_y.append(0)
+            else:
+                train_y.append(1)
+
+        i += 1
+
+    gc.collect()
+    crossvalid_x = np.array(crossvalid_x).astype(np.float32)
+    gc.collect()
+    crossvalid_y = np.array(crossvalid_y).astype('int32')
+    gc.collect()
+    train_x = np.array(train_x).astype(np.float32)
+    gc.collect()
+    train_y = np.array(train_y).astype('int32')
+    gc.collect()
+
+    # normalise the data
+    tx_m = np.mean(train_x, axis=0)
+    tx_std = np.std(train_x, axis=0)
+
+    gc.collect()
+    crossvalid_x -= tx_m
+    gc.collect()
+    crossvalid_x /= tx_std
+    gc.collect()
+    train_x -= tx_m
+    gc.collect()
+    train_x /= tx_std
+    gc.collect()
+
+    print 'Saving data to:', fetures_file_name
+    f = open(fetures_file_name, "wb")
+    np.save(f, crossvalid_x) 
+    np.save(f, crossvalid_y)
+    np.save(f, train_x)
+    np.save(f, train_y)
+    np.save(f, tx_m)
+    np.save(f, tx_std)
+    f.close()
+
+    return crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std
+
 
 def get_accuracy(true_y, predictions_y):
     """ Compute accuracy of predictions from the activation of the last NN layer, and the sil prior probability.
@@ -94,6 +191,54 @@ def get_accuracy(true_y, predictions_y):
 
     return acc, sil
 
+def lda(X, Y, n):
+    """Train a LDA teansform matrix."""
+    import scipy.linalg as linalg
+    import operator
+    import pycuda.gpuarray as gpuarray
+    import scikits.cuda.linalg as culinalg
+    
+    classLabels = np.unique(Y)
+    classNum = len(classLabels)
+    datanum, dim = X.shape
+    totalMean = np.mean(X,0)
+
+    print '1'
+    partition = [np.where(Y==label)[0] for label in classLabels]
+    classMean = [(np.mean(X[idx],0),len(idx)) for idx in partition]
+
+    print [z.shape for z in partition]
+    
+    print '2'
+    #compute the within-class scatter matrix
+    W = np.zeros((dim,dim))
+    for idx in partition:
+#        W += np.cov(X[idx],rowvar=0)*len(idx)
+        Xi = X[idx].astype(np.float32)
+        Xi -= Xi.mean(axis=0)
+        gpu_Xi = gpuarray.to_gpu(Xi)
+        W += culinalg.dot(gpu_Xi, gpu_Xi, transa='T').get() #/float(len(idx)-1)*len(idx)
+    print '3'
+    #compute the between-class scatter matrix
+    B = np.zeros((dim,dim))
+    for mu,class_size in classMean:
+        offset = mu - totalMean
+        B += np.outer(offset,offset)*class_size
+
+    #W /= float(datanum - classNum)
+    #B /= float(classNum - 1)
+     
+    print '4'
+    #solve the generalized eigenvalue problem for discriminant directions
+    ew, ev = linalg.eig(B,W+B)
+    sorted_pairs = sorted(enumerate(ew), key=operator.itemgetter(1), reverse=True)
+    selected_ind = [ind for ind,val in sorted_pairs[:n]]
+    LDA_m = ev[:,selected_ind]
+    print '5'
+    # LDA projection: np.dot(x,LDA_m)
+    
+    return LDA_m
+
 def train_nn(speech_data, speech_alignment):
     print
     print datetime.datetime.now()
@@ -105,104 +250,52 @@ def train_nn(speech_data, speech_alignment):
         crossvalid_y = np.load(f)
         train_x = np.load(f)
         train_y = np.load(f)
+        tx_m = np.load(f)
+        tx_std = np.load(f)
         f.close()
             
-    except:        
-        vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=last_frames, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
-        sil_count = 0
-        speech_count = 0
-        for sd, sa in zip(speech_data, speech_alignment):
-            mlf_speech = load_mlf(sa, max_files, max_frames_per_segment)
-            vta.append_mlf(mlf_speech)
-            vta.append_trn(sd)
+    except IOError:  
+        crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
 
-            sil_count += mlf_speech.count_length('sil')
-            speech_count += mlf_speech.count_length('speech')
+    print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
+    print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
 
-        print "The length of sil segments:    ", sil_count
-        print "The length of speech segments: ", speech_count
+    # add prev, and last frames
+    rows_c = [(c, c + len(crossvalid_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
+    rows_t = [(c, c + len(train_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
+                
+    crossvalid_x = np.hstack([crossvalid_x[l:r] for l, r in rows_c])
+    crossvalid_y = crossvalid_y[last_frames:last_frames + len(crossvalid_y) - (prev_frames + last_frames)]
+    train_x = np.hstack([train_x[l:r] for l, r in rows_t])
+    train_y = train_y[last_frames:last_frames + len(train_y) - (prev_frames + last_frames)] 
+    tx_m = np.tile(tx_m, prev_frames + 1 + last_frames)
+    tx_std = np.tile(tx_std, prev_frames + 1 + last_frames)
 
-        mfcc = vta.__iter__().next()
+    if uselda:
+        print
+        print datetime.datetime.now()
+        print
 
-        print "MFCC length:", len(mfcc[0])
-        input_size = len(mfcc[0])
+        LDA_m = lda(train_x, train_y, uselda).astype(np.float32)
 
-        print "Generating the cross-validation and train MFCC features"
-        crossvalid_x = []
-        crossvalid_y = []
-        train_x = []
-        train_y = []
-        i = 0
-        for frame, label in vta:
-            # downcast
-            frame = frame.astype(np.float32)
-    #        frame = frame - (10.0 if mel_banks_only else 0.0)
-
-            if i % (max_frames / 10) == 0:
-                print "Already processed: %.2f%% of data" % (100.0*i/max_frames)
-
-            if i > max_frames:
-                break
-
-            if random.random() < float(crossvalid_frames)/max_frames:
-                # sample validation (test) data
-                crossvalid_x.append(frame)
-                if label == "sil":
-                    crossvalid_y.append(0)
-                else:
-                    crossvalid_y.append(1)
-            else:
-                train_x.append(frame)
-                if label == "sil":
-                    train_y.append(0)
-                else:
-                    train_y.append(1)
-
-            i += 1
-
-        gc.collect()
-        crossvalid_x = np.array(crossvalid_x).astype(np.float32)
-        gc.collect()
-        crossvalid_y = np.array(crossvalid_y).astype('int32')
-        gc.collect()
-        train_x = np.array(train_x).astype(np.float32)
-        gc.collect()
-        train_y = np.array(train_y).astype('int32')
-        gc.collect()
+        print "Data shape:    ", train_x.shape
+        print "LDA projection:", LDA_m.shape
         
-        # normalise the data
-        tx_m = np.mean(train_x, axis=0)
-        tx_std = np.std(train_x, axis=0)
-        
-        gc.collect()
-        crossvalid_x -= tx_m
-        gc.collect()
-        crossvalid_x /= tx_std
-        gc.collect()
-        train_x -= tx_m
-        gc.collect()
-        train_x /= tx_std
-        gc.collect()
+        train_x = np.dot(train_x, LDA_m)
+        crossvalid_x = np.dot(crossvalid_x, LDA_m)
 
-        print 'Saving data to:', fetures_file_name
-        f = open(fetures_file_name, "wb")
-        np.save(f, crossvalid_x) 
-        np.save(f, crossvalid_y)
-        np.save(f, train_x)
-        np.save(f, train_y)
-        f.close()
             
     print
     print datetime.datetime.now()
     print
     print "The shape of training data: ", train_x.shape, train_y.shape
     print "The shape of test data:     ", crossvalid_x.shape, crossvalid_y.shape
+    print "The shape of tx_m, tx_std:  ", tx_m.shape, tx_std.shape
     print
 
     input_size = train_x.shape[1]
     
-    e = ffnn.TheanoFFNN2(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
-
+    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     dc_acc = []
     dt_acc = []
@@ -223,8 +316,8 @@ def train_nn(speech_data, speech_alignment):
         dt_acc.append(t_acc)
 
         print
-        print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
-        print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only 
+        print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
+        print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only 
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -255,10 +348,12 @@ def train_nn(speech_data, speech_alignment):
 
             nn = ffnn.FFNN()
             for w, b in e.params:
-                  nn.add_layer(w.get_value(), b.get_value())
-            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.nnt" % \
-                                 (input_size, hidden_units, last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, 
-                                 usec0, usedelta, useacc, mel_banks_only))
+                nn.add_layer(w.get_value(), b.get_value())
+            nn.set_input_norm(tx_m, tx_std)
+            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_pf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
+                                 (input_size, hidden_units, last_frames, prev_frames, max_frames, max_files, max_frames_per_segment,
+                                 trim_segments, 
+                                 usec0, usedelta, useacc, mel_banks_only, batch_size))
         
         if epoch == max_epoch:
             break
@@ -275,14 +370,15 @@ def train_nn(speech_data, speech_alignment):
 
 def main():
     global method, batch_size, hact
-    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, crossvalid_frames, usec0
+    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, prev_frames
+    global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
     global fetures_file_name
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""This program trains neural network VAD models using the theanets library.
+        description="""This program trains neural network VAD models using the theano library.
       """)
 
     parser.add_argument('--method', action="store", default=method, type=str,
@@ -305,6 +401,8 @@ def main():
                         help='number of hidden units: default %d' % hidden_units)
     parser.add_argument('--last_frames', action="store", default=last_frames, type=int,
                         help='number of last frames: default %d' % last_frames)
+    parser.add_argument('--prev_frames', action="store", default=prev_frames, type=int,
+                        help='number of prev frames: default %d' % prev_frames)
     parser.add_argument('--usec0', action="store", default=usec0, type=int,
                         help='use c0 in mfcc: default %d' % usec0)
     parser.add_argument('--mel_banks_only', action="store", default=mel_banks_only, type=int,
@@ -327,6 +425,7 @@ def main():
     max_epoch = args.max_epoch
     hidden_units = args.hidden_units
     last_frames = args.last_frames
+    prev_frames = args.prev_frames
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
     usec0 = args.usec0
     mel_banks_only = args.mel_banks_only
@@ -341,12 +440,14 @@ def main():
     train_speech.append('data_voip_en/train/*.wav')
     train_speech_alignment.append('model_voip_en/aligned_best.mlf')
 
+    train_speech.append('data_vad_sil/data/*.wav')
+    train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
+
     train_speech.append('data_voip_cs/train/*.wav')
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
 
-
-    fetures_file_name = "model_voip/vad_sds_mfcc_lf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (last_frames, max_frames, max_files, max_frames_per_segment, trim_segments, 
+    fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
+                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
                               usec0, usedelta, useacc, mel_banks_only)
 
     print datetime.datetime.now()

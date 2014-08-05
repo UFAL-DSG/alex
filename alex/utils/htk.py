@@ -239,6 +239,13 @@ class MLF:
                 self.mlf[f][i][0] = int(self.mlf[f][i][0] / frame_length / 10000000)
                 self.mlf[f][i][1] = int(self.mlf[f][i][1] / frame_length / 10000000)
 
+            # shorten the last segment by 10 frames as there may not be enough data for a final frame
+            self.mlf[f][i][1] -= 10
+
+            # remove the zero or negative length segments that could be created by the previous step
+            if self.mlf[f][i][0] >= self.mlf[f][i][1]:
+                del self.mlf[f][i]
+
     def trim_segments(self, n=3):
         """Remove n-frames from the beginning and the end of a segment."""
         if n:
@@ -256,27 +263,27 @@ class MLF:
 
     def shorten_segments(self, n=100):
         """Shorten segments to n-frames."""
+        if n:
+            for f in self.mlf:
+                # print f
+                transcription = []
+                for s, e, l in self.mlf[f]:
+                    if e - s > 2*n+2:
+                        # clip the middle part of the segment
+                        transcription.append([s, s + n, l])
+                        transcription.append([e-n-1, e-1, l])
 
-        for f in self.mlf:
-            # print f
-            transcription = []
-            for s, e, l in self.mlf[f]:
-                if e - s > 2*n+2:
-                    # clip the middle part of the segment
-                    transcription.append([s, s + n, l])
-                    transcription.append([e-n-1, e-1, l])
+                        # print transcription[-2]
+                        # print transcription[-1]
+                        # print '.'
+                    else:
+                        # it is short enough
+                        transcription.append([s, e, l])
 
-                    # print transcription[-2]
-                    # print transcription[-1]
-                    # print '.'
-                else:
-                    # it is short enough
-                    transcription.append([s, e, l])
+                        # print transcription[-1]
+                        # print '.'
 
-                    # print transcription[-1]
-                    # print '.'
-
-            self.mlf[f] = transcription
+                self.mlf[f] = transcription
 
     def count_length(self, pattern):
         """Count length of all segments matching the pattern"""
@@ -388,7 +395,6 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
         self.mfcc_front_end = None
 
-    @lru_cache(maxsize=100)
     def get_frame(self, file_name, frame_id):
         """Returns a frame from a specific param file."""
         if self.last_file_name != file_name:
@@ -435,6 +441,10 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
         frame = numpy.frombuffer(frame, dtype=numpy.int16)
 
-        mfcc_params = self.mfcc_front_end.param(frame)
-
+        try:
+            mfcc_params = self.mfcc_front_end.param(frame)
+        except ValueError:
+            print file_name, frame_id, len(frame)
+            raise
+            
         return mfcc_params

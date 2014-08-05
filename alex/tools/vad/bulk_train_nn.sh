@@ -5,7 +5,8 @@
 #nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 0 --usec0 0 > log.nn_mf_100M_hu_32_lf_0_c0_0 &
 #nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 3 --usec0 0 --mel_banks_only 0 > log.nn_mf_100M_hu_32_lf_3_mfc &
 #echo "." && sleep 20
-nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 3 --usec0 0 --mel_banks_only 1 > log.nn_mf_100M_hu_32_lf_3_mbo &
+nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 10000 --hidden_units 32 --last_frames 3 --usec0 0 --mel_banks_only 1 > log.nn_mf_100M_hu_32_lf_3_mbo &
+#nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 3 --usec0 0 --mel_banks_only 1 > log.nn_mf_100M_hu_32_lf_3_mbo &
 #nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 6 --usec0 0 --mel_banks_only 1 > log.nn_mf_100M_hu_32_lf_6_mbo &
 #nohup ./train_voip_en_nn_theanets_sds_mfcc.py --max_frames 100000000 --hidden_units 32 --last_frames 9 --usec0 0 --mel_banks_only 1 > log.nn_mf_100M_hu_32_lf_9_mbo &
 
