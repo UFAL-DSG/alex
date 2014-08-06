@@ -49,7 +49,7 @@ hact = 'tanh'
 #hact = 'sigmoid'
 #hact = 'softplus'
 #hact = 'relu'
-learning_rate = 1e-2 # 5e-2
+learning_rate = 10e-3 # 5e-2
 learning_rate_decay = 100.0
 weight_l2=1e-6
 batch_size= 500000 
@@ -270,6 +270,7 @@ def train_nn(speech_data, speech_alignment):
     train_y = train_y[last_frames:last_frames + len(train_y) - (prev_frames + last_frames)] 
     tx_m = np.tile(tx_m, prev_frames + 1 + last_frames)
     tx_std = np.tile(tx_std, prev_frames + 1 + last_frames)
+    gc.collect()
 
     if uselda:
         print
