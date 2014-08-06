@@ -41,8 +41,9 @@ class FFNNVAD():
                 self.cfg['VAD']['ffnn']['zmeansource'], self.cfg['VAD']['ffnn']['usepower'],
                 self.cfg['VAD']['ffnn']['usec0'], self.cfg['VAD']['ffnn']['usecmn'],
                 self.cfg['VAD']['ffnn']['usedelta'], self.cfg['VAD']['ffnn']['useacc'],
-                self.cfg['VAD']['ffnn']['n_last_frames'],
-                self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'])
+                self.cfg['VAD']['ffnn']['n_last_frames']+self.cfg['VAD']['ffnn']['n_prev_frames'],
+                self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'],
+                self.cfg['VAD']['ffnn']['mel_banks_only'])
         else:
             raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['ffnn']['frontend'], ))
 
