@@ -151,7 +151,7 @@ if __name__ == '__main__':
     vad.start()
     tts.start()
 
-    cfg['Logging']['session_logger'].set_close_event(self.close_event)
+    cfg['Logging']['session_logger'].set_close_event(close_event)
     cfg['Logging']['session_logger'].set_cfg(cfg)
     cfg['Logging']['session_logger'].start()
 
