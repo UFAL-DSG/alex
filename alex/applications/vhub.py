@@ -28,8 +28,9 @@ class VoipHub(Hub):
     output.
     """
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, ncalls):
         super(VoipHub, self).__init__(cfg)
+        self.ncalls = ncalls
         self.close_event = multiprocessing.Event()
 
     def write_pid_file(self, pids):
@@ -115,11 +116,12 @@ class VoipHub(Hub):
 
             call_connected = False
             hangup = False
+            ncalls = 0
 
             outstanding_nlg_da = None
 
             call_db = CallDB(self.cfg, self.cfg['VoipHub']['call_db'], self.cfg['VoipHub']['period'])
-            call_db.log()
+            #call_db.log()
 
             while 1:
                 # Check the close event.
@@ -206,7 +208,7 @@ class VoipHub(Hub):
                                 call_connected = True
 
                                 call_start = time.time()
-                                number_of_turns = 0
+                                number_of_turns = -1
                                 s_voice_activity = True
                                 s_last_voice_activity_time = time.time()
                                 u_voice_activity = False
@@ -254,7 +256,9 @@ class VoipHub(Hub):
                             call_db.track_disconnected_call(remote_uri)
 
                             call_connected = False
-
+                            number_of_turns = -1
+                            ncalls += 1
+                            
                             self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
 
                         if command.parsed['__name__'] == "play_utterance_start":
@@ -407,6 +411,9 @@ class VoipHub(Hub):
                     number_of_turns = -1
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
+                if not call_connected and s_last_dm_activity_time + 5.0 < current_time and (self.ncalls == 0 or ncalls >= self.ncalls):
+                    break
+                    
             # stop processes
             vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
             vad_commands.send(Command('stop()', 'HUB', 'VAD'))
@@ -470,12 +477,14 @@ if __name__ == '__main__':
       """)
 
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
+    parser.add_argument('-n', '--ncalls', help='number of calls accepeted before the hub automatically exits', type=int, default=0)
+    
     args = parser.parse_args()
 
     cfg = Config.load_configs(args.configs)
 
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
-    vhub = VoipHub(cfg)
+    vhub = VoipHub(cfg, args.ncalls)
 
     vhub.run()
