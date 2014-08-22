@@ -156,8 +156,9 @@ ontology = {
             'system_iconfirms', 'system_selects',
         ],
         'num_transfers': [
-            'user_requests',
-            'system_informs',
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_confirms',
+            'system_iconfirms', 'system_selects',
         ],
         'vehicle': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -308,7 +309,15 @@ ontology = {
             'last': 'poslední',
             'next': 'následující',
             'prev': 'předchozí',
-        }
+        },
+        'num_transfers': {
+            'dontcare': 's libovolným počtem přestupů',
+            '0': 'bez přestupů',
+            '1': 's jedním přestupem',
+            '2': 'se dvěma přestupy',
+            '3': 'se třemi přestupy',
+            '4': 'se čtyřmi přestupy',
+        },
     },
 }
 

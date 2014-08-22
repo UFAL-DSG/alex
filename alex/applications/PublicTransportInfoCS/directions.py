@@ -24,12 +24,18 @@ from alex.applications.PublicTransportInfoCS.data.convert_idos_stops import expa
 class Travel(object):
     """Holder for starting and ending point (and other parameters) of travel."""
 
-    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, vehicle=None):
-        self.from_city = from_city
-        self.from_stop = from_stop if from_stop not in ['__ANY__', 'none'] else None
-        self.to_city = to_city
-        self.to_stop = to_stop if to_stop not in ['__ANY__', 'none'] else None
-        self.vehicle = vehicle if vehicle not in ['__ANY__', 'none', 'dontcare'] else None
+    def __init__(self, **kwargs):
+        """Initializing (just filling in data).
+
+        Accepted keys: from_city, from_stop, to_city, to_stop, vehicle, max_transfers."""
+        self.from_city = kwargs['from_city']
+        self.from_stop = kwargs['from_stop'] if kwargs['from_stop'] not in ['__ANY__', 'none'] else None
+        self.to_city = kwargs['to_city']
+        self.to_stop = kwargs['to_stop'] if kwargs['to_stop'] not in ['__ANY__', 'none'] else None
+        self.vehicle = kwargs['vehicle'] if kwargs['vehicle'] not in ['__ANY__', 'none', 'dontcare'] else None
+        self.max_transfers = (kwargs['max_transfers']
+                              if kwargs['max_transfers'] not in  ['__ANY__', 'none', 'dontcare']
+                              else None)
 
     def get_minimal_info(self):
         """Return minimal waypoints information
@@ -45,14 +51,19 @@ class Travel(object):
             res.append("inform(to_stop='%s')" % self.to_stop)
         if self.vehicle is not None:
             res.append("inform(vehicle='%s')" % self.vehicle)
+        if self.max_transfers is not None:
+            res.append("inform(num_transfers='%s')" % str(self.max_transfers))
         return '&'.join(res)
 
 
 class Directions(Travel):
     """Ancestor class for transit directions, consisting of several routes."""
 
-    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, vehicle=None):
-        super(Directions, self).__init__(from_city, from_stop, to_city, to_stop, vehicle)
+    def __init__(self, **kwargs):
+        if 'travel' in kwargs:
+            super(Directions, self).__init__(**kwargs['travel'].__dict__)
+        else:
+            super(Directions, self).__init__(**kwargs)
         self.routes = []
 
     def __getitem__(self, index):
@@ -165,8 +176,8 @@ class DirectionsFinder(object):
 class GoogleDirections(Directions):
     """Traffic directions obtained from Google Maps API."""
 
-    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_json={}):
-        super(GoogleDirections, self).__init__(from_city, from_stop, to_city, to_stop, vehicle)
+    def __init__(self, input_json={}, **kwargs):
+        super(GoogleDirections, self).__init__(**kwargs)
         for route in input_json['routes']:
             self.routes.append(GoogleRoute(route))
 
@@ -219,9 +230,9 @@ class GoogleRouteLegStep(RouteStep):
 class CRWSDirections(Directions):
     """Traffic directions obtained from CR Web Service (CHAPS/IDOS)."""
 
-    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_data={}, finder=None):
+    def __init__(self, input_data={}, finder=None, **kwargs):
         # basic initialization
-        super(CRWSDirections, self).__init__(from_city, from_stop, to_city, to_stop, vehicle)
+        super(CRWSDirections, self).__init__(**kwargs)
         self.finder = None
         self.handle = None
         # appear totally empty in case of any errors
@@ -394,8 +405,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         response = json.load(page)
         self._log_response_json(response)
 
-        directions = GoogleDirections(waypoints.from_city, waypoints.from_stop,
-                                      waypoints.to_city, waypoints.to_stop, response)
+        directions = GoogleDirections(input_json=response, travel=waypoints)
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
@@ -538,10 +548,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(travel.from_city, travel.from_stop,
-                                    travel.to_city, travel.to_stop,
-                                    travel.vehicle,
-                                    response, self)
+        directions = CRWSDirections(input_data=response, finder=self, travel=travel)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
@@ -667,6 +674,9 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 params._aiTrTypeID = '155 307 507'
             elif parameters.vehicle == 'cable_car':
                 params._aiTrTypeID = '303'
+            # number of transfers limitations
+            if parameters.max_transfers != 'none':
+                params._iMaxChange = parameters.max_transfers
         return params
 
     def _normalize_idos_name(self, idos_stop):
