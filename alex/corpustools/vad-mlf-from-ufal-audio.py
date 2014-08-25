@@ -37,9 +37,8 @@ def create_mlf(indir, outfile, verbose):
         wav_stats = subprocess.check_output("soxi %s" % f, shell=True)
         wav_stats = wav_stats.split('\n')
 
-        mfc = f.replace('.wav', ".mfc")
-        subprocess.check_output(
-            "HCopy -T 1 -C config -C configwav %s %s" % (f, mfc), shell=True)
+        # mfc = f.replace('.wav', ".mfc")
+        # subprocess.check_output("HCopy -T 1 -C config -C configwav %s %s" % (f, mfc), shell=True)
 
         for l in wav_stats:
             if l.startswith('Duration'):
