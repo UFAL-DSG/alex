@@ -239,43 +239,51 @@ class MLF:
                 self.mlf[f][i][0] = int(self.mlf[f][i][0] / frame_length / 10000000)
                 self.mlf[f][i][1] = int(self.mlf[f][i][1] / frame_length / 10000000)
 
+            # shorten the last segment by 10 frames as there may not be enough data for a final frame
+            self.mlf[f][i][1] -= 10
+
+            # remove the zero or negative length segments that could be created by the previous step
+            if self.mlf[f][i][0] >= self.mlf[f][i][1]:
+                del self.mlf[f][i]
+
     def trim_segments(self, n=3):
         """Remove n-frames from the beginning and the end of a segment."""
-        for f in self.mlf:
-            transcription = []
-            for s, e, l in self.mlf[f]:
-                if s + n < e - n:
-                    # trim
-                    transcription.append([s + n, e - n, l])
-                else:
-                    # skip this segment as it is too short to be accuratelly aligned
-                    pass
+        if n:
+            for f in self.mlf:
+                transcription = []
+                for s, e, l in self.mlf[f]:
+                    if s + n < e - n:
+                        # trim
+                        transcription.append([s + n, e - n, l])
+                    else:
+                        # skip this segment as it is too short to be accuratelly aligned
+                        pass
 
-            self.mlf[f] = transcription
+                self.mlf[f] = transcription
 
     def shorten_segments(self, n=100):
         """Shorten segments to n-frames."""
+        if n:
+            for f in self.mlf:
+                # print f
+                transcription = []
+                for s, e, l in self.mlf[f]:
+                    if e - s > 2*n+2:
+                        # clip the middle part of the segment
+                        transcription.append([s, s + n, l])
+                        transcription.append([e-n-1, e-1, l])
 
-        for f in self.mlf:
-            # print f
-            transcription = []
-            for s, e, l in self.mlf[f]:
-                if e - s > 2*n+2:
-                    # clip the middle part of the segment
-                    transcription.append([s, s + n, l])
-                    transcription.append([e-n-1, e-1, l])
+                        # print transcription[-2]
+                        # print transcription[-1]
+                        # print '.'
+                    else:
+                        # it is short enough
+                        transcription.append([s, e, l])
 
-                    # print transcription[-2]
-                    # print transcription[-1]
-                    # print '.'
-                else:
-                    # it is short enough
-                    transcription.append([s, e, l])
+                        # print transcription[-1]
+                        # print '.'
 
-                    # print transcription[-1]
-                    # print '.'
-
-            self.mlf[f] = transcription
+                self.mlf[f] = transcription
 
     def count_length(self, pattern):
         """Count length of all segments matching the pattern"""
@@ -369,7 +377,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
     def __init__(self, windowsize=250000, targetrate=100000, filter=None,
                  usec0=False, usedelta=True, useacc=True,
-                 n_last_frames=0):
+                 n_last_frames=0, mel_banks_only = False):
         """Initialise the MFCC front-end.
 
         windowsize - defines the length of the window (frame) in the HTK's 100ns units
@@ -383,10 +391,10 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
         self.usedelta = usedelta
         self.useacc = useacc
         self.n_last_frames = n_last_frames
+        self.mel_banks_only = mel_banks_only
 
         self.mfcc_front_end = None
 
-    @lru_cache(maxsize=1000000)
     def get_frame(self, file_name, frame_id):
         """Returns a frame from a specific param file."""
         if self.last_file_name != file_name:
@@ -424,7 +432,7 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
             self.frame_shift = int(sample_rate * self.targetrate / 10000000)
             self.mfcc_front_end = MFCCFrontEnd(sample_rate, self.frame_size, usec0=self.usec0,
                                                usedelta=self.usedelta, useacc=self.useacc,
-                                               n_last_frames=self.n_last_frames)
+                                               n_last_frames=self.n_last_frames, mel_banks_only = self.mel_banks_only)
 
         # print "FS", self.frame_size
         self.last_param_file_features.setpos(max(frame_id * self.frame_shift - int(self.frame_size / 2), 0))
@@ -433,6 +441,10 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
         frame = numpy.frombuffer(frame, dtype=numpy.int16)
 
-        mfcc_params = self.mfcc_front_end.param(frame)
-
+        try:
+            mfcc_params = self.mfcc_front_end.param(frame)
+        except ValueError:
+            print file_name, frame_id, len(frame)
+            raise
+            
         return mfcc_params
