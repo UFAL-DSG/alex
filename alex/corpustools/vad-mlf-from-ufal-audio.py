@@ -51,7 +51,7 @@ def create_mlf(indir, outfile, verbose):
 
                 size += time
 
-        f = f.replace(".wav", ".lab").replace("data/", "*/")
+        f = f.replace(".wav", ".lab").replace("./data/", "*/")
         mlf.write('"%s"\n' % f)
         mlf.write('0 %d sil\n' % time)
         mlf.write(".\n")
