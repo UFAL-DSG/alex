@@ -412,22 +412,22 @@ if __name__ == '__main__':
             u_voice_activity == False and \
             current_time - s_last_voice_activity_time > 5 and current_time - u_last_voice_activity_time > 0.6:
 
-            s_voice_activity = True
-            
             if not cfg['RepeatAfterMe']['silence']:
-		          s1 = ram()
-		          tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
-		          s2 = sample_sentence(sample_sentences)
-		          tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
+                s_voice_activity = True
 
-		          s = s1 + ' ' + s2
+                s1 = ram()
+                tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
+                s2 = sample_sentence(sample_sentences)
+                tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
 
-		          m = []
-		          m.append('=' * 120)
-		          m.append('Say: ' + s)
-		          m.append('=' * 120)
+                s = s1 + ' ' + s2
 
-		          cfg['Logging']['system_logger'].info('\n'.join(m))
+                m = []
+                m.append('=' * 120)
+                m.append('Say: ' + s)
+                m.append('=' * 120)
+
+                cfg['Logging']['system_logger'].info('\n'.join(m))
 
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
