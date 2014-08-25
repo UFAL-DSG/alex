@@ -182,7 +182,7 @@ def convert(args):
 
     # Get all but the ignored transcriptions.
     if os.path.isdir(infname):
-        trs_paths = find(infname, '*.trs', ignore_globs=ignore_globs, ignore_paths=ignore_paths)
+        trs_paths = find(infname, '*.trs', mindepth=1, ignore_globs=ignore_globs, ignore_paths=ignore_paths)
     else:
         trs_paths = list()
         with open(infname, 'r') as inlist:
