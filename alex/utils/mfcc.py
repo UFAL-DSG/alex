@@ -201,4 +201,4 @@ class MFCCFrontEnd:
             else:
                 mfcc = np.append(mfcc, np.zeros_like(self.mfcc_queue[-1]))
 
-        return mfcc
+        return mfcc.astype(np.float32)

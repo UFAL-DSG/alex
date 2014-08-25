@@ -49,7 +49,7 @@ hact = 'tanh'
 #hact = 'sigmoid'
 #hact = 'softplus'
 #hact = 'relu'
-learning_rate = 10e-3 # 5e-2
+learning_rate = 20e-3 # 5e-2
 learning_rate_decay = 100.0
 weight_l2=1e-6
 batch_size= 500000 
@@ -253,9 +253,15 @@ def train_nn(speech_data, speech_alignment):
         tx_m = np.load(f)
         tx_std = np.load(f)
         f.close()
-            
     except IOError:  
         crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
+
+    if uselda:
+        input_size = uselda
+    else:
+        input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
+
+    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
@@ -285,7 +291,6 @@ def train_nn(speech_data, speech_alignment):
         train_x = np.dot(train_x, LDA_m)
         crossvalid_x = np.dot(crossvalid_x, LDA_m)
 
-            
     print
     print datetime.datetime.now()
     print
@@ -293,10 +298,6 @@ def train_nn(speech_data, speech_alignment):
     print "The shape of test data:     ", crossvalid_x.shape, crossvalid_y.shape
     print "The shape of tx_m, tx_std:  ", tx_m.shape, tx_std.shape
     print
-
-    input_size = train_x.shape[1]
-    
-    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     dc_acc = []
     dt_acc = []

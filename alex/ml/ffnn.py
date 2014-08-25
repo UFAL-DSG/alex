@@ -27,7 +27,7 @@ class FFNN(object):
     """ Implements simple feed-forward neural network with:
 
       -- input layer - activation function linear
-      -- hidden layers - activation function sigmoid
+      -- hidden layers - activation function tanh
       -- output layer - activation function softmax
     """
     def __init__(self):
@@ -104,7 +104,6 @@ class FFNN(object):
             y = input
             
             for w, b in zip(self.weights[:-1], self.biases[:-1]):
-                #y = self.sigmoid(np.dot(y,w)+b)
                 y = self.tanh(np.dot(y,w)+b)
 
             y = self.softmax(np.dot(y,self.weights[-1])+self.biases[-1])

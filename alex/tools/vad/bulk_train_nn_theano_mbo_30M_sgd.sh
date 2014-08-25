@@ -13,7 +13,7 @@ BSS='5k'
 LF=15
 PF=15
 
-HU=32
+HU=512
 
 M='sg-fixedlr'
 A='tanh'
