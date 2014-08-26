@@ -44,6 +44,7 @@ def phrase_pos(utterance, words):
     words = words if not isinstance(words, basestring) else words.strip().split()
     return utterance.find(words)
 
+
 def first_phrase_span(utterance, phrases):
     """Returns the span (start, end+1) of the first phrase from the given list
     that is found in the utterance. Returns (-1, -1) if no phrase is found.
@@ -64,6 +65,7 @@ def any_phrase_in(utterance, phrases):
 
 
 class PTICSHDCSLU(SLUInterface):
+
     def __init__(self, preprocessing, cfg=None):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
@@ -107,7 +109,6 @@ class PTICSHDCSLU(SLUInterface):
                 end -= 1
             else:
                 start += 1
-
 
         return abs_utts, category_labels
 
