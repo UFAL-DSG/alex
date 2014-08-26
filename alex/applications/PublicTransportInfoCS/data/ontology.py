@@ -41,7 +41,7 @@ ontology = {
         'date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
         'num_transfers': set([]),
-        'vehicle': set(["bus", "tram", "metro", "train", "cable_car", "ferry", ]),
+        'vehicle': set(["dontcare", "bus", "tram", "metro", "train", "cable_car", "ferry", "trolleybus"]),
         'alternative': set(['dontcare', '1', '2', '3', '4', 'last', 'next', 'prev', ]),
     },
 
@@ -156,8 +156,9 @@ ontology = {
             'system_iconfirms', 'system_selects',
         ],
         'num_transfers': [
-            'user_requests',
-            'system_informs',
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_confirms',
+            'system_iconfirms', 'system_selects',
         ],
         'vehicle': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -281,32 +282,7 @@ ontology = {
             'night': 'v noci'
         },
         'vehicle': {
-            'bus': 'autobusem',
-            'intercity_bus': 'dálkovým autobusem',
-            'night_bus': 'nočním autobusem',
-            'tram': 'tramvají',
-            'night_tram': 'noční tramvají',
-            'subway': 'metrem',
-            'train': 'vlakem',
-            'cable_car': 'lanovkou',
-            'ferry': 'přívozem',
-            'trolleybus': 'trolejbusem',
-            'substitute_traffic': 'náhradní dopravou',
-        },
-        'vehicle1': {
-            'bus': 'autobusem',
-            'intercity_bus': 'dálkovým autobusem',
-            'night_bus': 'nočním autobusem',
-            'tram': 'tramvají',
-            'night_tram': 'noční tramvají',
-            'subway': 'metrem',
-            'train': 'vlakem',
-            'cable_car': 'lanovkou',
-            'ferry': 'přívozem',
-            'trolleybus': 'trolejbusem',
-            'substitute_traffic': 'náhradní dopravou',
-        },
-        'vehicle2': {
+            'dontcare': 'čímkoliv',
             'bus': 'autobusem',
             'intercity_bus': 'dálkovým autobusem',
             'night_bus': 'nočním autobusem',
@@ -333,7 +309,15 @@ ontology = {
             'last': 'poslední',
             'next': 'následující',
             'prev': 'předchozí',
-        }
+        },
+        'num_transfers': {
+            'dontcare': 's libovolným počtem přestupů',
+            '0': 'bez přestupů',
+            '1': 's jedním přestupem',
+            '2': 'se dvěma přestupy',
+            '3': 'se třemi přestupy',
+            '4': 'se čtyřmi přestupy',
+        },
     },
 }
 

@@ -13,7 +13,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder, Waypoints
+from .directions import GoogleDirectionsFinder, Travel
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
@@ -650,6 +650,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
         from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
         to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+        vehicle_val = ds['vehicle'].mpv() if 'vehicle' in accepted_slots else 'none'
+        max_transfers_val = ds['num_transfers'].mpv() if 'num_transfers' in accepted_slots else 'none'
 
         # infer cities based on stops
         from_cities, to_cities = None, None
@@ -707,7 +709,9 @@ class PTICSHDCPolicy(DialoguePolicy):
             iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
             iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
 
-        return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val)
+        return req_da, iconfirm_da, Travel(from_city=from_city_val, from_stop=from_stop_val,
+                                           to_city=to_city_val, to_stop=to_stop_val,
+                                           vehicle=vehicle_val, max_transfers=max_transfers_val)
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.

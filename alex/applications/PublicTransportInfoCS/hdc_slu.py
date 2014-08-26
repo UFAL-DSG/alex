@@ -44,6 +44,7 @@ def phrase_pos(utterance, words):
     words = words if not isinstance(words, basestring) else words.strip().split()
     return utterance.find(words)
 
+
 def first_phrase_span(utterance, phrases):
     """Returns the span (start, end+1) of the first phrase from the given list
     that is found in the utterance. Returns (-1, -1) if no phrase is found.
@@ -64,6 +65,7 @@ def any_phrase_in(utterance, phrases):
 
 
 class PTICSHDCSLU(SLUInterface):
+
     def __init__(self, preprocessing, cfg=None):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
@@ -107,7 +109,6 @@ class PTICSHDCSLU(SLUInterface):
                 end -= 1
             else:
                 start += 1
-
 
         return abs_utts, category_labels
 
@@ -467,8 +468,8 @@ class PTICSHDCSLU(SLUInterface):
             phrase_in(u, "zopakovat poslední větu"):
             cn.add(1.0, DialogueActItem("repeat"))
 
-        if len(u) == 1 and any_word_in(u, "pardon pardón promiňte promiň sorry") or \
-                phrase_in(u, 'omlouvám se'):
+        if ((len(u) == 1 and any_word_in(u, "pardon pardón promiňte promiň sorry")) or
+                any_phrase_in(u, ['omlouvám se', 'je mi líto'])):
             cn.add(1.0, DialogueActItem("apology"))
 
         if not any_word_in(u, "nechci děkuji"):
@@ -588,11 +589,29 @@ class PTICSHDCSLU(SLUInterface):
             all_words_in(u, 'kolik je teďka'):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
-        if any_word_in(u, 'kolik počet kolikrát jsou je') and \
-            any_word_in(u, 'přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků ' +
-                        'přestupovat přestupuju přestupuji') and \
+        if any_word_in(u, 'přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků ' +
+                        'přestupovat přestupuju přestupuji přestupování přestupama přestupem') and \
             not any_word_in(u, 'čas času'):
-            cn.add(1.0, DialogueActItem('request', 'num_transfers'))
+            if any_word_in(u, 'kolik počet kolikrát jsou je'):
+                cn.add(1.0, DialogueActItem('request', 'num_transfers'))
+
+            elif any_word_in(u, 'nechci bez žádný žádné'):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
+            elif any_word_in(u, 'jeden jedním'):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', '1'))
+            elif any_word_in(u, 'dva dvěma dvěmi'):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', '2'))
+            elif any_word_in(u, 'tři třema třemi'):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', '3'))
+            elif any_word_in(u, 'čtyři čtyřma čtyřmi'):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', '4'))
+            elif (any_word_in(u, 'libovolně libovolný libovolné')
+                  or all_words_in(u, 'bez ohledu')
+                  or any_phrase_in(u, ['s přestupem', 's přestupy', 's přestupama'])):
+                cn.add(1.0, DialogueActItem('inform', 'num_transfers', 'dontcare'))
+
+        if any_phrase_in(u, ['přímý spoj', 'přímé spojení', 'přímé spoje', 'přímý spoje', 'přímej spoj']):
+            cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
 
         if any_word_in(u, 'spoj spojení spoje možnost možnosti varianta alternativa cesta cestu cesty '
                           'zpoždění stažení nalezená'):
