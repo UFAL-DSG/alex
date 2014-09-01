@@ -191,54 +191,17 @@ def get_accuracy(true_y, predictions_y):
 
     return acc, sil
 
-def lda(X, Y, n):
-    """Train a LDA teansform matrix."""
-    import scipy.linalg as linalg
-    import operator
-    import pycuda.gpuarray as gpuarray
-    import scikits.cuda.linalg as culinalg
-    
-    classLabels = np.unique(Y)
-    classNum = len(classLabels)
-    datanum, dim = X.shape
-    totalMean = np.mean(X,0)
+def frame_multiply_x(x, prev_frames, last_frames):
+    rows = [(c, c + len(x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
+    mx = np.hstack([x[l:r] for l, r in rows])
 
-    print '1'
-    partition = [np.where(Y==label)[0] for label in classLabels]
-    classMean = [(np.mean(X[idx],0),len(idx)) for idx in partition]
+    return mx
 
-    print [z.shape for z in partition]
-    
-    print '2'
-    #compute the within-class scatter matrix
-    W = np.zeros((dim,dim))
-    for idx in partition:
-#        W += np.cov(X[idx],rowvar=0)*len(idx)
-        Xi = X[idx].astype(np.float32)
-        Xi -= Xi.mean(axis=0)
-        gpu_Xi = gpuarray.to_gpu(Xi)
-        W += culinalg.dot(gpu_Xi, gpu_Xi, transa='T').get() #/float(len(idx)-1)*len(idx)
-    print '3'
-    #compute the between-class scatter matrix
-    B = np.zeros((dim,dim))
-    for mu,class_size in classMean:
-        offset = mu - totalMean
-        B += np.outer(offset,offset)*class_size
+def frame_multiply_y(y, prev_frames, last_frames):
+    my = y[last_frames:last_frames + len(y) - (prev_frames + last_frames)]
 
-    #W /= float(datanum - classNum)
-    #B /= float(classNum - 1)
-     
-    print '4'
-    #solve the generalized eigenvalue problem for discriminant directions
-    ew, ev = linalg.eig(B,W+B)
-    sorted_pairs = sorted(enumerate(ew), key=operator.itemgetter(1), reverse=True)
-    selected_ind = [ind for ind,val in sorted_pairs[:n]]
-    LDA_m = ev[:,selected_ind]
-    print '5'
-    # LDA projection: np.dot(x,LDA_m)
-    
-    return LDA_m
-
+    return my
+		
 def train_nn(speech_data, speech_alignment):
     print
     print datetime.datetime.now()
@@ -256,44 +219,35 @@ def train_nn(speech_data, speech_alignment):
     except IOError:  
         crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
 
-    if uselda:
-        input_size = uselda
-    else:
-        input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
+    input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
 
-    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
+    e = ffnn.TheanoFFNN(input_size, hidden_units, 1, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
 
     # add prev, and last frames
-    rows_c = [(c, c + len(crossvalid_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
-    rows_t = [(c, c + len(train_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
+#    rows_c = [(c, c + len(crossvalid_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
+#    rows_t = [(c, c + len(train_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
                 
-    crossvalid_x = np.hstack([crossvalid_x[l:r] for l, r in rows_c])
-    crossvalid_y = crossvalid_y[last_frames:last_frames + len(crossvalid_y) - (prev_frames + last_frames)]
-    train_x = np.hstack([train_x[l:r] for l, r in rows_t])
-    train_y = train_y[last_frames:last_frames + len(train_y) - (prev_frames + last_frames)] 
+#    crossvalid_x = np.hstack([crossvalid_x[l:r] for l, r in rows_c])
+#    crossvalid_y = crossvalid_y[last_frames:last_frames + len(crossvalid_y) - (prev_frames + last_frames)]
+#    train_x = np.hstack([train_x[l:r] for l, r in rows_t])
+#    train_y = train_y[last_frames:last_frames + len(train_y) - (prev_frames + last_frames)] 
+    
+#    crossvalid_x = frame_multiply_x(crossvalid_x, prev_frames, last_frames)
+#    crossvalid_y = frame_multiply_y(crossvalid_y, prev_frames, last_frames)
+#    train_x = frame_multiply_x(train_x, prev_frames, last_frames)
+#    train_y = frame_multiply_y(train_y, prev_frames, last_frames)
+    
     tx_m = np.tile(tx_m, prev_frames + 1 + last_frames)
     tx_std = np.tile(tx_std, prev_frames + 1 + last_frames)
     gc.collect()
 
-    if uselda:
-        print
-        print datetime.datetime.now()
-        print
-
-        LDA_m = lda(train_x, train_y, uselda).astype(np.float32)
-
-        print "Data shape:    ", train_x.shape
-        print "LDA projection:", LDA_m.shape
-        
-        train_x = np.dot(train_x, LDA_m)
-        crossvalid_x = np.dot(crossvalid_x, LDA_m)
-
     print
     print datetime.datetime.now()
     print
+    print "prev_frames +1+ last_frames:", prev_frames, 1, last_frames
     print "The shape of training data: ", train_x.shape, train_y.shape
     print "The shape of test data:     ", crossvalid_x.shape, crossvalid_y.shape
     print "The shape of tx_m, tx_std:  ", tx_m.shape, tx_std.shape
@@ -303,16 +257,18 @@ def train_nn(speech_data, speech_alignment):
     dt_acc = []
 
     epoch = 0
+    i_hidden_layers = 1
+    
     while True:
 
         print
         print '-'*80
         print 'Predictions'
         print '-'*80
-        predictions_y = e.predict(crossvalid_x, batch_size)
-        c_acc, c_sil = get_accuracy(crossvalid_y, predictions_y)
-        predictions_y = e.predict(train_x, batch_size)
-        t_acc, t_sil = get_accuracy(train_y, predictions_y)
+        predictions_y, gold_y = e.predict(crossvalid_x, batch_size, prev_frames, last_frames, crossvalid_y)
+        c_acc, c_sil = get_accuracy(gold_y, predictions_y)
+        predictions_y, gold_y = e.predict(train_x, batch_size, prev_frames, last_frames, train_y)
+        t_acc, t_sil = get_accuracy(gold_y, predictions_y)
 
         dc_acc.append(c_acc)
         dt_acc.append(t_acc)
@@ -361,11 +317,20 @@ def train_nn(speech_data, speech_alignment):
             break
         epoch += 1
 
+        if epoch > 1 and epoch % 1  == 0:
+            if i_hidden_layers < hidden_layers:
+                print
+                print '-'*80
+                print 'Adding a hidden layer: ', i_hidden_layers + 1
+                print '-'*80
+                e.add_hidden_layer(hidden_units)
+                i_hidden_layers += 1
+                
         print
         print '-'*80
         print 'Training'
         print '-'*80
-        e.train(train_x, train_y, method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch), batch_size = batch_size)
+        e.train(train_x, train_y, prev_frames, last_frames, method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch), batch_size = batch_size)
 
 
 ##################################################
