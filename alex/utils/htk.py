@@ -404,11 +404,15 @@ class MLFMFCCOnlineAlignedArray(MLFFeaturesAlignedArray):
 
             # find matching param file
             param_file_name = self.get_param_file_name(file_name)
-
+            if param_file_name == None:
+                raise Exception("MLFMFCCOnlineAlignedArray: param_file_name cannot be None, file_name: " + file_name)
             # print "PFN", param_file_name
 
             # open the param file
-            self.last_param_file_features = wave.open(param_file_name, 'r')
+            try:
+                self.last_param_file_features = wave.open(param_file_name, 'r')
+            except AttributeError:
+                print "Error opening file:", param_file_name
 
             if self.last_param_file_features.getnchannels() != 1:
                 raise Exception('Input wave is not in mono')

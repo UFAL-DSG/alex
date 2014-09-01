@@ -43,10 +43,12 @@ database = {
     "stop": {
     },
     "vehicle": {
+        "dontcare": ["čímkoliv", "jakkoliv", "jakýmkoliv způsobem", "jakýmkoliv prostředkem",
+                     "jakýmkoliv dopravním prostředkem", "libovolným dopravním prostředkem"],
         "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
         "tram": ["tram", "tramvaj", "tramvajový", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "metro": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
-        "train": ["vlak", "vlakem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
+        "subway": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
+        "train": ["vlak", "vlakem", "vláčkem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
         "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
         "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
     },
@@ -103,7 +105,7 @@ def db_add(category_label, value, form):
 #    if category_label == 'stop':
 #        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
 #            return
-            
+
 #    for c in '{}+/&[],-':
 #        form = form.replace(' %s ' % c, ' ')
 #        form = form.replace(' %s' % c, ' ')

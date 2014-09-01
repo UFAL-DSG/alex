@@ -411,7 +411,7 @@ class VoipHub(Hub):
                     number_of_turns = -1
                     vio_commands.send(Command('hangup()', 'HUB', 'VoipIO'))
 
-                if not call_connected and s_last_dm_activity_time + 5.0 < current_time and (self.ncalls == 0 or ncalls >= self.ncalls):
+                if self.ncalls != 0 and not call_connected and s_last_dm_activity_time + 5.0 < current_time and ncalls >= self.ncalls:
                     break
                     
             # stop processes
@@ -478,7 +478,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
     parser.add_argument('-n', '--ncalls', help='number of calls accepeted before the hub automatically exits', type=int, default=0)
-    
+
     args = parser.parse_args()
 
     cfg = Config.load_configs(args.configs)
