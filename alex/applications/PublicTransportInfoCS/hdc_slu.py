@@ -597,20 +597,22 @@ class PTICSHDCSLU(SLUInterface):
 
             elif any_word_in(u, 'nechci bez žádný žádné'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
-            elif any_word_in(u, 'jeden jedním'):
+            elif any_word_in(u, 'jeden jedním jednou'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '1'))
-            elif any_word_in(u, 'dva dvěma dvěmi'):
+            elif any_word_in(u, 'dva dvěma dvěmi dvakrát'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '2'))
-            elif any_word_in(u, 'tři třema třemi'):
+            elif any_word_in(u, 'tři třema třemi třikrát'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '3'))
-            elif any_word_in(u, 'čtyři čtyřma čtyřmi'):
+            elif any_word_in(u, 'čtyři čtyřma čtyřmi čtyřikrát'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '4'))
             elif (any_word_in(u, 'libovolně libovolný libovolné')
                   or all_words_in(u, 'bez ohledu')
                   or any_phrase_in(u, ['s přestupem', 's přestupy', 's přestupama'])):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', 'dontcare'))
 
-        if any_phrase_in(u, ['přímý spoj', 'přímé spojení', 'přímé spoje', 'přímý spoje', 'přímej spoj']):
+        if any_phrase_in(u, ['přímý spoj', 'přímé spojení', 'přímé spoje', 'přímý spoje', 'přímej spoj',
+                             'přímý spojení', 'jet přímo', 'pojedu přímo', 'dostanu přímo', 'dojedu přímo',
+                             'dostat přímo']):
             cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
 
         if any_word_in(u, 'spoj spojení spoje možnost možnosti varianta alternativa cesta cestu cesty '
