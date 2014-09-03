@@ -14,6 +14,7 @@ import autopath
 
 from alex.utils.htk import *
 from alex.ml import ffnn
+from alex.ml import tffnn
 
 """ This script trains NN for VAD.
 
@@ -221,7 +222,7 @@ def train_nn(speech_data, speech_alignment):
 
     input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
 
-    e = ffnn.TheanoFFNN(input_size, hidden_units, 1, 2, hidden_activation = hact, weight_l2 = weight_l2)
+    e = tffnn.TheanoFFNN(input_size, hidden_units, 1, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
