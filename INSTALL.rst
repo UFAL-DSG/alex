@@ -38,7 +38,7 @@ This version supports non-blocking audio.
 
   git clone https://github.com/bastibe/PyAudio.git
   cd PyAudio
-  python ./setup.py install
+  sudo python ./setup.py install
 
 flite
 ~~~~~
