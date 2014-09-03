@@ -13,8 +13,8 @@ Ask the root on the computer to run:
 .. code-block:: bash
 
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
-      flac speex sox mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev \
-      libjpeg8-dev libfreetype6-dev libpng12-dev libagg-dev
+      flac speex sox libsox-dev mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev \
+      libjpeg8-dev libfreetype6-dev libpng12-dev libagg-dev libatlas3-base
 
 To get latest versions of the following python packages, I recommend to run these commands:
 
@@ -38,7 +38,7 @@ This version supports non-blocking audio.
 
   git clone https://github.com/bastibe/PyAudio.git
   cd PyAudio
-  python ./setup.py install
+  sudo python ./setup.py install
 
 flite
 ~~~~~
@@ -125,14 +125,14 @@ To install ``pjsip``, follow these instructions:
   ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC
   make dep
   make
-  make install
+  sudo make install
 
 then 
 
 .. code-block:: bash
 
   cd pjsip-apps/src/python/
-  python setup-pjsuaxt.py install
+  sudo python setup-pjsuaxt.py install
 
 This will install the ``pjsuaxt`` library.
 
@@ -150,8 +150,8 @@ To install ``morfodita``, follow these instructions:
   cd ../bindings/python
   make PYTHON_INCLUDE=/usr/include/python2.7/
 
-  cp -R ./ufal /usr/local/lib/python2.7/dist-packages
-  cp ./morphodita_python.so /usr/local/lib/python2.7/dist-packages
+  sudo cp -R ./ufal /usr/local/lib/python2.7/dist-packages
+  sudo cp ./ufal_morphodita.so /usr/local/lib/python2.7/dist-packages
 
 
 OpenJulius
