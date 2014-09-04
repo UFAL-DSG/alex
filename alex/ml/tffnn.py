@@ -90,7 +90,7 @@ class TheanoFFNN(object):
         # Define the loss function.
         true_y = T.ivector('true_Y')  # The desired output vector.
         loss = -T.log(y[T.arange(y.shape[0]), true_y])  # Negative log-likelihood.
-        loss = T.sum(loss)                              # SUM negative log-likelihood.
+        loss = T.mean(loss)                              # SUM negative log-likelihood.
 
         # Add regularization.
         l2 = 0
@@ -108,7 +108,7 @@ class TheanoFFNN(object):
         updates = []
         learning_rate = T.fscalar()
         for p, g in zip(self.params, g_loss):
-            updates.append((p, p + learning_rate *g))
+            updates.append((p, p - learning_rate *g))
 
         self.f_train = function([x, true_y, learning_rate], loss, updates = updates)
 
@@ -179,7 +179,7 @@ class TheanoFFNN(object):
         updates = []
         learning_rate = T.fscalar()
         for p, g in zip(self.params, g_loss):
-            updates.append((p, p + learning_rate *g))
+            updates.append((p, p - learning_rate *g))
 
         self.f_train = function([x, true_y, learning_rate], loss, updates = updates)
 
@@ -248,14 +248,14 @@ class TheanoFFNN(object):
         :return:
         """
         if prediction:
-            loss = self.f_loss(data_x, data_y) / len(data_x)
+            loss = self.f_loss(data_x, data_y)
             acc = np.mean(np.equal(np.argmax(self.f_y(data_x), axis=1), data_y))
         else:
             loss = 0.0
             acc = 1.0
 
         # compute gradient
-        gradients = [np.asarray(g) / float(len(data_x)) for g in self.f_g_loss(data_x, data_y)]
+        gradients = self.f_g_loss(data_x, data_y)
         
         return -loss, acc, gradients
 
