@@ -16,7 +16,7 @@ from alex.utils.htk import *
 from alex.ml import ffnn
 from alex.ml import tffnn
 
-""" This script trains NN for VAD.
+""" This program trains neural network VAD models using the theano library.
 
 """
 
@@ -223,25 +223,12 @@ def train_nn(speech_data, speech_alignment):
 
     input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
 
-    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
+    e = tffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
 
     # add prev, and last frames
-#    rows_c = [(c, c + len(crossvalid_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
-#    rows_t = [(c, c + len(train_x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
-                
-#    crossvalid_x = np.hstack([crossvalid_x[l:r] for l, r in rows_c])
-#    crossvalid_y = crossvalid_y[last_frames:last_frames + len(crossvalid_y) - (prev_frames + last_frames)]
-#    train_x = np.hstack([train_x[l:r] for l, r in rows_t])
-#    train_y = train_y[last_frames:last_frames + len(train_y) - (prev_frames + last_frames)] 
-    
-#    crossvalid_x = frame_multiply_x(crossvalid_x, prev_frames, last_frames)
-#    crossvalid_y = frame_multiply_y(crossvalid_y, prev_frames, last_frames)
-#    train_x = frame_multiply_x(train_x, prev_frames, last_frames)
-#    train_y = frame_multiply_y(train_y, prev_frames, last_frames)
-    
     tx_m = np.tile(tx_m, prev_frames + 1 + last_frames)
     tx_std = np.tile(tx_std, prev_frames + 1 + last_frames)
     gc.collect()
@@ -309,7 +296,7 @@ def train_nn(speech_data, speech_alignment):
             print
 
             nn = ffnn.FFNN()
-            for w, b in e.params:
+            for w, b in [e.params[n:n+2] for n in range(0, len(e.params), 2)]:
                 nn.add_layer(w.get_value(), b.get_value())
             nn.set_input_norm(tx_m, tx_std)
             nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_hl%d_hla%d_lf%d_pf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
