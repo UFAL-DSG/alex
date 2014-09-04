@@ -14,6 +14,7 @@ import autopath
 
 from alex.utils.htk import *
 from alex.ml import ffnn
+from alex.ml import tffnn
 
 """ This script trains NN for VAD.
 
