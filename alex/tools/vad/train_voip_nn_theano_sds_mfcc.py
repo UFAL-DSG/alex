@@ -28,7 +28,8 @@ max_frames_per_segment = 0
 trim_segments = 0
 max_epoch = 20
 hidden_units = 32
-hidden_layers = 4
+hidden_layers = 1
+hidden_layers_add = 0
 last_frames = 15
 prev_frames = 15
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
@@ -201,7 +202,7 @@ def frame_multiply_y(y, prev_frames, last_frames):
     my = y[last_frames:last_frames + len(y) - (prev_frames + last_frames)]
 
     return my
-		
+
 def train_nn(speech_data, speech_alignment):
     print
     print datetime.datetime.now()
@@ -221,7 +222,7 @@ def train_nn(speech_data, speech_alignment):
 
     input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
 
-    e = ffnn.TheanoFFNN(input_size, hidden_units, 1, 2, hidden_activation = hact, weight_l2 = weight_l2)
+    e = ffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
@@ -257,7 +258,7 @@ def train_nn(speech_data, speech_alignment):
     dt_acc = []
 
     epoch = 0
-    i_hidden_layers = 1
+    i_hidden_layers = hidden_layers
     
     while True:
 
@@ -274,8 +275,10 @@ def train_nn(speech_data, speech_alignment):
         dt_acc.append(t_acc)
 
         print
-        print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
-        print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, hidden_units, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only 
+        print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, " \
+              "hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
+        print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, \
+            hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -308,8 +311,8 @@ def train_nn(speech_data, speech_alignment):
             for w, b in e.params:
                 nn.add_layer(w.get_value(), b.get_value())
             nn.set_input_norm(tx_m, tx_std)
-            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_lf%d_pf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
-                                 (input_size, hidden_units, last_frames, prev_frames, max_frames, max_files, max_frames_per_segment,
+            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_hl%d_hla%d_lf%d_pf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
+                                 (input_size, hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, max_frames, max_files, max_frames_per_segment,
                                  trim_segments, 
                                  usec0, usedelta, useacc, mel_banks_only, batch_size))
         
@@ -318,7 +321,7 @@ def train_nn(speech_data, speech_alignment):
         epoch += 1
 
         if epoch > 1 and epoch % 1  == 0:
-            if i_hidden_layers < hidden_layers:
+            if i_hidden_layers < hidden_layers + hidden_layers_add:
                 print
                 print '-'*80
                 print 'Adding a hidden layer: ', i_hidden_layers + 1
@@ -337,7 +340,8 @@ def train_nn(speech_data, speech_alignment):
 
 def main():
     global method, batch_size, hact
-    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch, hidden_units, last_frames, prev_frames
+    global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch
+    global hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames
     global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
@@ -366,6 +370,10 @@ def main():
                         help='number of training epochs: default %d' % max_epoch)
     parser.add_argument('--hidden_units', action="store", default=hidden_units, type=int,
                         help='number of hidden units: default %d' % hidden_units)
+    parser.add_argument('--hidden_layers', action="store", default=hidden_layers, type=int,
+                        help='number of hidden layers: default %d' % hidden_layers)
+    parser.add_argument('--hidden_layers_add', action="store", default=hidden_layers_add, type=int,
+                        help='number of hidden layers to added in first epoch: default %d' % hidden_layers_add)
     parser.add_argument('--last_frames', action="store", default=last_frames, type=int,
                         help='number of last frames: default %d' % last_frames)
     parser.add_argument('--prev_frames', action="store", default=prev_frames, type=int,
@@ -391,6 +399,8 @@ def main():
     trim_segments = args.trim_segments
     max_epoch = args.max_epoch
     hidden_units = args.hidden_units
+    hidden_layers = args.hidden_layers
+    hidden_layers_add = args.hidden_layers_add
     last_frames = args.last_frames
     prev_frames = args.prev_frames
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
