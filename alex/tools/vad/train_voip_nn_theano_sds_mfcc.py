@@ -31,7 +31,7 @@ max_epoch = 20
 hidden_units = 32
 hidden_layers = 1
 hidden_layers_add = 0
-last_frames = 15
+next_frames = 15
 prev_frames = 15
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
@@ -221,27 +221,29 @@ def train_nn(speech_data, speech_alignment):
     except IOError:  
         crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
 
-    input_size = train_x.shape[1] * (prev_frames + 1 + last_frames)
-
-    e = tffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2)
+    input_size = train_x.shape[1] * (prev_frames + 1 + next_frames)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
     print "The shape of non-multiplied test data:     ", crossvalid_x.shape, crossvalid_y.shape
 
     # add prev, and last frames
-    tx_m = np.tile(tx_m, prev_frames + 1 + last_frames)
-    tx_std = np.tile(tx_std, prev_frames + 1 + last_frames)
+    tx_m = np.tile(tx_m, prev_frames + 1 + next_frames)
+    tx_std = np.tile(tx_std, prev_frames + 1 + next_frames)
     gc.collect()
 
     print
     print datetime.datetime.now()
     print
-    print "prev_frames +1+ last_frames:", prev_frames, 1, last_frames
+    print "prev_frames +1+ last_frames:", prev_frames, 1, next_frames
     print "The shape of training data: ", train_x.shape, train_y.shape
     print "The shape of test data:     ", crossvalid_x.shape, crossvalid_y.shape
     print "The shape of tx_m, tx_std:  ", tx_m.shape, tx_std.shape
     print
 
+    e = tffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2,
+                         training_set_x = train_x, training_set_y = train_y,
+                         prev_frames = prev_frames, next_frames= next_frames,
+                         batch_size = batch_size)
     dc_acc = []
     dt_acc = []
 
@@ -254,9 +256,9 @@ def train_nn(speech_data, speech_alignment):
         print '-'*80
         print 'Predictions'
         print '-'*80
-        predictions_y, gold_y = e.predict(crossvalid_x, batch_size, prev_frames, last_frames, crossvalid_y)
+        predictions_y, gold_y = e.predict(crossvalid_x, batch_size, prev_frames, next_frames, crossvalid_y)
         c_acc, c_sil = get_accuracy(gold_y, predictions_y)
-        predictions_y, gold_y = e.predict(train_x, batch_size, prev_frames, last_frames, train_y)
+        predictions_y, gold_y = e.predict(train_x, batch_size, prev_frames, next_frames, train_y)
         t_acc, t_sil = get_accuracy(gold_y, predictions_y)
 
         dc_acc.append(c_acc)
@@ -264,9 +266,9 @@ def train_nn(speech_data, speech_alignment):
 
         print
         print "method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, " \
-              "hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
+              "hidden_units, hidden_layers, hidden_layers_add, prev_frames, next_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only "
         print method, hact, max_frames, max_files, max_frames_per_segment, trim_segments, batch_size, max_epoch, \
-            hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only
+            hidden_units, hidden_layers, hidden_layers_add, prev_frames, next_frames, crossvalid_frames, usec0, usedelta, useacc, mel_banks_only
         print "Epoch: %d" % (epoch,)
         print
         print "Cross-validation stats"
@@ -299,8 +301,8 @@ def train_nn(speech_data, speech_alignment):
             for w, b in [e.params[n:n+2] for n in range(0, len(e.params), 2)]:
                 nn.add_layer(w.get_value(), b.get_value())
             nn.set_input_norm(tx_m, tx_std)
-            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_hl%d_hla%d_lf%d_pf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
-                                 (input_size, hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames, max_frames, max_files, max_frames_per_segment,
+            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_hl%d_hla%d_pf%d_nf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
+                                 (input_size, hidden_units, hidden_layers, hidden_layers_add, prev_frames, next_frames, max_frames, max_files, max_frames_per_segment,
                                  trim_segments, 
                                  usec0, usedelta, useacc, mel_banks_only, batch_size))
         
@@ -321,7 +323,7 @@ def train_nn(speech_data, speech_alignment):
         print '-'*80
         print 'Training'
         print '-'*80
-        e.train(train_x, train_y, prev_frames, last_frames, method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch), batch_size = batch_size)
+        e.train(method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch))
 
 
 ##################################################
@@ -329,7 +331,7 @@ def train_nn(speech_data, speech_alignment):
 def main():
     global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch
-    global hidden_units, hidden_layers, hidden_layers_add, last_frames, prev_frames
+    global hidden_units, hidden_layers, hidden_layers_add, next_frames, prev_frames
     global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
@@ -362,10 +364,10 @@ def main():
                         help='number of hidden layers: default %d' % hidden_layers)
     parser.add_argument('--hidden_layers_add', action="store", default=hidden_layers_add, type=int,
                         help='number of hidden layers to added in first epoch: default %d' % hidden_layers_add)
-    parser.add_argument('--last_frames', action="store", default=last_frames, type=int,
-                        help='number of last frames: default %d' % last_frames)
     parser.add_argument('--prev_frames', action="store", default=prev_frames, type=int,
                         help='number of prev frames: default %d' % prev_frames)
+    parser.add_argument('--next_frames', action="store", default=next_frames, type=int,
+                        help='number of next frames: default %d' % next_frames)
     parser.add_argument('--usec0', action="store", default=usec0, type=int,
                         help='use c0 in mfcc: default %d' % usec0)
     parser.add_argument('--mel_banks_only', action="store", default=mel_banks_only, type=int,
@@ -389,8 +391,8 @@ def main():
     hidden_units = args.hidden_units
     hidden_layers = args.hidden_layers
     hidden_layers_add = args.hidden_layers_add
-    last_frames = args.last_frames
     prev_frames = args.prev_frames
+    next_frames = args.next_frames
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
     usec0 = args.usec0
     mel_banks_only = args.mel_banks_only
