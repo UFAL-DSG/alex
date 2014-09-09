@@ -247,6 +247,8 @@ class Zone(object):
         node_type = getattr(alex.components.nlg.tectotpl.core.node, layer.upper())
         # create the root
         root = node_type(data=data, zone=self)
+        if hasattr(root, 'ord') and root.ord is None:  # set root's ord to 0 if not set in data
+            root.ord = 0
         setattr(self, layer + 'tree', root)
         # create all the children given in data
         if nodes_data is not None:
