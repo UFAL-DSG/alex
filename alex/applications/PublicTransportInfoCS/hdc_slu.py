@@ -571,11 +571,10 @@ class PTICSHDCSLU(SLUInterface):
                                                              'dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if all_words_in(u, 'za jak tam') and any_word_in(u, 'dlouho dlóho') and any_word_in(u, "budu bude budem přijedu přijede přijedem přijedete "
-                                                                   "dojedu dorazí dorazím dorazíte") or \
-            all_words_in(u, 'za jak budu') and any_word_in(u, 'dlouho dlóho') and (any_word_in(u, "cílové stanici") or \
-                                                           any_word_in(u, "cílové zastávce") or \
-                                                           any_word_in(u, 'cíli')):
+        if (all_words_in(u, 'za jak') and any_word_in(u, 'dlouho dlóho') and
+            any_word_in(u, 'budu bude budem přijedu přijede přijedem přijedete dojedu dorazí dorazím dorazíte') and
+            any_phrase_in(u, ['tam', 'v cíli', 'do cíle', 'k cíli', 'cílové zastávce', 'cílové stanici'])):
+
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'za v'):
