@@ -33,6 +33,7 @@ hidden_layers = 1
 hidden_layers_add = 0
 next_frames = 15
 prev_frames = 15
+amplify_center_frame = 1.0
 crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
 usec0=0
 usedelta=False
@@ -242,7 +243,7 @@ def train_nn(speech_data, speech_alignment):
 
     e = tffnn.TheanoFFNN(input_size, hidden_units, hidden_layers, 2, hidden_activation = hact, weight_l2 = weight_l2,
                          training_set_x = train_x, training_set_y = train_y,
-                         prev_frames = prev_frames, next_frames= next_frames,
+                         prev_frames = prev_frames, next_frames= next_frames, amplify_center_frame = amplify_center_frame,
                          batch_size = batch_size)
     dc_acc = []
     dt_acc = []
@@ -331,7 +332,7 @@ def train_nn(speech_data, speech_alignment):
 def main():
     global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch
-    global hidden_units, hidden_layers, hidden_layers_add, next_frames, prev_frames
+    global hidden_units, hidden_layers, hidden_layers_add, next_frames, prev_frames, amplify_center_frame
     global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
@@ -368,6 +369,8 @@ def main():
                         help='number of prev frames: default %d' % prev_frames)
     parser.add_argument('--next_frames', action="store", default=next_frames, type=int,
                         help='number of next frames: default %d' % next_frames)
+    parser.add_argument('--amplify_center_frame', action="store", default=amplify_center_frame, type=float,
+                        help='amplify_center_frame: default %d' % amplify_center_frame)
     parser.add_argument('--usec0', action="store", default=usec0, type=int,
                         help='use c0 in mfcc: default %d' % usec0)
     parser.add_argument('--mel_banks_only', action="store", default=mel_banks_only, type=int,
@@ -393,6 +396,7 @@ def main():
     hidden_layers_add = args.hidden_layers_add
     prev_frames = args.prev_frames
     next_frames = args.next_frames
+    amplify_center_frame = args.amplify_center_frame
     crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
     usec0 = args.usec0
     mel_banks_only = args.mel_banks_only

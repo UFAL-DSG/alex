@@ -21,8 +21,8 @@ class TheanoFFNN(object):
       -- output layer - activation function softmax
     """
     def __init__(self, n_inputs, n_hidden_units, n_hidden_layers, n_outputs,
-                 training_set_x, training_set_y, prev_frames = 0, next_frames = 0, batch_size = 0,
-                 hidden_activation = 'tanh', weight_l2 = 1e-6):
+                 training_set_x, training_set_y, prev_frames = 0, next_frames = 0, amplify_center_frame = 1.0, 
+                 batch_size = 0, hidden_activation = 'tanh', weight_l2 = 1e-6):
         self.n_inputs = n_inputs
 
         if hidden_activation == 'tanh':
@@ -46,6 +46,13 @@ class TheanoFFNN(object):
         self.prev_frames = prev_frames
         self.next_frames = next_frames
         self.batch_size = batch_size
+
+        self.amp_min = 1.0/amplify_center_frame
+        self.amp_max = 1.0
+         
+        amp_prev = [self.amp_min + (float(i) / self.prev_frames) * (self.amp_max - self.amp_min) for i in range(0, self.prev_frames)]
+        amp_next = [self.amp_min + (float(i) / self.next_frames) * (self.amp_max - self.amp_min) for i in range(0, self.next_frames)]
+        self.amp = amp_prev + [self.amp_max,] + list(reversed(amp_next))
 
         self.build_model(n_hidden_units, n_hidden_layers)
         self.rprop_init()
@@ -94,7 +101,7 @@ class TheanoFFNN(object):
         l2 = 0
         for p in self.params:
             l2 += (p**2).sum()
-        loss += self.weight_l2 * l2
+        loss -= self.weight_l2 * l2
 
         self.f_loss = function([x, true_y], loss, allow_input_downcast=True)
 
@@ -102,7 +109,7 @@ class TheanoFFNN(object):
         g_loss = T.grad(loss, wrt=self.params)
         self.f_g_loss = function([x, true_y], g_loss)
 
-        # Create a training function
+        # Create a training function for maximization
         updates = []
         learning_rate = T.fscalar()
         for p, g in zip(self.params, g_loss):
@@ -189,7 +196,7 @@ class TheanoFFNN(object):
         l2 = 0
         for p in self.params:
             l2 += (p**2).sum()
-        loss += self.weight_l2 * l2
+        loss -= self.weight_l2 * l2
 
         self.f_loss = function([x, true_y], loss, allow_input_downcast=True)
 
@@ -197,7 +204,7 @@ class TheanoFFNN(object):
         g_loss = T.grad(loss, wrt=self.params)
         self.f_g_loss = function([x, true_y], g_loss)
 
-        # Create a training function
+        # Create a training function for maximization
         updates = []
         learning_rate = T.fscalar()
         for p, g in zip(self.params, g_loss):
@@ -282,13 +289,14 @@ class TheanoFFNN(object):
         return loss, acc, gradients
 
     def frame_multiply_x(self, x, prev_frames, next_frames):
-         rows = [(c, c + len(x) - (prev_frames + next_frames)) for c in range(prev_frames + next_frames, -1, -1)]
-         mx = np.hstack([x[l:r] for l, r in rows])
-         return mx
+        rows = [(c, c + len(x) - (self.prev_frames + 1 + self.next_frames)) for c in range(0, self.prev_frames + 1 + self.next_frames)]
+         
+        mx = np.hstack([a*x[l:r] for a, (l, r) in zip(self.amp, rows)])
+        return mx
 
     def frame_multiply_y(self, y, prev_frames, next_frames):
-         my = y[prev_frames:len(y) - next_frames]
-         return my
+        my = y[prev_frames:len(y) - 1 - next_frames]
+        return my
 
     def train(self, method = 'ng', n_iters = 1, learning_rate = 0.1):
         # Do batch-gradient descent to learn the parameters.
