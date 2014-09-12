@@ -6,9 +6,6 @@ import sys
 import numpy as np
 import datetime
 import random
-import gc
-
-from collections import deque
 
 import autopath
 
@@ -42,8 +39,8 @@ mel_banks_only=1
 uselda = 0
 hidden_dropouts=0
 
-#method = 'sg-fixedlr'
-method = 'sg-rprop'
+method = 'sg-fixedlr'
+#method = 'sg-rprop'
 #method = 'sg-adalr'
 #method = 'ng-fixedlr'
 #method = 'ng-rprop'
@@ -146,29 +143,19 @@ def gen_features(speech_data, speech_alignment):
 
         i += 1
 
-    gc.collect()
     crossvalid_x = np.array(crossvalid_x).astype(np.float32)
-    gc.collect()
     crossvalid_y = np.array(crossvalid_y).astype('int32')
-    gc.collect()
     train_x = np.array(train_x).astype(np.float32)
-    gc.collect()
     train_y = np.array(train_y).astype('int32')
-    gc.collect()
 
     # normalise the data
     tx_m = np.mean(train_x, axis=0)
     tx_std = np.std(train_x, axis=0)
 
-    gc.collect()
     crossvalid_x -= tx_m
-    gc.collect()
     crossvalid_x /= tx_std
-    gc.collect()
     train_x -= tx_m
-    gc.collect()
     train_x /= tx_std
-    gc.collect()
 
     print 'Saving data to:', fetures_file_name
     f = open(fetures_file_name, "wb")
@@ -193,17 +180,6 @@ def get_accuracy(true_y, predictions_y):
     sil = (1.0-float(np.count_nonzero(true_y)) / len(true_y))*100.0
 
     return acc, sil
-
-def frame_multiply_x(x, prev_frames, last_frames):
-    rows = [(c, c + len(x) - (prev_frames + last_frames)) for c in range(prev_frames + last_frames, -1, -1)]
-    mx = np.hstack([x[l:r] for l, r in rows])
-
-    return mx
-
-def frame_multiply_y(y, prev_frames, last_frames):
-    my = y[last_frames:last_frames + len(y) - (prev_frames + last_frames)]
-
-    return my
 
 def train_nn(speech_data, speech_alignment):
     print
@@ -230,7 +206,6 @@ def train_nn(speech_data, speech_alignment):
     # add prev, and last frames
     tx_m = np.tile(tx_m, prev_frames + 1 + next_frames)
     tx_std = np.tile(tx_std, prev_frames + 1 + next_frames)
-    gc.collect()
 
     print
     print datetime.datetime.now()
@@ -245,6 +220,8 @@ def train_nn(speech_data, speech_alignment):
                          training_set_x = train_x, training_set_y = train_y,
                          prev_frames = prev_frames, next_frames= next_frames, amplify_center_frame = amplify_center_frame,
                          batch_size = batch_size)
+    e.set_input_norm(tx_m, tx_std)
+
     dc_acc = []
     dt_acc = []
 
@@ -295,18 +272,22 @@ def train_nn(speech_data, speech_alignment):
 
         if epoch == np.argmax(dc_acc):
             print
-            print "Saving the FFNN model"
+            print "Saving the FFNN and TFFN models"
             print
 
+            file_name = "model_voip/vad_nnt_%d_hu%d_hl%d_hla%d_pf%d_nf%d_acf_%.1f_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d" % \
+                                 (input_size, hidden_units, hidden_layers, hidden_layers_add,
+                                  prev_frames, next_frames, amplify_center_frame, max_frames, max_files, max_frames_per_segment,
+                                  trim_segments,
+                                  usec0, usedelta, useacc, mel_banks_only, batch_size)
             nn = ffnn.FFNN()
             for w, b in [e.params[n:n+2] for n in range(0, len(e.params), 2)]:
                 nn.add_layer(w.get_value(), b.get_value())
             nn.set_input_norm(tx_m, tx_std)
-            nn.save(file_name = "model_voip/vad_sds_mfcc_is%d_hu%d_hl%d_hla%d_pf%d_nf%d_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d_bs%d.nnt" % \
-                                 (input_size, hidden_units, hidden_layers, hidden_layers_add, prev_frames, next_frames, max_frames, max_files, max_frames_per_segment,
-                                 trim_segments, 
-                                 usec0, usedelta, useacc, mel_banks_only, batch_size))
-        
+            nn.save(file_name+".ffnn")
+
+            e.save(file_name+".tffnn")
+
         if epoch == max_epoch:
             break
         epoch += 1

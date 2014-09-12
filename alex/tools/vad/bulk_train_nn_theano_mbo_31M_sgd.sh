@@ -2,7 +2,7 @@
 ## Fail: python.sh
 #
 
-DEV='gpu1'
+DEV='gpu0'
 EP='1000'
 MF='31000000'
 MFS='31M'
@@ -10,14 +10,14 @@ MFS='31M'
 BS='1000'
 BSS='1k'
 
-PF=15
+PF=30
 NF=15
 
 HU=512
 HL=1
 HLA=3
 
-ACF=1.0
+ACF=2.0
 
 M='sg-fixedlr'
 A='tanh'

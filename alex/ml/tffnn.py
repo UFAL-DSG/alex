@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cPickle as pickle
 import random
 import copy
 import numpy as np
@@ -20,8 +21,8 @@ class TheanoFFNN(object):
       -- hidden layers - activation function tanh
       -- output layer - activation function softmax
     """
-    def __init__(self, n_inputs, n_hidden_units, n_hidden_layers, n_outputs,
-                 training_set_x, training_set_y, prev_frames = 0, next_frames = 0, amplify_center_frame = 1.0, 
+    def __init__(self, n_inputs = 0, n_hidden_units = 0, n_hidden_layers = 0, n_outputs = 0,
+                 training_set_x = None, training_set_y = None, prev_frames = 0, next_frames = 0, amplify_center_frame = 1.0,
                  batch_size = 0, hidden_activation = 'tanh', weight_l2 = 1e-6):
         self.n_inputs = n_inputs
 
@@ -37,7 +38,6 @@ class TheanoFFNN(object):
             raise NotImplementedError
 
         self.n_outputs = n_outputs
-        self.n_hidden_activation = hidden_activation
         self.weight_l2 = weight_l2
 
         self.training_set_x = training_set_x
@@ -47,17 +47,20 @@ class TheanoFFNN(object):
         self.next_frames = next_frames
         self.batch_size = batch_size
 
-        self.amp_min = 1.0/amplify_center_frame
-        self.amp_max = 1.0
+        amp_min = 1.0/amplify_center_frame
+        amp_max = 1.0
          
-        amp_prev = [self.amp_min + (float(i) / self.prev_frames) * (self.amp_max - self.amp_min) for i in range(0, self.prev_frames)]
-        amp_next = [self.amp_min + (float(i) / self.next_frames) * (self.amp_max - self.amp_min) for i in range(0, self.next_frames)]
-        self.amp = amp_prev + [self.amp_max,] + list(reversed(amp_next))
+        amp_prev = [amp_min + (float(i) / self.prev_frames) * (amp_max - amp_min) for i in range(0, self.prev_frames)]
+        amp_next = [amp_min + (float(i) / self.next_frames) * (amp_max - amp_min) for i in range(0, self.next_frames)]
+        self.amp = amp_prev + [amp_max,] + list(reversed(amp_next))
+        self.amp_vec = np.repeat(self.amp, n_inputs / (self.prev_frames + 1 + self.next_frames))
 
-        self.build_model(n_hidden_units, n_hidden_layers)
+        if n_inputs:
+            self.build_model(n_hidden_units, n_hidden_layers)
+
         self.rprop_init()
 
-    def build_model(self, n_hidden_units, n_hidden_layers):
+    def build_model(self, n_hidden_units, n_hidden_layers, old_params = None):
         # Model definition.
         x = T.fmatrix('X')
         y = x
@@ -66,7 +69,10 @@ class TheanoFFNN(object):
         self.params = []  
 
         # Build the layered neural network.
-        self.n_hidden = [n_hidden_units,]*n_hidden_layers
+        if not old_params:
+            self.n_hidden = [n_hidden_units,]*n_hidden_layers
+        else:
+            self.n_hidden = self.n_hidden + [n_hidden_units,]*n_hidden_layers
         
         activations = [self.hidden_activation,]*len(self.n_hidden)
         activations.extend([T.nnet.softmax,]) # NOTE: The last function goes to the output layer.
@@ -77,14 +83,21 @@ class TheanoFFNN(object):
         
         # Iterate over pairs of adjacent layers.
         for i, (n1, n2, act) in enumerate(zip(layers[:-1], layers[1:], activations)):
-            w = theano.shared(
-                               np.asarray(rng.uniform(
-                                                      low=-np.sqrt(6. / (n1 + n2)),
-                                                      high=np.sqrt(6. / (n1 + n2)),
-                                                      size=(n1, n2)),
-                                          dtype=np.float32),
-                               'W%d' % i, borrow=True)
-            b = theano.shared(np.zeros(n2, dtype=np.float32), 'b%d' % (i + 1))
+            if old_params and (2*i < len(old_params)):
+                # print "using old params"
+                # init an existing layer
+                w = theano.shared(old_params[2*i], 'W%d' % i, borrow=True)
+                b = theano.shared(old_params[2*i+1], 'b%d' % (i + 1))
+            else:
+                # print "sampling new params"
+                w = theano.shared(
+                                   np.asarray(rng.uniform(
+                                                          low=-np.sqrt(6. / (n1 + n2)),
+                                                          high=np.sqrt(6. / (n1 + n2)),
+                                                          size=(n1, n2)),
+                                              dtype=np.float32),
+                                   'W%d' % i, borrow=True)
+                b = theano.shared(np.zeros(n2, dtype=np.float32), 'b%d' % (i + 1))
             self.params.append(w)
             self.params.append(b)
 
@@ -140,83 +153,79 @@ class TheanoFFNN(object):
                                     #true_y: self.shared_training_set_y[m*self.batch_size: (m+1)*self.batch_size]
 #                                })
 
-    def add_hidden_layer(self, n_hidden_units):
-        ''' It is like a building a complete network, you have to just initialise the network using the parameters
-        from the previous network.
+    def add_hidden_layer(self, n_hidden_units):    
+        ''' It is like a building a complete network, you have to just initialise the network using 
+        the parameters from the previous network.
         ''' 
         
-        # Model definition.
-        x = T.fmatrix('X')
-        y = x
-
         # Keep model params here.
-        prev_params = copy.deepcopy(self.params)
-        self.params = []  
+        old_params = [p.get_value() for p in self.params]
 
-        # Build the layered neural network.
-        self.n_hidden = self.n_hidden + [n_hidden_units,]
-        
-        activations = [self.hidden_activation,]*len(self.n_hidden)
-        activations.extend([T.nnet.softmax,]) # NOTE: The last function goes to the output layer.
+        # Remove the last layer parameters
+        old_params = old_params[:-2]
 
-        assert len(self.n_hidden) + 1 == len(activations)
-        
-        layers = [self.n_inputs] + self.n_hidden + [self.n_outputs]
+        self.build_model(n_hidden_units, 1, old_params)
 
-        # Iterate over pairs of adjacent layers.
-        for i, (n1, n2, act) in enumerate(zip(layers[:-1], layers[1:], activations)):
-            if 2*i < len(prev_params) - 2:
-                # init an existing layer
-                w = theano.shared(prev_params[2*i].get_value(), 'W%d' % i, borrow=True)
-                b = theano.shared(prev_params[2*i+1].get_value(), 'b%d' % (i + 1))
-            else:
-                # init a new layer
-                w = theano.shared(
-                                   np.asarray(rng.uniform(
-                                                          low=-np.sqrt(6. / (n1 + n2)),
-                                                          high=np.sqrt(6. / (n1 + n2)),
-                                                          size=(n1, n2)),
-                                              dtype=np.float32),
-                                   'W%d' % i, borrow=True)
-                b = theano.shared(np.zeros(n2, dtype=np.float32), 'b%d' % (i + 1))
+    def set_input_norm(self, m, std):
+        self.input_m = m
+        self.input_std = std
 
-            self.params.append(w)
-            self.params.append(b)
+    def load(self, file_name):
+        """ Loads saved NN.
 
-            y = act(T.dot(y, w) + b)
+        :param file_name: file name of the saved NN
+        :return: None
+        """
+        with open(file_name, "rb") as f:
+            self.input_m, \
+            self.input_std, \
+            old_params, \
+            self.n_hidden, \
+            self.hidden_activation, \
+            self.n_inputs, \
+            self.n_outputs, \
+            self.weight_l2, \
+            self.prev_frames, \
+            self.next_frames, \
+            self.batch_size, \
+            self.amp, \
+            self.amp_vec = pickle.load(f)
 
-        self.f_y = function([x], y) # PREDICTION FUNCTION
+        self.build_model(0, 0, old_params = old_params)
 
-        # Define the loss function.
-        true_y = T.ivector('true_Y')  # The desired output vector.
-        loss = T.log(y[T.arange(y.shape[0]), true_y])  # log-likelihood.
-        loss = T.mean(loss)                            # SUM log-likelihood.
 
-        # Add regularization.
-        l2 = 0
-        for p in self.params:
-            l2 += (p**2).sum()
-        loss -= self.weight_l2 * l2
+    def save(self, file_name):
+        """ Saves the NN into a file.
 
-        self.f_loss = function([x, true_y], loss, allow_input_downcast=True)
-
-        # Derive the gradients for the parameters.
-        g_loss = T.grad(loss, wrt=self.params)
-        self.f_g_loss = function([x, true_y], g_loss)
-
-        # Create a training function for maximization
-        updates = []
-        learning_rate = T.fscalar()
-        for p, g in zip(self.params, g_loss):
-            updates.append((p, p + learning_rate * g))
-
-        self.f_train_ret_loss = function([x, true_y, learning_rate], loss, updates = updates)
-
-    def predict(self, data_x, batch_size = 0, prev_frames = 0, last_frames = 0, data_y = None):
+        :param file_name: name of the file where the NN will be saved
+        :return: None
+        """
+        with open(file_name, "wb") as f:
+            data = (self.input_m, 
+                    self.input_std, 
+                    [p.get_value() for p in self.params],
+                    self.n_hidden,
+                    self.hidden_activation,
+                    self.n_inputs,
+                    self.n_outputs,
+                    self.weight_l2,
+                    self.prev_frames,
+                    self.next_frames,
+                    self.batch_size,
+                    self.amp,
+                    self.amp_vec,
+                    )
+            pickle.dump(data, f)
+                
+    def predict(self, data_x, batch_size = 0, prev_frames = 0, next_frames = 0, data_y = None):
         if not batch_size:
-            mx = self.frame_multiply_x(data_x, prev_frames, last_frames)
+            if prev_frames or next_frames:
+                mx = self.frame_multiply_x(data_x, prev_frames, next_frames)
+            else:
+                mx = data_x
+                
             if data_y != None:
-                my = self.frame_multiply_y(data_y, prev_frames, last_frames)
+                my = self.frame_multiply_y(data_y, prev_frames, next_frames)
                 return self.f_y(mx), my
                                 
             return self.f_y(mx)
@@ -224,9 +233,13 @@ class TheanoFFNN(object):
             res = []
             resy = []
             for i in range(0, len(data_x), batch_size):
-                mx = self.frame_multiply_x(data_x[i:i+batch_size], prev_frames, last_frames)
+                if prev_frames or next_frames:
+                    mx = self.frame_multiply_x(data_x[i:i+batch_size], prev_frames, next_frames)
+                else:
+                    mx = data_x[i:i+batch_size]
+                    
                 if data_y != None:
-                    my = self.frame_multiply_y(data_y[i:i+batch_size], prev_frames, last_frames)
+                    my = self.frame_multiply_y(data_y[i:i+batch_size], prev_frames, next_frames)
                     resy.append(my)
                     
                 res.append(self.f_y(mx))
@@ -236,6 +249,13 @@ class TheanoFFNN(object):
                                 
             return np.vstack(res)
 
+    def predict_normalise(self, input):
+        input -= self.input_m
+        input /= self.input_std
+        input *= self.amp_vec
+        
+        return self.predict(input)
+        
     def rprop_init(self):
         self.d_max = 1e+2
         self.d_min = 1e-6
