@@ -17,7 +17,7 @@ HU=512
 HL=1
 HLA=3
 
-ACF=2.0
+ACF=4.0
 
 M='sg-fixedlr'
 A='tanh'
