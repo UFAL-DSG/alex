@@ -23,6 +23,12 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    # Mocking of the dependencies
+    sys.path.insert(0,'.')
+    from readthedocs import *
+    sys.path.pop(0)
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
