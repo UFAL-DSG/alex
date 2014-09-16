@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
-from os import path
+from os import path, system
 
 
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
-os.system("cd doc; python manual_rsts.py")
+system("cd doc; python manual_rsts.py; make html")
 
 
 setup(
