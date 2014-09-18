@@ -13,9 +13,9 @@ compiler:
 
 before_install:
     - sudo apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev gfortran  git python python-pip libsqlite3-dev wget
-#    - liblapack3
-    # ATLAS matrix library
-    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-yaml git libportaudio-dev portaudio19-dev libsox-dev
+#    - liblapack3 portaudio19-dev 
+    # ATLAS matrix library 
+    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-yaml git libportaudio-dev libsox-dev
     - pip install -r alex-requirements.txt
     - easy_install pysox
     - pip install pystache cython flask theano
