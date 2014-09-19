@@ -80,7 +80,7 @@ changes in the topic branch. Then follow the instructions above, that is:
 
 Documentation
 -------------
-The documentation is available `here <http://alex.readthedocs.org/en/latest/>`_ and is generated using Sphinx and its ``autodoc`` extension. Please document
+The documentation is available `here <http://alex.readthedocs.org/en/latest/>`_ and is automatically generated after each push on readdocs.org using Sphinx and its ``autodoc`` extension. Please document
 all your code as much as possible using the conventions which can be parsed by Sphinx. 
 
 Also provide README style documentation describing the complete packages, applications, 
