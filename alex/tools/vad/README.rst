@@ -1,169 +1,68 @@
 Building a voice activity detector (VAD)
 ========================================
 
-It looks like that the English VAD works well even for Czech. However, language independent VAD should be trained
-on all available languages.
+This tect described how to builda voice activity detector (VAD) for Alex.
+This work builds multilingual VAD. That means that we do not have VADs for individual languages but rather only one.
+It appears that NN VAD has the capacity to distinguish between non-speech and speech in any language.
 
-The goal is to train a robust multi-language VAD.
+As of now, we use VAD based on neural networks (NNs) implemented in theano toolkit. 
+The main advantage that the same code can eficently run both CPUs and GPUs and theano impliments atomatic derivations.
+Automatic derivations is very usefull epsecially when gradient descend techniques, such as stochastic gradient discend, 
+are used for model parameters optimisation.
+
+Old GMM code is still present but it may not work and its performenace would be significantly worse that of 
+the current NN implementation.
 
 Experiments and the notes for the NN VAD
 ----------------------------------------
 
-- testing is done on the first 20% of training data. If the data is 100k examples, then the test data is the first 20k examples
-  and the train data is the remaining 80% of the original train data.
+- testing is performed on randomly sampled datapoints (20%) from entire set 
 
-- dropouts in hidden layers does not work with the HF optimiser
- 
-- HF preconditioner does not impact the performance of training, it converges without it so enabling it does not help
- 
-- L2 regularisation must be very small less then 0.001 for network with 55k parameters
+- L2 regularisation must be very small, it does not help much
 
-- test MFCC with C0  (on a small training data 100k - it can give up to 2% absolute improvement)
+- instead of MFCC, we use mel-filter banks coefficents only. It looks like the performance is the same or even better
 
-- training on last 10 frames gives only 0.5 % absolute improvement (5 % relative error reduction) on the training data 1M,
-  on less data it is worse by 4 % absolute
+- as of 2014-09-19 the best compromise between the model complexity and the performance appears to be.
+  
+  - 30 previous frames
+  - 15 next frames
+  - 512 hidden units
+  - 4 hidden layers
+  - tanh hidden layer activation
+  - 4x amplification of the central frame compared to outer frames
+  - discriminative preptraining
 
-  - maybe on more then 10M training data it would help more
-  - please note that this improvement was achieved only with small number of hidden units - 32, 64
+  - given this setup we get about 95.3 % frame accuracy on about 27 milinon of all data
 
-- experiment N. 16 is the best:
 
-  - NN 32 hidden units, 1M training examples, 1 last frame, using C0
-
-Using theano-nets
-~~~~~~~~~~~~~~~~~
-To train the neural nets please download from http://github.com/lmjohns3/theano-nets or
+Data
+----
 
 ::
 
-  $ git clone git@github.com:lmjohns3/theano-nets.git
+  data_vad_sil    # a directory with only silence, noise data and its mlf file
+  data_voip_cs    # a directory where CS data reside and its MLF (phoneme alignment)
+  data_voip_en    # a directory where EN data reside and its MLF (phoneme alignment)
+  model_voip      # a directory where all the resulting models are stored.
+  
+  
+Scripts
+-------
 
-Missing test
-~~~~~~~~~~~~
-There are no missing tests at this moment.
+::
+
+  upload_models.sh                     # uploads all available models in ``model_voip`` onto the Alex online update server
+  train_voip_nn_theano_sds_mfcc.py     # this is the main trainign script, see its help for more details
+  bulk_train_nn_theano_mbo_31M_sgd.sh  # script with curently ``optimal`` setting for VAD
 
 
-Experiments
-~~~~~~~~~~~~~~~~~~~~
-This is a list of evaluation notes and experiments:
+Comments
+--------
 
-#. When comparing 4 hidden layers, and 1 hidden layer,
+To save some time especially for multiple experiments on the same data, we store preprocesed speech parametrisation.
+The speech parametrisation parametriisation is stored because it takes about 7 hours to produce; however, it takes 
+only 1 minute to load from a disk file. 
+Tthe ``model_voip`` directory also this speech parametrisation in ``*.npc`` files.
+There fore if new data is added, then these NPC files must be deleted.
+If there are no NPC files then they are automatically generated from the available WAV files.
 
-   - 1 layer VAD is better by 3 % on 100k examples,
-   - 1 layer system is about 1 % worse on 1000k and more examples
-
-#. pybrain, 4 hidden layers, 128 units, 1 last frame
-
-   - data 100k examples, test data accuracy (first 20k examples): 82.4 %
-   - data 1000k examples, test data accuracy (first 200k examples): 87.5 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 87.5 %
-   - iterations: 1273, 124, 24
-
-#. pybrain, 4 hidden layers, 128 units, 10 last frames
-
-   - data 100k examples, test data accuracy (first 20k examples): 82.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 86.5 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 83.5 %
-   - the training was not probably finished, though I did not have high hopes that I would get better results
-   - iterations: 550, 55, 10
-
-#. pybrain, 4 hidden layers, 128 units, 1 last frame
-
-   - data 100k examples, test data accuracy (first 20k examples): 85.4 %
-   - data 1000k examples, test data accuracy (first 200k examples): 84.5 - 87.5 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 86.5 %
-   - the training was not probably finished, though I did not have high hopes that I would get better results
-   - iterations: 811, 81, 14
-
-#. pybrain, 4 hidden layers, 128 units, 10 last frames
-
-   - data 100k examples, test data accuracy (first 20k examples): 82.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 83.5 - 84.5 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 82.5 - 83.5%
-   - the training was not probably finished, though I did not have high hopes that I would get better results
-   - iterations:  559, 52, 8
-
-#. theanets, 4 hidden layers, 128, units, 1 last frame, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 87.7 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.5 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 89.5 % # iter 18/30
-
-#. theanets, 4 hidden layers, 128, units, 10 last frames, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 82.5 - 84.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.5 % # iter 26/30 - from 21/30 not improving
-
-#. theanets, 4 hidden layers, 256, units, 1 last frame, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 87.4 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.4 % # iter 21/30
-
-#. theanets, 4 hidden layers, 256, units, 10 last frames, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 85.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 88.9 % # iter 18/30
-
-#. theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 88.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.8 %
-
-#. theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 84.4 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.9 %
-
-#. theanets, 4 hidden layers, 64, units, 1 last frame, hf-optimiser, USING C0
-
-   - data 100k examples, test data accuracy (first 20k examples): 88.0 %
-   - data 1000k examples, test data accuracy (first 200k examples): 91.4 %
-
-#. theanets, 4 hidden layers, 64, units, 10 last frames, hf-optimiser, USING C0
-
-   - data 100k examples, test data accuracy (first 20k examples): 88.9 %
-   - data 1000k examples, test data accuracy (first 200k examples): 91.8 %
-
-#. theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 88.7 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.6 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 89.6 %
-
-#. theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser
-
-   - data 100k examples, test data accuracy (first 20k examples): 86.7 %
-   - data 1000k examples, test data accuracy (first 200k examples): 89.9 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 90.1 %
-
-#. theanets, 4 hidden layers, 32, units, 1 last frame, hf-optimiser, USING C0
-
-   - data 100k examples, test data accuracy (first 20k examples): 90.9 %
-   - data 1000k examples, test data accuracy (first 200k examples): 91.3 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 91.4 %
-
-#. theanets, 4 hidden layers, 32, units, 10 last frames, hf-optimiser, USING C0
-
-   - data 100k examples, test data accuracy (first 20k examples): 90.6 %
-   - data 1000k examples, test data accuracy (first 200k examples): 91.1 %
-   - data 5000k examples, test data accuracy (first 1000k examples): 91.7 %
-
-Evaluation of the GMM VAD
--------------------------
-Clearly, the NN VAD achieves about 5 % absolute better results in frame accuracy.
-
-#. 64 mixtures, data 10k examples,
-
-   - test data accuracy (first 2k examples): 80.4 %
-
-#. 64 mixtures, data 100k examples,
-
-   - test data accuracy (first 20k examples): 85.5 %
-
-#. 64 mixtures, data 1000k examples,
-
-   - test data accuracy (first 200k examples): 85.7 %
-
-#. 64 mixtures, data 5000k examples,
-
-   - test data accuracy (first 2000k examples): X %
