@@ -381,10 +381,10 @@ class TheanoFFNN(object):
 
             gradients = [gradients[k] for k in sorted(gradients.keys())]
 
-            # iRPROP- update of parameters.
-            for p, g in zip(self.params, gradients):
+            # iRPROP- update of parameters
+            for j, (p, g) in enumerate(zip(self.params, gradients)):
                 # gradient update
-                p.set_value(p.get_value() + learning_rate * g)
+                p.set_value(p.get_value() +  self.rprop(g, j, learning_rate))
         else:
             print "Unknown update method"
             return
