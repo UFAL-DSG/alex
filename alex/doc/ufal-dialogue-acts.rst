@@ -4,7 +4,7 @@ UFAL Dialogue act scheme
 The purpose of this document is to describe the structure and function of dialogue acts used in spoken dialogue systems developed at UFAL, MFF, UK, Czech Republic.
 
 Definition of dialogue acts
-===========================
+---------------------------
 
 In a spoken dialogue system, the observations and the system actions are represented by dialogue acts. Dialogue acts represent basic intents (such as inform, request, etc.) and the semantic content in the input utterance (e.g. type=hotel, area=east). In some cases, the value can be omitted, for example, where the intention is to query the value of a slot e.g. ``request(food)``.
 
@@ -72,7 +72,7 @@ NOTE: Having this set of acts we cannot confirm that something is not equal to s
 NOTE: Please note that all slot values are always placed in quotes ``"``.
 
 Dialogue act examples
-=====================
+---------------------
 
 This section presents examples of dialogue acts:
 
@@ -211,7 +211,7 @@ An example dialogue form tourist information domain is in the following table:
 +----------+------------------------------------+--------------------------------+
 
 Semantic Decoding and Ambiguity
-===============================
+-------------------------------
 
 Very often there are many ways as to map (to interpret) a natural utterance into a dialogue act, ,
 some times because of natural ambiguity of a sentence – sometimes because of the speech recognition errors. Therefore, a semantic parser will generate multiple hypotheses. In this case, each hypothesis will be assigned a probability meaning the likelihood of being correct and the dialogue manager will resolve this ambiguity in the context of the dialogue (e.g. other sentences).
@@ -242,7 +242,7 @@ Please remember that semantic parsers should interpret an utterance only on the 
 In the first case, the user explicitly says that he/she is looking for a restaurant. However, in the second case, the user said that he/she is looking for some venue serving Indian food which can be both a restaurant or only a take-away.
 
 Building a statistical SLU parser for a new domain
-==================================================
+--------------------------------------------------
 
 From experience, it appears that the easiest approach to build a statistical parser for a new domain is to start with build a handcrafted (rule based) parser. There are several practical reasons for that:
 
@@ -263,14 +263,14 @@ To build a data driven SLU, the following approach is recommended:
 Note that the main benefit of data driven SLU methods comes from the ability to robustly handle erroneous input. Therefore, the data driven SLU should be trained to map **the recognised speech** to the dialogue acts (e.g. obtained by the handcrafted parser on the transcribed speech and then corrected by human annotator).
 
 Comments
-========
+--------
 
 The previous sections described the general set of dialogue acts in UFAL dialogue systems. However, exact set of dialogue acts depends on a specific application domain and is defined by the domain specific semantic parser.
 
 The only requirement is that all the output of a parser must be accepted by the dialogue manager developed for the particular domain.
 
 Apendix A: UFAL Dialogue acts
-=============================
+-----------------------------
 
 
 +-----------------------------+--------------------------------------------------------------------------------------+
