@@ -1,7 +1,7 @@
 Building a voice activity detector (VAD)
 ========================================
 
-This tect described how to builda voice activity detector (VAD) for Alex.
+This text described how to builda voice activity detector (VAD) for Alex.
 This work builds multilingual VAD. That means that we do not have VADs for individual languages but rather only one.
 It appears that NN VAD has the capacity to distinguish between non-speech and speech in any language.
 
@@ -16,9 +16,9 @@ the current NN implementation.
 Experiments and the notes for the NN VAD
 ----------------------------------------
 
-- testing is performed on randomly sampled datapoints (20%) from entire set 
+- testing is performed on randomly sampled datapoints (20%) from the entire set 
 
-- L2 regularisation must be very small, it does not help much
+- L2 regularisation must be very small, in addition it does not help much
 
 - instead of MFCC, we use mel-filter banks coefficents only. It looks like the performance is the same or even better
 
