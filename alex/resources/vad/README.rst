@@ -14,4 +14,5 @@ More information about the process of creating the VAD models is available in :d
 
 Please note that the NN VAD is much better compared to GMM VAD. Also ``alex/resources/vad/`` stores the models, 
 but they should not be checked in the repository anymore. Instead, they should be on the online_update server 
-and downloaded from it when they are updated.
+and downloaded from it when they are updated. More on online update is available in
+:doc:`alex.applications.ONLINE_RESOURCES_UPDATE`.
