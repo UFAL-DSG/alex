@@ -1,10 +1,11 @@
 Description of resource files for VAD
 =====================================
 
-Please note that to simplified deployment of SDS the the VAD is trained to be language independent. That means that VAD
-classifies silence vs. all sounds in any language.
+Please note that to simplify deployment of SDSs, the the VAD is trained to be language independent. That means that VAD
+classifies silence (noise, etc.) vs. all sounds in any language.
 
-At this moment, the ``alex/resources/vad/`` has only VAD models build using VOIP audio signal. The created models include:
+At this moment, the ``alex/resources/vad/`` has only VAD models build using VOIP audio signal. The created models 
+include:
 
 - GMM models
 - NN models
