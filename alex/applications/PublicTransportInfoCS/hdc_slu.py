@@ -158,6 +158,10 @@ class PTICSHDCSLU(SLUInterface):
 
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
+        :param wp_id: waypoint slot category label (e.g. "STOP=", "CITY=")
+        :param wp_slot_suffix: waypoint slot suffix (e.g. "stop", "city")
+        :param phr_wp_types: set of phrases for each waypoint type
+        :param phr_in: phrases for 'in' waypoint type
         """
         u = abutterance
         N = len(u)
@@ -239,8 +243,8 @@ class PTICSHDCSLU(SLUInterface):
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.
 
-        :param abutterance:
-        :param cn:
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
         """
 
         u = abutterance
@@ -330,8 +334,8 @@ class PTICSHDCSLU(SLUInterface):
     def parse_date_rel(self, abutterance, cn):
         """Detects the relative date in the input abstract utterance.
 
-        :param abutterance:
-        :param cn:
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
         """
 
         u = abutterance
@@ -353,8 +357,8 @@ class PTICSHDCSLU(SLUInterface):
     def parse_ampm(self, abutterance, cn):
         """Detects the ampm in the input abstract utterance.
 
-        :param abutterance:
-        :param cn:
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
         """
 
         u = abutterance
@@ -377,8 +381,8 @@ class PTICSHDCSLU(SLUInterface):
     def parse_vehicle(self, abutterance, cn):
         """Detects the vehicle (transport type) in the input abstract utterance.
 
-        :param abutterance:
-        :param cn:
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
         """
 
         u = abutterance
@@ -400,8 +404,8 @@ class PTICSHDCSLU(SLUInterface):
     def parse_task(self, abutterance, cn):
         """Detects the task in the input abstract utterance.
 
-        :param abutterance:
-        :param cn:
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
         """
 
         u = abutterance
@@ -421,8 +425,8 @@ class PTICSHDCSLU(SLUInterface):
         """
         Processes non-speech events in the input utterance.
 
-        :param utterance:
-        :param cn:
+        :param utterance: the input utterance
+        :param cn: The output dialogue act item confusion network.
         :return: None
         """
         u = utterance
@@ -440,8 +444,8 @@ class PTICSHDCSLU(SLUInterface):
         """
         Detects all dialogue acts which do not generalise its slot values using CLDB.
 
-        :param utterance:
-        :param cn:
+        :param utterance: the input utterance
+        :param cn: The output dialogue act item confusion network.
         :return: None
         """
         u = utterance
