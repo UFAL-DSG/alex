@@ -60,6 +60,8 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with codecs.open(trs_fname, 'w', 'UTF-8') as trs_file:
         trs_file.write(trs)
     return existed
