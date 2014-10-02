@@ -388,7 +388,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         #     lon, lat = None, None
         # request the weather
         weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, state=in_state)
-        # check errors
+        # check errorsclea
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")&inform(in_state="%s"' % (in_city, in_state))
         # time
