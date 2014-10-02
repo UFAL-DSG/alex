@@ -687,7 +687,7 @@ def normalise_text(text):
     # non-speech events with the forms with underscores).
     #
     # This step can incur superfluous whitespace.
-    if '(' in text:
+    if '(' in text or '<' in text:
         text = _parenthesized_rx.sub(r' (\1) ', text)
         for parenized, uscored in _nonspeech_trl.iteritems():
             text = text.replace(parenized, uscored)
@@ -703,8 +703,8 @@ def normalise_text(text):
 
     return text
 
-_excluded_characters = ['=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+_excluded_characters = set(['=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 def exclude_asr(text):
     """
@@ -747,7 +747,7 @@ def exclude_lm(text):
     longer than one word.
     """
 
-    if text.find('_EXCLUDE_') >= 0:
+    if '_EXCLUDE_' in text:
         return True
 
     for char in _excluded_characters:
