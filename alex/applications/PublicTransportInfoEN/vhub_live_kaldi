@@ -2,7 +2,7 @@
 
 pushd ..
 
-./vhub.py -c ./PublicTransportInfoEN/ptics.cfg ./PublicTransportInfoEN/ptics_live.cfg ../resources/private/ext-800899998.cfg ./PublicTransportInfoEN/kaldi.cfg
+./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/ptien_live.cfg ../resources/private/ext-800899998.cfg ./PublicTransportInfoEN/kaldi.cfg
 
 popd
 

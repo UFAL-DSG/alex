@@ -8,14 +8,16 @@ from datetime import datetime
 import os.path
 import time
 import json
-from alex.tools.apirequest import APIRequest
-from suds.client import Client
-from crws_enums import *
 import pickle
 import gzip
 import re
 import sys
 import codecs
+
+from suds.client import Client
+
+from alex.tools.apirequest import APIRequest
+from crws_enums import *
 from alex.utils.cache import lru_cache
 from alex.utils.config import online_update, to_project_path
 from alex.applications.PublicTransportInfoEN.data.convert_idos_stops import expand_abbrevs
@@ -201,7 +203,10 @@ class GoogleRouteLegStep(RouteStep):
             self.arrival_stop = data['arrival_stop']['name']
             self.arrival_time = datetime.fromtimestamp(data['arrival_time']['value'])
             self.headsign = data['headsign']
-            self.line_name = data['line']['short_name']
+            if not 'short_name' in data['line']:
+                self.line_name = data['line']['name']
+            else:
+                self.line_name = data['line']['short_name']
             vehicle_type = data['line']['vehicle'].get('type', data['line']['vehicle']['name'])
             self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type.lower())
             # normalize some stops' names
@@ -367,12 +372,12 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         Setting the correct date is compulsory!
         """
         data = {
-            'origin': ('"zastávka %s", %s, Česká republika' %
+            'origin': ('"%s", %s, New York' %
                        (waypoints.from_stop, waypoints.from_city)).encode('utf-8'),
-            'destination': ('"zastávka %s", %s, Česká republika' %
+            'destination': ('"%s", %s, New York' %
                             (waypoints.to_stop, waypoints.to_city)).encode('utf-8'),
-            'region': 'cz',
-            'sensor': 'false',
+            'region': 'us',
+            # 'sensor': 'false',
             'alternatives': 'true',
             'mode': 'transit',
         }
@@ -383,8 +388,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
 
         self.system_logger.info("Google Directions request:\n" + str(data))
 
-        page = urllib.urlopen(self.directions_url + '?' +
-                              urllib.urlencode(data))
+        page = urllib.urlopen(self.directions_url + '?' + urllib.urlencode(data))
         response = json.load(page)
         self._log_response_json(response)
 

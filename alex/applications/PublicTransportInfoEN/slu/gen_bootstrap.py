@@ -3,19 +3,12 @@
 
 from __future__ import unicode_literals
 
-import glob
-import os
-import xml.dom.minidom
 import random
-import autopath
-import sys
-
 from collections import defaultdict
-
-import alex.utils.various as various
 
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.slu.base import CategoryLabelDatabase
+
 
 def zastavka(f):
     return f.startswith('zastáv') or f.startswith('stanic')
@@ -70,6 +63,14 @@ def inform(f, v, c):
         e.append((sem, 'v obci {form}'.format(form=f)))
         e.append((sem, 've vesnici {form}'.format(form=f)))
         e.append((sem, 'v {form}'.format(form=f)))
+
+        slot = 'in_state'
+        sem = 'inform({slot}="{value}")'.format(slot=slot, value=v)
+        e.append((sem, 've městě {form}'.format(form=f)))
+        e.append((sem, 'v obci {form}'.format(form=f)))
+        e.append((sem, 've vesnici {form}'.format(form=f)))
+        e.append((sem, 'v {form}'.format(form=f)))
+
 
         slot = 'via_city'
         sem = 'inform({slot}="{value}")'.format(slot=slot, value=v)

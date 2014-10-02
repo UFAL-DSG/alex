@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 import codecs
 import collections
 import copy
-import cStringIO
 from importlib import import_module
 import os
 import time
@@ -21,6 +20,7 @@ import urllib2
 
 import alex.utils.env as env
 from alex.utils.exceptions import ConfigException
+
 
 config = None
 
@@ -101,6 +101,8 @@ __is_update_server_reachable = None
 def is_update_server_reachble():
     global __is_update_server_reachable
     global online_update_server
+
+    return False
 
     if __is_update_server_reachable is None:
         try:

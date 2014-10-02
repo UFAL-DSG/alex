@@ -3,5 +3,5 @@
 
 from alex.components.dm.exceptions import DialoguePolicyException
 
-class PTICSHDCPolicyException(DialoguePolicyException):
+class PTIENHDCPolicyException(DialoguePolicyException):
     pass

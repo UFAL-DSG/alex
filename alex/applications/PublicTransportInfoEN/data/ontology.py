@@ -2,20 +2,25 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-from database import database
 import codecs
 import os
+
+from database import database
 from alex.utils.config import online_update, to_project_path
+
+
 
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
+WEATHER_STATES_CITIES_FNAME = 'w.states_cities.tsv'
 # tab-separated file containing city + all locations of the city/cities with this name
 # (as pipe-separated longitude, latitude, district, region)
-CITIES_LOCATION_FNAME = 'cities_locations.tsv'
+# CITIES_LOCATION_FNAME = 'cities_locations.tsv'
 
 # load new versions of the data files from the server
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_STOPS_FNAME)))
-online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATION_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), WEATHER_STATES_CITIES_FNAME)))
+# online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATION_FNAME)))
 
 ontology = {
     'slots': {
@@ -29,6 +34,7 @@ ontology = {
         'to_city': set([]),
         'via_city': set([]),
         'in_city': set([]),
+        'in_state': set([]),
         'departure_time': set([]),
         'departure_time_rel': set([]),
         'arrival_time': set([]),
@@ -84,6 +90,10 @@ ontology = {
             'system_confirms', 'system_iconfirms',
         ],
         'in_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'in_state': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_confirms', 'system_iconfirms',
         ],
@@ -257,14 +267,20 @@ ontology = {
         'city_stop': [
             'from_city', 'to_city', 'via_city', 'in_city',
         ],
+        'w_city_w_state': [
+            'in_state',
+        ],
     },
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},
+        'w_city_w_state': {},
+        'w_state_w_city': {},
     },
 
     'default_values': {
         'in_city': 'New York',
+        'in_state': 'New York',
     },
 
     'addinfo': {
@@ -324,6 +340,7 @@ add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')
 add_slot_values_from_database('in_city', 'city')
+add_slot_values_from_database('in_state', 'state')
 add_slot_values_from_database('departure_time', 'time', exceptions=set(['now']))
 add_slot_values_from_database('departure_time_rel', 'time')
 add_slot_values_from_database('arrival_time', 'time', exceptions=set(['now']))
@@ -350,17 +367,18 @@ def load_compatible_values(fname, slot1, slot2):
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
+load_compatible_values(os.path.join(dirname, WEATHER_STATES_CITIES_FNAME), 'w_state', 'w_city')
 
-def load_additional_information(fname, slot, keys):
-    with codecs.open(fname, 'r', 'UTF-8') as fh:
-        for line in fh:
-            if line.startswith('#') or not '\t' in line:
-                continue
-            data = line.strip().split('\t')
-            value, data = data[0], data[1:]
-            ontology['addinfo'][slot][value] = []
-            for data_point in data:
-                ontology['addinfo'][slot][value].append({add_key: add_val for add_key, add_val
-                                                         in zip(keys, data_point.split('|'))})
-
-load_additional_information(os.path.join(dirname, CITIES_LOCATION_FNAME), 'city', ['lon', 'lat', 'district', 'region'])
+# def load_additional_information(fname, slot, keys):
+#     with codecs.open(fname, 'r', 'UTF-8') as fh:
+#         for line in fh:
+#             if line.startswith('#') or not '\t' in line:
+#                 continue
+#             data = line.strip().split('\t')
+#             value, data = data[0], data[1:]
+#             ontology['addinfo'][slot][value] = []
+#             for data_point in data:
+#                 ontology['addinfo'][slot][value].append({add_key: add_val for add_key, add_val
+#                                                          in zip(keys, data_point.split('|'))})
+#
+# load_additional_information(os.path.join(dirname, CITIES_LOCATION_FNAME), 'city', ['lon', 'lat', 'district', 'region'])

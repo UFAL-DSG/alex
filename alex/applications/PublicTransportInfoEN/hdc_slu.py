@@ -11,9 +11,10 @@ from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 
+
+
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
-from uno import _uno_extract_printable_stacktrace
 
 
 def any_word_in(utterance, words):
@@ -65,9 +66,9 @@ def any_phrase_in(utterance, phrases):
     return first_phrase_span(utterance, phrases) != (-1, -1)
 
 
-class PTICSHDCSLU(SLUInterface):
+class PTIENHDCSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
-        super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
+        super(PTIENHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
 
     def abstract_utterance(self, utterance):
@@ -114,7 +115,7 @@ class PTICSHDCSLU(SLUInterface):
         return abs_utts, category_labels
 
     def __repr__(self):
-        return "PTICSHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
+        return "PTIENHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
 
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -124,13 +125,39 @@ class PTICSHDCSLU(SLUInterface):
         """
 
         # regular parsing
-        phr_wp_types = [('from', set(['from', 'at', 'begining', 'start', 'starting', 'origin', # of, off
-                                      'originated', 'originating', 'origination', 'initial'])),
-                        ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
-                                    'target', 'output', 'exit'])),
+        phr_wp_types = [('from', set(['from', 'begining', 'start', 'starting', 'origin', 'standing in', 'standing at', # of, off
+                                      'originated', 'originating', 'origination', 'initial', 'i am at', 'i am in',
+                                      'leave'])),
+                        ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
+                                    'target', 'output', 'exit', 'destination', 'be at'])),
                         ('via', set(['via', 'through', 'transfer', 'interchange' ]))] # change line
 
         self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types)
+
+    def parse_state(self, abutterance, cn):
+        """ Detects state in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+
+        for i, w in enumerate(abutterance):
+            if w.startswith("STATE="):
+                value = w[6:]
+                cn.add(1.0, DialogueActItem("inform", 'in_state', value))
+
+    def parse_weather_city(self, abutterance, cn):
+        """ Detects a city in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+
+        for i, w in enumerate(abutterance):
+            if w.startswith("WCITY="):
+                value = w[6:]
+                cn.add(1.0, DialogueActItem("inform", 'in_city', value))
+
 
     def parse_city(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -141,11 +168,11 @@ class PTICSHDCSLU(SLUInterface):
 
         # regular parsing
         phr_wp_types = [('from', set(['from', 'begining', 'start', 'starting', 'origin', # of, off
-                                      'originated', 'originating', 'origination', 'initial'])), # I'm at, I'm in ?
-                        ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
-                                    'target', 'output', 'exit'])),
+                                      'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
+                        ('to', set(['to', 'into', 'in' 'end', 'ending', 'terminal', 'final',
+                                    'target', 'output', 'exit', 'destination',])),
                         ('via', set(['via', 'through', 'transfer', 'interchange' ])),
-                        ('in', set(['for', 'after'])), # ? ['pro', 'po']
+                        ('in', set(['for', 'after', 'in', 'at'])), # ? ['pro', 'po']
                        ]
 
         self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_in=['in', 'at'])
@@ -161,8 +188,8 @@ class PTICSHDCSLU(SLUInterface):
         N = len(u)
 
         # simple "not" cannot be included as it collides with negation. "I do not want [,] go from Brooklin"
-        phr_dai_types = [('confirm', set(['it departs', 'departs from', 'depart from', 'leave', 'leaves',
-                                          'is the starting']), set()),
+        phr_dai_types = [('confirm', set(['it departs', 'departs from', 'depart from',# 'leave', 'leaves',
+                                          'is the starting',]), set()),
                          ('deny',
                           set(['not from', 'not at', 'not in', 'not on', 'not to', 'not into', 'and not',
                                'not the', 'rather than']), # don't, doesn't?
@@ -187,6 +214,12 @@ class PTICSHDCSLU(SLUInterface):
                         wp_types.add('to')
                     elif any_phrase_in(u[i:i + 3], phr_wp_types[1][1]):
                         wp_types.add('from')
+                # test longer following context - hack for catching "_ is the terminal station."
+                if not wp_types:
+                    if any_phrase_in(u[i:i + 5], phr_wp_types[0][1]): # and not another STOP= (wp_type asi?) in i, i + 6 -> ok, jinak to nad tímhle
+                        wp_types.add('from')
+                    elif any_phrase_in(u[i:i + 5], phr_wp_types[1][1]):
+                        wp_types.add('to')
                 # resolve context according to further preceding/following waypoint name (assuming from-to)
                 if not wp_types:
                     if i >= 1 and u[i - 1].startswith(wp_id):
@@ -245,9 +278,10 @@ class PTICSHDCSLU(SLUInterface):
 
         u = abutterance
 
-        preps_abs = set(["at", "time", "past", "after", "between", "before", "in"])
+        preps_abs = set(["at", "time", "past", "after", "between", "before", "in", "around", "about", "for"])
         preps_rel = set(["in", ])
 
+        # list of positive, negative (contains(positive) & !contains(negative))
         test_context = [('confirm', 'departure',
                          ['it leaves', 'it departures', 'it starts', 'is starting', 'is leaving', 'is departuring',
                           'departure point'],
@@ -260,23 +294,24 @@ class PTICSHDCSLU(SLUInterface):
                          ['it is', 'you think', 'positive'],
                          []),
                         ('deny', 'departure',
-                         ['not leaving', 'not leave', 'not departuring', 'not departure', 'not starting',
+                         ['not leaving', 'not leave', 'not departing', 'not departure', 'not starting',
                           'not start', 'not want to go from'],
                          []),
                         ('deny', 'arrival',
-                         ['not arriving', 'not arrive', 'not come', 'not comming', 'not want to arrive',
+                         ['not arriving', 'not arrive', 'not come', 'not coming', 'not want to arrive',
                           'not want to come', 'not want to go to', 'not want to arrive'],
                          []),
                         ('deny', '',
                          ['no', 'not want', 'negative'],
                          []),
                         ('inform', 'departure',
-                         ['TASK=find_connection', 'departure', 'departing', 'depatrs', 'departs from', 'leaving',
+                         ['TASK=find_connection', 'departure', 'departing', 'departs', 'departs from', 'leaving',
                           'leaves', 'starts', 'starting', 'goes', 'would go', 'will go', 'VEHICLE=tram',
-                          'want to go', 'want to leave',],
-                         ['arrival', 'arrive', 'get to', 'to get', 'arriving', 'want to be at']),
+                          'want to go', 'want to leave', 'want to take', 'want to travel', 'how can i get',
+                          'how do i get', 'would like to go', 'i am at', 'i am in',],
+                         ['arrival', 'arrive', 'arriving', 'want to be at', 'like to be at',]),
                         ('inform', 'arrival',
-                         ['arrival', 'arrive', 'get to', 'to get', 'arriving', 'want to be at'],
+                         ['arrival', 'arrive', 'get to', 'to get', 'arriving', 'want to be at', 'like to be at',],
                          []),
                         ('inform', '',
                          [],
@@ -456,12 +491,14 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("bye"))
 
         if not any_word_in(u, 'connection station option'):
-            if any_word_in(u, 'different another'):
+            if any_word_in(u, 'different another') or\
+                    phrase_in(u, 'anything else'):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not any_word_in(u, 'connection station option last offer offered found beginning repeat begin'):
+        if not any_word_in(u, 'connection station option options last offer offered found beginning begin where going'):
             if (any_word_in(u, 'repeat again') or
-                phrase_in(u, "come again")):
+                phrase_in(u, "come again") or
+                phrase_in(u, "once more")):
                 cn.add(1.0, DialogueActItem("repeat"))
 
         if phrase_in(u, "repeat the last sentence") or \
@@ -472,7 +509,7 @@ class PTICSHDCSLU(SLUInterface):
         if len(u) == 1 and any_word_in(u, "excuse pardon sorry apology, apologise, apologies"):
             cn.add(1.0, DialogueActItem("apology"))
 
-        if not any_word_in(u, "dont want thank you"):
+        if not any_word_in(u, "dont want thank"):
             if any_word_in(u, "help hint"):
                 cn.add(1.0, DialogueActItem("help"))
 
@@ -488,7 +525,7 @@ class PTICSHDCSLU(SLUInterface):
             (len(u) == 1 and any_word_in(u, "can\'t hear you")):
             cn.add(1.0, DialogueActItem('notunderstood'))
 
-        if any_word_in(u, "yes yeah sure") and \
+        if any_word_in(u, "yes yeah sure correct") and \
             not any_word_in(u, "end over option offer surrender") :
             cn.add(1.0, DialogueActItem("affirm"))
 
@@ -503,21 +540,22 @@ class PTICSHDCSLU(SLUInterface):
         if any_word_in(u, 'thanks thankyou thank cheers'):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if any_word_in(u, 'ok right well correct') and \
+        if any_word_in(u, 'ok right well correct fine') and \
             not any_word_in(u, "yes"):
             cn.add(1.0, DialogueActItem("ack"))
 
-        if any_word_in(u, "from begin begins") and any_word_in(u, "beginning scratch") or \
-            any_word_in(u, "reset restart") or \
+        if any_word_in(u, "from begin begins start starting") and any_word_in(u, "beginning scratch over") or \
+            any_word_in(u, "reset restart reboot") or \
+            phrase_in(u, 'new entry') or \
             phrase_in(u, 'new connection') and not phrase_in(u, 'connection from') or \
             phrase_in(u, 'new connection') and not phrase_in(u, 'from') or \
             phrase_in(u, 'new link') and not any_word_in(u, "from"):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if any_phrase_in(u, ['want to go', 'like to go', 'want to get', 'would like to get', ]):
+        if any_phrase_in(u, ['want to go', 'like to go', 'want to get', 'would like to get', 'want to take', 'want to travel', ]):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
-        if any_phrase_in(u, ['what is the weather', 'will be the weather']):
+        if any_phrase_in(u, ['what is the weather', 'will be the weather', 'the forecast']):
             cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
 
         if all_words_in(u, 'where does it start') or \
@@ -528,14 +566,18 @@ class PTICSHDCSLU(SLUInterface):
             all_words_in(u, 'where starts') or \
             all_words_in(u, 'where goes from') or \
             all_words_in(u, 'where does go from') or \
+            all_words_in(u, 'from what station') or \
+            all_words_in(u, 'what is the starting') or \
             all_words_in(u, 'where will from'):
             cn.add(1.0, DialogueActItem('request', 'from_stop'))
 
         if all_words_in(u, 'where does it arrive') or \
             all_words_in(u, 'where does it stop') or \
             all_words_in(u, 'where stopping') or \
+            all_words_in(u, 'where going') or \
             all_words_in(u, 'where arriving') or \
             all_words_in(u, 'to what station') or \
+            all_words_in(u, 'at which station arrive') or \
             all_words_in(u, 'what is target') or \
             all_words_in(u, 'where is target') or \
             all_words_in(u, 'where destination') or \
@@ -544,30 +586,27 @@ class PTICSHDCSLU(SLUInterface):
             all_words_in(u, "where terminate"):
             cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
-        if not any_phrase_in(u, ['will be', 'will arrive', 'will stop', 'will get to', ]):
-            if all_words_in(u, "when does it go") or \
-                all_words_in(u, "when does it leave") or \
-                all_words_in(u, "what time") or \
-                (any_word_in(u, 'when time') and  any_word_in(u, 'leave, departure, go')):
+        if not any_phrase_in(u, ['will be', 'will arrive', 'will stop', 'will get to']):
+            if (any_phrase_in(u, ["what time"]) and any_phrase_in(u, ["is the", "does",])) or \
+                any_phrase_in(u, ["when does", "when is",]) or \
+                (all_words_in(u, 'when time') and any_word_in(u, 'leave departure go')):
                 cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
-        if not any_phrase_in(u, ['will be', 'will arrive', 'will stop', 'will get to', ]):
-            if all_words_in(u, "how long till") or \
-                all_words_in(u, "how long until") or \
-                all_words_in(u, "how long before"):
+        if not any_phrase_in(u, ['will be', 'arrive', 'arrives', 'arriving', 'arrival', 'will stop', 'get', 'gets',
+            'destination', 'target station', 'terminal station', ]):
+            if all_words_in(u, "how") and any_word_in(u, "till until before"):
                 cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if (all_words_in(u, 'when will') and any_word_in(u, 'be arrive')) or \
             (all_words_in(u, 'when will i') and any_word_in(u, 'be arrive')) or \
             (all_words_in(u, 'what time will') and any_word_in(u, 'be arrive')) or \
-            all_words_in(u, 'time of arrival') or \
-            (any_word_in(u, 'when time') and  any_word_in(u, 'arrival arrive')):
+            all_words_in(u, 'time of arrival') or (any_word_in(u, 'when time') and any_word_in(u, 'arrival arrive')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-        if all_words_in(u, 'how long till') and any_word_in(u, "get arrive") or \
-            all_words_in(u, 'how long until') and (any_word_in(u, "target station") or \
-                                                           any_word_in(u, "terminal station") or \
-                                                           any_word_in(u, 'destination')):
+#tohle celý přepsat, žádný any_word_in 'fráze', a vůbec je to nějaký divný tady kolem
+        if all_words_in(u, 'how') and any_word_in(u, 'till until before') and \
+            any_phrase_in(u, ['will be', 'arrive', 'arrives', 'arriving', 'arrival', 'will stop', 'get',
+                              'gets', 'destination', 'target station', 'terminal station', ]):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until'):
@@ -575,18 +614,17 @@ class PTICSHDCSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if all_words_in(u, 'what time is it') or \
-            all_words_in(u, 'what is the time') or \
-            all_words_in(u, 'what\'s the time') or \
+            phrase_in(u, 'what is the time') or \
             all_words_in(u, 'what time do we have'):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
-        if all_words_in(u, 'how many') and \
-            any_word_in(u, 'transfer transfers transfering changing change changes'
+        if (all_words_in(u, 'how many') or all_words_in(u, 'number of')) and \
+            any_word_in(u, 'transfer transfers transferring changing change changes'
                            'interchange interchanging interchanges') and \
             not any_word_in(u, 'time'):
             cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-        if any_word_in(u, 'connection alternatives alternative option options found'):
+        if any_word_in(u, 'connection alternatives alternative option options found choice'):
             if any_word_in(u, 'arbitrary') and \
                 not any_word_in(u, 'first second third fourth one two three four'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
@@ -606,11 +644,11 @@ class PTICSHDCSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
             if any_word_in(u, "last before latest lattermost bottom repeat again") and \
-                not all_words_in(u, "previous"):
+                not all_words_in(u, "previous precedent"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
             if any_word_in(u, "next different following subsequent later") or \
-                phrase_in(u, "one more") or \
+                phrase_in(u, "once more") or \
                 phrase_in(u, "the next one"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
@@ -624,7 +662,8 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
-            (all_words_in(u, "and the following") or  all_words_in(u, "and afterwards")):
+            (all_words_in(u, "and the following") or  all_words_in(u, "and afterwards") or \
+             all_words_in(u, "and later")):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 1 and any_word_in(u, "previous precedent"):
@@ -665,31 +704,32 @@ class PTICSHDCSLU(SLUInterface):
             category_labels = dict()
 
         # handle false positive alarms of abstraction
-        abutterance = abutterance.replace(('STOP=Metra',), ('metra',))
-        abutterance = abutterance.replace(('STOP=Nádraží',), ('nádraží',))
-        abutterance = abutterance.replace(('STOP=SME',), ('sme',))
-        abutterance = abutterance.replace(('STOP=Bílá Hora', 'STOP=Železniční stanice',), ('STOP=Bílá Hora', 'železniční stanice',))
 
-        abutterance = abutterance.replace(('TIME=now','bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
-        abutterance = abutterance.replace(('STOP=Čím','se'), ('čím', 'se',))
-        abutterance = abutterance.replace(('STOP=Lužin','STOP=Na Chmelnici',), ('STOP=Lužin','na','STOP=Chmelnici',))
-        abutterance = abutterance.replace(('STOP=Konečná','zastávka'), ('konečná', 'zastávka',))
-        abutterance = abutterance.replace(('STOP=Konečná','STOP=Anděl'), ('konečná', 'STOP=Anděl',))
-        abutterance = abutterance.replace(('STOP=Konečná stanice','STOP=Ládví'), ('konečná', 'stanice', 'STOP=Ládví',))
-        abutterance = abutterance.replace(('STOP=Výstupní', 'stanice', 'je'), ('výstupní', 'stanice', 'je'))
-        abutterance = abutterance.replace(('STOP=Nová','jiné'), ('nové', 'jiné',))
-        abutterance = abutterance.replace(('STOP=Nová','spojení'), ('nové', 'spojení',))
-        abutterance = abutterance.replace(('STOP=Nová','zadání'), ('nové', 'zadání',))
-        abutterance = abutterance.replace(('STOP=Nová','TASK=find_connection'), ('nový', 'TASK=find_connection',))
-        abutterance = abutterance.replace(('z','CITY=Liberk',), ('z', 'CITY=Liberec',))
-        abutterance = abutterance.replace(('do','CITY=Liberk',), ('do', 'CITY=Liberec',))
-        abutterance = abutterance.replace(('pauza','hrozně','STOP=Dlouhá',), ('pauza','hrozně','dlouhá',))
-        abutterance = abutterance.replace(('v','STOP=Praga',), ('v', 'CITY=Praha',))
-        abutterance = abutterance.replace(('na','STOP=Praga',), ('na', 'CITY=Praha',))
-        abutterance = abutterance.replace(('po','STOP=Praga', 'ale'), ('po', 'CITY=Praha',))
-        abutterance = abutterance.replace(('jsem','v','STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
-        category_labels.add('CITY')
-        category_labels.add('VEHICLE')
+        # abutterance = abutterance.replace(('STOP=Metra',), ('metra',))
+        # abutterance = abutterance.replace(('STOP=Nádraží',), ('nádraží',))
+        # abutterance = abutterance.replace(('STOP=SME',), ('sme',))
+        # abutterance = abutterance.replace(('STOP=Bílá Hora', 'STOP=Železniční stanice',), ('STOP=Bílá Hora', 'železniční stanice',))
+        #
+        # abutterance = abutterance.replace(('TIME=now','bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
+        # abutterance = abutterance.replace(('STOP=Čím','se'), ('čím', 'se',))
+        # abutterance = abutterance.replace(('STOP=Lužin','STOP=Na Chmelnici',), ('STOP=Lužin','na','STOP=Chmelnici',))
+        # abutterance = abutterance.replace(('STOP=Konečná','zastávka'), ('konečná', 'zastávka',))
+        # abutterance = abutterance.replace(('STOP=Konečná','STOP=Anděl'), ('konečná', 'STOP=Anděl',))
+        # abutterance = abutterance.replace(('STOP=Konečná stanice','STOP=Ládví'), ('konečná', 'stanice', 'STOP=Ládví',))
+        # abutterance = abutterance.replace(('STOP=Output', 'station', 'is'), ('output', 'station', 'is'))
+        # abutterance = abutterance.replace(('STOP=Nová','jiné'), ('nové', 'jiné',))
+        # abutterance = abutterance.replace(('STOP=Nová','spojení'), ('nové', 'spojení',))
+        # abutterance = abutterance.replace(('STOP=Nová','zadání'), ('nové', 'zadání',))
+        # abutterance = abutterance.replace(('STOP=Nová','TASK=find_connection'), ('nový', 'TASK=find_connection',))
+        # abutterance = abutterance.replace(('z','CITY=Liberk',), ('z', 'CITY=Liberec',))
+        # abutterance = abutterance.replace(('do','CITY=Liberk',), ('do', 'CITY=Liberec',))
+        # abutterance = abutterance.replace(('pauza','hrozně','STOP=Dlouhá',), ('pauza','hrozně','dlouhá',))
+        # abutterance = abutterance.replace(('v','STOP=Praga',), ('v', 'CITY=Praha',))
+        # abutterance = abutterance.replace(('na','STOP=Praga',), ('na', 'CITY=Praha',))
+        # abutterance = abutterance.replace(('po','STOP=Praga', 'ale'), ('po', 'CITY=Praha',))
+        # abutterance = abutterance.replace(('jsem','v','STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
+        # category_labels.add('CITY')
+        # category_labels.add('VEHICLE')
 
         # print 'After preprocessing: "{utt}".'.format(utt=abutterance)
         # print category_labels
@@ -706,6 +746,10 @@ class PTICSHDCSLU(SLUInterface):
                 self.parse_stop(abutterance, res_cn)
             if 'CITY' in category_labels:
                 self.parse_city(abutterance, res_cn)
+            if 'WCITY' in category_labels:
+                self.parse_weather_city(abutterance, res_cn)
+            if 'STATE' in category_labels:
+                self.parse_state(abutterance, res_cn)
             if 'TIME' in category_labels:
                 self.parse_time(abutterance, res_cn)
             if 'DATE_REL' in category_labels:

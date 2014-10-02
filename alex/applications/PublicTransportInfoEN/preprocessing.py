@@ -4,16 +4,14 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
-from alex.components.slu.base import SLUPreprocessing
-from alex.components.asr.utterance import Utterance
-from alex.utils.czech_stemmer import cz_stem
-from alex.components.nlg.template import TemplateNLGPreprocessing
-from alex.components.nlg.tools.cs import word_for_number
 import re
 
-class PTICSSLUPreprocessing(SLUPreprocessing):
+from alex.components.slu.base import SLUPreprocessing
+from alex.components.nlg.template import TemplateNLGPreprocessing
+from alex.components.nlg.tools.en import word_for_number
+
+
+class PTIENSLUPreprocessing(SLUPreprocessing):
     """
     Extends SLUPreprocessing for some transformations specific for Czech:
         - devocalisation of prepositions
@@ -21,36 +19,36 @@ class PTICSSLUPreprocessing(SLUPreprocessing):
 
     """
     def __init__(self, *args, **kwargs):
-        super(PTICSSLUPreprocessing, self).__init__(*args, **kwargs)
+        super(PTIENSLUPreprocessing, self).__init__(*args, **kwargs)
 
         num_norms = []
         for num in xrange(60):
-            num_norms.append(([unicode(num)], [word_for_number(num, 'F1')]))
+            num_norms.append(([unicode(num)], [word_for_number(num)]))
         self.text_normalization_mapping += num_norms
 
         self.text_normalization_mapping += [
-            (['ve'], ['v']),
-            (['ke'], ['k']),
-            (['ku'], ['k']),
-            (['ze'], ['z']),
-            # (['se'], ['s']), # do not use this, FJ
-            (['barandov'], ['barrandov']),
-            (['litňanská'], ['letňanská']),
-            (['ípé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
-            (['í', 'pé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
-            (['čaplinovo'], ['chaplinovo']),
-            (['čaplinova'], ['chaplinova']),
-            (['zologická'], ['zoologická']),
+            (["i'm"], ['i am']),
+            (["it'll"], ['it will']),
+            (["i'll"], ['i will']),
+            # (['ze'], ['z']),
+            # # (['se'], ['s']), # do not use this, FJ
+            # (['barandov'], ['barrandov']),
+            # (['litňanská'], ['letňanská']),
+            # (['ípé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
+            # (['í', 'pé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
+            # (['čaplinovo'], ['chaplinovo']),
+            # (['čaplinova'], ['chaplinova']),
+            # (['zologická'], ['zoologická']),
         ]
 
     def normalise_utterance(self, utterance):
-        utterance = super(PTICSSLUPreprocessing, self).normalise_utterance(utterance)
+        utterance = super(PTIENSLUPreprocessing, self).normalise_utterance(utterance)
         #utterance = Utterance(" ".join(map(cz_stem, utterance)))
         return utterance
 
 
 
-class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
+class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
     """Template NLG preprocessing routines for Czech public transport information.
 
     This serves for spelling out relative and absolute time expressions,
@@ -58,7 +56,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
     """
 
     def __init__(self, ontology):
-        super(PTICSNLGPreprocessing, self).__init__(ontology)
+        super(PTIENNLGPreprocessing, self).__init__(ontology)
         # keep track of relative and absolute time slots
         self.rel_time_slots = set()
         self.abs_time_slots = set()
@@ -88,7 +86,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
     def preprocess(self, template, svs_dict):
         """Preprocess values to be filled into an NLG template.
         Spells out temperature and time expressions and translates some of the values
-        to Czech.
+        to English.
 
         :param svs_dict: Slot-value dictionary
         :return: The same dictionary, with modified values
@@ -123,9 +121,6 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
                 svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
         return template, svs_dict
 
-    HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
-    HR_ENDING_DEFAULT = ''
-
     def spell_time(self, time, relative):
         """\
         Convert a time expression into words (assuming accusative).
@@ -134,26 +129,23 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         :param relative: If true, time is interpreted as relative, i.e. \
                 0:15 will generate '15 minutes' and not '0 hours and \
                 15 minutes'.
-        :return: Czech time string with all numerals written out as words
+        :return: time string with all numerals written out as words
         """
         if ':' not in time:  # 'now' and similar
             return time
         hours, mins = map(int, time.split(':'))
         time_str = []
         if not (relative and hours == 0):
-            hr_id = 'hodin' + self.HR_ENDING.get(hours, '')
-            hours = word_for_number(hours, 'F4')
+            hr_id = 'hours'
+            hours = word_for_number(hours)
             time_str.extend((hours, hr_id))
         if mins == 0 and (not relative or hours != 0):
             return ' '.join(time_str)
         if time_str:
             time_str.append('a')
-        min_id = 'minut' + self.HR_ENDING.get(mins, self.HR_ENDING_DEFAULT)
-        mins = word_for_number(mins, 'F4')
+        min_id = 'minutes'
+        mins = word_for_number(mins)
         return ' '.join(time_str + [mins, min_id])
-
-    DEG_ENDING = {1: 'eň', 2: 'ně', 3: 'ně', 4: 'ně'}
-    DEG_ENDING_DEFAULT = 'ňů'
 
     def spell_temperature(self, value, interval):
         """Convert a temperature expression into words (assuming nominative).
@@ -167,9 +159,9 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         ret = ''
         value = int(value)
         if value < 0:
-            ret += 'mínus '
+            ret += 'minus '
             value = abs(value)
-        ret += word_for_number(value, 'M1')
+        ret += word_for_number(value)
         if not interval:
-            ret += ' stup' + self.DEG_ENDING.get(value, self.DEG_ENDING_DEFAULT)
+            ret += ' degrees'
         return ret

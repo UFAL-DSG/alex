@@ -8,9 +8,8 @@ import os
 import re
 import sys
 
-import autopath
-
 from alex.utils.config import online_update, to_project_path
+
 
 __all__ = ['database']
 
@@ -160,7 +159,7 @@ def add_time():
         # set stems for hours (cardinal), hours (ordinal)
         hr_str_stem = numbers_str[hour]
         if hour == 22:
-            hr_str_stem = 'dvacet dva'
+            hr_str_stem = 'dvacet dva' # místo dvacet dvě
         hr_ord = NUMBERS_ORD[hour]
         if hr_ord.endswith('ý'):
             hr_ord = hr_ord[:-1] + 'é'
@@ -171,37 +170,37 @@ def add_time():
         # some time expressions are not declined -- use just 1st ending
         _, hr_str_end = hr_endings.get(hour, [('', '')])[0]
         # X:00
-        add_db_time(hour, 0, "{ho} hodině", {'ho': hr_ord})
+        add_db_time(hour, 0, "{ho} hodině", {'ho': hr_ord}) # druhé hodině
 
         if hour >= 1 and hour <= 12:
             # (X-1):15 quarter past (X-1)
             add_db_time(hour - 1, 15, "čtvrt na {h}",
-                        {'h': hr_str_stem + hr_str_end})
+                        {'h': hr_str_stem + hr_str_end}) # čtvrt na dvě
             # (X-1):30 half past (X-1)
-            add_db_time(hour - 1, 30, "půl {ho}", {'ho': hr_ord})
+            add_db_time(hour - 1, 30, "půl {ho}", {'ho': hr_ord}) # půl druhé
             # (X-1):45 quarter to X
             add_db_time(hour - 1, 45, "tři čtvrtě na {h}",
-                        {'h': hr_str_stem + hr_str_end})
+                        {'h': hr_str_stem + hr_str_end}) # třičtvrtě na dvě
 
         # some must be declined (but variants differ only for hour=1)
         for hr_id_end, hr_str_end in hr_endings.get(hour, [('', '')]):
             # X:00
-            add_db_time(hour, 0, "{h}", {'h': hr_str_stem + hr_str_end})
-            add_db_time(hour, 0, "{h} {hi}", {'h': hr_str_stem + hr_str_end,
+            add_db_time(hour, 0, "{h}", {'h': hr_str_stem + hr_str_end}) # dvě
+            add_db_time(hour, 0, "{h} {hi}", {'h': hr_str_stem + hr_str_end,#jedn-a, hodin-a
                                               'hi': hr_id_stem + hr_id_end})
             # X:YY
             for minute in xrange(60):
                 min_str = numbers_str[minute]
                 add_db_time(hour, minute, "{h} {hi} {m}",
                             {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
+                             'hi': hr_id_stem + hr_id_end, 'm': min_str}) #dvě hodiny nula
                 add_db_time(hour, minute, "{h} {hi} a {m}",
                             {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
+                             'hi': hr_id_stem + hr_id_end, 'm': min_str})#jedna hodina a jedna
                 if minute < 10:
                     min_str = 'nula ' + min_str
                 add_db_time(hour, minute, "{h} {m}",
-                            {'h': hr_str_stem + hr_str_end, 'm': min_str})
+                            {'h': hr_str_stem + hr_str_end, 'm': min_str})#jedna nula jedna
 
     # YY minut(u/y)
     for minute in xrange(60):

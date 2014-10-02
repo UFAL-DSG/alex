@@ -2,7 +2,7 @@
 set -e
 
 ENVDIR="/xdisk/devel/vystadial_lab/vystadial_env"
-TMPDIR="/tmp/ptics" #$(date +%s)
+TMPDIR="/tmp/ptien" #$(date +%s)
 cd ../../../
 
 rm -rf $TMPDIR
@@ -31,11 +31,11 @@ find alex \
     ! -name ".*" \
     -exec cp --parents {} $TMPDIR \;
 
-cp alex/applications/PublicTransportInfoEN/ptics.cfg ${TMPDIR}/alex/resources/default.cfg
+cp alex/applications/PublicTransportInfoEN/ptien.cfg ${TMPDIR}/alex/resources/default.cfg
 
 mkdir ${TMPDIR}/env
 cp -r $ENVDIR/setenv ${TMPDIR}/
 cp -r $ENVDIR/python2.7/ ${TMPDIR}/env/
 
 cd /tmp/
-zip -r ptics.zip ptics
+zip -r ptien.zip ptien

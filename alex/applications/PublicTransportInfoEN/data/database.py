@@ -8,9 +8,8 @@ import os
 import re
 import sys
 
-import autopath
-
 from alex.utils.config import online_update, to_project_path
+
 
 __all__ = ['database']
 
@@ -24,12 +23,13 @@ database = {
         'weather': ['weather', ],
     },
     "time": {
-        "now": ["now", "at once", "immediately", "offhand", "at the moment", "at this time"],
-        "0:01": ["a minute", ],
-        "0:15": ["a quarter of an hour", ],
-        "0:30": ["a half an hour", ],
-        "0:45": ["a three quarters of an hour", ],
-        "1:00": ["an hour", ],
+        "now": [ "now", "at once", "immediately", "offhand", "at the moment", "at this time",
+                 "the closest", "in the moment"],
+        "0:01": ["minute", ],
+        "0:15": ["quarter of an hour", ],
+        "0:30": ["half an hour", "half past"],
+        "0:45": ["three quarters of an hour", ],
+        "1:00": ["hour", ],
     },
     "date_rel": {
         "today": ["today", "this day", "todays", "this days"],
@@ -39,7 +39,7 @@ database = {
     "stop": {
     },
     "vehicle": {
-        "bus": ["bus", "buses"],
+        "bus": ["bus", "buses", "coach"],
         "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms"],
         "metro": ["metro", "sub", "subway", "tube", "underground"],
         "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "railstation", "speedtrain", "rail", "rails"],
@@ -48,24 +48,29 @@ database = {
     },
     "ampm": {
         "morning": ["morning", "dawn"],
-        "am": ["am", "forenoon", ],
-        "pm": ["pm", "afternoon", ],
+        "am": [ "forenoon", "a.m." ],
+        "pm": [ "afternoon", "p.m."],
         "evening": ["evening", "dusk", ],
         "night": ["night", "nighttime"],
     },
     "city": {
     },
+    "wcity": {
+    },
+    "state": {
+
+    },
 }
 
 NUMBERS_1 = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", ]
 NUMBERS_10 = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", ]
-NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen",
-                "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
-NUMBERS_ORD = ["zero", "first", "second", "third", "fourth", "fifth", "sixth", # nultý - zero/prime?
-               "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
-               "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
-               "eighteenth", "nineteenth", "twentieth", "twenty first",
-               "twenty second", "twenty third"]
+NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+                "sixteen", "seventeen", "eighteen", "nineteen"]
+# NUMBERS_ORD = ["zero", "first", "second", "third", "fourth", "fifth", "sixth", # nultý - zero/prime?
+#                "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
+#                "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+#                "eighteenth", "nineteenth", "twentieth", "twenty first",
+#                "twenty second", "twenty third"]
 
 # name of the file with one stop per line, assumed to reside in the same
 # directory as this script
@@ -76,10 +81,14 @@ NUMBERS_ORD = ["zero", "first", "second", "third", "fourth", "fifth", "sixth", #
 # form.
 STOPS_FNAME = "stops.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
+WEATHER_CITIES_FNAME = "w.cities.expanded.txt"
+STATES_FNAME = "states.expanded.txt"
 
 # load new stops & cities list from the server if needed
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), WEATHER_CITIES_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STATES_FNAME)))
 
 
 def db_add(category_label, value, form):
@@ -107,9 +116,8 @@ def db_add(category_label, value, form):
     database[category_label].setdefault(value, set()).add(form)
 
 
-# TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
-    """Spells out the number given in the argument."""
+    """Spells out the number given in the argument. not greater than 69"""
     tens, units = num / 10, num % 10
     tens_str = NUMBERS_10[tens]
     units_str = NUMBERS_1[units]
@@ -129,85 +137,68 @@ def add_time():
 
     Handles:
         <hour>
-        <hour> hodin(a/y)
-        <hour> hodin(a/y) <minute>
+        <hour> o'clock
+        <hour> hour(s)
+        <hour> hour(s) <minute>
         <hour> <minute>
-        půl/čtvrt/tři čtvrtě <hour>
-        <minute> minut(u/y)
+        half past/quarter past/quarter to <hour>
+        <minute> minute(s)
     where <hour> and <minute> are spelled /given as numbers.
 
     Cannot yet handle:
-        za pět osm
-        dvacet dvě hodiny
+        five minutes to ten
     """
-    # ["nula", "jedna", ..., "padesát devět"]
+    # ["zero", "one", ..., "fifty nine"]
     numbers_str = [spell_number(num) for num in xrange(60)]
-    hr_id_stem = 'hodin'
-    hr_endings = {1: [('u', 'u'), ('a', 'a')],
-                  2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
-
-    min_id_stem = 'minut'
-    min_endings = {1: [('u', 'u'), ('a', 'a')],
-                   2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
 
     for hour in xrange(24):
-        # set stems for hours (cardinal), hours (ordinal)
-        hr_str_stem = numbers_str[hour]
-        if hour == 22:
-            hr_str_stem = 'dvacet dva'
-        hr_ord = NUMBERS_ORD[hour]
-        if hr_ord.endswith('ý'):
-            hr_ord = hr_ord[:-1] + 'é'
         if hour == 1:
-            hr_ord = 'jedné'
-            hr_str_stem = 'jedn'
+            hr_id = 'hour'
+        else:
+            hr_id = 'hours'
 
-        # some time expressions are not declined -- use just 1st ending
-        _, hr_str_end = hr_endings.get(hour, [('', '')])[0]
+        hr_str = numbers_str[hour]
+
         # X:00
-        add_db_time(hour, 0, "{ho} hodině", {'ho': hr_ord})
+        add_db_time(hour, 0, '{ho} o\'clock', {'ho': hr_str})
 
         if hour >= 1 and hour <= 12:
-            # (X-1):15 quarter past (X-1)
-            add_db_time(hour - 1, 15, "čtvrt na {h}",
-                        {'h': hr_str_stem + hr_str_end})
-            # (X-1):30 half past (X-1)
-            add_db_time(hour - 1, 30, "půl {ho}", {'ho': hr_ord})
+            # (X-1):15 quarter past (X)
+            add_db_time(hour, 15, "quarter past {h}", {'h': hr_str})
+            # (X-1):30 half past (X)
+            add_db_time(hour, 30, "half past {ho}", {'ho': hr_str})
             # (X-1):45 quarter to X
-            add_db_time(hour - 1, 45, "tři čtvrtě na {h}",
-                        {'h': hr_str_stem + hr_str_end})
+            add_db_time(hour - 1, 45, "quarter to {h}", {'h': hr_str})
 
         # some must be declined (but variants differ only for hour=1)
-        for hr_id_end, hr_str_end in hr_endings.get(hour, [('', '')]):
-            # X:00
-            add_db_time(hour, 0, "{h}", {'h': hr_str_stem + hr_str_end})
-            add_db_time(hour, 0, "{h} {hi}", {'h': hr_str_stem + hr_str_end,
-                                              'hi': hr_id_stem + hr_id_end})
-            # X:YY
-            for minute in xrange(60):
-                min_str = numbers_str[minute]
-                add_db_time(hour, minute, "{h} {hi} {m}",
-                            {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
-                add_db_time(hour, minute, "{h} {hi} a {m}",
-                            {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str})
-                if minute < 10:
-                    min_str = 'nula ' + min_str
-                add_db_time(hour, minute, "{h} {m}",
-                            {'h': hr_str_stem + hr_str_end, 'm': min_str})
+        # X:00
+        add_db_time(hour, 0, "{h}", {'h': hr_str})
+        add_db_time(hour, 0, "{h} {hi}", {'h': hr_str, 'hi': hr_id})
+        # X:YY
+        for minute in xrange(60):
+            min_str = numbers_str[minute]
+            add_db_time(hour, minute, "{h} {hi} {m}", {'h': hr_str, 'hi': hr_id, 'm': min_str})
+            add_db_time(hour, minute, "{h} {hi} and {m}", {'h': hr_str, 'hi': hr_id, 'm': min_str})
+            if minute < 10:
+                add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': 'zero ' + min_str})
+                if minute > 0:
+                    add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': 'o ' + min_str})
+                #TODO: "van ou van"i
+            add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': min_str})
 
     # YY minut(u/y)
     for minute in xrange(60):
-        min_str_stem = numbers_str[minute]
-        if minute == 22:
-            min_str_stem = 'dvacet dva'
-        if minute == 1:
-            min_str_stem = 'jedn'
+        min_str = numbers_str[minute]
 
-        for min_id_end, min_str_end in min_endings.get(minute, [('', '')]):
-            add_db_time(0, minute, "{m} {mi}", {'m': min_str_stem + min_str_end,
-                                                'mi': min_id_stem + min_id_end})
+        if minute == 1:
+            min_id = 'minute'
+        else:
+            min_id = "minutes"
+
+        add_db_time(0, minute, "{m} {mi}", {'m': min_str, 'mi': min_id})
+
+        # if minute < 10 and minute > 0:
+        #     add_db_time(0, minute, "{m} {mi}", {'m': 'o ' + min_str, 'mi': min_id})
 
 
 def add_db_time(hour, minute, format_str, replacements):
@@ -247,6 +238,14 @@ def add_stops():
 def add_cities():
     """Add city names from the cities file."""
     add_from_file('city', CITIES_FNAME)
+
+def add_weather_cities():
+    """Add city names from the weather cities file for weather info purposes."""
+    add_from_file('wcity', WEATHER_CITIES_FNAME)
+
+def add_states():
+    """Add state names from the states file."""
+    add_from_file('state', STATES_FNAME)
 
 
 def save_c2v2f(file_name):
@@ -305,6 +304,8 @@ def save_SRILM_classes(file_name):
 add_time()
 add_stops()
 add_cities()
+add_weather_cities()
+add_states()
 
 if "dump" in sys.argv or "--dump" in sys.argv:
     save_c2v2f('database_c2v2f.txt')

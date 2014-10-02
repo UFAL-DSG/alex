@@ -1,4 +1,4 @@
-Building a SLU for the PTIcs domain
+Building a SLU for the PTIen domain
 ===================================
 
 Available data
@@ -9,7 +9,7 @@ transcribed audio. In general, the quality of the automatic annotation is very g
 
 The data can be prepared using the ``prapare_data.py`` script. It assumes that there exist the ``indomain_data`` directory
 with links to directories containing ``asr_transcribed.xml`` files. Then it uses these files to extract transcriptions
-and generate automatic SLU annotations using the PTICSHDCSLU parser from the ``hdc_slu.py`` file.
+and generate automatic SLU annotations using the PTIENHDCSLU parser from the ``hdc_slu.py`` file.
 
 The script generates the following files:
 

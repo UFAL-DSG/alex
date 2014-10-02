@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 import random
 
-import autopath
-
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.slu.da import DialogueActConfusionNetwork
@@ -32,11 +30,11 @@ def randbool(n):
     return False
 
 
-class PTICSHDCPolicy(DialoguePolicy):
-    """The handcrafted policy for the PTI-CS system."""
+class PTIENHDCPolicy(DialoguePolicy):
+    """The handcrafted policy for the PTI-EN system."""
 
     def __init__(self, cfg, ontology):
-        super(PTICSHDCPolicy, self).__init__(cfg, ontology)
+        super(PTIENHDCPolicy, self).__init__(cfg, ontology)
 
         directions_type = GoogleDirectionsFinder
         if 'directions' in cfg['DM'] and 'type' in cfg['DM']['directions']:
@@ -51,7 +49,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.debug = cfg['DM']['basic']['debug']
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
-        self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
+        self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTIENHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
 
     def reset_on_change(self, ds, changed_slots):
@@ -83,6 +81,7 @@ class PTICSHDCPolicy(DialoguePolicy):
     def filter_iconfirms(self, da):
         """Filter implicit confirms if the same information is uttered in an inform
         dialogue act item. Also filter implicit confirms for stop names equaling city names.
+        Also check if the stop and city names are equal!
 
         :param da: unfiltered dialogue act
         :return: filtered dialogue act
@@ -109,6 +108,11 @@ class PTICSHDCPolicy(DialoguePolicy):
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
                     city_dai = dai.name[:-4] + 'city'
+                    if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
+                        continue
+                # filter state names that are the same as city names
+                elif dai.name.endswith('_state'):
+                    city_dai = dai.name[:-5] + 'city'
                     if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
                 # filter mistakenly added iconfirms that have an unset value
@@ -154,7 +158,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         if self.debug:
             s = []
-            s.append('PTICSHDCPolicy - Slot stats')
+            s.append('PTIENHDCPolicy - Slot stats')
             s.append("")
             s.append("ludait:                 %s" % unicode(ludait))
             s.append("Slots being requested:  %s" % unicode(slots_being_requested))
@@ -336,6 +340,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
     def get_weather(self, ds):
         """Retrieve weather information according to the current dialogue state.
+        Infers state names based on city names and vice versa.
 
         :param ds: The current dialogue state
         :rtype: DialogueAct
@@ -347,14 +352,25 @@ class PTICSHDCPolicy(DialoguePolicy):
         ampm = ds['ampm'].mpv()
         lta_time = ds['lta_time'].mpv()
         in_city = ds['in_city'].mpv()
+        in_state = ds['in_state'].mpv()
 
         # return the result
         res_da = DialogueAct()
 
-        # default city if no city is set
-        if in_city == 'none':
+        # retrieve state based on the city
+        if in_city != 'none' and in_state == 'none':
+            states = self.ontology.get_compatible_vals('w_city_w_state', in_city)
+            if len(states): # possibly more states - baltimore (ohio, maryland)
+                in_state = states.pop()
+                res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
+        # default city and state if no city nor state is set
+        if in_city == 'none' and in_state == 'none':
             in_city = self.ontology.get_default_value('in_city')
             res_da.append(DialogueActItem('iconfirm', 'in_city', in_city))
+            # in_state = self.ontology.get_default_value('in_state')
+            # res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
+        in_city = in_city if in_city != 'none' else None
+        in_state = in_state if in_state != 'none' else None
 
         # interpret time
         daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
@@ -362,19 +378,19 @@ class PTICSHDCPolicy(DialoguePolicy):
         weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
-        # find the coordinates of the city
-        city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
-        if city_addinfo:
-            # TODO: here we just take the first city of that name. We should do some
-            # resolution of cities with the same name in different districts
-            lon, lat = city_addinfo[0]['lon'], city_addinfo[0]['lat']
-        else:
-            lon, lat = None, None
+        # # find the coordinates of the city
+        # city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
+        # if city_addinfo:
+        #     # TODO: here we just take the first city of that name. We should do some
+        #     # resolution of cities with the same name in different districts
+        #     lon, lat = city_addinfo[0]['lon'], city_addinfo[0]['lat']
+        # else:
+        #     lon, lat = None, None
         # request the weather
-        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, lon=lon, lat=lat)
+        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, state=in_state)
         # check errors
         if weather is None:
-            return DialogueAct('apology()&inform(in_city="%s")' % in_city)
+            return DialogueAct('apology()&inform(in_city="%s")&inform(in_state="%s"' % (in_city, in_state))
         # time
         if weather_ts:
             if time_type == 'rel':
@@ -622,11 +638,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         for cand_stop_name in [city, 'Hlavní nádraží', 'CAN, Husova']:
             if cand_stop_name in stops:
                 return cand_stop_name
-        for cand_stop_suffix in [' hlavní nádraží', ' město', ' střed',
+        for cand_stop_suffix in [' main station', ' city', ' střed',
                                  ', nádraží', ', autobusové stanoviště',
                                  ', železniční zastávka', ', železniční stanice',
-                                 ', radnice', ', náměstí', ', centrum', ', obec',
-                                 ', náves', ', obecní úřad', ', škola', ', kostel',
+                                 ', radnice', ', suburb', ', center', ', obec',
+                                 ', náves', ', obecní úřad', ', school', ', church',
                                  ', rozcestí', ', hostinec']:
             stop = city + cand_stop_suffix
             if stop in stops:
@@ -1087,7 +1103,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     # 'night' ~ 6pm till 5:59am
                     elif time_ampm == 'night' and time_hour >= 6:
                         time_hour = (time_hour + 12) % 24
-                # 12hr time + no AM/PM set + today or no date set: default to next 12hrs
+                # 12hr time + no AM/PM  set + today or no date set: default to next 12hrs
                 elif date_rel in ['none', 'today'] and now_hour > time_hour and now_hour < time_hour + 12:
                     time_hour = (time_hour + 12) % 24
             time_abs = datetime.combine(now, dttime(time_hour, time_parsed.minute))

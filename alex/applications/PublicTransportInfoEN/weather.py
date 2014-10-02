@@ -6,10 +6,9 @@ from __future__ import unicode_literals
 import urllib
 from datetime import datetime
 from datetime import time as dttime
-import time
 import json
-import os.path
-import codecs
+
+from alex.utils.config import load_as_module
 from alex.tools.apirequest import APIRequest
 from alex.utils.cache import lru_cache
 
@@ -20,86 +19,11 @@ class Weather(object):
 
 class OpenWeatherMapWeather(Weather):
 
-    CONDITION_TRANSL = {200: 'bouřka se slabým deštěm',
-                        201: 'bouřka a déšť',
-                        202: 'bouřka se silným deštěm',
-                        210: 'slabší bouřka',
-                        211: 'bouřka',
-                        212: 'silná bouřka',
-                        221: 'bouřková přeháňka',
-                        230: 'bouřka se slabým mrholením',
-                        231: 'bouřka s mrholením',
-                        232: 'bouřka se silným mrholením',
-                        300: 'slabé mrholení',
-                        301: 'mrholení',
-                        302: 'silné mrholení',
-                        310: 'slabé mrholení a déšť',
-                        311: 'mrholení s deštěm',
-                        312: 'silné mrholení a déšť',
-                        313: 'mrholení a přeháňky',
-                        314: 'mrholení a silné přeháňky',
-                        321: 'občasné mrholení',
-                        500: 'slabý déšť',
-                        501: 'déšť',
-                        502: 'prudký déšť',
-                        503: 'přívalový déšť',
-                        504: 'průtrž mračen',
-                        511: 'mrznoucí déšť',
-                        520: 'slabé přeháňky',
-                        521: 'přeháňky',
-                        522: 'silné přeháňky',
-                        531: 'občasné přeháňky',
-                        600: 'mírné sněžení',
-                        601: 'sněžení',
-                        602: 'husté sněžení',
-                        611: 'zmrzlý déšť',
-                        612: 'smíšené přeháňky',
-                        615: 'slabý déšť se sněhem',
-                        616: 'déšť se sněhem',
-                        620: 'slabé sněhové přeháňky',
-                        621: 'sněhové přeháňky',
-                        622: 'silné sněhové přeháňky',
-                        701: 'mlha',
-                        711: 'kouř',
-                        721: 'opar',
-                        731: 'písečné či prachové víry',
-                        741: 'hustá mlha',
-                        751: 'písek',
-                        761: 'prašno',
-                        762: 'sopečný popel',
-                        771: 'prudké bouře',
-                        781: 'tornádo',
-                        800: 'jasno',
-                        801: 'skoro jasno',
-                        802: 'polojasno',
-                        803: 'oblačno',
-                        804: 'zataženo',
-                        900: 'tornádo',
-                        901: 'tropická bouře',
-                        902: 'hurikán',
-                        903: 'zima',
-                        904: 'horko',
-                        905: 'větrno',
-                        906: 'krupobití',
-                        950: 'bezvětří',
-                        951: 'vánek',
-                        952: 'větřík',
-                        953: 'slabý vítr',
-                        954: 'mírný vítr',
-                        955: 'čerstvý vítr',
-                        956: 'silný vítr',
-                        957: 'prudký vítr',
-                        958: 'bouřlivý vítr',
-                        959: 'vichřice',
-                        960: 'silná vichřice',
-                        961: 'mohutná vichřice',
-                        962: 'orkán'}
-
-    def __init__(self, input_json, time=None, daily=False):
+    def __init__(self, input_json, substitutions, time=None, daily=False):
         # get current weather
         if time is None:
             self.temp = self._round_temp(input_json['main']['temp'])
-            self.condition = self.CONDITION_TRANSL[input_json['weather'][0]['id']]
+            self.condition = substitutions[input_json['weather'][0]['id']]
             return
         # get prediction
         if daily:  # set time to 13:00 for daily
@@ -108,7 +32,7 @@ class OpenWeatherMapWeather(Weather):
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
             if ts >= fc1['dt'] and ts <= fc2['dt']:
-                self.condition = self.CONDITION_TRANSL[fc1['weather'][0]['id']]
+                self.condition = substitutions[fc1['weather'][0]['id']]
                 # hourly forecast -- interpolate temperature
                 if not daily:
                     slope = (fc2['main']['temp'] - fc1['main']['temp']) / (fc2['dt'] - fc1['dt'])
@@ -151,8 +75,18 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
+        self.cfg = cfg # refine?! - neni potřeba tam dávat celý cfg, jen suffix a default_place
+        self.load(cfg['weather']['dictionary'])
+
+    def load(self, file_name):
+        tp_mod = load_as_module(file_name, force=True)
+        if not hasattr(tp_mod, 'substitutions'):
+            raise Exception("Weather config does not define the 'substitutions' object!")
+
+        self.substitutions = tp_mod.substitutions
+
     @lru_cache(maxsize=10)
-    def get_weather(self, time=None, daily=False, place=None, lat=None, lon=None):
+    def get_weather(self, time=None, daily=False, place=None, lat=None, lon=None, state=None):
         """Get OpenWeatherMap weather information or forecast for the given time.
 
         The time/date should be given as a datetime.datetime object.
@@ -163,10 +97,11 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             data['lat'] = lat
             data['lon'] = lon
         else:
-            # default to weather for Czech Rep.
-            place = place if place is not None else 'Czech Republic'
+            # default to weather for default place
+            place = place if place is not None else self.cfg['weather']['default_place']
+            state = state if state is not None else self.cfg['weather']['suffix']
             # set the place
-            data['q'] = (place + ',CZ').encode('utf-8')
+            data['q'] = (','.join([place, state])).encode('utf-8');
 
         method = 'weather'
         if daily:
@@ -181,6 +116,6 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             return None
         response = json.load(page)
         self._log_response_json(response)
-        weather = OpenWeatherMapWeather(response, time, daily)
+        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather
