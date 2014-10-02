@@ -9,7 +9,7 @@ import struct
 from math import log
 
 from alex.components.asr.exceptions import ASRException
-from alex.ml.ffnn import FFNN
+from alex.ml.tffnn import TheanoFFNN
 from alex.utils.mfcc import MFCCFrontEnd
 
 
@@ -24,7 +24,7 @@ class FFNNVAD():
 
         self.audio_recorded_in = []
 
-        self.ffnn = FFNN()
+        self.ffnn = TheanoFFNN()
         self.ffnn.load(self.cfg['VAD']['ffnn']['model'])
 
         self.log_probs_speech = deque(maxlen=self.cfg['VAD']['ffnn']['filter_length'])
@@ -41,8 +41,9 @@ class FFNNVAD():
                 self.cfg['VAD']['ffnn']['zmeansource'], self.cfg['VAD']['ffnn']['usepower'],
                 self.cfg['VAD']['ffnn']['usec0'], self.cfg['VAD']['ffnn']['usecmn'],
                 self.cfg['VAD']['ffnn']['usedelta'], self.cfg['VAD']['ffnn']['useacc'],
-                self.cfg['VAD']['ffnn']['n_last_frames'],
-                self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'])
+                self.cfg['VAD']['ffnn']['n_last_frames']+self.cfg['VAD']['ffnn']['n_prev_frames'],
+                self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'],
+                self.cfg['VAD']['ffnn']['mel_banks_only'])
         else:
             raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['ffnn']['frontend'], ))
 
@@ -62,7 +63,9 @@ class FFNNVAD():
 
             mfcc = self.front_end.param(frame)
 
-            prob_sil, prob_speech = self.ffnn.predict(mfcc)
+            prob_sil, prob_speech = self.ffnn.predict_normalise(mfcc.reshape(1,len(mfcc)))[0]
+
+            # print prob_sil, prob_speech
 
             self.log_probs_speech.append(log(prob_speech))
             self.log_probs_sil.append(log(prob_sil))
@@ -74,7 +77,7 @@ class FFNNVAD():
 
             prob_speech_avg = np.exp(log_prob_speech_avg)
 
-#      print 'prob_speech_avg: %5.3f' % prob_speech_avg
+            # print 'prob_speech_avg: %5.3f' % prob_speech_avg
 
             self.last_decision = prob_speech_avg
 

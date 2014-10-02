@@ -12,6 +12,8 @@ from alex.utils.czech_stemmer import cz_stem
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
 import re
+import string
+
 
 class PTICSSLUPreprocessing(SLUPreprocessing):
     """
@@ -93,20 +95,22 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         :return: The same dictionary, with modified values
         """
         # regular changes to slot values
-        for slot, val in svs_dict.iteritems():
+        for slot_id, val in svs_dict.iteritems():
+            # remove number suffixes from some slot IDs to produce actual slot names
+            slot_name = slot_id[:-1] if slot_id[-1] in string.digits else slot_id
             # spell out time expressions
-            if slot in self.rel_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=True)
-            elif slot in self.abs_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=False)
+            if slot_name in self.rel_time_slots:
+                svs_dict[slot_id] = self.spell_time(val, relative=True)
+            elif slot_name in self.abs_time_slots:
+                svs_dict[slot_id] = self.spell_time(val, relative=False)
             # spell out temperature expressions
-            elif slot in self.temp_slots:
-                svs_dict[slot] = self.spell_temperature(val, interval=False)
-            elif slot in self.temp_int_slots:
-                svs_dict[slot] = self.spell_temperature(val, interval=True)
+            elif slot_name in self.temp_slots:
+                svs_dict[slot_id] = self.spell_temperature(val, interval=False)
+            elif slot_name in self.temp_int_slots:
+                svs_dict[slot_id] = self.spell_temperature(val, interval=True)
             # translate some slot values (default to untranslated)
-            elif slot in self.translated_slots:
-                svs_dict[slot] = self.translations[slot].get(val, val)
+            elif slot_name in self.translated_slots:
+                svs_dict[slot_id] = self.translations[slot_name].get(val, val)
         # reflect changes to slot values stored in the template
         slot_modif = {}
 

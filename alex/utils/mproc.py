@@ -59,8 +59,6 @@ def global_lock(lock):
             lock.acquire()
             try:
                 return user_function(*args, **kw)
-            except Exception as e:
-                raise e
             finally:
                 lock.release()
 

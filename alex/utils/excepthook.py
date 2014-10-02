@@ -8,6 +8,24 @@ import sys
 
 ### Hook functions
 # {{{
+WEIRD_STUFF_MSG = "BE CAREFUL! Exception happened while executing an " \
+                  "exception handler. Weird stuff can happen!"
+
+def hook_decorator(f):
+    """Print the caution message when the decorated function raises an error."""
+
+    def wrapper(*args, **kwargs):
+        try:
+            f(*args, **kwargs)
+        except Exception, e:
+            import traceback
+            print traceback.print_exc()
+            print >>sys.stderr, WEIRD_STUFF_MSG
+            # Do not raise
+    return wrapper
+
+
+@hook_decorator
 def ipdb_hook(type_, value, tb):
     if hasattr(sys, 'ps1') or not sys.stderr.isatty():
     # we are in interactive mode or we don't have a tty-like
@@ -24,12 +42,14 @@ def ipdb_hook(type_, value, tb):
         ipdb.post_mortem(tb)  # more “modern”
 
 
+@hook_decorator
 def log_hook(type_, value, tb):
     import traceback
     indent = ' ' * 8
     tb_lines = traceback.format_tb(tb)
-    tb_msg = ''.join(tb_lines).replace('\n', '\n' + indent)
-    msg = '''
+    tb_msg = (''.join(ln.decode('utf8') for ln in tb_lines)
+              .replace('\n','\n' + indent))
+    msg = u'''
     Error occured.
       Type: {type}
       Value: {value}
@@ -38,9 +58,13 @@ def log_hook(type_, value, tb):
     ExceptionHook._log(msg)
 
 
+
+
+@hook_decorator
 def log_and_ipdb_hook(type_, value, tb):
     log_hook(type_, value, tb)
     ipdb_hook(type_, value, tb)
+
 # }}}
 
 

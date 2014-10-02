@@ -41,7 +41,8 @@ from alex.utils.fs import find
 
 _LANG2NORMALISATION_MOD = {
     'cs': 'alex.corpustools.text_norm_cs',
-    'en': 'alex.corpustools.text_norm_en'
+    'en': 'alex.corpustools.text_norm_en',
+    'es': 'alex.corpustools.text_norm_es',
 }
 
 from alex.utils.ui import getTerminalSize
@@ -182,7 +183,7 @@ def convert(args):
 
     # Get all but the ignored transcriptions.
     if os.path.isdir(infname):
-        trs_paths = find(infname, '*.trs', ignore_globs=ignore_globs, ignore_paths=ignore_paths)
+        trs_paths = find(infname, '*.trs', mindepth=1, ignore_globs=ignore_globs, ignore_paths=ignore_paths)
     else:
         trs_paths = list()
         with open(infname, 'r') as inlist:

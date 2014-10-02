@@ -129,7 +129,7 @@ def online_update(file_name):
     fn = as_project_path(file_name)
 
     if not is_update_server_reachble():
-        return fn;
+        return fn
 
     url = online_update_server + file_name
     url_time = urllib.urlopen(url).info().getdate('Last-Modified')

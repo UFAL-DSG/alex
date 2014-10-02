@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import argparse
+import numpy as np
+import matplotlib.pyplot as plt
+import datetime
+
+import autopath
+
+""" Graphing the results
+
+"""
+
+def parse_log(fn):
+    t = []
+    c = []
+    with open(fn) as f:
+        for l in f:
+            if l.startswith('Cross-validation stats'):
+                l = f.__iter__().next()
+                l = f.__iter__().next()
+                acc = float(l.split(':')[1])
+                c.append(acc)
+            if l.startswith('Training stats'):
+                l = f.__iter__().next()
+                l = f.__iter__().next()
+                acc = float(l.split(':')[1])
+                t.append(acc)
+                
+    return [t, c]
+                
+##################################################
+
+def main():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="""This program graphs NN VAD training.
+      """)
+
+    parser.add_argument('--r', action="store", nargs='+', default=None, type=str,
+                        help='results log: default %s' % None)
+    parser.add_argument('--s', action="store", nargs='+', default="p.pdf", type=str,
+                        help='resulting graph: default %s' % "p.pdf")
+
+    args = parser.parse_args()
+    
+    d = {}
+    for r in args.r:
+        d[r] = parse_log(r)
+
+    fig, ax = plt.subplots()
+    for r in d:
+        print r
+        t, c = d[r]
+        t = t[1:]
+        x = range(len(t))
+        ax.plot(x, t, label=r + ': training data')
+        c = c[1:]
+        x = range(len(c))
+        ax.plot(x, c, label=r + ': cross-valid data')
+
+    ax.set_xscale('log')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epochs')
+    ax.grid(True)
+    legend = ax.legend(loc='lower right', shadow=True)    
+    # Set the fontsize
+    for label in legend.get_texts():
+        label.set_fontsize('xx-small')    
+    fig.savefig(args.s)
+    
+if __name__ == "__main__":
+    main()

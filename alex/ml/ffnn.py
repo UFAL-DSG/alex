@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import cPickle as pickle
+import math
+import random
+import copy
 import numpy as np
+import numpy.random as rng
 
 from exceptions import FFNNException
 
@@ -10,7 +14,7 @@ class FFNN(object):
     """ Implements simple feed-forward neural network with:
 
       -- input layer - activation function linear
-      -- hidden layers - activation function sigmoid
+      -- hidden layers - activation function tanh
       -- output layer - activation function softmax
     """
     def __init__(self):
@@ -47,8 +51,16 @@ class FFNN(object):
         self.weights.append(w)
         self.biases.append(b)
 
+    def set_input_norm(self, m, std):
+        self.input_m = m
+        self.input_std = std
+    
     def sigmoid(self, y):
         y =  1/ (1 + np.exp(-y))
+        return y
+
+    def tanh(self, y):
+        y =  np.tanh(y)
         return y
 
     def softmax(self, y):
@@ -73,9 +85,13 @@ class FFNN(object):
         """
 
         try:
+            input -= self.input_m
+            input /= self.input_std
+            
             y = input
+            
             for w, b in zip(self.weights[:-1], self.biases[:-1]):
-                y = self.sigmoid(np.dot(y,w)+b)
+                y = self.tanh(np.dot(y,w)+b)
 
             y = self.softmax(np.dot(y,self.weights[-1])+self.biases[-1])
         except ValueError:
@@ -94,7 +110,7 @@ class FFNN(object):
         :return: None
         """
         with open(file_name, "rb") as f:
-            self.weights, self.biases = pickle.load(f)
+            self.weights, self.biases, self.input_m, self.input_std = pickle.load(f)
 
     def save(self, file_name):
         """ Saves the NN into a file.
@@ -103,6 +119,5 @@ class FFNN(object):
         :return: None
         """
         with open(file_name, "wb") as f:
-            pickle.dump((self.weights, self.biases), f)
-
+            pickle.dump((self.weights, self.biases, self.input_m, self.input_std), f)
 
