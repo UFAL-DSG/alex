@@ -211,7 +211,6 @@ class TextHub(Hub):
                 utt_nblist = self.input_usr_utt_nblist()
                 self.process_utterance_hyp({'utt_nbl': utt_nblist})
 
-
         except KeyboardInterrupt:
             print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
             self.close_event.set()
