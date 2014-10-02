@@ -9,8 +9,6 @@ import autopath
 
 import argparse
 import multiprocessing
-import sys
-import traceback
 
 from alex.applications.exceptions import TextHubException
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceException
@@ -221,8 +219,6 @@ class TextHub(Hub):
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
             raise
-
-
 
 
 #########################################################################
