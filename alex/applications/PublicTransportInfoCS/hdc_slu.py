@@ -5,10 +5,11 @@
 from __future__ import unicode_literals
 
 import copy
+import codecs
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
-from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork, DialogueAct, DialogueActHyp
 
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
@@ -81,6 +82,12 @@ class PTICSHDCSLU(SLUInterface):
     def __init__(self, preprocessing, cfg=None):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
+        self.utt2da = {}
+        with codecs.open("../data/utt2da_dict.txt", 'r', 'UTF-8') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                   key, val = line.split('\t')
+                   self.utt2da[unicode(key)] = val
 
     def abstract_utterance(self, utterance):
         """
@@ -743,6 +750,10 @@ class PTICSHDCSLU(SLUInterface):
         # print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
+
+        dict_da = self.utt2da.get(unicode(utterance), None)
+        if dict_da:
+            return DialogueActHyp(1.0, DialogueAct(dict_da))
 
         if self.preprocessing:
             # the text normalisation
