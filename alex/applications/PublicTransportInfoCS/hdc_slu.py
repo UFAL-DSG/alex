@@ -59,9 +59,21 @@ def first_phrase_span(utterance, phrases):
             return pos, pos + len(phrase)
     return -1, -1
 
-
 def any_phrase_in(utterance, phrases):
     return first_phrase_span(utterance, phrases) != (-1, -1)
+
+def ending_phrases_in(utterance, phrases):
+    """Returns True if the utterance ends with one of the phrases"""
+
+    utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
+    utterance_len = len(utterance)
+    for phrase in phrases:
+        phr_pos = phrase_pos(utterance, phrase)
+        # print (phr_pos is not -1 and phr_pos + len(phrase) is utterance_len),  \
+        #     utterance, ';', phrase, ':', phrase_pos(utterance, phrase), len(phrase), len(str(utterance))
+        if phr_pos is not -1 and phr_pos + len(phrase.split()) is utterance_len:
+            return True
+    return False
 
 
 class PTICSHDCSLU(SLUInterface):
@@ -169,9 +181,9 @@ class PTICSHDCSLU(SLUInterface):
         # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
                          ('deny',
-                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'ne k', 'nikoliv']),
+                          set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'né do', 'ne k', 'nikoliv', 'nechci na', 'nechtěl']),
                           set(['nechci ukončit hovor', 'nechci to tak', 'né to nechci', 'ne to nechci', 'nechci nápovědu',
-                               'nechci chci', ]))]
+                               'nechci chci']))]
         last_wp_pos = 0
 
         for i, w in enumerate(u):
@@ -216,7 +228,7 @@ class PTICSHDCSLU(SLUInterface):
                     cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name))
                 # backoff 2: let the DM decide in context resolution
                 else:
-                    cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
+                    cn.add(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name))
 
                 last_wp_pos = i + 1
 
@@ -387,8 +399,8 @@ class PTICSHDCSLU(SLUInterface):
 
         u = abutterance
 
-        confirm = phrase_in(u, ['jede', 'to'])
-        deny = phrase_in(u, ['nechci', 'jet'])
+        confirm = phrase_in(u, 'jede to')
+        deny = any_phrase_in(u, ['nechci jet', 'bez použití'])
 
         for i, w in enumerate(u):
             if w.startswith("VEHICLE="):
@@ -455,21 +467,20 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("hello"))
 
         if (any_word_in(u, "nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
-                            "naschledanou čau čauky čaues shledanó")):
+                            "naschledanou čau čauky čaues shledanó") or phrase_in(u, "dobrou noc") or
+                (not any_word_in(u, "nechci") and phrase_in(u, "ukončit hovor"))):
             cn.add(1.0, DialogueActItem("bye"))
 
         if not any_word_in(u, 'spojení zastávka stanice možnost varianta'):
             if any_word_in(u, 'jiný jiné jiná jiného'):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená začátku opakuji začneme začněme začni začněte'):
-            if (any_word_in(u, 'zopakovat opakovat znova znovu opakuj zopakuj zopakujte') or
+        if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená začátku opakuji začneme začněme začni začněte začít'):
+            if (any_word_in(u, 'zopakovat opakovat znova znovu opakuj zopakuj zopakujte zvopakovat') or
                 phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
 
-        if phrase_in(u, "zopakuj poslední větu") or \
-            phrase_in(u, "zopakujte mi poslední větu") or \
-            phrase_in(u, "zopakovat poslední větu"):
+        if any_word_in(u, "zopakuj zopakujte zopakovat opakovat") and phrase_in(u, "poslední větu"):
             cn.add(1.0, DialogueActItem("repeat"))
 
         if ((len(u) == 1 and any_word_in(u, "pardon pardón promiňte promiň sorry")) or
@@ -477,12 +488,12 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("apology"))
 
         if not any_word_in(u, "nechci děkuji"):
-            if any_word_in(u, "nápověda nápovědu pomoc pomoct pomoci pomož pomohla pomohl pomůžete help nevím nevim") or \
-                all_words_in(u, 'co říct') or \
-                all_words_in(u, 'co zeptat'):
+            if any_word_in(u, "nápověda nápovědu pomoc pomoct pomoci pomož pomohla pomohl pomůžete help nevím nevim nechápu") or \
+                    (any_word_in(u, 'co') and any_word_in(u, "zeptat říct dělat")):
                 cn.add(1.0, DialogueActItem("help"))
 
-        if any_word_in(u, "neslyšíme neslyším halo haló"):
+        if any_word_in(u, "neslyšíme neslyším halo haló nefunguje cože") or \
+                (phrase_in(u, "slyšíme se") and not phrase_in(u, "ano slyšíme se")):
             cn.add(1.0, DialogueActItem('canthearyou'))
 
         if all_words_in(u, "nerozuměl jsem") or \
@@ -492,13 +503,13 @@ class PTICSHDCSLU(SLUInterface):
             (len(u) == 1 and any_word_in(u, "nerozumím")):
             cn.add(1.0, DialogueActItem('notunderstood'))
 
-        if any_word_in(u, "ano jo jasně") and \
+        if any_word_in(u, "ano jo jasně jojo") and \
             not any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if not any_phrase_in(u, ['ne z', ]):
-            if  any_word_in(u, "ne né nene nené") or \
-                 phrase_in(u, 'nechci to tak') or \
+        if not any_phrase_in(u, ['ne z', 'né do']):
+            if  any_word_in(u, "ne né nene nené néé") or \
+                 any_phrase_in(u, ['nechci to tak', 'to nechci', 'to nehledej', 'no nebyli']) or \
                          len(u) == 1 and any_word_in(u, "nejedu nechci") or \
                          len(u) == 2 and all_words_in(u, "ano nechci") or \
                  all_words_in(u, "to je špatně"):
@@ -507,21 +518,26 @@ class PTICSHDCSLU(SLUInterface):
         if any_word_in(u, 'díky dikec děkuji dekuji děkuju děkují'):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if any_word_in(u, 'ok pořádku dobře správně') and \
+        if (any_word_in(u, 'ok pořádku dobře správně stačí super fajn rozuměl rozuměla slyším') or \
+            any_phrase_in(u, ['to je vše', 'je to vše', 'je to všechno', 'to bylo všechno', 'to bude všechno',
+                              'už s ničím', 'už s ničim', 'to jsem chtěl slyšet']) or \
+            (any_word_in(u, "dobrý") and not any_phrase_in(u, ['dobrý den', 'dobrý dén', 'dobrý večer']))) and \
             not any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
 
         if any_word_in(u, "od začít začneme začněme začni začněte") and any_word_in(u, "začátku znova znovu") or \
-            any_word_in(u, "reset resetuj restart restartuj") or \
+            any_word_in(u, "reset resetuj restart restartuj zrušit") or \
             phrase_in(u, 'nové spojení') and not phrase_in(u, 'spojení ze') or \
             phrase_in(u, 'nový spojení') and not phrase_in(u, 'spojení ze') or \
             phrase_in(u, 'nové zadání') and not any_word_in(u, "ze") or \
             phrase_in(u, 'nový zadání') and not any_word_in(u, "ze") or \
-            phrase_in(u, 'nový spoj') and not phrase_in(u, "spoj ze"):
+            phrase_in(u, 'nový spoj') and not phrase_in(u, "spoj ze") or \
+            all_words_in(u, "tak jinak") or any_phrase_in(u, ["tak znova", 'zkusíme to ještě jednou']):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if any_phrase_in(u, ['chci jet', 'chtěla jet', 'bych jet', 'bychom jet',
-                             'bych tam jet', ]):
+        if any_phrase_in(u, ['chci jet', 'chtěla jet', 'bych jet', 'bych jel', 'bychom jet',
+                             'bych tam jet', 'jak se dostanu', 'se dostat']) or \
+                any_word_in(u, "trasa, trasou, trasy, trasu, trase"):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
         if any_phrase_in(u, ['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
@@ -552,12 +568,13 @@ class PTICSHDCSLU(SLUInterface):
             all_words_in(u, "kam pojede"):
             cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
-        if not any_word_in(u, 'za budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
+        if not any_word_in(u, 'za budu bude budem přijede přijedete přijedu dojedu dojede dorazí dorazím dorazíte'):
             if all_words_in(u, "kdy jede") or \
                 all_words_in(u, "v kolik jede") or \
                 all_words_in(u, "v kolik hodin") or \
                 all_words_in(u, "kdy to pojede") or \
-                (any_word_in(u, 'kdy kolik') and  any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')):
+                (any_word_in(u, 'kdy kolik') and  any_word_in(u, 'jede odjíždí odjede odjíždíš odjíždíte')) or \
+                phrase_in(u, 'časový údaj'):
                 cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
         if not any_word_in(u, 'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
@@ -568,11 +585,10 @@ class PTICSHDCSLU(SLUInterface):
                 cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if (all_words_in(u, 'kdy tam') and any_word_in(u, 'budu bude budem')) or \
-            (all_words_in(u, 'v kolik tam') and any_word_in(u, 'budu bude budem')) or \
-            (all_words_in(u, 'v kolik hodin') and any_word_in(u, 'budu bude budem')) or \
+            (all_words_in(u, 'v kolik') and any_word_in(u, 'budu bude budem')) or \
             all_words_in(u, 'čas příjezdu') or \
             (any_word_in(u, 'kdy kolik') and  any_word_in(u, 'příjezd přijede přijedete přijedu přijedem dojedu dorazí '
-                                                             'dorazím dorazíte')):
+                                                             'dojede dorazím dorazíte')):
             cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
         if (all_words_in(u, 'za jak') and any_word_in(u, 'dlouho dlóho') and
@@ -598,7 +614,7 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'kolik počet kolikrát jsou je'):
                 cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-            elif any_word_in(u, 'nechci bez žádný žádné'):
+            elif any_word_in(u, 'nechci bez žádný žádné žáden'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
             elif any_word_in(u, 'jeden jedním jednou'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '1'))
@@ -619,13 +635,14 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
 
         if any_word_in(u, 'spoj spojení spoje možnost možnosti varianta alternativa cesta cestu cesty '
-                          'zpoždění stažení nalezená'):
+                          'zpoždění stažení nalezená nabídnuté'):
             if any_word_in(u, 'libovolný') and \
                 not any_word_in(u, 'první jedna druhá druhý třetí čtvrtá čtvrtý'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
 
             if any_word_in(u, 'první jedna') and \
-                not any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý'):
+                not any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý') and \
+                not all_words_in(u, 'ještě jedna'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
             if any_word_in(u, 'druhé druhá druhý druhou dva')and \
@@ -638,22 +655,27 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'čtvrté čtvrtá čtvrtý čtvrtou čtyři'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if any_word_in(u, "poslední znovu znova opakovat zopakovat zopakujte zopakování") and \
-                not all_words_in(u, "předchozí"):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
-
-            if any_word_in(u, "další jiné jiná následující pozdější") or \
-                phrase_in(u, "ještě jedno") or \
-                phrase_in(u, "ještě jednu"):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+            if any_word_in(u, 'páté pátou'):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "5"))
 
             if any_word_in(u, "předchozí před"):
-                if phrase_in(u, "nechci vědět předchozí"):
+                if any_phrase_in(u, ["nechci vědět předchozí", "nechci předchozí"]):
                     cn.add(1.0, DialogueActItem("deny", "alternative", "prev"))
                 else:
                     cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if len(u) == 1 and any_word_in(u, 'další následující následují'):
+            elif any_word_in(u, "poslední znovu znova opakovat zopakovat zopakujte zopakování"):
+                if any_phrase_in(u, ["nechci poslední"]):
+                    cn.add(1.0, DialogueActItem("deny", "alternative", "last"))
+                else:
+                    cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
+
+            elif (any_word_in(u, "další jiné jiná následující pozdější") or \
+                any_phrase_in(u, ['ještě jedno', 'ještě jednu' , 'ještě jedna', 'ještě jednou', 'ještě zeptat na jedno'])):
+                cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+
+        if (len(u) == 1 and any_word_in(u, 'další následující následují později')) or \
+            ending_phrases_in(u, ['další', 'co dál']):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
@@ -666,6 +688,49 @@ class PTICSHDCSLU(SLUInterface):
         if any_phrase_in(u, ["jako v dne", "jako ve dne"]):
             cn.add(1.0, DialogueActItem('inform', 'ampm', 'pm'))
 
+        if ending_phrases_in(u, ["od", "z", "z nádraží"]):
+            cn.add(1.0, DialogueActItem('inform', 'from', '*'))
+        elif ending_phrases_in(u, ["na", "do", "dó"]):
+            cn.add(1.0, DialogueActItem('inform', 'to', '*'))
+        elif ending_phrases_in(u, ["z zastávky", "z stanice", "výchozí stanice je", "výchozí zastávku"]):
+            cn.add(1.0, DialogueActItem('inform', 'from_stop', '*'))
+        elif ending_phrases_in(u, ["na zastávku", "ná zastávků", "do zastávky", "do zástavky", "do zastavky"]) :
+            cn.add(1.0, DialogueActItem('inform', 'to_stop', '*'))
+        elif ending_phrases_in(u, ["přes"]) :
+            cn.add(1.0, DialogueActItem('inform', 'via', '*'))
+
+    def handle_false_abstractions(self, abutterance):
+        """
+        Revert false positive alarms of abstraction
+
+        :param abutterance: the abstracted utterance
+        :return: the abstracted utterance without false positive abstractions
+        """
+        #
+        abutterance = abutterance.replace(('STOP=Metra',), ('metra',))
+        abutterance = abutterance.replace(('STOP=Nádraží',), ('nádraží',))
+        abutterance = abutterance.replace(('STOP=SME',), ('sme',))
+        abutterance = abutterance.replace(('STOP=Bílá Hora', 'STOP=Železniční stanice',),
+                                          ('STOP=Bílá Hora', 'železniční stanice',))
+        abutterance = abutterance.replace(('TIME=now', 'bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
+        abutterance = abutterance.replace(('STOP=Čím', 'se'), ('čím', 'se',))
+        abutterance = abutterance.replace(('STOP=Lužin', 'STOP=Na Chmelnici',), ('STOP=Lužin', 'na', 'STOP=Chmelnici',))
+        abutterance = abutterance.replace(('STOP=Konečná', 'zastávka'), ('konečná', 'zastávka',))
+        abutterance = abutterance.replace(('STOP=Konečná', 'STOP=Anděl'), ('konečná', 'STOP=Anděl',))
+        abutterance = abutterance.replace(('STOP=Konečná stanice', 'STOP=Ládví'), ('konečná', 'stanice', 'STOP=Ládví',))
+        abutterance = abutterance.replace(('STOP=Výstupní', 'stanice', 'je'), ('výstupní', 'stanice', 'je'))
+        abutterance = abutterance.replace(('STOP=Nová', 'jiné'), ('nové', 'jiné',))
+        abutterance = abutterance.replace(('STOP=Nová', 'spojení'), ('nové', 'spojení',))
+        abutterance = abutterance.replace(('STOP=Nová', 'zadání'), ('nové', 'zadání',))
+        abutterance = abutterance.replace(('STOP=Nová', 'TASK=find_connection'), ('nový', 'TASK=find_connection',))
+        abutterance = abutterance.replace(('z', 'CITY=Liberk',), ('z', 'CITY=Liberec',))
+        abutterance = abutterance.replace(('do', 'CITY=Liberk',), ('do', 'CITY=Liberec',))
+        abutterance = abutterance.replace(('pauza', 'hrozně', 'STOP=Dlouhá',), ('pauza', 'hrozně', 'dlouhá',))
+        abutterance = abutterance.replace(('v', 'STOP=Praga',), ('v', 'CITY=Praha',))
+        abutterance = abutterance.replace(('na', 'STOP=Praga',), ('na', 'CITY=Praha',))
+        abutterance = abutterance.replace(('po', 'STOP=Praga', 'ale'), ('po', 'CITY=Praha',))
+        abutterance = abutterance.replace(('jsem', 'v', 'STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
+        return abutterance
 
     def parse_1_best(self, obs, verbose=False):
         """Parse an utterance into a dialogue act."""
@@ -691,30 +756,7 @@ class PTICSHDCSLU(SLUInterface):
         else:
             category_labels = dict()
 
-        # handle false positive alarms of abstraction
-        abutterance = abutterance.replace(('STOP=Metra',), ('metra',))
-        abutterance = abutterance.replace(('STOP=Nádraží',), ('nádraží',))
-        abutterance = abutterance.replace(('STOP=SME',), ('sme',))
-        abutterance = abutterance.replace(('STOP=Bílá Hora', 'STOP=Železniční stanice',), ('STOP=Bílá Hora', 'železniční stanice',))
-
-        abutterance = abutterance.replace(('TIME=now','bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
-        abutterance = abutterance.replace(('STOP=Čím','se'), ('čím', 'se',))
-        abutterance = abutterance.replace(('STOP=Lužin','STOP=Na Chmelnici',), ('STOP=Lužin','na','STOP=Chmelnici',))
-        abutterance = abutterance.replace(('STOP=Konečná','zastávka'), ('konečná', 'zastávka',))
-        abutterance = abutterance.replace(('STOP=Konečná','STOP=Anděl'), ('konečná', 'STOP=Anděl',))
-        abutterance = abutterance.replace(('STOP=Konečná stanice','STOP=Ládví'), ('konečná', 'stanice', 'STOP=Ládví',))
-        abutterance = abutterance.replace(('STOP=Výstupní', 'stanice', 'je'), ('výstupní', 'stanice', 'je'))
-        abutterance = abutterance.replace(('STOP=Nová','jiné'), ('nové', 'jiné',))
-        abutterance = abutterance.replace(('STOP=Nová','spojení'), ('nové', 'spojení',))
-        abutterance = abutterance.replace(('STOP=Nová','zadání'), ('nové', 'zadání',))
-        abutterance = abutterance.replace(('STOP=Nová','TASK=find_connection'), ('nový', 'TASK=find_connection',))
-        abutterance = abutterance.replace(('z','CITY=Liberk',), ('z', 'CITY=Liberec',))
-        abutterance = abutterance.replace(('do','CITY=Liberk',), ('do', 'CITY=Liberec',))
-        abutterance = abutterance.replace(('pauza','hrozně','STOP=Dlouhá',), ('pauza','hrozně','dlouhá',))
-        abutterance = abutterance.replace(('v','STOP=Praga',), ('v', 'CITY=Praha',))
-        abutterance = abutterance.replace(('na','STOP=Praga',), ('na', 'CITY=Praha',))
-        abutterance = abutterance.replace(('po','STOP=Praga', 'ale'), ('po', 'CITY=Praha',))
-        abutterance = abutterance.replace(('jsem','v','STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
+        abutterance = self.handle_false_abstractions(abutterance)
         category_labels.add('CITY')
         category_labels.add('VEHICLE')
 
