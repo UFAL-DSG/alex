@@ -303,6 +303,7 @@ ontology = {
             'find_connection': [('', '^task$', '^find_connection$'), ('', '^departure_', ''), ('', '^arrival_', ''),
                                 ('', '^from_stop$', ''), ('', '^to_stop$', ''),
                                 ('', '^duration$', '')],
+            'find_platform': [('', '^task$', '^find_platform$'), ],
         },
     },
 

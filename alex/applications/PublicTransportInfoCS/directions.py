@@ -9,6 +9,8 @@ import os.path
 import time
 import json
 from suds.client import Client
+from alex.applications.PublicTransportInfoCS.platform_info import \
+    CRWSPlatformFinder
 from crws_enums import *
 import pickle
 import gzip
@@ -482,6 +484,51 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
     def search_city(self, city_mask):
         return self.search_stop(city_mask, self.city_list_id)
+
+
+
+    @lru_cache(maxsize=10)
+    def get_platform(self, platform_info):
+        # try to map from-to to IDOS identifiers, default to originals
+        self.system_logger.info("ALEX: Looking up platform for: %s -- %s" %
+                                (platform_info.from_city, platform_info.to_city))
+
+        from_obj = self.search_city(platform_info.from_city)
+        #to_obj = self.search_city(platform_info.to_city)
+
+        #self.system_logger.info(("CRWS Request for connection:\n\nFROM:
+        # %s\n\nTO: %s\n\n") %
+        #                        (from_obj, to_obj, ))
+        # request the connections from CRWS
+        response = self.client.service.SearchDepartureTableInfo(
+            self.user_id,
+            self.user_desc,
+            self.default_comb_id,
+            from_obj[0],
+            True,
+            datetime.min, # timestamp of arrival or departure
+            True,
+            SEARCHMODE.EXACT,
+            1,
+            REG.SMART,
+            TTINFODETAILS.STATIONSEXT,
+            None,
+            TTDETAILS.STANDS,
+            TTLANG.ENGLISH
+        )
+        # (use this to log raw XML requests/responses)
+        # # xml_data = unicode(self.client.last_sent())
+        # # xml_data += "\n" + unicode(self.client.last_received())
+        # # self.session_logger.external_data_file(ftype, fname, xml_data.encode('UTF-8'))
+        # log the response
+        self._log_response_json(_todict(response, '_origClassName'))
+
+        pfinder = CRWSPlatformFinder(response)
+        platform_res = pfinder.find_platform(platform_info)
+        self.system_logger.info("CRWS PlatformFinder response:\n" + unicode(
+            platform_res))
+
+        return platform_res
 
     @lru_cache(maxsize=10)
     def get_directions(self, travel, departure_time=None, arrival_time=None):

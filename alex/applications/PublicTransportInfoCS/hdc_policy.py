@@ -15,6 +15,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 
 from datetime import timedelta
 from .directions import GoogleDirectionsFinder, Travel
+from .platform_info import  PlatformInfo
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
 from datetime import time as dttime
@@ -259,6 +260,17 @@ class PTICSHDCPolicy(DialoguePolicy):
                                            accepted_slots, changed_slots, state_changed)
             res_da.extend(w_da)
             res_da = self.filter_iconfirms(res_da)
+        elif dialogue_state['lta_task'].test('find_platform', self.accept_prob):
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
+
+            # talk about the platform number
+            da = self.get_platform_res_da(dialogue_state, ludait,
+                                          slots_being_requested,
+                                          slots_being_confirmed, accepted_slots,
+                                          changed_slots, state_changed)
+            res_da.extend(da)
+            res_da = self.filter_iconfirms(res_da)
         else:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
@@ -314,6 +326,52 @@ class PTICSHDCPolicy(DialoguePolicy):
                     ds.conn_info = conn_info
                     res_da = iconfirm_da
                     res_da.extend(self.get_directions(ds, check_conflict=True))
+                else:
+                    res_da = self.backoff_action(ds)
+            else:
+                res_da = req_da
+
+        return res_da
+
+    def get_platform_res_da(self, ds, ludait, slots_being_requested,
+                            slots_being_confirmed, accepted_slots,
+                            changed_slots, state_changed):
+        if slots_being_requested:
+            # inform about all requested slots
+            res_da = self.get_requested_info(slots_being_requested, ds, accepted_slots)
+
+        elif slots_being_confirmed:
+            # inform about all slots being confirmed by the user
+            res_da = self.get_confirmed_info(slots_being_confirmed, ds, accepted_slots)
+
+        else:
+            # gather known information about the connection
+            req_da, iconfirm_da, platform_info = self.gather_platform_info(ds,
+                    accepted_slots)
+            if len(req_da) == 0:
+                if state_changed:
+                    # we know everything we need -> start searching
+                    #ds.platform_info = platform_info
+                    res_da = iconfirm_da
+                    platform_res = self.directions.get_platform(platform_info)
+
+                    if not platform_res:
+                        res_da.append(DialogueActItem('inform', 'platform',
+                                                      'not_found'))
+                    else:
+                        if platform_res.platform:
+                            res_da.append(DialogueActItem('inform', 'platform',
+                                                      platform_res.platform))
+                            res_da.append(DialogueActItem('inform', 'track',
+                                                      platform_res.track))
+                        else:
+                            res_da.append(DialogueActItem('inform', 'platform',
+                                                      'none'))
+                            res_da.append(DialogueActItem('inform', 'track',
+                                                      'none'))
+
+                    # Construct platform info.
+
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -718,6 +776,39 @@ class PTICSHDCPolicy(DialoguePolicy):
         return req_da, iconfirm_da, Travel(from_city=from_city_val, from_stop=from_stop_val,
                                            to_city=to_city_val, to_stop=to_stop_val,
                                            vehicle=vehicle_val, max_transfers=max_transfers_val)
+
+
+    def gather_platform_info(self, ds, accepted_slots):
+        """!!!!!!!!
+        change
+
+        Return a DA requesting further information needed to search
+        for traffic directions and a dictionary containing the known information.
+        Infers city names based on stop names and vice versa.
+
+        If the request DA is empty, the search for directions may be commenced immediately.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct, dict
+        """
+        req_da = DialogueAct()
+
+        # retrieve the slot variables
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+
+
+        if from_city_val == 'none':
+            req_da.extend(DialogueAct('request(from_city)'))
+        elif to_city_val == 'none':
+            req_da.extend(DialogueAct('request(to_city)'))
+
+        # generate implicit confirms if we inferred cities and they are not the same for both stops
+        iconfirm_da = DialogueAct()
+
+        return req_da, iconfirm_da, PlatformInfo(from_city=from_city_val,
+                                                 to_city=to_city_val)
+
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
