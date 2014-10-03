@@ -1,0 +1,178 @@
+albert einstein	albert einstein
+alois negrelli	alois negrelli
+anton bruckner	anton bruckner
+antonín dvořák	antonín dvořák
+antonín slavíček	antonín slavíček
+avala	avala
+bečva	bečva
+beskyd	beskyd
+bezdrev	bezdrev
+bílina	bílina
+blaník	blaník
+blockheide	blockheide
+bobrava	bobrava
+bouzov	bouzov
+brněnský drak	brněnský drak
+buchlov	buchlov
+canopus	canopus
+carl maria von weber	carl maria von weber
+cidlina	cidlina
+cimburk	cimburk
+comenius	comenius
+czarna góra	czarna góra
+detvan	detvan
+donau moldau	donau moldau
+doubrava	doubrava
+dřevnice	dřevnice
+evn energiesparen	evn energiesparen
+excelsior	excelsior
+f.a.gerstner	f.a.gerstner
+fatra	fatra
+ferdinand kindermann	ferdinand kindermann
+františek křižík	františek křižík
+franz kafka	franz kafka
+franz schubert	franz schubert
+galán	galán
+glacensis	glacensis
+gustav klimt	gustav klimt
+gustav mahler	gustav mahler
+hedeč	hedeč
+hejtman	hejtman
+helfštýn	helfštýn
+hradčany	hradčany
+hradišťan	hradišťan
+hruškovice	hruškovice
+hukvaldy	hukvaldy
+hungaria	hungaria
+hutník	hutník
+chomutovka	chomutovka
+chopin	chopin
+choustník	choustník
+chrudimka	chrudimka
+jakub krčín	jakub krčín
+jan hus	jan hus
+jan jesenius	jan jesenius
+jan kašpar	jan kašpar
+jan perner	jan perner
+jan žižka	jan žižka
+jaroslav hašek	jaroslav hašek
+javorka	javorka
+javořina	javořina
+jevišovka	jevišovka
+jihlava	jihlava
+jizera	jizera
+johann gregor mendel	johann gregor mendel
+johannes brahms	johannes brahms
+jordán	jordán
+josef ressel	josef ressel
+josef skupa	josef skupa
+josef václav myslbek	josef václav myslbek
+junák	junák
+karel čapek	karel čapek
+karel havlíček borovský	karel havlíček borovský
+karel klostermann	karel klostermann
+karlex	karlex
+klokoty	klokoty
+kokořínsko	kokořínsko
+konopiště	konopiště
+košičan	košičan
+kotnov	kotnov
+kozlov	kozlov
+krakonoš	krakonoš
+krušnohor	krušnohor
+křížová hora	křížová hora
+kunětická hora	kunětická hora
+kyjovka	kyjovka
+kysuca	kysuca
+kyšperk	kyšperk
+labe	labe
+lainsitz	lainsitz
+landek	landek
+leoš janáček	leoš janáček
+ležáky	ležáky
+litava	litava
+loutkař	loutkař
+lužnice	lužnice
+macocha	macocha
+malše	malše
+matalík	matalík
+matthias braun	matthias braun
+matthias schönerer	matthias schönerer
+metoděj vlach	metoděj vlach
+metropol	metropol
+metuje	metuje
+milešovka	milešovka
+nežárka	nežárka
+nysa	nysa
+odra	odra
+ohrada	ohrada
+ohře	ohře
+olšava	olšava
+orlice	orlice
+ostravan	ostravan
+pancíř	pancíř
+peklák	peklák
+pernštejn	pernštejn
+petr vok	petr vok
+petrov	petrov
+phoenix	phoenix
+polonia	polonia
+portáš	portáš
+praděd	praděd
+praha	praha
+punkva	punkva
+radegast	radegast
+radhošť	radhošť
+radobýl	radobýl
+radyně	radyně
+rokytka	rokytka
+rokytná	rokytná
+rotes kreuz nö	rotes kreuz nö
+rozkoš	rozkoš
+rožmberk	rožmberk
+rudolf těsnohlídek	rudolf těsnohlídek
+říp	říp
+salubia	salubia
+santon	santon
+schmidatal	schmidatal
+silesia	silesia
+slavkov	slavkov
+sloupečník	sloupečník
+slovakia	slovakia
+slovan	slovan
+slovenská strela	slovenská strela
+smetana	smetana
+sněžka	sněžka
+sněžník	sněžník
+sobieski	sobieski
+střekov	střekov
+svatava	svatava
+svět	svět
+svitava	svitava
+svojanov	svojanov
+šembera	šembera
+šírava	šírava
+šohaj	šohaj
+špičák	špičák
+špilberk	špilberk
+švihov	švihov
+točník	točník
+třebovka	třebovka
+úpa	úpa
+vajgar	vajgar
+varsovia	varsovia
+velehrad	velehrad
+větruše	větruše
+viktor kaplan	viktor kaplan
+vindobona	vindobona
+vlára	vlára
+vltava	vltava
+vltava dunaj	vltava dunaj
+vojtěch lanna	vojtěch lanna
+vsacan	vsacan
+vysočina	vysočina
+waldviertel-kurier	waldviertel-kurier
+zdeněk fibich	zdeněk fibich
+zemská brána	zemská brána
+zlínský expres	zlínský expres
+žuráň	žuráň

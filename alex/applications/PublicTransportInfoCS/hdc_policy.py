@@ -352,23 +352,34 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if state_changed:
                     # we know everything we need -> start searching
                     #ds.platform_info = platform_info
-                    res_da = iconfirm_da
+                    res_da = DialogueAct()
                     platform_res = self.directions.get_platform(platform_info)
 
                     if not platform_res:
                         res_da.append(DialogueActItem('inform', 'platform',
                                                       'not_found'))
+                        res_da.append(DialogueActItem('inform', 'direction',
+                                                      platform_info.to_station))
                     else:
                         if platform_res.platform:
                             res_da.append(DialogueActItem('inform', 'platform',
                                                       platform_res.platform))
                             res_da.append(DialogueActItem('inform', 'track',
                                                       platform_res.track))
+                            if platform_info.train_name:
+                                res_da.append(DialogueActItem('inform',
+                                                              'train_name',
+                                                              platform_info.train_name))
+                            else:
+                                res_da.append(DialogueActItem('inform', 'direction',
+                                                      platform_res.direction))
                         else:
                             res_da.append(DialogueActItem('inform', 'platform',
                                                       'none'))
                             res_da.append(DialogueActItem('inform', 'track',
                                                       'none'))
+                            res_da.append(DialogueActItem('inform', 'direction',
+                                                      platform_res.direction))
 
                     # Construct platform info.
 
@@ -794,20 +805,25 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # retrieve the slot variables
-        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
-        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+        from_station_val = (ds['from_city'].mpv() if 'from_city' in
+                            accepted_slots else 'none')
+        to_station_val = (ds['to_city'].mpv() if 'to_city' in accepted_slots
+                          else 'none')
+        train_name_val = (ds['train_name'].mpv() if 'train_name' in
+                          accepted_slots else 'none')
 
 
-        if from_city_val == 'none':
-            req_da.extend(DialogueAct('request(from_city)'))
-        elif to_city_val == 'none':
-            req_da.extend(DialogueAct('request(to_city)'))
+        if from_station_val == 'none':
+            req_da.extend(DialogueAct('request(from_station)'))
+        elif to_station_val == 'none' and train_name_val == 'none':
+            req_da.extend(DialogueAct('request(to_station_or_train_name)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
 
-        return req_da, iconfirm_da, PlatformInfo(from_city=from_city_val,
-                                                 to_city=to_city_val)
+        return req_da, iconfirm_da, PlatformInfo(from_station=from_station_val,
+                                                 to_station=to_station_val,
+                                                 train_name=train_name_val)
 
 
     def req_current_time(self):

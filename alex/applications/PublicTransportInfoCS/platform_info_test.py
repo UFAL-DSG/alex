@@ -27,8 +27,8 @@ class TestPlatformInfo(unittest.TestCase):
     def test_prague_to_brno(self):
         m = mox.Mox()
 
-        system_logger = m.CreateMockAnything()
-        system_logger.AnyMethod()
+        system_logger = SystemLogger("/tmp/xxx")
+
 
         session_logger = m.CreateMockAnything()
         session_logger.AnyMethod()
@@ -70,7 +70,7 @@ class TestPlatformInfo(unittest.TestCase):
                     }
                 },
                 'Logging': {
-                    'system_logger': SystemLogger("/tmp/xxx"),
+                    'system_logger': system_logger,
                     'session_logger': SessionLogger()
                 },
                 'CRWS': {
@@ -80,12 +80,15 @@ class TestPlatformInfo(unittest.TestCase):
 
         dm = DialogueManager(cfg)
         dm.new_dialogue()
-        print dm.da_out()
+        system_logger.debug(dm.da_out())
         dm.da_in(utter("inform(task=find_platform)"))
-        print dm.da_out()
+        system_logger.debug(dm.da_out())
         dm.da_in(utter("inform(from_city=Praha)"))
-        print dm.da_out()
-        dm.da_in(utter("inform(to_city=Olomouc)"))
-        print dm.da_out()
-        dm.da_in(utter("inform(to_city=Cheb)"))
-        print dm.da_out()
+        system_logger.debug(dm.da_out())
+        dm.da_in(utter("inform(train_name='Phoenix')"))
+        system_logger.debug(dm.da_out())
+
+        #dm.da_in(utter("inform(to_city=Olomouc)"))
+        #system_logger.debug(dm.da_out())
+        #dm.da_in(utter("inform(to_city=Cheb)"))
+        #system_logger.debug(dm.da_out())

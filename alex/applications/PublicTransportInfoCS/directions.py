@@ -464,7 +464,8 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         self.combinations = self._load_combination_info()
         self.default_comb_id = self.combinations[0]['_sID']
         # parse list of lists and get ID of cities list and stop names list
-        self.city_list_id, self.stops_list_for_city = self._get_stop_list_ids()
+        self.city_list_id, self.train_list_id, self.stops_list_for_city = \
+            self._get_stop_list_ids()
         # load mapping from ALEX stops to IDOS stops and back
         self.mapping, self.reverse_mapping = self._load_stops_mapping()
 
@@ -482,6 +483,22 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             TTLANG.ENGLISH # language
         )
 
+    def search_train_station(self, stop_mask, max_count=0, skip_count=0):
+        return self.client.service.SearchGlobalListItemInfo(
+            self.user_id,
+            self.user_desc,
+            self.default_comb_id,
+            self.train_list_id,
+            stop_mask, # mask
+            SEARCHMODE.EXACT | SEARCHMODE.USE_PRIORITY, # search mode
+            max_count, # max count
+            REG.SMART, # return regions
+            skip_count, # skip count
+            TTINFODETAILS.STATIONSEXT,
+            COOR.DEFAULT,
+            TTLANG.ENGLISH # language
+        )
+
     def search_city(self, city_mask):
         return self.search_stop(city_mask, self.city_list_id)
 
@@ -491,15 +508,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     def get_platform(self, platform_info):
         # try to map from-to to IDOS identifiers, default to originals
         self.system_logger.info("ALEX: Looking up platform for: %s -- %s" %
-                                (platform_info.from_city, platform_info.to_city))
+                                (platform_info.from_station,
+                                 platform_info.to_station))
 
-        from_obj = self.search_city(platform_info.from_city)
-        #to_obj = self.search_city(platform_info.to_city)
+        from_obj = self.search_train_station(platform_info.from_station)
+        to_obj = self.search_train_station(platform_info.to_station)
 
-        #self.system_logger.info(("CRWS Request for connection:\n\nFROM:
-        # %s\n\nTO: %s\n\n") %
-        #                        (from_obj, to_obj, ))
-        # request the connections from CRWS
+        # Get the entries in the departure table at the from station.
         response = self.client.service.SearchDepartureTableInfo(
             self.user_id,
             self.user_desc,
@@ -516,15 +531,20 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             TTDETAILS.STANDS,
             TTLANG.ENGLISH
         )
-        # (use this to log raw XML requests/responses)
-        # # xml_data = unicode(self.client.last_sent())
-        # # xml_data += "\n" + unicode(self.client.last_received())
-        # # self.session_logger.external_data_file(ftype, fname, xml_data.encode('UTF-8'))
-        # log the response
+
         self._log_response_json(_todict(response, '_origClassName'))
 
+        # Extract the departure table entry.
         pfinder = CRWSPlatformFinder(response)
-        platform_res = pfinder.find_platform(platform_info)
+        if platform_info.to_station != 'none':
+            self.system_logger.info("CRWS Looking by destination station.")
+            platform_res = pfinder.find_platform_by_station(to_obj)
+        elif platform_info.train_name != 'none':
+            self.system_logger.info("CRWS Looking by train name.")
+            platform_res = pfinder.find_platform_by_train_name(platform_info.train_name)
+        else:
+            raise Exception("Incorrect state!")
+
         self.system_logger.info("CRWS PlatformFinder response:\n" + unicode(
             platform_res))
 
@@ -625,16 +645,20 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     def _get_stop_list_ids(self):
         """Retrieve IDs of lists of stops for all available cities, plus the ID of the list of cities."""
         cities_list = None
+        train_list = None
         stop_lists = {}
         for comb in self.combinations:
             for list_info in comb['aoGlobalLists']:
                 if cities_list is None:
                     if list_info['asName'][0] == 'města a obce':
                         cities_list = list_info['_iID']
+                if train_list is None:
+                    if list_info['asName'][0] == 'stanice (vlak)':
+                        train_list = list_info['_iID']
                 matching = re.match(r'^(?:zastávky|stanice) \(([^)]+)\)$', list_info['asName'][0])
                 if matching:
                     stop_lists[matching.group(1)] = list_info['_iID']
-        return cities_list, stop_lists
+        return cities_list, train_list, stop_lists
 
     def _load_combination_info(self):
         """Get a list of accessible object lists (cached using pickles)."""

@@ -553,6 +553,23 @@ class PTICSHDCSLU(SLUInterface):
                 else:
                     cn.add(1.0, DialogueActItem("inform", 'task', value))
 
+    def parse_train_name(self, abutterance, cn):
+        """Detects the train name in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+        category_label = "TRAIN_NAME="
+
+        u = abutterance
+
+        for i, w in enumerate(u):
+            if w.startswith(category_label):
+                value = w[len(category_label):]
+
+                cn.add(1.0, DialogueActItem("inform", 'train_name', value))
+
+
     def parse_non_speech_events(self, utterance, cn):
         """
         Processes non-speech events in the input utterance.
@@ -908,6 +925,8 @@ class PTICSHDCSLU(SLUInterface):
                 self.parse_vehicle(abutterance, res_cn)
             if 'TASK' in category_labels:
                 self.parse_task(abutterance, res_cn)
+            if 'TRAIN_NAME' in category_labels:
+                self.parse_train_name(abutterance, res_cn)
 
             self.parse_meta(utterance, res_cn)
 
