@@ -70,8 +70,6 @@ def ending_phrases_in(utterance, phrases):
     utterance_len = len(utterance)
     for phrase in phrases:
         phr_pos = phrase_pos(utterance, phrase)
-        # print (phr_pos is not -1 and phr_pos + len(phrase) is utterance_len),  \
-        #     utterance, ';', phrase, ':', phrase_pos(utterance, phrase), len(phrase), len(str(utterance))
         if phr_pos is not -1 and phr_pos + len(phrase.split()) is utterance_len:
             return True
     return False
@@ -79,15 +77,27 @@ def ending_phrases_in(utterance, phrases):
 
 class PTICSHDCSLU(SLUInterface):
 
-    def __init__(self, preprocessing, cfg=None):
+    def __init__(self, preprocessing, cfg=None, utt2da_fn="../data/utt2da_dict.txt"):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
-        self.utt2da = {}
-        with codecs.open("../data/utt2da_dict.txt", 'r', 'UTF-8') as f:
+        self.utt2da = self._load_utt2da(utt2da_fn)
+
+    def _load_utt2da(self, filename):
+        """
+        Load a dictionary mapping utterances directly to dialogue acts for the utterances
+        that are either too complicated or too unique to be parsed by HDC SLU rules.
+
+        :param filename: path to file with a list of utterances transcriptions and corresponding dialogue acts
+        :return: a dictionary from utterance to dialogue act
+        :rtype: dict
+        """
+        utt2da = {}
+        with codecs.open(filename, 'r', 'UTF-8') as f:
             for line in f:
                 if line.strip() and not line.startswith('#'):
-                   key, val = line.split('\t')
-                   self.utt2da[unicode(key)] = val
+                    key, val = line.split('\t')
+                    utt2da[unicode(key)] = val
+        return utt2da
 
     def abstract_utterance(self, utterance):
         """
@@ -621,7 +631,7 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'kolik počet kolikrát jsou je'):
                 cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-            elif any_word_in(u, 'nechci bez žádný žádné žáden'):
+            elif any_word_in(u, 'nechci bez žádný žádné'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
             elif any_word_in(u, 'jeden jedním jednou'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '1'))
