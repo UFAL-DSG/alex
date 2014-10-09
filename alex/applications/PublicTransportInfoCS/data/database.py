@@ -24,7 +24,7 @@ database = {
         'weather': ['počasí', ],
     },
     "time": {
-        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
+        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli", "co nejdřív"],
         "0:01": ["minutu", ],
         "0:15": ["čtvrt hodiny", ],
         "0:30": ["půl hodiny", ],
@@ -45,9 +45,9 @@ database = {
     "vehicle": {
         "dontcare": ["čímkoliv", "jakkoliv", "jakýmkoliv způsobem", "jakýmkoliv prostředkem",
                      "jakýmkoliv dopravním prostředkem", "libovolným dopravním prostředkem"],
-        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
+        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové", "autobusovýho"],
         "tram": ["tram", "tramvaj", "tramvajový", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "subway": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
+        "subway": ["metro", "metrem", "metrema", "metru", "metra", "krtek", "krtkem", "podzemka", "podzemkou"],
         "train": ["vlak", "vlakem", "vláčkem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
         "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
         "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
