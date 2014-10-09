@@ -631,7 +631,7 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'kolik počet kolikrát jsou je'):
                 cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-            elif any_word_in(u, 'nechci bez žádný žádné'):
+            elif any_word_in(u, 'nechci bez žádný žádné žáden'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '0'))
             elif any_word_in(u, 'jeden jedním jednou'):
                 cn.add(1.0, DialogueActItem('inform', 'num_transfers', '1'))
