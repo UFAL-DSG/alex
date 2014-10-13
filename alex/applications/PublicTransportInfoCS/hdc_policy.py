@@ -196,10 +196,11 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct("silence()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "bye":
+        elif "lta_bye" in accepted_slots:
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
             dialogue_state["ludait"].reset()
+            dialogue_state["lta_bye"].reset()
 
         elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
@@ -692,12 +693,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
-            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif from_stop_val == 'none':
-            req_da.extend(DialogueAct("request(from_stop)"))
-        elif to_stop_val == 'none':
-            req_da.extend(DialogueAct('request(to_stop)'))
+        elif stop_city_inferred or from_city_val == to_city_val:
+            # if user did not provided info about a city ask about stops
+            if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
+                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+            elif from_stop_val == 'none':
+                req_da.extend(DialogueAct("request(from_stop)"))
+            elif to_stop_val == 'none':
+                req_da.extend(DialogueAct('request(to_stop)'))
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
