@@ -36,7 +36,8 @@ def main():
     for line in uniq_trn:
         wav_key, utterance = line.split(" => ",2)
         da = slu.parse_1_best({'utt':Utterance(utterance)}).get_best_da()
-        uniq_trn_sem[wav_key] = utterance.rstrip() + " <=> " + unicode(da)
+        uniq_trn_sem[wav_key] = (utterance.rstrip() # + " <=> " + slu.preprocess_utterance(Utterance(utterance))[0]
+            + " <=> " + unicode(da))
 
     print "Saving output to file", fn_uniq_trn_sem
     save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)

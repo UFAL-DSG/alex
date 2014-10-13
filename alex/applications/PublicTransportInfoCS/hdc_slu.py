@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import copy
 import codecs
+from ast import literal_eval
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
@@ -64,7 +65,12 @@ def any_phrase_in(utterance, phrases):
     return first_phrase_span(utterance, phrases) != (-1, -1)
 
 def ending_phrases_in(utterance, phrases):
-    """Returns True if the utterance ends with one of the phrases"""
+    """Returns True if the utterance ends with one of the phrases
+
+    :param utterance: The utterance to search in
+    :param phrases: a list of phrases to search for
+    :rtype: bool
+    """
 
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     utterance_len = len(utterance)
@@ -269,6 +275,88 @@ class PTICSHDCSLU(SLUInterface):
             return set([best_type])
         return set()
 
+    def parse_number(self, abutterance):
+        """Detect a number in the input abstract utterance
+
+        Number words that form time expression are collapsed into a single TIME category word.
+        Recognized time expressions (where FRAC, HOUR and MIN stands for fraction, hour and minute numbers respectively):
+            - FRAC [na] HOUR
+            - FRAC hodin*
+            - HOUR a FRAC hodin*
+            - HOUR hodin* a MIN minut*
+            - HOUR hodin* MIN
+            - HOUR hodin*
+            - HOUR [0]MIN
+            - MIN minut*
+
+        Words of NUMBER category are assumed to be in format parsable to int or float
+
+        :param abutterance: the input abstract utterance.
+        :type abutterance: Utterance
+        """
+        def parse_number(word):
+            return literal_eval(word[len("NUMBER="):])
+
+        def hour_number(word):
+            if not word.startswith("NUMBER="):
+                return False
+            num = parse_number(word)
+            return isinstance(num,int) and 0 <= num < 24
+
+        def minute_number(word):
+            if not word.startswith("NUMBER="):
+                return False
+            num = parse_number(word)
+            return isinstance(num,int) and 0 <= num < 60
+
+        def fraction_number(word):
+            if not word.startswith("NUMBER="):
+                return False
+            num = parse_number(word)
+            return isinstance(num,float)
+
+        u = abutterance
+        i = 0
+        while i < len(u):
+            if fraction_number(u[i]):
+                minute_num = int(parse_number(u[i]) * 60)
+                if i < len(u)-2 and minute_num in [15,45] and u[i+1] == 'na' and hour_number(u[i+2]):
+                    u[i:i+3] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+2])-1, min=minute_num)] # FRAC na HOUR
+                if i < len(u)-1 and minute_num == 30 and hour_number(u[i+1]):
+                    u[i:i+2] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+1])-1, min=minute_num)] # FRAC HOUR
+                elif i < len(u)-1 and u[i+1].startswith('hodin'):
+                    u[i:i+2] = ["TIME=0:{min}".format(min=minute_num)] # FRAC hodin*
+            elif hour_number(u[i]):
+                hour_num = parse_number(u[i])
+                if i < len(u)-3 and u[i+1] == 'a' and fraction_number(u[i+2]) and u[i+3].startswith('hodin'):
+                    u[i:i+4] = ["TIME={hour}:{min}".format(hour=hour_num, min=int(parse_number(u[i+2]) * 60))] # HOUR a FRAC hodin*
+                if i < len(u)-1 and u[i+1].startswith('hodin'):
+                    if i < len(u)-4 and u[i+2] == 'a' and minute_number(u[i+3]) and u[i+4].startswith('minut'):
+                        u[i:i+5] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+3]))] # HOUR hodin* a MIN minut*
+                    elif i < len(u)-3 and minute_number(u[i+2]):
+                        u[i:i+4] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))] # HOUR hodin* MIN
+                    else:
+                        u[i:i+2] = ["TIME={hour}:00".format(hour=hour_num)] # HOUR hodin*
+                if i < len(u)-1 and minute_number(u[i+1]):
+                    minute_num = parse_number(u[i+1])
+                    if minute_num > 9:
+                        u[i:i+2] = ["TIME={hour}:{min}".format(hour=hour_num, min=minute_num)] # HOUR MIN
+                    elif minute_num == 0 and i < len(u)-2 and minute_number(u[i+2]) and parse_number(u[i+2]) <= 9:
+                        u[i:i+3] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))] # HOUR 0 MIN
+            if minute_number(u[i]):
+                if i < len(u)-1 and u[i+1].startswith("minut"):
+                    u[i:i+2] = ["TIME=0:{min:0>2d}".format(min=parse_number(u[i]))] # MIN minut*
+
+            if i > 0 :
+                if u[i-1] == 'v' and hour_number(u[i]):
+                    u[i] = "TIME={hour}:00".format(hour=parse_number(u[i])) # v HOUR
+                elif u[i-1] == 'za':
+                    if u[i] == 'hodinu':
+                        u[i] = "TIME=1:00"
+                    elif u[i] == 'minutu':
+                        u[i] = "TIME=0:01"
+            i+=1
+
     def parse_time(self, abutterance, cn):
         """Detects the time in the input abstract utterance.
 
@@ -344,7 +432,7 @@ class PTICSHDCSLU(SLUInterface):
                                                                  'neslyším', 'už mi neříká']):
                     time_rel = True
 
-                if time_abs or time_rel:
+                if time_abs or time_rel or value != "now":
                     for act_type, time_type, phrases_pos, phrases_neg in test_context:
                         if any_phrase_in(u[j:k], phrases_pos) and not any_phrase_in(u, phrases_neg):
                             break
@@ -749,49 +837,51 @@ class PTICSHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('jsem', 'v', 'STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
         return abutterance
 
-    def parse_1_best(self, obs, verbose=False):
-        """Parse an utterance into a dialogue act."""
+
+    def preprocess_utterance(self, utterance):
+        """Normalize and abstract utterance
+
+        :type utterance: Utterance
+        :rtype (Utterance, Utterance, set)
+        """
+
+        utterance = self.preprocessing.normalise_utterance(utterance)
+        abutterance, category_labels = self.abstract_utterance(utterance)
+        return utterance, abutterance, category_labels
+
+    def parse_1_best(self, obs, verbose=False, *args, **kwargs):
+        """Parse an utterance into a dialogue act.
+
+        :rtype DialogueActConfusionNetwork
+        """
+
         utterance = obs['utt']
 
         if isinstance(utterance, UtteranceHyp):
             # Parse just the utterance and ignore the confidence score.
             utterance = utterance.utterance
 
-        # print 'Parsing utterance "{utt}".'.format(utt=utterance)
         if verbose:
             print 'Parsing utterance "{utt}".'.format(utt=utterance)
 
+        res_cn = DialogueActConfusionNetwork()
+
         dict_da = self.utt2da.get(unicode(utterance), None)
         if dict_da:
-#            return DialogueActHyp(1.0, DialogueAct(dict_da))
-
-            res_cn = DialogueActConfusionNetwork()
-
             for dai in DialogueAct(dict_da):
                 res_cn.add(1.0, dai)
-                
             return res_cn
-    
-        if self.preprocessing:
-            # the text normalisation
-            utterance = self.preprocessing.normalise_utterance(utterance)
 
-            abutterance, category_labels = self.abstract_utterance(utterance)
+        utterance, abutterance, category_labels = self.preprocess_utterance(utterance)
 
-            if verbose:
-                print 'After preprocessing: "{utt}".'.format(utt=abutterance)
-                print category_labels
-        else:
-            category_labels = dict()
+        if verbose:
+            print 'After preprocessing: "{utt}".'.format(utt=abutterance)
+            print category_labels
 
         abutterance = self.handle_false_abstractions(abutterance)
         category_labels.add('CITY')
         category_labels.add('VEHICLE')
-
-        # print 'After preprocessing: "{utt}".'.format(utt=abutterance)
-        # print category_labels
-
-        res_cn = DialogueActConfusionNetwork()
+        category_labels.add('NUMBER')
 
         self.parse_non_speech_events(utterance, res_cn)
 
@@ -803,6 +893,9 @@ class PTICSHDCSLU(SLUInterface):
                 self.parse_stop(abutterance, res_cn)
             if 'CITY' in category_labels:
                 self.parse_city(abutterance, res_cn)
+            if 'NUMBER' in category_labels:
+                self.parse_number(abutterance)
+                if any([word.startswith("TIME") for word in abutterance]): category_labels.add('TIME')
             if 'TIME' in category_labels:
                 self.parse_time(abutterance, res_cn)
             if 'DATE_REL' in category_labels:
