@@ -531,24 +531,71 @@ class DAILogRegClassifier(SLUInterface):
         for k in sorted(self.classifiers):
             print('%40s = %d' % (k, self.classifiers[k]))
 
-    def gen_classifiers_data(self, verbose=False):
+    def prune_features(self, clser, min_feature_count, verbose=False):
+        print '=' * 120
+        print 'Pruning features for classifier', clser
+        print '-' * 120
+
+        features_counts = defaultdict(int)
+        for feat in self.classifiers_features[clser]:
+            for f in feat:
+                features_counts[f] += 1
+
+        if verbose:
+            print "  Number of features: ", len(features_counts)
+
+        remove_features = []
+        for f in features_counts:
+            if features_counts[f] < min_feature_count + len(f):
+                remove_features.append(f)
+
+        if verbose:
+            print "  Number of features occurring less then %d times: %d" % (min_feature_count, len(remove_features))
+
+        remove_features = set(remove_features)
+        for feat in self.classifiers_features[clser]:
+            feat.prune(remove_features)
+
+        features_counts = defaultdict(int)
+        for feat in self.classifiers_features[clser]:
+            for f in feat:
+                features_counts[f] += 1
+
+        self.classifiers_features_list[clser] = features_counts.keys()
+
+        self.classifiers_features_mapping[clser] = {}
+        for i, f in enumerate(self.classifiers_features_list[clser]):
+            self.classifiers_features_mapping[clser][f] = i
+
+        if verbose:
+            print "  Number of features after pruning: ", len(features_counts)
+
+    def gen_classifiers_data(self, min_feature_count = 5, verbose=False, verbose2 = False):
         # generate training data
         self.classifiers_outputs = defaultdict(list)
         self.classifiers_cls = defaultdict(list)
         self.classifiers_features = defaultdict(list)
+        self.classifiers_features_list = {}
+        self.classifiers_features_mapping = {}
+
 
         self.parsed_classifiers = {}
         for clser in self.classifiers:
             self.parsed_classifiers[clser] = DialogueActItem()
             self.parsed_classifiers[clser].parse(clser)
 
-        for utt_idx in self.utterances_list:
-            if verbose:
-                print "-" * 120
-                print unicode(self.utterances[utt_idx])
-                print unicode(self.das[utt_idx])
+        for n, clser in enumerate(sorted(self.classifiers)):
+            if verbose or verbose2:
+                print '=' * 120
+                print 'Generating classifiers data for classifier', clser , ' #', n+1 , '/', len(self.classifiers)
+                print '-' * 120
 
-            for clser in self.classifiers:
+            for utt_idx in self.utterances_list:
+                # if verbose:
+                #     print "-" * 120
+                #     print unicode(self.utterances[utt_idx])
+                #     print unicode(self.das[utt_idx])
+
                 if self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value.startswith('CL_'):
                     # process abstracted classifiers
                     for i, (dai, (f, v, c)) in enumerate(zip(self.das_abstracted[utt_idx], self.das_category_labels[utt_idx])):
@@ -592,61 +639,13 @@ class DAILogRegClassifier(SLUInterface):
                     if verbose:
                         print "  @", clser
 
-        for clser in self.classifiers:
             self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser])
 
             if verbose:
                 print clser
                 print zip(self.classifiers_outputs[clser], self.classifiers_cls[clser])
 
-    def prune_features(self, min_feature_count=5, verbose=False):
-
-        self.classifiers_features_list = {}
-        self.classifiers_features_mapping = {}
-
-        if verbose:
-            print '=' * 120
-            print 'Pruning features'
-            print '-' * 120
-
-        for clser in sorted(self.classifiers):
-            if verbose:
-                print "Classifier: ", clser
-
-            features_counts = defaultdict(int)
-            for feat in self.classifiers_features[clser]:
-                for f in feat:
-                    features_counts[f] += 1
-
-            if verbose:
-                print "  Number of features: ", len(features_counts)
-
-            remove_features = []
-            for f in features_counts:
-                if features_counts[f] < min_feature_count + len(f):
-                    remove_features.append(f)
-
-            if verbose:
-                print "  Number of features occurring less then %d times: %d" % (min_feature_count, len(remove_features))
-
-            remove_features = set(remove_features)
-            for feat in self.classifiers_features[clser]:
-                feat.prune(remove_features)
-
-            features_counts = defaultdict(int)
-            for feat in self.classifiers_features[clser]:
-                for f in feat:
-                    features_counts[f] += 1
-
-            self.classifiers_features_list[clser] = features_counts.keys()
-
-            self.classifiers_features_mapping[clser] = {}
-            for i, f in enumerate(self.classifiers_features_list[clser]):
-                self.classifiers_features_mapping[clser][f] = i
-
-            if verbose:
-                print "  Number of features after pruning: ", len(features_counts)
-
+            self.prune_features(clser, min_feature_count, verbose = (verbose or verbose2))
 
     def train(self, inverse_regularisation=1.0, verbose=True):
         self.trained_classifiers = {}

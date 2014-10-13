@@ -54,8 +54,7 @@ def train(fn_model,
     slu.extract_classifiers(das, utterances, verbose=True)
     slu.prune_classifiers(min_classifier_count = min_classifier_count)
     slu.print_classifiers()
-    slu.gen_classifiers_data()
-    slu.prune_features(min_feature_count = min_feature_count, verbose=True)
+    slu.gen_classifiers_data(min_feature_count = min_feature_count, verbose2 = True)
 
     slu.train(inverse_regularisation=1e1, verbose=True)
 

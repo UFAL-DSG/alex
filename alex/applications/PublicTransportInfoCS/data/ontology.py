@@ -22,9 +22,11 @@ ontology = {
         'silence': set([]),
         'ludait': set([]),
         'task': set(['find_connection', 'find_platform', 'weather']),
+        'stop': set(['Zličín', 'Anděl', ]),
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
+        'city': set([]),
         'from_city': set([]),
         'to_city': set([]),
         'via_city': set([]),
@@ -55,6 +57,9 @@ ontology = {
             #'system_informs', 'system_requests', 'system_confirms',
             #'system_iconfirms', 'system_selects',
         ],
+        'stop': [
+            'user_informs',
+        ],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
@@ -70,6 +75,9 @@ ontology = {
             #'system_informs', 'system_requests',
             'system_confirms', 'system_iconfirms',
             #'system_selects',
+        ],
+        'city': [
+            'user_informs',
         ],
         'from_city': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -184,6 +192,7 @@ ontology = {
         ],
 
         'lta_task': [],
+        'lta_bye': [],
         'lta_time': [],
         'lta_date': [],
         'lta_departure_time': [],
@@ -203,6 +212,16 @@ ontology = {
             'temperature',
         ],
     },
+
+    'context_resolution': {
+        # it is used DM belief tracking context that
+        #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
+        #       "from_city"
+
+        'stop': set(['from_stop', 'to_stop', 'via_stop',]),
+        'city': set(['from_city', 'to_city', 'via_city', 'in_city',]),
+    },
+
     'reset_on_change': {
         # reset slots when any of the specified slots has changed, for matching changed slots a regexp is used
         'route_alternative': [
@@ -226,6 +245,10 @@ ontology = {
             # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
             # slot
             'date_rel': [('', '^date_rel$', '')],
+        },
+        'lta_bye': {
+            # if user say bye it will recorded in a separate slot. we do not have to rely on the ludait slot
+            'true': [('^bye$', '', ''), ],
         },
         'lta_date': {
             'date': [('', '^date$', ''), ],
@@ -327,9 +350,11 @@ def add_slot_values_from_database(slot, category, exceptions=set()):
         if value not in exceptions:
             ontology['slots'][slot].add(value)
 
+add_slot_values_from_database('stop', 'stop')
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
 add_slot_values_from_database('via_stop', 'stop')
+add_slot_values_from_database('city', 'city')
 add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')

@@ -126,7 +126,8 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
             
         rec = uturn.find("rec")
         trs = uturn.findall("asr_transcription")
-        if trs is None:
+        print trs
+        if not trs:
             if rec is not None:
                 n_missing_trs += 1
             continue
