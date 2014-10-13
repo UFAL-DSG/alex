@@ -662,7 +662,7 @@ class PTICSHDCSLU(SLUInterface):
                 not all_words_in(u, 'ještě jedna'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if any_word_in(u, 'druhé druhá druhý druhou dva')and \
+            if any_word_in(u, 'druhé druhá druhý druhou dva') and \
                 not any_word_in(u, 'třetí čtvrtá čtvrtý další'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
 
@@ -763,8 +763,15 @@ class PTICSHDCSLU(SLUInterface):
 
         dict_da = self.utt2da.get(unicode(utterance), None)
         if dict_da:
-            return DialogueActHyp(1.0, DialogueAct(dict_da))
+#            return DialogueActHyp(1.0, DialogueAct(dict_da))
 
+            res_cn = DialogueActConfusionNetwork()
+
+            for dai in DialogueAct(dict_da):
+                res_cn.add(1.0, dai)
+                
+            return res_cn
+    
         if self.preprocessing:
             # the text normalisation
             utterance = self.preprocessing.normalise_utterance(utterance)
