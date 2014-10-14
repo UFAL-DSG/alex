@@ -378,7 +378,7 @@ class PTICSHDCSLU(SLUInterface):
 
         u = abutterance
 
-        preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
+        # preps_abs = set(["v", "ve", "čas", "o", "po", "před", "kolem"])
         preps_rel = set(["za", ])
 
         test_context = [('confirm', 'departure',
@@ -426,12 +426,9 @@ class PTICSHDCSLU(SLUInterface):
         for i, w in enumerate(u):
             if w.startswith("TIME="):
                 value = w[5:]
-                time_abs = False
                 time_rel = False
 
                 if i >= 1:
-                    if u[i - 1] in preps_abs:
-                        time_abs = True
                     if u[i - 1] in preps_rel:
                         time_rel = True
 
@@ -440,23 +437,23 @@ class PTICSHDCSLU(SLUInterface):
                 else:
                     j, k = 0, len(u)
 
-                if value == "now" and not any_phrase_in(u[j:k], ['no a', 'kolik je',
-                                                                 'neslyším', 'už mi neříká']):
-                    time_rel = True
+                if value == "now":
+                    if any_phrase_in(u[j:k], ['no a', 'kolik je', 'neslyším', 'už mi neříká']):
+                        continue
+                    else:
+                        time_rel = True
 
-                if time_abs or time_rel or value != "now":
-                    for act_type, time_type, phrases_pos, phrases_neg in test_context:
-                        if any_phrase_in(u[j:k], phrases_pos) and not any_phrase_in(u, phrases_neg):
-                            break
+                for act_type, time_type, phrases_pos, phrases_neg in test_context:
+                    if any_phrase_in(u[j:k], phrases_pos) and not any_phrase_in(u, phrases_neg):
+                        break
 
-                    if count_times > 1 and not time_type:
-                        # use the previous type if there was time before this one
-                        time_type = last_time_type
+                if count_times > 1 and not time_type:
+                    # use the previous type if there was time before this one
+                    time_type = last_time_type
+                last_time_type = time_type
 
-                    last_time_type = time_type
-
-                    slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
-                    cn.add(1.0, DialogueActItem(act_type, slot, value))
+                slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
+                cn.add(1.0, DialogueActItem(act_type, slot, value))
 
                 last_time = i + 1
 
