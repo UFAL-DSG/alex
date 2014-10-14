@@ -846,18 +846,6 @@ class PTICSHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('jsem', 'v', 'STOP=Metra',), ('jsem', 'v', 'VEHICLE=metro',))
         return abutterance
 
-
-    def preprocess_utterance(self, utterance):
-        """Normalize and abstract utterance
-
-        :type utterance: Utterance
-        :rtype (Utterance, Utterance, set)
-        """
-
-        utterance = self.preprocessing.normalise_utterance(utterance)
-        abutterance, category_labels = self.abstract_utterance(utterance)
-        return utterance, abutterance, category_labels
-
     def parse_1_best(self, obs, verbose=False, *args, **kwargs):
         """Parse an utterance into a dialogue act.
 
@@ -881,7 +869,8 @@ class PTICSHDCSLU(SLUInterface):
                 res_cn.add(1.0, dai)
             return res_cn
 
-        utterance, abutterance, category_labels = self.preprocess_utterance(utterance)
+        utterance = self.preprocessing.normalise_utterance(utterance)
+        abutterance, category_labels = self.abstract_utterance(utterance)
 
         if verbose:
             print 'After preprocessing: "{utt}".'.format(utt=abutterance)
