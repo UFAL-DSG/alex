@@ -893,7 +893,8 @@ class PTICSHDCSLU(SLUInterface):
                 self.parse_city(abutterance, res_cn)
             if 'NUMBER' in category_labels:
                 self.parse_number(abutterance)
-                if any([word.startswith("TIME") for word in abutterance]): category_labels.add('TIME')
+                if any([word.startswith("TIME") for word in abutterance]):
+                    category_labels.add('TIME')
             if 'TIME' in category_labels:
                 self.parse_time(abutterance, res_cn)
             if 'DATE_REL' in category_labels:
