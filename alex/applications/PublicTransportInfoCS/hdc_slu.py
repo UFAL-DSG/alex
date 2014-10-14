@@ -320,36 +320,48 @@ class PTICSHDCSLU(SLUInterface):
         while i < len(u):
             if fraction_number(u[i]):
                 minute_num = int(parse_number(u[i]) * 60)
+                # FRAC na HOUR
                 if i < len(u)-2 and minute_num in [15,45] and u[i+1] == 'na' and hour_number(u[i+2]):
-                    u[i:i+3] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+2])-1, min=minute_num)] # FRAC na HOUR
+                    u[i:i+3] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+2])-1, min=minute_num)]
+                # FRAC HOUR
                 if i < len(u)-1 and minute_num == 30 and hour_number(u[i+1]):
-                    u[i:i+2] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+1])-1, min=minute_num)] # FRAC HOUR
+                    u[i:i+2] = ["TIME={hour}:{min}".format(hour=parse_number(u[i+1])-1, min=minute_num)]
+                # FRAC hodin*
                 elif i < len(u)-1 and u[i+1].startswith('hodin'):
-                    u[i:i+2] = ["TIME=0:{min}".format(min=minute_num)] # FRAC hodin*
+                    u[i:i+2] = ["TIME=0:{min}".format(min=minute_num)]
             elif hour_number(u[i]):
                 hour_num = parse_number(u[i])
+                # HOUR a FRAC hodin*
                 if i < len(u)-3 and u[i+1] == 'a' and fraction_number(u[i+2]) and u[i+3].startswith('hodin'):
-                    u[i:i+4] = ["TIME={hour}:{min}".format(hour=hour_num, min=int(parse_number(u[i+2]) * 60))] # HOUR a FRAC hodin*
+                    u[i:i+4] = ["TIME={hour}:{min}".format(hour=hour_num, min=int(parse_number(u[i+2]) * 60))]
                 if i < len(u)-1 and u[i+1].startswith('hodin'):
+                    # HOUR hodin* a MIN minut*
                     if i < len(u)-4 and u[i+2] == 'a' and minute_number(u[i+3]) and u[i+4].startswith('minut'):
-                        u[i:i+5] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+3]))] # HOUR hodin* a MIN minut*
+                        u[i:i+5] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+3]))]
+                    # HOUR hodin* MIN
                     elif i < len(u)-3 and minute_number(u[i+2]):
-                        u[i:i+4] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))] # HOUR hodin* MIN
+                        u[i:i+4] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))]
+                    # HOUR hodin*
                     else:
-                        u[i:i+2] = ["TIME={hour}:00".format(hour=hour_num)] # HOUR hodin*
+                        u[i:i+2] = ["TIME={hour}:00".format(hour=hour_num)]
                 if i < len(u)-1 and minute_number(u[i+1]):
                     minute_num = parse_number(u[i+1])
+                    # HOUR MIN
                     if minute_num > 9:
-                        u[i:i+2] = ["TIME={hour}:{min}".format(hour=hour_num, min=minute_num)] # HOUR MIN
+                        u[i:i+2] = ["TIME={hour}:{min}".format(hour=hour_num, min=minute_num)]
+                    # HOUR 0 MIN (single digit MIN)
                     elif minute_num == 0 and i < len(u)-2 and minute_number(u[i+2]) and parse_number(u[i+2]) <= 9:
-                        u[i:i+3] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))] # HOUR 0 MIN
+                        u[i:i+3] = ["TIME={hour}:{min:0>2d}".format(hour=hour_num, min=parse_number(u[i+2]))]
             if minute_number(u[i]):
+                # MIN minut*
                 if i < len(u)-1 and u[i+1].startswith("minut"):
-                    u[i:i+2] = ["TIME=0:{min:0>2d}".format(min=parse_number(u[i]))] # MIN minut*
+                    u[i:i+2] = ["TIME=0:{min:0>2d}".format(min=parse_number(u[i]))]
 
             if i > 0 :
+                # v HOUR
                 if u[i-1] == 'v' and hour_number(u[i]):
-                    u[i] = "TIME={hour}:00".format(hour=parse_number(u[i])) # v HOUR
+                    u[i] = "TIME={hour}:00".format(hour=parse_number(u[i]))
+                # za hodinu/minutu
                 elif u[i-1] == 'za':
                     if u[i] == 'hodinu':
                         u[i] = "TIME=1:00"
