@@ -145,6 +145,7 @@ class Utterance(object):
     # though, because of the way built-in types are constructed.
 
     def __init__(self, surface):
+        """:type surface: str | unicode"""
         self._utterance = surface.split()
         self._wordset = set(self._utterance)
 
@@ -189,6 +190,9 @@ class Utterance(object):
 
     def __getitem__(self, idx):
         return self._utterance[idx]
+
+    def __setitem__(self, idx, val):
+        self._utterance[idx] = val
 
     def __iter__(self):
         for word in self._utterance:
