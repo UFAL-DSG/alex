@@ -626,9 +626,12 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if any_word_in(u, 'přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků ' +
-                        'přestupovat přestupuju přestupuji přestupování přestupama přestupem') and \
-            not any_word_in(u, 'čas času'):
-            if any_word_in(u, 'kolik počet kolikrát jsou je'):
+                        'přestupovat přestupuju přestupuji přestupování přestupama přestupem'):
+                        
+            if any_word_in(u, 'čas času dlouho trvá trvají trvat'):
+                cn.add(1.0, DialogueActItem('request', 'time_transfers'))
+
+            elif any_word_in(u, 'kolik počet kolikrát jsou je'):                        
                 cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
             elif any_word_in(u, 'nechci bez žádný žádné žáden'):
