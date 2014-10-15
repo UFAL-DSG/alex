@@ -22,6 +22,7 @@ def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
     slu = PTICSHDCSLU(preprocessing)
+    abstract_only = False
 
     fn_uniq_trn_sem = 'uniq.trn.sem.tmp'
 
@@ -35,8 +36,14 @@ def main():
     uniq_trn_sem = {}
     for line in uniq_trn:
         wav_key, utterance = line.split(" => ",2)
-        da = slu.parse_1_best({'utt':Utterance(utterance)}).get_best_da()
-        uniq_trn_sem[wav_key] = utterance.rstrip() + " <=> " + unicode(da)
+        if abstract_only:
+            utterance = slu.preprocessing.normalise_utterance(utterance)
+            abutterance, _ = slu.abstract_utterance(utterance)
+            annotation = abutterance
+        else:
+            da = slu.parse_1_best({'utt':Utterance(utterance)}).get_best_da()
+            annotation = da
+        uniq_trn_sem[wav_key] = utterance.rstrip() + " <=> " + annotation
 
     print "Saving output to file", fn_uniq_trn_sem
     save_wavaskey(fn_uniq_trn_sem, uniq_trn_sem)

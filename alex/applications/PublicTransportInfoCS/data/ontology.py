@@ -43,6 +43,9 @@ ontology = {
         'date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
         'num_transfers': set([]),
+        'time_transfers': set([]),
+        'time_transfers_stop': set([]),
+        'time_transfers_limit': set([]),        
         'vehicle': set(["dontcare", "bus", "tram", "metro", "train", "cable_car", "ferry", "trolleybus"]),
         'alternative': set(['dontcare', '1', '2', '3', '4', 'last', 'next', 'prev', ]),
     },
@@ -168,6 +171,16 @@ ontology = {
             'system_informs', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
+        'time_transfers': [
+            'user_requests',
+        ],
+        'time_transfers_stop': [
+            'system_informs',
+        ],
+        'time_transfers_limit': [
+            'system_informs',
+            'relative_time',
+        ],                
         'vehicle': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs',
