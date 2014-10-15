@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd ..
+
+./shub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg

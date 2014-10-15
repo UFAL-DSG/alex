@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import random
+import itertools
 
 import autopath
 
@@ -496,11 +497,13 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_duration(ds))
                 elif slot == "num_transfers":
                     res_da.extend(self.req_num_transfers(ds))
+                elif slot == "time_transfers":
+                    res_da.extend(self.req_time_transfers(ds))                    
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
                             'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', ]:
+                            'duration', 'num_transfers', 'time_transfers', ]:
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
@@ -866,6 +869,25 @@ class PTICSHDCPolicy(DialoguePolicy):
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
+        return da
+
+    def req_time_transfers(self, dialogue_state):
+        """Return a DA informing the user about transfer places and time needed for the trasfer in the
+        last recommended connection.
+        """
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        # get only transit with some means of transport
+        transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT ]
+
+        # get_time counts difference between two datetime objects, returns a string h:min
+        get_time = lambda f,t: '%d:%02d' % divmod(((t - f).seconds / 60), 60)
+        # calculate time needed as "departure_time from next stop minus arrival time to the stop"
+        n =  [ (arrive_at.arrival_stop, get_time( arrive_at.arrival_time, depart_from.departure_time))
+                 for arrive_at, depart_from in itertools.izip(transits,transits[1:])]
+        names = [ 'inform(time_transfers_stop="%s")&inform(time_transfers_limit="%s")' % tuple_n for tuple_n in n ]
+
+        da = DialogueAct("&".join(names)) if len(names) > 0 else DialogueAct('inform(num_transfers="0")')
         return da
 
     def check_directions_conflict(self, wp):
