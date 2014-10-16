@@ -60,9 +60,9 @@ Comments
 --------
 
 To save some time especially for multiple experiments on the same data, we store preprocessed speech parametrisation.
-The speech parametrisation is stored because it takes about 7 hours to produce; however, it takes 
-only 1 minute to load from a disk file. 
-The ``model_voip`` directory also this speech parametrisation in ``*.npc`` files.
+The speech parametrisation is stored because it takes about 7 hours to produce.
+However, it takes only 1 minute to load from a disk file. 
+The ``model_voip`` directory stores this speech parametrisation in ``*.npc`` files.
 There fore if new data is added, then these NPC files must be deleted.
 If there are no NPC files then they are automatically generated from the available WAV files.
 
