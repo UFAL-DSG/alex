@@ -102,7 +102,7 @@ def is_update_server_reachble():
     global __is_update_server_reachable
     global online_update_server
 
-    return False
+    #return False
 
     if __is_update_server_reachable is None:
         try:
