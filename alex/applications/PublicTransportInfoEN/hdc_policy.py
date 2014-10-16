@@ -360,11 +360,11 @@ class PTIENHDCPolicy(DialoguePolicy):
         # retrieve state based on the city
         if in_city != 'none' and in_state == 'none':
             states = self.ontology.get_compatible_vals('w_city_w_state', in_city)
-            if len(states) == 1: # possibly more states - baltimore (ohio, maryland)
+            if len(states) == 1:
                 in_state = states.pop()
                 res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
-            elif len(states) > 1:
-                res_da.append(DialogueAct('request(in_state)'))
+            elif len(states) > 1: # possibly more states - baltimore (ohio, maryland)
+                return DialogueAct('request(in_state)')
         # default city and state if no city nor state is set
         if in_city == 'none' and in_state == 'none':
             in_city = self.ontology.get_default_value('in_city')
