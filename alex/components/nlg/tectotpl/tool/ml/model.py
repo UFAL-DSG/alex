@@ -13,7 +13,11 @@ and SplitModel.
 
 from alex.components.nlg.tectotpl.core.util import file_stream
 from alex.components.nlg.tectotpl.core.log import log_info
-from sklearn.metrics import zero_one_score
+# Sklearn renamed zero_one_loss in new version.
+try:
+    from sklearn.metrics import zero_one_loss
+except:
+    from sklearn.metrics import zero_one_loss as zero_one_score
 from alex.components.nlg.tectotpl.tool.ml.dataset import DataSet
 from sklearn.dummy import DummyClassifier
 from alex.components.nlg.tectotpl.core.exception import RuntimeException

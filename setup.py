@@ -4,8 +4,6 @@ from os import path, system
 
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
-system("cd doc; python manual_rsts.py; make html")
-
 
 setup(
     name='Alex Dialogue Systems Framework',
