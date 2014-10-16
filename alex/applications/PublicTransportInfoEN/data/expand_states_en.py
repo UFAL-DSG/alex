@@ -26,10 +26,9 @@ def unfold_state_codes(file_to_unfold, state_codes):
             if line.startswith('#') or not line:
                 continue
 
+            #city\tlatitude|longitude   |state code
             line = line.strip()
-            pair = line.split('\t'); # city \t state code
-
-            state_code = pair[1]
+            state_code = line.split('|')[-1]
             state = state_codes[state_code]
             states[line] = state
     return states
@@ -37,17 +36,17 @@ def unfold_state_codes(file_to_unfold, state_codes):
 
 def main():
 
-    file_to_unfold = "/home/m2rtin/Desktop/transport/cities/cities.state.codes.txt"
+    file_to_unfold = "/home/m2rtin/Desktop/transport/cities/cities_locations.tsv"
     file_codes = "/home/m2rtin/Desktop/transport/cities/state.codes.txt"
 
-    file_out = "/home/m2rtin/alex/alex/applications/PublicTransportInfoEN/data/w.states_cities.tsv.txt"
+    file_out = "/home/m2rtin/alex/alex/applications/PublicTransportInfoEN/data/w.cities_locations.tsv.txt"
 
     state_codes = extract_state_codes(file_codes)
 
     with codecs.open(file_out, 'w', 'UTF-8') as output:
         expansion = unfold_state_codes(file_to_unfold, state_codes)
         for key in expansion:
-            print >> output, expansion[key] + '\t' + key.split('\t')[0]
+            print >> output, key.rsplit('|',1)[0] + '|' + expansion[key]
 
 
 if __name__ == '__main__':

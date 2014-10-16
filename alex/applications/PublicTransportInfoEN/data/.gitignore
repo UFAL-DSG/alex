@@ -9,3 +9,5 @@ cities_stops.tsv
 idos_map.tsv
 errors.txt
 stops-idos.tsv
+!cities.expanded.txt
+!stops.expanded.txt

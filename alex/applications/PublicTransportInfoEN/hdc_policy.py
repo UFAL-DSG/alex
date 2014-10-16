@@ -360,15 +360,17 @@ class PTIENHDCPolicy(DialoguePolicy):
         # retrieve state based on the city
         if in_city != 'none' and in_state == 'none':
             states = self.ontology.get_compatible_vals('w_city_w_state', in_city)
-            if len(states): # possibly more states - baltimore (ohio, maryland)
+            if len(states) == 1: # possibly more states - baltimore (ohio, maryland)
                 in_state = states.pop()
                 res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
+            elif len(states) > 1:
+                res_da.append(DialogueAct('request(in_state)'))
         # default city and state if no city nor state is set
         if in_city == 'none' and in_state == 'none':
             in_city = self.ontology.get_default_value('in_city')
             res_da.append(DialogueActItem('iconfirm', 'in_city', in_city))
-            # in_state = self.ontology.get_default_value('in_state')
-            # res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
+            in_state = self.ontology.get_default_value('in_state')
+            res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
         in_city = in_city if in_city != 'none' else None
         in_state = in_state if in_state != 'none' else None
 
@@ -378,17 +380,10 @@ class PTIENHDCPolicy(DialoguePolicy):
         weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
-        # # find the coordinates of the city
-        # city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
-        # if city_addinfo:
-        #     # TODO: here we just take the first city of that name. We should do some
-        #     # resolution of cities with the same name in different districts
-        #     lon, lat = city_addinfo[0]['lon'], city_addinfo[0]['lat']
-        # else:
-        #     lon, lat = None, None
+
         # request the weather
-        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, state=in_state)
-        # check errorsclea
+        weather = self.weather.get_weather(time=weather_ts, daily=daily, city=in_city, state=in_state)
+        # check errorscale
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")&inform(in_state="%s"' % (in_city, in_state))
         # time
@@ -659,6 +654,14 @@ class PTIENHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct, dict
         """
+
+
+        #TODO: implement the lon,lat:
+        # city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
+        # if city_addinfo:
+        #     states = [entry['state'] for entry in city_addinfo]
+
+
         req_da = DialogueAct()
 
         # retrieve the slot variables
@@ -917,6 +920,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 destination stops are different and issue a warning DA if not.
         :rtype: DialogueAct
         """
+
         conn_info = ds.conn_info
         # check for route conflicts
         if check_conflict:

@@ -10,17 +10,19 @@ from alex.utils.config import online_update, to_project_path
 
 
 
+
+
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
 WEATHER_STATES_CITIES_FNAME = 'w.states_cities.tsv'
 # tab-separated file containing city + all locations of the city/cities with this name
 # (as pipe-separated longitude, latitude, district, region)
-# CITIES_LOCATION_FNAME = 'cities_locations.tsv'
+WEATHER_CITIES_LOCATION_FNAME = 'w.cities_locations.tsv'
 
 # load new versions of the data files from the server
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_STOPS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), WEATHER_STATES_CITIES_FNAME)))
-# online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATION_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), WEATHER_CITIES_LOCATION_FNAME)))
 
 ontology = {
     'slots': {
@@ -366,19 +368,19 @@ def load_compatible_values(fname, slot1, slot2):
 
 
 dirname = os.path.dirname(os.path.abspath(__file__))
-load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
 load_compatible_values(os.path.join(dirname, WEATHER_STATES_CITIES_FNAME), 'w_state', 'w_city')
+load_compatible_values(os.path.join(dirname, CITIES_STOPS_FNAME), 'city', 'stop')
 
+# different implementation (compared to CS) - can not have multiple values in one row, supports duplicit keys (Baltimore MD/OH)
 # def load_additional_information(fname, slot, keys):
 #     with codecs.open(fname, 'r', 'UTF-8') as fh:
 #         for line in fh:
 #             if line.startswith('#') or not '\t' in line:
 #                 continue
 #             data = line.strip().split('\t')
-#             value, data = data[0], data[1:]
-#             ontology['addinfo'][slot][value] = []
-#             for data_point in data:
-#                 ontology['addinfo'][slot][value].append({add_key: add_val for add_key, add_val
-#                                                          in zip(keys, data_point.split('|'))})
+#             value, data = data[0], data[1]
+#             if not value in ontology['addinfo'][slot]:
+#                 ontology['addinfo'][slot][value] = []
+#             ontology['addinfo'][slot][value].append({add_key: add_val for add_key, add_val in zip(keys, data.split('|'))})
 #
-# load_additional_information(os.path.join(dirname, CITIES_LOCATION_FNAME), 'city', ['lon', 'lat', 'district', 'region'])
+# load_additional_information(os.path.join(dirname, WEATHER_CITIES_LOCATION_FNAME), 'city', ['lon', 'lat', 'state'])
