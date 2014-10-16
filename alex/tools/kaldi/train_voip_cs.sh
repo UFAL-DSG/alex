@@ -7,17 +7,19 @@ renice 20 $$
 # Source optional config if exists
 [ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
 
-. ./path.sh "$KALDI_ROOT"
+. ./path.sh
 
 # If you have cluster of machines running GridEngine you may want to
 # change the train and decode commands in the file below
 . ./cmd.sh
 
+mkdir -p $WORK  $EXP
 #######################################################################
 #       Preparing acoustic features, LMs and helper files             #
 #######################################################################
 
-check local/data_split.sh --every_n $EVERY_N $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
+check local/data_split.sh --every_n $EVERY_N \
+    $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
 
 check local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
     $WORK/local/test/trans.txt  $WORK/local/lm "$LMs" || exit 1
@@ -32,8 +34,8 @@ check local/create_G.sh $WORK/lang "$LMs" $WORK/local/lm $WORK/local/dict/lexico
 
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
-    check steps/make_mfcc.sh --mfcc-config common/mfcc.conf --cmd \
-      "$train_cmd" --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
+    check steps/make_mfcc.sh --mfcc-config common/mfcc.conf --cmd "$train_cmd" \
+      --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
     # Note --fake -> NO CMVN
     check steps/compute_cmvn_stats.sh $fake $WORK/local/$s \
       $EXP/make_mfcc/$s $WORK/mfcc || exit 1;

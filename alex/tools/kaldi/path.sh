@@ -2,7 +2,11 @@
 export LC_ALL=C
 
 if [[ -z "$KALDI_ROOT" ]] ; then
-    echo "KALDI_ROOT need to be set"
+    export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
+fi
+
+if [[ ! -d "$KALDI_ROOT" ]] ; then
+    echo "KALDI_ROOT need to be set to point to directory"
     exit 1
 fi
 
@@ -35,8 +39,9 @@ for d in $srilm_sub_bin ; do
     export PATH=$d:$PATH
 done
 
+mkdir -p ckpts
 function check {
- name="./ckpts/`echo $@ | sed 's:[/!]:_:gi'`"
+ name="./ckpts/`echo $@ | sed 's:[/!]:_:gi' | cut -c1-255`"
  echo -e -n "\nCheckpoint $name "
  if [ -f "$name" ] ; then
      echo "found! Skipping!"
@@ -47,3 +52,4 @@ function check {
  fi
  return 0
 }
+
