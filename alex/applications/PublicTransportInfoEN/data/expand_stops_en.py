@@ -70,10 +70,9 @@ def get_column_index(header, caption, default):
 
 
 def hack_stops(stops):
-    # make hundred/ one hundred variants
     extras = []
     for stop in stops:
-        # make hundred/ one hundred variants
+        # make 'hundred'/'one hundred' variants
         if "hundred" in stop:
             extras.append(stop.replace("hundred", "one hundred"))
         # apostroph is mandatory
@@ -87,14 +86,15 @@ def expand_stops(file_name):
     with codecs.open(file_name, 'r', 'UTF-8') as stopsFile:
         header = stopsFile.readline()
 
-        index = get_column_index(header, "stop_name", 2)
+        stop_index = get_column_index(header, "stop_name", 2)
 
         for line in stopsFile:
             reversed = True;
             if line.startswith('#') or not line:  # skip comments
                 continue
 
-            stop = line.split(',')[index].strip('"');
+            fields = line.strip().split(',')
+            stop = fields[stop_index].strip('"');
 
             conjunctions = [' and ', ' on ']
 
@@ -125,21 +125,30 @@ def expand_stops(file_name):
                     stops[stop].append(" ".join(expansion[::-1]))
 
             hack_stops(stops[stop])
-            print (stop, stops[stop])
     return stops
 
 
 def main():
     # transport_dir = "/home/m2rtin/Desktop/transport/";
     # files_to_expand = [file for file in listdir(transport_dir)]
-    files_to_expand = ["/home/m2rtin/Desktop/transport/metro_stops.txt",
-                       '/home/m2rtin/Desktop/transport/bus_manhatten.txt',
-                       "/home/m2rtin/Desktop/transport/amtrak_20140723.txt", ]
+    files_to_expand = [
+        '/home/m2rtin/Desktop/transport/bus_staten_island.txt',
+        '/home/m2rtin/Desktop/transport/bus_bronx.txt',
+        '/home/m2rtin/Desktop/transport/bus_brooklyn.txt',
+        '/home/m2rtin/Desktop/transport/bus_company.txt',
+        '/home/m2rtin/Desktop/transport/bus_manhattan.txt',
+        '/home/m2rtin/Desktop/transport/bus_queens.txt',
+        '/home/m2rtin/Desktop/transport/ferry_ny_waterway.txt',
+        '/home/m2rtin/Desktop/transport/ferry_staten_island.txt',
+        '/home/m2rtin/Desktop/transport/metro_stops.txt',
+        "/home/m2rtin/Desktop/transport/attractions.txt",
+        ]
 
     file_out = "/home/m2rtin/alex/alex/applications/PublicTransportInfoEN/data/_expanded_stops.txt"
 
     with codecs.open(file_out, 'w', 'UTF-8') as output:
         for file in files_to_expand:
+            print >> output, '#-' + file
             expansion = expand_stops(file)
             for key in expansion:
                 print >> output, key + '\t' + "; ".join(expansion[key])

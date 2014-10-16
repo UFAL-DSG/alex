@@ -19,12 +19,13 @@ def extract_stops(file_name):
     with codecs.open(file_name, 'r', 'UTF-8') as stopsFile:
         header = stopsFile.readline()
 
-        index = get_column_index(header, "stop_name", 2)
+        stop_index = get_column_index(header, "stop_name", 2)
 
         for line in stopsFile:
             if line.startswith('#') or not line:  # skip comments and empty lines
                 continue
-            stop = line.split(',')[index].strip('"')
+            fields = line.split(',')
+            stop = fields[stop_index].strip('"')
             stops.append(stop)
 
     return stops
@@ -33,10 +34,18 @@ def extract_stops(file_name):
 
 def main():
     #list of tuples (label, path_to_list_of_stops)
-    ls_files = [('New York', "/home/m2rtin/Desktop/transport/metro_stops.txt"),
+    ls_files = [('Staten Island', "/home/m2rtin/Desktop/transport/bus_staten_island.txt"),
+               ('New York', '/home/m2rtin/Desktop/transport/bus_bronx.txt'),
+               ('New York', '/home/m2rtin/Desktop/transport/bus_brooklyn.txt'),
+               ('New York', '/home/m2rtin/Desktop/transport/bus_company.txt'),
                ('New York', '/home/m2rtin/Desktop/transport/bus_manhatten.txt'),
-               ('New York', "/home/m2rtin/Desktop/transport/amtrak_20140723.txt"),
-               ('Jersey City', "/home/m2rtin/Desktop/transport/njtransit_bus.txt"),
+               ('New York', '/home/m2rtin/Desktop/transport/bus_queens.txt'),
+               ('New York', '/home/m2rtin/Desktop/transport/ferry_ny_waterway.txt'),
+               ('Staten Island', '/home/m2rtin/Desktop/transport/ferry_staten_island.txt'),
+               ('New York', '/home/m2rtin/Desktop/transport/metro_stops.txt'),
+               ('New York', '/home/m2rtin/Desktop/transport/attractions.txt'),
+               # ('Bronx', '/home/m2rtin/Desktop/transport/bus_bronx.txt'),
+               # ('Brooklyn', '/home/m2rtin/Desktop/transport/bus_brooklyn.txt'),
                ]
 
     file_out = "/home/m2rtin/alex/alex/applications/PublicTransportInfoEN/data/_expanded_stop_cities.txt"
@@ -46,8 +55,6 @@ def main():
             listed_stops = extract_stops(file)
             for stop in listed_stops:
                 print >> output, label + "\t" + stop
-
-
 
 
 

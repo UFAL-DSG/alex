@@ -13,6 +13,8 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 
 
 
+
+
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
 
@@ -92,13 +94,20 @@ class PTIENHDCSLU(SLUInterface):
 
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
-                        for c in self.cldb.form2value2cl[f][v]:
-                            abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
-
-                            category_labels.add(c.upper())
-                            break
+                        slots = self.cldb.form2value2cl[f][v]
+                        if "stop" in slots and "wcity" in slots:
+                            abs_utts = abs_utts.replace(f, ('STOP='+v,))
+                            category_labels.add('STOP')
+                        elif "city" in slots and "wcity" in slots:
+                            abs_utts = abs_utts.replace(f, ('CITY='+v,))
+                            category_labels.add('CITY')
                         else:
-                            continue
+                            for c in slots:
+                                abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
+                                category_labels.add(c.upper())
+                                break
+                            else:
+                                continue
 
                         break
 
@@ -711,7 +720,9 @@ class PTIENHDCSLU(SLUInterface):
         # abutterance = abutterance.replace(('STOP=Bílá Hora', 'STOP=Železniční stanice',), ('STOP=Bílá Hora', 'železniční stanice',))
         #
         # abutterance = abutterance.replace(('TIME=now','bych', 'chtěl'), ('teď', 'bych', 'chtěl'))
-        # abutterance = abutterance.replace(('STOP=Čím','se'), ('čím', 'se',))
+        abutterance = abutterance.replace(('how', 'WCITY=Many'), ('how', 'many'))
+        abutterance = abutterance.replace(('WCITY=Tell', 'me'), ('tell', 'me'))
+        abutterance = abutterance.replace(('WCITY=Transfer',), ('transfer',))
         # abutterance = abutterance.replace(('STOP=Lužin','STOP=Na Chmelnici',), ('STOP=Lužin','na','STOP=Chmelnici',))
         # abutterance = abutterance.replace(('STOP=Konečná','zastávka'), ('konečná', 'zastávka',))
         # abutterance = abutterance.replace(('STOP=Konečná','STOP=Anděl'), ('konečná', 'STOP=Anděl',))

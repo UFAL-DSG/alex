@@ -86,7 +86,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         self.substitutions = tp_mod.substitutions
 
     @lru_cache(maxsize=10)
-    def get_weather(self, time=None, daily=False, place=None, lat=None, lon=None, state=None):
+    def get_weather(self, time=None, daily=False, city=None, state=None, lat=None, lon=None):
         """Get OpenWeatherMap weather information or forecast for the given time.
 
         The time/date should be given as a datetime.datetime object.
@@ -97,11 +97,11 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             data['lat'] = lat
             data['lon'] = lon
         else:
-            # default to weather for default place
-            place = place if place is not None else self.cfg['weather']['default_place']
+            # if no state is specified get default state, city is optional
             state = state if state is not None else self.cfg['weather']['suffix']
-            # set the place
-            data['q'] = (','.join([place, state])).encode('utf-8');
+            query = ','.join([city, state]) if city is not None else state
+            # set the city
+            data['q'] = query.encode('utf-8');
 
         method = 'weather'
         if daily:
