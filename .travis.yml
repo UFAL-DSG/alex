@@ -5,7 +5,6 @@
 branches:
     only:
         - master
-        - travis_pykaldi
 
 language: python
 python:
