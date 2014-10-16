@@ -22,7 +22,11 @@ ontology = {
         'silence': set([]),
         'ludait': set([]),
         'task': set(['find_connection', 'find_platform', 'weather']),
-        'stop': set(['Zličín', 'Anděl', ]),
+        'from': set([]),
+        'to': set([]),
+        'via': set([]),
+        'in': set([]),
+        'stop': set([]),
         'from_stop': set(['Zličín', 'Anděl', ]),
         'to_stop': set(['Zličín', 'Anděl', ]),
         'via_stop': set(['Zličín', 'Anděl', ]),
@@ -60,7 +64,22 @@ ontology = {
             #'system_informs', 'system_requests', 'system_confirms',
             #'system_iconfirms', 'system_selects',
         ],
+        'from': [
+            'user_informs',
+        ],
+        'to': [
+            'user_informs',
+        ],
+        'via': [
+            'user_informs',
+        ],
+        'in': [
+            'user_informs',
+        ],
         'stop': [
+            'user_informs',
+        ],
+        'city': [
             'user_informs',
         ],
         'from_stop': [
