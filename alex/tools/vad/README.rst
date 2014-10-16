@@ -1,26 +1,26 @@
 Building a voice activity detector (VAD)
 ========================================
 
-This text described how to builda voice activity detector (VAD) for Alex.
+This text described how to build a voice activity detector (VAD) for Alex.
 This work builds multilingual VAD. That means that we do not have VADs for individual languages but rather only one.
 It appears that NN VAD has the capacity to distinguish between non-speech and speech in any language.
 
-As of now, we use VAD based on neural networks (NNs) implemented in theano toolkit. 
-The main advantage that the same code can eficently run both CPUs and GPUs and theano impliments atomatic derivations.
-Automatic derivations is very usefull epsecially when gradient descend techniques, such as stochastic gradient discend, 
+As of now, we use VAD based on neural networks (NNs) implemented in the Theano toolkit. 
+The main advantage that the same code can efficiently run both CPUs and GPUs and Theano implements automatic derivations.
+Automatic derivations is very useful especially when gradient descend techniques, such as stochastic gradient descent, 
 are used for model parameters optimisation.
 
-Old GMM code is still present but it may not work and its performenace would be significantly worse that of 
+Old GMM code is still present but it may not work and its performance would be significantly worse that of 
 the current NN implementation.
 
 Experiments and the notes for the NN VAD
 ----------------------------------------
 
-- testing is performed on randomly sampled datapoints (20%) from the entire set 
+- testing is performed on randomly sampled data points (20%) from the entire set 
 
 - L2 regularisation must be very small, in addition it does not help much
 
-- instead of MFCC, we use mel-filter banks coefficents only. It looks like the performance is the same or even better
+- instead of MFCC, we use mel-filter banks coefficients only. It looks like the performance is the same or even better
 
 - as of 2014-09-19 the best compromise between the model complexity and the performance appears to be.
   
@@ -30,9 +30,9 @@ Experiments and the notes for the NN VAD
   - 4 hidden layers
   - tanh hidden layer activation
   - 4x amplification of the central frame compared to outer frames
-  - discriminative preptraining
+  - discriminative pre-training
 
-  - given this setup we get about 95.3 % frame accuracy on about 27 milinon of all data
+  - given this setup we get about 95.3 % frame accuracy on about 27 million of all data
 
 
 Data
@@ -59,10 +59,10 @@ Scripts
 Comments
 --------
 
-To save some time especially for multiple experiments on the same data, we store preprocesed speech parametrisation.
-The speech parametrisation parametriisation is stored because it takes about 7 hours to produce; however, it takes 
-only 1 minute to load from a disk file. 
-Tthe ``model_voip`` directory also this speech parametrisation in ``*.npc`` files.
+To save some time especially for multiple experiments on the same data, we store preprocessed speech parametrisation.
+The speech parametrisation is stored because it takes about 7 hours to produce.
+However, it takes only 1 minute to load from a disk file. 
+The ``model_voip`` directory stores this speech parametrisation in ``*.npc`` files.
 There fore if new data is added, then these NPC files must be deleted.
 If there are no NPC files then they are automatically generated from the available WAV files.
 

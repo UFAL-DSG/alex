@@ -14,7 +14,8 @@ Ask the root on the computer to run:
 
   sudo apt-get install gfortran libatlas-base-dev portaudio19-dev swig \
       flac speex sox libsox-dev mplayer libsqlite3-dev python-wxgtk2.8 libmad0-dev \
-      libjpeg8-dev libfreetype6-dev libpng12-dev libagg-dev libatlas3-base
+      libjpeg8-dev libfreetype6-dev libpng12-dev libagg-dev libatlas3-base \
+      libsox-fmt-mp3
 
 To get latest versions of the following python packages, I recommend to run these commands:
 
