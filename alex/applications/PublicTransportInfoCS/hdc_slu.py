@@ -83,10 +83,13 @@ def ending_phrases_in(utterance, phrases):
 
 class PTICSHDCSLU(SLUInterface):
 
-    def __init__(self, preprocessing, cfg=None, utt2da_fn="../data/utt2da_dict.txt"):
+    def __init__(self, preprocessing, cfg):
         super(PTICSHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
-        self.utt2da = self._load_utt2da(utt2da_fn)
+        if 'utt2da' in cfg['SLU'][PTICSHDCSLU]:
+            self.utt2da = self._load_utt2da(cfg['SLU'][PTICSHDCSLU]['utt2da'])
+        else:
+            self.utt2da = {}
 
     def _load_utt2da(self, filename):
         """

@@ -4,6 +4,8 @@
 import sys
 import autopath
 
+from alex.utils.config import as_project_path
+
 from alex.applications.PublicTransportInfoCS.hdc_slu import PTICSHDCSLU
 
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
@@ -23,7 +25,7 @@ else:
 
 cldb = CategoryLabelDatabase('../data/database.py')
 preprocessing = PTICSSLUPreprocessing(cldb)
-slu = PTICSHDCSLU(preprocessing)
+slu = PTICSHDCSLU(preprocessing, cfg = {'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
 
 da = slu.parse_1_best({'utt':Utterance(utterance)}, verbose=True).get_best_da()
 

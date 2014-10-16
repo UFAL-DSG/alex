@@ -7,6 +7,8 @@ import autopath
 import codecs
 import sys
 
+from alex.utils.config import as_project_path
+
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.slu.base import CategoryLabelDatabase
 from alex.components.asr.utterance import Utterance
@@ -21,7 +23,7 @@ def main():
 
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
-    slu = PTICSHDCSLU(preprocessing)
+    slu = PTICSHDCSLU(preprocessing, cfg = {'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
     abstract_only = False
 
     fn_uniq_trn_sem = 'uniq.trn.sem.tmp'

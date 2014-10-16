@@ -15,6 +15,8 @@ import multiprocessing
 
 import alex.utils.various as various
 
+from alex.utils.config import as_project_path
+
 from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.asr.common import asr_factory
@@ -37,7 +39,7 @@ num_workers = 1
 
 cldb = CategoryLabelDatabase('../data/database.py')
 preprocessing = PTICSSLUPreprocessing(cldb)
-slu = PTICSHDCSLU(preprocessing)
+slu = PTICSHDCSLU(preprocessing, cfg = {'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
 cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
 asr_rec = asr_factory(cfg)
 
