@@ -592,12 +592,16 @@ class PTICSHDCSLU(SLUInterface):
             if any_word_in(u, 'jiný jiné jiná jiného'):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená začátku opakuji začneme začněme začni začněte začít'):
+        if any_word_in(u, "od začít začneme začněme začni začněte") and any_word_in(u, "začátku znova znovu") or \
+            any_word_in(u, "reset resetuj restart restartuj zrušit") or \
+            any_phrase_in(u, ['nové spojení', 'nový spojení', 'nové zadání', 'nový zadání', 'nový spoj']) and not any_word_in(u, "ze") or \
+            all_words_in(u, "tak jinak") or any_phrase_in(u, ["tak znova", 'zkusíme to ještě jednou']):
+            cn.add(1.0, DialogueActItem("restart"))
+        elif not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená opakuji'):
             if (any_word_in(u, 'zopakovat opakovat znova znovu opakuj zopakuj zopakujte zvopakovat') or
                 phrase_in(u, "ještě jednou")):
                 cn.add(1.0, DialogueActItem("repeat"))
-
-        if any_word_in(u, "zopakuj zopakujte zopakovat opakovat") and phrase_in(u, "poslední větu"):
+        elif any_word_in(u, "zopakuj zopakujte zopakovat opakovat") and phrase_in(u, "poslední větu"):
             cn.add(1.0, DialogueActItem("repeat"))
 
         if ((len(u) == 1 and any_word_in(u, "pardon pardón promiňte promiň sorry")) or
@@ -641,16 +645,6 @@ class PTICSHDCSLU(SLUInterface):
             (any_word_in(u, "dobrý") and not any_phrase_in(u, ['dobrý den', 'dobrý dén', 'dobrý večer']))) and \
             not any_word_in(u, "ano"):
             cn.add(1.0, DialogueActItem("ack"))
-
-        if any_word_in(u, "od začít začneme začněme začni začněte") and any_word_in(u, "začátku znova znovu") or \
-            any_word_in(u, "reset resetuj restart restartuj zrušit") or \
-            phrase_in(u, 'nové spojení') and not phrase_in(u, 'spojení ze') or \
-            phrase_in(u, 'nový spojení') and not phrase_in(u, 'spojení ze') or \
-            phrase_in(u, 'nové zadání') and not any_word_in(u, "ze") or \
-            phrase_in(u, 'nový zadání') and not any_word_in(u, "ze") or \
-            phrase_in(u, 'nový spoj') and not phrase_in(u, "spoj ze") or \
-            all_words_in(u, "tak jinak") or any_phrase_in(u, ["tak znova", 'zkusíme to ještě jednou']):
-            cn.add(1.0, DialogueActItem("restart"))
 
         if any_phrase_in(u, ['chci jet', 'chtěla jet', 'bych jet', 'bych jel', 'bychom jet',
                              'bych tam jet', 'jak se dostanu', 'se dostat']) or \
