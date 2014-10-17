@@ -183,5 +183,3 @@ def convert_mp3_to_wav(cfg, mp3_string):
     # read the transformation results back to the buffer
     return load_wav(cfg, fdopen(tmp2fh, 'rb'))
 
-def play(cfg, wav):
-    pass
