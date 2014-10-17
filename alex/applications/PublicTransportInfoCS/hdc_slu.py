@@ -208,9 +208,11 @@ class PTICSHDCSLU(SLUInterface):
         # simple "ne" cannot be included as it collides with negation. "ne [,] chci jet z Motola"
         phr_dai_types = [('confirm', set(['jede to', 'odjíždí to', 'je výchozí']), set()),
                          ('deny',
+                          # positive matches
                           set(['nechci', 'nejedu', 'ne z', 'ne od', 'ne na', 'ne do', 'né do', 'ne k', 'nikoliv', 'nechci na', 'nechtěl']),
+                          # negative matches
                           set(['nechci ukončit hovor', 'nechci to tak', 'né to nechci', 'ne to nechci', 'nechci nápovědu',
-                               'nechci chci']))]
+                               'nechci chci', 'ne to ne', 'ne ne z']))]
         last_wp_pos = 0
 
         for i, w in enumerate(u):
