@@ -274,6 +274,7 @@ class Utterance(object):
                 match_idx += min(max_skip, phrase_idx)
             else:
                 match_idx += 1
+
         # No match found.
         return -1
 
@@ -324,9 +325,7 @@ class Utterance(object):
             orig = u' '.join(orig)
         if isinstance(replacement, list):
             replacement = u' '.join(replacement)
-        # FJ (this does not work well): using '\b' to ensure we are replacing only at whitespace
-        # FJ a changed it
-        return Utterance(re.sub('(^|\s)' + re.escape(orig) + '($|\s)', ' '+replacement+' ', unicode(self)))
+        return Utterance(re.sub(r'\b{pat}\b'.format(pat=orig), ' '+replacement+' ', unicode(self), flags=re.UNICODE))
 
     def replace2(self, start, end, replacement):
         """

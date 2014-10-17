@@ -322,6 +322,8 @@ _subst = [
 for idx, tup in enumerate(_subst):
     pat, sub = tup
     _subst[idx] = (re.compile(r'(^|\s){pat}($|\s)'.format(pat=pat)), ' '+sub+' ')
+    # alternative and probably better use this in the future, but must be tested!
+    # _subst[idx] = (re.compile(r'\b{pat}\b'.format(pat=pat)), ' '+sub+' ', flags=re.UNICODE)
 
 # hesitation expressions {{{
 _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",

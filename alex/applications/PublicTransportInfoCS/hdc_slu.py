@@ -74,6 +74,7 @@ def ending_phrases_in(utterance, phrases):
 
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     utterance_len = len(utterance)
+
     for phrase in phrases:
         phr_pos = phrase_pos(utterance, phrase)
         if phr_pos is not -1 and phr_pos + len(phrase.split()) is utterance_len:
@@ -876,17 +877,17 @@ class PTICSHDCSLU(SLUInterface):
             print 'After preprocessing: "{utt}".'.format(utt=abutterance)
             print category_labels
 
+        self.parse_non_speech_events(utterance, res_cn)
+
+        utterance = utterance.replace_all(['_noise_'], '').replace_all(['_laugh_'], '').replace_all(['_ehm_hmm_'], '').replace_all(['_inhale_'], '')
+        abutterance = abutterance.replace_all(['_noise_'], '').replace_all(['_laugh_'], '').replace_all(['_ehm_hmm_'], '').replace_all(['_inhale_'], '')
+
         abutterance = self.handle_false_abstractions(abutterance)
         category_labels.add('CITY')
         category_labels.add('VEHICLE')
         category_labels.add('NUMBER')
 
-        self.parse_non_speech_events(utterance, res_cn)
-
         if len(res_cn) == 0:
-            # remove non speech events, they are not relevant for SLU
-            abutterance = abutterance.replace_all('_noise_', '').replace_all('_laugh_', '').replace_all('_ehm_hmm_', '').replace_all('_inhale_', '')
-
             if 'STOP' in category_labels:
                 self.parse_stop(abutterance, res_cn)
             if 'CITY' in category_labels:
