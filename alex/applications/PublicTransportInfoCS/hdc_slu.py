@@ -708,7 +708,7 @@ class PTICSHDCSLU(SLUInterface):
 
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
-        if not any_word_in(u, 'za v'):
+        if not any_word_in(u, 'za v přestup přestupy'):
             if all_words_in(u, 'jak') and any_word_in(u, 'dlouho dlóho') and any_word_in(u, "jede pojede trvá trvat") or \
                 all_words_in(u, "kolik minut") and any_word_in(u, "jede pojede trvá trvat"):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
