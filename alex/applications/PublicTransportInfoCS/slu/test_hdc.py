@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import autopath
 
-from alex.applications.PublicTransportInfoCS.slu.test import trained_slu_test, hdc_slu_test
+from alex.applications.PublicTransportInfoCS.slu.test import hdc_slu_test
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 
 if __name__ == "__main__":

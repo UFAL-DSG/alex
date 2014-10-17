@@ -8,15 +8,14 @@ import glob
 import os
 import xml.dom.minidom
 import random
-import autopath
 import sys
-
 import multiprocessing
+
+import autopath
 
 import alex.utils.various as various
 
 from alex.utils.config import as_project_path
-
 from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.asr.common import asr_factory
