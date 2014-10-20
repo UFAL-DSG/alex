@@ -76,7 +76,7 @@ class TTS(multiprocessing.Process):
                 if ord(x) != 0:
                     break
 
-            return wav[2*int(i/2):-2*int(j/2)]
+            return wav[2*int(i/2):-2*int(j/2+1)]
         else:
             return wav
 

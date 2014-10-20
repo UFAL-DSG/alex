@@ -261,7 +261,7 @@ class SLUInterface(object):
 
     """
 
-    def __init__(self, preprocessing, cfg=None, *args, **kwargs):
+    def __init__(self, preprocessing, cfg, *args, **kwargs):
         self.preprocessing = preprocessing
         self.cfg = cfg
 

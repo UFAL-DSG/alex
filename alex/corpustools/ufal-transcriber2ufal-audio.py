@@ -41,7 +41,8 @@ from alex.utils.fs import find
 
 _LANG2NORMALISATION_MOD = {
     'cs': 'alex.corpustools.text_norm_cs',
-    'en': 'alex.corpustools.text_norm_en'
+    'en': 'alex.corpustools.text_norm_en',
+    'es': 'alex.corpustools.text_norm_es',
 }
 
 from alex.utils.ui import getTerminalSize

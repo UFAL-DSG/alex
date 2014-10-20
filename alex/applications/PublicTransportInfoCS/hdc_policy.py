@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import random
+import itertools
 
 import autopath
 
@@ -196,10 +197,11 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct("silence()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "bye":
+        elif "lta_bye" in accepted_slots:
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
             dialogue_state["ludait"].reset()
+            dialogue_state["lta_bye"].reset()
 
         elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
@@ -495,11 +497,13 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_duration(ds))
                 elif slot == "num_transfers":
                     res_da.extend(self.req_num_transfers(ds))
+                elif slot == "time_transfers":
+                    res_da.extend(self.req_time_transfers(ds))                    
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
                             'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', ]:
+                            'duration', 'num_transfers', 'time_transfers', ]:
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
@@ -692,12 +696,14 @@ class PTICSHDCPolicy(DialoguePolicy):
         if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
-            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif from_stop_val == 'none':
-            req_da.extend(DialogueAct("request(from_stop)"))
-        elif to_stop_val == 'none':
-            req_da.extend(DialogueAct('request(to_stop)'))
+        elif stop_city_inferred or from_city_val == to_city_val:
+            # if user did not provided info about a city ask about stops
+            if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
+                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+            elif from_stop_val == 'none':
+                req_da.extend(DialogueAct("request(from_stop)"))
+            elif to_stop_val == 'none':
+                req_da.extend(DialogueAct('request(to_stop)'))
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
@@ -863,6 +869,25 @@ class PTICSHDCPolicy(DialoguePolicy):
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
+        return da
+
+    def req_time_transfers(self, dialogue_state):
+        """Return a DA informing the user about transfer places and time needed for the trasfer in the
+        last recommended connection.
+        """
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        # get only transit with some means of transport
+        transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT ]
+
+        # get_time counts difference between two datetime objects, returns a string h:min
+        get_time = lambda f,t: '%d:%02d' % divmod(((t - f).seconds / 60), 60)
+        # calculate time needed as "departure_time from next stop minus arrival time to the stop"
+        n =  [ (arrive_at.arrival_stop, get_time( arrive_at.arrival_time, depart_from.departure_time))
+                 for arrive_at, depart_from in itertools.izip(transits,transits[1:])]
+        names = [ 'inform(time_transfers_stop="%s")&inform(time_transfers_limit="%s")' % tuple_n for tuple_n in n ]
+
+        da = DialogueAct("&".join(names)) if len(names) > 0 else DialogueAct('inform(num_transfers="0")')
         return da
 
     def check_directions_conflict(self, wp):
@@ -1043,7 +1068,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :rtype: tuple(datetime, string)
         """
         now = datetime.now()
-        now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
+        now += timedelta(seconds=(60 - now.second), microseconds=(-now.microsecond))  # round to next minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
         if (time_abs != 'none' or date_rel != 'none') and time_rel != 'none':

@@ -145,6 +145,7 @@ class Utterance(object):
     # though, because of the way built-in types are constructed.
 
     def __init__(self, surface):
+        """:type surface: str | unicode"""
         self._utterance = surface.split()
         self._wordset = set(self._utterance)
 
@@ -189,6 +190,9 @@ class Utterance(object):
 
     def __getitem__(self, idx):
         return self._utterance[idx]
+
+    def __setitem__(self, idx, val):
+        self._utterance[idx] = val
 
     def __iter__(self):
         for word in self._utterance:
@@ -270,6 +274,7 @@ class Utterance(object):
                 match_idx += min(max_skip, phrase_idx)
             else:
                 match_idx += 1
+
         # No match found.
         return -1
 
@@ -289,6 +294,9 @@ class Utterance(object):
                 the resulting utterance is returned.
 
         """
+        if not isinstance(orig, (tuple, list)):
+            orig = [orig, ]
+
         orig_pos = self.find(orig)
         if orig_pos == -1:
             # If `orig' does not occur in self, do nothing, return self.
@@ -297,11 +305,11 @@ class Utterance(object):
             # If `orig' does occur in self, construct a new utterance with
             # `orig' replaced by `replacement' and return that.
             ret_utt = Utterance('')
-            if not isinstance(replacement, list):
+            if isinstance(replacement, tuple):
                 replacement = list(replacement)
-            ret_utt.utterance = (self._utterance[:orig_pos] +
-                             replacement +
-                             self._utterance[orig_pos + len(orig):])
+            if not isinstance(replacement, list):
+                replacement = [replacement,]
+            ret_utt.utterance = self._utterance[:orig_pos] + replacement + self._utterance[orig_pos + len(orig):]
             ret_utt._wordset = set(ret_utt._utterance)
 
         return (ret_utt, orig_pos) if return_startidx else ret_utt
@@ -314,15 +322,14 @@ class Utterance(object):
         :param replacement: the replacement (as string or list of words)
         :rtype: Utterance
         """
-        if self.find(orig) == -1:
-            return self
-        if isinstance(orig, list):
-            orig = u' '.join(orig)
-        if isinstance(replacement, list):
-            replacement = u' '.join(replacement)
-        # FJ (this does not work well): using '\b' to ensure we are replacing only at whitespace
-        # FJ a changed it
-        return Utterance(re.sub('(^|\s)' + re.escape(orig) + '($|\s)', ' '+replacement+' ', unicode(self)))
+
+        ret_utt = self
+        orig_pos = 1
+
+        while orig_pos != -1:
+            ret_utt, orig_pos = ret_utt.replace(orig, replacement, return_startidx=True)
+
+        return ret_utt
 
     def replace2(self, start, end, replacement):
         """
@@ -335,8 +342,10 @@ class Utterance(object):
         """
 
         ret_utt = Utterance('')
+        if isinstance(replacement, tuple):
+            replacement = list(replacement)
         if not isinstance(replacement, list):
-            replacement = [replacement, ]
+            replacement = [replacement,]
 
         ret_utt.utterance = self._utterance[:start] + replacement + self._utterance[end:]
         ret_utt._wordset = set(ret_utt._utterance)

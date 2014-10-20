@@ -47,7 +47,8 @@ from alex.utils.fs import find
 
 _LANG2NORMALISATION_MOD = {
     'cs': 'alex.corpustools.text_norm_cs',
-    'en': 'alex.corpustools.text_norm_en'
+    'en': 'alex.corpustools.text_norm_en',
+    'es': 'alex.corpustools.text_norm_es',
 }
 
 
@@ -60,6 +61,8 @@ def save_transcription(trs_fname, trs):
 
     """
     existed = os.path.exists(trs_fname)
+    if not trs.endswith('\n'):
+        trs += '\n'
     with codecs.open(trs_fname, 'w', 'UTF-8') as trs_file:
         trs_file.write(trs)
     return existed
@@ -123,7 +126,8 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
             
         rec = uturn.find("rec")
         trs = uturn.findall("asr_transcription")
-        if trs is None:
+        print trs
+        if not trs:
             if rec is not None:
                 n_missing_trs += 1
             continue

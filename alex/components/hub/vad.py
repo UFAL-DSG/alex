@@ -161,8 +161,14 @@ class VAD(multiprocessing.Process):
                 # buffer the recorded and played audio
                 self.deque_audio_in.append(data_rec)
 
+                #s = (time.time(), time.clock())
+
                 decision = self.vad.decide(data_rec.payload)
                 vad, change = self.smoothe_decison(decision)
+
+                #d = (time.time() - s[0], time.clock() - s[1])
+                #if d[0] > 0.001:
+                #    print "VAD t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
 
                 if self.cfg['VAD']['debug']:
                     self.system_logger.debug("vad: %s change: %s" % (vad, change))

@@ -7,6 +7,7 @@ import os.path
 import codecs
 import autopath
 
+from alex.utils.config import as_project_path
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 def trained_slu_test(fn_model, fn_input, constructor, fn_reference):
@@ -107,7 +108,7 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
 
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
-    hdc_slu = PTICSHDCSLU(preprocessing)
+    hdc_slu = PTICSHDCSLU(preprocessing, cfg = {'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
 
     test_utterances = load_wavaskey(fn_input, constructor, limit=100000)
 

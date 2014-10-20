@@ -275,11 +275,55 @@ _subst = [
           ('FŔST', '_EXCLUDE_'),
           ('BRA', '_EXCLUDE_'),
           ('ALÉÉ', 'ALÉ'),
+          ('DALĚÍ', 'DALŠÍ'),
+          ('ANKTRARTIDA', 'ANTARKTIDA'),
+          ('MALOSTRANSKÁ ALE BUĎ JIŽ DALŠÍ', 'MALOSTRANSKÁ ALE BUDIŽ DALŠÍ'),
+          ('DEVEDASÁT', 'DEVEDESÁT'),
+          ('DLOUHAU', 'DLOUHOU'),
+          ('DLÓHÓ', 'DLÓHO'),
+          ('DNESKÁ', 'DNESKA'),
+          ('DVACETSEDUM', 'DVACET SEDUM'),
+          ('DVACETTŘI', 'DVACET TŘI'),
+          ('DVACETČTYRY', 'DVACET ČTYRY'),
+          ('DVACETŠEST', 'DVACET ŠEST'),
+          ('DVACÁTÉHOOSMÉHO', 'DVACÁTÉHO OSMÉHO'),
+          ('DVACÁTÉHOSMÉHO', 'DVACÁTÉHO OSMÉHO'),
+          ('DVACÁTÝHOŠESTÝHO', 'DVACÁTÝHO ŠESTÝHO'),
+          ('DVATISÍCETŘINÁCT', 'DVATISÍCE TŘINÁCT'),
+          ('DVĚSTĚDVOJKA', 'DVĚSTĚ DVOJKA'),
+          ('DVĚSTĚPADESÁT', 'DVĚSTĚ PADESÁT'),
+          ('DĚKUJÚ', 'DĚKUJŮ'),
+          ('ERROR', 'EROR'),
+          ('HŮŮ', 'HŮ'),
+          ('JÉÉ', 'JÉ'),
+          ('JÉŽIŠ', 'JÉŽÍŠ'),
+          ('KRČSKA', 'KRČSKÁ'),
+          ('KVASNICÁ', 'KVASNICKÁ'),
+          ('NADRAŽÍ', 'NÁDRAŽÍ'),
+          ('NÉÉ', 'NÉ'),
+          ('POLIKLANIKA', 'POLIKLINIKA'),
+          ('POLIKLLINIKY', 'POLIKLINIKY'),
+          ('POSLEDNÉHO', 'POSLEDNÍHO'),
+          ('STODVACET', 'STO DVACET'),
+          ('STODVOJKA', 'STO DVOJKA'),
+          ('STOJEDNA', 'STO JEDNA'),
+          ('STOSEDMDESÁT', 'STO SEDMDESÁT'),
+          ('STOŠEDESÁTJEDNA', 'STO ŠEDESÁT JEDNA'),
+          ('TUOLEVOVY', 'TUPOLEVOVY'),
+          ('VUNIČOVĚ', 'V UNIČOVĚ'),
+          ('ČTYŘICETŠET', 'ČTYŘICET ŠET'),
+          ('ZA ANDĚLA', 'Z ANDĚLA'),
+          ('ANTŔT', 'ANTRT'),
+          ('MALOSTARNSKÉHO', 'MALOSTRANSKÉHO'),
+          ('POLIKLLINIKY', 'POLIKLINIKY'),
+          ('JSEMSE', 'JSEM SE'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
     pat, sub = tup
     _subst[idx] = (re.compile(r'(^|\s){pat}($|\s)'.format(pat=pat)), ' '+sub+' ')
+    # alternative and probably better use this in the future, but must be tested!
+    # _subst[idx] = (re.compile(r'\b{pat}\b'.format(pat=pat)), ' '+sub+' ', flags=re.UNICODE)
 
 # hesitation expressions {{{
 _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
@@ -338,7 +382,7 @@ def normalise_text(text):
     return text
 
 _excluded_characters = set(['=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Ŕ'])
 
 def exclude_asr(text):
     """

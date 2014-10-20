@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import autopath
 
 import argparse
+import multiprocessing
 
 from alex.applications.exceptions import TextHubException
 from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceException
