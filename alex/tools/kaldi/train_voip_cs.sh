@@ -81,10 +81,16 @@ check steps/train_lda_mllt.sh  --cmd "$train_cmd" $pdf $gauss \
   $WORK/train $WORK/lang $EXP/tri1_ali $EXP/tri2b || exit 1;
 
 echo "Align all data with LDA+MLLT system (tri2b)"
-check steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
+# TODO cannot use check because the checkpoint is limited to 255 name and multile align steps map to one checkpoint
+# check steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
+steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
     --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
 
 echo -e 'TODO convert alignments to phone level alignmetns'
+
+check steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
+   --beam $mmi_beam --lattice-beam $mmi_lat_beam \
+   $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1;
 
 echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05"
 check steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
@@ -129,7 +135,7 @@ for s in $TEST_SETS ; do
     # check steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
     #    --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
     #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir}
-    
+
     # Note: change --iter option to select the best model. 4.mdl == final.mdl
     echo "Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
     steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
