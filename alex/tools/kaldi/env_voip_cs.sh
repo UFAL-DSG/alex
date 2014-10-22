@@ -6,7 +6,6 @@ export EVERY_N=1
 export TEST_SETS="dev test"
 
 # Directories set up
-export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
 export DATA_ROOT=`pwd`/data_voip_cs  # expects subdirectories train + $TEST_SETS
 export WORK=`pwd`/model_voip_cs
 export EXP=`pwd`/model_voip_cs/exp

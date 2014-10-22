@@ -54,10 +54,6 @@ learning_rate_decay = 100.0
 weight_l2=1e-6
 batch_size= 500000 
 
-fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
-                              usec0, usedelta, useacc, mel_banks_only)
-
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     """ Loads a MLF file and creates normalised MLF class.
@@ -83,6 +79,13 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf.shorten_segments(max_frames_per_segment)
 
     return mlf
+
+
+def create_kaldi_mlflike():
+    # Has to support
+    # mlf_speech.count_length('sil')
+    pass
+
 
 def gen_features(speech_data, speech_alignment):
     vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=0, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
@@ -157,8 +160,8 @@ def gen_features(speech_data, speech_alignment):
     train_x -= tx_m
     train_x /= tx_std
 
-    print 'Saving data to:', fetures_file_name
-    f = open(fetures_file_name, "wb")
+    print 'Saving data to:', features_file_name
+    f = open(features_file_name, "wb")
     np.save(f, crossvalid_x) 
     np.save(f, crossvalid_y)
     np.save(f, train_x)
@@ -187,7 +190,7 @@ def train_nn(speech_data, speech_alignment):
     print
     random.seed(0)
     try:
-        f = open(fetures_file_name, "rb")
+        f = open(features_file_name, "rb")
         crossvalid_x = np.load(f) 
         crossvalid_y = np.load(f)
         train_x = np.load(f)
@@ -317,13 +320,15 @@ def main():
     global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
-    global fetures_file_name
+    global features_file_name
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This program trains neural network VAD models using the theano library.
       """)
 
+    parser.add_argument('--align-format', action="store", default="htk", type=str,
+                        help='Format of alignments [htk, kaldi]')
     parser.add_argument('--method', action="store", default=method, type=str,
                         help='an optimisation method: default %s' % method)
     parser.add_argument('--hact', action="store", default=hact, type=str,
@@ -398,7 +403,7 @@ def main():
     train_speech.append('data_voip_cs/train/*.wav')
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
 
-    fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
+    features_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
                              (max_frames, max_files, max_frames_per_segment, trim_segments, 
                               usec0, usedelta, useacc, mel_banks_only)
 
