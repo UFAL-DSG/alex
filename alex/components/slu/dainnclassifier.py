@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This is a rewrite of the DAILogRegClassifier ``from dailrclassifier_old.py``. The underlying approach is the same; however,
-the way how the features are computed is changed significantly.
+This is a rewrite of the DAILogRegClassifier. This code uses Theano FFNN.
 """
 from __future__ import unicode_literals
 
@@ -158,8 +157,7 @@ class UtteranceFeatures(Features):
             self.features[f] = 1.0
 
 
-
-class DAILogRegClassifier(SLUInterface):
+class DAINNClassifier(SLUInterface):
     """Implements learning of dialogue act item classifiers based on logistic
     regression.
 
