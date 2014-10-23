@@ -21,8 +21,12 @@ class TestSkipperPlugin(Plugin):
         )
 
         # Build a list of absolute paths to be ignored.
-        self.ignore_paths = [os.path.join(self.alex_root, p) 
-                             for p in self.config.get('ignore_paths').split()]
+        self.ignore_paths = [
+            os.path.abspath(
+                os.path.join(self.alex_root, p)
+            ) for p in self.config.get('ignore_paths').split()]
+
+        print self.ignore_paths
 
     def matchPath(self, event):
         """Skip the configured tests."""

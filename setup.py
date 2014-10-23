@@ -9,7 +9,7 @@ setup(
     name='Alex Dialogue Systems Framework',
     packages=find_packages(),
     version='0.1',
-    test_suite="nose.collector",
+    test_suite='nose2.collector.collector',
     author='UFAL-DSG https://github.com/UFAL-DSG/',
     author_email='dsg-l@ufal.mff.cuni.cz',
     url='https://github.com/DSG-UFAL/alex',
