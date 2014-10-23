@@ -30,4 +30,4 @@ script:
     - python -c 'import kaldi.decoders'
     - python -c 'import pjsuaxt'
     - python -c 'import alex.applications.vhub'
-    - nose2
+    - nose2 alex
