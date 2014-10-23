@@ -11,7 +11,7 @@ RUN update-locale LANG=en_US.UTF-8
 # Clone Alex from repository.
 RUN mkdir /app
 WORKDIR /app
-RUN git clone https://github.com/UFAL-DSG/alex.git
+ADD . alex
 WORKDIR /app/alex
 RUN pip install -r alex-requirements.txt
 RUN pip install pystache cython flask theano
