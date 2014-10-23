@@ -13,11 +13,30 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
-locdata=$1; shift
-train_text=$1; shift
-test_text=$1; shift
+
+train_text=""
+arpa_paths="build2"   
+lm_names="$arpa_path"
+
+. utils/parse_options.sh
+
+if [ $# != 1 ]; then
+   echo "usage: $0 <options> directory to store LMS"
+   echo "--arpa-paths \"path1.arpa path2.arpa build2\"     default: $arpa_paths"  specify either path or build[0-4] to build LM note that
+   echo "               Contains paths to arpa files or command to build n-gram model from transcriptions"
+   echo "--train-text   Path to transcriptions"
+   echo "--lm-names     The # of names should match # of arpa paths; the names should not contain underscore"
+   exit 1;
+fi
+
 local_lm=$1; shift
-lms=$1; shift
+
+declare -A lms
+set -- $arpa_paths
+for k in $lm_names ; do 
+    lms[$k]=$1
+    shift
+done
 
 
 mkdir -p $local_lm
@@ -41,27 +60,30 @@ with open('$lm', 'r+') as f:
 """
 }
 
-for lm in $lms ; do
-    lm_base=`basename $lm`
-    if [ ${lm_base%[0-6]} !=  'build' ] ; then
-        cp $lm $local_lm
-    else
-        # We will build the LM 'build[0-9].arpa
-        lm_order=${lm_base#build}
-
-        echo "=== Building LM of order ${lm_order}..."
-        if [ $lm_order -eq 0 ] ; then
-            echo "Zerogram $lm_base LM is build from text: $test_text"
-            cut -d' ' -f2- $test_text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
-                sort -u > $locdata/lm_test.txt
-            build_0gram  $locdata/lm_test.txt $local_lm/${lm_base}
-        else
-            echo "LM $lm_base is build from text: $train_text"
-            cut -d' ' -f2- $train_text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
-                sort -u > $locdata/lm_train.txt
-            ngram-count -text $locdata/lm_train.txt -order ${lm_order} \
-                -wbdiscount -interpolate -lm $local_lm/${lm_base}
+for name  in "${!lms[@]}" ; do
+    if [[ ${name%[0-5]} ==  'build' ]] ; then
+        if [ $name != ${lms[$name]} ] ; then
+            echo -e "\nIf using the build command $name, specify path as the same value!\n"
+            exit 1;
         fi
+        # We will build the LM 'build[0-9].arpa
+        lm_order=${name#build}
+        echo "=== Building LM of order ${lm_order}..."
+        cut -d' ' -f2- $train_text | sed -e 's:^:<s> :' -e 's:$: </s>:' | \
+            sort -u > $local_lm/lm_train.txt
+        echo "LM $name is build from text: $train_text"
+        if [ $lm_order -eq 0 ] ; then
+            build_0gram  $local_lm/lm_train.txt $local_lm/${name}
+        else
+            ngram-count -text $local_lm/lm_train.txt -order ${lm_order} \
+                -wbdiscount -interpolate -lm $local_lm/${name}
+        fi
+    else
+        if [[ ! -f ${lms[$name]} ]] ; then
+            echo ${lms[$name]} is not path to arpa file!
+            exit 1
+        fi
+        cp -f ${lms[$name]} $local_lm/$name
     fi
 done
 echo "*** LMs preparation finished!"
@@ -70,20 +92,15 @@ echo "=== Preparing the vocabulary ..."
 
 if [ "$DICTIONARY" == "build" ]; then
   echo; echo "Building dictionary from train data"; echo
-  cut -d' ' -f2- $train_text | tr ' ' '\n' > $locdata/vocab-full-raw.txt
+  cut -d' ' -f2- $train_text | tr ' ' '\n' > $local_lm/vocab-full-raw.txt
 else
   echo; echo "Using predefined dictionary: ${DICTIONARY}"
   echo "Throwing away first 2 rows."; echo
-  tail -n +3 $DICTIONARY | cut -f 1 > $locdata/vocab-full-raw.txt
+  tail -n +3 $DICTIONARY | cut -f 1 > $local_lm/vocab-full-raw.txt
 fi
 
-echo '</s>' >> $locdata/vocab-full-raw.txt
+echo '</s>' >> $local_lm/vocab-full-raw.txt
 echo "Removing from vocabulary _NOISE_, and  all '_' words from vocab-full.txt"
-cat $locdata/vocab-full-raw.txt | grep -v '_' | \
-  sort -u > $locdata/vocab-full.txt
+cat $local_lm/vocab-full-raw.txt | grep -v '_' | \
+  sort -u > $local_lm/vocab-full.txt
 echo "*** Vocabulary preparation finished!"
-
-
-echo "Removing from vocabulary _NOISE_, and  all '_' words from vocab-test.txt"
-cut -d' ' -f2 $test_text | tr ' ' '\n' | grep -v '_' | sort -u > $locdata/vocab-test.txt
-

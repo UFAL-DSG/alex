@@ -15,7 +15,8 @@ export TGT_MODELS=../../resources/asr/voip_cs/kaldi/last
 # Specify build0 or build1 or build2, .. for building (zero|uni|bi)-gram LM.
 # Note: The LM file name should not contain underscore "_"! 
 # Otherwise the results will be reported without the LM with underscore."
-export LMs="build0 build2"
+export LM_paths="build0 build2"
+export LM_names="build0 build2"
 
 # Use path to prebuilt dictionary or 'build' command in order to build dictionary
 # export DICTIONARY="../../resources/lm/caminfo/dict"

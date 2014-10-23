@@ -19,18 +19,20 @@ mkdir -p $WORK  $EXP
 #######################################################################
 
 check local/data_split.sh --every_n $EVERY_N \
-    $DATA_ROOT $WORK/local "$LMs" "$TEST_SETS" || exit 1
+    $DATA_ROOT $WORK/local "$LM_paths" "$TEST_SETS" || exit 1
 
-check local/create_LMs.sh $WORK/local $WORK/local/train/trans.txt \
-    $WORK/local/test/trans.txt  $WORK/local/lm "$LMs" || exit 1
+check local/create_LMs.sh \
+    --train_text $WORK/local/train/trans.txt \
+    --arpa-paths "$LM_paths" --lm-names "$LM_names" \
+    $WORK/local/lm || exit 1
 
-check local/prepare_cs_transcription.sh $WORK/local $WORK/local/dict || exit 1
+check local/prepare_cs_transcription.sh $WORK/local/lm $WORK/local/dict || exit 1
 
 check local/create_phone_lists.sh $WORK/local/dict || exit 1
 
 check utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
 
-check local/create_G.sh $WORK/lang "$LMs" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
+check local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
 
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
@@ -46,8 +48,8 @@ echo "Distribute the links to MFCC feats to all LM variations."
 cp $WORK/local/train/feats.scp $WORK/train/feats.scp
 cp $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
 for s in $TEST_SETS; do
-  for lm in $LMs; do
-    tgt_dir=${s}_`basename "$lm"`
+  for lm in $LM_names; do
+    tgt_dir=${s}_${lm}
     echo "cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp"
     cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp
     echo "cp $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp"
@@ -102,7 +104,7 @@ check steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
 #######################################################################
 #                       Building decoding graph                       #
 #######################################################################
-for lm in $LMs ; do
+for lm in $LM_names ; do
   lm=`basename "$lm"`
   # check utils/mkgraph.sh --mono $WORK/lang_${lm} $EXP/mono $EXP/mono/graph_${lm} || exit 1
   # check utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri1 $EXP/tri1/graph_${lm} || exit 1
@@ -114,7 +116,7 @@ done
 #                              Decoding                               #
 #######################################################################
 for s in $TEST_SETS ; do
-  for lm in $LMs ; do
+  for lm in $LM_names ; do
     lm=`basename "$lm"`
     tgt_dir=${s}_`basename "$lm"`
 
