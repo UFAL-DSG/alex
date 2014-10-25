@@ -38,18 +38,3 @@ srilm_sub_bin=`find "$srilm_bin" -type d`
 for d in $srilm_sub_bin ; do
     export PATH=$d:$PATH
 done
-
-mkdir -p ckpts
-function check {
- name="./ckpts/`echo $@ | sed 's:[/!]:_:gi' | cut -c1-255`"
- echo -e -n "\nCheckpoint $name "
- if [ -f "$name" ] ; then
-     echo "found! Skipping!"
- else
-     echo -e " will be created.\nRunning $@.\n"
-     "$@" || return $?
-     touch "$name"
- fi
- return 0
-}
-
