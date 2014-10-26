@@ -37,10 +37,10 @@ utils/check.sh local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/loc
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
     utils/check.sh steps/make_mfcc.sh --mfcc-config common/mfcc.conf --cmd "$train_cmd" \
-      --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
+      --nj $njobs $WORK/local/$s $EXP/make_mfcc/$s $WORK/mfcc || exit 1
     # Note --fake -> NO CMVN
     utils/check.sh steps/compute_cmvn_stats.sh $fake $WORK/local/$s \
-      $EXP/make_mfcc/$s $WORK/mfcc || exit 1;
+      $EXP/make_mfcc/$s $WORK/mfcc || exit 1
 done
 
 echo "Decoding is done for each pair (TEST_SET x LMs)"
@@ -62,42 +62,42 @@ done
 #######################################################################
 
 echo "Train monophone models on full data -> may be wastefull (can be done on subset)"
-utils/check.sh steps/train_mono.sh  --nj $njobs --cmd "$train_cmd" $WORK/train $WORK/lang $EXP/mono || exit 1;
+utils/check.sh steps/train_mono.sh  --nj $njobs --cmd "$train_cmd" $WORK/train $WORK/lang $EXP/mono || exit 1
 
 echo "Get alignments from monophone system."
 utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
-  $WORK/train $WORK/lang $EXP/mono $EXP/mono_ali || exit 1;
+  $WORK/train $WORK/lang $EXP/mono $EXP/mono_ali || exit 1
 
 echo "Train tri1 [first triphone pass]"
 utils/check.sh steps/train_deltas.sh  --cmd "$train_cmd" \
-  $pdf $gauss $WORK/train $WORK/lang $EXP/mono_ali $EXP/tri1 || exit 1;
+  $pdf $gauss $WORK/train $WORK/lang $EXP/mono_ali $EXP/tri1 || exit 1
 
 # draw-tree $WORK/lang/phones.txt $EXP/tri1/tree | dot -Tsvg -Gsize=8,10.5  > graph.svg
 
 echo "Align tri1"
 utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
-  --use-graphs true $WORK/train $WORK/lang $EXP/tri1 $EXP/tri1_ali || exit 1;
+  --use-graphs true $WORK/train $WORK/lang $EXP/tri1 $EXP/tri1_ali || exit 1
 
 echo "Train tri2b [LDA+MLLT]"
 utils/check.sh steps/train_lda_mllt.sh  --cmd "$train_cmd" $pdf $gauss \
   --splice-opts "--left-context=3 --right-context=3" \
-  $WORK/train $WORK/lang $EXP/tri1_ali $EXP/tri2b || exit 1;
+  $WORK/train $WORK/lang $EXP/tri1_ali $EXP/tri2b || exit 1
 
 utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
     --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
 
-echo -e 'TODO convert alignments to phone level alignmetns'
+./local/run_align2mlf.sh $EXP/tri2b_ali $EXP/tri2b_ali_mlf || exit 1
+
+./local/run_nnet_online-base.sh || exit 1
 
 utils/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
    --beam $mmi_beam --lattice-beam $mmi_lat_beam \
-   $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1;
+   $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1
 
 echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05"
 utils/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
-   $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1;
+   $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
-# echo "Train MPE."
-# steps/train_mpe.sh $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mpe || exit 1;
 
 #######################################################################
 #                       Building decoding graph                       #
@@ -116,7 +116,7 @@ done
 for s in $TEST_SETS ; do
   for lm in $LM_names ; do
     lm=`basename "$lm"`
-    tgt_dir=${s}_`basename "$lm"`
+    tgt_dir=${s}_${lm}
 
     # echo "Monophone decoding"
     # # Note: steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
@@ -142,10 +142,6 @@ for s in $TEST_SETS ; do
        --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir};
 
-    # echo "Decode MPE."
-    # utils/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-    #    --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
-    #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mpe/decode_it4_${tgt_dir} || exit 1;
   done
 done
 
