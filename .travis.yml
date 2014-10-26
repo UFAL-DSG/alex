@@ -1,48 +1,33 @@
 # http://about.travis-ci.org/docs/user/ci-environment/
 # http://about.travis-ci.org/docs/user/build-configuration/
 # Travis uses Ubuntu 64 12.04
+
 branches:
     only:
         - master
 
 language: python
 python:
-    - "2.7" 
+    - "2.7"
 compiler:
     - gcc
 
-before_install:
-    - sudo apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev gfortran  git python python-pip libsqlite3-dev wget
-#    - liblapack3 
-    # ATLAS matrix library 
-    - sudo apt-get install -y build-essential libatlas-base-dev python-dev python-yaml git portaudio19-dev libsox-dev
-    - pip install -r alex-requirements.txt
-    - easy_install pysox
-    - pip install pystache cython flask theano
-    - pip install --allow-unverified pyaudio --allow-unverified pyaudio pyaudio
-    - pip install pyfst
-    - mkdir tmp/
-    - cd tmp/
-    - git clone https://github.com/UFAL-DSG/pjsip.git
-    - cd pjsip
-    - ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC
-    - make dep
-    - make
-    - make install
-    - cd pjsip-apps/src/python/
-    - python setup-pjsuaxt.py install
-
-#install: 
-#    - pip install -q cython pystache pyyaml --use-mirrors
-#    - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]] ; then pip install --use-mirrors unittest2 ordereddict argparse ; fi
-#    # Openfst: building
-#    - pushd tools && make -j 4 openfst_tgt && popd
-#    # hack how to make available clapack.h
-#    - pushd tools && make -j 4 atlas && popd
-#    # Configure with ATLAS (default)
-#    - pushd src && ./configure --shared && popd
-#    - pushd src && make -j 4 && popd
-#    - pushd src/onl-rec && make -j 4 && popd
+install:
+    # TODO should we not use only from from openblas or just atlas?
+    - sudo apt-get update && sudo apt-get install -y build-essential libpng12-dev libfreetype6-dev libopenblas-dev libopenblas-base liblapack-dev gfortran  git python python-dev python-pip libsqlite3-dev wget libatlas-base-dev &> /dev/null
+    - echo "/usr/lib/atlas-base" | sudo tee /etc/ld.so.conf.d/atlas-lib.conf && sudo ldconfig  # Hack: solution from http://unix.stackexchange.com/questions/52703/using-atlas-from-scipy
+    - (pip install -r alex-requirements.txt 2>&1 > /tmp/pip_log.log & PIP_PID=$! ; while [ "$(ps -p ${PIP_PID} | wc -l)" -eq "2" ]; do sleep 60; echo "pip is still running"; done;)
+    - echo "#####################"; echo "vvv PIP LOG vvv"; tail -n 100 /tmp/pip_log.log ; echo "#####################";
+    # Install pjsip.
+    - (git clone https://github.com/UFAL-DSG/pjsip.git && pushd pjsip && git checkout travis && ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC && make dep && make && sudo make install && cd pjsip-apps/src/python/ && pip install . && popd && python -c 'import pjsuaxt') &> /dev/null
+    # Unpack and install precomplied openfst, pykaldi and pyfst
+    - (wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/pykaldi/pykaldi-travis_2.7.tar.gz/pykaldi/pykaldi_Ubuntu_12.04_LTS.tar.gz && tar xf pykaldi_Ubuntu_12.04_LTS.tar.gz && pushd pykaldi_Ubuntu_12.04_LTS && sudo cp -r openfst/lib/* /usr/local/lib && sudo ldconfig && sudo tar xf pyfst*.tar -C / && sudo tar xf pykaldi*.tar -C / ; popd ) &> /dev/null
+    - sudo apt-get install -y libsox-dev &> /dev/null
+    - easy_install pysox &> /dev/null
+    - pip install nose2 &> /dev/null
 
 script:
-    - echo "ahoj"
+    - python -c 'import kaldi.decoders'
+    - python -c 'import pjsuaxt'
+    - python -c 'import alex.applications.vhub'
+    - nose2 alex

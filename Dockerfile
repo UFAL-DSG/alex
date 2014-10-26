@@ -4,16 +4,18 @@ MAINTAINER Lukas Zilka <lukas@zilka.me>
 RUN apt-get update   # Run once at the beggining
 
 # Alex prerequisites.
-RUN apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev liblapack3 gfortran  git python python-pip libsqlite3-dev wget
+RUN apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev liblapack3 gfortran  git python python-pip libsqlite3-dev wget libsox-fmt-mp3 libsox-dev
 RUN locale-gen en_US.UTF-8
+RUN update-locale LANG=en_US.UTF-8
 
 # Clone Alex from repository.
 RUN mkdir /app
 WORKDIR /app
-RUN git clone https://github.com/UFAL-DSG/alex.git
+ADD . alex
 WORKDIR /app/alex
 RUN pip install -r alex-requirements.txt
 RUN pip install pystache cython flask theano
+RUN pip easy_install pysox
 # RUN pip install --allow-unverified pyaudio --allow-unverified pyaudio pyaudio
 
 #

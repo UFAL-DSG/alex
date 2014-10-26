@@ -16,7 +16,7 @@ CONFIG_DICT = {
         'debug': True,
         'type': 'Template',
         'Template' : {
-            'model': as_project_path('applications/CamInfoRest/nlgtemplates.cfg')
+            'model': as_project_path('applications/PublicTransportInfoCS/nlg_templates.cfg')
         },
     }
 }
