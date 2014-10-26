@@ -66,7 +66,7 @@ def train(fn_model,
 def main():
     min_classifier_count = 4
     min_pos_feature_count = 3
-    min_neg_feature_count = 40
+    min_neg_feature_count = 100
     limit = 100000
 
     # models used in the live system (we use all available data)

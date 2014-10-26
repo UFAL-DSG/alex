@@ -677,13 +677,12 @@ class DAILogRegClassifier(SLUInterface):
                 print "Training classifier: ", clser, ' #', n+1 , '/', len(self.classifiers)
                 print "  Matrix:            ", (len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser]))
 
-            classifier_input = lil_matrix((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
+            classifier_input = np.zeros((training_data_size, len(self.classifiers_features_list[clser])))
             for i, feat in enumerate(self.classifiers_features[clser]):
-                classifier_input.data[i], classifier_input.rows[i] = feat.get_feature_vector_lil(self.classifiers_features_mapping[clser])
+                classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
 
-            classifier_input = classifier_input.tocsr()
+            lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-6)
 
-            lr = LogisticRegression('l2', dual=True, C=inverse_regularisation, tol=1e-6)
             lr.fit(classifier_input, self.classifiers_outputs[clser])
             self.trained_classifiers[clser] = lr
 

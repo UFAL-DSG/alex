@@ -11,13 +11,13 @@ import numpy as np
 import cPickle as pickle
 
 from collections import defaultdict
-from sklearn.linear_model import LogisticRegression
 from scipy.sparse import lil_matrix
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.slu.exceptions import DAILRException
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
+from alex.ml import tffnn
 from alex.utils.cache import lru_cache
 
 CONFNET2NBLIST_EXPANSION_APPROX = 40
@@ -48,7 +48,7 @@ class Features(object):
             yield i
 
     def get_feature_vector(self, features_mapping):
-        fv = np.zeros(len(features_mapping))
+        fv = np.zeros(len(features_mapping), dtype=np.float32)
         for f in self.features:
             if f in features_mapping:
                 fv[features_mapping[f]] = self.features[f]
@@ -617,18 +617,18 @@ class DAINNClassifier(SLUInterface):
                         if clser == dai and self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value == c:
                             if verbose:
                                 print "+ Matching a classifier in the abstracted dai, and matching category label"
-                            self.classifiers_outputs[clser].append(1.0)
+                            self.classifiers_outputs[clser].append(1)
                             self.classifiers_cls[clser].append(self.das_category_labels[utt_idx][i])
 
                         elif clser != dai and self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value == c:
                             if verbose:
                                 print "- NON-Matching a classifier in the abstracted dai, and matching category label"
-                            self.classifiers_outputs[clser].append(0.0)
+                            self.classifiers_outputs[clser].append(0)
                             self.classifiers_cls[clser].append(self.das_category_labels[utt_idx][i])
                         else:
                             if verbose:
                                 print "- NON-Matching a classifier in the abstracted dai, and NON-matching category label"
-                            self.classifiers_outputs[clser].append(0.0)
+                            self.classifiers_outputs[clser].append(0)
                             self.classifiers_cls[clser].append((None, None, None))
 
                         self.classifiers_features[clser].append(
@@ -641,12 +641,12 @@ class DAINNClassifier(SLUInterface):
                     if clser in self.das_abstracted[utt_idx]:
                         if verbose:
                             print "+ Matching a classifier "
-                        self.classifiers_outputs[clser].append(1.0)
+                        self.classifiers_outputs[clser].append(1)
                         self.classifiers_cls[clser].append((None, None, None))
                     else:
                         if verbose:
                             print "- NON-Matching a classifier"
-                        self.classifiers_outputs[clser].append(0.0)
+                        self.classifiers_outputs[clser].append(0)
                         self.classifiers_cls[clser].append((None, None, None))
 
                     self.classifiers_features[clser].append(self.get_features(self.utterances[utt_idx], (None, None, None), self.das_category_labels[utt_idx]))
@@ -654,7 +654,7 @@ class DAINNClassifier(SLUInterface):
                     if verbose:
                         print "  @", clser
 
-            self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser])
+            self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser], dtype=np.int32)
 
             if verbose:
                 print clser
@@ -675,33 +675,108 @@ class DAINNClassifier(SLUInterface):
                 print "Training classifier: ", clser, ' #', n+1 , '/', len(self.classifiers)
                 print "  Matrix:            ", (len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser]))
 
-            classifier_input = lil_matrix((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
+            classifier_input = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])), dtype=np.float32)
             for i, feat in enumerate(self.classifiers_features[clser]):
-                classifier_input.data[i], classifier_input.rows[i] = feat.get_feature_vector_lil(self.classifiers_features_mapping[clser])
+                classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
 
-            classifier_input = classifier_input.tocsr()
 
-            lr = LogisticRegression('l2', dual=True, C=inverse_regularisation, tol=1e-6)
-            lr.fit(classifier_input, self.classifiers_outputs[clser])
-            self.trained_classifiers[clser] = lr
+            # standardise the data
+            m = np.mean(classifier_input, axis=0)
+            std = np.std(classifier_input, axis=0)
+            # replace 0.0 std by 1.0
+            inds = np.where(np.isclose(std, 0.0))
+            std[inds] = 1.0
 
-            if verbose:
-                mean_accuracy = lr.score(classifier_input, self.classifiers_outputs[clser])
-                print "  Prediction mean accuracy on the training data: %6.2f" % (100.0 * mean_accuracy, )
-                print "  Size of the params:", lr.coef_.shape
+            m = np.zeros_like(m)
+            std = np.ones_like(std)
+            
+            classifier_input -= m
+            classifier_input /= std
+
+            indices = np.random.permutation(classifier_input.shape[0])
+            training_data_size = int(0.9*len(indices))
+            training_idx, test_idx = indices[:training_data_size], indices[training_data_size:]
+            training_input, crossvalid_input = classifier_input[training_idx,:], classifier_input[test_idx,:]
+            training_output, crossvalid_output = self.classifiers_outputs[clser][training_idx,], self.classifiers_outputs[clser][test_idx,]
+
+            if not np.isclose(training_output, 1.0).any():
+                print "Warning! At least one example should be positive"
+                training_output[0] = 1
+
+            # lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-3)
+            #
+            # lr.fit(training_input, training_output)
+
+
+            method = 'sg-fixedlr'
+            hact = 'tanh'
+            learning_rate = 20e-3 # 5e-2
+            learning_rate_decay = 1000.0
+            batch_size = 10
+
+            nn = tffnn.TheanoFFNN(training_input.shape[1], 16, 0, 2, hidden_activation = hact, weight_l2 = 1e-16,
+                         training_set_x = training_input, training_set_y = training_output,
+                         batch_size = batch_size)
+            nn.set_input_norm(m, std)
+
+            max_crossvalid_mean_accuracy = 0.0
+            for epoch in range(200):
+                print "Epoch", epoch
+
+                predictions_y = nn.predict(training_input, batch_size = batch_size)
+                training_mean_accuracy = np.mean(np.equal(np.argmax(predictions_y, axis=1), training_output))*100.0
+
+                print "  Prediction accuracy on the training data: %6.2f" % (training_mean_accuracy, )
+                print "                    the training data size: ",  training_input.shape
+
+                predictions_y = nn.predict(crossvalid_input, batch_size = batch_size)
+
+                crossvalid_mean_accuracy = np.mean(np.equal(np.argmax(predictions_y, axis=1), crossvalid_output))*100.0
+
+                print "  Prediction accuracy on the crossvalid data: %6.2f" % (crossvalid_mean_accuracy, )
+                print "                    the crossvalid data size: ",  crossvalid_input.shape
+
+
+                if max_crossvalid_mean_accuracy < crossvalid_mean_accuracy:
+                    print "  Storing the best classifiers so far"
+                    self.trained_classifiers[clser] = nn
+                    max_crossvalid_mean_accuracy = crossvalid_mean_accuracy
+
+
+                if training_mean_accuracy >= 99.99 or max_crossvalid_mean_accuracy >= 99.99:
+                    print "  Stop: It does not have to be better"
+                    break
+
+                print "  Training "
+                nn.train(method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch))
+
+
+            # if verbose:
+            #     training_mean_accuracy = lr.score(training_input, training_output)
+            #     print "  Prediction mean accuracy on the training data: %6.2f" % (100.0 * training_mean_accuracy, )
+            #     print "                         the training data size: ",  training_input.shape
+            #     crossvalid_mean_accuracy = lr.score(crossvalid_input, crossvalid_output)
+            #     print "  Prediction mean accuracy on the crossvalid data: %6.2f" % (100.0 * crossvalid_mean_accuracy, )
+            #     print "                         the crossvalid data size: ",  crossvalid_input.shape
+            #     print "  Size of the classifier's params:", lr.coef_.shape
 
     def save_model(self, file_name, gzip=None):
-        data = [self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
-                self.parsed_classifiers, self.features_size]
+        self.trained_classifiers_params = {}
+        for clser in self.trained_classifiers:
+            self.trained_classifiers_params[clser] = self.trained_classifiers[clser].get_params()
+
+        data = [self.classifiers_features_list, self.classifiers_features_mapping,
+                self.trained_classifiers_params, self.parsed_classifiers,
+                self.features_size]
 
         if gzip is None:
             gzip = file_name.endswith('gz')
         if gzip:
             import gzip
-
             open_meth = gzip.open
         else:
             open_meth = open
+            
         with open_meth(file_name, 'wb') as outfile:
             pickle.dump(data, outfile)
 
@@ -709,15 +784,20 @@ class DAINNClassifier(SLUInterface):
         # Handle gzipped files.
         if file_name.endswith('gz'):
             import gzip
-
             open_meth = gzip.open
         else:
             open_meth = open
 
         with open_meth(file_name, 'rb') as model_file:
-            (self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
-             self.parsed_classifiers, self.features_size) = pickle.load(model_file)
+            (self.classifiers_features_list, self.classifiers_features_mapping,
+             self.trained_classifiers_params, self.parsed_classifiers,
+             self.features_size) = pickle.load(model_file)
 
+        self.trained_classifiers = {}
+        for clser in self.trained_classifiers_params:
+            self.trained_classifiers[clser] = tffnn.TheanoFFNN()
+            self.trained_classifiers[clser].set_params(self.trained_classifiers_params[clser])
+    		
     def parse_X(self, utterance, verbose=False):
         if verbose:
             print '='*120
@@ -749,14 +829,14 @@ class DAINNClassifier(SLUInterface):
                         #print clser, f, v, c
 
                         classifiers_features = self.get_features(utterance, (f, v, cc), utterance_fvcs)
-                        classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])))
+                        classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])), dtype=np.float32)
                         classifiers_inputs[0] = classifiers_features.get_feature_vector(self.classifiers_features_mapping[clser])
 
                         #if verbose:
                         #    print classifiers_features
                         #    print self.classifiers_features_mapping[clser]
 
-                        p = self.trained_classifiers[clser].predict_proba(classifiers_inputs)
+                        p = self.trained_classifiers[clser].predict(classifiers_inputs)
 
                         if verbose:
                             print '  Probability:', p
@@ -766,14 +846,14 @@ class DAINNClassifier(SLUInterface):
             else:
                 # process concrete classifiers
                 classifiers_features = self.get_features(utterance, (None, None, None), utterance_fvcs)
-                classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])))
+                classifiers_inputs = np.zeros((1, len(self.classifiers_features_mapping[clser])), dtype=np.float32)
                 classifiers_inputs[0] = classifiers_features.get_feature_vector(self.classifiers_features_mapping[clser])
 
                 #if verbose:
                 #    print classifiers_features
                 #    print self.classifiers_features_mapping[clser]
 
-                p = self.trained_classifiers[clser].predict_proba(classifiers_inputs)
+                p = self.trained_classifiers[clser].predict(classifiers_inputs)
 
                 if verbose:
                     print '  Probability:', p
