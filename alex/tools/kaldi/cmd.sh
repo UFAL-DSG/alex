@@ -7,6 +7,8 @@
 
 # export train_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
 # export decode_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
+
+# UFAL settings
 export train_cmd="queue.pl -l mf=5g"
 export decode_cmd="queue.pl -l mf=5g"
 njobs=100
@@ -16,4 +18,4 @@ njobs=100
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
 # export train_cmd=run.pl
 # export decode_cmd=run.pl
-# njobs=10
+# njobs=8
