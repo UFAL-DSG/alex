@@ -86,6 +86,8 @@ utils/check.sh steps/train_lda_mllt.sh  --cmd "$train_cmd" \
 utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
   --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
 
+utils/check.sh steps/get_train_ctm.sh $WORK/train $WORK/lang $EXP/tri2b_ali || exit 1
+
 ./local/run_align2mlf.sh $EXP/tri2b_ali $EXP/tri2b_ali_mlf || exit 1
 
 ./local/run_nnet_online-base.sh || exit 1
