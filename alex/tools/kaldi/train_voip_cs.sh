@@ -79,12 +79,12 @@ utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
   --use-graphs true $WORK/train $WORK/lang $EXP/tri1 $EXP/tri1_ali || exit 1
 
 echo "Train tri2b [LDA+MLLT]"
-utils/check.sh steps/train_lda_mllt.sh  --cmd "$train_cmd" $pdf $gauss \
+utils/check.sh steps/train_lda_mllt.sh  --cmd "$train_cmd" \
   --splice-opts "--left-context=3 --right-context=3" \
-  $WORK/train $WORK/lang $EXP/tri1_ali $EXP/tri2b || exit 1
+  $pdf $gauss $WORK/train $WORK/lang $EXP/tri1_ali $EXP/tri2b || exit 1
 
 utils/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
-    --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
+  --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
 
 ./local/run_align2mlf.sh $EXP/tri2b_ali $EXP/tri2b_ali_mlf || exit 1
 
