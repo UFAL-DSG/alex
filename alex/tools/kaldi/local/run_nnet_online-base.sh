@@ -68,6 +68,7 @@ utils/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
 for lm in $LM_names ; do
   lm=`basename "$lm"`
   graph_dir=$EXP/tri3b/graph_${lm}
+  utils/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
     utils/check.sh steps/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
