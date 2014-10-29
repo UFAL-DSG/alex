@@ -205,7 +205,7 @@ def train_nn(speech_data, speech_alignment):
         f.close()
     except IOError:  
         crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
-
+    
     input_size = train_x.shape[1] * (prev_frames + 1 + next_frames)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
@@ -332,8 +332,6 @@ def main():
         description="""This program trains neural network VAD models using the theano library.
       """)
 
-    parser.add_argument('--align-format', action="store", default="htk", type=str,
-                        help='Format of alignments [htk, kaldi]')
     parser.add_argument('--method', action="store", default=method, type=str,
                         help='an optimisation method: default %s' % method)
     parser.add_argument('--hact', action="store", default=hact, type=str,
