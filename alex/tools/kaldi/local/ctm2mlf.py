@@ -18,7 +18,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import argparse
 
 
-def write_mlf_recording(wf, name, alignment, second_split=100000):
+def write_mlf_recording(wf, name, alignment, second_split=10000000):
     wf.write('"%s"\n' % name)
     for (start, length, phoneme) in alignment:
         start = start * second_split
