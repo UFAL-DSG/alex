@@ -70,6 +70,11 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf.sub('_noise_', 'sil')
     mlf.sub('_laugh_', 'sil')
     mlf.sub('_inhale_', 'sil')
+    mlf.sub('SIL', 'sil')
+    mlf.sub('SP', 'sil')
+    mlf.sub('_NOISE_', 'sil')
+    mlf.sub('_LAUGH_', 'sil')
+    mlf.sub('_INHALE_', 'sil')
     # map everything except of sil to speech
     mlf.sub('sil', 'speech', False)
     mlf.merge()
@@ -394,11 +399,11 @@ def main():
     train_speech = []
     train_speech_alignment = []
 
-    train_speech.append('data_voip_en/train/*.wav')
-    train_speech_alignment.append('model_voip_en/aligned_best.mlf')
+    # train_speech.append('data_voip_en/train/*.wav')
+    # train_speech_alignment.append('model_voip_en/aligned_best.mlf')
 
-    train_speech.append('data_vad_sil/data/*.wav')
-    train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
+    # train_speech.append('data_vad_sil/data/*.wav')
+    # train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
 
     train_speech.append('data_voip_cs/train/*.wav')
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
