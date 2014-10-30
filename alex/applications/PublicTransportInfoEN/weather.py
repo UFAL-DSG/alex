@@ -16,6 +16,10 @@ from alex.utils.cache import lru_cache
 class Weather(object):
     pass
 
+class WeatherPoint(object):
+    def __init__(self, in_city=None, in_state=None):
+        self.in_city = in_city if not in_city is 'none' else None
+        self.in_state = in_state if not in_state is 'none' else None
 
 class OpenWeatherMapWeather(Weather):
 

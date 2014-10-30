@@ -11,8 +11,9 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
+from applications.PublicTransportInfoEN.time import GoogleTimeFinder
 from .directions import GoogleDirectionsFinder, Waypoints
-from .weather import OpenWeatherMapWeatherFinder
+from .weather import OpenWeatherMapWeatherFinder, WeatherPoint
 from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
@@ -41,6 +42,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             directions_type = cfg['DM']['directions']['type']
         self.directions = directions_type(cfg=cfg)
         self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
+        self.time = GoogleTimeFinder()
         self.infer_default_stops = directions_type == GoogleDirectionsFinder
 
         self.das = []
@@ -247,9 +249,10 @@ class PTIENHDCPolicy(DialoguePolicy):
             res_da = self.filter_iconfirms(res_da)
 
         elif 'current_time' in slots_being_requested:
-            # Respond to questions about current weather
+            # Respond to questions about current time
             # TODO: allow combining with other questions?
-            res_da = self.req_current_time()
+
+            res_da = self.get_current_time_res_da(dialogue_state, accepted_slots, state_changed)
 
         # topic-dependent
         elif dialogue_state['lta_task'].test('weather', self.accept_prob):
@@ -331,14 +334,41 @@ class PTIENHDCPolicy(DialoguePolicy):
         :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
-        res_da = None
+
+        # collect all necesary information
+        req_da, ref_point = self.gather_weather_info(ds, accepted_slots)
+        if len(req_da):
+            return req_da
+
+        # check if it is valid information
+        apology_da = self.check_weather_conflict(ref_point)
+        if apology_da is not None:
+            return apology_da
+
+        # obtain the weather if have not done so in previous turn
         if state_changed:
-            res_da = self.get_weather(ds)
+            res_da = self.get_weather(ds, ref_point)
         else:
             res_da = self.backoff_action(ds)
         return res_da
 
-    def get_weather(self, ds):
+    def get_current_time_res_da(self, ds, accepted_slots, state_changed):
+        """Generates a dialogue act informing about the current time.
+        :rtype: DialogueAct
+        """
+
+        req_da, in_state = self.gather_time_info(ds, accepted_slots)
+
+        if len(req_da):
+            return req_da
+
+        # if state_changed:
+        res_da = self.get_current_time(in_state)
+        # else:
+        #     res_da = self.backoff_action(ds)
+        return res_da
+
+    def get_weather(self, ds, ref_point = None):
         """Retrieve weather information according to the current dialogue state.
         Infers state names based on city names and vice versa.
 
@@ -351,28 +381,11 @@ class PTIENHDCPolicy(DialoguePolicy):
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
         lta_time = ds['lta_time'].mpv()
-        in_city = ds['in_city'].mpv()
-        in_state = ds['in_state'].mpv()
+        in_city = ref_point.in_city#ds['in_city'].mpv()
+        in_state = ref_point.in_state#ds['in_state'].mpv()
 
         # return the result
         res_da = DialogueAct()
-
-        # retrieve state based on the city
-        if in_city != 'none' and in_state == 'none':
-            states = self.ontology.get_compatible_vals('w_city_w_state', in_city)
-            if len(states) == 1:
-                in_state = states.pop()
-                res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
-            elif len(states) > 1: # possibly more states - baltimore (ohio, maryland)
-                return DialogueAct('request(in_state)')
-        # default city and state if no city nor state is set
-        if in_city == 'none' and in_state == 'none':
-            in_city = self.ontology.get_default_value('in_city')
-            res_da.append(DialogueActItem('iconfirm', 'in_city', in_city))
-            in_state = self.ontology.get_default_value('in_state')
-            res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
-        in_city = in_city if in_city != 'none' else None
-        in_state = in_state if in_state != 'none' else None
 
         # interpret time
         daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
@@ -385,7 +398,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         weather = self.weather.get_weather(time=weather_ts, daily=daily, city=in_city, state=in_state)
         # check errorscale
         if weather is None:
-            return DialogueAct('apology()&inform(in_city="%s")&inform(in_state="%s"' % (in_city, in_state))
+            return DialogueAct('apology()&inform(in_city="%s")&inform(in_state="%s")' % (in_city, in_state))
         # time
         if weather_ts:
             if time_type == 'rel':
@@ -407,6 +420,32 @@ class PTIENHDCPolicy(DialoguePolicy):
         # weather conditions
         res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
         return res_da
+
+    def get_current_time(self, in_state):
+
+        cur_time, time_zone = self.time.get_time(place=in_state)
+        if cur_time is None:
+            default_time = self.get_default_time()
+            default_state = self.ontology.get_default_value('in_state')
+            d_time = default_time.strftime("%I:%M:%p")
+            if in_state is not default_state:
+                return DialogueAct('apology()&inform(in_state="%s")&inform(current_time=%s)&iconfirm(in_state=%s)' % (in_state, d_time, default_state))
+            else:
+                return DialogueAct('inform(current_time=%s)&iconfirm(in_state="%s")' % (d_time, default_state))
+
+
+        res_da = DialogueAct()
+        res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
+        res_da.append(DialogueActItem('inform', 'current_time', cur_time.strftime("%I:%M:%p")))
+        res_da.append(DialogueActItem('inform', 'time_zone',  time_zone))
+
+        return res_da
+
+    def get_default_time(self):
+        """
+        :return: Returns utc time - 8 hours
+        """
+        return datetime.utcnow() + timedelta(hours=-5)
 
     def backoff_action(self, ds):
         """Generate a random backoff dialogue act in case we don't know what to do.
@@ -728,12 +767,69 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val)
 
-    def req_current_time(self):
-        """Generates a dialogue act informing about the current time.
-        :rtype: DialogueAct
+    def gather_weather_info(self, ds, accepted_slots):
+        """Handles in_city and in_state to be properly filled. If needed, a Request DA is formed for missing slots to be filled.
+
+        Returns Reqest DA and WeatherPoint - information about the place
+        If the request DA is empty, the search for weather may be commenced immediately.
+
+        :param ds: The current dialogue state,
         """
-        cur_time = datetime.now()
-        return DialogueAct('inform(current_time=%d:%02d)' % (cur_time.hour, cur_time.minute))
+
+        req_da = DialogueAct()
+
+        # retrieve the slot variables
+        in_state_val = ds['in_state'].mpv() if 'in_state' in accepted_slots else 'none'
+        in_city_val = ds['in_city'].mpv() if 'in_city' in accepted_slots else 'none'
+
+        if in_city_val != 'none' and in_state_val == 'none':
+            in_states = self.ontology.get_compatible_vals('w_city_w_state', in_city_val)
+            if not in_states or not len(in_states):
+                print "WARNING: there is no compatible state with this city: " + in_city_val
+            elif len(in_states) == 1:
+                in_state_val = in_states.pop()
+                
+        if in_city_val == 'none' and in_state_val == 'none':
+            in_city_val = self.ontology.get_default_value('in_city')
+            in_state_val = self.ontology.get_default_value('in_state')
+
+
+        # s
+        if in_state_val == 'none':
+            req_da.extend(DialogueAct("request(in_state)"))
+        elif in_city_val == 'none':
+            req_da.extend(DialogueAct("request(in_city)"))
+
+        return req_da, WeatherPoint(in_city_val, in_state_val)
+
+    def gather_time_info(self, ds, accepted_slots):
+        """Handles if in_city specified it handles properly filled in_state slot. If needed, a Request DA is formed for missing in_state slot.
+
+        Returns Reqest DA and in_state
+        If the request DA is empty, the search for current_time may be commenced immediately.
+
+        :param ds: The current dialogue state,
+        """
+        req_da = DialogueAct()
+
+        in_state_val = ds['in_state'].mpv() if 'in_state' in accepted_slots else 'none'
+        in_city_val = ds['in_city'].mpv() if 'in_city' in accepted_slots else 'none'
+
+        if in_city_val != 'none' and in_state_val == 'none':
+            in_states = self.ontology.get_compatible_vals('w_city_w_state', in_city_val)
+            if not in_states or not len(in_states):
+                print "WARNING: there is no compatible state with this city: " + in_city_val
+            elif len(in_states) == 1:
+                in_state_val = in_states.pop()
+
+        if in_city_val == 'none' and in_state_val == 'none':
+            in_state_val = self.ontology.get_default_value('in_state')
+
+        if in_state_val == 'none':
+            req_da = DialogueAct("request(in_state)")
+
+        return req_da, in_state_val
+
 
     def req_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last
@@ -904,6 +1000,21 @@ class PTIENHDCPolicy(DialoguePolicy):
             apology_da = DialogueAct('apology()&inform(stops_conflict="incompatible")')
             apology_da.extend(DialogueAct('inform(to_city="%s")&inform(to_stop="%s")' %
                                           (wp.to_city, wp.to_stop)))
+            return apology_da
+        return None
+
+    def check_weather_conflict(self, wp):
+        """Check for conflicts in the given WeatherPoint. Return an apology() DA if the state and city is incompatible.
+
+        :param wp: WeatherPoint filled with in_city, in_state slot values
+        :rtype: DialogueAct
+        :return: apology dialogue act in case of conflict, or None
+        """
+
+        if not self.ontology.is_compatible('w_city_w_state', wp.in_city, wp.in_state):
+            apology_da = DialogueAct('apology()&inform(cities_conflict="incompatible")')
+            apology_da.extend(DialogueAct('inform(in_city="%s")&inform(in_state="%s")' %
+                                          (wp.in_city, wp.in_state)))
             return apology_da
         return None
 

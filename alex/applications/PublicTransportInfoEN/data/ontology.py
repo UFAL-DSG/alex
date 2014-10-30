@@ -12,6 +12,7 @@ from alex.utils.config import online_update, to_project_path
 
 
 
+
 # tab-separated file containing city + stop in that city, one per line
 CITIES_STOPS_FNAME = 'cities_stops.tsv'
 WEATHER_STATES_CITIES_FNAME = 'w.states_cities.tsv'
@@ -192,6 +193,10 @@ ontology = {
         'route_alternative': [
             # this is necessary to be defined as it is a state variable used by the policy and automatically added to
             # the dialogue state
+        ],
+        'time_zone': [
+            'system_informs',
+            'absolute_time',
         ],
 
         'lta_task': [],

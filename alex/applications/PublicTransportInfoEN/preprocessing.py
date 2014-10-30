@@ -95,9 +95,9 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         for slot, val in svs_dict.iteritems():
             # spell out time expressions
             if slot in self.rel_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=True)
+                svs_dict[slot] = self.spell_time_relative(val)
             elif slot in self.abs_time_slots:
-                svs_dict[slot] = self.spell_time(val, relative=False)
+                svs_dict[slot] = self.spell_time_absolute(val)
             # spell out temperature expressions
             elif slot in self.temp_slots:
                 svs_dict[slot] = self.spell_temperature(val, interval=False)
@@ -121,31 +121,53 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
                 svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
         return template, svs_dict
 
-    def spell_time(self, time, relative):
+    def spell_time_relative(self, time):
         """\
-        Convert a time expression into words (assuming accusative).
+        Convert a time expression into words.
 
-        :param time: The 24hr numerical time value in a string, e.g. '8:05'
+        :param time: Numerical time value in a string, e.g. '8:05'
         :param relative: If true, time is interpreted as relative, i.e. \
-                0:15 will generate '15 minutes' and not '0 hours and \
+
+        :return: time string with all numerals written out as words 0:15 will generate '15 minutes' and not '0 hours and \
                 15 minutes'.
-        :return: time string with all numerals written out as words
         """
         if ':' not in time:  # 'now' and similar
             return time
         hours, mins = map(int, time.split(':'))
+
         time_str = []
-        if not (relative and hours == 0):
-            hr_id = 'hours'
+        if hours is not 0:
+            hr_id = 'hour' if hours is 1 else 'hours'
             hours = word_for_number(hours)
             time_str.extend((hours, hr_id))
-        if mins == 0 and (not relative or hours != 0):
+        if mins == 0 and hours != 0:
             return ' '.join(time_str)
         if time_str:
-            time_str.append('a')
-        min_id = 'minutes'
+            time_str.append('and')
+        min_id = 'minute' if mins == 1 else 'minutes'
         mins = word_for_number(mins)
         return ' '.join(time_str + [mins, min_id])
+
+    def spell_time_absolute(self, time):
+        """\
+        Convert a time expression into words.
+
+        :param time: The 12hr numerical time value in a string, e.g. '08:05:pm'
+        :return: time string with all numerals written out as words
+        """
+
+        if ':' not in time:  # 'now' and similar
+            return time
+        hours, mins, period = time.split(':')
+        hours = int(hours)
+        mins = int(mins)
+
+        time_str = [word_for_number(hours)] # always start with an hour
+        if mins == 0:
+            return ' '.join(time_str + [period])
+        if mins < 9:
+            time_str.append('o') # support one-o-one am
+        return ' '.join(time_str + [word_for_number(mins), period])
 
     def spell_temperature(self, value, interval):
         """Convert a temperature expression into words (assuming nominative).

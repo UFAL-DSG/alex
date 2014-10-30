@@ -15,6 +15,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
 
 
 
+
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
 
@@ -95,6 +96,7 @@ class PTIENHDCSLU(SLUInterface):
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
                         slots = self.cldb.form2value2cl[f][v]
+                        #todo - fix this hack
                         if "stop" in slots and "wcity" in slots:
                             abs_utts = abs_utts.replace(f, ('STOP='+v,))
                             category_labels.add('STOP')
@@ -352,7 +354,7 @@ class PTIENHDCSLU(SLUInterface):
                 else:
                     j, k = 0, len(u)
 
-                if value == "now" and not any_phrase_in(u[j:k], ['so what', 'what is the time',
+                if value == "now" and not any_phrase_in(u[j:k], ['so what', 'what is the time', 'whats the time',
                                                                  'can not hear', 'no longer telling me']):
                     time_rel = True
 
@@ -622,9 +624,7 @@ class PTIENHDCSLU(SLUInterface):
             if all_words_in(u, 'how long') and any_phrase_in(u, ['does it take', 'will it take', 'travel' ]):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
-        if all_words_in(u, 'what time is it') or \
-            phrase_in(u, 'what is the time') or \
-            all_words_in(u, 'what time do we have'):
+        if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have']):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if (all_words_in(u, 'how many') or all_words_in(u, 'number of')) and \
