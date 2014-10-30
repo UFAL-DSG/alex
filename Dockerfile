@@ -1,10 +1,32 @@
 FROM      ubuntu:14.04
-MAINTAINER Lukas Zilka <lukas@zilka.me>
-
-RUN apt-get update   # Run once at the beggining
+MAINTAINER Martin Vejman <vejmanm@ssakhk.cz>
 
 # Alex prerequisites.
-RUN apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev liblapack3 gfortran  git python python-pip libsqlite3-dev wget libsox-fmt-mp3 libsox-dev
+RUN apt-get update && apt-get install -y \
+    build-essential \
+	libpng12-dev \
+	libfreetype6-dev \
+	python-dev \
+	libopenblas-dev \
+	libopenblas-base \
+	liblapack-dev \
+	liblapack3 \
+	gfortran \
+	git \
+	python \
+	python-pip \
+	libsqlite3-dev \
+	wget \
+	libsox-fmt-mp3 \
+	libsox-dev \
+	libasound2-plugins \
+	libsox-fmt-all \
+	sox
+	flac
+
+RUN pip install --upgrade --pre pysox
+
+
 RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
 
@@ -12,11 +34,12 @@ RUN update-locale LANG=en_US.UTF-8
 RUN mkdir /app
 WORKDIR /app
 RUN git clone  https://github.com/m2rtin/alex.git
-RUN git checkout en
 WORKDIR /app/alex
+RUN git checkout en
 RUN sudo apt-get -y build-dep matplotlib
 RUN pip install -r alex-requirements.txt
 RUN pip install pystache cython flask theano
+
 # RUN apt-get install -y python-setuptool
 # RUN pip easy_install pysox
 # RUN pip install --allow-unverified pyaudio --allow-unverified pyaudio pyaudio
@@ -75,16 +98,12 @@ RUN git clone https://github.com/bastibe/PyAudio.git
 WORKDIR /app/PyAudio
 RUN python setup.py install
 
-# others
-RUN apt-get install -y libasound2-plugins libsox-fmt-all libsox-dev sox
-RUN pip install --upgrade --pre pysox
+#
+# en version
+#
 
-RUN apt-get install -y flac
-
-WORKDIR /app/alex/alex/resources
-RUN mkdir ./private
-RUN echo "config = {}" > ./private/default.cfg
-
+RUN mkdir /app/alex/alex/resources/private
+RUN echo "config = {}" > /app/alex/alex/resources/private/default.cfg
 
 RUN /app/alex/alex/applications/PublicTransportInfoCS/hclg/models/download_models.py
 RUN /app/alex/alex/applications/PublicTransportInfoCS/data/download_data.py
@@ -92,5 +111,4 @@ RUN /app/alex/alex/applications/PublicTransportInfoCS/lm/download_models.py
 RUN /app/alex/alex/applications/PublicTransportInfoCS/slu/download_models.py
 
 WORKDIR /app/alex/alex/applications/PublicTransportInfoEN/
-CMD ./vhub_private_ext_google_only_hdc_slu
-
+CMD ["sh","./vhub_private_ext_google_only_hdc_slu"]

@@ -1,4 +1,7 @@
 #stop_name
+Brooklyn	brooklyn
+Queens	queens
+Manhattan	manhattan
 Center	center
 Central Park	central park
 Lincoln Center	lincoln center

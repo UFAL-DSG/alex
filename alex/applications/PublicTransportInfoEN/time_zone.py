@@ -75,4 +75,5 @@ class GoogleTimeFinder:
         time_zone = response[u'timeZoneName']
         offset = response['rawOffset'] + response['dstOffset']
         time = datetime.fromtimestamp(int(datetime.utcnow().strftime("%s")) + offset)
+        #int(time.mktime(departure_time.timetuple()))
         return time, time_zone

@@ -2010,6 +2010,7 @@ New York	90 ST/55 AV
 New York	90 ST/57 AV
 New York	90 St - Elmhurst Av
 New York	90 ST/NORTHERN BL
+New York	9/11 Memorial
 New York	92 ST/30 AV
 New York	92 ST/31 AV
 New York	92 ST/32 AV
@@ -2115,6 +2116,7 @@ New York	ADAM C POWELL BL/W 154 ST
 New York	ADAM C POWELL BL/WEST 119 ST
 New York	ADAMS ST/BKLYN SUPREME CRT
 New York	ADAMS ST / JOHNSON ST
+New York	African Burial Ground
 New York	AILEEN B RYAN OVAL/UNIONPORT RD
 New York	AILEEN RYAN OVAL/METROPOLITAN AV
 New York	Alabama Av
@@ -2131,6 +2133,7 @@ New York	ALBANY AV/WINTHROP ST
 New York	ALBANY CR/BAILEY AV
 New York	ALBERT RD /99 PL
 New York	ALBERT RD /CENTERVILLE ST
+New York	Alice Tully Hall
 New York	ALLEN ST/CANAL ST
 New York	ALLEN ST/DELANCEY ST
 New York	ALLEN ST/E HOUSTON ST
@@ -2158,11 +2161,14 @@ New York	ALLERTON AV/WHITE PLAINS RD
 New York	ALLERTON AV/WILLIAMSBRIDGE RD
 New York	ALLERTON AV/WILSON AV
 New York	ALLERTON AV/WOODHULL AV
+New York	Alma Mater Statue
 New York	AMBOY LA/JAMAICA AV
 New York	AMBOY LA/SPRINGFIELD BL
 New York	AMEDOLA PL/WILKINSON AV
 New York	AMENDOLA PL/WESTCHESTER AV
 New York	AMENDOLA PL/WILKINSON AV
+New York	American Folk Art Museum
+New York	American Radiator Building
 New York	AMSTERDAM AV/193 ST
 New York	AMSTERDAM AV/LA SALLE ST
 New York	AMSTERDAM AV/W 100 ST
@@ -2239,7 +2245,9 @@ New York	AMSTERDAM AV/W 96 ST
 New York	AMSTERDAM AV/W 98 ST
 New York	Annadale
 New York	Ansonia
+New York	Apollo Theater
 New York	Appalachian Trail
+New York	Appellate Court
 New York	Aqueduct - N Conduit Av
 New York	Aqueduct Racetrack
 New York	AQUEDUCT RACETRACK / RESORTS CASINO
@@ -2323,6 +2331,7 @@ New York	Astoria Blvd
 New York	Astoria - Ditmars Blvd
 New York	Astor Pl
 New York	ASTOR PL/3 AV
+New York	Astor Place
 New York	Atlantic
 New York	Atlantic Av
 New York	ATLANTIC AV/100 ST
@@ -2406,6 +2415,7 @@ New York	ATLANTIC AV/WAVERLY AV
 New York	ATLANTIC AV/WOODHAVEN BL
 New York	ATLANTIC AV/WYONA ST
 New York	AUDUBON AV/W 165 ST
+New York	Audubon Terrace
 New York	AUSTIN ST/69 RD
 New York	AUSTIN ST/70 RD
 New York	AUSTIN ST /82 AV
@@ -2470,6 +2480,7 @@ New York	Avenue N
 New York	Avenue P
 New York	Avenue U
 New York	Avenue X
+New York	Avery Fisher Hall
 New York	AV H/ALBANY AV
 New York	AV H / E 32 ST
 New York	AV H / E 38 ST
@@ -2717,6 +2728,7 @@ New York	B. 104TH ST / ROCKAWAY FREEWAY
 New York	BAILEY AV/VAN CORTLANDT PK S
 New York	BAILEY AV/W 233 ST
 New York	BAILEY AV/W 238 ST
+New York	Bailey Fountain
 New York	BAINBRIDGE AV/BEDFORD PK BL
 New York	BAINBRIDGE AV/E 194 ST
 New York	BAINBRIDGE AV/E 196 ST
@@ -2738,6 +2750,7 @@ New York	BAISLEY BL/172 ST
 New York	BAISLEY BL/MERRILL ST
 New York	BALCOM AV/RANDALL AV
 New York	BALCOM AV/SCHLEY AV
+New York	Barclays Center
 New York	BARTOW AV/BAYCHESTER AV
 New York	BARTOW AV/BRUNNER AV
 New York	BARTOW AV/CO-OP CITY BL
@@ -2762,6 +2775,8 @@ New York	BATH AV/25 AV
 New York	BATH AV/BAY 20TH ST
 New York	BATH AV/BAY PY
 New York	BATHGATE AV/E 172 ST
+New York	Battery Park
+New York	Battery Park City
 New York	BATTERY PL/1 PL
 New York	BATTERY PL/3 PL
 New York	Battery Pl/Greenwich St
@@ -3020,6 +3035,7 @@ New York	BELL BL/43 AV
 New York	BELL BL/46 AV
 New York	BELL BL/NORTHERN BL
 New York	BELMONT PARK/HEMPSTEAD AV
+New York	Belvedere Castle
 New York	BERGEN AV/E 149 ST
 New York	BERGEN AV/WESTCHESTER AV
 New York	Bergen St
@@ -3048,6 +3064,7 @@ New York	BERGEN ST/UTICA AV
 New York	BERGEN ST/VANDERBILT AV
 New York	BERGEN ST/WASHINGTON AV
 New York	Bethel
+New York	Bethesda Terrace
 New York	BETHUNE ST/GREENWICH ST
 New York	Beverly Rd
 New York	BEVERLY RD/E 57 ST
@@ -3446,8 +3463,16 @@ New York	BROOKLYN AV/MONTGOMERY ST
 New York	BROOKLYN AV/PARK PL
 New York	BROOKLYN AV/ST JOHNS PL
 New York	BROOKLYN AV/UNION ST
+New York	Brooklyn Borough Hall
+New York	Brooklyn Botanic Garden
+New York	Brooklyn Bridge
 New York	Brooklyn Bridge - City Hall
+New York	Brooklyn Bridge Park
 New York	BROOKLYN BRIDGE PARK/PIER 6
+New York	Brooklyn Heights
+New York	Brooklyn Heights Promenade
+New York	Brooklyn Museum
+New York	Brooklyn Public Library
 New York	BROOKLYN QUEENS EXP/47 ST
 New York	BROOKVILLE BL/136 AV
 New York	BROOKVILLE BL/137 AV
@@ -3481,6 +3506,7 @@ New York	BRUCKNER BL/WILLOW LA
 New York	BRUCKNER BL/WILLOW LN
 New York	BRUCKNER BL/ZEREGA AV
 New York	BRUSH AV/BRUCKNER BL
+New York	Bryant Park
 New York	BUFFALO AV/PARK PL
 New York	BUFFALO AV/PROSPECT PL
 New York	BUFFALO AV/ST JOHNS PL
@@ -3491,6 +3517,7 @@ New York	Burnside Av
 New York	BURNS ST/68 AV
 New York	BURNS ST/YELLOWSTONE BL
 New York	Bushwick Av - Aberdeen St
+New York	Butler Library
 New York	CADMAN PLAZA WEST/JOHNSON ST
 New York	CADMAN PLZ W/CADMAN TOWER
 New York	CADMAN PLZ W/CRANBERRY ST
@@ -3514,7 +3541,10 @@ New York	Cannondale
 New York	CARGO PLAZA/150 AV
 New York	CARGO PLAZA/BLDG 86
 New York	CARGO PLAZA/N SERVICE CT
+New York	Carl Schurz Park
+New York	Carnegie Hall
 New York	Carroll St
+New York	Castle Clinton
 New York	Castle Hill Av
 New York	CASTLE HILL AV/BRUCKNER BL
 New York	CASTLE HILL AV/CHATTERTON AV
@@ -3532,6 +3562,7 @@ New York	CASTLE HILL AV/VIRGIL PL
 New York	CASTLE HILL AV/WATSON AV
 New York	CASTLE HILL AV/WESTCHESTER AV
 New York	CASTLE HILL AV/ZEREGA AV
+New York	Cathedral of St. John the Divine
 New York	Cathedral Pkwy
 New York	Cathedral Pkwy (110 St)
 New York	CATHEDRAL PY/AMSTERDAM AV
@@ -3558,6 +3589,7 @@ New York	CENTERVILLE ST /149 AV
 New York	CENTERVILLE ST /ECKFORD AV
 New York	CENTERVILLE ST /PITKIN AV
 New York	Central Av
+New York	Central Park
 New York	Central Park North (110 St)
 New York	CENTRAL PK N/5 AV
 New York	CENTRAL PK N/ADAM C POWELL BL
@@ -3594,6 +3626,7 @@ New York	CENTRAL PK W/W 92 ST
 New York	CENTRAL PK W/W 94 ST
 New York	CENTRAL PK W/W 96 ST
 New York	CENTRAL PK W/W 97 ST
+New York	Central Synagogue
 New York	CENTRE ST/CHAMBERS ST
 New York	CHAFFEE AV/HATTING PL
 New York	Chambers St
@@ -3602,12 +3635,16 @@ New York	CHAMBERS ST/CHURCH ST
 New York	CHAMBERS ST/GREENWICH ST
 New York	CHAMBERS ST/HUDSON ST
 New York	CHAMBERS ST/WEST ST
+New York	Chanin Building
 New York	Chappaqua
+New York	Charging Bull
 New York	CHARLES CRIMI BL/SUBWAY OVERPASS
 New York	CHARLES CRIMI RD/SUBWAY OVERPASS BAY
 New York	Chauncey St
 New York	CHERRY ST/JACKSON ST
 New York	CHERRY ST/VANDERVOORT AV
+New York	Chess and Checkers House
+New York	Chinatown
 New York	CHRISTIE AV/98 ST
 New York	CHRISTIE AV/99 ST
 New York	CHRISTOPHER ST/7 AV S
@@ -3618,6 +3655,7 @@ New York	CHRISTOPHER ST/HUDSON ST
 New York	Christopher St - Sheridan Sq
 New York	CHRISTOPHER ST/WASHINGTON ST
 New York	CHRISTOPHER ST/WAVERLY PL
+New York	Chrysler Building
 New York	Church Av
 New York	CHURCH AV/BROOKLYN AV
 New York	CHURCH AV/CHESTER AV
@@ -3660,6 +3698,8 @@ New York	CHURCH AV/STORY ST
 New York	CHURCH AV/TROY AV
 New York	CHURCH AV/UTICA AV
 New York	CHURCH AV/WESTMINSTER RD
+New York	Church of the Intercession
+New York	Church of the Transfiguration
 New York	CHURCH ST / BARCLAY ST
 New York	CHURCH ST/CHAMBERS ST
 New York	CHURCH ST/CORTLANDT ST
@@ -3672,7 +3712,10 @@ New York	CHURCH ST/VESEY ST
 New York	CHURCH ST/WARREN ST
 New York	CHURCH ST /WORTH ST
 New York	CHURCH ST/WORTH ST
+New York	Citigroup Center
+New York	Citizens' Savings Bank Building
 New York	City Hall
+New York	City Hall Park
 New York	CITY ISLAND AV/BEACH ST
 New York	CITY ISLAND AV / CROSS ST
 New York	CITY ISLAND AV/CROSS ST
@@ -3735,6 +3778,7 @@ New York	CLASSON AV/STERLING PL
 New York	CLASSON AV/ST JOHNS PL
 New York	CLASSON AV/WILLOUGHBY AV
 New York	CLAY AV/E 171 ST
+New York	Cleopatra's Needle
 New York	Cleveland St
 New York	Clifton
 New York	Clinton (SLE)
@@ -3774,6 +3818,7 @@ New York	COLLEGE PT BL/SANFORD AV
 New York	COLLEGE PT BL/VAN WYCK EY EXIT
 New York	COLLEGE PT BL/WHITESTONE EXP
 New York	COLLEGE PT BL/WHITESTONE EXP W S/R
+New York	Colonnade Row
 New York	COLUMBIA ST/ATLANTIC AV
 New York	COLUMBIA ST/BALTIC ST
 New York	COLUMBIA ST/CARROLL ST
@@ -3784,6 +3829,7 @@ New York	COLUMBIA ST/RIVINGTON ST
 New York	COLUMBIA ST/SACKETT ST
 New York	COLUMBIA ST/UNION ST
 New York	COLUMBIA ST/WARREN ST
+New York	Columbia University
 New York	COLUMBUS AV/CATHEDRAL PY
 New York	COLUMBUS AV/W 100 ST
 New York	COLUMBUS AV/W 102 ST
@@ -3804,6 +3850,9 @@ New York	COLUMBUS AV/W 92 ST
 New York	COLUMBUS AV/W 94 ST
 New York	COLUMBUS AV/W 97 ST
 New York	COLUMBUS CIR/8 AV
+New York	Columbus Circle
+New York	Columbus Park
+New York	Coney Island
 New York	CONEY ISLAND AV/18 AV
 New York	CONEY ISLAND AV/AV C
 New York	CONEY ISLAND AV/AV H
@@ -3844,6 +3893,8 @@ New York	CONEY ISLAND AV/OCEAN VIEW AV
 New York	CONEY ISLAND AV/PARK CI
 New York	CONEY ISLAND AV/SLOCUM PL
 New York	Coney Island - Stillwell Av
+New York	Confusius Statue
+New York	Conservatory Garden
 New York	CONVENT AV/W 129 ST
 New York	CO-OP CITY BL/BAY PLAZA BL
 New York	CO-OP CITY BL/BELLAMY LOOP N
@@ -3868,10 +3919,12 @@ New York	COOPER AV/ATLAS PARK MALL
 New York	COOPER AV/CYPRESS HILL ST
 New York	COOPER AV/METROPOLITAN AV
 New York	COOPER SQ/E 6 ST
+New York	Cooper Square
 New York	COOPER ST/BROADWAY
 New York	COOPER ST/BUSHWICK AV
 New York	COOPER ST/CENTRAL AV
 New York	COOPER ST/EVERGREEN AV
+New York	Cooper Union
 New York	CORNAGA AV/BEACH 19 ST
 New York	CORNAGA AV/BEACH 20 ST
 New York	CORNAGA AV /MOTT AV
@@ -4086,6 +4139,7 @@ New York	CYPRESS HILL ST/MACHPELAH CEM
 New York	CYPRESS HILL ST/MACHPELAH CEM N
 New York	CYPRESS HILL ST/MT NEBOH CEM
 New York	DAHILL RD/12 AV
+New York	Daily News Building
 New York	Danbury
 New York	Darien
 New York	David Sheridan Plaza
@@ -4155,6 +4209,7 @@ New York	DE KALB AV/VANDERBILT AV
 New York	DE KALB AV/WASHINGTON AV
 New York	DE KALB AV/WILSON AV
 New York	DE KALB AV/WYCKOFF AV
+New York	Delacorte Theater
 New York	Delancey St
 New York	DELANCEY ST/ALLEN ST
 New York	DELANCEY ST/COLUMBIA ST
@@ -4687,6 +4742,7 @@ New York	EASTCHESTER RD/TILLOTSON AV
 New York	EASTCHESTER RD/WARING AV
 New York	EASTCHESTER RD/WATERS PL
 New York	EASTCHESTER RD/WILKINSON AV
+New York	East Coast War Memorial
 New York	Eastern Pkwy - Brooklyn Museum
 New York	EASTERN PY/BUFFALO AV
 New York	EASTERN PY/RALPH AV
@@ -4810,6 +4866,7 @@ New York	E KINGSBRIDGE RD/E192 ST
 New York	E KINGSBRIDGE RD/E FORDHAM RD
 New York	E KINGSBRIDGE RD/GRAND CONCOURSE
 New York	E KINGSBRIDGE RD/MORRIS AV
+New York	El Cid Campeador
 New York	Elder Av
 New York	ELDERT LA/LINDEN BL
 New York	ELDERT LA/LORING AV
@@ -4834,6 +4891,7 @@ New York	ELIOT AV/FRESH POND RD
 New York	ELIOT AV/METROPOLITAN AV
 New York	ELIOT AV/MT OLIVET CRES
 New York	ELIOT AV/WOODHAVEN BL
+New York	Ellis Island
 New York	ELLSWORTH AV/SCHLEY AV
 New York	Elmhurst Av
 New York	Eltingville
@@ -4870,6 +4928,8 @@ New York	EMPIRE BL/NOSTRAND AV
 New York	EMPIRE BL/ROGERS AV
 New York	EMPIRE BL/UTICA AV
 New York	EMPIRE BL/WASHINGTON AV
+New York	Empire Diner
+New York	Empire State Building
 New York	ERSKINE PL/DEREIMER AV
 New York	ERSKINE PL/EARHART LA
 New York	ERSKINE ST/GATEWAY DR
@@ -5014,10 +5074,14 @@ New York	FARMERS BL/TURIN DR
 New York	FARMERS BL/WESTGATE ST
 New York	FARRAGUT RD/NOSTRAND AV
 New York	Far Rockaway - Mott Av
+New York	Federal Hall
+New York	Federal Reserve Bank
 New York	FERN PL/POLHEMAS AV
 New York	FERN PL/REX RD
 New York	FERRY TERMINAL/FDR DR
 New York	FERRY TERMINAL/FDR DRIVE
+New York	Fifth Avenue
+New York	Fifth Avenue Apple Store
 New York	FILLMORE AV / BURNETT ST
 New York	FILLMORE AV / COLEMAN ST
 New York	FILLMORE AV / E 32 ST
@@ -5032,6 +5096,7 @@ New York	FILLMORE AV / GERRITSEN AV
 New York	FILLMORE AV / MARINE PKY
 New York	FILLMORE AV / RYDER ST
 New York	FILLMORE AV / STUART ST
+New York	Firemen's Memorial
 New York	FLATBUSH AV/5 AV
 New York	FLATBUSH AV/8 AV
 New York	FLATBUSH AV/ALBEMARLE RD
@@ -5103,6 +5168,7 @@ New York	FLATBUSH AV/TOLL BOOTH
 New York	FLATBUSH AV/TOYS R US
 New York	FLATBUSH AV/TROY AV
 New York	FLATBUSH AV/UTICA AV
+New York	Flatiron Building
 New York	FLATLANDS AV/ALABAMA AV
 New York	FLATLANDS AV/ATKINS AV
 New York	FLATLANDS AV/AV J
@@ -5188,9 +5254,11 @@ New York	FLUSHING AV/WILSON AV
 New York	FLUSHING AV/WOODWARD AV
 New York	FLUSHING AV/WYCKOFF AV
 New York	Flushing - Main St
+New York	Foley Square
 New York	FOOD CENTER DR/FARRAGUT ST
 New York	FOOD CENTER DR/HUNTS PT MARKET
 New York	FOOD CENTER DR/MARKET ST
+New York	Ford Foundation Building
 New York	Fordham
 New York	FORDHAM PLAZA/BUS TERMINAL
 New York	Fordham Rd
@@ -5210,6 +5278,7 @@ New York	FOREST AV/SUMMERFIELD ST
 New York	FOREST AV/WOODBINE ST
 New York	Forest Hills - 71 Av
 New York	Fort Hamilton Pkwy
+New York	Fort Tryon Park
 New York	FOSTER AV/ARGYLE RD
 New York	FOSTER AV/BEDFORD AV
 New York	FOSTER AV/CONEY ISLAND AV
@@ -5340,6 +5409,7 @@ New York	FRANKLIN AV/STERLING PL
 New York	FRANKLIN AV/ST JOHNS PL
 New York	FRANKLIN AV/UNION ST
 New York	FRANKLIN AV/WILLOUGHBY AV
+New York	Franklin D. Roosevelt Four Freedoms Park
 New York	Franklin St
 New York	FRANKLIN ST/CALYER ST
 New York	FRANKLIN ST/GREENPOINT AV
@@ -5347,6 +5417,7 @@ New York	FRANKLIN ST/GREEN ST
 New York	FRANKLIN ST/INDIA ST
 New York	FRANKLIN ST/MESEROLE AV
 New York	FRANKLIN ST/NOBLE ST
+New York	Fraunces Tavern Museum
 New York	FRED DOUGLASS BL/CATHEDRAL PY
 New York	FRED DOUGLASS BL/MACOMBS PL
 New York	FRED DOUGLASS BL/W 111 ST
@@ -5405,6 +5476,7 @@ New York	FRESH POND RD/MYRTLE AV
 New York	FRESH POND RD/PALMETTO ST
 New York	FRESH POND RD/PUTNAM AV
 New York	FRESH POND RD/WOODBINE ST
+New York	Frick Collection
 New York	FRONT ST / YORK ST
 New York	FRONT ST/YORK ST
 New York	FT GEORGE AV/66 FORT GEORGE AV
@@ -5546,6 +5618,8 @@ New York	GATEWAY DR/ERSKINE ST
 New York	GATEWAY DR/GATEWAY BUS TURNAROUND
 New York	GATEWAY DR/SITE DR
 New York	GEIGERICH PL/LOCUST POINT DR
+New York	General Post Office
+New York	George Washington Bridge
 New York	GERRITSEN AV / AV S
 New York	GERRITSEN AV/AV S
 New York	GERRITSEN AV/AV T
@@ -5634,6 +5708,7 @@ New York	GRAHAM AV/METROPOLITAN AV
 New York	GRAHAM AV/RICHARDSON ST
 New York	GRAHAM AV/SCHOLES ST
 New York	GRAHAM AV/SEIGEL ST
+New York	Gramercy Park
 New York	GRAND ARMY/FLATBUSH AV
 New York	Grand Army Plaza
 New York	GRAND ARMY PLZ/FLATBUSH AV
@@ -5669,6 +5744,7 @@ New York	GRAND AV/RUST ST
 New York	GRAND AV/VAN HORN ST
 New York	Grand Central
 New York	Grand Central - 42 St
+New York	Grand Central Terminal
 New York	GRAND CONCOURSE/BEDFORD PK BL
 New York	GRAND CONCOURSE/CROSS BX EXP OVERPASS
 New York	GRAND CONCOURSE/E 138 ST
@@ -5741,10 +5817,13 @@ New York	Grant Av
 New York	GRANT AV /LIBERTY AV
 New York	GRANT AV /PITKIN AV
 New York	Grant City
+New York	Grant's Tomb
 New York	Grasmere
 New York	GRAVESEND NECK RD/EAST 29 St
 New York	Great Kills
+New York	Greeley Square
 New York	GREEN ACRE/BEST BUY
+New York	Greenacre Park
 New York	GREEN ACRES/MACYS
 New York	GREEN ACRES/MACY'S
 New York	GREEN ACRES/STERNS
@@ -5790,8 +5869,11 @@ New York	GREENWICH AV/CHRISTOPHER ST
 New York	GREENWICH ST/BATTERY PL
 New York	GREENWICH ST/HORATIO ST
 New York	GREENWICH ST/MORRIS ST
+New York	Green-Wood Cemetery
+New York	Green-Wood Chapel
 New York	Greystone
 New York	GROTE ST/BELMONT AV
+New York	Guggenheim Museum
 New York	Guilford (SLE)
 New York	Gun Hill Rd
 New York	GUNTHER AV/E GUN HILL RD
@@ -5884,6 +5966,7 @@ New York	HARWAY AV/BAY 43 ST
 New York	HARWAY AV/BAY 47 ST
 New York	HARWAY AV/BAY 50 ST
 New York	Hastings-on-Hudson
+New York	Haughwout Building
 New York	HAVEMEYER ST/DIVISION AV
 New York	Haverstraw
 New York	Hawthorne
@@ -5936,8 +6019,10 @@ New York	HENRY HUDSON PKY W/W 239 ST
 New York	HENRY HUDSON PKY W/W 246 ST
 New York	HENRY HUDSON PKY W/W 249 ST
 New York	HENRY HUDSON PKY W/W 252 ST
+New York	Herald Square
 New York	Hewes St
 New York	H. HARDING EXPY/F.LEWIS BLVD
+New York	High Line
 New York	High St
 New York	HILLSIDE AV/139 ST
 New York	HILLSIDE AV/144 ST
@@ -6154,6 +6239,7 @@ New York	HORACE HARDING EXP/UTOPIA PY
 New York	HORACE HARDING EXP/WALDRON ST
 New York	HORACE HARDING EXP/WESTSIDE AV
 New York	HORACE HARDING EXP/YELLOWSTONE BL
+New York	Hotel Chelsea
 New York	Houston St
 New York	Howard Beach - JFK Airport
 New York	HOYT AV/23 ST
@@ -6162,6 +6248,8 @@ New York	HOYT AV/31 ST
 New York	HOYT AV/CRESCENT ST
 New York	Hoyt - Schermerhorn Sts
 New York	Hoyt St
+New York	Huang Da Xian Temple
+New York	Hudson River Park
 New York	HUDSON ST/BARROW ST
 New York	HUDSON ST/BETHUNE ST
 New York	HUDSON ST/CHARLTON ST
@@ -6201,13 +6289,16 @@ New York	HUTCHINSON RVR PKY/WENNER PL
 New York	HUTCHINSON RVR PY E/BOLLER AV
 New York	HUTCHINSON RVR PY E/EINSTEIN LOOP N
 New York	HUTCHINSON RVR PY E/EINSTEIN LOOP S
+New York	IAC Building
 New York	INDEPENDENCE AV/W 237 ST
 New York	Intervale Av
+New York	Intrepid Sea
 New York	Inwood - 207 St
 New York	INWOOD AV/MACOMBS RD
 New York	IRVING AV/COVERT ST
 New York	Irvington
 New York	IRWIN AV/JOHNSON AV
+New York	Italian American Museum
 New York	Jackson Av
 New York	JACKSON AV/11 ST
 New York	JACKSON AV/21 ST
@@ -6385,7 +6476,9 @@ New York	JAMAICA AV /WOODHULL AV
 New York	JAMAICA AV/WYONA ST
 New York	Jamaica Center - Parsons/Archer
 New York	Jamaica - Van Wyck
+New York	James Watson House
 New York	JARVIS AV/BRUCKNER BL
+New York	Javits Convention Center
 New York	JAY AV/65 PL
 New York	JAY AV/66 ST
 New York	JAY AV/68 ST
@@ -6400,6 +6493,7 @@ New York	JAY ST/TILLARY ST
 New York	JAY ST/WILLOUGHBY ST
 New York	JAY ST/YORK ST
 New York	Jefferson Av
+New York	Jefferson Market Library
 New York	Jefferson St
 New York	JENNINGS ST/HOE AV
 New York	JENNINGS ST/LONGFELLOW AV
@@ -6454,6 +6548,9 @@ New York	JEWEL AV/QUEENS BL
 New York	JFK AIRPORT/TERMINAL 5 AirTrain STATION
 New York	JFK/TERMINAL 5-6
 New York	JFK TERMINAL 5/AIR TRAIN STATION
+New York	Joan of Arc Memorial
+New York	John Finley Walk
+New York	John F. Kennedy Memorial
 New York	JOHNSON AV/BOGART ST
 New York	JOHNSON AV/BUSHWICK AV
 New York	JOHNSON AV/HUMBOLT ST
@@ -6728,6 +6825,7 @@ New York	LEGION ST/PITKIN AV
 New York	LENOX RD/E 95 ST
 New York	LENOX RD/E 98 ST
 New York	LENOX RD/ROCKAWAY PY
+New York	Lever House
 New York	LEWIS AV/BAINBRIDGE ST
 New York	LEWIS AV/BROADWAY
 New York	LEWIS AV/DEKALB AV
@@ -6852,6 +6950,7 @@ New York	LINCOLN AV/BLAKE AV
 New York	LINCOLN AV/BRUCKNER Bl
 New York	LINCOLN AV/E 136 ST
 New York	LINCOLN AV/E 138 ST
+New York	Lincoln Center
 New York	LINCOLN RD/FLATBUSH AV
 New York	LINCOLN ST /115 AV
 New York	LINCOLN ST /116 AV
@@ -6926,6 +7025,8 @@ New York	LINDEN PL/31 RD
 New York	LINDEN PL/32 AV
 New York	LINDEN PL/35 AV
 New York	LINDEN PL/WHITESTONE EXP
+New York	Lin Ze Xu Statue
+New York	Little Italy
 New York	LITTLE NECK PKY/255 ST
 New York	LITTLE NECK PKY/260 ST
 New York	LITTLE NECK PKY/58 AV
@@ -6969,6 +7070,7 @@ New York	LITTLE NECK PY/NORTHERN BL
 New York	LITTLE NECK PY/SHILOH AV
 New York	LITTLE NECK PY/UNION TP
 New York	LITTLE NECK PY/WEST END DR
+New York	Little Red Lighthouse
 New York	LIVINGSTON ST / BOND ST
 New York	LIVINGSTON ST/BOND ST
 New York	LIVINGSTON ST/ COURT ST
@@ -6984,7 +7086,9 @@ New York	LIVONIA AV/ASHFORD ST
 New York	LOCUST POINT DR/GIEGERICH PL
 New York	LOCUST POINT DR/HATTING PL
 New York	LODOVICK AV/ALLERTON AV
+New York	Loeb Boathouse
 New York	LOGAN ST /SUTTER AV
+New York	Lombard Lamp
 New York	LONGSTREET AV/CHAFFEE AV
 New York	Longwood Av
 New York	LONGWOOD AV/BARRY ST
@@ -7025,6 +7129,7 @@ New York	LORRAINE ST/OTSEGO ST
 New York	LOUBET ST/70 AV
 New York	LOUIS NINE BL/BOSTON RD
 New York	LOUIS NINE BL/E 170 ST
+New York	Low Library
 New York	Ludlow
 New York	LUKE PL/217 ST
 New York	LUKE PL/218 ST
@@ -7038,6 +7143,7 @@ New York	MACOMBS RD/GRAND AV
 New York	MACOMBS RD/INWOOD AV
 New York	MACOMBS RD/NELSON AV
 New York	MACOMBS RD/W 176 ST
+New York	Macy's Department Store
 New York	MADISON AV/71 ST
 New York	MADISON AV/E 101 ST
 New York	MADISON AV/E 102 ST
@@ -7130,6 +7236,8 @@ New York	MADISON AV/EAST 55 - 56 ST
 New York	MADISON AV/EAST 60 - 61 ST
 New York	MADISON AV/EAST 63 ST
 New York	Madison (SLE)
+New York	Madison Square
+New York	Madison Square Garden
 New York	MADISON ST/CATHERINE ST
 New York	MADISON ST/CLINTON ST
 New York	MADISON ST/CYPRESS AV
@@ -7148,6 +7256,7 @@ New York	MADISON ST/SENECA AV
 New York	MADISON ST/ST JAMES PL
 New York	MADISON ST/WOODWARD AV
 New York	MAIN AV/ASTORIA BL
+New York	Maine Monument
 New York	MAIN RDWY/T.B.T.A.
 New York	MAIN RDY/AFTER EXIT RAMP
 New York	MAIN RDY/CLARKE THOMAS BLDG
@@ -7267,6 +7376,8 @@ New York	MANHATTAN AV/W 116 ST
 New York	MANHATTAN AV/W 119 ST
 New York	MANHATTAN AV/W 121 ST
 New York	MANHATTAN AV/W 122 ST
+New York	Manhattan Bridge Gate
+New York	Manhattan Municipal Building
 New York	Manitou
 New York	MARATHON PY/51 AV
 New York	Marble Hill
@@ -7491,6 +7602,9 @@ New York	METROPOLITAN AV/WOOD AV
 New York	METROPOLITAN AV/WOODHAVEN BL
 New York	METROPOLITAN AV/WOOD RD
 New York	METROPOLITAN AV/WOODWARD AV
+New York	Metropolitan Life Insurance Company Building
+New York	Metropolitan Museum of Art
+New York	Metropolitan Opera
 New York	METROTECH UNDERPASS/LAWRENCE ST
 New York	Mets - Willets Point
 New York	Middletown Rd
@@ -7502,6 +7616,7 @@ New York	MILL AV/AV U
 New York	MILL AV/RALPH AV
 New York	MILL RD /PENINSULA BL
 New York	MILL ST/CLINTON ST
+New York	MoMA
 New York	Montrose Av
 New York	MONTROSE AV/BUSHWICK AV
 New York	MONTROSE AV/GRAHAM AV
@@ -7512,6 +7627,7 @@ New York	Morgan Av
 New York	MORGAN AV/FLUSHING AV
 New York	MORGAN AV/HARRISON PL
 New York	MORGAN AV/THAMES ST
+New York	Morgan Library
 New York	MORNINGSIDE AV/W 125 ST
 New York	MORRIS AV/E 140 ST
 New York	MORRIS AV/E 141 ST
@@ -7598,6 +7714,9 @@ New York	MURDOCK AV/SPRINGFIELD BL
 New York	MURRAY ST/CHURCH ST
 New York	MURRAY ST/GREENWICH ST
 New York	MURRAY ST/NORTH END AV
+New York	Museum of Chinese in America
+New York	Museum of Natural History
+New York	Museum of the City of New York
 New York	Myrtle Av
 New York	MYRTLE AV/108 ST
 New York	MYRTLE AV/111 ST
@@ -7726,6 +7845,7 @@ New York	N CONDUIT AV/222 ST
 New York	N CONDUIT AV/225 ST
 New York	N CONDUIT AV/230 PL
 New York	Neck Rd
+New York	Nelson A. Rockefeller Park
 New York	Neptune Av
 New York	NEPTUNE AV/BRIGHTON 3 ST
 New York	NEPTUNE AV/BRIGHTON 4 ST
@@ -7754,8 +7874,10 @@ New York	NEREID AV/MURDOCK AV
 New York	NEREID AV/SETON AV
 New York	NEREID AV/WHITE PLAINS RD
 New York	Nevins St
+New York	New Amsterdam Pavilion
 New York	Newburg
 New York	New Canaan
+New York	New Cooper Union
 New York	New Dorp
 New York	New Hamburg
 New York	New Haven
@@ -7786,6 +7908,7 @@ New York	NEW LOTS AV/VAN SINDEREN AV
 New York	NEW LOTS AV/VERMONT ST
 New York	NEW LOTS AV/WILLIAMS AV
 New York	NEW LOTS AV/WYONA ST
+New York	New Museum of Contemporary Art
 New York	NEWPORT AV/BEACH 116 ST
 New York	NEWPORT AV/BEACH 118 ST
 New York	NEWPORT AV/BEACH 119 ST
@@ -7843,7 +7966,12 @@ New York	NEW YORK AV/ST JOHNS PL
 New York	NEW YORK AV/TILDEN AV
 New York	NEW YORK AV/UNION ST
 New York	NEW YORK AV/WINTHROP ST
+New York	New York by Gehry
+New York	New York County Courthouse
+New York	New York Historical Society
+New York	New York Public Library
 New York	NH-State St.
+New York	Nicholas Roerich Museum
 New York	Noroton Heights
 New York	NORTH END AV/WARREN ST
 New York	NORTHERN BL/100 ST
@@ -8040,6 +8168,7 @@ New York	N  VAN WYCK SERVICE RD /STOP 15 BLDG 122
 New York	N VAN WYCK SERVICE RD/STOP 15 BLDG 122
 New York	N VAN WYCK SERVICE RD/STOP 17 AMERICAN FREIGHT
 New York	N VW SERVICE RD/STOP 17 AMERICAN FREIGHT
+New York	NY Stock Exchange
 New York	Oakwood Heights
 New York	OCEAN AV/231 OCEAN AVENUE
 New York	OCEAN AV/AV H
@@ -8111,6 +8240,7 @@ New York	Old Saybrook (SLE)
 New York	Old Town
 New York	OLMSTEAD AV/SEWARD AV
 New York	ONDERDONK AV/CATALPA AV
+New York	One WTC
 New York	ORCHARD BEACH CIR/CITY ISLAND RD
 New York	ORIENTAL BL/BEAUMONT ST
 New York	ORIENTAL BL/BEAUMONT ST (LTD - does not stop)
@@ -8137,8 +8267,11 @@ New York	PALMETTO ST/MYRTLE AV
 New York	PALMETTO ST/ST NICHOLAS AV
 New York	PALMETTO ST/ST. NICHOLAS AV.
 New York	PALMETTO ST/WYCKOFF AV
+New York	PanAm Building
 New York	PARK AV/CARLTON AV
 New York	PARK AV/E 125 ST
+New York	Park Avenue
+New York	Park Avenue Armory
 New York	PARK AV/NAVY ST
 New York	PARK AV/N PORTLAND ST
 New York	PARK AV/RYERSON ST
@@ -8154,6 +8287,7 @@ New York	PARK LA S/METROPOLITAN AV
 New York	PARK LA S/MYRTLE AV
 New York	Park Pl
 New York	PARK ROW/BEEKMAN ST
+New York	Park Row Building
 New York	PARK ROW/SPRUCE ST
 New York	PARK ROW/ST JAMES PL
 New York	PARK ROW/WORTH ST
@@ -8161,6 +8295,7 @@ New York	Parkside Av
 New York	PARKSIDE AV/BEDFORD AV
 New York	PARKSIDE AV/FLATBUSH AV
 New York	PARKSIDE AV/OCEAN AV
+New York	Park Slope Historic District
 New York	PARKVILLE AV/MCDONALD AV
 New York	PARSONS BL/14 AV
 New York	PARSONS BL/159 ST
@@ -8302,6 +8437,8 @@ New York	PENNYFIELD AV/TIERNEY PL
 New York	Philipse Manor
 New York	PIDGEON MEADOW RD/46 AV
 New York	PIDGEON MEADOW RD/LABURNUM AV
+New York	Pier 15
+New York	Pier 17
 New York	PIKE ST/CHERRY ST
 New York	PIKE ST/DIVISION ST
 New York	PIKE ST/MADISON ST
@@ -8339,11 +8476,14 @@ New York	Pleasant Plains
 New York	Pleasantville
 New York	PLIMPTON AV/EDWARD L. GRANT HY
 New York	PLIMPTON AV/W 170 ST
+New York	Plymouth Church
 New York	POLHEMAS AV/WATSON PL
+New York	Police Headquarters Building
 New York	POLY PL/7 AV
 New York	POPPENHUSEN AV/119 ST
 New York	Port Chester
 New York	POSTAL FACILITY RD/IN FRONT OF FACILITY
+New York	Potter Building
 New York	Poughkeepsie
 New York	POWELLS COVE BL/157 ST
 New York	POWELLS COVE BL/159 ST
@@ -8354,6 +8494,7 @@ New York	POWELL ST/DUMONT AV
 New York	President St
 New York	Prince's Bay
 New York	Prince St
+New York	Prison Ship Martyr's Monument
 New York	Prospect Av
 New York	PROSPECT AV/BOSTON RD
 New York	PROSPECT AV/E 149 ST
@@ -8384,8 +8525,11 @@ New York	PROSPECT PK W/19 ST
 New York	PROSPECT PK W/9 ST
 New York	PROSPECT PK W/PROSPECT AV
 New York	PROSPECT PK W/WINDSOR PL
+New York	Public Theater
+New York	Puck Building
 New York	PUGSLEY AV/RANDALL AV
 New York	PUGSLEY AV/SEWARD AV
+New York	Pulitzer Fountain
 New York	Purdy's
 New York	PUTNAM AV/BEDFORD AV
 New York	PUTNAM AV/CLASSON AV
@@ -8398,6 +8542,7 @@ New York	PUTNAM AV/NOSTRAND AV
 New York	PUTNAM AV/ONDERDONK AV
 New York	PUTNAM AV/WOODWARD AV
 New York	PUTNAM AV/WYCKOFF AV
+New York	Queen Elisabeth II September 11 Garden
 New York	QUEENS BL/108 ST
 New York	QUEENS BL/33 ST
 New York	QUEENS BL/35 ST
@@ -8474,6 +8619,7 @@ New York	QUEENS BLVD/ 78 AV
 New York	QUEENS BL/WOODHAVEN BL
 New York	QUEENS BL/YELLOWSTONE BL
 New York	QUEENSBORO BR EXIT/E 61 ST
+New York	Queensboro Bridge
 New York	Queensboro Plaza
 New York	QUEENS MIDTOWN EXP/45 ST
 New York	QUEENS MIDTOWN EXP/48 ST
@@ -8588,6 +8734,7 @@ New York	REMSEN AV/LINDEN BL
 New York	REMSEN AV/RUTLAND RD
 New York	REMSEN AV/SEAVIEW AV
 New York	REMSEN AV/WINTHROP ST
+New York	Renwick's Ruins
 New York	RESEARCH AV/AMPERE AV
 New York	RESERVOIR AV/W 195 ST
 New York	RESERVOIR AV/W KINGSBRIDGE RD
@@ -8617,6 +8764,7 @@ New York	RIVERDALE AV/W 261 ST
 New York	RIVERDALE AV/W 263 ST
 New York	Riverside
 New York	RIVERSIDE BL/W 69 ST
+New York	Riverside Church
 New York	RIVERSIDE DR/157-10 RIVERSIDE DR
 New York	RIVERSIDE DR/TIEMANN PL
 New York	RIVERSIDE DR/W 100 ST
@@ -8653,6 +8801,7 @@ New York	RIVERSIDE DR/W 89 ST
 New York	RIVERSIDE DR/W 91 ST
 New York	RIVERSIDE DR/W 94 ST
 New York	RIVERSIDE DR/W 97 ST
+New York	Riverside Park
 New York	ROAD 5/TRAM
 New York	ROCHESTER AV/BERGEN ST
 New York	Rockaway Av
@@ -8815,6 +8964,7 @@ New York	ROCKAWAY TPK /PENINSULA BL
 New York	ROCKAWAY TPK /REYEM DR
 New York	ROCKAWAY TPK /RUGBY RD
 New York	ROCKAWAY TPK /W BROADWAY
+New York	Rockefeller Center
 New York	ROCKY HILL RD/202 ST
 New York	ROCKY HILL RD/203 ST
 New York	ROCKY HILL RD/CLEARVIEW EP
@@ -8985,6 +9135,7 @@ New York	SEAGIRT BL/BEACH 34 ST
 New York	SEAGIRT BL /CREST RD
 New York	SEAGIRT BL/CREST RD
 New York	SEAGIRT BL /SEAGIRT AV
+New York	Seagram Building
 New York	SEAVIEW AV/E 102 ST
 New York	SEAVIEW AV/E 104 ST
 New York	SEAVIEW AV/E 105 ST
@@ -9037,6 +9188,7 @@ New York	SENECA AV/STOCKHOLM ST
 New York	SEWARD AV/PUGSLEY AV
 New York	Seymour
 New York	SHAKESPEARE AV/W 169 ST
+New York	Shakespeare Garden
 New York	Sheepshead Bay
 New York	SHEEPSHEAD BAY RD/E 15 ST
 New York	SHEEPSHEAD BAY RD/E 16 ST
@@ -9049,6 +9201,7 @@ New York	SHELL RD/BOUCK CT
 New York	Shepherd Av
 New York	SHERIDAN BL /BAYVIEW AV
 New York	SHERIDAN BL /CARVEL PL
+New York	Shinran Shonin statue
 New York	SHORE BL/EMMONS AV
 New York	SHORE BL/NEPTUNE AV
 New York	SHORE PKWY/KNAPP ST
@@ -9085,6 +9238,7 @@ New York	SHORE RD/NARROWS AV
 New York	SHORE RD/OLIVER ST
 New York	SHORE RD/RIDGE BL
 New York	Simpson St
+New York	Skyscraper Museum
 New York	Smith - 9 Sts
 New York	SMITH ST/2 ST
 New York	SMITH ST/5 ST
@@ -9097,6 +9251,9 @@ New York	SMITH ST/ NELSON ST
 New York	SMITH ST/UNION ST
 New York	SMITH ST/W 9 ST
 New York	SMITH ST/WARREN ST
+New York	SoHo
+New York	Soldier' and Sailors' Arch
+New York	Soldiers' and Sailors' Monument
 New York	SOUNDVIEW AV/CORNELL AV
 New York	SOUNDVIEW AV/GILDERSLEEVE AV
 New York	SOUNDVIEW AV/LACOMBE AV
@@ -9143,6 +9300,7 @@ New York	SOUTHERN BL/WESTCHESTER AV
 New York	South Ferry Loop
 New York	SOUTH FERRY/TERMINAL
 New York	South Norwalk
+New York	Southpoint Park
 New York	Southport
 New York	SOUTH RD /150 ST
 New York	SOUTH RD /153 ST
@@ -9154,6 +9312,7 @@ New York	SOUTH RD /159 ST
 New York	SOUTH RD /160 ST
 New York	SOUTH RD /GUY R BREWER BL
 New York	SOUTH RD /SUTPHIN BL
+New York	South Street Seaport
 New York	SOUTH ST/WHITEHALL ST
 New York	SPENCER DR/KENNELLWORTH PL
 New York	SPENCER DR/REED PL
@@ -9237,6 +9396,7 @@ New York	Spring St
 New York	SPRING ST/GREENWICH ST
 New York	SPRING ST/HUDSON ST
 New York	Spuyten Duyvil
+New York	Squadron A. Armory
 New York	Stamford
 New York	STANHOPE ST/FAIRVIEW AV
 New York	STANHOPE ST/GRANDVIEW AV
@@ -9263,6 +9423,8 @@ New York	STATE ST / BATTERY PL
 New York	STATE ST/BATTERY PL
 New York	STATE ST/BRIDGE ST
 New York	STATE ST/WHITEHALL ST
+New York	Statue of Liberty
+New York	St Bartholomew's Church
 New York	ST CLAIRE PL/W 125 ST
 New York	Steinway St
 New York	STEINWAY ST/20 AV
@@ -9306,6 +9468,7 @@ New York	STILLWELL AV/QUENTIN RD
 New York	STILLWELL AV/W 15 PL
 New York	STILLWELL/TERMINAL
 New York	STILLWELL TERMINAL BUS LOOP
+New York	St. James' Church
 New York	ST JOHNS PL/ALBANY AV
 New York	ST JOHNS PL/BEDFORD AV
 New York	ST JOHNS PL/BROOKLYN AV
@@ -9326,6 +9489,7 @@ New York	St Lawrence Av
 New York	ST MARKS AV/BUFFALO AV
 New York	ST MARKS AV/RALPH AV
 New York	ST MARKS AV/ROCHESTER AV
+New York	St. Mark's Church in the Bowery
 New York	ST MARKS PL/1 AV
 New York	ST MARKS PL/2 AV
 New York	ST MARKS PL/3 AV
@@ -9384,9 +9548,17 @@ New York	STORY AV/SOUNDVIEW AV
 New York	STORY AV/TAYLOR AV
 New York	STORY AV/THIERIOT AV
 New York	STORY AV/UNDERHILL AV
+New York	St. Patrick's Cathedral
+New York	St. Patrick's Old Cathedral
+New York	St. Paul's Chapel
+New York	St. Peter's Church
+New York	Strand Bookstore
 New York	Stratford
+New York	Strauss Park
+New York	Strawberry Fields
 New York	STUART ST/FILLMORE AV
 New York	STUART ST / FILLMORE AVENUE
+New York	Stuyvesant Square
 New York	SULLIVAN PL/WASHINGTON AV
 New York	SUMMERFIELD ST/CYPRESS AV
 New York	SUMMERFIELD ST/FOREST AV
@@ -9419,6 +9591,7 @@ New York	SURF AV/W 37 ST
 New York	SURF AV/W 5 ST
 New York	SURF AV/W 6 ST
 New York	SURF AV/W 8 ST
+New York	Surrogate's Court
 New York	SUTPHIN BL/109 AV
 New York	SUTPHIN BL/110 AV
 New York	SUTPHIN BL/111 AV
@@ -9506,11 +9679,22 @@ New York	S  VAN WYCK SERVICE RD/BLDG 23
 New York	S VAN WYCK SERVICE RD/BLDG 23
 New York	S  VAN WYCK SERVICE RD /BLDG 90
 New York	S VAN WYCK SERVICE RD/BLDG 90
+New York	Swedish Cottage
 New York	Talmadge Hill
 New York	Tarrytown
 New York	TEARDROP/LAYOVER
+New York	Temple Emanu-El
+New York	Tenement Museum
 New York	Tenmile River
 New York	TERMINAL C/STOP 1
+New York	The Ansonia
+New York	The Beresford
+New York	The Cloisters
+New York	The Dairy
+New York	The Dakota
+New York	The Mall
+New York	The Plaza
+New York	The San Remo
 New York	THOMAS S BOYLAND ST/ATLANTIC AV
 New York	THOMAS S BOYLAND ST/BAINBRIDGE ST
 New York	THOMAS S BOYLAND ST/DEAN ST
@@ -9555,6 +9739,9 @@ New York	TILLARY ST/CADMAN PZ E
 New York	TILLARY ST/CADMAN PZ W
 New York	TILLARY ST/JAY ST
 New York	Times Sq - 42 St
+New York	Times Square
+New York	Time Warner Center
+New York	Titanic Memorial
 New York	TOMPKINS AV/DEKALB AV
 New York	TOMPKINS AV/ELLERY ST
 New York	TOMPKINS AV/FLUSHING AV
@@ -9567,12 +9754,16 @@ New York	TOMPKINS AV/MARTIN L KING PL
 New York	TOMPKINS AV/MYRTLE AV
 New York	TOMPKINS AV/PUTNAM AV
 New York	TOMPKINS AV/WILLOUGHBY AV
+New York	Tompkins Square Park
 New York	Tompkinsville
+New York	Tom's Restaurant
 New York	TOTTEN AV /CROSS ISLAND PKY
 New York	TOTTEN AV/CROSS ISLAND PY
 New York	Tottenville
 New York	Tremont
 New York	Tremont Av
+New York	Trinity Cemetery
+New York	Trinity Church
 New York	TRINITY PL / EXCHANGE AL
 New York	TRINITY PL/EXCHANGE ALLEY
 New York	TRINITY PL/MORRIS ST
@@ -9587,8 +9778,11 @@ New York	TROY AV/EAST NEW YORK AV
 New York	TROY AV/EMPIRE BL
 New York	TROY AV/FULTON ST
 New York	TROY AV/MONTGOMERY ST
+New York	Trump Tower
 New York	Tuckahoe
+New York	Tudor City
 New York	TURNBULL AV/ PUGSLEY AV
+New York	Tweed Courthouse
 New York	ULMER ST/25 AV
 New York	UNDERCLIFF AV/BOSCOBEL PL
 New York	UNDERCLIFF AV/SEDGWICK AV
@@ -9602,6 +9796,7 @@ New York	UNIONPORT RD/METROPOLITAN AV
 New York	UNIONPORT RD/STARLING AV
 New York	Union Sq - 14 St
 New York	UNION SQ E/E 15 ST
+New York	Union Square
 New York	Union St
 New York	UNION ST/25 RD
 New York	UNION ST/26 AV
@@ -9703,6 +9898,8 @@ New York	UNION TP/SURREY PL
 New York	UNION TP/UTOPIA PY
 New York	UNION TP/VLEIGH PL
 New York	UNION TP/WINCHESTER BL
+New York	United Nations Headquarters
+New York	United States Custom House
 New York	UNIVERSITY AV/HALL OF FAME TE
 New York	UNIVERSITY AV/MORTON PL
 New York	UNIVERSITY AV/N OF WASHINGTON BDG
@@ -9720,6 +9917,7 @@ New York	UNIVERSITY AV/W BURNSIDE AV #1
 New York	UNIVERSITY AV/W FORDHAM RD
 New York	UNIVERSITY AV/W TREMONT AV
 New York	University Heights
+New York	US Courthouse
 New York	Utica Av
 New York	UTICA AV/ATLANTIC AV
 New York	UTICA AV/AV D
@@ -9922,6 +10120,7 @@ New York	VETERANS AV/E 69 ST
 New York	VETERANS AV /E 71 ST
 New York	VETERANS AV/E 71 ST
 New York	VETERANS AV/RALPH AV
+New York	Victorian Gardens
 New York	VICTOR MOORE TERM/74 ST-BWAY TERMINAL
 New York	VICTOR MOORE TERM/Q47 STAND
 New York	VICTOR MOORE TERM/Q49 STAND
@@ -10158,11 +10357,13 @@ New York	Wakefield
 New York	Wakefield - 241 St
 New York	WAKEMAN PL/3 AV
 New York	WAKEMAN PL/RIDGE BL
+New York	Waldorf=Astoria
 New York	WALLABOUT ST/BEDFORD AV
 New York	WALLABOUT ST/FRANKLIN AV
 New York	WALLABOUT ST/WYTHE AV
 New York	W ALLEY RD/233 ST
 New York	Wall St
+New York	Wall Street
 New York	WALNUT AV/E 133 ST
 New York	WALNUT AV/E 135 ST
 New York	WALTHAM ST /105 AV
@@ -10194,6 +10395,8 @@ New York	WASHINGTON PLZ/LANE 2
 New York	WASHINGTON PLZ/LANE3
 New York	WASHINGTON PLZ / WASHINGTON PLZ
 New York	WASHINGTON PLZ/WASHINGTON PLZ
+New York	Washington Square
+New York	Washington Square Arch
 New York	WASHINGTON ST/W HOUSTON ST
 New York	WASNER AV /CLINTON ST
 New York	WASNER AV /DOUGHTY BL
@@ -10423,6 +10626,7 @@ New York	WHITESTONE EXP/LINDEN PL
 New York	WHITESTONE EXP W SVC RD/20 AV
 New York	WHITESTONE EXPWY/LINDEN PL
 New York	Whitlock Av
+New York	Whitney Museum of American Art
 New York	W HOUSTON ST/AV OF THE AMERICAS
 New York	W HOUSTON ST/GREENE ST
 New York	W HOUSTON ST/HUDSON ST
@@ -10465,6 +10669,7 @@ New York	WILLIAMSBRIDGE RD/PIERCE AV
 New York	WILLIAMSBRIDGE RD/RHINELANDER AV
 New York	WILLIAMSBRIDGE RD/SILVER ST
 New York	WILLIAMSBRIDGE RD/ST RAYMONDS AV
+New York	Williamsburgh Savings Bank
 New York	WILLIS AV/E 138 ST
 New York	WILLIS AV/E 140 ST
 New York	WILLIS AV/E 141 ST
@@ -10502,6 +10707,7 @@ New York	WILSON AV/TROUTMAN ST
 New York	WILSON AV/WILLOUGHBY AV
 New York	WILSON AV/WOODBINE ST
 New York	Wilton
+New York	Winter Garden
 New York	Winthrop St
 New York	WINTHROP ST/ROCKAWAY PY
 New York	W KINGSBRIDGE RD/BAILEY AV
@@ -10558,6 +10764,8 @@ New York	WOODSIDE AV/64 ST
 New York	WOODSIDE AV/65 PL
 New York	WOODWARD AV/STANHOPE ST
 New York	WOODYCREST AV/W 168 ST
+New York	Woolworth Building
+New York	World Financial Center
 New York	World Trade Center
 New York	WORTH ST/CENTRE ST
 New York	WORTH ST/MOTT ST
@@ -10598,6 +10806,7 @@ New York	WYTHE AV/S 3 ST
 New York	WYTHE AV/S 5 ST
 New York	WYTHE AV/WILLIAMSBURG ST W
 New York	Yankees-E153 St.
+New York	Yankee Stadium
 New York	YELLOWSTONE BL/62 RD
 New York	YELLOWSTONE BL/63 DR
 New York	YELLOWSTONE BL/64 RD
@@ -10639,7 +10848,6 @@ New York	York St
 New York	YORK ST/GOLD ST
 New York	YORK ST/JAY ST
 New York	Zerega Av
-Staten Island	40.70136
 Staten Island	4 AV/86 ST
 Staten Island	4 AV/87 ST
 Staten Island	4 AV/90 ST
@@ -10788,7 +10996,6 @@ Staten Island	ARTHUR KILL RD/WINANT PL
 Staten Island	ARTHUR KILL RD/WOOD AV
 Staten Island	ARTHUR KILL RD/WOODROW RD
 Staten Island	ARTHUR KILL RD/YETMAN AV
-Staten Island	 at the intersection of Bay Street and Richmond Terrace. Passengers using wheelchairs or carrying bicycles are encouraged to board on the  lower level.
 Staten Island	AV C / E 23 ST
 Staten Island	AV OF THE AMERICAS/LISPENARD ST
 Staten Island	AV OF THE AMERICAS/PRINCE ST
@@ -11867,6 +12074,7 @@ Staten Island	ST GEORGE FERRY/S 76 & S86
 Staten Island	ST GEORGE FERRY/S78
 Staten Island	ST GEORGE FERRY /ST GEORGE FERRY
 Staten Island	ST GEORGE FERRY/ST GEORGE FERRY
+Staten Island	St. George Ferry Terminal
 Staten Island	ST MARKS PL/83 ST MARKS PL
 Staten Island	ST MARKS PL/FORT PL
 Staten Island	ST MARKS PL/HAMILTON AV
@@ -12080,6 +12288,7 @@ Staten Island	WEST ST/CARLISLE ST
 Staten Island	WEST ST/N MOORE ST
 Staten Island	WEST ST/SPRING ST
 Staten Island	WEST ST/VESEY ST
+Staten Island	Whitehall Ferry Terminal
 Staten Island	W HOUSTON ST/MERCER ST
 Staten Island	W HOUSTON ST/WASHINGTON  ST
 Staten Island	WILDER AV/MORTON ST

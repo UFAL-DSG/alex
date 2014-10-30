@@ -1778,7 +1778,6 @@ Brookley Field	brookley field
 Brooklin	brooklin
 Brookline	brookline
 Brookline Statio	brookline statio
-Brooklyn	brooklyn
 Brooklyn Center	brooklyn center
 Brooklyn Curtis	brooklyn curtis
 Brooklyn Navy Ya	brooklyn navy ya
@@ -8841,7 +8840,6 @@ Mandeville	mandeville
 Manfred	manfred
 Mangham	mangham
 Manhattan Beach	manhattan beach
-Manhattan	manhattan
 Manheim	manheim
 Manila	manila
 Manilla	manilla

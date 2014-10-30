@@ -11,7 +11,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from applications.PublicTransportInfoEN.time import GoogleTimeFinder
+from applications.PublicTransportInfoEN.time_zone import GoogleTimeFinder
 from .directions import GoogleDirectionsFinder, Waypoints
 from .weather import OpenWeatherMapWeatherFinder, WeatherPoint
 from datetime import datetime
@@ -876,7 +876,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
-                da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%H:%M")))
+                da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%I:%M:%p")))
                 return da
 
     def req_departure_time_rel(self, dialogue_state):
@@ -920,7 +920,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%H:%M")))
+                da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%I:%M:%p")))
                 return da
 
     def req_arrival_time_rel(self, dialogue_state):
@@ -1136,7 +1136,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
                 res.append("inform(departure_time=%s)" %
-                           step.departure_time.strftime("%H:%M"))
+                           step.departure_time.strftime("%I:%M:%p"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
                     res.append("inform(enter_at=%s)" % step.departure_stop)
@@ -1199,7 +1199,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                     time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
                 elif date_rel != 'none':
                     time_abs = "%02d:%02d" % (now.hour, now.minute)
-            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
+            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%I:%M:%p").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
             # handle 12hr time
