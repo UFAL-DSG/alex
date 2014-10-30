@@ -1,0 +1,8 @@
+#!/bin/bash
+
+pushd ..
+
+./vhub.py -c ./PublicTransportInfoCS/ptics.cfg ../resources/private/ext-lz-277278199.cfg ./PublicTransportInfoCS/kaldi.cfg
+
+
+popd
