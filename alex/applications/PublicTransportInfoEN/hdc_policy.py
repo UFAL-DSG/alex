@@ -11,7 +11,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from applications.PublicTransportInfoEN.time_zone import GoogleTimeFinder
+from .time_zone import GoogleTimeFinder
 from .directions import GoogleDirectionsFinder, Waypoints
 from .weather import OpenWeatherMapWeatherFinder, WeatherPoint
 from datetime import datetime
