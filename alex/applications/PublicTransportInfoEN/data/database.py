@@ -16,7 +16,7 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "find_connection": ["find connection", "find out connection", "find link",
+        "find_connection": ["find connection", "find a connection", "find out connection", "find link", "find a link"
                             "find out link", "looking for a connection", 'connection', 'link',
                            ],
         "find_platform": ["find platform", "find out platform", ],

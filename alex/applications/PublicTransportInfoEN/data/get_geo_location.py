@@ -2,16 +2,20 @@
 # -*- coding: utf-8 -*-
 
 """
-A script that collects the location names (city, state) of all the given longitude, latitude coordinates using the Google Geocoding API.
+A script that collects the locations of all the given cities using the Google
+Geocoding API.
 
 Usage:
 
-./get_geo_names.py [-d delay] [-l limit] [-a] locations-in.tsv names-out.tsv
+./get_cities_locations.py [-d delay] [-l limit] [-a] cities_locations-in.tsv cities_locations-out.tsv
 
--d = delay between requests in seconds (will be extended by a random period up to 1/2 of the original value)
+-d = delay between requests in seconds (will be extended by a random period
+        up to 1/2 of the original value)
 -l = limit maximum number of requests
 -a = retrieve all locations, even if they are set
 """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # i needed to install grequests : $ sudo pip install grequests
 
@@ -27,7 +31,7 @@ from random import random
 
 import grequests
 
-from applications.PublicTransportInfoEN.data.proxy_list import proxy_list
+from proxy_list import proxy_list
 
 
 def build_request(req, proxy='www.webproxy.net:80', protocol='http'):
@@ -44,8 +48,8 @@ def build_async_batch(req_list, proxy_list):
     return batch
 
 
-def compose_url(longitude, latitude):
-    data = {'latlng': ','.join((latitude, longitude,)), 'language': 'en'}
+def compose_url(place):
+    data = {'address': place, 'language': 'en'}
     url = 'https://maps.googleapis.com/maps/api/geocode/json?' + urllib.urlencode(data)
     return url
 
@@ -53,6 +57,7 @@ def compose_url(longitude, latitude):
 def process_batch(requests):
     res = grequests.map(requests)
     results = []
+    geo_data = []
     dead_proxies = []
     #TODO: here there should be taken care of proxies, that don't return nothing -> distinguish them and return them along with propper results
     for i, r in enumerate(res):
@@ -66,17 +71,20 @@ def process_batch(requests):
             dead_proxies.append(requests[i].kwargs['proxies']['http'])
             continue
         long_names = [[x['long_name'] for x in result['address_components'] if 'political' in x['types']] for result in json_obj['results']]
-        flat_set_names = list(set([item for sublist in long_names for item in sublist]))
-        results.append(flat_set_names)
+        # flat_set_names = list(set([item for sublist in long_names for item in sublist]))
+        results.append(long_names)
 
-    return results, dead_proxies
+        geo = [(result['geometry']['location']['lng'],result['geometry']['location']['lat']) for result in json_obj['results']]
+        geo_data.append(geo)
+
+    return results, geo_data, dead_proxies
 
 
 def process_query(chunk, proxy_list):
     requests = []
-    for (lon, lat) in chunk:
-        url = compose_url(lon, lat)
-        requests.append(url)
+    for place in chunk:
+        url = compose_url(place)
+        requesuts.append(url)
     batch = build_async_batch(requests, proxy_list)
 
     return process_batch(batch)
@@ -152,32 +160,27 @@ def extract_fields(lines, header):
         geo_data.append((longitude, latitude))
     return (geo_data, stops)
 
-def get_chunk(buf, in_file_header, previously_processed,  n):
+def get_chunk(buf, previously_processed,  n):
     """ Read n-line chunks from filehandle. Returns sequence of n lines, or None at EOF.
         it skips any stop that was previously processed
     """
 
     chunk = []
     while len(chunk) < n:
-        in_line = buf.readline()
+        in_line = buf.readline().strip()
         if not in_line:
             return chunk
-        stop_index = get_column_index(in_file_header, "stop_name", 2)
-        stop = in_line.strip().split(',')[stop_index].strip('"')
-        if stop in previously_processed:
+        place = in_line.strip()
+        if place in previously_processed:
             continue;
         chunk.append(in_line)
-
-    # if not any(chunk):  # detect end-of-file (list of ['', '',...] )
-    #     chunk = None
 
     return chunk
 
 
-def find_names(file_in, file_out, proxy_list, limit, delay = 1, chunk_size = 55):
+def find_locations(file_in, file_out, proxy_list, delay = 1, chunk_size = 55):
 
     with codecs.open(file_in, 'r', 'UTF-8') as fs_in:
-        header = fs_in.readline()
         num_records = 0
         previously_processed = load_reference_file(file_out)
         print str(len(previously_processed)) + " previously processed:"
@@ -185,8 +188,8 @@ def find_names(file_in, file_out, proxy_list, limit, delay = 1, chunk_size = 55)
         with codecs.open(file_out, 'a', 'UTF-8') as fs_out:
             chunk_rest = []
             proxies_in_use = []
-            while num_records < limit:
-                chunk = get_chunk(fs_in, header, previously_processed, chunk_size - len(chunk_rest))
+            while chunk_rest is not None:
+                chunk = get_chunk(fs_in, previously_processed, chunk_size - len(chunk_rest))
                 # append previously non-successful lines
                 chunk = chunk_rest + chunk
                 # end of input file handling
@@ -195,21 +198,17 @@ def find_names(file_in, file_out, proxy_list, limit, delay = 1, chunk_size = 55)
                 if len(proxies_in_use) < len(chunk):
                     proxies_in_use.extend(list(proxy_list))
 
-                # preprocess chunk of lines
-                geo_data, stops = extract_fields(chunk, header)
-                # list of names for each entry
-
-                possible_names, dead_proxies = process_query(geo_data, proxies_in_use)
+                possible_names, geo_data, dead_proxies = process_query(chunk, proxies_in_use)
                 proxies_in_use = [proxy for proxy in proxies_in_use if proxy not in dead_proxies]
 
                 # handle non-successful queries
+
                 chunk_rest = [chunk[i] for i, names in enumerate(possible_names) if not names]
                 if chunk_rest is None:
                     print "not chunk_rest"
+                chunk = [chunk[i] for i, names in enumerate(possible_names) if names]
 
-                geo_data = [geo_data[i] for i, names in enumerate(possible_names) if names]
-                stops = [stops[i] for i, names in enumerate(possible_names) if names]
-
+                # geo_data = [geo_data[i] for i, names in enumerate(possible_names) if names]
                 possible_names = [names for names in possible_names if names]
 
                 # ref_city_match = []
@@ -222,7 +221,7 @@ def find_names(file_in, file_out, proxy_list, limit, delay = 1, chunk_size = 55)
                 #         match = options
                 #     ref_city_match.append(match)
 
-                output_lines = [stop + '\t' + ';'.join(names) + '\t' + ';'.join(geo) + '\n' for stop, names, geo in zip(stops, possible_names, geo_data)]
+                output_lines = [ch + '\t' + ';'.join(l) + '\t' + ';'.join(str(geo[i]).strip('(').strip(')').split(',')) + '\n' for (ch, loc,geo) in zip(chunk, possible_names, geo_data) for i,l in enumerate(loc)]
                 num_records += len(output_lines)
 
                 fs_out.writelines(output_lines)
@@ -234,7 +233,7 @@ def find_names(file_in, file_out, proxy_list, limit, delay = 1, chunk_size = 55)
 # Main
 #
 
-def load_reference_file(file_name, ref_state = None):
+def load_reference_file(file_name):
     """ Reads first field from file and returns it as a list. Fields are separated by tabs.
         If ref_state (abbreviated) is specified, it only returns cities in that state
     """
@@ -244,10 +243,6 @@ def load_reference_file(file_name, ref_state = None):
             if line.startswith('#'):
                 continue
             first_field = line.strip().split('\t', 1)[0]
-            # if state is specified skip non matching states
-            if ref_state and not ref_state == line.strip().split("|")[-1]:
-                continue;
-
             ref_list.append(first_field)
     return ref_list
 
@@ -258,11 +253,9 @@ if __name__ == '__main__':
     if len(files) != 2:
         sys.exit(__doc__)
 
-    limit = 3000
-
     file_in, file_out = files
 
     if not os.path.isfile(file_out):
         open(file_out, 'w').close()
 
-    find_names(file_in, file_out, proxy_list, limit)
+    find_locations(file_in, file_out, proxy_list)

@@ -6,6 +6,7 @@ czech.dict
 #cities.*.txt
 #stops*.txt
 #cities_stops.tsv
+stops-add.txt
 idos_map.tsv
 errors.txt
 stops-idos.tsv
