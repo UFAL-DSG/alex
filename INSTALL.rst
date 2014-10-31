@@ -22,6 +22,9 @@ To get latest versions of the following python packages, I recommend to run thes
 .. code-block:: bash
 
   sudo pip install --upgrade -r alex-requirements.txt
+  # The following step is optional as it installs dependencies specific for performing
+  # only certain tasks (like evaluating VAD performance).
+  sudo pip install --upgrade -r alex-requirements-dev.txt
   sudo easy_install pysox
   
 
