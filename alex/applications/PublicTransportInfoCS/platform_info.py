@@ -12,8 +12,10 @@ class PlatformFinderResult(object):
         self.direction = direction
 
     def __unicode__(self):
-        return "PlatformFinderResult(platform=%s, track=%s, direction=%s)" % (
-            str(self.platform), str(self.track), str(self.direction), )
+        return u"PlatformFinderResult(platform=%s, track=%s, direction=%s)" % (
+            unicode(self.platform),
+            unicode(self.track),
+            unicode(self.direction), )
 
 
 class CRWSPlatformFinder(object):

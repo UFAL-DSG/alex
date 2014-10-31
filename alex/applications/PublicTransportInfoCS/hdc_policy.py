@@ -264,7 +264,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
 
-            # talk about the platform number
+            # talk about the platform nuber
             da = self.get_platform_res_da(dialogue_state, ludait,
                                           slots_being_requested,
                                           slots_being_confirmed, accepted_slots,

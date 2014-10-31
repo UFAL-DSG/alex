@@ -674,6 +674,9 @@ class PTICSHDCSLU(SLUInterface):
         if any_phrase_in(u, ['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
             cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
 
+        if any_word_in(u, 'nástupiště'):
+            cn.add(1.0, DialogueActItem("inform", "task", "find_platform"))
+
         if all_words_in(u, 'od to jede') or \
             all_words_in(u, 'z jake jede') or \
             all_words_in(u, 'z jaké jede') or \
