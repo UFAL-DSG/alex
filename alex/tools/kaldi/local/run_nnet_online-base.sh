@@ -84,7 +84,6 @@ utils/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
   $WORK/train $WORK/lang $EXP/tri3b_ali $dir || exit 1
 
 for lm in $LM_names ; do
-  lm=`basename "$lm"`
   graph_dir=$EXP/tri3b/graph_${lm}
   utils/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
   for s in $TEST_SETS ; do
@@ -94,10 +93,9 @@ for lm in $LM_names ; do
   done
 done
 
-utils/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang "$dir" ${dir}_online || exit 1
+utils/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang $dir ${dir}_online || exit 1
 
 for lm in $LM_names ; do
-  lm=`basename "$lm"`
   graph_dir=$EXP/tri3b/graph_${lm}
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
@@ -108,5 +106,4 @@ for lm in $LM_names ; do
   done
 done
 
-exit 0;
-
+exit 0
