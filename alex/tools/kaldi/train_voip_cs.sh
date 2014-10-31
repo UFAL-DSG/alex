@@ -87,7 +87,7 @@ local/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
   --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_ali || exit 1;
 
 local/check.sh local/get_train_ctm_phones.sh $WORK/train $WORK/lang $EXP/tri2b_ali || exit 1
-./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 1
+local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 1
 
 ./local/run_nnet_online-base.sh || exit 1
 

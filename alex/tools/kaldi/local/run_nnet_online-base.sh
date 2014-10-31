@@ -3,24 +3,25 @@
 # This is p-norm neural net training, with the "fast" script, on top of adapted
 # 40-dimensional features.
 set -e
-set -x
+# set -x
 
 echo -e "\nTODO Debug this script which is based on egs/wsj/s5/local/online/run_nnet2_baseline.sh baseline online DNN decoding without ivectors\n"
 echo -e "\nTODO extend this script with ivectors based on egs/wsj/s5/local/online/run_nnet2.sh\n"
-
-. ./cmd.sh
-. ./path.sh
 
 # Load training parameters
 . ./env_voip_cs.sh
 # Source optional config if exists
 [ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
 
+. ./cmd.sh
+. ./path.sh
+
+
 train_stage=-10
 use_gpu=true
 test_sets=
-nj=6
-num_jobs_nnet=4
+nj=8
+num_jobs_nnet=8
 
 
 if $use_gpu; then
@@ -54,15 +55,20 @@ utils/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
   $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
 utils/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
- --samples-per-iter 400000 \
- --parallel-opts "$parallel_opts" \
- --num-threads "$num_threads" \
- --minibatch-size "$minibatch_size" \
- --num-jobs-nnet $num_jobs_nnet  --mix-up 8000 \
- --initial-learning-rate 0.01 --final-learning-rate 0.001 \
- --num-hidden-layers 4 \
- --pnorm-input-dim 2000 --pnorm-output-dim 400 \
- --cmd "$decode_cmd" \
+    --num-epochs 8 --num-epochs-extra 4 \
+    --splice-width 7 --feat-type raw \
+    --cmvn-opts "--norm-means=false --norm-vars=false" \
+    --num-threads "$num_threads" \
+    --minibatch-size "$minibatch_size" \
+    --parallel-opts "$parallel_opts" \
+    --num-jobs-nnet 6 \
+    --num-hidden-layers 4 \
+    --mix-up 4000 \
+    --initial-learning-rate 0.02 --final-learning-rate 0.004 \
+    --cmd "$decode_cmd" \
+    --pnorm-input-dim 2400 \
+    --pnorm-output-dim 300 \
+    --num-jobs-nnet $num_jobs_nnet \
   $WORK/train $WORK/lang $EXP/tri3b_ali $dir || exit 1
 
 for lm in $LM_names ; do
@@ -76,7 +82,7 @@ for lm in $LM_names ; do
   done
 done
 
-steps/online/nnet2/prepare_online_decoding.sh $WORK/lang "$dir" ${dir}_online || exit 1
+utils/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang "$dir" ${dir}_online || exit 1
 
 for lm in $LM_names ; do
   lm=`basename "$lm"`
@@ -86,7 +92,7 @@ for lm in $LM_names ; do
     # Decode. the --per-utt true option makes no difference to the results here
     utils/check.sh steps/online/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
       --per-utt true \
-      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $dir/decode_${tgt_dir} || exit 1
+      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir ${dir}_online/decode_${tgt_dir} || exit 1
   done
 done
 
