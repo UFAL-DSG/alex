@@ -11,11 +11,11 @@ RUN update-locale LANG=en_US.UTF-8
 # Clone Alex from repository.
 RUN mkdir /app
 WORKDIR /app
-ADD . /app/alex
+ADD . alex
 WORKDIR /app/alex
 RUN pip install -r alex-requirements.txt
 RUN pip install pystache cython flask theano
-RUN easy_install pysox
+RUN pip easy_install pysox
 # RUN pip install --allow-unverified pyaudio --allow-unverified pyaudio pyaudio
 
 #
