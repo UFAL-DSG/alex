@@ -22,7 +22,20 @@ use_gpu=true
 test_sets=
 nj=8
 num_jobs_nnet=8
+gauss=19200
+pdf=9000
+tgt_dir=nnet_baseline
 
+. utils/parse_options.sh
+
+if [ $# -nq 4 ] ; then
+    echo usage $0: WORK EXP LM_names TEST_SETS
+    exit 1
+fi
+WORK=$1
+EXP=$2
+LM_names="$3"
+TEST_SETS=$4
 
 if $use_gpu; then
   if ! cuda-compiled; then
@@ -35,16 +48,15 @@ EOF
   parallel_opts="-l gpu=1" 
   num_threads=1
   minibatch_size=512
-  dir=$EXP/nnet5a_clean_100_gpu
+  dir=$EXP/$tgt_dir
 else
   # with just 4 jobs this might be a little slow.
   num_threads=16
   parallel_opts="-pe smp $num_threads" 
   minibatch_size=128
-  dir=$EXP/nnet
+  dir=$EXP/${tgt_dir}_NOGPU
 fi
 
-. utils/parse_options.sh
 
 
 # Train tri3b, which is LDA+MLLT+SAT
