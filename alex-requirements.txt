@@ -21,3 +21,6 @@ wget
 ipdb
 nose
 sphinxcontrib-napoleon
+
+flask
+theano

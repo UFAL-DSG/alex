@@ -1,4 +1,4 @@
 #!/bin/bash
 
-sudo docker build -t alex .
-sudo docker build -t alex-ptics alex/applications/PublicTransportInfoCS
+docker build -t alex .
+docker build -t alex-ptics alex/applications/PublicTransportInfoCS

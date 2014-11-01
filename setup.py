@@ -4,14 +4,12 @@ from os import path, system
 
 long_description = open(path.join(path.dirname(__file__), 'README.rst')).read()
 
-system("cd doc; python manual_rsts.py; make html")
-
 
 setup(
     name='Alex Dialogue Systems Framework',
     packages=find_packages(),
     version='0.1',
-    test_suite="nose.collector",
+    test_suite='nose2.collector.collector',
     author='UFAL-DSG https://github.com/UFAL-DSG/',
     author_email='dsg-l@ufal.mff.cuni.cz',
     url='https://github.com/DSG-UFAL/alex',
