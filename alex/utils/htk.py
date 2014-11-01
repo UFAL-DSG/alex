@@ -118,9 +118,6 @@ class MLF:
     Def: segment is a sequence of frames with the same label.
     """
 
-    def kaldi2mlf(todo_files, mlf_file):
-        pass
-
     def __init__(self, file_name=None, max_files=None):
         self.mlf = {}
         self.max_files = max_files

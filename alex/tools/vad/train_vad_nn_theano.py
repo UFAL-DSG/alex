@@ -86,12 +86,6 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     return mlf
 
 
-def create_kaldi_mlflike():
-    # Has to support
-    # mlf_speech.count_length('sil')
-    pass
-
-
 def gen_features(speech_data, speech_alignment):
     vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=0, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
     sil_count = 0
