@@ -386,19 +386,18 @@ def main():
     prev_frames = args.prev_frames
     next_frames = args.next_frames
     amplify_center_frame = args.amplify_center_frame
-    crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
+    crossvalid_frames = int((0.20 * max_frames))  # cca 20 % of all training data
     usec0 = args.usec0
     mel_banks_only = args.mel_banks_only
     hidden_dropouts = args.hidden_dropouts
     weight_l2 = args.weight_l2
 
-
     # add all the training data
     train_speech = []
     train_speech_alignment = []
 
-    # train_speech.append('data_voip_en/train/*.wav')
-    # train_speech_alignment.append('model_voip_en/aligned_best.mlf')
+    train_speech.append('data_voip_en/train/*.wav')
+    train_speech_alignment.append('model_voip_en/aligned_best.mlf')
 
     # train_speech.append('data_vad_sil/data/*.wav')
     # train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
@@ -407,7 +406,7 @@ def main():
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
 
     features_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
+                             (max_frames, max_files, max_frames_per_segment, trim_segments,
                               usec0, usedelta, useacc, mel_banks_only)
 
     print datetime.datetime.now()

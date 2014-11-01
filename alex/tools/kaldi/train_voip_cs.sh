@@ -90,7 +90,7 @@ local/check.sh local/get_train_ctm_phones.sh $WORK/train $WORK/lang $EXP/tri2b_a
 local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 1
 
 ./local/run_nnet_online-base.sh --gauss $gauss --pdf $pdf \
-    $WORK $EXP $LM_names $TEST_SETS || exit 1 
+    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
    --beam $mmi_beam --lattice-beam $mmi_lat_beam \

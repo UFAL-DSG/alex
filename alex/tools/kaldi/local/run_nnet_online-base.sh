@@ -28,14 +28,14 @@ tgt_dir=nnet_baseline
 
 . utils/parse_options.sh
 
-if [ $# -nq 4 ] ; then
+if [ $# -ne 4 ] ; then
     echo usage $0: WORK EXP LM_names TEST_SETS
     exit 1
 fi
 WORK=$1
 EXP=$2
 LM_names="$3"
-TEST_SETS=$4
+TEST_SETS="$4"
 
 if $use_gpu; then
   if ! cuda-compiled; then
