@@ -399,8 +399,8 @@ def main():
     train_speech.append('data_voip_en/train/*.wav')
     train_speech_alignment.append('model_voip_en/aligned_best.mlf')
 
-    # train_speech.append('data_vad_sil/data/*.wav')
-    # train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
+    train_speech.append('data_vad_sil/data/*.wav')
+    train_speech_alignment.append('data_vad_sil/vad-silence.mlf')
 
     train_speech.append('data_voip_cs/train/*.wav')
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
