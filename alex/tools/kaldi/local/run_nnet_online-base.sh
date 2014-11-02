@@ -60,13 +60,13 @@ fi
 
 
 # Train tri3b, which is LDA+MLLT+SAT
-utils/check.sh steps/train_sat.sh --cmd "$train_cmd" \
+local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
   $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
 
-utils/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+local/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
   $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
-utils/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
+local/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
     --num-epochs 8 --num-epochs-extra 4 \
     --splice-width 7 --feat-type raw \
     --cmvn-opts "--norm-means=false --norm-vars=false" \
@@ -85,22 +85,22 @@ utils/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
 
 for lm in $LM_names ; do
   graph_dir=$EXP/tri3b/graph_${lm}
-  utils/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
-    utils/check.sh steps/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
+    local/check.sh steps/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
       $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $dir/decode_${tgt_dir} || exit 1
   done
 done
 
-utils/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang $dir ${dir}_online || exit 1
+local/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang $dir ${dir}_online || exit 1
 
 for lm in $LM_names ; do
   graph_dir=$EXP/tri3b/graph_${lm}
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
     # Decode. the --per-utt true option makes no difference to the results here
-    utils/check.sh steps/online/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
+    local/check.sh steps/online/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
       --per-utt true \
       $EXP/tri3b/graph_${lm} $WORK/$tgt_dir ${dir}_online/decode_${tgt_dir} || exit 1
   done
