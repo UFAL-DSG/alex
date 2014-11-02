@@ -41,7 +41,7 @@ every_n=1
 
 
 if [ $# -ne 4 ] ; then
-    echo "Usage: local/data_split.sh [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
+    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
     exit 1;
 fi
 

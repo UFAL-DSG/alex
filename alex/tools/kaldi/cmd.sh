@@ -5,13 +5,17 @@
 # (make sure your --num-jobs options are no more than
 # the number of cpus on your machine.
 
-#export train_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
-#export decode_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
+# export train_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
+# export decode_cmd="queue.pl -q all.q@a*.clsp.jhu.edu"
+
+# # UFAL settings
 # export train_cmd="queue.pl -l mf=5g"
 # export decode_cmd="queue.pl -l mf=5g"
-export train_cmd=run.pl
-export decode_cmd=run.pl
+# njobs=100
+
 
 # The number of parallel jobs to be started for some parts of the recipe
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
-njobs=10
+export train_cmd=run.pl
+export decode_cmd=run.pl
+njobs=8
