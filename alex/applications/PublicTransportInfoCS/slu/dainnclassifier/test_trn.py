@@ -13,17 +13,14 @@ if __name__ == "__main__":
     # **WARNING** due to data sparsity the metrics on the dev and test data fluctuate a lot
     # therefore meaningful results can be only obtained using N-fold cross validation
 
-    trained_slu_test('./dainn.trn.model', '../dev.trn', Utterance, '../dev.trn.hdc.sem')
+#    trained_slu_test('./dainn.trn.model', '../dev.trn', Utterance, '../dev.trn.hdc.sem')
+#    trained_slu_test('./dainn.trn.model', '../test.trn', Utterance, '../test.trn.hdc.sem')
 
-    trained_slu_test('./dainn.trn.model', '../test.trn', Utterance, '../test.trn.hdc.sem')
+#    trained_slu_test('./dainn.asr.model', '../dev.asr', Utterance, '../dev.trn.hdc.sem')
+#    trained_slu_test('./dainn.asr.model', '../test.asr', Utterance, '../test.trn.hdc.sem')
 
-    trained_slu_test('./dainn.asr.model', '../dev.asr', Utterance, '../dev.trn.hdc.sem')
-
-    trained_slu_test('./dainn.asr.model', '../test.asr', Utterance, '../test.trn.hdc.sem')
-
-    trained_slu_test('./dainn.nbl.model', '../dev.nbl', UtteranceNBList, '../dev.trn.hdc.sem')
-
-    trained_slu_test('./dainn.nbl.model', '../test.nbl', UtteranceNBList, '../test.trn.hdc.sem')
+#    trained_slu_test('./dainn.nbl.model', '../dev.nbl', UtteranceNBList, '../dev.trn.hdc.sem')
+#    trained_slu_test('./dainn.nbl.model', '../test.nbl', UtteranceNBList, '../test.trn.hdc.sem')
 
     # cheating experiment on all data using models trained on all data
     # though these models are used for live system
