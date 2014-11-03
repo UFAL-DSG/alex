@@ -549,8 +549,8 @@ class DANNClassifier(SLUInterface):
             if '=' in clser and 'CL_' not in clser and self.classifiers[clser] < min_classifier_count:
                 continue
 
-            # if '=' in clser and 'CL_' in clser and self.classifiers[clser] < 1:
-            #     continue
+            if '=' in clser and 'CL_' in clser and self.classifiers[clser] <= 1:
+                 continue
 
             if '="dontcare"' in clser and '(="dontcare")' not in clser:
                 continue
@@ -596,10 +596,6 @@ class DANNClassifier(SLUInterface):
         remove_features = []
         for f in features_counts:
             negative, positive = features_counts[f]
-
-            if len(f) <= 1:
-                # keep it
-                continue
 
             if positive >= min_pos_feature_count + len(f):
                 # keep it
@@ -742,7 +738,8 @@ class DANNClassifier(SLUInterface):
               n_batches=1000,
               move_training_set_to_GPU=False,
               standardize=False,
-              gradient_treatment='clipping',
+              gradient_treatment='normalisation',
+              crossvalidation=False,
               verbose=True):
         if verbose:
             print '=' * 120
@@ -750,7 +747,10 @@ class DANNClassifier(SLUInterface):
 
 
         indices = np.random.permutation(self.classifier_input.shape[0])
-        training_data_size = int(0.9 * len(indices))
+        if crossvalidation:
+            training_data_size = int(0.9 * len(indices))
+        else:
+            training_data_size = len(indices)
         training_idx, test_idx = indices[:training_data_size], indices[training_data_size:]
         training_input, crossvalid_input = self.classifier_input[training_idx, :], self.classifier_input[test_idx, :]
         training_output, crossvalid_output = self.classifier_output[training_idx, :], self.classifier_output[test_idx, :]
@@ -811,14 +811,20 @@ class DANNClassifier(SLUInterface):
                 np.mean(np.greater_equal(training_output[:, :training_output.shape[1] / 2], 0.5)) * 100.0,
                 np.mean(np.greater_equal(predictions_y[:, :training_output.shape[1] / 2], 0.5)) * 100.0)
 
-            predictions_y = nn.predict_normalise(crossvalid_input, batch_size=batch_size)
-            crossvalid_mean_accuracy = np.mean(np.equal(np.greater_equal(predictions_y, 0.5), crossvalid_output)) * 100.0
 
-            print "  Prediction accuracy on the crossvalid data: %6.4f" % (crossvalid_mean_accuracy, )
-            print "                    the crossvalid data size: ", crossvalid_input.shape
-            print "  t %10.8f p %10.8f" % (
-                np.mean(np.greater_equal(crossvalid_output[:, :training_output.shape[1] / 2], 0.5)) * 100.0,
-                np.mean(np.greater_equal(predictions_y[:, :training_output.shape[1] / 2], 0.5)) * 100.0)
+            if crossvalidation:
+                predictions_y = nn.predict_normalise(crossvalid_input, batch_size=batch_size)
+                crossvalid_mean_accuracy = np.mean(np.equal(np.greater_equal(predictions_y, 0.5), crossvalid_output)) * 100.0
+
+                print "  Prediction accuracy on the crossvalid data: %6.4f" % (crossvalid_mean_accuracy, )
+                print "                    the crossvalid data size: ", crossvalid_input.shape
+                print "  t %10.8f p %10.8f" % (
+                    np.mean(np.greater_equal(crossvalid_output[:, :training_output.shape[1] / 2], 0.5)) * 100.0,
+                    np.mean(np.greater_equal(predictions_y[:, :training_output.shape[1] / 2], 0.5)) * 100.0)
+            else:
+                crossvalid_mean_accuracy = training_mean_accuracy
+                print "  WARNING: Instead of crossvalidation data, training data are used!"
+
 
             if max_crossvalid_mean_accuracy + 0.0001 < crossvalid_mean_accuracy:
                 print "  Storing the best classifiers so far"
@@ -828,7 +834,7 @@ class DANNClassifier(SLUInterface):
             else:
                 n_no_icrease_on_crossvalid += 1
 
-            print "  Number of iterations with no icrease on crossvalid data:", n_no_icrease_on_crossvalid
+            print "  Number of iterations with no increase on crossvalid data:", n_no_icrease_on_crossvalid
 
             if n_no_icrease_on_crossvalid >= 40:
                 print "  Stop: It does not have to be better - reached the max n_no_icrease_on_crossvalid"
