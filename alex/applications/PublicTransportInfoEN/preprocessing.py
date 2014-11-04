@@ -161,6 +161,9 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         hours, mins, period = time.split(':')
         hours = int(hours)
         mins = int(mins)
+        # hack for TTS
+        period = "P.M." if period == "PM" else period
+        period = "A.M." if period == "AM" else period
 
         time_str = [word_for_number(hours)] # always start with an hour
         if mins == 0:

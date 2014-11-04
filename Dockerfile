@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 	libsox-dev \
 	libasound2-plugins \
 	libsox-fmt-all \
-	sox
+	sox \
 	flac
 
 RUN pip install --upgrade --pre pysox
@@ -103,6 +103,7 @@ RUN python setup.py install
 #
 
 RUN mkdir /app/alex/alex/resources/private
+RUN mkdir /app/alex/alex/applications/call_logs
 RUN echo "config = {}" > /app/alex/alex/resources/private/default.cfg
 
 RUN /app/alex/alex/applications/PublicTransportInfoCS/hclg/models/download_models.py
