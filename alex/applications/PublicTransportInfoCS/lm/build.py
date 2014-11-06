@@ -13,6 +13,31 @@ The training procedure is as follows:
 #. Append the selected sentences to the training data generated in the 1. step.
 #. Re-build the class based language model.
 """
+
+def is_srilm_available():
+    """Test whether SRILM is available in PATH."""
+    return os.system("which ngram-count") == 0
+
+
+def require_srilm():
+    """Test whether SRILM is available in PATH, try to import it from env
+    variable and exit the program in case there are problems with it."""
+    if not is_srilm_available():
+        if 'SRILM_PATH' in os.environ:
+            srilm_path = os.environ['SRILM_PATH']
+            os.environ['PATH'] += ':%s' % srilm_path
+            if not is_srilm_available():
+                print 'SRILM_PATH you specified does not contain the ' \
+                      'utilities needed. Please make sure you point to the ' \
+                      'directory with the SRILM binaries.'
+                exit(1)
+
+        else:
+            print 'SRILM not found. Set SRILM_PATH environment variable to ' \
+                  'the path with SRILM binaries.'
+            exit(1)
+
+
 if __name__ == '__main__':
     import os
     import xml.dom.minidom
@@ -27,6 +52,9 @@ if __name__ == '__main__':
 
     from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
     from alex.corpustools.wavaskey import save_wavaskey
+
+    # Test if SRILM is available.
+    require_srilm()
 
     train_data_size                 = 0.90
     bootstrap_text                  = "bootstrap.txt"
