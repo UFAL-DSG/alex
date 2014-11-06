@@ -38,10 +38,13 @@ def require_srilm():
             exit(1)
 
 
-def exit_on_system_fail(cmd):
+def exit_on_system_fail(cmd, msg=None):
     system_res = os.system(cmd)
     if not system_res == 0:
-        raise Exception("Command failed, exitting.")
+        err_msg = "Command failed, exitting."
+        if msg:
+            err_msg = "%s %s" % (err_msg, msg, )
+        raise Exception(err_msg)
 
 
 if __name__ == '__main__':
@@ -222,14 +225,16 @@ if __name__ == '__main__':
         print "-"*120
         ###############################################################################################
         # convert surface forms to classes
-        cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
-              (indomain_data_text_trn_norm_cls_classes,
+        cmd = r"[ -e %s ] && replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s || exit 1" % \
+              (classes,
+               indomain_data_text_trn_norm_cls_classes,
                classes,
                indomain_data_text_trn_norm,
                indomain_data_text_trn_norm_cls)
 
         print cmd
-        exit_on_system_fail(cmd)
+        exit_on_system_fail(cmd, "Maybe you forgot to run "
+                                 "'../data/database.py build'?")
 
         cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
               (indomain_data_text_trn_norm_cls,
@@ -283,14 +288,16 @@ if __name__ == '__main__':
         exit_on_system_fail(cmd)
 
         # convert surface forms to classes
-        cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
-              (extended_data_text_trn_norm_cls_classes,
+        cmd = r"[ -e %s ] && replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s || exit 1" % \
+              (classes,
+               extended_data_text_trn_norm_cls_classes,
                classes,
                extended_data_text_trn_norm,
                extended_data_text_trn_norm_cls)
 
         print cmd
-        exit_on_system_fail(cmd)
+        exit_on_system_fail(cmd, "Maybe you forgot to run "
+                                 "'../data/database.py build'?")
 
         cmd = "ngram-count -text %s -vocab %s -limit-vocab -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
               (extended_data_text_trn_norm_cls,
