@@ -41,8 +41,7 @@ def require_srilm():
 def exit_on_system_fail(cmd):
     system_res = os.system(cmd)
     if not system_res == 0:
-        print "Command failed."
-        exit(1)
+        raise Exception("Command failed, exitting.")
 
 
 if __name__ == '__main__':
