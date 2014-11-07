@@ -15,7 +15,7 @@ if __name__ == '__main__':
     print
 
     text = 'Hello. Thank you for calling.'
-    language = 'en'
+    language = 'en-us'
 
     print "Synthesize text:", text
     print "Language:       ", language

@@ -284,7 +284,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -331,7 +330,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -405,8 +403,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem('inform', 'time_rel', time_rel))
             else:
                 if time_abs != 'none' or ampm != 'none':
-                    res_da.append(DialogueActItem('inform', 'time',
-                                                  '%d:%02d' % (weather_ts.hour, weather_ts.minute)))
+                    res_da.append(DialogueActItem('inform', 'time', weather_ts.strftime("%I:%M:%p")))
                 if date_rel != 'none':
                     res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
         else:
@@ -423,7 +420,7 @@ class PTIENHDCPolicy(DialoguePolicy):
 
     def get_current_time(self, in_state):
 
-        cur_time, time_zone = self.time.get_time(place=in_state)
+        cur_time, time_zone = None, None#self.time.get_time(place=in_state)
         if cur_time is None:
             default_time = self.get_default_time()
             default_state = self.ontology.get_default_value('in_state')
@@ -492,7 +489,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.extend(self.get_directions(ds, "last"))
             elif ds_alternative == "next":
                 ds["route_alternative"] += 1
-                try:
+                try:#TODO: why has this no effect and is still there?
                     ds.directions[ds['route_alternative']]
                     res_da.extend(self.get_directions(ds, "next"))
                 except:
@@ -1199,7 +1196,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                     time_abs = self.DEFAULT_AMPM_TIMES[time_ampm]
                 elif date_rel != 'none':
                     time_abs = "%02d:%02d" % (now.hour, now.minute)
-            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%I:%M:%p").time())
+            time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
+            # time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%I:%M:%p").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
             # handle 12hr time
@@ -1230,6 +1228,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             elif time_abs < now:
                 time_abs += timedelta(days=1)
 
+        # time_en = dttime(hour=time_abs.hour, minute=time_abs.minute)
         return time_abs, time_type
 
     def get_limited_context_help(self, dialogue_state):

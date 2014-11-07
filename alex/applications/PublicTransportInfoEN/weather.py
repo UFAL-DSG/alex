@@ -31,7 +31,7 @@ class OpenWeatherMapWeather(Weather):
             return
         # get prediction
         if daily:  # set time to 13:00 for daily
-            time = datetime.combine(time.date(), dttime(13, 00))
+            time = datetime.combine(time.date(), dttime(19, 00)) #TODO: improve -> 19 - 6 is 13.00 in new york
         ts = int(time.strftime("%s"))  # convert time to Unix timestamp
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
@@ -105,7 +105,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             state = state if state is not None else self.cfg['weather']['suffix']
             query = ','.join([city, state]) if city is not None else state
             # set the city
-            data['q'] = query.encode('utf-8');
+            data['q'] = query.encode('utf-8')
 
         method = 'weather'
         if daily:

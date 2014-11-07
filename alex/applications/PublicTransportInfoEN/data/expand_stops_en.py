@@ -3,7 +3,7 @@
 import codecs
 from collections import defaultdict
 
-from components.nlg.tools.en import every_word_for_number
+from alex.components.nlg.tools.en import every_word_for_number
 
 
 prefixes = {
@@ -89,20 +89,20 @@ def expand_stops(file_name):
         stop_index = get_column_index(header, "stop_name", 2)
 
         for line in stopsFile:
-            reversed = True;
+            reversed = True
             if line.startswith('#') or not line:  # skip comments
                 continue
 
             fields = line.strip().split(',')
-            stop = fields[stop_index].strip('"');
+            stop = fields[stop_index].strip('"')
 
             conjunctions = [' and ', ' on ']
 
             if '-' in stop:
-                elements = stop.split('-');
+                elements = stop.split('-')
             elif '(' in stop:
                 elements = stop.replace(')', '').split('(')
-                reversed = False;
+                reversed = False
                 # lexington av/63 street
             elif '/' in stop:
                 elements = stop.split('/')
@@ -132,15 +132,15 @@ def main():
     # transport_dir = "/home/m2rtin/Desktop/transport/";
     # files_to_expand = [file for file in listdir(transport_dir)]
     files_to_expand = [
-        '/home/m2rtin/Desktop/transport/bus_staten_island.txt',
-        '/home/m2rtin/Desktop/transport/bus_bronx.txt',
-        '/home/m2rtin/Desktop/transport/bus_brooklyn.txt',
-        '/home/m2rtin/Desktop/transport/bus_company.txt',
-        '/home/m2rtin/Desktop/transport/bus_manhattan.txt',
-        '/home/m2rtin/Desktop/transport/bus_queens.txt',
-        '/home/m2rtin/Desktop/transport/ferry_ny_waterway.txt',
-        '/home/m2rtin/Desktop/transport/ferry_staten_island.txt',
-        '/home/m2rtin/Desktop/transport/metro_stops.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_staten_island.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_bronx.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_brooklyn.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_company.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_manhattan.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/bus_queens.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/ferry_ny_waterway.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/ferry_staten_island.txt',
+        '/home/m2rtin/Desktop/transport/stops/done/metro_stops.txt',
         "/home/m2rtin/Desktop/transport/attractions.txt",
         ]
 

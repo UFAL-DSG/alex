@@ -126,7 +126,6 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         Convert a time expression into words.
 
         :param time: Numerical time value in a string, e.g. '8:05'
-        :param relative: If true, time is interpreted as relative, i.e. \
 
         :return: time string with all numerals written out as words 0:15 will generate '15 minutes' and not '0 hours and \
                 15 minutes'.
@@ -162,8 +161,8 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         hours = int(hours)
         mins = int(mins)
         # hack for TTS
-        period = "P.M." if period == "PM" else period
-        period = "A.M." if period == "AM" else period
+        period = "P M" if period == "PM" else period
+        period = "A M" if period == "AM" else period
 
         time_str = [word_for_number(hours)] # always start with an hour
         if mins == 0:
