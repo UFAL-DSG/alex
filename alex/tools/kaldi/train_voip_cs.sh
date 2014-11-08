@@ -100,12 +100,19 @@ echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05
 local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
+local/check.sh local/data_clean.sh --thresh 0.1 --cleandir $EXP/tri2b_mmi_b${train_mmi_boost}_selected \
+  $WORK/train $WORK/lang $EXP/tri2b_mmi_b${train_mmi_boost} $WORK/train_cleaned || exit 1
+
+echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05 on CLEANED data"
+local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train_cleaned $WORK/lang \
+   $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned || exit 1
+
+
 
 #######################################################################
 #                       Building decoding graph                       #
 #######################################################################
 for lm in $LM_names ; do
-  lm=`basename "$lm"`
   # local/check.sh utils/mkgraph.sh --mono $WORK/lang_${lm} $EXP/mono $EXP/mono/graph_${lm} || exit 1
   # local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri1 $EXP/tri1/graph_${lm} || exit 1
   local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri2b $EXP/tri2b/graph_${lm} || exit 1
@@ -117,7 +124,6 @@ done
 #######################################################################
 for s in $TEST_SETS ; do
   for lm in $LM_names ; do
-    lm=`basename "$lm"`
     tgt_dir=${s}_${lm}
 
     # echo "Monophone decoding"
@@ -141,8 +147,13 @@ for s in $TEST_SETS ; do
     # Note: change --iter option to select the best model. 4.mdl == final.mdl
     echo "Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
     local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-       --config common/decode.conf --iter 4 --nj $njobs --cmd "$decode_cmd" \
+       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir};
+
+    echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
+    local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned/decode_it4_${tgt_dir};
 
   done
 done
