@@ -20,7 +20,7 @@ cd ../../pykaldi
 pip install -r pykaldi-requirements.txt
 make install && echo 'Pykaldi build and installation files prepared: OK'
 # Install locally installed Openfst to /usr/local
-../tools/openfst
+cd ../tools/openfst
 for dir in lib include bin ; do cp -r $dir /usr/local/ ; done
 ldconfig
 # Test setup
