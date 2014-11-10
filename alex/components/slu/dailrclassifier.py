@@ -296,6 +296,9 @@ class DAILogRegClassifier(SLUInterface):
         return abs_utt
 
     def get_abstract_da(self, da, fvcs):
+        """
+        	Returns an abstracted dialogie act and used abstractions in abstraction.
+        """
         new_da = copy.deepcopy(da)
         c_fvcs = copy.deepcopy(fvcs)
 

@@ -17,7 +17,7 @@ from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBLi
 from alex.components.slu.exceptions import DAILRException
 from alex.components.slu.base import SLUInterface
 from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork
-from alex.ml import tffnn
+from alex.ml import twffnn as tffnn
 from alex.utils.cache import lru_cache
 from alex.utils.czech_stemmer import cz_stem_word
 
@@ -77,19 +77,6 @@ class Features(object):
         # reclaim the freed memory by recreating the self.features dictionary
         self.features = dict(self.features)
         
-    def stem(self):
-        """
-        Stem all features.
-        """
-        features = defaultdict(float)
-        for f in list(self.features.keys()):
-            stemmed_f = []
-            for w in f:
-                stemmed_f.append(cz_stem_word(w, False))
-            features[tuple(stemmed_f)] += self.features[f]
-        
-        self.features = features
-				
     def scale(self, scale=1.0):
         """
         Scale all features with the scale.
@@ -343,9 +330,12 @@ class DANNClassifier(SLUInterface):
                     dai.value = cl_name
                     break
 
-        return abds_da
+        return abs_da
 
     def get_abstract_da(self, da, fvcs):
+        """
+        	Returns an abstracted dialogie act and used abstractions in abstraction.
+        """
         new_da = copy.deepcopy(da)
         c_fvcs = copy.deepcopy(fvcs)
 
@@ -391,6 +381,50 @@ class DANNClassifier(SLUInterface):
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
+                            if c == 'number':
+                                if end < len(utterance) and \
+                                   utterance[start] == 'půl' and \
+                                   utterance[start+1] == 'hodiny':
+                                    c = 'time'
+                                    v = '0:30'
+                                elif end < len(utterance)-1 and \
+                                   utterance[end] in set(['hodina', 'hodin', 'hodiny', 'hodinu', 'hodinou', 'ráno', 'dopoledne', 'odpoledne', 'večer']) and \
+                                   utterance[end+1] not in set(['a',]):
+                                    c = 'time'
+                                    v += ':00'
+                                elif end < len(utterance)-1 and \
+                                   utterance[end] == 'nula' and \
+                                   utterance[end+1] == 'nula':
+                                    c = 'time'
+                                    v += ':00'
+                                elif end < len(utterance) and \
+                                   utterance[end] == 'třicet':
+                                    c = 'time'
+                                    v += ':30'
+                                elif end < len(utterance)-1 and \
+                                   utterance[end] in set(['hodina', 'hodin', 'hodiny', 'hodinu']) and \
+                                   utterance[end+1] == 'třicet':
+                                    c = 'time'
+                                    v += ':30'
+                                elif end < len(utterance)-1 and \
+                                   utterance[end] == 'čtyřicet' and \
+                                   utterance[end+1] == 'pět':
+                                    c = 'time'
+                                    v += ':45'
+                                elif end == len(utterance)-1 and \
+                                   utterance[end] in set(['hodina', 'hodin', 'hodiny', 'hodinu', 'hodinou', 'ráno', 'dopoledne', 'odpoledne', 'večer']):
+                                    c = 'time'
+                                    v += ':00'
+                                elif end == len(utterance) and \
+                                   utterance[start-1] in set(['v', ]):
+                                    c = 'time'
+                                    v += ':00'
+                                elif end <= len(utterance) and \
+                                   utterance[start-1] in set(['za', ]) and \
+                                   utterance[end] in set(['minut', ]) :
+                                    c = 'time'
+                                    v = '0:'+v
+                      
                             cl_name = 'CL_' + c.upper() + '-' + unicode(category_label_counter[c])
                             category_label_counter[c] += 1
 
@@ -479,8 +513,6 @@ class DANNClassifier(SLUInterface):
         feat.merge(UtteranceFeatures(size=self.features_size, utterance=utterance), weight=scale)
         feat.merge(UtteranceFeatures(size=self.features_size, utterance=abs_obs), weight=scale)
 
-        feat.stem()
-				
         return feat
 
     def get_features_in_nblist(self, nblist, fvcs):
@@ -505,7 +537,6 @@ class DANNClassifier(SLUInterface):
         nblist = confnet.get_utterance_nblist(n=CONFNET2NBLIST_EXPANSION_APPROX)
         return self.get_features_in_nblist(nblist, fvcs)
 
-    # @lru_cache(maxsize=1000)
     def get_features(self, obs, fvcs):
         """
         Generate utterance features for a specific utterance given by utt_idx.
@@ -521,6 +552,43 @@ class DANNClassifier(SLUInterface):
             return self.get_features_in_nblist(obs, fvcs)
         elif isinstance(obs, UtteranceConfusionNetwork):
             return self.get_features_in_confnet(obs, fvcs)
+        else:
+            raise DAILRException("Unsupported observations.")
+
+    def get_wfeatures_in_utterance(self, utterance, fvcs, utterance_size):
+        """
+        """
+
+        u = ['U_START',]+list(utterance)
+        for x in range(utterance_size - len(u)):
+            u.append('U_END')
+
+        abs_utt = self.get_abstract_utterance3(utterance, fvcs)
+        a = ['A_START',]+list(abs_utt)
+        for x in range(utterance_size - len(a)):
+            a.append('A_END')
+
+#        u = u[:utterance_size]
+        u = []
+        u.extend(a[:utterance_size])
+
+        return u
+        
+    def get_wfeatures(self, obs, fvcs, utterance_size):
+        """
+        Generate utterance features for a specific utterance given by utt_idx.
+
+        :param obs: the utterance being processed in multiple formats
+        :param fvc: a form, value category tuple describing how the utterance should be abstracted
+        :return: a set of features from the utterance
+        """
+
+        if isinstance(obs, Utterance):
+            return self.get_wfeatures_in_utterance(obs, fvcs, utterance_size)
+        elif isinstance(obs, UtteranceNBList):
+            return self.get_wfeatures_in_nblist(obs, fvcs)
+        elif isinstance(obs, UtteranceConfusionNetwork):
+            return self.get_wfeatures_in_confnet(obs, fvcs)
         else:
             raise DAILRException("Unsupported observations.")
 
@@ -648,15 +716,45 @@ class DANNClassifier(SLUInterface):
         if verbose:
             print "  Number of features after pruning: ", len(features_counts)
 
+    def gen_vocabulary(self, classifier_features, min_word_count=2):
+    
+        words = defaultdict(int)
+        for u in classifier_features:
+            for w in u:
+                words[w] += 1
 
+        print "Words before pruning", len(words)
+            
+        self.classifiers_features_list = ['OOV',]
+        for w in sorted(words.keys()):
+            if words[w] >= min_word_count:
+                self.classifiers_features_list.append(w)
+
+        for i, f in enumerate(self.classifiers_features_list):
+            self.classifiers_features_mapping[f] = i
+
+        print "Words after pruning", len(self.classifiers_features_list)
+        
+    def map_words_to_ints(self, ulist):
+        r = []
+        for w in ulist:
+            if w in self.classifiers_features_mapping:
+                r.append(self.classifiers_features_mapping[w])
+            else:
+                r.append(self.classifiers_features_mapping['OOV'])
+        return r    
+        
+                
     def gen_classifiers_data(self, min_pos_feature_count=5, min_neg_feature_count=5, verbose=False, verbose2=False,
+                             fn_pickle=None,
                              full_abstraction=True,
-                             fn_pickle=None):
+                             utterance_size = 10):
         try:
             print 'Reading', fn_pickle
             with open(fn_pickle, "rb") as f:
                 self.classifier_output = np.load(f)
                 self.classifier_input = np.load(f)
+                self.utterance_size, \
                 self.classifiers_list, \
                 self.classifiers_features_list, \
                 self.classifiers_features_mapping, \
@@ -666,12 +764,16 @@ class DANNClassifier(SLUInterface):
                     print '-' * 120
                     print "Input classifier matrix:  ", self.classifier_input.shape
                     print "Output classifier matrix: ", self.classifier_output.shape
-
+                    print "#Classifiers:             ", len(self.classifiers_list)
+                    print "Utterance size:           ", self.utterance_size
+                    print "Vocabulary size:          ", len(self.classifiers_features_list)
                 return
         except IOError:
             print 'No existing pickle', fn_pickle
             pass
 
+        self.utterance_size = utterance_size
+        
         # generate training data for the train and pars functions
         self.classifiers_outputs = defaultdict(list)
         self.classifiers_inputs = defaultdict(list)
@@ -688,16 +790,14 @@ class DANNClassifier(SLUInterface):
             print '=' * 120
 
         for n, utt_idx in enumerate(self.utterances_list):
-            # temporal data
-
             if (verbose or verbose2) and n % (len(self.utterances_list) / 10) == 0:
                 print 'Generating the training data for the utterance #', n + 1, '/', len(self.utterances_list)
 
             if not full_abstraction:
-                classifier_features.append(self.get_features(self.utterances[utt_idx], self.das_category_labels[utt_idx]))
+                classifier_features.append(self.get_wfeatures(self.utterances[utt_idx], self.das_category_labels[utt_idx], self.utterance_size))
             else:
-                # WARNING: BING Thing even for log reg.
-                classifier_features.append(self.get_features(self.utterances[utt_idx], self.utterance_fvc[utt_idx]))
+               # WARNING: BING Thing even for log reg.
+               classifier_features.append(self.get_wfeatures(self.utterances[utt_idx], self.utterance_fvc[utt_idx], self.utterance_size))
 
             for clser in self.classifiers:
                 if verbose:
@@ -720,14 +820,15 @@ class DANNClassifier(SLUInterface):
         for clser in self.classifiers:
             self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser], dtype=np.float32)
 
-        self.prune_features(classifier_features, min_pos_feature_count, min_neg_feature_count,
-                            verbose=(verbose or verbose2))
+#        self.prune_features(classifier_features, min_pos_feature_count, min_neg_feature_count,
+#                            verbose=(verbose or verbose2))
 
-        # self.classifier_input = np.zeros((len(classifier_features), 2*len(self.classifiers_features_list)), dtype=np.float32)
-        self.classifier_input = np.zeros((len(classifier_features), len(self.classifiers_features_list)),
-                                         dtype=np.float32)
+        self.gen_vocabulary(classifier_features, min_word_count=min_pos_feature_count)
+
+#        self.classifier_input = np.zeros((len(classifier_features), 2*utterance_size),dtype=np.int32)
+        self.classifier_input = np.zeros((len(classifier_features), utterance_size),dtype=np.int32)
         for i, feat in enumerate(classifier_features):
-            self.classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping)
+            self.classifier_input[i] = self.map_words_to_ints(feat)
 
         o = np.hstack([self.classifiers_outputs[clser] for clser in self.classifiers_list])
         self.classifier_output = np.hstack((o, 1 - o))
@@ -736,19 +837,46 @@ class DANNClassifier(SLUInterface):
             print '-' * 120
             print "Input classifier matrix:  ", self.classifier_input.shape
             print "Output classifier matrix: ", self.classifier_output.shape
+            print "#Classifiers:             ", len(self.classifiers_list)
+            print "Utterance size:           ", self.utterance_size
+            print "Vocabulary size:          ", len(self.classifiers_features_list)
 
         with open(fn_pickle, "wb") as f:
             print 'Writing', fn_pickle
             np.save(f, self.classifier_output)
             np.save(f, self.classifier_input)
-            data = (self.classifiers_list,
+            data = (self.utterance_size, \
+                    self.classifiers_list,
                     self.classifiers_features_list,
                     self.classifiers_features_mapping,
                     self.parsed_classifiers)
             pickle.dump(data, f)
 
+    def scoring(self, case, pred):
+        """
+        :param case:
+        :param pred:
+        :return:
+        """
+
+        # TN / True Negative: case was negative and predicted negative
+        tn = float(np.sum(np.logical_and(case < 0.5, pred < 0.5)))
+        # TP / True Positive: case was positive and predicted positive
+        tp = float(np.sum(np.logical_and(case >= 0.5, pred >= 0.5)))
+        # FN / False Negative: case was positive but predicted negative
+        fn = float(np.sum(np.logical_and(case >= 0.5, pred < 0.5)))
+        # FP / False Positive: case was negative but predicted positive
+        fp = float(np.sum(np.logical_and(case < 0.5, pred >= 0.5)))
+
+        acc = (tp + tn) / (tp + tn + fp + fn)
+        pre = tp / (tp + fp) if tp + fp > 1 else 0.0
+        rec = tp / (tp + fn) if tp + fp > 1 else 0.0
+        fme = 2 * pre * rec / (pre + rec) if pre + rec > 1e-6 else 0.0
+
+        return acc, fme, pre, rec
+
     def train(self,
-              alpha=0.9,
+              weight_alpha=None,
               method='sg-fixedlr',
               hact='tanh',
               learning_rate=500e-3,
@@ -757,6 +885,8 @@ class DANNClassifier(SLUInterface):
               n_hidden_layers=0,
               n_epoch=300,
               n_batches=1000,
+              embedding_size=10,
+              max_pooling=False,
               move_training_set_to_GPU=False,
               standardize=False,
               gradient_treatment='normalisation',
@@ -765,6 +895,8 @@ class DANNClassifier(SLUInterface):
         if verbose:
             print '=' * 120
             print 'Training'
+            print '  Embedding size:', embedding_size
+            print '-' * 120
 
 
         indices = np.random.permutation(self.classifier_input.shape[0])
@@ -776,87 +908,77 @@ class DANNClassifier(SLUInterface):
         training_input, crossvalid_input = self.classifier_input[training_idx, :], self.classifier_input[test_idx, :]
         training_output, crossvalid_output = self.classifier_output[training_idx, :], self.classifier_output[test_idx, :]
 
-        if alpha:
+        if weight_alpha:
             weight_bias = np.reciprocal(np.mean(self.classifier_output, axis=0))
-            weight_bias = (1.0 - alpha) * np.ones_like(weight_bias) + alpha * weight_bias
-#        for i in range(len(weight_bias) / 2, len(weight_bias)):
-#            weight_bias[i] = 1.0
+            weight_bias = (1.0 - weight_alpha) * np.ones_like(weight_bias) + weight_alpha * weight_bias
+#            for i in range(len(weight_bias) / 2, len(weight_bias)):
+#                weight_bias[i] = 1.0
         else:
             weight_bias = None
 
         batch_size = training_input.shape[0] / n_batches + 1
 
-        if standardize:
-            m = np.zeros_like(training_input[0])
-            std = np.ones_like(m)
-            # standardise the input data
-#            m = np.mean(training_input, axis=0)
-#            std = np.std(training_input, axis=0)
-            # replace 0.0 std by 1.0
-#            idx = np.where(np.isclose(std, 0.0))
-#            m[idx] = 0.0
-#            std[idx] = 1.0
-
-            print "Mean:", m
-            print "Std:", std
-
-#            training_input -= m
-#            training_input /= std
-
-            idx = np.where(np.isclose(training_input, 0.0))
-            training_input[idx] = -.01
-            idx = np.where(np.isclose(crossvalid_input, 0.0))
-            crossvalid_input[idx] = -.01
-
-        else:
-            m = np.zeros_like(training_input[0])
-            std = np.ones_like(m)
-
         nn = tffnn.TheanoFFNN(training_input.shape[1], n_hidden_units, n_hidden_layers, training_output.shape[1],
                               hidden_activation=hact, weight_l2=1e-6,
                               training_set_x=training_input, training_set_y=training_output,
                               batch_size=batch_size,
-                              classifier='binary-set', weight_bias=weight_bias,
+                              classifier='binary-set',
+                              weight_bias=weight_bias,
                               gradient_treatment=gradient_treatment,
-                              move_training_set_to_GPU=move_training_set_to_GPU)
-        nn.set_input_norm(m, std)
+                              g_max=1e+3,
+                              move_training_set_to_GPU=move_training_set_to_GPU,
+                              embedding_size=embedding_size,
+                              max_pooling=max_pooling,
+                              vocabulary_size=len(self.classifiers_features_mapping))
 
-        max_crossvalid_mean_accuracy = 0.0
+        max_crossvalid_fme = 0.0
         n_no_icrease_on_crossvalid = 0
         for epoch in range(n_epoch):
             print "Epoch", epoch
 
-            predictions_y = nn.predict(training_input, batch_size=batch_size)
-            training_mean_accuracy = np.mean(np.equal(np.greater_equal(predictions_y, 0.5), training_output)) * 100.0
+            predictions_y = nn.predict(training_input, batch_size=batch_size/10)
 
-            print "  Prediction accuracy on the training data:   %6.4f" % (training_mean_accuracy, )
-            print "                    the training data size:   ", training_input.shape
-            print "  t %10.8f p %10.8f" % (
-                np.mean(np.greater_equal(training_output[:, :training_output.shape[1] / 2], 0.5)) * 100.0,
-                np.mean(np.greater_equal(predictions_y[:, :training_output.shape[1] / 2], 0.5)) * 100.0)
+            t_acc, t_fme, t_pre, t_rec = self.scoring(training_output[:, :training_output.shape[1] / 2],
+                                                      predictions_y[:, :training_output.shape[1] / 2])
 
+            print "  Prediction on the training data (data size):", training_input.shape
+            print "    Accuracy:  %6.4f" % (t_acc * 100.0,)
+            print "    Precision: %6.4f" % (t_pre * 100.0,)
+            print "    Recall:    %6.4f" % (t_rec * 100.0,)
+            print "    F-measure: %6.4f" % (t_fme * 100.0,)
+            print "    ------------------------------------------"
+            print "    t %10.8f p %10.8f" % (
+                np.mean(training_output[:, :training_output.shape[1] / 2] >= 0.5) * 100.0,
+                np.mean(predictions_y[:, :training_output.shape[1] / 2] >= 0.5) * 100.0)
 
             if crossvalidation:
-                predictions_y = nn.predict_normalise(crossvalid_input, batch_size=batch_size)
-                crossvalid_mean_accuracy = np.mean(np.equal(np.greater_equal(predictions_y, 0.5), crossvalid_output)) * 100.0
+                predictions_y = nn.predict(crossvalid_input, batch_size=batch_size/10)
+                c_acc, c_fme, c_pre, c_rec = self.scoring(crossvalid_output[:, :crossvalid_output.shape[1] / 2],
+                                                          predictions_y[:, :crossvalid_output.shape[1] / 2])
 
-                print "  Prediction accuracy on the crossvalid data: %6.4f" % (crossvalid_mean_accuracy, )
-                print "                    the crossvalid data size: ", crossvalid_input.shape
-                print "  t %10.8f p %10.8f" % (
-                    np.mean(np.greater_equal(crossvalid_output[:, :training_output.shape[1] / 2], 0.5)) * 100.0,
-                    np.mean(np.greater_equal(predictions_y[:, :training_output.shape[1] / 2], 0.5)) * 100.0)
+                print "  Prediction on the training data (data size):", crossvalid_input.shape
+                print "    Accuracy:  %6.4f" % (c_acc * 100.0,)
+                print "    Precision: %6.4f" % (c_pre * 100.0,)
+                print "    Recall:    %6.4f" % (c_rec * 100.0,)
+                print "    F-measure: %6.4f" % (c_fme * 100.0,)
+                print "    ------------------------------------------"
+                print "    t %10.8f p %10.8f" % (
+                    np.mean(crossvalid_output[:, :training_output.shape[1] / 2] >= 0.5) * 100.0,
+                    np.mean(predictions_y[:, :training_output.shape[1] / 2] >= 0.5) * 100.0)
             else:
-                crossvalid_mean_accuracy = training_mean_accuracy
+                c_fme = t_fme
                 print "  WARNING: Instead of crossvalidation data, training data are used!"
 
 
-            if max_crossvalid_mean_accuracy + 0.0001 < crossvalid_mean_accuracy:
+            if max_crossvalid_fme + 0.0001 < c_fme:
                 print "  Storing the best classifiers so far"
                 self.trained_classifier = nn
-                max_crossvalid_mean_accuracy = crossvalid_mean_accuracy
+                max_crossvalid_fme = c_fme
                 n_no_icrease_on_crossvalid = 0
             else:
                 n_no_icrease_on_crossvalid += 1
+                print "  Worse than the best classifiers"
+                print "        The best classifiers FME: %6.4f" % (max_crossvalid_fme * 100.0,)
 
             print "  Number of iterations with no increase on crossvalid data:", n_no_icrease_on_crossvalid
 
@@ -864,7 +986,7 @@ class DANNClassifier(SLUInterface):
                 print "  Stop: It does not have to be better - reached the max n_no_icrease_on_crossvalid"
                 break
 
-            if training_mean_accuracy >= 99.99 or max_crossvalid_mean_accuracy >= 99.99:
+            if c_fme >= 0.99 or max_crossvalid_fme >= 0.99:
                 print "  Stop: It does not have to be better - reached the max acc"
                 break
 
@@ -877,7 +999,8 @@ class DANNClassifier(SLUInterface):
                 self.classifiers_features_mapping,
                 self.trained_classifier.get_params(),
                 self.parsed_classifiers,
-                self.features_size)
+                self.features_size,
+                self.utterance_size)
 
         if gzip is None:
             gzip = file_name.endswith('gz')
@@ -906,7 +1029,8 @@ class DANNClassifier(SLUInterface):
              self.classifiers_features_mapping,
              trained_classifier_params,
              self.parsed_classifiers,
-             self.features_size) = pickle.load(model_file)
+             self.features_size,
+             self.utterance_size) = pickle.load(model_file)
 
         self.trained_classifier = tffnn.TheanoFFNN()
         self.trained_classifier.set_params(trained_classifier_params)
@@ -928,16 +1052,18 @@ class DANNClassifier(SLUInterface):
             print unicode(utterance)
             print unicode(utterance_fvcs)
 
-        classifier_features = self.get_features(utterance, utterance_fvcs)
-        # classifier_input = np.zeros((1, 2*len(self.classifiers_features_mapping)), dtype=np.float32)
-        classifier_input = np.zeros((1, len(self.classifiers_features_mapping)), dtype=np.float32)
-        classifier_input[0] = classifier_features.get_feature_vector(self.classifiers_features_mapping)
-
+        classifier_features = self.get_wfeatures(utterance, utterance_fvcs, self.utterance_size)
+#        classifier_input = np.zeros((1, 2*self.utterance_size), dtype=np.int32)
+        classifier_input = np.zeros((1, self.utterance_size), dtype=np.int32)
+        classifier_input[0] = self.map_words_to_ints(classifier_features)
+    
+        
         if verbose:
             print classifier_features
+            print classifier_input
         #            print self.classifiers_features_mapping
 
-        da_prob = self.trained_classifier.predict_normalise(classifier_input)
+        da_prob = self.trained_classifier.predict(classifier_input)
 
         if verbose:
             print da_prob.shape
