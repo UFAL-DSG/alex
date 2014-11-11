@@ -100,12 +100,12 @@ echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05
 local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
-local/check.sh local/data_clean.sh --thresh 0.1 --cleandir $EXP/tri2b_mmi_b${train_mmi_boost}_selected \
-  $WORK/train $WORK/lang $EXP/tri2b_mmi_b${train_mmi_boost} $WORK/train_cleaned || exit 1
-
-echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05 on CLEANED data"
-local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train_cleaned $WORK/lang \
-   $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned || exit 1
+# local/check.sh local/data_clean.sh --thresh 0.1 --cleandir $EXP/tri2b_mmi_b${train_mmi_boost}_selected \
+#   $WORK/train $WORK/lang $EXP/tri2b_mmi_b${train_mmi_boost} $WORK/train_cleaned || exit 1
+#
+# echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05 on CLEANED data"
+# local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train_cleaned $WORK/lang \
+#    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned || exit 1
 
 
 
@@ -150,10 +150,10 @@ for s in $TEST_SETS ; do
        --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir};
 
-    echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
-    local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned/decode_it4_${tgt_dir};
+    # echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05: RESULTS on vystadial 0.95% of all data and WER improvement of 0.02 for tri2 + bMMI_b005 model"
+    # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+    #    --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+    #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned/decode_it4_${tgt_dir};
 
   done
 done
