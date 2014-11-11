@@ -24,7 +24,7 @@ Alex modules
 .. toctree::
    :maxdepth: 2
 
-   _rst/alex
+.. automodule:: alex
 
 Indices and tables
 ------------------
