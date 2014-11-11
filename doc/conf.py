@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(doc_dir, '..')))
 
 # Findo out whether we are on ReadTheDocs and if so, run some auxiliary scripts.
 if 'READTHEDOCS' in os.environ:
-              os.system('sphinx-apidoc -f -o . %s' % os.path.join(doc_dir, '..', 'alex'))
+              os.system('sphinx-apidoc -f -o _rst %s' % os.path.join(doc_dir, '..', 'alex'))
               os.system('python %s/manual_rsts.py' % doc_dir)
 
 # -- General configuration -----------------------------------------------------
