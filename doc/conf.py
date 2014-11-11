@@ -17,10 +17,13 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+doc_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.abspath(os.path.join(doc_dir, '..')))
 
+# Findo out whether we are on ReadTheDocs and if so, run some auxiliary scripts.
 if 'READTHEDOCS' in os.environ:
-              os.system('python %s/manual_rsts.py' % os.path.dirname(__file__))
+              os.system('sphinx-apidoc -f -o . %s' % os.path.join(doc_dir, '..', 'alex'))
+              os.system('python %s/manual_rsts.py' % doc_dir)
 
 # -- General configuration -----------------------------------------------------
 
