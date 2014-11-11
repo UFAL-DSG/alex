@@ -13,6 +13,8 @@ Contents
 ----------------------------------------------------------
 .. toctree::
    :maxdepth: 1
+   
+.. automodule:: alex
 
    _man_rst/README
    _man_rst/INSTALL
@@ -23,8 +25,6 @@ Alex modules
 
 .. toctree::
    :maxdepth: 2
-
-.. automodule:: alex
 
 Indices and tables
 ------------------
