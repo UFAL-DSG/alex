@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
-import autopath
 
 import alex.utils.audio as audio
-
 from alex.components.tts.google import GoogleTTS
 from alex.utils.config import Config
 
 if __name__ == '__main__':
+    import autopath
+
     print "Testing Google TTS service"
     print "=" * 120
     print

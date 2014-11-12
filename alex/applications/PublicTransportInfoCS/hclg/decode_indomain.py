@@ -14,8 +14,6 @@ import fnmatch
 import argparse
 import time
 
-import autopath
-
 import alex.utils.various as various
 
 from alex.components.asr.common import asr_factory
@@ -305,6 +303,8 @@ def extract_from_xml(indomain_data_dir, outdir, cfg):
 
 
 if __name__ == '__main__':
+    import autopath
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description=""" TODO """)

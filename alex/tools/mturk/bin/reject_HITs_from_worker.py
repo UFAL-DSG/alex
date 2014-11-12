@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
-import argparse
-
 from collections import defaultdict
+
 from boto.mturk.connection import MTurkConnection
-
-
 from alex.utils.config import as_project_path, Config
-
 import alex.tools.mturk.bin.mturk as mturk
 
 if __name__ == '__main__':
+    import autopath
+    import argparse
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

@@ -5,8 +5,6 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
 import argparse
 import multiprocessing
 
@@ -224,6 +222,8 @@ class TextHub(Hub):
 #########################################################################
 
 if __name__ == '__main__':
+    import autopath
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

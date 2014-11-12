@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
 import multiprocessing
 import time
 import argparse
@@ -460,6 +458,8 @@ class VoipHub(Hub):
 
 
 if __name__ == '__main__':
+    import autopath
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""\
