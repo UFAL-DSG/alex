@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
 import multiprocessing
 import sys
 import time
@@ -14,6 +12,8 @@ from alex.components.hub.messages import Command, Frame
 from alex.utils.config import Config
 
 if __name__ == '__main__':
+    import autopath
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

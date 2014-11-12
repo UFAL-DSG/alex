@@ -7,7 +7,6 @@ import glob
 import os
 import xml.dom.minidom
 import random
-import autopath
 import sys
 
 from collections import defaultdict
@@ -129,6 +128,8 @@ def confirm(f, v, c):
     return e
     
 def main():
+    import autopath
+
     cldb = CategoryLabelDatabase('../data/database.py')
 
     f_dupl = 0

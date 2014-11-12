@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
 import multiprocessing
 import time
 
@@ -13,6 +11,8 @@ from alex.components.hub.vad import VAD
 from alex.components.hub.messages import Command, Frame
 
 if __name__  == '__main__':
+    import autopath
+
     cfg = {
         'Audio': {
             'sample_rate': 16000

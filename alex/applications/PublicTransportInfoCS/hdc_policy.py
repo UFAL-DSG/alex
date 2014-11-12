@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 import random
 import itertools
 
-import autopath
-
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.slu.da import DialogueActConfusionNetwork

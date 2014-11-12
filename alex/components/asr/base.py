@@ -3,7 +3,6 @@
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 from __future__ import unicode_literals
 
-import autopath
 from alex.components.asr.exceptions import ASRException
 from alex.utils.audio import load_wav
 from alex.components.hub.messages import Frame

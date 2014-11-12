@@ -11,8 +11,6 @@ import random
 import sys
 import multiprocessing
 
-import autopath
-
 import alex.utils.various as various
 
 from alex.utils.config import as_project_path
@@ -171,6 +169,8 @@ def process_call_log(fn):
     return asr, nbl, sem, trn, trn_hdc_sem, fcount, tcount
 
 def main():
+    import autopath
+
     global asr_log
     global num_workers
 

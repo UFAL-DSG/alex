@@ -24,7 +24,6 @@ Output:
 """
 
 from __future__ import unicode_literals
-import autopath
 import codecs
 import sys
 import re
@@ -522,6 +521,7 @@ def unambig_variants(variants, idos_list):
 
 
 def main():
+    import autopath
     # initialize
     files = sys.argv[1:]
     if len(files) != 5:
