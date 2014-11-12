@@ -97,9 +97,9 @@ class TextHub(Hub):
 
     def output_sys_utt(self, utt):
         """Prints the system utterance to the output."""
-        print "System:   ", utt
+        print "System:   ", unicode(utt)
         if self.tts is not None:
-            print "TTS-prep: ", self.tts.preprocessing.process(utt)
+            print "TTS-prep: ", unicode(self.tts.preprocessing.process(utt))
         print
 
     def output_usr_utt_nblist(self, utt_nblist):
