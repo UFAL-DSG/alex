@@ -496,7 +496,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                 elif slot == "num_transfers":
                     res_da.extend(self.req_num_transfers(ds))
                 elif slot == "time_transfers":
-                    res_da.extend(self.req_time_transfers(ds))                    
+                    res_da.extend(self.req_time_transfers(ds))
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
@@ -674,6 +674,14 @@ class PTICSHDCPolicy(DialoguePolicy):
             from_city_val = to_city_val
         if to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
             to_city_val = from_city_val
+        if (to_cities is not None and from_cities is not None and
+                from_city_val == 'none' and to_city_val == 'none'):
+            # more cities for each side of the route -- try to intersect the lists
+            intersect = [c for c in from_cities if c in to_cities]
+            if len(intersect) == 1:
+                from_city_val = intersect.pop()
+                to_city_val = from_city_val
+                stop_city_inferred = True
 
         # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
         if self.infer_default_stops:
@@ -689,19 +697,22 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                                     from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
 
-        # check all state variables and the output one request dialogue act
-        # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
+        # check all state variables and output one request dialogue act
+        # once upon a time, request departure time before requesting stops
         if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif stop_city_inferred or from_city_val == to_city_val:
-            # if user did not provided info about a city ask about stops
+
+        # we know the cities, but it's not an intercity connection -- request stops if required
+        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
             if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
                 req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
             elif from_stop_val == 'none':
                 req_da.extend(DialogueAct("request(from_stop)"))
             elif to_stop_val == 'none':
                 req_da.extend(DialogueAct('request(to_stop)'))
+
+        # we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
