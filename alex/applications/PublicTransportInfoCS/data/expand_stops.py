@@ -17,7 +17,6 @@ Usage:
 """
 
 from __future__ import unicode_literals
-import autopath
 import sys
 import re
 from collections import defaultdict
@@ -181,6 +180,7 @@ class ExpandStops(object):
 
 
 def main():
+    import autopath
     cases = ['1', '2', '4']
     merge_file = None
     strip_punct = False

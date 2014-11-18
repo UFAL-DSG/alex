@@ -44,9 +44,11 @@ clean:
 	-rm -rf $(RST)/modules.rst $(RST)/alex*.rst
 	-rm -rf $(BUILDDIR)/*
 
-html:
+prepare:
 	python ./manual_rsts.py
 	$(SPHINXAPIDOC) -o $(RST) ../alex
+
+html: prepare
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

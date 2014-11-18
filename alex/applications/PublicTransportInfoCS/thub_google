@@ -1,5 +1,10 @@
 #!/bin/bash
 
+export LANG=en_US.UTF-8
+export LC_ALL="$LANG"
+export LANGUAGE="$LANG"
+
+
 cd ..
 
 ./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg -t

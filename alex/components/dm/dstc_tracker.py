@@ -10,7 +10,6 @@
 
 from collections import defaultdict
 
-import autopath
 from alex.components.dm.pstate import PDDiscrete, PDDiscreteOther
 from alex.components.dm.tracker import StateTracker
 from alex.components.slu.da import DialogueActConfusionNetwork, DialogueActItem
@@ -131,6 +130,8 @@ class DSTCTracker(StateTracker):
 
 
 def main():
+    import autopath
+
     # initialize tracker and state
     slots = ["food", "location"]
     tr = DSTCTracker(slots)
