@@ -18,7 +18,6 @@ from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
 import re
-from wx import ACCEL_ALT
 
 
 def randbool(n):
