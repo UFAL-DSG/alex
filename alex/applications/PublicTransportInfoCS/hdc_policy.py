@@ -18,6 +18,7 @@ from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
 import re
+from wx import ACCEL_ALT
 
 
 def randbool(n):
@@ -105,14 +106,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 elif iconfirms[dai.name, dai.value] > 1:
                     iconfirms[dai.name, dai.value] -= 1
                     continue
+                # filter mistakenly added iconfirms that have an unset/meaningless value
+                elif dai.value is None or dai.value in ['none', '*']:
+                    continue
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
                     city_dai = dai.name[:-4] + 'city'
                     if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
-                # filter mistakenly added iconfirms that have an unset value
-                elif dai.value == 'none' or dai.value is None:
-                    continue
 
             new_da.append(dai)
 
@@ -635,6 +636,23 @@ class PTICSHDCPolicy(DialoguePolicy):
                 return stop
         return None
 
+    def get_accepted_mpv(self, ds, slot_name, accepted_slots):
+        """Return a slot's 'mpv()' (most probable value) if the slot is accepted, and
+        return 'none' otherwise.
+        Also, convert a mpv of '*' to 'none' since we don't know how to interpret it.
+
+        :param ds: Dialogue state
+        :param slot_name: The name of the slot to query
+        :param accepted_slots: The currently accepted slots of the dialogue state
+        :rtype: string
+        """
+        val = 'none'
+        if slot_name in accepted_slots:
+            val = ds[slot_name].mpv()
+            if val == '*':
+                val = 'none'
+        return val
+
     def gather_connection_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
         for traffic directions and a dictionary containing the known information.
@@ -648,12 +666,12 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # retrieve the slot variables
-        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else 'none'
-        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
-        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
-        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
-        vehicle_val = ds['vehicle'].mpv() if 'vehicle' in accepted_slots else 'none'
-        max_transfers_val = ds['num_transfers'].mpv() if 'num_transfers' in accepted_slots else 'none'
+        from_stop_val = self.get_accepted_mpv(ds, 'from_stop', accepted_slots)
+        to_stop_val = self.get_accepted_mpv(ds, 'to_stop', accepted_slots)
+        from_city_val = self.get_accepted_mpv(ds, 'from_city', accepted_slots)
+        to_city_val = self.get_accepted_mpv(ds, 'to_city', accepted_slots)
+        vehicle_val = self.get_accepted_mpv(ds, 'vehicle', accepted_slots)
+        max_transfers_val = self.get_accepted_mpv(ds, 'max_transfers', accepted_slots)
 
         # infer cities based on stops
         from_cities, to_cities = None, None
