@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" This scripts consolidates all input key files. That means, that it generates new keyfiles ({old_name}.pruned,
-    which contains only entries common to all input ket files.
-"""
 
 from __future__ import unicode_literals
+
+import autopath
 import sys
 
 from alex.corpustools.wavaskey import load_wavaskey, save_wavaskey
 
+""" This scripts consolidates all input key files. That means, that it generates new keyfiles ({old_name}.pruned,
+    which contains only entries common to all input ket files.
+"""
 def main():
-    import autopath
 
     files = []
     for i in range(1, len(sys.argv)):

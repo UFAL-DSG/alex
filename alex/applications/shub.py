@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import autopath
+
 import argparse
 
 from alex.applications.exceptions import SemHubException
@@ -127,8 +129,6 @@ class SemHub(Hub):
 #########################################################################
 
 if __name__ == '__main__':
-    import autopath
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

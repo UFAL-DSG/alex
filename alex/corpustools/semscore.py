@@ -4,10 +4,13 @@
 from __future__ import unicode_literals
 
 import re
+import argparse
 import sys
 import codecs
 
 from collections import defaultdict
+
+import autopath
 
 from alex.utils.text import split_by
 
@@ -152,8 +155,6 @@ def score(fn_refsem, fn_testsem, item_level = False, detailed_error_output = Fal
         outfile.write("\n")
 
 if __name__ == '__main__':
-    import autopath
-    import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
     Compute scores for semantic parser output against reference semantics.

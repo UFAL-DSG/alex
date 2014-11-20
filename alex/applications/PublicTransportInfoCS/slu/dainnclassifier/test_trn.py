@@ -3,12 +3,12 @@
 
 from __future__ import unicode_literals
 
+import autopath
+
 from alex.applications.PublicTransportInfoCS.slu.dainnclassifier.test import trained_slu_test
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 
 if __name__ == "__main__":
-    import autopath
-
     # regular experiment evaluating models trained on training data and evaluated on deb and test data
     # **WARNING** due to data sparsity the metrics on the dev and test data fluctuate a lot
     # therefore meaningful results can be only obtained using N-fold cross validation

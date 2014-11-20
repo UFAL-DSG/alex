@@ -9,6 +9,8 @@ import cPickle as pickle
 import argparse
 import re
 
+import autopath
+
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.tts import TTS
@@ -644,8 +646,6 @@ def run(cfg1, cfg2):
 #########################################################################
 
 if __name__ == '__main__':
-    import autopath
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

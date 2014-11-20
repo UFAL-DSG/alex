@@ -36,6 +36,8 @@ import sys
 from time import sleep
 import traceback
 
+import autopath
+
 from alex.components.asr.exceptions import ASRException
 from alex.components.asr.julius import JuliusASR
 from alex.components.hub.messages import Frame
@@ -179,9 +181,7 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
 
 
 if __name__ == "__main__":
-    import autopath
     import argparse
-
     arger = argparse.ArgumentParser(
         description=('Finds WAVs in the directory specified and decodes them '
                      'as confnets.'))

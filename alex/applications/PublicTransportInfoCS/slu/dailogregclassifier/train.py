@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import autopath
+
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.da import DialogueAct
@@ -62,8 +64,6 @@ def train(fn_model,
     slu.save_model(fn_model)
 
 def main():
-    import autopath
-
     min_classifier_count = 4
     min_pos_feature_count = 3
     min_neg_feature_count = 100

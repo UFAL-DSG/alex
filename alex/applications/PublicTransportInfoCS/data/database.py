@@ -8,8 +8,7 @@ import os
 import re
 import sys
 
-if __name__ == '__main__':
-    import autopath
+import autopath
 
 from alex.utils.config import online_update, to_project_path
 
@@ -259,7 +258,6 @@ def save_SRILM_classes(file_name):
 add_numbers()
 add_stops()
 add_cities()
-
 
 if __name__ == '__main__':
     if "dump" in sys.argv or "--dump" in sys.argv:

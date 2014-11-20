@@ -8,6 +8,8 @@
 import os.path
 import unittest
 
+import autopath
+
 from alex.components.asr.utterance import load_utterances
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.slu.da import load_das
@@ -52,5 +54,4 @@ class TestCatlabSubstitution(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    import autopath
     unittest.main()

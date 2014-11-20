@@ -3,9 +3,12 @@
 
 #this cannot be used with GASR
 #from __future__ import unicode_literals
+import autopath
+
 import multiprocessing
 import sys
 import time
+import argparse
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -18,8 +21,6 @@ from alex.utils.config import Config
 #########################################################################
 #########################################################################
 if __name__ == '__main__':
-    import autopath
-    import argparse
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

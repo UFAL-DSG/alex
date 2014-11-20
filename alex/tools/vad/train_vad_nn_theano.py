@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import argparse
 import sys
 import numpy as np
 import datetime
 import random
+
+import autopath
 
 from alex.utils.htk import *
 from alex.ml import ffnn
@@ -309,9 +313,6 @@ def train_nn(speech_data, speech_alignment):
 ##################################################
 
 def main():
-    import autopath
-    import argparse
-
     global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch
     global hidden_units, hidden_layers, hidden_layers_add, next_frames, prev_frames, amplify_center_frame

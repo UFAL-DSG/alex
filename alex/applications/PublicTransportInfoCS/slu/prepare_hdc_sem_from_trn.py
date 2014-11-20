@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+import autopath
+
 from alex.utils.config import as_project_path
 
 from alex.components.asr.utterance import Utterance, UtteranceNBList
@@ -69,8 +71,6 @@ def hdc_slu(fn_input, constructor, fn_output):
     save_wavaskey(fn_output, parsed_das, trans = lambda da: '&'.join(sorted(unicode(da).split('&'))))
 
 if __name__ == "__main__":
-    import autopath
-
     hdc_slu('./all.trn',    Utterance, './all.trn.hdc.sem')
     hdc_slu('./train.trn',  Utterance, './train.trn.hdc.sem')
     hdc_slu('./dev.trn',    Utterance, './dev.trn.hdc.sem')

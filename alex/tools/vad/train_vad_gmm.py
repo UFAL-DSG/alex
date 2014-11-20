@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import numpy as np
 import datetime
+
 from multiprocessing import *
 
+import autopath
 
 from alex.ml.gmm import GMM
 from alex.utils.htk import *
@@ -75,8 +78,6 @@ def train_gmm(name, vta):
     return
 
 if __name__ == '__main__':
-    import autopath
-
     train_data_sil = 'data_vad_sil/data/*.wav'
     train_data_sil_aligned = 'data_vad_sil/vad-silence.mlf'
 
