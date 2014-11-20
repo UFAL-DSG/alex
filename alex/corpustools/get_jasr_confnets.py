@@ -25,7 +25,10 @@ all odd dialogue turns should be ignored.
 # Matěj Korvas
 
 from __future__ import unicode_literals
+if __name__ == "__main__":
+    import autopath
 
+import argparse
 import codecs
 from operator import itemgetter
 from os.path import basename
@@ -178,10 +181,7 @@ def main(dirname, outfname, cfg, skip=0, ignore_list_file=None):
             clean_up(jul, grep, errfile)
 
 
-if __name__ == "__main__":
-    import autopath
-    import argparse
-
+if __name__ == '__main__':
     arger = argparse.ArgumentParser(
         description=('Finds WAVs in the directory specified and decodes them '
                      'as confnets.'))

@@ -4,6 +4,8 @@
 Serves to quickly test HDC SLU with a single utterance supplied as argument
 """
 
+if __name__ == '__main__':
+    import autopath
 import sys
 
 from alex.utils.config import as_project_path
@@ -16,7 +18,6 @@ from alex.components.slu.base import CategoryLabelDatabase
 
 
 if __name__ == '__main__':
-    import autopath
     if len(sys.argv) < 2:
         print "No utterance entered as argument. Processing sample utterance instead..."
         utterance = u"CHTĚL BYCH JET ZE ZASTÁVKY ANDĚL DO ZASTÁVKY MALOSTRANSKÉ NÁMĚSTÍ"
