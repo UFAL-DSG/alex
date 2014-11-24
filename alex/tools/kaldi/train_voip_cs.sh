@@ -94,7 +94,7 @@ local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 
 local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
   $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
 
-local/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
   $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
 
@@ -102,6 +102,11 @@ local/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 ./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
+    --tgt-dir nnet2_online \
+    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+
+./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
+    --src-dir nnet2_online \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \

@@ -21,7 +21,7 @@ nj=8
 num_jobs_nnet=8
 gauss=19200
 pdf=9000
-tgt_dir=nnet_baseline
+tgt_dir=nnet2_online
 
 . utils/parse_options.sh
 
