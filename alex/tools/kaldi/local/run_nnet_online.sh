@@ -21,7 +21,7 @@ nj=8
 num_jobs_nnet=8
 gauss=19200
 pdf=9000
-tgt_dir=nnet2_online
+tgtdir=$EXP/nnet2_online
 
 . utils/parse_options.sh
 
@@ -45,13 +45,13 @@ EOF
   parallel_opts="-l gpu=1" 
   num_threads=1
   minibatch_size=512
-  dir=$EXP/$tgt_dir
+  dir=$tgtdir
 else
   # with just 4 jobs this might be a little slow.
   num_threads=16
   parallel_opts="-pe smp $num_threads" 
   minibatch_size=128
-  dir=$EXP/${tgt_dir}_NOGPU
+  dir=${tgtdir}_NOGPU
 fi
 
 mkdir -p $EXP/nnet2_online
