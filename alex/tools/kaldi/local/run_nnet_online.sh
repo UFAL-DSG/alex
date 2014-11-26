@@ -60,11 +60,11 @@ mkdir -p $EXP/nnet2_online
 # the tri2b is the input dir; the choice of this is not critical as we just use
 # it for the LDA matrix.  Since the iVectors don't make a great deal of difference,
 # we'll use 256 Gaussians for speed.
-local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 30 --num-frames 200000 \
+local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 10 --num-frames 200000 \
     $WORK/train 256 $EXP/tri2b $EXP/nnet2_online/diag_ubm
 
 # even though $nj is just 10, each job uses multiple processes and threads.
-local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 10 \
+local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 1 \
 $WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
 
 # TODO probably useless but nice for debugging
@@ -75,7 +75,7 @@ $WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
 local/check.sh steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 $WORK/train $WORK/train_max2
 
 local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj 30 \
+    --cmd "$train_cmd" --nj 1 \
     $WORK/train_max2 $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_train || exit 1;
 
 
@@ -114,8 +114,8 @@ local/check.sh steps/nnet2/train_pnorm_simple.sh --stage $train_stage \
 
 for s in $TEST_SETS ; do
   local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj 8 \
-    $WORK/${s} $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_${s} || exit 1;
+    --cmd "$train_cmd" --nj 1 \
+    $WORK/local/${s} $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_${s} || exit 1;
 done
 
 
@@ -130,7 +130,8 @@ for lm in $LM_names ; do
   done
 done
 
-local/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang $dir ${dir}_online || exit 1
+local/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang \
+  $EXP/nnet2_online/extractor $dir ${dir}_online || exit 1
 
 for lm in $LM_names ; do
   graph_dir=$EXP/tri3b/graph_${lm}
@@ -138,8 +139,6 @@ for lm in $LM_names ; do
     tgt_dir=${s}_${lm}
     # Decode. the --per-utt true option makes no difference to the results here
     local/check.sh steps/online/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
-      --online-ivector-dir $EXP/nnet2_online/ivectors_${s} \
-      --per-utt true \
       $EXP/tri3b/graph_${lm} $WORK/$tgt_dir ${dir}_online/decode_${tgt_dir} || exit 1
   done
 done
