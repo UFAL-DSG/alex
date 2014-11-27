@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import codecs
 import sys
@@ -19,7 +21,6 @@ Uses HDC SLU to add DA annotations to input from uniq.trn file (by default, can 
 """
 
 def main():
-    import autopath
 
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)

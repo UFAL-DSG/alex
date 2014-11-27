@@ -7,6 +7,8 @@
 
 .. moduleauthor:: Lukas Zilka <lukas@zilka.me>
 """
+if __name__ == '__main__':
+    import autopath
 
 from collections import defaultdict
 
@@ -130,7 +132,6 @@ class DSTCTracker(StateTracker):
 
 
 def main():
-    import autopath
 
     # initialize tracker and state
     slots = ["food", "location"]

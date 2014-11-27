@@ -4,6 +4,8 @@
 # Made into a unit test, since it used to fail and Jenkins would not find about
 # it.
 # 2013-07-02 Matěj Korvas
+if __name__ == '__main__':
+    import autopath
 
 import os.path
 import unittest
@@ -52,5 +54,4 @@ class TestCatlabSubstitution(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    import autopath
     unittest.main()

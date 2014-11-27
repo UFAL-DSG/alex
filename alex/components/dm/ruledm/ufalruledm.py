@@ -34,7 +34,6 @@ class PUfalRuleDM(PRuleDM):
 
 
 def main():
-    import autopath
     cfg = Config.load_configs(['resources/default-lz.cfg'],
                               use_default=False, project_root=True)
     #cfg = {'DM': {'UfalRuleDM':

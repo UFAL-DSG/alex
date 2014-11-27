@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
+import argparse
 import re
 import sys
 import codecs
@@ -152,8 +155,6 @@ def score(fn_refsem, fn_testsem, item_level = False, detailed_error_output = Fal
         outfile.write("\n")
 
 if __name__ == '__main__':
-    import autopath
-    import argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
     Compute scores for semantic parser output against reference semantics.

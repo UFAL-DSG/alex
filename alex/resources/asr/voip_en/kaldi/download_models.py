@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from alex.utils.config import online_update
-
-
 if __name__ == "__main__":
     import autopath
+    from alex.utils.config import online_update
 
     # Description files
     online_update('resources/asr/voip_en/kaldi/results.log')

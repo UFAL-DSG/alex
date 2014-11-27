@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import glob
@@ -169,7 +171,6 @@ def process_call_log(fn):
     return asr, nbl, sem, trn, trn_hdc_sem, fcount, tcount
 
 def main():
-    import autopath
 
     global asr_log
     global num_workers
