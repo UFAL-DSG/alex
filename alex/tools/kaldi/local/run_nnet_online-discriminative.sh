@@ -73,9 +73,9 @@ local/check.sh steps/nnet2/align.sh  --cmd "$decode_cmd $gpu_opts" \
 
 if $use_gpu; then
   local/check.sh steps/nnet2/train_discriminative.sh --cmd "$decode_cmd" --learning-rate 0.00002 \
-    --online-ivector-dir exp/nnet2_online/ivectors_train \
+    --online-ivector-dir $EXP/nnet2_online/ivectors_train \
     --num-jobs-nnet 4  --num-threads $num_threads --parallel-opts "$gpu_opts" \
-      data/train_si284 data/lang \
+      $WORK/train $WORK/lang \
     ${srcdir}_ali ${srcdir}_denlats ${srcdir}/final.mdl ${srcdir}_smbr
 fi
 
@@ -104,9 +104,9 @@ done
 if $use_gpu; then
   local/check.sh steps/nnet2/train_discriminative.sh --cmd "$decode_cmd" --learning-rate 0.00002 \
     --use-preconditioning true \
-    --online-ivector-dir exp/nnet2_online/ivectors_train_si284 \
+    --online-ivector-dir $EXP/nnet2_online/ivectors_train \
     --num-jobs-nnet 4  --num-threads $num_threads --parallel-opts "$gpu_opts" \
-      data/train_si284 data/lang \
+      $WORK/train $WORK/lang \
     ${srcdir}_ali ${srcdir}_denlats ${srcdir}/final.mdl ${srcdir}_smbr_precon
 fi
 
