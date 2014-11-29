@@ -19,6 +19,8 @@ It also assumes that exists all_trn.txt which can be produced by
 Th
 
 """
+if __name__ == '__main__':
+    import autopath
 
 import glob
 import os
@@ -228,7 +230,6 @@ def scores_equal_size_bins(wp_2_match):
     print repr(cal_list)
 
 if __name__ == '__main__':
-    import autopath
 
     reference = 'decoded_kaldi/all_trn.txt'
     trn_dict = load_wavaskey(reference, Utterance)

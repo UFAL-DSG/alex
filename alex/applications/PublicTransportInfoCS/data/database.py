@@ -3,13 +3,13 @@
 
 from __future__ import unicode_literals
 
+if __name__ == '__main__':
+    import autopath
 import codecs
 import os
 import re
 import sys
 
-if __name__ == '__main__':
-    import autopath
 
 from alex.utils.config import online_update, to_project_path
 

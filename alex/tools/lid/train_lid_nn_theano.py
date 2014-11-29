@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+if __name__ == '__main__':
+    import autopath
 
+import argparse
 import sys
 import numpy as np
 import datetime
@@ -319,8 +322,6 @@ def train_nn(speech_data, speech_alignment):
 ##################################################
 
 def main():
-    import autopath
-    import argparse
 
     global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch

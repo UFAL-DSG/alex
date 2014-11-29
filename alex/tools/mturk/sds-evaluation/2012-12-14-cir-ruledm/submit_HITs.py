@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+if __name__ == '__main__':
+    import autopath
+
+import argparse
 import sys
 import os.path
 import datetime
@@ -11,9 +15,6 @@ from boto.mturk.qualification import *
 import alex.tools.mturk.bin.mturk as mturk
 from alex.utils.config import as_project_path, Config
 
-if __name__ == '__main__':
-    import autopath
-    import argparse
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

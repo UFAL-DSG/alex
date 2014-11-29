@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 Extracts wavs from call logs
 and runs the Kaldi decoding using the AM and HCLG graph from models directory
 """
+if __name__ == '__main__':
+    import autopath
 
 import os
 import errno
@@ -303,7 +305,6 @@ def extract_from_xml(indomain_data_dir, outdir, cfg):
 
 
 if __name__ == '__main__':
-    import autopath
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,

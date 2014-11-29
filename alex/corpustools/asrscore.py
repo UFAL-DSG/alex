@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import re
 import argparse
@@ -64,7 +66,6 @@ def score(fn_reftext, fn_testtext, outfile = sys.stdout):
     outfile.write("\n")
 
 if __name__ == '__main__':
-    import autopath
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""

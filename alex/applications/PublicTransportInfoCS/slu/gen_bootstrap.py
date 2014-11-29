@@ -3,6 +3,9 @@
 
 from __future__ import unicode_literals
 
+if __name__ == '__main__':
+    import autopath
+
 import glob
 import os
 import xml.dom.minidom
@@ -128,7 +131,6 @@ def confirm(f, v, c):
     return e
     
 def main():
-    import autopath
 
     cldb = CategoryLabelDatabase('../data/database.py')
 
