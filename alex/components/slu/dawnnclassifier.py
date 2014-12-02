@@ -559,12 +559,12 @@ class DANNClassifier(SLUInterface):
         """
         """
 
-        u = ['U_START',]+list(utterance)
+        u = ['U_START',] + list(utterance) if list(utterance) else ['U_EMPTY',]
         for x in range(utterance_size - len(u)):
             u.append('U_END')
 
         abs_utt = self.get_abstract_utterance3(utterance, fvcs)
-        a = ['A_START',]+list(abs_utt)
+        a = ['A_START',] + list(abs_utt) if list(abs_utt) else ['A_EMPTY',] 
         for x in range(utterance_size - len(a)):
             a.append('A_END')
 
@@ -716,58 +716,89 @@ class DANNClassifier(SLUInterface):
         if verbose:
             print "  Number of features after pruning: ", len(features_counts)
 
-    def gen_vocabulary(self, classifier_features, min_word_count=2):
-    
+    def gen_vocabulary(self, classifier_features, min_word_count=2, min_bigram_count=50, min_trigram_count=5000):
         words = defaultdict(int)
         for u in classifier_features:
-            for w in u:
-                words[w] += 1
+            for i, w in enumerate(u):
+                words[(w,)] += 1
+                
+                if i >= 1:
+                    # bigram
+                    words[(u[i-1], w,)] += 1
 
-        print "Words before pruning", len(words)
+                    if i < len(u) - 1:
+                        # trigram
+                        words[(u[i-1], w, u[i+1])] += 1
+
+        print "Words before pruning   ", sum([1 for w in words if len(w) == 1])
+        print "2-ngram before pruning ", sum([1 for w in words if len(w) == 2])
+        print "3-ngram before pruning ", sum([1 for w in words if len(w) == 3])
             
-        self.classifiers_features_list = ['OOV',]
+        self.classifiers_features_list = [('OOV',)]
         for w in sorted(words.keys()):
-            if words[w] >= min_word_count:
+            if words[w] >= min_word_count and len(w) == 1 or \
+               words[w] >= min_bigram_count and len(w) == 2 or \
+               words[w] >= min_trigram_count and len(w) == 3:
                 self.classifiers_features_list.append(w)
 
         for i, f in enumerate(self.classifiers_features_list):
             self.classifiers_features_mapping[f] = i
 
-        print "Words after pruning", len(self.classifiers_features_list)
-        
+        words = self.classifiers_features_list
+        print "Words after pruning   ", sum([1 for w in words if len(w) == 1])
+        print "2-ngram after pruning ", sum([1 for w in words if len(w) == 2])
+        print "3-ngram after pruning ", sum([1 for w in words if len(w) == 3])
+        print "Total after pruning   ", len(self.classifiers_features_list)
+
     def map_words_to_ints(self, ulist):
         r = []
-        for w in ulist:
-            if w in self.classifiers_features_mapping:
-                r.append(self.classifiers_features_mapping[w])
+        for i, w in enumerate(ulist):
+            w_m1 = ulist[i-1] if i >= 1 else '*'
+            w_p1 = ulist[i+1] if i < len(ulist) - 1 else '*'
+            
+            w_t = (w_m1, w, w_p1)
+            w_b = (w_m1, w,)
+            w_u = (w,)
+            
+            if w_t in self.classifiers_features_mapping:
+                r.append(self.classifiers_features_mapping[w_t])
+            elif w_b in self.classifiers_features_mapping:
+                r.append(self.classifiers_features_mapping[w_b])
+            elif w_u in self.classifiers_features_mapping:
+                r.append(self.classifiers_features_mapping[w_u])
             else:
-                r.append(self.classifiers_features_mapping['OOV'])
-        return r    
-        
-                
-    def gen_classifiers_data(self, min_pos_feature_count=5, min_neg_feature_count=5, verbose=False, verbose2=False,
+                r.append(self.classifiers_features_mapping[('OOV',)])
+
+        return r
+
+    def gen_classifiers_data(self,
+                             min_word_count=2,
+                             min_bigram_count=50,
+                             min_trigram_count=500,
+                             verbose=False, verbose2=False,
                              fn_pickle=None,
                              full_abstraction=True,
                              utterance_size = 10):
         try:
-            print 'Reading', fn_pickle
-            with open(fn_pickle, "rb") as f:
-                self.classifier_output = np.load(f)
-                self.classifier_input = np.load(f)
-                self.utterance_size, \
-                self.classifiers_list, \
-                self.classifiers_features_list, \
-                self.classifiers_features_mapping, \
-                self.parsed_classifiers = pickle.load(f)
+            if fn_pickle:
+                print 'Reading', fn_pickle
+                with open(fn_pickle, "rb") as f:
+                    self.classifier_output = np.load(f)
+                    self.classifier_input = np.load(f)
+                    self.utterance_size, \
+                    self.classifiers_list, \
+                    self.classifiers_features_list, \
+                    self.classifiers_features_mapping, \
+                    self.parsed_classifiers = pickle.load(f)
 
-                if verbose2:
-                    print '-' * 120
-                    print "Input classifier matrix:  ", self.classifier_input.shape
-                    print "Output classifier matrix: ", self.classifier_output.shape
-                    print "#Classifiers:             ", len(self.classifiers_list)
-                    print "Utterance size:           ", self.utterance_size
-                    print "Vocabulary size:          ", len(self.classifiers_features_list)
-                return
+                    if verbose2:
+                        print '-' * 120
+                        print "Input classifier matrix:  ", self.classifier_input.shape
+                        print "Output classifier matrix: ", self.classifier_output.shape
+                        print "#Classifiers:             ", len(self.classifiers_list)
+                        print "Utterance size:           ", self.utterance_size
+                        print "Vocabulary size:          ", len(self.classifiers_features_list)
+                    return
         except IOError:
             print 'No existing pickle', fn_pickle
             pass
@@ -823,7 +854,8 @@ class DANNClassifier(SLUInterface):
 #        self.prune_features(classifier_features, min_pos_feature_count, min_neg_feature_count,
 #                            verbose=(verbose or verbose2))
 
-        self.gen_vocabulary(classifier_features, min_word_count=min_pos_feature_count)
+        self.gen_vocabulary(classifier_features, min_word_count=min_word_count,
+                            min_bigram_count=min_bigram_count, min_trigram_count=min_trigram_count)
 
 #        self.classifier_input = np.zeros((len(classifier_features), 2*utterance_size),dtype=np.int32)
         self.classifier_input = np.zeros((len(classifier_features), utterance_size),dtype=np.int32)
@@ -841,16 +873,17 @@ class DANNClassifier(SLUInterface):
             print "Utterance size:           ", self.utterance_size
             print "Vocabulary size:          ", len(self.classifiers_features_list)
 
-        with open(fn_pickle, "wb") as f:
-            print 'Writing', fn_pickle
-            np.save(f, self.classifier_output)
-            np.save(f, self.classifier_input)
-            data = (self.utterance_size, \
-                    self.classifiers_list,
-                    self.classifiers_features_list,
-                    self.classifiers_features_mapping,
-                    self.parsed_classifiers)
-            pickle.dump(data, f)
+        if fn_pickle:
+            with open(fn_pickle, "wb") as f:
+                print 'Writing', fn_pickle
+                np.save(f, self.classifier_output)
+                np.save(f, self.classifier_input)
+                data = (self.utterance_size, \
+                        self.classifiers_list,
+                        self.classifiers_features_list,
+                        self.classifiers_features_mapping,
+                        self.parsed_classifiers)
+                pickle.dump(data, f)
 
     def scoring(self, case, pred):
         """
@@ -885,7 +918,12 @@ class DANNClassifier(SLUInterface):
               n_hidden_layers=0,
               n_epoch=300,
               n_batches=1000,
+              input_dropout=None,
+              embedding_dropout=None,
+              max_pooling_dropout=None,
+              hidden_dropout=None,
               embedding_size=10,
+              convolution_size=0,
               max_pooling=False,
               move_training_set_to_GPU=False,
               standardize=False,
@@ -911,8 +949,6 @@ class DANNClassifier(SLUInterface):
         if weight_alpha:
             weight_bias = np.reciprocal(np.mean(self.classifier_output, axis=0))
             weight_bias = (1.0 - weight_alpha) * np.ones_like(weight_bias) + weight_alpha * weight_bias
-#            for i in range(len(weight_bias) / 2, len(weight_bias)):
-#                weight_bias[i] = 1.0
         else:
             weight_bias = None
 
@@ -927,16 +963,21 @@ class DANNClassifier(SLUInterface):
                               gradient_treatment=gradient_treatment,
                               g_max=1e+3,
                               move_training_set_to_GPU=move_training_set_to_GPU,
+                              input_dropout=input_dropout,
+                              embedding_dropout=embedding_dropout,
+                              max_pooling_dropout=max_pooling_dropout,
+                              hidden_dropout=hidden_dropout,
                               embedding_size=embedding_size,
-                              max_pooling=max_pooling,
-                              vocabulary_size=len(self.classifiers_features_mapping))
+                              vocabulary_size=len(self.classifiers_features_mapping),
+                              convolution_size=convolution_size,
+                              max_pooling=max_pooling)
 
         max_crossvalid_fme = 0.0
-        n_no_icrease_on_crossvalid = 0
+        n_no_increase_on_crossvalid = 0
         for epoch in range(n_epoch):
             print "Epoch", epoch
 
-            predictions_y = nn.predict(training_input, batch_size=batch_size/10)
+            predictions_y = nn.predict(training_input, batch_size=batch_size*10)
 
             t_acc, t_fme, t_pre, t_rec = self.scoring(training_output[:, :training_output.shape[1] / 2],
                                                       predictions_y[:, :training_output.shape[1] / 2])
@@ -952,11 +993,11 @@ class DANNClassifier(SLUInterface):
                 np.mean(predictions_y[:, :training_output.shape[1] / 2] >= 0.5) * 100.0)
 
             if crossvalidation:
-                predictions_y = nn.predict(crossvalid_input, batch_size=batch_size/10)
+                predictions_y = nn.predict(crossvalid_input, batch_size=batch_size*10)
                 c_acc, c_fme, c_pre, c_rec = self.scoring(crossvalid_output[:, :crossvalid_output.shape[1] / 2],
                                                           predictions_y[:, :crossvalid_output.shape[1] / 2])
 
-                print "  Prediction on the training data (data size):", crossvalid_input.shape
+                print "  Prediction on the crossvalidation data (data size):", crossvalid_input.shape
                 print "    Accuracy:  %6.4f" % (c_acc * 100.0,)
                 print "    Precision: %6.4f" % (c_pre * 100.0,)
                 print "    Recall:    %6.4f" % (c_rec * 100.0,)
@@ -974,19 +1015,19 @@ class DANNClassifier(SLUInterface):
                 print "  Storing the best classifiers so far"
                 self.trained_classifier = nn
                 max_crossvalid_fme = c_fme
-                n_no_icrease_on_crossvalid = 0
+                n_no_increase_on_crossvalid = 0
             else:
-                n_no_icrease_on_crossvalid += 1
+                n_no_increase_on_crossvalid += 1
                 print "  Worse than the best classifiers"
                 print "        The best classifiers FME: %6.4f" % (max_crossvalid_fme * 100.0,)
 
-            print "  Number of iterations with no increase on crossvalid data:", n_no_icrease_on_crossvalid
+            print "  Number of iterations with no increase on crossvalid data:", n_no_increase_on_crossvalid
 
-            if n_no_icrease_on_crossvalid >= 40:
-                print "  Stop: It does not have to be better - reached the max n_no_icrease_on_crossvalid"
+            if n_no_increase_on_crossvalid >= 40:
+                print "  Stop: It does not have to be better - reached the max n_no_increase_on_crossvalid"
                 break
 
-            if c_fme >= 0.99 or max_crossvalid_fme >= 0.99:
+            if c_fme >= 0.995 or max_crossvalid_fme >= 0.995:
                 print "  Stop: It does not have to be better - reached the max acc"
                 break
 

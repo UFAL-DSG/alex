@@ -3,9 +3,7 @@
 
 import cPickle as pickle
 import random
-import copy
 import numpy as np
-import sys
 
 import theano
 from theano import function
@@ -14,6 +12,62 @@ import numpy.random as rng
 
 rng.seed(0)
 
+
+def discrete_dropout(x, dropout, dropout_on=None):
+    """
+    Implements drop out for a discrete input.
+
+    It means that a dropout proportion is randomly replaced by 0.
+
+    :param x:       the input variable to which the dropout is applied
+    :param dropout: the proportion of elements dropped out from the input
+    :return:
+    """
+    if dropout:
+        if not dropout_on:
+            dropout_on = theano.shared(np.int32(1))
+
+        rng = np.random.RandomState(0)
+        srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
+
+        # p is a probability of success
+        mask = srng.binomial(n=1, p=1.0 - dropout, size=x.shape)
+        x = x * dropout_on * T.cast(mask, 'int32') \
+            + x * (1 - dropout_on)
+
+    else:
+        if not dropout_on:
+            dropout_on = theano.shared(np.int32(0))
+
+    return x, dropout_on
+
+def continuous_dropout(x, dropout, dropout_on=None):
+    """
+    Implements drop out for a continuous input.
+
+    It means that a dropout proportion is randomly replaced by 0.0.
+
+    :param x:       the input variable to which the dropout is applied
+    :param dropout: the proportion of elements dropped out from the input
+    :return:
+    """
+    if dropout:
+        if not dropout_on:
+            dropout_on = theano.shared(np.cast[theano.config.floatX](1.0), borrow=True)
+
+        rng = np.random.RandomState(0)
+        srng = T.shared_randomstreams.RandomStreams(rng.randint(999999))
+
+        # p is a probability of success
+        mask = srng.binomial(n=1, p=1.0 - dropout, size=x.shape)
+        x = x * dropout_on *  T.cast(mask, theano.config.floatX) +\
+            x * (1 - dropout_on) * (1 - dropout)
+
+    else:
+        if not dropout_on:
+            dropout_on = theano.shared(np.cast[theano.config.floatX](0.0), borrow=True)
+
+    return x, dropout_on
 
 class TheanoFFNN(object):
     """ Implements simple feed-forward neural network with:
@@ -28,9 +82,16 @@ class TheanoFFNN(object):
                  batch_size=0, hidden_activation='tanh', weight_l2=1e-6, classifier='categorical', weight_bias=None,
                  gradient_treatment='clipping', g_min=-1e6, g_max=1e6,
                  move_training_set_to_GPU=False,
+                 input_dropout=None,
+                 embedding_dropout=None,
+                 max_pooling_dropout=None,
+                 hidden_dropout=None,
                  embedding_size=0,
+                 vocabulary_size=0,
+                 # x - number of convolved input elements
+                 # the smallest meaningful convolution is 2 (of 2 elements from the input)
+                 convolution_size=0,
                  max_pooling=False,
-                 vocabulary_size=0,                 
     ):
         self.n_inputs = n_inputs
 
@@ -51,7 +112,12 @@ class TheanoFFNN(object):
         self.g_min = g_min
         self.g_max = g_max
         self.move_training_set_to_GPU = move_training_set_to_GPU
+        self.input_dropout = input_dropout
+        self.embedding_dropout = embedding_dropout
+        self.max_pooling_dropout = max_pooling_dropout
+        self.hidden_dropout = hidden_dropout
         self.embedding_size = embedding_size
+        self.convolution_size = convolution_size
         self.max_pooling = max_pooling
         self.vocabulary_size = vocabulary_size
 
@@ -108,29 +174,58 @@ class TheanoFFNN(object):
         # Keep model params here.
         self.params = []
 
-        # Model definition.
+        # input
         x = T.imatrix('X')
 
-        if not old_params:        
-            e = theano.shared(np.asarray(rng.uniform(-0.01, 0.01, size=(self.vocabulary_size, self.embedding_size)), dtype=np.float32), 'E')
-        else:
+        x, self.input_dropout_on = discrete_dropout(x, self.input_dropout)
+
+
+        if old_params:
             e = theano.shared(old_params.pop(0), 'E')
+        else:
+            e = theano.shared(np.asarray(rng.uniform(-0.01, 0.01, size=(self.vocabulary_size, self.embedding_size)), dtype=theano.config.floatX), 'E')
 
         self.params.append(e)
 
         ex = e[x]
-        
-        if not self.max_pooling:
-            y = ex.reshape((x.shape[0],  ex.shape[0]*ex.shape[1]*ex.shape[2] // x.shape[0]))
-        else:
+
+        ex, self.embedding_dropout_on = continuous_dropout(ex, self.embedding_dropout)
+
+        if self.convolution_size > 1:
+            conv_ex = [ex[:,i:i + ex.shape[1]-self.convolution_size+1] for i in range(0, self.convolution_size)]
+            conv_ex = T.concatenate(conv_ex, axis=2)
+
+            if old_params:
+                w = theano.shared(old_params.pop(0), 'conv_W', borrow=True)
+                b = theano.shared(old_params.pop(0), 'conv_b')
+            else:
+                n1 = self.embedding_size * self.convolution_size
+                n2 = self.embedding_size
+                w = theano.shared(
+                    np.asarray(rng.uniform(
+                        low=-np.sqrt(6. / (n1 + n2)),
+                        high=np.sqrt(6. / (n1 + n2)),
+                        size=(n1, n2)),
+                               dtype=theano.config.floatX),
+                    'conv_W', borrow=True)
+                b = theano.shared(np.zeros(n2, dtype=theano.config.floatX), 'conv_b')
+            self.params.append(w)
+            self.params.append(b)
+
+            ex = T.tensordot(conv_ex, w, 1) + b
+
+        if self.max_pooling:
             y = ex.max(axis=1)
-        
+        else:
+            y = ex.reshape((x.shape[0],  ex.shape[0]*ex.shape[1]*ex.shape[2] // x.shape[0]))
+
+        y, self.max_pooling_dropout_on = continuous_dropout(y, self.max_pooling_dropout)
 
         # Build the layered neural network.
-        if not old_params:
-            self.n_hidden = [n_hidden_units, ] * n_hidden_layers
-        else:
+        if old_params:
             self.n_hidden = self.n_hidden + [n_hidden_units, ] * n_hidden_layers
+        else:
+            self.n_hidden = [n_hidden_units, ] * n_hidden_layers
 
         activations = [self.hidden_activation, ] * len(self.n_hidden)
         # NOTE: The last function goes to the output layer.
@@ -143,15 +238,21 @@ class TheanoFFNN(object):
         else:
             layers = [self.embedding_size] + self.n_hidden + [self.n_outputs]
 
+        if self.hidden_dropout:
+            self.hidden_dropout_on = theano.shared(np.cast[theano.config.floatX](1.0), borrow=True)
+        else:
+            self.hidden_dropout_on = theano.shared(np.cast[theano.config.floatX](1.0), borrow=True)
+
         # Iterate over pairs of adjacent layers.
         for i, (n1, n2, act) in enumerate(zip(layers[:-1], layers[1:], activations)):
             # print i, n1, n2, act
+            last_layer = False if i < len(layers) - 2  else True
 
-            if old_params and (2 * i < len(old_params)):
+            if old_params:
                 #print "using old params"
                 # init an existing layer
-                w = theano.shared(old_params[2 * i], 'W%d' % i, borrow=True)
-                b = theano.shared(old_params[2 * i + 1], 'b%d' % (i + 1))
+                w = theano.shared(old_params.pop(0), 'W%d' % i, borrow=True)
+                b = theano.shared(old_params.pop(0), 'b%d' % (i + 1))
             else:
                 #print "sampling new params"
                 w = theano.shared(
@@ -159,13 +260,16 @@ class TheanoFFNN(object):
                         low=-np.sqrt(6. / (n1 + n2)),
                         high=np.sqrt(6. / (n1 + n2)),
                         size=(n1, n2)),
-                               dtype=np.float32),
+                               dtype=theano.config.floatX),
                     'W%d' % i, borrow=True)
-                b = theano.shared(np.zeros(n2, dtype=np.float32), 'b%d' % (i + 1))
+                b = theano.shared(np.zeros(n2, dtype=theano.config.floatX), 'b%d' % (i + 1))
             self.params.append(w)
             self.params.append(b)
 
             y = act(T.dot(y, w) + b)
+
+            if not last_layer:
+                y, self.hidden_dropout_on = continuous_dropout(y, self.hidden_dropout, self.hidden_dropout_on)
 
         self.f_y = function([x], y)  # PREDICTION FUNCTION
 
@@ -185,21 +289,6 @@ class TheanoFFNN(object):
                 L = self.weight_bias * true_y * T.log(y)
             else:
                 L = true_y * T.log(y)
-
-            # case = true_y
-            # pred = T.log(y)+0.69
-            #
-            # tn = T.mean(case[:, y.shape[1] / 2:] * pred[:, y.shape[1] / 2:])
-            # tp = T.mean(case[:, :y.shape[1] / 2] * pred[:, :y.shape[1] / 2])
-            # fn = T.mean(case[:, :y.shape[1] / 2] * pred[:, y.shape[1] / 2:])
-            # fp = T.mean(case[:, y.shape[1] / 2:] * pred[:, :y.shape[1] / 2])
-            #
-            # pre = tp / (tp + fp)
-            # rec = tp / (tp + fn)
-            #
-            # L = 2*pre*rec/(pre + rec)
-            #
-            # L = -fp -fn
 
             # MEAN log-likelihood - using the mean to make it independent of the size of outputs and the size of a
             # mini-batch
@@ -225,7 +314,7 @@ class TheanoFFNN(object):
         for p, g in zip(self.params, g_loss):
             if self.gradient_treatment == 'clipping':
                 updates.append((p, p + learning_rate * g.clip(self.g_min, self.g_max)))
-            elif self.gradient_treatment == 'normalisation':   
+            elif self.gradient_treatment == 'normalisation':
                 updates.append((p, p + learning_rate * g / g.norm(2)))
             else:
                 raise NotImplementedError
@@ -272,6 +361,30 @@ class TheanoFFNN(object):
         self.input_m = m
         self.input_std = std
 
+    def set_input_dropout(self, dropout):
+        self.input_dropout_on.set_value(dropout)
+
+    def set_embedding_dropout(self, dropout):
+        self.embedding_dropout_on.set_value(dropout)
+
+    def set_max_pooling_dropout(self, dropout):
+        self.max_pooling_dropout_on.set_value(dropout)
+
+    def set_hidden_dropout(self, dropout):
+        self.hidden_dropout_on.set_value(dropout)
+
+    def enable_dropout(self):
+        self.set_input_dropout(1)
+        self.set_embedding_dropout(1)
+        self.set_max_pooling_dropout(1)
+        self.set_hidden_dropout(1)
+
+    def disable_dropout(self):
+        self.set_input_dropout(0)
+        self.set_embedding_dropout(0)
+        self.set_max_pooling_dropout(0)
+        self.set_hidden_dropout(0)
+
     def set_params(self, params):
         """ Set new NN params and build the network model.
         """
@@ -288,8 +401,13 @@ class TheanoFFNN(object):
         self.batch_size, \
         self.amp, \
         self.amp_vec, \
+        self.input_dropout, \
+        self.embedding_dropout, \
+        self.max_pooling_dropout, \
+        self.hidden_dropout, \
         self.embedding_size, \
         self.vocabulary_size, \
+        self.convolution_size, \
         self.max_pooling, \
         self.classifier = params
 
@@ -312,8 +430,13 @@ class TheanoFFNN(object):
                   self.batch_size,
                   self.amp,
                   self.amp_vec,
+                  self.input_dropout,
+                  self.embedding_dropout,
+                  self.max_pooling_dropout,
+                  self.hidden_dropout,
                   self.embedding_size,
                   self.vocabulary_size,
+                  self.convolution_size,
                   self.max_pooling,
                   self.classifier,
         )
@@ -338,6 +461,8 @@ class TheanoFFNN(object):
             pickle.dump(self.get_params(), f)
 
     def predict(self, data_x, batch_size=0, prev_frames=0, next_frames=0, data_y=None):
+        self.disable_dropout()
+
         if not batch_size:
             if prev_frames or next_frames:
                 mx = self.frame_multiply_x(data_x, prev_frames, next_frames)
@@ -388,6 +513,8 @@ class TheanoFFNN(object):
         return my
 
     def train(self, method='fixedlr', n_iters=1, learning_rate=0.1):
+        self.enable_dropout()
+
         # Do batch-gradient descent to learn the parameters.
 
         if self.batch_size > 0 and self.batch_size <= len(self.training_set_x):
@@ -432,7 +559,7 @@ class TheanoFFNN(object):
                         print stop
 
                     if (m % m_minibatches) == 0:
-                        print "iteration (%d)" % ni, "minibatch (%d)" % m, "log likelihood %.4f" % log_lik
+                        print "iteration (%d)" % ni, "minibatch (%03d)" % m, "log likelihood %.6f" % log_lik
         else:
             print "Unknown update method"
             return
