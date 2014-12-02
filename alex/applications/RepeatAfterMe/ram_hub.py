@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import multiprocessing
 import time
@@ -10,8 +12,6 @@ import cPickle as pickle
 import argparse
 import codecs
 import re
-
-import autopath
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -94,6 +94,7 @@ def ram():
 #########################################################################
 #########################################################################
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

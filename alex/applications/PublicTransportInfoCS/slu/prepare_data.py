@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import glob
@@ -10,8 +12,6 @@ import xml.dom.minidom
 import random
 import sys
 import multiprocessing
-
-import autopath
 
 import alex.utils.various as various
 
@@ -171,6 +171,7 @@ def process_call_log(fn):
     return asr, nbl, sem, trn, trn_hdc_sem, fcount, tcount
 
 def main():
+
     global asr_log
     global num_workers
 

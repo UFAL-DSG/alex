@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
 import multiprocessing
 import time
 import argparse
 import os
+
+if __name__ == '__main__':
+    import autopath
 
 from alex.components.hub import Hub
 from alex.components.hub.vio import VoipIO
@@ -460,6 +461,7 @@ class VoipHub(Hub):
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""\

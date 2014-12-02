@@ -17,7 +17,14 @@ import os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('..'))
+doc_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.abspath(os.path.join(doc_dir, '..')))
+
+# Find out whether we are on ReadTheDocs and if so, run some auxiliary scripts,
+# that prepare the documentation to be built by Sphinx. This is needed because
+# ReadTheDocs does NOT build the documentation by running `make html`.
+if 'READTHEDOCS' in os.environ:
+              os.system('make -C %s prepare' % doc_dir)
 
 # -- General configuration -----------------------------------------------------
 

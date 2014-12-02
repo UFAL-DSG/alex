@@ -3,8 +3,8 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
+if __name__ == '__main__':
+    import autopath
 from alex.applications.PublicTransportInfoCS.preprocessing import PTICSSLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.da import DialogueAct

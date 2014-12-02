@@ -13,8 +13,8 @@ lexicon=$1; shift
 # Next, for each type of language model, create the corresponding FST
 # and the corresponding lang_test_* directory.
 for lm in $LMs ; do
-    tgt=${langdir}_`basename "$lm"`
-    lmp=$lmdir/`basename $lm`
+    tgt=${langdir}_${lm}
+    lmp=$lmdir/$lm
 
     tmpdir=$tgt/tmp
     mkdir -p $tgt 

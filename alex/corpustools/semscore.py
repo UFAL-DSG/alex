@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
-import re
 import argparse
+import re
 import sys
 import codecs
 
 from collections import defaultdict
-
-import autopath
 
 from alex.utils.text import split_by
 

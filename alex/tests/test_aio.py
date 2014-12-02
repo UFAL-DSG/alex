@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
-
 import multiprocessing
 import sys
 import time
 import argparse
 
+if __name__ == '__main__':
+    import autopath
 import alex.utils.audio as audio
 import alex.utils.various as various
 from alex.components.hub.aio import AudioIO
@@ -14,6 +14,7 @@ from alex.components.hub.messages import Command, Frame
 from alex.utils.config import Config
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
-import autopath
-
+import argparse
 import multiprocessing
 import sys
 import time
-import argparse
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.messages import Command, Frame
 from alex.utils.config import Config
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

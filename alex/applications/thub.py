@@ -4,8 +4,8 @@
 # http://www.python.org/dev/peps/pep-0008/.
 
 from __future__ import unicode_literals
-
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import multiprocessing
@@ -97,9 +97,9 @@ class TextHub(Hub):
 
     def output_sys_utt(self, utt):
         """Prints the system utterance to the output."""
-        print "System:   ", utt
+        print "System:   ", unicode(utt)
         if self.tts is not None:
-            print "TTS-prep: ", self.tts.preprocessing.process(utt)
+            print "TTS-prep: ", unicode(self.tts.preprocessing.process(utt))
         print
 
     def output_usr_utt_nblist(self, utt_nblist):
@@ -224,6 +224,7 @@ class TextHub(Hub):
 #########################################################################
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
-
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 
@@ -129,6 +129,7 @@ class SemHub(Hub):
 #########################################################################
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""

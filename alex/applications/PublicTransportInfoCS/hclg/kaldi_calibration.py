@@ -19,6 +19,8 @@ It also assumes that exists all_trn.txt which can be produced by
 Th
 
 """
+if __name__ == '__main__':
+    import autopath
 
 import glob
 import os
@@ -31,8 +33,6 @@ import pylab as P
 from collections import defaultdict
 from math import exp
 import time
-
-import autopath
 
 from alex.components.asr.utterance import Utterance
 from alex.corpustools.wavaskey import save_wavaskey, load_wavaskey
@@ -230,6 +230,7 @@ def scores_equal_size_bins(wp_2_match):
     print repr(cal_list)
 
 if __name__ == '__main__':
+
     reference = 'decoded_kaldi/all_trn.txt'
     trn_dict = load_wavaskey(reference, Utterance)
     trn_dict = basename_dict(trn_dict)
@@ -272,7 +273,3 @@ if __name__ == '__main__':
     scores_equal_size_bins(wp_2_match)
 
     # print wp_2_match
-
-
-
-

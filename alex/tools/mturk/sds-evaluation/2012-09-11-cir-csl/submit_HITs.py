@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import sys
 import os.path
 import datetime
+from collections import defaultdict
 
 from boto.mturk.connection import MTurkConnection
 from boto.mturk.question import *
 from boto.mturk.qualification import *
-from collections import defaultdict
 
 import alex.tools.mturk.bin.mturk as mturk
-
 from alex.utils.config import as_project_path, Config
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

@@ -3,8 +3,8 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
+if __name__ == "__main__":
+    import autopath
 from alex.applications.PublicTransportInfoCS.slu.dailogregclassifier.test import trained_slu_test
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 

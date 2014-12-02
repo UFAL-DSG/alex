@@ -4,8 +4,6 @@
 
 from __future__ import unicode_literals
 
-import autopath
-
 from alex.components.slu.base import SLUPreprocessing
 from alex.components.asr.utterance import Utterance
 from alex.utils.czech_stemmer import cz_stem

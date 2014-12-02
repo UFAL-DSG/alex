@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 import multiprocessing
 import time
@@ -12,6 +13,7 @@ from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command, ASRHyp, TTSText
 
 if __name__ == '__main__':
+
     cfg = {
         'Audio': {
         'sample_rate': 16000,

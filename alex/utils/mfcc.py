@@ -7,6 +7,40 @@ from scipy.fftpack import dct
 from collections import deque
 
 
+class MFCCKaldi:
+    '''
+    TODO port Kaldi mfcc to Python. Use similar parameters as
+    in suggested in __init__ function
+    '''
+
+    def __init__(self, sourcerate=16000, framesize=512,
+                 usehamming=True, preemcoef=0.97,
+                 numchans=26, ceplifter=22, numceps=12,
+                 enormalise=True, zmeansource=True, usepower=True, usec0=True,
+                 usecmn=False, usedelta=True, useacc=True, n_last_frames=0,
+                 lofreq=125, hifreq=3800, mel_banks_only=False):
+        self.sourcerate = sourcerate
+        self.framesize = framesize
+        self.usehamming = usehamming
+        self.preemcoef = preemcoef
+        self.numchans = numchans
+        self.ceplifter = ceplifter
+        self.enormalise = enormalise
+        self.zmeansource = zmeansource
+        self.usepower = usepower
+        self.usec0 = usec0
+        self.usecmn = usecmn
+        self.usedelta = usedelta
+        self.useacc = useacc
+        self.numceps = numceps
+        self.lofreq = lofreq
+        self.hifreq = hifreq
+        self.mel_banks_only = mel_banks_only
+
+    def param(self, frame):
+        """Compute the MFCC coefficients in a way similar to the HTK."""
+
+
 class MFCCFrontEnd:
     """This is an a CLOSE approximation of MFCC coefficients computed by the HTK.
 

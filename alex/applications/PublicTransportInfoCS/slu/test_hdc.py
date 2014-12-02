@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 import os.path
 import codecs
 
-import autopath
-
+if __name__ == "__main__":
+    import autopath
 from alex.utils.config import as_project_path
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 
@@ -80,6 +80,7 @@ def hdc_slu_test(fn_input, constructor, fn_reference):
 
 
 if __name__ == "__main__":
+
     # cheating experiment on all data using models trained on all data
     hdc_slu_test('./all.trn', Utterance, './all.trn.hdc.sem')
     hdc_slu_test('./all.asr', Utterance, './all.trn.hdc.sem')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 from alex.utils.config import online_update
 

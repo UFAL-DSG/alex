@@ -23,17 +23,10 @@ mkdir -p $tgt
 
 echo "--- Exporting models to $tgt ..."
 
-# See local/save_check.sh  which saves the settings at the beginning for details
-cp -f $exp/alex_gitlog.log $exp/alex_gitdiff.log $exp/experiment_bash_vars.log $tgt
-
 # Store also the results
 cp -f $exp/results.log $tgt/results.log
 
-
 cp -f common/mfcc.conf $tgt 
-
-cp -f $exp/tri2a/final.mdl $tgt/tri2a.mdl
-cp -f $exp/tri2a/tree $tgt/tri2a.tree
 
 cp -f $exp/tri2b/final.mdl $tgt/tri2b.mdl
 cp -f $exp/tri2b/tree $tgt/tri2b.tree

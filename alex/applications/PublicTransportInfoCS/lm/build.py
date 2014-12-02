@@ -14,19 +14,58 @@ The training procedure is as follows:
 #. Re-build the class based language model.
 """
 if __name__ == '__main__':
-    import os
-    import xml.dom.minidom
-    import glob
-    import codecs
-    import random
-
     import autopath
 
-    import alex.corpustools.lm as lm
-    import alex.utils.various as various
+import os
+import xml.dom.minidom
+import glob
+import codecs
+import random
 
-    from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
-    from alex.corpustools.wavaskey import save_wavaskey
+
+import alex.corpustools.lm as lm
+import alex.utils.various as various
+
+from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
+from alex.corpustools.wavaskey import save_wavaskey
+
+def is_srilm_available():
+    """Test whether SRILM is available in PATH."""
+    return os.system("which ngram-count") == 0
+
+
+def require_srilm():
+    """Test whether SRILM is available in PATH, try to import it from env
+    variable and exit the program in case there are problems with it."""
+    if not is_srilm_available():
+        if 'SRILM_PATH' in os.environ:
+            srilm_path = os.environ['SRILM_PATH']
+            os.environ['PATH'] += ':%s' % srilm_path
+            if not is_srilm_available():
+                print 'SRILM_PATH you specified does not contain the ' \
+                      'utilities needed. Please make sure you point to the ' \
+                      'directory with the SRILM binaries.'
+                exit(1)
+
+        else:
+            print 'SRILM not found. Set SRILM_PATH environment variable to ' \
+                  'the path with SRILM binaries.'
+            exit(1)
+
+
+def exit_on_system_fail(cmd, msg=None):
+    system_res = os.system(cmd)
+    if not system_res == 0:
+        err_msg = "Command failed, exitting."
+        if msg:
+            err_msg = "%s %s" % (err_msg, msg, )
+        raise Exception(err_msg)
+
+
+if __name__ == '__main__':
+
+    # Test if SRILM is available.
+    require_srilm()
 
     train_data_size                 = 0.90
     bootstrap_text                  = "bootstrap.txt"
@@ -98,7 +137,7 @@ if __name__ == '__main__':
                gen_data_norm)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(indomain_data_text_trn_norm):
         print "Generating train and dev data"
@@ -173,7 +212,7 @@ if __name__ == '__main__':
                indomain_data_text_trn_norm)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         # dev data
         cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
@@ -181,21 +220,23 @@ if __name__ == '__main__':
               "'",
               indomain_data_text_dev_norm)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(indomain_data_text_trn_norm_cls_pg_arpa):
         print "Generating class-based 5-gram language model from trn in-domain data"
         print "-"*120
         ###############################################################################################
         # convert surface forms to classes
-        cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
-              (indomain_data_text_trn_norm_cls_classes,
+        cmd = r"[ -e %s ] && replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s || exit 1" % \
+              (classes,
+               indomain_data_text_trn_norm_cls_classes,
                classes,
                indomain_data_text_trn_norm,
                indomain_data_text_trn_norm_cls)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd, "Maybe you forgot to run "
+                                 "'../data/database.py build'?")
 
         cmd = "ngram-count -text %s -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
               (indomain_data_text_trn_norm_cls,
@@ -204,7 +245,7 @@ if __name__ == '__main__':
                indomain_data_text_trn_norm_cls_pg_arpa)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(indomain_data_text_trn_norm_pg_arpa):
         print
@@ -217,14 +258,14 @@ if __name__ == '__main__':
                indomain_data_text_trn_norm_pg_arpa)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(indomain_data_text_trn_norm_cls_pg_arpa_scoring):
         print
         print "Scoring general text data using the in-domain language model"
         print "-"*120
         ###############################################################################################
-        os.system("ngram -lm %s -classes %s -order 5 -debug 1 -ppl %s | gzip > %s" % \
+        exit_on_system_fail("ngram -lm %s -classes %s -order 5 -debug 1 -ppl %s | gzip > %s" % \
                   (indomain_data_text_trn_norm_cls_pg_arpa,
                    indomain_data_text_trn_norm_cls_classes,
                    gen_data_norm,
@@ -235,7 +276,7 @@ if __name__ == '__main__':
         print "Selecting similar sentences to in-domain data from general text data"
         print "-"*120
         ###############################################################################################
-        os.system("zcat %s | ../../../corpustools/srilm_ppl_filter.py > %s " % (indomain_data_text_trn_norm_cls_pg_arpa_scoring, gen_data_norm_selected))
+        exit_on_system_fail("zcat %s | ../../../corpustools/srilm_ppl_filter.py > %s " % (indomain_data_text_trn_norm_cls_pg_arpa_scoring, gen_data_norm_selected))
 
 
     if not os.path.exists(extended_data_text_trn_norm_cls_pg_arpa):
@@ -246,17 +287,19 @@ if __name__ == '__main__':
         cmd = r"cat %s %s > %s" % (indomain_data_text_trn_norm, gen_data_norm_selected, extended_data_text_trn_norm)
         # cmd = r"cat %s > %s" % (indomain_data_text_trn_norm, extended_data_text_trn_norm)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         # convert surface forms to classes
-        cmd = r"replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s" % \
-              (extended_data_text_trn_norm_cls_classes,
+        cmd = r"[ -e %s ] && replace-words-with-classes addone=10 normalize=1 outfile=%s classes=%s %s > %s || exit 1" % \
+              (classes,
+               extended_data_text_trn_norm_cls_classes,
                classes,
                extended_data_text_trn_norm,
                extended_data_text_trn_norm_cls)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd, "Maybe you forgot to run "
+                                 "'../data/database.py build'?")
 
         cmd = "ngram-count -text %s -vocab %s -limit-vocab -write-vocab %s -write1 %s -order 5 -wbdiscount -memuse -lm %s" % \
               (extended_data_text_trn_norm_cls,
@@ -266,21 +309,21 @@ if __name__ == '__main__':
                extended_data_text_trn_norm_cls_pg_arpa)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] _]\+CL_'> %s" % \
               (extended_data_text_trn_norm_cls_pg_arpa,
                extended_data_text_trn_norm_cls_pg_arpa_filtered)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "ngram -lm %s -order 5 -write-lm %s -renorm" % \
               (extended_data_text_trn_norm_cls_pg_arpa_filtered,
                extended_data_text_trn_norm_cls_pg_arpa_filtered)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(expanded_lm_pg):
         print
@@ -294,7 +337,7 @@ if __name__ == '__main__':
                      expanded_lm_vocab,
                      expanded_lm_pg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(mixed_lm_pg):
         print
@@ -309,7 +352,7 @@ if __name__ == '__main__':
                      mixed_lm_vocab,
                      mixed_lm_pg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
     if not os.path.exists(final_lm_pg):
         print
@@ -321,31 +364,31 @@ if __name__ == '__main__':
                   % (mixed_lm_pg,
                      final_lm_pg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "ngram -lm %s -order 4 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
                   % (mixed_lm_pg,
                      final_lm_qg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "ngram -lm %s -order 3 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
                   % (mixed_lm_pg,
                      final_lm_tg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "ngram -lm %s -order 2 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
                   % (mixed_lm_pg,
                      final_lm_bg)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' | grep -v 'CL_' | grep -v '{' > %s" % \
               (mixed_lm_vocab,
                final_lm_vocab)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = """
         echo "<s>	[] sil" > {dict} &&
@@ -358,19 +401,19 @@ if __name__ == '__main__':
         """.format(dict=final_lm_dict)
 
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "perl ../../../tools/htk/bin/PhoneticTranscriptionCS.pl %s %s" % \
               (final_lm_vocab,
                final_lm_dict)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
         cmd = "perl ../../../tools/htk/bin/AddSp.pl %s 1 > %s " % \
               (final_lm_dict,
               final_lm_dict_sp_sil)
         print cmd
-        os.system(cmd)
+        exit_on_system_fail(cmd)
 
 ###############################################################################################
     print
@@ -379,7 +422,7 @@ if __name__ == '__main__':
     print "-"*120
     print "Class-based trn 5-gram LM on trn data."
     print "-"*120
-    os.system("ngram -lm %s -classes %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_cls_pg_arpa,
+    exit_on_system_fail("ngram -lm %s -classes %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_cls_pg_arpa,
                                                              indomain_data_text_trn_norm_cls_classes,
                                                              indomain_data_text_trn_norm))
     print
@@ -387,7 +430,7 @@ if __name__ == '__main__':
     print "-"*120
     print "Full trn 5-gram LM on trn data."
     print "-"*120
-    os.system("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_trn_norm))
+    exit_on_system_fail("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_trn_norm))
     print
     print
 
@@ -395,7 +438,7 @@ if __name__ == '__main__':
     print "-"*120
     print "Class-based trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (indomain_data_text_trn_norm_cls_pg_arpa,
+    exit_on_system_fail("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (indomain_data_text_trn_norm_cls_pg_arpa,
                                                              indomain_data_text_trn_norm_cls_classes,
                                                              indomain_data_text_dev_norm))
     print
@@ -404,7 +447,7 @@ if __name__ == '__main__':
     print "-"*120
     print "Extended class-based trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa,
+    exit_on_system_fail("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa,
                                                              extended_data_text_trn_norm_cls_classes,
                                                              indomain_data_text_dev_norm))
     print
@@ -413,7 +456,7 @@ if __name__ == '__main__':
     print "-"*120
     print "Extended filtered class-based trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa_filtered,
+    exit_on_system_fail("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (extended_data_text_trn_norm_cls_pg_arpa_filtered,
                                                              extended_data_text_trn_norm_cls_classes,
                                                              indomain_data_text_dev_norm))
     print
@@ -422,45 +465,45 @@ if __name__ == '__main__':
     print "-"*120
     print "Expanded class-based trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (expanded_lm_pg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -order 5 -ppl %s -zeroprob-word _NOISE_" % (expanded_lm_pg, indomain_data_text_dev_norm))
     print
 
     print "-"*120
     print "Full trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -order 5 -ppl %s" % (indomain_data_text_trn_norm_pg_arpa, indomain_data_text_dev_norm))
     print
 
 
     print "-"*120
     print "Mixed trn 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -order 5 -ppl %s" % (mixed_lm_pg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -order 5 -ppl %s" % (mixed_lm_pg, indomain_data_text_dev_norm))
     print
 
     print "-"*120
     print "Final 5-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -order 5 -ppl %s" % (final_lm_pg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -order 5 -ppl %s" % (final_lm_pg, indomain_data_text_dev_norm))
     print
 
 
     print "-"*120
     print "Final 4-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
     print
 
 
     print "-"*120
     print "Final 3-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
     print
 
 
     print "-"*120
     print "Final 2-gram LM on dev data."
     print "-"*120
-    os.system("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
+    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
     print

@@ -41,7 +41,7 @@ every_n=1
 
 
 if [ $# -ne 4 ] ; then
-    echo "Usage: local/data_split.sh [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
+    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
     exit 1;
 fi
 
@@ -89,10 +89,10 @@ sort "$locdata/spk2gender" -k1 -o "$locdata/spk2gender"
 
 echo "--- Distributing the file lists to train and ($test_sets x $LMs) directories ..."
 mkdir -p $WORK/train
-cp $locdata/train/wav.scp $WORK/train/wav.scp || exit 1;
-cp $locdata/train/trans.txt $WORK/train/text || exit 1;
-cp $locdata/train/spk2utt $WORK/train/spk2utt || exit 1;
-cp $locdata/train/utt2spk $WORK/train/utt2spk || exit 1;
+sort -u $locdata/train/wav.scp > $WORK/train/wav.scp || exit 1;
+sort -u $locdata/train/trans.txt > $WORK/train/text || exit 1;
+sort -u $locdata/train/spk2utt > $WORK/train/spk2utt || exit 1;
+sort -u $locdata/train/utt2spk > $WORK/train/utt2spk || exit 1;
 utils/filter_scp.pl $WORK/train/spk2utt $locdata/spk2gender > $WORK/train/spk2gender || exit 1;
 
 for s in $test_sets ; do 

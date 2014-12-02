@@ -3,12 +3,13 @@
 
 from __future__ import unicode_literals
 
+if __name__ == '__main__':
+    import autopath
 import codecs
 import os
 import re
 import sys
 
-import autopath
 
 from alex.utils.config import online_update, to_project_path
 
@@ -218,6 +219,7 @@ def save_c2v2f(file_name):
             f.write(' => '.join(x))
             f.write('\n')
 
+
 def save_surface_forms(file_name):
     surface_forms = []
     for k in database:
@@ -258,7 +260,9 @@ add_numbers()
 add_stops()
 add_cities()
 
-if "dump" in sys.argv or "--dump" in sys.argv:
-    save_c2v2f('database_c2v2f.txt')
-    save_surface_forms('database_surface_forms.txt')
-    save_SRILM_classes('database_SRILM_classes.txt')
+
+if __name__ == '__main__':
+    if "dump" in sys.argv or "--dump" in sys.argv:
+        save_c2v2f('database_c2v2f.txt')
+        save_surface_forms('database_surface_forms.txt')
+        save_SRILM_classes('database_SRILM_classes.txt')
