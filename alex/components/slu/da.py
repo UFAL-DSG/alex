@@ -68,13 +68,23 @@ class DialogueActItem(Abstracted):
     # position in the argument list, so that __init__ recovers a DAI object
     # repr() would have stored (once __repr__ is implemented so).
     def __init__(self, dialogue_act_type=None, name=None, value=None,
-                 dai=None, attrs=None):
+                 dai=None, attrs=None, alignment=None):
         """
         Initialise the dialogue act item. Assigns the default values to
         dialogue act type (dat), slot name (name), and slot value (value).
 
-        TODO: Document what the `attrs' kwarg is for, please.
+        :param dialogue_act_type: dialogue act type
+        :type dialogue_act_type: string
+        :param name: slot name
+        :type name: string
+        :param value: slot value
+        :type value: string
+        :param dai: string representation of this DAI
+        :type dai: string
+        :param attrs: TODO: Document what the `attrs' kwarg is for, please.
 
+        :param alignment: list of word indices this DAI corresponds to
+        :type alignment: set[int] | None
         """
         # Store the arguments.
         self._dat = dialogue_act_type
@@ -82,6 +92,7 @@ class DialogueActItem(Abstracted):
         self._value = value
         # XXX! What is this for?!
         self._attrs = {} if attrs is None else attrs
+        self._alignment = alignment
 
         # Bookkeeping.
         self._orig_values = set()

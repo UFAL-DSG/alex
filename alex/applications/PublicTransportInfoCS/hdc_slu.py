@@ -82,6 +82,80 @@ def ending_phrases_in(utterance, phrases):
     return False
 
 
+class DAIBuilder(object):
+
+    def __init__(self, utterance):
+        self._utterance = utterance if not isinstance(self, list) else Utterance(' '.join(utterance))
+        self._alignment = set()
+
+    def build(self, act_type, slot, value):
+        return DialogueActItem(act_type, slot, value, alignment=self._alignment)
+
+    def add(self, indices):
+        self._alignment.union(indices)
+
+    def any_word_in(self, words):
+        words = words if not isinstance(words, basestring) else words.strip().split()
+        indices = [i for i, word in enumerate(self._utterance.utterance) if word in words]
+        if indices:
+            self._alignment.union(indices)
+            return True
+        else:
+            return False
+
+    def all_words_in(self, words):
+        words = words if not isinstance(words, basestring) else words.strip().split()
+        indices = [i for i, word in enumerate(self._utterance.utterance) if word in words]
+        if len(indices) == len(words):
+            self._alignment.union(indices)
+            return True
+        else:
+            return False
+
+    def phrase_pos(self, words, sub_utt=None):
+        """Returns the position of the given phrase in the given utterance, or -1 if not found.
+
+        :rtype: int
+        """
+        if not sub_utt:
+            sub_utt = 0, len(self._utterance)
+        words = words if not isinstance(words, basestring) else words.strip().split()
+        return self._utterance[sub_utt].find(words)
+
+    def first_phrase_span(self, phrases, sub_utt=None):
+        """Returns the span (start, end+1) of the first phrase from the given list
+        that is found in the utterance. Returns (-1, -1) if no phrase is found.
+
+        :param phrases: a list of phrases to be tried (in the given order)
+        :rtype: tuple
+        """
+        for phrase in phrases:
+            pos = self.phrase_pos(phrase, sub_utt)
+            if pos != -1:
+                self._alignment.union(range(pos, pos+len(phrase.split())))
+                return pos, pos+len(phrase)
+        return -1, -1
+
+    def phrase_in(self, phrase, sub_utt=None):
+        return self.any_phrase_in([phrase], sub_utt)
+
+    def any_phrase_in(self, phrases, sub_utt=None):
+        return self.first_phrase_span(phrases, sub_utt) != (-1, -1)
+
+    def ending_phrases_in(self, phrases):
+        """Returns True if the utterance ends with one of the phrases
+
+        :param phrases: a list of phrases to search for
+        :rtype: bool
+        """
+        utterance = self._utterance if not isinstance(self, list) else Utterance(' '.join(self._utterance))
+        for phrase in phrases:
+            phr_pos = self.phrase_pos(phrase)
+            if phr_pos is not -1 and phr_pos + len(phrase.split()) is len(utterance):
+                return True
+        return False
+
+
 class PTICSHDCSLU(SLUInterface):
 
     def __init__(self, preprocessing, cfg):
@@ -460,7 +534,6 @@ class PTICSHDCSLU(SLUInterface):
 
                 slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                 cn.add(1.0, DialogueActItem(act_type, slot, value))
-
                 last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
@@ -541,17 +614,16 @@ class PTICSHDCSLU(SLUInterface):
         """
 
         u = abutterance
-
-        deny = phrase_in(u, ['nechci', 'nehledám'])
-
+        dai = DAIBuilder(u)
+        deny = dai.phrase_in(['nechci', 'nehledám'])
         for i, w in enumerate(u):
             if w.startswith("TASK="):
                 value = w[5:]
-
+                dai.add([i])
                 if deny:
-                    cn.add(1.0, DialogueActItem("deny", 'task', value))
+                    cn.add(1.0, dai.build("deny", 'task', value))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'task', value))
+                    cn.add(1.0, dai.build("inform", 'task', value))
 
     def parse_non_speech_events(self, utterance, cn):
         """
@@ -563,10 +635,10 @@ class PTICSHDCSLU(SLUInterface):
         """
         u = utterance
 
-        if  len(u.utterance) == 0 or "_silence_" == u or "__silence__" == u or "_sil_" == u:
+        if len(u.utterance) == 0 or "_silence_" == u or "__silence__" == u or "_sil_" == u:
             cn.add(1.0, DialogueActItem("silence"))
 
-        if "_noise_" == u or "_laugh_" == u or "_ehm_hmm_" == u or "_inhale_" == u :
+        if "_noise_" == u or "_laugh_" == u or "_ehm_hmm_" == u or "_inhale_" == u:
             cn.add(1.0, DialogueActItem("null"))
 
         if "_other_" == u or "__other__" == u:
