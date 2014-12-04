@@ -17,8 +17,8 @@ set -e
 train_stage=-10
 use_gpu=true
 test_sets=
-nj=8
-num_jobs_nnet=8
+nj=16
+num_jobs_nnet=4
 gauss=19200
 pdf=9000
 srcdir=$EXP/nnet2_online
@@ -74,7 +74,7 @@ local/check.sh steps/nnet2/align.sh  --cmd "$decode_cmd $gpu_opts" \
 if $use_gpu; then
   local/check.sh steps/nnet2/train_discriminative.sh --cmd "$decode_cmd" --learning-rate 0.00002 \
     --online-ivector-dir $EXP/nnet2_online/ivectors_train \
-    --num-jobs-nnet 4  --num-threads $num_threads --parallel-opts "$gpu_opts" \
+    --num-jobs-nnet $num_jobs_nnet  --num-threads $num_threads --parallel-opts "$gpu_opts" \
       $WORK/train $WORK/lang \
     ${srcdir}_ali ${srcdir}_denlats ${srcdir}/final.mdl ${srcdir}_smbr
 fi
@@ -95,7 +95,7 @@ for epoch in 1 2 3 4; do
     graph_dir=$EXP/tri3b/graph_${lm}
     for s in $TEST_SETS ; do
       tgt_dir=${s}_${lm}
-      local/check.sh steps/online/nnet2/decode.sh --cmd "$decode_cmd" --nj 8 --iter smbr_epoch${epoch} \
+      local/check.sh steps/online/nnet2/decode.sh --cmd "$decode_cmd" --nj $nj --iter smbr_epoch${epoch} \
         "$graph_dir" $WORK/${tgt_dir} ${srcdir}_online/decode_${tgt_dir}_${epoch} || exit 1;
     done
   done
@@ -105,7 +105,7 @@ if $use_gpu; then
   local/check.sh steps/nnet2/train_discriminative.sh --cmd "$decode_cmd" --learning-rate 0.00002 \
     --use-preconditioning true \
     --online-ivector-dir $EXP/nnet2_online/ivectors_train \
-    --num-jobs-nnet 4  --num-threads $num_threads --parallel-opts "$gpu_opts" \
+    --num-jobs-nnet $num_jobs_nnet  --num-threads $num_threads --parallel-opts "$gpu_opts" \
       $WORK/train $WORK/lang \
     ${srcdir}_ali ${srcdir}_denlats ${srcdir}/final.mdl ${srcdir}_smbr_precon
 fi
@@ -125,7 +125,7 @@ for epoch in 1 2 3 4; do
     graph_dir=$EXP/tri3b/graph_${lm}
     for s in $TEST_SETS ; do
       tgt_dir=${s}_${lm}
-      local/check.sh steps/online/nnet2/decode.sh --cmd "$decode_cmd" --nj 8 --iter smbr_precon_epoch${epoch} \
+      local/check.sh steps/online/nnet2/decode.sh --cmd "$decode_cmd" --nj $nj --iter smbr_precon_epoch${epoch} \
         "$graph_dir" $WORK/${tgt_dir} ${srcdir}_online/decode_precon_${tgt_dir}_${epoch} || exit 1;
     done
   done
