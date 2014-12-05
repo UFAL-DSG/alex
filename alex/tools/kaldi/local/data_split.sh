@@ -99,10 +99,10 @@ for s in $test_sets ; do
     for lm in $LMs; do
         tgt_dir=$WORK/${s}_`basename ${lm}`
         mkdir -p $tgt_dir
-        cp $locdata/${s}/wav.scp $tgt_dir/wav.scp || exit 1;
-        cp $locdata/${s}/trans.txt $tgt_dir/text || exit 1;
-        cp $locdata/${s}/spk2utt $tgt_dir/spk2utt || exit 1;
-        cp $locdata/${s}/utt2spk $tgt_dir/utt2spk || exit 1;
+        sort -u $locdata/${s}/wav.scp > $tgt_dir/wav.scp || exit 1;
+        sort -u $locdata/${s}/trans.txt > $tgt_dir/text || exit 1;
+        sort -u $locdata/${s}/spk2utt > $tgt_dir/spk2utt || exit 1;
+        sort -u $locdata/${s}/utt2spk > $tgt_dir/utt2spk || exit 1;
         utils/filter_scp.pl $tgt_dir/spk2utt $locdata/spk2gender > $tgt_dir/spk2gender || exit 1;
     done
 done

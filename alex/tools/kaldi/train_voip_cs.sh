@@ -30,9 +30,9 @@ local/check.sh local/prepare_cs_transcription.sh $WORK/local/lm $WORK/local/dict
 
 local/check.sh local/create_phone_lists.sh $WORK/local/dict || exit 1
 
-local/check.sh utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
-
 local/check.sh local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
+
+local/check.sh utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
 
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
@@ -50,6 +50,7 @@ cp $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
 for s in $TEST_SETS; do
   for lm in $LM_names; do
     tgt_dir=${s}_${lm}
+    mkdir -p $WORK/$tgt_dir
     echo "cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp"
     cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp
     echo "cp $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp"
@@ -89,7 +90,20 @@ local/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
 local/check.sh local/get_train_ctm_phones.sh $WORK/train $WORK/lang $EXP/tri2b_ali || exit 1
 local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 1
 
-./local/run_nnet_online-base.sh --gauss $gauss --pdf $pdf \
+
+# Train tri3b, which is LDA+MLLT+SAT
+local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
+  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
+
+local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
+  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
+
+./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
+    --tgtdir $EXP/nnet2_online \
+    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+
+./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
+    --nj $nj --srcdir $EXP/nnet2_online \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
@@ -100,6 +114,7 @@ echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05
 local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
+# Cleaning does not help a lot
 # local/check.sh local/data_clean.sh --thresh 0.1 --cleandir $EXP/tri2b_mmi_b${train_mmi_boost}_selected \
 #   $WORK/train $WORK/lang $EXP/tri2b_mmi_b${train_mmi_boost} $WORK/train_cleaned || exit 1
 #
@@ -152,7 +167,7 @@ for s in $TEST_SETS ; do
 
     # echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05: RESULTS on vystadial 0.95% of all data and WER improvement of 0.02 for tri2 + bMMI_b005 model"
     # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-    #    --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+    #   --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
     #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned/decode_it4_${tgt_dir};
 
   done
@@ -161,5 +176,9 @@ done
 
 echo "Successfully trained and evaluated all the experiments"
 local/results.py $EXP | tee $EXP/results.log
+
+for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+
+# for d in `find exp/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
 
 local/export_models.sh $TGT_MODELS $EXP $WORK/lang
