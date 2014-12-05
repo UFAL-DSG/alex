@@ -50,6 +50,7 @@ cp $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
 for s in $TEST_SETS; do
   for lm in $LM_names; do
     tgt_dir=${s}_${lm}
+    mkdir -p $WORK/$tgt_dir
     echo "cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp"
     cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp
     echo "cp $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp"
