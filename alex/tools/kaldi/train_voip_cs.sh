@@ -30,9 +30,9 @@ local/check.sh local/prepare_cs_transcription.sh $WORK/local/lm $WORK/local/dict
 
 local/check.sh local/create_phone_lists.sh $WORK/local/dict || exit 1
 
-local/check.sh utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
-
 local/check.sh local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
+
+local/check.sh utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
 
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
@@ -175,5 +175,9 @@ done
 
 echo "Successfully trained and evaluated all the experiments"
 local/results.py $EXP | tee $EXP/results.log
+
+for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+
+# for d in `find exp/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
 
 local/export_models.sh $TGT_MODELS $EXP $WORK/lang

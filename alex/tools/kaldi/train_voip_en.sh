@@ -30,9 +30,10 @@ local/check.sh local/prepare_en_transcription.sh $WORK/local/lm $WORK/local/dict
 
 local/check.sh local/create_phone_lists.sh $WORK/local/dict || exit 1
 
+local/check.sh local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
+
 local/check.sh utils/prepare_lang.sh $WORK/local/dict '_SIL_' $WORK/local/lang $WORK/lang || exit 1
 
-local/check.sh local/create_G.sh $WORK/lang "$LM_names" $WORK/local/lm $WORK/local/dict/lexicon.txt || exit 1
 
 echo "Create MFCC features and storing them (Could be large)."
 for s in train $TEST_SETS ; do
