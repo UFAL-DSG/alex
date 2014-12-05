@@ -5,11 +5,6 @@
 set -e
 # set -x
 
-# Load training parameters
-. ./env_voip_cs.sh
-# Source optional config if exists
-[ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
-
 . ./cmd.sh
 . ./path.sh
 
