@@ -33,6 +33,8 @@
 # _SIL_
 
 # renice 20 $$
+set -e
+# set -x
 
 every_n=1
 
@@ -41,7 +43,7 @@ every_n=1
 
 
 if [ $# -ne 4 ] ; then
-    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
+    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets>";
     exit 1;
 fi
 
@@ -49,7 +51,7 @@ DATA=$1; shift
 locdata=$1; shift
 LMs=$1; shift
 test_sets=$1; shift
-tgt_dir=$1; shift
+
 
 echo "LMs $LMs  test_sets $test_sets"
 
@@ -59,12 +61,14 @@ echo "--- Making test/train data split from $DATA taking every $every_n recordin
 
 mkdir -p $locdata
 
+
 i=0
 for s in $test_sets train ; do
     mkdir -p $locdata/$s
     ls $DATA/$s/ | sed -n /.*wav$/p |\
     while read wav ; do
-        ((i++)) # bash specific
+        ((i++)) || true # bash specific
+        exit 0
         if [[ $i -ge $every_n ]] ; then
             i=0
             pwav=$DATA/$s/$wav
@@ -86,6 +90,7 @@ done # for in $test_sets train
 
 echo "Set 1:1 relation for spk2utt: spk in $test_sets AND train, sort in place"
 sort "$locdata/spk2gender" -k1 -o "$locdata/spk2gender" 
+
 
 echo "--- Distributing the file lists to train and ($test_sets x $LMs) directories ..."
 mkdir -p $WORK/train

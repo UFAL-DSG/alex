@@ -1,5 +1,6 @@
 #!/bin/bash
 # Copyright Ondrej Platek Apache 2.0
+set -e
 renice 20 $$
 
 # Load training parameters

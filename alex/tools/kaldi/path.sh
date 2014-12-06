@@ -2,7 +2,7 @@
 # Needed for "correct" sorting
 export LC_ALL=C
 
-if [[ ! -d "$KALDI_ROOT" ]] ; then
+if [ ! -d "$KALDI_ROOT" ] ; then
   echo "KALDI_ROOT need to be set to point to directory"
   exit 1
 fi
@@ -22,7 +22,7 @@ for syml in $symlinks ; do
         echo "Failed to create symlink $syml -> $name"
         exit 1
     fi
-  elif [[ "$syml"  != `readlink -f $name` ]] ; then
+  elif [ "$syml"  != `readlink -f $name` ] ; then
     echo -e "Relinking symlink '$name' according to new KALDI_ROOT \n$KALDI_ROOT"
     ln -f -s "$syml"
   fi
