@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 locdata=$1
 locdict=$2
