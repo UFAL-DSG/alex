@@ -1,3 +1,4 @@
+#!/bin/bash
 # Needed for "correct" sorting
 export LC_ALL=C
 

@@ -4,9 +4,9 @@ mkdir -p ckpts
 
 fullname="./ckpts/`echo $@ | sed 's:[/!]:_:g'`"
 if [[ ${#fullname} -gt 255 ]] ; then
-  if which md5 ; then 
+  if which md5 > /dev/null ; then 
       hash="`echo $fullname | md5`" 
-  elif which md5sum ; then 
+  elif which md5sum > /dev/null ; then 
       hash="`echo $fullname | md5sum | cut -d ' ' -f 1`"
   else
       hash="BADHASH_`date +%s`"
