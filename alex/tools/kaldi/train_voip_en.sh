@@ -20,7 +20,7 @@ mkdir -p $WORK  $EXP
 #######################################################################
 
 local/check.sh local/data_split.sh --every_n $EVERY_N \
-    $DATA_ROOT $WORK/local "$LM_paths" "$TEST_SETS" || exit 1
+    $DATA_ROOT $WORK/local "$LM_names" "$TEST_SETS" || exit 1
 
 local/check.sh local/create_LMs.sh \
     --train_text $WORK/local/train/trans.txt \
@@ -47,16 +47,16 @@ done
 
 echo "Decoding is done for each pair (TEST_SET x LMs)"
 echo "Distribute the links to MFCC feats to all LM variations."
-cp $WORK/local/train/feats.scp $WORK/train/feats.scp
-cp $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
+cp -f $WORK/local/train/feats.scp $WORK/train/feats.scp
+cp -f $WORK/local/train/cmvn.scp $WORK/train/cmvn.scp
 for s in $TEST_SETS; do
   for lm in $LM_names; do
     tgt_dir=${s}_${lm}
     mkdir -p $WORK/$tgt_dir
     echo "cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp"
-    cp $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp
+    cp -f $WORK/local/$s/feats.scp $WORK/$tgt_dir/feats.scp
     echo "cp $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp"
-    cp $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp
+    cp -f $WORK/local/$s/cmvn.scp $WORK/$tgt_dir/cmvn.scp
   done
 done
 
@@ -178,5 +178,9 @@ done
 
 echo "Successfully trained and evaluated all the experiments"
 local/results.py $EXP | tee $EXP/results.log
+
+for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+
+# for d in `find exp/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
 
 local/export_models.sh $TGT_MODELS $EXP $WORK/lang
