@@ -4,7 +4,7 @@
 # Apache 2.0
 
 set -e
-set -x
+# set -x
 
 echo "===test_sets Formating data ..."
 langdir=$1; shift

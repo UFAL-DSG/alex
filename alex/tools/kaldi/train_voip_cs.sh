@@ -20,7 +20,7 @@ mkdir -p $WORK  $EXP
 #######################################################################
 
 local/check.sh local/data_split.sh --every_n $EVERY_N \
-    $DATA_ROOT $WORK/local "$LM_paths" "$TEST_SETS" || exit 1
+    $DATA_ROOT $WORK/local "$LM_names" "$TEST_SETS" || exit 1
 
 local/check.sh local/create_LMs.sh \
     --train_text $WORK/local/train/trans.txt \
