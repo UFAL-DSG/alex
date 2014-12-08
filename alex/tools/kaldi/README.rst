@@ -51,6 +51,8 @@ Example of ``env_voip_en_CUSTOM.sh``
     export LM_paths="build0 $DATA_ROOT/arpa_bigram"
     export LM_names="build0 vystadialbigram"
 
+    export CUDA_VISIBLE_DEVICES=1  # just card 1 will be used for DNN training
+
 
 Running experiments
 -------------------
