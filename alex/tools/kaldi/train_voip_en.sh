@@ -105,7 +105,7 @@ local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 ./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
-    --nj $nj --srcdir $EXP/nnet2_online \
+    --srcdir $EXP/nnet2_online \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \

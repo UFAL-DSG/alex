@@ -37,6 +37,3 @@ cp -f $exp/tri2b/tree $tgt/tri2b_bmmi.tree
 cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
 
 cp -f $lang/phones.txt $lang/phones/silence.csl $tgt
-
-
-# FIXME do I need splice_opts for something?

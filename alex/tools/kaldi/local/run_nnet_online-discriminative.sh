@@ -12,12 +12,12 @@ set -e
 train_stage=-10
 use_gpu=true
 test_sets=
-nj=16
+nj=8
 num_jobs_nnet=4
 gauss=19200
 pdf=9000
-srcdir=$EXP/nnet2_online
-tgtdir=$EXP/nnet2_online_disc
+srcdir=exp/nnet2_online
+tgtdir=exp/nnet2_online_disc
 
 . utils/parse_options.sh
 
