@@ -176,11 +176,10 @@ for s in $TEST_SETS ; do
 done
 
 
-echo "Successfully trained and evaluated all the experiments"
-local/results.py $EXP | tee $EXP/results.log
-
 for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
-
 # for d in `find exp/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
 
+local/results.py $EXP | tee $EXP/results.log
+
+echo "Successfully trained and evaluated all the experiments"
 local/export_models.sh $TGT_MODELS $EXP $WORK/lang
