@@ -56,7 +56,7 @@ fi
 # note: it's the sub-split option that determinies how many jobs actually
 # run at one time.
 local/check.sh steps/nnet2/make_denlats.sh --cmd "$decode_cmd -l mem_free=1G,ram_free=1G" \
-    --nj $nj --sub-split 40 --num-threads 6 --parallel-opts "-pe smp 6" \
+    --nj $nj --sub-split 40 --num-threads 1 --parallel-opts "-pe smp 1" \
     --online-ivector-dir $EXP/nnet2_online/ivectors_train \
     $WORK/train $WORK/lang $srcdir ${srcdir}_denlats
 
