@@ -1,5 +1,0 @@
-New York	new york; new york city
-New Jersey	new jersey
-Baltimore	baltimore
-Staten Island	staten island
-Bronx	bronx

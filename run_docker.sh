@@ -1,6 +1,7 @@
 #!/bin/bash
 #MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" && pwd )"
 
+#TODO: docker acquire czech, checkout english, provide additional stuff and start docker with -v for english sources
 #BASE_FOLDER=${CURDIR}
 BASE_FOLDER=/mnt/data
 SOURCE_FOLDER=${BASE_FOLDER}/alex

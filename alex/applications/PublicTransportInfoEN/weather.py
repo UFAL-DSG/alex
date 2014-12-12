@@ -25,6 +25,7 @@ class OpenWeatherMapWeather(Weather):
 
     def __init__(self, input_json, substitutions, time=None, daily=False):
         # get current weather
+
         if time is None:
             self.temp = self._round_temp(input_json['main']['temp'])
             self.condition = substitutions[input_json['weather'][0]['id']]
@@ -46,6 +47,9 @@ class OpenWeatherMapWeather(Weather):
                     self.temp = self._round_temp(fc1['temp']['day'])
                     self.min_temp = self._round_temp(fc1['temp']['min'])
                     self.max_temp = self._round_temp(fc1['temp']['max'])
+        if not hasattr(self, 'temp'):
+            self.temp = self._round_temp(input_json['list'][0]['main']['temp'])
+            self.condition = substitutions[input_json['list'][0]['weather'][0]['id']]
 
     def _round_temp(self, temp):
         return int(round(temp - 273.15))

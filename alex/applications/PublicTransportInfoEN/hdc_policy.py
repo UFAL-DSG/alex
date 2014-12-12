@@ -30,7 +30,6 @@ def randbool(n):
         return True
     return False
 
-
 class PTIENHDCPolicy(DialoguePolicy):
     """The handcrafted policy for the PTI-EN system."""
 
@@ -339,7 +338,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             return req_da
 
         # check if it is valid information
-        apology_da = self.check_weather_conflict(ref_point)
+        apology_da = self.check_city_state_conflict(ref_point.in_city, ref_point.in_state)
         if apology_da is not None:
             return apology_da
 
@@ -355,13 +354,19 @@ class PTIENHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         """
 
-        req_da, in_state = self.gather_time_info(ds, accepted_slots)
+        req_da, in_city, in_state, lon, lat = self.gather_time_info(ds, accepted_slots)
 
         if len(req_da):
             return req_da
 
+        # check for valid input
+        if in_city != 'none':
+            apology_da = self.check_city_state_conflict(in_city, in_state)
+            if apology_da is not None:
+                return apology_da
+
         # if state_changed:
-        res_da = self.get_current_time(in_state)
+        res_da = self.get_current_time(in_city, in_state, lon, lat)
         # else:
         #     res_da = self.backoff_action(ds)
         return res_da
@@ -390,7 +395,9 @@ class PTIENHDCPolicy(DialoguePolicy):
         # check if any time is set to distinguish current/prediction
         weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
-            weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
+            weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time, local=True)
+        else:
+            time_type = ""
 
         # request the weather
         weather = self.weather.get_weather(time=weather_ts, daily=daily, city=in_city, state=in_state)
@@ -418,11 +425,15 @@ class PTIENHDCPolicy(DialoguePolicy):
         res_da.append(DialogueActItem('inform', 'weather_condition', weather.condition))
         return res_da
 
-    def get_current_time(self, in_state):
+    def get_current_time(self, in_city, in_state, longitude, latitude):
 
-        cur_time, time_zone = None, None#self.time.get_time(place=in_state)
+        place = in_city + "," + in_state if in_city != 'none' else in_state
+        if longitude and latitude:
+            cur_time, time_zone = self.time.get_time(place=place, lat=latitude, lon=longitude)
+        else:
+            cur_time, time_zone = self.time.get_time(place=place)
         if cur_time is None:
-            default_time = self.get_default_time()
+            default_time = self.get_default_local_time()
             default_state = self.ontology.get_default_value('in_state')
             d_time = default_time.strftime("%I:%M:%p")
             if in_state is not default_state:
@@ -438,11 +449,17 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         return res_da
 
-    def get_default_time(self):
+    def get_default_local_time(self):
         """
         :return: Returns utc time - 8 hours
         """
-        return datetime.utcnow() + timedelta(hours=-5)
+        return datetime.utcnow() + self.ontology['default_values']['time_zone_offset']  # timedelta(hours=-5)
+
+    def get_default_time(self):
+        """
+        :return: Returns utc time
+        """
+        return datetime.utcnow()
 
     def backoff_action(self, ds):
         """Generate a random backoff dialogue act in case we don't know what to do.
@@ -489,8 +506,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.extend(self.get_directions(ds, "last"))
             elif ds_alternative == "next":
                 ds["route_alternative"] += 1
-                try:#TODO: why has this no effect and is still there?
-                    ds.directions[ds['route_alternative']]
+                try:
                     res_da.extend(self.get_directions(ds, "next"))
                 except:
                     ds["route_alternative"] -= 1
@@ -691,13 +707,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct, dict
         """
 
-
-        #TODO: implement the lon,lat:
-        # city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
-        # if city_addinfo:
-        #     states = [entry['state'] for entry in city_addinfo]
-
-
         req_da = DialogueAct()
 
         # retrieve the slot variables
@@ -762,7 +771,17 @@ class PTIENHDCPolicy(DialoguePolicy):
             iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
             iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
 
-        return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val)
+        # retrieve additional geo location data:
+        # we only need geo locations for stop, str(city + stop) is greater information than geolocation of city
+        from_stop_geo = self.ontology['addinfo']['city'].get(from_city_val, {}).get(from_stop_val, None)
+        if not from_stop_geo is None:
+            from_stop_geo = None if from_stop_geo['lat'].lower() == 'nan' or from_stop_geo['lon'].lower() == 'nan' else from_stop_geo
+        to_stop_geo = self.ontology['addinfo']['city'].get(to_city_val, {}).get(to_stop_val, None)
+        if not to_stop_geo is None:
+            to_stop_geo = None if to_stop_geo['lat'].lower() == 'nan' or to_stop_geo['lon'].lower() == 'nan' else to_stop_geo
+
+
+        return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo)
 
     def gather_weather_info(self, ds, accepted_slots):
         """Handles in_city and in_state to be properly filled. If needed, a Request DA is formed for missing slots to be filled.
@@ -780,9 +799,9 @@ class PTIENHDCPolicy(DialoguePolicy):
         in_city_val = ds['in_city'].mpv() if 'in_city' in accepted_slots else 'none'
 
         if in_city_val != 'none' and in_state_val == 'none':
-            in_states = self.ontology.get_compatible_vals('w_city_w_state', in_city_val)
+            in_states = self.ontology.get_compatible_vals('city_state', in_city_val)
             if not in_states or not len(in_states):
-                print "WARNING: there is no compatible state with this city: " + in_city_val
+                print "WARNING: there is no state compatible with this city: " + in_city_val
             elif len(in_states) == 1:
                 in_state_val = in_states.pop()
                 
@@ -790,8 +809,6 @@ class PTIENHDCPolicy(DialoguePolicy):
             in_city_val = self.ontology.get_default_value('in_city')
             in_state_val = self.ontology.get_default_value('in_state')
 
-
-        # s
         if in_state_val == 'none':
             req_da.extend(DialogueAct("request(in_state)"))
         elif in_city_val == 'none':
@@ -813,19 +830,28 @@ class PTIENHDCPolicy(DialoguePolicy):
         in_city_val = ds['in_city'].mpv() if 'in_city' in accepted_slots else 'none'
 
         if in_city_val != 'none' and in_state_val == 'none':
-            in_states = self.ontology.get_compatible_vals('w_city_w_state', in_city_val)
+            in_states = self.ontology.get_compatible_vals('city_state', in_city_val)
             if not in_states or not len(in_states):
-                print "WARNING: there is no compatible state with this city: " + in_city_val
+                print "WARNING: there is no state compatible with this city: " + in_city_val
             elif len(in_states) == 1:
                 in_state_val = in_states.pop()
 
         if in_city_val == 'none' and in_state_val == 'none':
             in_state_val = self.ontology.get_default_value('in_state')
+            in_city_val = self.ontology.get_default_value('in_city')
 
         if in_state_val == 'none':
-            req_da = DialogueAct("request(in_state)")
+            req_da = DialogueAct("request(in_state)")  # we don't know which state to choose
 
-        return req_da, in_state_val
+        lon = None
+        lat = None
+        if in_city_val != 'none' and in_state_val != 'none' and in_state_val in self.ontology['addinfo']['state']:
+            cities = self.ontology['addinfo']['state'][in_state_val]
+            if cities and in_city_val in cities:
+                lat = cities[in_city_val]['lat']
+                lon = cities[in_city_val]['lon']
+
+        return req_da, in_city_val, in_state_val, lon, lat
 
 
     def req_from_stop(self, ds):
@@ -886,7 +912,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 # construct relative time from now to departure
-                now = datetime.now()
+                now = self.get_default_local_time()  # datetime.now()
                 now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
                 departure_time_rel = (step.departure_time - now)
 
@@ -931,7 +957,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 # construct relative time from now to arrival
-                arrival_time_rel = (step.arrival_time - datetime.now()).seconds / 60
+                arrival_time_rel = (step.arrival_time - self.get_default_local_time()).seconds / 60
                 arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
@@ -1000,18 +1026,18 @@ class PTIENHDCPolicy(DialoguePolicy):
             return apology_da
         return None
 
-    def check_weather_conflict(self, wp):
-        """Check for conflicts in the given WeatherPoint. Return an apology() DA if the state and city is incompatible.
+    def check_city_state_conflict(self, in_city, in_state):
+        """Check for conflicts in the given city and state. Return an apology() DA if the state and city is incompatible.
 
-        :param wp: WeatherPoint filled with in_city, in_state slot values
+        :param in_city: city slot value
+        :param in_state: state slot value
         :rtype: DialogueAct
         :return: apology dialogue act in case of conflict, or None
         """
 
-        if not self.ontology.is_compatible('w_city_w_state', wp.in_city, wp.in_state):
+        if not self.ontology.is_compatible('city_state', in_city, in_state):
             apology_da = DialogueAct('apology()&inform(cities_conflict="incompatible")')
-            apology_da.extend(DialogueAct('inform(in_city="%s")&inform(in_state="%s")' %
-                                          (wp.in_city, wp.in_state)))
+            apology_da.extend(DialogueAct('inform(in_city="%s")&inform(in_state="%s")' % (in_city, in_state)))
             return apology_da
         return None
 
@@ -1159,14 +1185,14 @@ class PTIENHDCPolicy(DialoguePolicy):
                           'evening': "18:00",
                           'night': "00:00"}
 
-    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time):
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time, local=False):
         """Interpret time, given current dialogue state most probable values for
         relative and absolute time and date, plus the corresponding last-talked-about value.
 
         :return: the inferred time value + flag indicating the inferred time type ('abs' or 'rel')
         :rtype: tuple(datetime, string)
         """
-        now = datetime.now()
+        now = self.get_default_local_time() if local else self.get_default_time()
         now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
@@ -1197,7 +1223,6 @@ class PTIENHDCPolicy(DialoguePolicy):
                 elif date_rel != 'none':
                     time_abs = "%02d:%02d" % (now.hour, now.minute)
             time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%H:%M").time())
-            # time_parsed = datetime.combine(now, datetime.strptime(time_abs, "%I:%M:%p").time())
             time_hour = time_parsed.hour
             now_hour = now.hour
             # handle 12hr time

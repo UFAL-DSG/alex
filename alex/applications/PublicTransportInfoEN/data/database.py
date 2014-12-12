@@ -36,6 +36,8 @@ database = {
         "tomorrow": ["tomorrow", "tomorrows", "morrow", "morrows"],
         "day_after_tomorrow": ["day after tomorrow", "after tomorrow" ,"after tomorrows"],
     },
+    "street": {
+    },
     "stop": {
     },
     "vehicle": {
@@ -55,10 +57,7 @@ database = {
     },
     "city": {
     },
-    "wcity": {
-    },
     "state": {
-
     },
 }
 
@@ -79,15 +78,15 @@ NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
 #   <value>; <phrase>; <phrase>; ...
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
+STREETS_FNAME = "streets.expanded.txt"
 STOPS_FNAME = "stops.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
-WEATHER_CITIES_FNAME = "w.cities.expanded.txt"
 STATES_FNAME = "states.expanded.txt"
 
 # load new stops & cities list from the server if needed
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
-online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), WEATHER_CITIES_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STATES_FNAME)))
 
 
@@ -103,10 +102,6 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-#    if category_label == 'stop':
-#        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
-#            return
-            
 #    for c in '{}+/&[],-':
 #        form = form.replace(' %s ' % c, ' ')
 #        form = form.replace(' %s' % c, ' ')
@@ -229,6 +224,9 @@ def add_from_file(category_label, fname):
             for form in val_surface_forms:
                 db_add(category_label, val_name, form)
 
+def add_streets():
+    """Add street names from the streets file."""
+    add_from_file('street', STREETS_FNAME)
 
 def add_stops():
     """Add stop names from the stops file."""
@@ -239,9 +237,6 @@ def add_cities():
     """Add city names from the cities file."""
     add_from_file('city', CITIES_FNAME)
 
-def add_weather_cities():
-    """Add city names from the weather cities file for weather info purposes."""
-    add_from_file('wcity', WEATHER_CITIES_FNAME)
 
 def add_states():
     """Add state names from the states file."""
@@ -302,9 +297,9 @@ def save_SRILM_classes(file_name):
 #                  Automatically expand the database                   #
 ########################################################################
 add_time()
+add_streets()
 add_stops()
 add_cities()
-add_weather_cities()
 add_states()
 
 if "dump" in sys.argv or "--dump" in sys.argv:

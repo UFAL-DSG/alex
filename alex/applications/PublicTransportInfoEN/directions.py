@@ -15,22 +15,25 @@ import sys
 import codecs
 
 from suds.client import Client
+from alex.applications.PublicTransportInfoCS.data.convert_idos_stops import expand_abbrevs
+from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
 
 from alex.tools.apirequest import APIRequest
 from crws_enums import *
 from alex.utils.cache import lru_cache
 from alex.utils.config import online_update, to_project_path
-from alex.applications.PublicTransportInfoEN.data.convert_idos_stops import expand_abbrevs
 
 
 class Waypoints(object):
     """Holder for starting and ending point of travel."""
 
-    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None):
+    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, from_geo=None, to_geo=None):
         self.from_city = from_city
         self.from_stop = from_stop if from_stop not in ['__ANY__', 'none'] else None
         self.to_city = to_city
         self.to_stop = to_stop if to_stop not in ['__ANY__', 'none'] else None
+        self.from_geo = from_geo
+        self.to_geo = to_geo
 
     def get_minimal_info(self):
         """Return minimal waypoints information
@@ -112,12 +115,12 @@ class RouteStep(object):
     MODE_WALKING = 'WALKING'
 
     # TODO this should be done somehow more clever
-    STOPS_MAPPING = {'Můstek - A': 'Můstek',
-                     'Můstek - B': 'Můstek',
-                     'Muzeum - A': 'Muzeum',
-                     'Muzeum - C': 'Muzeum',
-                     'Florenc - B': 'Florenc',
-                     'Florenc - C': 'Florenc'}
+    # STOPS_MAPPING = {'Můstek - A': 'Můstek',
+    #                  'Můstek - B': 'Můstek',
+    #                  'Muzeum - A': 'Muzeum',
+    #                  'Muzeum - C': 'Muzeum',
+    #                  'Florenc - B': 'Florenc',
+    #                  'Florenc - C': 'Florenc'}
 
     def __init__(self, travel_mode):
         self.travel_mode = travel_mode
@@ -209,9 +212,9 @@ class GoogleRouteLegStep(RouteStep):
                 self.line_name = data['line']['short_name']
             vehicle_type = data['line']['vehicle'].get('type', data['line']['vehicle']['name'])
             self.vehicle = self.VEHICLE_TYPE_MAPPING.get(vehicle_type, vehicle_type.lower())
-            # normalize some stops' names
-            self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
-            self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
+            # normalize stop names
+            self.departure_stop = expand_stop(self.departure_stop)  # self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
+            self.arrival_stop = expand_stop(self.arrival_stop)  # self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
 
         elif self.travel_mode == self.MODE_WALKING:
             self.duration = input_json['duration']['value']
@@ -343,8 +346,8 @@ class CRWSRouteStep(RouteStep):
                 self.arrival_stop = finder.get_stop_full_name(self.arrival_stop)
                 self.headsign = finder.get_stop_full_name(self.headsign)
             # further normalize some stops' names
-            self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
-            self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
+            # self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
+            # self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
 
             self.departure_stop = self.departure_stop.replace(',,', ', ')
             self.arrival_stop = self.arrival_stop.replace(',,', ', ')
@@ -371,15 +374,24 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         The time/date should be given as a datetime.datetime object.
         Setting the correct date is compulsory!
         """
+
+        if not waypoints.from_geo:
+            origin = ('%s,%s' % (waypoints.from_stop, waypoints.from_city)).encode('utf-8')
+        else:
+            origin = ('%s,%s' % (waypoints.from_geo['lat'], waypoints.from_geo['lon'])).encode('utf-8')
+
+        if not waypoints.to_geo:
+            destination = ('%s,%s' % (waypoints.to_stop, waypoints.to_city)).encode('utf-8')
+        else:
+            destination = ('%s,%s' % (waypoints.to_geo['lat'], waypoints.to_geo['lon'])).encode('utf-8')
         data = {
-            'origin': ('"%s", %s, New York' %
-                       (waypoints.from_stop, waypoints.from_city)).encode('utf-8'),
-            'destination': ('"%s", %s, New York' %
-                            (waypoints.to_stop, waypoints.to_city)).encode('utf-8'),
+            'origin': origin,
+            'destination': destination,
             'region': 'us',
             # 'sensor': 'false',
             'alternatives': 'true',
             'mode': 'transit',
+            'language': 'en',
         }
         if departure_time:
             data['departure_time'] = int(time.mktime(departure_time.timetuple()))
