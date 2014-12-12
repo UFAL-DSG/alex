@@ -30,7 +30,7 @@ if __name__ == '__main__':
     slu = PTICSHDCSLU(preprocessing, cfg={'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
 
     norm_utterance = slu.preprocessing.normalise_utterance(Utterance(utterance))
-    abutterance, _ = slu.abstract_utterance(norm_utterance)
+    abutterance, _, _ = slu.abstract_utterance(norm_utterance)
     da = slu.parse_1_best({'utt': Utterance(utterance)}, verbose=True).get_best_da()
     print "Abstracted utterance:", unicode(abutterance)
     print "Dialogue act:", unicode(da)

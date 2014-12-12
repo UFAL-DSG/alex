@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import copy
 import codecs
 from ast import literal_eval
+from itertools import chain
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp
 from alex.components.slu.base import SLUInterface
@@ -84,21 +85,35 @@ def ending_phrases_in(utterance, phrases):
 
 
 class DAIBuilder(object):
+    """
+    Builds DialogueActItems with proper alignment to corresponding utterance words.
+    When words are successfully matched using DAIBuilder, their indices in the utterance are
+    added to alignment set of the DAI as a side-effect.
+    """
 
-    def __init__(self, utterance):
+    def __init__(self, utterance, abutterance_lenghts=None):
+        """
+        :param utterance: utterance to search words in
+        :type utterance: Utterance
+        :param abutterance_lenghts: numbers of utterance words that correspond to each abutterance word.
+            I.e.: an element is 1 if respective abutterance word is unabstracted utterance words
+        :type abutterance_lenghts: list[int]
+        """
         self._utterance = utterance if not isinstance(self, list) else Utterance(' '.join(utterance))
+        self.utt2abutt_idxs = range(len(utterance)) if not abutterance_lenghts else \
+            list(chain.from_iterable([idx]*abutterance_lenghts[idx] for idx in range(len(abutterance_lenghts))))
         self._alignment = set()
 
     def build(self, act_type=None, slot=None, value=None):
-        dai = DialogueActItem(act_type, slot, value, alignment=self._alignment)
+        """
+        Produce DialogueActItem based on arguments and alignment from this DAIBuilder state.
+        """
+        dai = DialogueActItem(act_type, slot, value, alignment={self.utt2abutt_idxs[i] for i in self._alignment})
         self.clear()
         return dai
 
     def clear(self):
         self._alignment = set()
-
-    def add(self, indices):
-        self._alignment.update(indices)
 
     def _words_in(self, qualifier, words):
         words = words if not isinstance(words, basestring) else words.strip().split()
@@ -196,20 +211,20 @@ class PTICSHDCSLU(SLUInterface):
 
         abs_utts = copy.deepcopy(utterance)
         category_labels = set()
-
+        abs_utt_lenghts = [1] * len(abs_utts)
         start = 0
         while start < len(utterance):
             end = len(utterance)
             while end > start:
                 f = tuple(utterance[start:end])
-                #print start, end
-                #print f
+                # print start, end
+                # print f
 
                 if f in self.cldb.form2value2cl:
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
                             abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
-
+                            abs_utt_lenghts[start:end] = [len(f)]
                             category_labels.add(c.upper())
                             break
                         else:
@@ -217,7 +232,7 @@ class PTICSHDCSLU(SLUInterface):
 
                         break
 
-                    #print f
+                    # print f
 
                     # skip all substring for this form
                     start = end
@@ -226,7 +241,7 @@ class PTICSHDCSLU(SLUInterface):
             else:
                 start += 1
 
-        return abs_utts, category_labels
+        return abs_utts, category_labels, abs_utt_lenghts
 
     def __repr__(self):
         return "PTICSHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
@@ -650,18 +665,23 @@ class PTICSHDCSLU(SLUInterface):
         if "_other_" == u or "__other__" == u:
             cn.add(1.0, DialogueActItem("other", alignment={0}))
 
-    def parse_meta(self, utterance, cn):
+    def parse_meta(self, utterance, abutt_lenghts, cn):
         """
         Detects all dialogue acts which do not generalise its slot values using CLDB.
 
-        Note: Alignment indices correspond to utterance, but are interpreted on abutterance,
+        NOTE: Use DAIBuilder ('dai' variable) to match words and build DialogueActItem,
+            so that the DAI is aligned to corresponding words. If matched words are not
+            supposed to be aligned, use PTICSHDCSLU matching method instead.
+            Make sure to list negative conditions first, so the following positive
+            conditions are not added to alignment, when they shouldn't. E.g.:
+            (not any_phrase_in(u, ['dobrý den', 'dobrý večer']) and dai.any_word_in("dobrý"))
 
         :param utterance: the input utterance
         :param cn: The output dialogue act item confusion network.
         :return: None
         """
         u = utterance
-        dai = DAIBuilder(u)
+        dai = DAIBuilder(u, abutt_lenghts)
 
         if (dai.any_word_in('ahoj áhoj nazdar zdar') or
                 dai.all_words_in('dobrý den')):
@@ -947,7 +967,7 @@ class PTICSHDCSLU(SLUInterface):
             return res_cn
 
         utterance = self.preprocessing.normalise_utterance(utterance)
-        abutterance, category_labels = self.abstract_utterance(utterance)
+        abutterance, category_labels, abutterance_lenghts = self.abstract_utterance(utterance)
 
         if verbose:
             print 'After preprocessing: "{utt}".'.format(utt=abutterance)
@@ -983,7 +1003,7 @@ class PTICSHDCSLU(SLUInterface):
             if 'TASK' in category_labels:
                 self.parse_task(abutterance, res_cn)
 
-            self.parse_meta(utterance, res_cn)
+            self.parse_meta(utterance, abutterance_lenghts, res_cn)
 
         res_cn.merge()
 

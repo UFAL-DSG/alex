@@ -54,7 +54,7 @@ def main():
         annotation = []
         if output_alignment:
             norm_utterance = slu.preprocessing.normalise_utterance(Utterance(utterance))
-            abutterance, _ = slu.abstract_utterance(norm_utterance)
+            abutterance, _, _ = slu.abstract_utterance(norm_utterance)
             abutterance = slu.handle_false_abstractions(abutterance)
             da = slu.parse_1_best({'utt': Utterance(utterance)}).get_best_da()
 
