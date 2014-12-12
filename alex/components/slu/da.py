@@ -202,6 +202,10 @@ class DialogueActItem(Abstracted):
     def unnorm_values(self):
         return self._unnorm_values or self._orig_values or set((self._value, ))
 
+    @property
+    def alignment(self):
+        return self._alignment if not self.is_null() else {-1}
+
     def has_category_label(self):
         """whether the current DAI value is the category label"""
         return bool(self._orig_values)  # whether there was an original value
@@ -402,6 +406,7 @@ class DialogueAct(object):
 
         """
         self._dais = []
+        """:type : list[DialogueActItem]"""
 
         if da_str is not None:
             if not isinstance(da_str, basestring):
