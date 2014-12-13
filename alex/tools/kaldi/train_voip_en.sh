@@ -176,8 +176,8 @@ for s in $TEST_SETS ; do
 done
 
 
-for x in exp/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
-# for d in `find exp/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
+for x in $EXP/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; done
+# for d in `find $EXP/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done 
 
 local/results.py $EXP | tee $EXP/results.log
 
