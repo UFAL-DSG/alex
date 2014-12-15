@@ -677,7 +677,7 @@ class DAILogRegClassifier(SLUInterface):
                 print "Training classifier: ", clser, ' #', n+1 , '/', len(self.classifiers)
                 print "  Matrix:            ", (len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser]))
 
-            classifier_input = np.zeros((training_data_size, len(self.classifiers_features_list[clser])))
+            classifier_input = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
             for i, feat in enumerate(self.classifiers_features[clser]):
                 classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
 
