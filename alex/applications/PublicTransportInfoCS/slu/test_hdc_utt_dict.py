@@ -27,8 +27,23 @@ if __name__ == '__main__':
 
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTICSSLUPreprocessing(cldb)
-    slu = PTICSHDCSLU(preprocessing, cfg = {'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
+    slu = PTICSHDCSLU(preprocessing, cfg={'SLU': {PTICSHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoCS/data/utt2da_dict.txt")}}})
 
-    da = slu.parse_1_best({'utt':Utterance(utterance)}, verbose=True).get_best_da()
+    norm_utterance = slu.preprocessing.normalise_utterance(Utterance(utterance))
+    abutterance, _, _ = slu.abstract_utterance(norm_utterance)
+    da = slu.parse_1_best({'utt': Utterance(utterance)}, verbose=True).get_best_da()
+    print "Abstracted utterance:", unicode(abutterance)
+    print "Dialogue act:", unicode(da)
 
-    print "Resulting dialogue act: \n", unicode(da)
+    max_alignment_idx = lambda _dai: max(_dai.alignment) if _dai.alignment else len(abutterance)
+    for i, dai in enumerate(sorted(da, key=max_alignment_idx)):
+        if not dai.alignment:
+            print "Empty alignment:", unicode(abutterance), ";", dai
+
+        if not dai.alignment or dai.alignment == -1:
+            dai_alignment_idx = len(abutterance)
+        else:
+            dai_alignment_idx = max(dai.alignment) + i + 1
+
+        abutterance.insert(dai_alignment_idx, "[{} - {}]".format(dai, dai.alignment))
+    print "Alignment:", unicode(abutterance)
