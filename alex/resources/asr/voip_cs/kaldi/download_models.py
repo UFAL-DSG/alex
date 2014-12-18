@@ -16,8 +16,6 @@ if __name__ == '__main__':
     online_update('resources/asr/voip_cs/kaldi/mfcc.conf')
     online_update('resources/asr/voip_cs/kaldi/phones.txt')
     online_update('resources/asr/voip_cs/kaldi/silence.csl')
-    online_update('resources/asr/voip_cs/kaldi/tri2a.mdl')
-    online_update('resources/asr/voip_cs/kaldi/tri2a.tree')
     online_update('resources/asr/voip_cs/kaldi/tri2b.mdl')
     online_update('resources/asr/voip_cs/kaldi/tri2b.tree')
     online_update('resources/asr/voip_cs/kaldi/tri2b.mat')
