@@ -11,7 +11,7 @@ import sys
 
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.components.asr.utterance import Utterance
-from alex.utils.text import min_edit_dist, min_edit_ops
+from alex.utils.text import WordDistance 
 
 def score_file(reftext, testtext):
     """
@@ -28,7 +28,8 @@ def score_file(reftext, testtext):
         t = re.sub(ur"\b_\w+_\b",r"",unicode(testtext[utt_idx]).lower(),flags=re.UNICODE).split()
 #        r = unicode(reftext[utt_idx]).lower().split()
 #        t = unicode(testtext[utt_idx]).lower().split()
-        i, d, s = min_edit_ops(t, r)
+        wd = WordDistance(r, t)
+        i, d, s = wd.ops_used()
 
         ii += i
         dd += d
