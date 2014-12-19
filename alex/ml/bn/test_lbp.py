@@ -3,6 +3,8 @@
 
 import unittest
 
+if __name__ == '__main__':
+    import autopath
 from alex.ml.bn.factor import Factor
 from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 from alex.ml.bn.lbp import LBP
@@ -404,3 +406,6 @@ class TestLBP(unittest.TestCase):
             #print theta.alpha.pretty_print(precision=5)
             lbp.init_messages()
         print theta.alpha.pretty_print(precision=5)
+
+if __name__ == '__main__':
+    unittest.main()
