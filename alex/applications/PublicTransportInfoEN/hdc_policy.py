@@ -709,6 +709,11 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         req_da = DialogueAct()
 
+        #TODO: here should be implemented the street/avenue handling.
+        #TODO: we need to support multiple from_/to_streets to apear in accepted slots
+
+        # self.ontology['addinfo']['stop_category'].get(ds['from_street'].mpv())
+
         # retrieve the slot variables
         from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else 'none'
         to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'

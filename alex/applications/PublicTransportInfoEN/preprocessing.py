@@ -9,7 +9,7 @@ import re
 from alex.components.slu.base import SLUPreprocessing
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.en import word_for_number
-import site_preprocessing;
+import site_preprocessing
 
 
 class PTIENSLUPreprocessing(SLUPreprocessing):
@@ -107,7 +107,7 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
             # translate some slot values (default to untranslated)
             elif slot in self.translated_slots:
                 svs_dict[slot] = self.translations[slot].get(val, val)
-            elif slot in ['from_stop','to_stop','headsign', ]:
+            elif slot in ['from_street','to_street','from_stop','to_stop','headsign', ]:
                 svs_dict[slot] = site_preprocessing.expand_stop(val.lower())
 
         # reflect changes to slot values stored in the template

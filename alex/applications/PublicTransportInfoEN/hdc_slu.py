@@ -93,11 +93,12 @@ class PTIENHDCSLU(SLUInterface):
                     for v in self.cldb.form2value2cl[f]:
                         slots = self.cldb.form2value2cl[f][v]
                         # todo - fix this hack
-                        # TODO: add STREET handling!
-                        if "street" in slots:
-                            abs_utts = abs_utts.replace(f, ('STOP='+v,))
-                            category_labels.add('STOP')
-                        elif "stop" in slots and "city" in slots:
+                        # # TODO: add STREET handling!
+                        # if "street" in slots:
+                        #     abs_utts = abs_utts.replace(f, ('STOP='+v,))
+                        #     category_labels.add('STOP')
+                        # elif "stop" in slots and ("city" in slots or "street" in slots):
+                        if "stop" in slots and ("city" in slots or "street" in slots):
                             abs_utts = abs_utts.replace(f, ('STOP='+v,))
                             category_labels.add('STOP')
                         else:
@@ -125,6 +126,24 @@ class PTIENHDCSLU(SLUInterface):
     def __repr__(self):
         return "PTIENHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
 
+    def parse_street(self, abutterance, cn):
+        """ Detects street in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+
+        # regular parsing
+        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', 'standing in', 'standing at',  # of, off
+                                      'originated', 'originating', 'origination', 'initial', 'i am at', 'i am in',
+                                      'leave', ])),
+                        ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
+                                    'target', 'output', 'exit', 'destination', 'be at'])),
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange', ]))]  # change line
+
+        #TODO: here we need to support more than one initial and destination point if it is a street!
+        self.parse_waypoint(abutterance, cn, 'STREET=', 'street', phr_wp_types)
+
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
 
@@ -138,7 +157,7 @@ class PTIENHDCSLU(SLUInterface):
                                       'leave', ])),
                         ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination', 'be at'])),
-                        ('via', set(['via', 'through', 'transfer', 'interchange', ]))]  # change line
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange', ]))]  # change line
 
         self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types)
 
@@ -154,17 +173,6 @@ class PTIENHDCSLU(SLUInterface):
                 value = w[6:]
                 cn.add(1.0, DialogueActItem("inform", 'in_state', value))
 
-    def parse_weather_city(self, abutterance, cn):
-        """ Detects a city in the input abstract utterance.
-
-        :param abutterance: the input abstract utterance.
-        :param cn: The output dialogue act item confusion network.
-        """
-
-        for i, w in enumerate(abutterance):
-            if w.startswith("CITY="):
-                value = w[5:]
-                cn.add(1.0, DialogueActItem("inform", 'in_city', value))
 
     def parse_city(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -178,7 +186,7 @@ class PTIENHDCSLU(SLUInterface):
                                       'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
                         ('to', set(['to', 'into', 'in' 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination',])),
-                        ('via', set(['via', 'through', 'transfer', 'interchange' ])),
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
                        ]
 
@@ -490,12 +498,12 @@ class PTIENHDCSLU(SLUInterface):
         """
         u = utterance
 
-        if (any_word_in(u, 'hello hi greetings') or
-                all_words_in(u, 'good day')):
+        if (any_word_in(u, 'ahoy hello hey hi greetings') or
+                any_phrase_in(u, ['good day', "what's up", 'what is up'])):
             cn.add(1.0, DialogueActItem("hello"))
 
         if (any_word_in(u, "bye byebye seeya goodbye") or
-                all_words_in(u, 'good bye')):
+                any_phrase_in(u, ['good bye', 'see you'])):
             cn.add(1.0, DialogueActItem("bye"))
 
         if not any_word_in(u, 'connection station option'):
@@ -769,13 +777,11 @@ class PTIENHDCSLU(SLUInterface):
             abutterance = abutterance.replace_all('_noise_', '').replace_all('_laugh_', '').replace_all('_ehm_hmm_', '').replace_all('_inhale_', '')
 
             if 'STREET' in category_labels:  # TODO: handle streets separately!
-                self.parse_stop(abutterance, res_cn)
+                self.parse_street(abutterance, res_cn)
             if 'STOP' in category_labels:
                 self.parse_stop(abutterance, res_cn)
             if 'CITY' in category_labels:
                 self.parse_city(abutterance, res_cn)
-            if 'WCITY' in category_labels:
-                self.parse_weather_city(abutterance, res_cn)
             if 'STATE' in category_labels:
                 self.parse_state(abutterance, res_cn)
             if 'TIME' in category_labels:
