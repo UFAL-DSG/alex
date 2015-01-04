@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 import urllib
-from datetime import datetime
+from datetime import datetime, timedelta
 import os.path
 import time
 import json
@@ -24,16 +24,17 @@ from alex.utils.cache import lru_cache
 from alex.utils.config import online_update, to_project_path
 
 
-class Waypoints(object):
-    """Holder for starting and ending point of travel."""
+class Travel(object):
+    """Holder for starting and ending point (and other parameters) of travel."""
 
-    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, from_geo=None, to_geo=None):
+    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, from_geo=None, to_geo=None, vehicle=None):
         self.from_city = from_city
         self.from_stop = from_stop if from_stop not in ['__ANY__', 'none'] else None
         self.to_city = to_city
         self.to_stop = to_stop if to_stop not in ['__ANY__', 'none'] else None
         self.from_geo = from_geo
         self.to_geo = to_geo
+        self.vehicle = vehicle if vehicle not in ['__ANY__', 'none', 'dontcare'] else None
 
     def get_minimal_info(self):
         """Return minimal waypoints information
@@ -47,14 +48,16 @@ class Waypoints(object):
             res.append("inform(to_city='%s')" % self.to_city)
         if self.to_stop is not None:
             res.append("inform(to_stop='%s')" % self.to_stop)
+        if self.vehicle is not None:
+            res.append("inform(vehicle='%s')" % self.vehicle)
         return '&'.join(res)
 
 
-class Directions(Waypoints):
+class Directions(Travel):
     """Ancestor class for transit directions, consisting of several routes."""
 
-    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None):
-        super(Directions, self).__init__(from_city, from_stop, to_city, to_stop)
+    def __init__(self, from_city=None, from_stop=None, to_city=None, to_stop=None, vehicle=None):
+        super(Directions, self).__init__(from_city, from_stop, to_city, to_stop, vehicle=vehicle)
         self.routes = []
 
     def __getitem__(self, index):
@@ -154,7 +157,7 @@ class DirectionsFinder(object):
     """Abstract ancestor for transit direction finders."""
 
     def get_directions(self, from_city, from_stop, to_city, to_stop,
-                       departure_time=None, arrival_time=None):
+                       departure_time=None, arrival_time=None, parameters=None):
         """
         Retrieve the transit directions from the given stop to the given stop
         at the given time.
@@ -167,10 +170,18 @@ class DirectionsFinder(object):
 class GoogleDirections(Directions):
     """Traffic directions obtained from Google Maps API."""
 
-    def __init__(self, from_city, from_stop, to_city, to_stop, input_json={}):
-        super(GoogleDirections, self).__init__(from_city, from_stop, to_city, to_stop)
+    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_json={}):
+        super(GoogleDirections, self).__init__(from_city, from_stop, to_city, to_stop, vehicle=vehicle)
         for route in input_json['routes']:
-            self.routes.append(GoogleRoute(route))
+            g_route = GoogleRoute(route)
+
+            # if VEHICLE is defined, than route must be composed of walking and VEHICLE transport
+            if vehicle is not None and vehicle not in ['__ANY__', 'none', 'dontcare']:
+                route_vehicles = set([step.vehicle for leg in g_route.legs for step in leg.steps if hasattr(step, "vehicle")])
+                if (vehicle not in route_vehicles or len(route_vehicles) > 1) and len(route_vehicles) != 0:
+                    continue
+
+            self.routes.append(g_route)
 
 
 class GoogleRoute(Route):
@@ -191,11 +202,30 @@ class GoogleRouteLeg(RouteLeg):
 
 class GoogleRouteLegStep(RouteStep):
 
-    VEHICLE_TYPE_MAPPING = {'HEAVY_RAIL': 'train',
-                            'Train': 'train',
-                            'Long distance train': 'train'}
+    VEHICLE_TYPE_MAPPING = {
+        'RAIL': 'train',
+        'METRO_RAIL': 'tram',
+        'SUBWAY': 'subway',
+        'TRAM': 'tram',
+        'MONORAIL': 'monorail',
+        'HEAVY_RAIL': 'train',
+        'COMMUTER_TRAIN': 'train',
+        'HIGH_SPEED_TRAIN': 'train',
+        'BUS': 'bus',
+        'INTERCITY_BUS': 'bus',
+        'TROLLEYBUS': 'bus',
+        'SHARE_TAXI': 'bus',
+        'FERRY': 'ferry',
+        'CABLE_CAR': 'cable_car',
+        'GONDOLA_LIFT': 'ferry',
+        'FUNICULAR': 'cable_car',
+        'OTHER': 'dontcare',
+        'Train': 'train',
+        'Long distance train': 'train'
+    }
 
     def __init__(self, input_json):
+        # super(GoogleRouteLegStep, self).__init__(travel_mode)
         self.travel_mode = input_json['travel_mode']
 
         if self.travel_mode == self.MODE_TRANSIT:
@@ -206,6 +236,7 @@ class GoogleRouteLegStep(RouteStep):
             self.arrival_stop = data['arrival_stop']['name']
             self.arrival_time = datetime.fromtimestamp(data['arrival_time']['value'])
             self.headsign = data['headsign']
+            # sometimes short_name not present
             if not 'short_name' in data['line']:
                 self.line_name = data['line']['name']
             else:
@@ -224,9 +255,9 @@ class GoogleRouteLegStep(RouteStep):
 class CRWSDirections(Directions):
     """Traffic directions obtained from CR Web Service (CHAPS/IDOS)."""
 
-    def __init__(self, from_city, from_stop, to_city, to_stop, input_data={}, finder=None):
+    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_data={}, finder=None):
         # basic initialization
-        super(CRWSDirections, self).__init__(from_city, from_stop, to_city, to_stop)
+        super(CRWSDirections, self).__init__(from_city, from_stop, to_city, to_stop, vehicle)
         self.finder = None
         self.handle = None
         # appear totally empty in case of any errors
@@ -335,7 +366,10 @@ class CRWSRouteStep(RouteStep):
                 self.line_name = ''
             # replace train numbers with names (e.g. 'Hutník', 'Pendolino' etc.) or nothing
             if self.vehicle.endswith('train'):
-                self.line_name = input_data.oTrainData.oInfo._sNum2 or ''
+                self.line_name = (input_data.oTrainData.oInfo._sNum2
+                                  if hasattr(input_data.oTrainData.oInfo, '_sNum2')
+                                  and input_data.oTrainData.oInfo
+                                  else '')
                 if self.line_name:  # strip train type shortcut if it's contained in the name
                     train_type_shortcut = input_data.oTrainData.oInfo._sType
                     if self.line_name.startswith(train_type_shortcut + ' '):
@@ -346,6 +380,7 @@ class CRWSRouteStep(RouteStep):
                 self.arrival_stop = finder.get_stop_full_name(self.arrival_stop)
                 self.headsign = finder.get_stop_full_name(self.headsign)
             # further normalize some stops' names
+			# TODO: this part is not used, but probbably should be expanded
             # self.departure_stop = self.STOPS_MAPPING.get(self.departure_stop, self.departure_stop)
             # self.arrival_stop = self.STOPS_MAPPING.get(self.arrival_stop, self.arrival_stop)
 
@@ -405,7 +440,8 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         self._log_response_json(response)
 
         directions = GoogleDirections(waypoints.from_city, waypoints.from_stop,
-                                      waypoints.to_city, waypoints.to_stop, response)
+                                      waypoints.to_city, waypoints.to_stop,
+                                      waypoints.vehicle, response)
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
@@ -484,15 +520,15 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         return self.search_stop(city_mask, self.city_list_id)
 
     @lru_cache(maxsize=10)
-    def get_directions(self, waypoints, departure_time=None, arrival_time=None, parameters=None):
+    def get_directions(self, travel, departure_time=None, arrival_time=None):
         # try to map from-to to IDOS identifiers, default to originals
         self.system_logger.info("ALEX: %s -- %s, %s -- %s" %
-                                (waypoints.from_stop, waypoints.from_city,
-                                 waypoints.to_stop, waypoints.to_city))
-        from_city, from_stop = self.mapping.get((waypoints.from_city, waypoints.from_stop),
-                                                (waypoints.from_city, waypoints.from_stop))
-        to_city, to_stop = self.mapping.get((waypoints.to_city, waypoints.to_stop),
-                                            (waypoints.to_city, waypoints.to_stop))
+                                (travel.from_stop, travel.from_city,
+                                 travel.to_stop, travel.to_city))
+        from_city, from_stop = self.mapping.get((travel.from_city, travel.from_stop),
+                                                (travel.from_city, travel.from_stop))
+        to_city, to_stop = self.mapping.get((travel.to_city, travel.to_stop),
+                                            (travel.to_city, travel.to_stop))
         self.system_logger.info("IDOS: %s -- %s,  %s -- %s" % (from_stop, from_city, to_stop, to_city))
         # find from and to objects
         from_obj = None
@@ -525,7 +561,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             None, # change
             ts, # timestamp of arrival or departure
             is_departure, # is departure? (or arrival)
-            self._create_search_parameters(parameters), # search parameters (=use default)
+            self._create_search_parameters(travel),  # detailed search parameters
             REMMASK.NONE,
             SEARCHMODE.NONE,
             0, # max objects count
@@ -537,11 +573,16 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
             TTLANG.ENGLISH,
             0)
+        # (use this to log raw XML requests/responses)
+        # # xml_data = unicode(self.client.last_sent())
+        # # xml_data += "\n" + unicode(self.client.last_received())
+        # # self.session_logger.external_data_file(ftype, fname, xml_data.encode('UTF-8'))
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
-        directions = CRWSDirections(waypoints.from_city, waypoints.from_stop,
-                                    waypoints.to_city, waypoints.to_stop, response, self)
+        directions = CRWSDirections(travel.from_city, travel.from_stop,
+                                    travel.to_city, travel.to_stop,
+                                    travel.vehicle, response, self)
         self.system_logger.info("CRWS Directions response:\n" + unicode(directions))
 
         return directions
@@ -650,7 +691,23 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         params._iMaxArcLengthTo = 4
         params._iNodeFrom = 1
         params._iNodeTo = 1
-        # TODO preferred connection type (_aiTrTypeID), number of transfers (_iMaxChange)
+        # TODO number of transfers (_iMaxChange)
+        if parameters is not None:
+            # vehicle type limitations (IDs taken from CRWS)
+            if parameters.vehicle == 'train':
+                params._aiTrTypeID = '100 150 151 152 153'
+            elif parameters.vehicle == 'bus':
+                params._aiTrTypeID = '154 301 200 201 202 304 308'
+            elif parameters.vehicle == 'tram':
+                params._aiTrTypeID = '300 309'
+            elif parameters.vehicle == 'subway':
+                params._aiTrTypeID = '302'
+            elif parameters.vehicle == 'trolleybus':
+                params._aiTrTypeID = '306'
+            elif parameters.vehicle == 'ferry':
+                params._aiTrTypeID = '155 307 507'
+            elif parameters.vehicle == 'cable_car':
+                params._aiTrTypeID = '303'
         return params
 
     def _normalize_idos_name(self, idos_stop):

@@ -41,12 +41,15 @@ database = {
     "stop": {
     },
     "vehicle": {
+        "dontcare": ["anything", "whatever", "no matter", "any way", "any means",
+                     "don't care how", "do not care how"],
         "bus": ["bus", "buses", "coach"],
         "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms"],
-        "metro": ["metro", "sub", "subway", "tube", "underground"],
-        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "railstation", "speedtrain", "rail", "rails"],
+        "subway": ["metro", "sub", "subway", "tube", "underground"],
+        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "railstation", "express", "fast train", "speed train", "rail", "rails"],
         "cable_car": ["cable car", "cablecar", "air railway"],
-        "ferry": ["ferry", "boat", "ferryboat"],
+        "ferry": ["ferry", "boat", "ferryboat", "gondola", ],
+        "monorail": ["monorail", "single rail"]
     },
     "ampm": {
         "morning": ["morning", "dawn"],

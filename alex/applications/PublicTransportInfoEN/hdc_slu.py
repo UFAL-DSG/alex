@@ -120,7 +120,6 @@ class PTIENHDCSLU(SLUInterface):
             else:
                 start += 1
 
-
         return abs_utts, category_labels
 
     def __repr__(self):
@@ -202,13 +201,14 @@ class PTIENHDCSLU(SLUInterface):
         u = abutterance
         N = len(u)
 
-        # simple "not" cannot be included as it collides with negation. "I do not want [,] go from Brooklyn"
+        # simple "not" cannot be included as it collides with negation. "I do not want this [,] go from Brooklyn"
         phr_dai_types = [('confirm', set(['it departs', 'departs from', 'depart from',  # 'leave', 'leaves',
                                           'is the starting',]), set()),
                          ('deny',
                           set(['not from', 'not at', 'not in', 'not on', 'not to', 'not into', 'and not',
                                'not the', 'rather than']),  # don't, doesn't?
-                          set(['not at all' 'not wish', 'not this way', 'no not that', 'not need help',
+                          set(['not'
+                               ' at all' 'not wish', 'not this way', 'no not that', 'not need help',
                                'not want', ]))]
         last_wp_pos = 0
 

@@ -12,7 +12,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 
 from datetime import timedelta
 from .time_zone import GoogleTimeFinder
-from .directions import GoogleDirectionsFinder, Waypoints
+from .directions import GoogleDirectionsFinder, Travel
 from .weather import OpenWeatherMapWeatherFinder, WeatherPoint
 from datetime import datetime
 from datetime import time as dttime
@@ -719,6 +719,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
         from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
         to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+        vehicle_val = ds['vehicle'].mpv() if 'vehicle' in accepted_slots else 'none'
 
         # infer cities based on stops
         from_cities, to_cities = None, None
@@ -785,8 +786,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         if not to_stop_geo is None:
             to_stop_geo = None if to_stop_geo['lat'].lower() == 'nan' or to_stop_geo['lon'].lower() == 'nan' else to_stop_geo
 
-
-        return req_da, iconfirm_da, Waypoints(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo)
+        return req_da, iconfirm_da, Travel(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo, vehicle_val)
 
     def gather_weather_info(self, ds, accepted_slots):
         """Handles in_city and in_state to be properly filled. If needed, a Request DA is formed for missing slots to be filled.
@@ -1094,9 +1094,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             departure_ts, _ = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
 
         # retrieve transit directions
-        ds.directions = self.directions.get_directions(conn_info,
-                                                       departure_time=departure_ts,
-                                                       arrival_time=arrival_ts)
+        ds.directions = self.directions.get_directions(conn_info, departure_time=departure_ts, arrival_time=arrival_ts)
         return self.process_directions_for_output(ds, route_type)
 
     ORIGIN = 'ORIGIN'
