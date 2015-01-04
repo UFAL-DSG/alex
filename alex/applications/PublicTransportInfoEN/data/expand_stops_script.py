@@ -115,7 +115,7 @@ def read_expansions(stops_expanded_file):
     return data
 
 
-def read_first_column(filename):
+def read_first_column(filename, surpress_warning=True):
     data = []
     if not file_check(filename, "reading first column"):
         return data
@@ -127,7 +127,7 @@ def read_first_column(filename):
                 continue
 
             value = line.split('\t')[0]
-            if value in data:
+            if value in data and not surpress_warning:
                 print "WARNING: " + value + " already appeared while reading first column from file " + filename
             data.append(value)
     return data
@@ -178,11 +178,12 @@ def read_exports(filename):
     return data
 
 
-def merge(primary, secondary):
+def merge(primary, secondary, surpress_warning=True):
     merged = copy(primary)
     for key in secondary:
         if key in primary:
-            print "WARNING: previous instance already contains key " + key + " while merging"
+            if not surpress_warning:
+                print "WARNING: previous instance already contains key " + key + " while merging"
             continue
         merged[key] = secondary[key]
 

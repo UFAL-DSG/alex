@@ -379,7 +379,7 @@ add_slot_values_from_database('time_rel', 'time')
 add_slot_values_from_database('date_rel', 'date_rel')
 
 
-def load_geo_values(fname, slot1, slot2):
+def load_geo_values(fname, slot1, slot2, surpress_warning=True):
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
             if line.startswith('#'):
@@ -392,7 +392,7 @@ def load_geo_values(fname, slot1, slot2):
             lon, lat = geo.strip().split('|')
             if not value2 in ontology['addinfo'][slot2]:
                 ontology['addinfo'][slot2][value2] = {}
-            if value1 in ontology['addinfo'][slot2][value2]:
+            if value1 in ontology['addinfo'][slot2][value2] and not surpress_warning:
                 print 'WARNING: ' + slot2 + " " + slot1 + " " + value1 + " already present!"
             ontology['addinfo'][slot2][value2][value1] = {'lon': lon, 'lat': lat}
 
@@ -412,7 +412,7 @@ def load_compatible_values(fname, slot1, slot2):
             subset.add(val_slot1)
 
 
-def load_file_defined_slots(fname):
+def load_file_defined_slots(fname, surpress_warning=True):
     # we expect to see these slots in column 'slot':  'avenue', 'street', 'place'
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
@@ -425,7 +425,7 @@ def load_file_defined_slots(fname):
             value = data[0]
             slot = data[3].lower()
             prev_value = ontology['addinfo']['stop_category'].get(value, None)
-            if prev_value:
+            if prev_value and not surpress_warning:
                 print 'WARNING: slot ' + value + " already contains " + prev_value + " (overwriting with " + slot + ")!"
             ontology['addinfo']['stop_category'][value] = slot
 
