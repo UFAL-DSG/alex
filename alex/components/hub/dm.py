@@ -33,6 +33,7 @@ class DM(multiprocessing.Process):
         self.slu_hypotheses_in = slu_hypotheses_in
         self.dialogue_act_out = dialogue_act_out
         self.close_event = close_event
+        self.start_time = time.time()
         self.last_user_da_time = time.time()
         self.last_user_diff_time = time.time()
         self.epilogue_state = None
@@ -41,7 +42,7 @@ class DM(multiprocessing.Process):
         self.dm = dm_factory(dm_type, cfg)
         self.dm.new_dialogue()
 
-        self.codes = ["%04d" % i  for i in range(0, 10000)]
+        self.codes = ["%04d" % i for i in range(0, 10000)]
         random.seed(self.cfg['DM']['epilogue']['code_seed'])
         random.shuffle(self.codes)
 
@@ -180,8 +181,9 @@ class DM(multiprocessing.Process):
             self.epilogue_final_question()
             return 'final_question'
         elif self.cfg['DM']['epilogue']['final_code_url']:
-            self.epilogue_final_code()
-            return 'final_code'
+            if time.time() - self.start_time > self.cfg['DM']['epilogue']['final_code_time_limit']:
+                self.epilogue_final_code()
+                return 'final_code'
 
         return None
 
