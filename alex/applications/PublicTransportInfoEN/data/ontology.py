@@ -2,15 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from database import database
+from datetime import timedelta
 import codecs
 import os
-from datetime import timedelta
-
-from database import database
 from alex.utils.config import online_update, to_project_path
-
-
-
 
 # tab-separated file containing street + city + lon|lat coordinates + slot_specification
 STREETS_LOCATIONS_FNAME = 'streets.locations.csv'
@@ -29,16 +25,24 @@ ontology = {
         'silence': set([]),
         'ludait': set([]),
         'task': set(['find_connection', 'find_platform', 'weather']),
+        'from': set([]),
+        'to': set([]),
+        'via': set([]),
+        'in': set([]),
+        'stop': set([]),
+        'street': set([]),
         'from_stop': set(['Central Park', 'Wall Street', ]),
         'to_stop': set(['Central Park', 'Wall Street', ]),
         'via_stop': set(['Central Park', 'Wall Street', ]),
         'from_street': set(['123 St', ]),
         'to_street': set(['100 Av', ]),
+        'city': set([]),
         'from_city': set([]),
         'to_city': set([]),
         'via_city': set([]),
         'in_city': set([]),
         'in_state': set([]),
+        'state': set([]),
         'departure_time': set([]),
         'departure_time_rel': set([]),
         'arrival_time': set([]),
@@ -64,6 +68,30 @@ ontology = {
             #'user_requests', 'user_confirms',
             #'system_informs', 'system_requests', 'system_confirms',
             #'system_iconfirms', 'system_selects',
+        ],
+        'from': [
+            'user_informs',
+        ],
+        'to': [
+            'user_informs',
+        ],
+        'via': [
+            'user_informs',
+        ],
+        'in': [
+            'user_informs',
+        ],
+        'stop': [
+            'user_informs',
+        ],
+        'street': [
+            'user_informs',
+        ],
+        'city': [
+            'user_informs',
+        ],
+		'state': [
+            'user_informs',
         ],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -211,6 +239,7 @@ ontology = {
         ],
 
         'lta_task': [],
+        'lta_bye': [],
         'lta_time': [],
         'lta_date': [],
         'lta_departure_time': [],
@@ -230,6 +259,18 @@ ontology = {
             'temperature',
         ],
     },
+
+    'context_resolution': {
+        # it is used DM belief tracking context that
+        #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
+        #       "from_city"
+
+        'street': set(['from_street', 'to_street',]),
+        'stop': set(['from_stop', 'to_stop', 'via_stop',]),
+        'city': set(['from_city', 'to_city', 'via_city', 'in_city',]),
+        'state': set(['in_state',]),
+    },
+
     'reset_on_change': {
         # reset slots when any of the specified slots has changed, for matching changed slots a regexp is used
         'route_alternative': [
@@ -253,6 +294,10 @@ ontology = {
             # as a consequence, the last slot the user talked about will have the highest probability in the ``time_sel``
             # slot
             'date_rel': [('', '^date_rel$', '')],
+        },
+        'lta_bye': {
+            # if user say bye it will recorded in a separate slot. we do not have to rely on the ludait slot
+            'true': [('^bye$', '', ''), ],
         },
         'lta_date': {
             'date': [('', '^date$', ''), ],
@@ -356,21 +401,24 @@ ontology = {
 }
 
 
-
-
 def add_slot_values_from_database(slot, category, exceptions=set()):
     for value in database.get(category, tuple()):
         if value not in exceptions:
             ontology['slots'][slot].add(value)
+
+add_slot_values_from_database('street', 'street')
 add_slot_values_from_database('from_street', 'street')
 add_slot_values_from_database('to_street', 'street')
+add_slot_values_from_database('stop', 'stop')
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
 add_slot_values_from_database('via_stop', 'stop')
+add_slot_values_from_database('city', 'city')
 add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')
 add_slot_values_from_database('in_city', 'city')
+add_slot_values_from_database('state', 'state')
 add_slot_values_from_database('in_state', 'state')
 add_slot_values_from_database('departure_time', 'time', exceptions=set(['now']))
 add_slot_values_from_database('departure_time_rel', 'time')

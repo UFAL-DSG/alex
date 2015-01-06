@@ -20,7 +20,6 @@ def any_word_in(utterance, words):
     for alt_expr in words:
         if alt_expr in utterance.utterance:
             return True
-
     return False
 
 
@@ -99,6 +98,10 @@ class PTIENHDCSLU(SLUInterface):
                         #     category_labels.add('STOP')
                         # elif "stop" in slots and ("city" in slots or "street" in slots):
                         if "stop" in slots and ("city" in slots or "street" in slots):
+                            abs_utts = abs_utts.replace(f, ('STOP='+v,))
+                            category_labels.add('STOP')
+                        # TODO: add the street functionality!
+                        elif "street" in slots:
                             abs_utts = abs_utts.replace(f, ('STOP='+v,))
                             category_labels.add('STOP')
                         else:
@@ -197,6 +200,10 @@ class PTIENHDCSLU(SLUInterface):
 
         :param abutterance: the input abstract utterance.
         :param cn: The output dialogue act item confusion network.
+        :param wp_id: waypoint slot category label (e.g. "STOP=", "CITY=")
+        :param wp_slot_suffix: waypoint slot suffix (e.g. "stop", "city")
+        :param phr_wp_types: set of phrases for each waypoint type
+        :param phr_in: phrases for 'in' waypoint type
         """
         u = abutterance
         N = len(u)
@@ -725,20 +732,21 @@ class PTIENHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('CITY=Transfer',), ('transfer',))
         if 'CITY=Ohio' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Ohio',), ('STATE=Ohio',))
-            category_labels.remove('CITY')
+            # category_labels.remove('CITY')
             category_labels.add('STATE')
         if 'CITY=California' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=California',), ('STATE=California',))
-            category_labels.remove('CITY')
+            # category_labels.remove('CITY')
             category_labels.add('STATE')
         if 'CITY=Washington' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Washington',), ('STATE=Washington',))
-            category_labels.remove('CITY')
+            # category_labels.remove('CITY')
             category_labels.add('STATE')
         if 'CITY=Maryland' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Maryland',), ('STATE=Maryland',))
-            category_labels.remove('CITY')
+            # category_labels.remove('CITY')
             category_labels.add('STATE')
+
 
         # abutterance = abutterance.replace(('STOP=Metra',), ('metra',))
         # abutterance = abutterance.replace(('STOP=Nádraží',), ('nádraží',))

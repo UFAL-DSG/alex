@@ -106,6 +106,9 @@ class PTIENHDCPolicy(DialoguePolicy):
                 elif iconfirms[dai.name, dai.value] > 1:
                     iconfirms[dai.name, dai.value] -= 1
                     continue
+                # filter mistakenly added iconfirms that have an unset/meaningless value
+                elif dai.value is None or dai.value in ['none', '*']:
+                    continue
                 # filter stop names that are the same as city names
                 elif dai.name.endswith('_stop'):
                     city_dai = dai.name[:-4] + 'city'
@@ -116,9 +119,6 @@ class PTIENHDCPolicy(DialoguePolicy):
                     city_dai = dai.name[:-5] + 'city'
                     if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
-                # filter mistakenly added iconfirms that have an unset value
-                elif dai.value == 'none' or dai.value is None:
-                    continue
 
             new_da.append(dai)
 
@@ -201,10 +201,11 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct("silence()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "bye":
+        elif "lta_bye" in accepted_slots:
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
             dialogue_state["ludait"].reset()
+            dialogue_state["lta_bye"].reset()
 
         elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
@@ -283,6 +284,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -329,6 +331,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
+        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -696,6 +699,23 @@ class PTIENHDCPolicy(DialoguePolicy):
                 return stop
         return None
 
+    def get_accepted_mpv(self, ds, slot_name, accepted_slots):
+        """Return a slot's 'mpv()' (most probable value) if the slot is accepted, and
+        return 'none' otherwise.
+        Also, convert a mpv of '*' to 'none' since we don't know how to interpret it.
+
+        :param ds: Dialogue state
+        :param slot_name: The name of the slot to query
+        :param accepted_slots: The currently accepted slots of the dialogue state
+        :rtype: string
+        """
+        val = 'none'
+        if slot_name in accepted_slots:
+            val = ds[slot_name].mpv()
+            if val == '*':
+                val = 'none'
+        return val
+
     def gather_connection_info(self, ds, accepted_slots):
         """Return a DA requesting further information needed to search
         for traffic directions and a dictionary containing the known information.
@@ -715,11 +735,11 @@ class PTIENHDCPolicy(DialoguePolicy):
         # self.ontology['addinfo']['stop_category'].get(ds['from_street'].mpv())
 
         # retrieve the slot variables
-        from_stop_val = ds['from_stop'].mpv() if 'from_stop' in accepted_slots else 'none'
-        to_stop_val = ds['to_stop'].mpv() if 'to_stop' in accepted_slots else 'none'
-        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
-        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
-        vehicle_val = ds['vehicle'].mpv() if 'vehicle' in accepted_slots else 'none'
+        from_stop_val = self.get_accepted_mpv(ds, 'from_stop', accepted_slots)
+        to_stop_val = self.get_accepted_mpv(ds, 'to_stop', accepted_slots)
+        from_city_val = self.get_accepted_mpv(ds, 'from_city', accepted_slots)
+        to_city_val = self.get_accepted_mpv(ds, 'to_city', accepted_slots)
+        vehicle_val = self.get_accepted_mpv(ds, 'vehicle', accepted_slots)
 
         # infer cities based on stops
         from_cities, to_cities = None, None
@@ -740,6 +760,14 @@ class PTIENHDCPolicy(DialoguePolicy):
             from_city_val = to_city_val
         if to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
             to_city_val = from_city_val
+        if (to_cities is not None and from_cities is not None and
+                from_city_val == 'none' and to_city_val == 'none'):
+            # more cities for each side of the route -- try to intersect the lists
+            intersect = [c for c in from_cities if c in to_cities]
+            if len(intersect) == 1:
+                from_city_val = intersect.pop()
+                to_city_val = from_city_val
+                stop_city_inferred = True
 
         # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
         if self.infer_default_stops:
@@ -755,17 +783,22 @@ class PTIENHDCPolicy(DialoguePolicy):
                                                                     from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
 
-        # check all state variables and the output one request dialogue act
-        # it just easier to have a list than a tree, the tree is just too confusing for me. FJ
+        # check all state variables and output one request dialogue act
+        # once upon a time, request departure time before requesting stops
         if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-        elif from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
-            req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-        elif from_stop_val == 'none':
-            req_da.extend(DialogueAct("request(from_stop)"))
-        elif to_stop_val == 'none':
-            req_da.extend(DialogueAct('request(to_stop)'))
+
+        # we know the cities, but it's not an intercity connection -- request stops if required
+        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
+            if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
+                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
+            elif from_stop_val == 'none':
+                req_da.extend(DialogueAct("request(from_stop)"))
+            elif to_stop_val == 'none':
+                req_da.extend(DialogueAct('request(to_stop)'))
+
+        # we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
@@ -980,14 +1013,14 @@ class PTIENHDCPolicy(DialoguePolicy):
                 departure_time = step.departure_time
                 break
         else:
-            return None
+            departure_time = datetime.fromtimestamp(0)
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 arrival_time = step.arrival_time
                 break
-        else:
-            return None
+        else:  # return time for walking (otherwise there would be mode_transit)
+            arrival_time = datetime.fromtimestamp(leg.steps[0].duration)
 
         duration = (arrival_time - departure_time).seconds / 60
         duration_hrs, duration_mins = divmod(duration, 60)
