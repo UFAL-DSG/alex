@@ -60,7 +60,7 @@ def expand_place(stop_list):
 
     for stop in stop_list:
         reverse = True
-        conjunctions = [' and ', ' on ', ]
+        conjunctions = [' and ', ' on ', ' at ', ]
 
         if '-' in stop:
             elements = stop.split('-')
