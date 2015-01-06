@@ -124,6 +124,8 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             return None
         response = json.load(page)
         self._log_response_json(response)
+        if response['cod'] != 200:
+            return None
         weather = OpenWeatherMapWeather(response, self.substitutions, time, daily)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather
