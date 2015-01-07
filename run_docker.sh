@@ -3,10 +3,10 @@
 
 #TODO: docker acquire czech, checkout english, provide additional stuff and start docker with -v for english sources
 #BASE_FOLDER=${CURDIR}
-BASE_FOLDER=/mnt/data
+BASE_FOLDER=/mnt/data/repo
 SOURCE_FOLDER=${BASE_FOLDER}/alex
 
-SRC_VOLUME="-v ${SOURCE_FOLDER}:/app/alex"
+SRC_VOLUME="-v ${SOURCE_FOLDER}:/repo/alex"
 DOCKER_OPTS="--rm -i -t ${SRC_VOLUME}"
 
 docker run ${DOCKER_OPTS} ptien /bin/bash

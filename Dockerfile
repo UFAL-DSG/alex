@@ -21,5 +21,31 @@ RUN /repo/alex/alex/applications/PublicTransportInfoCS/data/download_data.py
 RUN /repo/alex/alex/applications/PublicTransportInfoCS/lm/download_models.py
 RUN /repo/alex/alex/applications/PublicTransportInfoCS/slu/download_models.py
 
+
+
+# ===============TEMPORARY BEFORE MASTER PULL==============
+#
+# Install PjSip & its Python module.
+#
+WORKDIR /app/
+RUN git clone https://github.com/UFAL-DSG/pjsip.git
+WORKDIR /app/pjsip
+RUN ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC
+RUN make dep
+RUN make
+RUN make install
+WORKDIR /app/pjsip/pjsip-apps/src/python/
+RUN python setup-pjsuaxt.py install
+
+# PyAudio
+WORKDIR /app/
+RUN apt-get install -y portaudio19-dev
+RUN git clone https://github.com/bastibe/PyAudio.git
+WORKDIR /app/PyAudio
+RUN python setup.py install
+#
+# =========================================================
+
+
 WORKDIR /repo/alex/alex/applications/PublicTransportInfoEN/
 CMD ["sh","./vhub_private_ext_google_only_hdc_slu"]
