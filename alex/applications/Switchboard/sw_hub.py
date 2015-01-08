@@ -9,6 +9,9 @@ import cPickle as pickle
 import argparse
 import re
 
+if __name__ == '__main__':
+    import autopath
+
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.tts import TTS
@@ -206,10 +209,14 @@ def run(cfg1, cfg2):
                 return
 
             time.sleep(cfg1['Hub']['main_loop_sleep_time'])
-
+            
+#            print intro_played1, intro_played2
+#            print intro_played1 and intro_played2
+#            print u_start1, u_start2
+            
             if intro_played1 and intro_played2 and not u_start1:
                 vio1_commands.send(Command('flush_out()', 'HUB', 'VoipIO1'))
-                time.sleep(cfg1['Hub']['main_loop_sleep_time'])
+                time.sleep(0.1)
                 cfg1['Logging']['session_logger'].turn("system")
                 vio1_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
                     ('system', '', 'vpl-1.wav', 'true'), 'HUB', 'VoipIO1'))
@@ -217,7 +224,7 @@ def run(cfg1, cfg2):
 
             if intro_played1 and intro_played2 and not u_start2:
                 vio2_commands.send(Command('flush_out()', 'HUB', 'VoipIO2'))
-                time.sleep(cfg1['Hub']['main_loop_sleep_time'])
+                time.sleep(0.1)
                 cfg2['Logging']['session_logger'].turn("system")
                 vio2_play.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
                     ('system', '', 'vpl-2.wav', 'true'), 'HUB', 'VoipIO2'))
@@ -402,6 +409,7 @@ def run(cfg1, cfg2):
                         callee_uri = ''
 
                         vio2_commands.send(Command('hangup()', 'HUB', 'VoipIO1'))
+                        hangup2 = True
 
                     if command.parsed['__name__'] == "play_utterance_start":
                         cfg1['Logging']['system_logger'].info(command)
@@ -644,8 +652,6 @@ def run(cfg1, cfg2):
 #########################################################################
 
 if __name__ == '__main__':
-    import autopath
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
