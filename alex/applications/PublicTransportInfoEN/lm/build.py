@@ -32,7 +32,7 @@ train_data_size                 = 0.90
 bootstrap_text                  = "bootstrap.txt"
 classes                         = "../data/database_SRILM_classes.txt"
 indomain_data_dir               = "indomain_data"
-gen_data                        = lm.download_general_LM_data('cs')
+gen_data                        = lm.download_general_LM_data('en')
 
 fn_pt_trn                       = "reference_transcription_trn.txt"
 fn_pt_dev                       = "reference_transcription_dev.txt"
