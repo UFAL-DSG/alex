@@ -9,8 +9,10 @@ states*.txt
 streets*.txt
 cities*.csv
 stops*.csv
+states*.csv
 streets*.csv
 stops-add.txt
+concat_stops.sh
 idos_map.tsv
 errors.txt
 stops-idos.tsv

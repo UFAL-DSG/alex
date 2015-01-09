@@ -100,10 +100,6 @@ class PTIENHDCSLU(SLUInterface):
                         if "stop" in slots and ("city" in slots or "street" in slots):
                             abs_utts = abs_utts.replace(f, ('STOP='+v,))
                             category_labels.add('STOP')
-                        # TODO: add the street functionality!
-                        elif "street" in slots:
-                            abs_utts = abs_utts.replace(f, ('STOP='+v,))
-                            category_labels.add('STOP')
                         else:
                             for c in slots:
                                 abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))

@@ -229,7 +229,8 @@ def add_from_file(category_label, fname):
 
 def add_streets():
     """Add street names from the streets file."""
-    add_from_file('street', STREETS_FNAME)
+    # todo: temporary hack street = stop for street handling
+    add_from_file('stop', STREETS_FNAME)
 
 def add_stops():
     """Add stop names from the stops file."""

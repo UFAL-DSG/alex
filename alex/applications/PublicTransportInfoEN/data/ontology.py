@@ -448,11 +448,16 @@ def load_geo_values(fname, slot1, slot2, surpress_warning=True):
 
 
 def load_compatible_values(fname, slot1, slot2):
+    slot1_orig = slot1  # TODO:hack as well
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
             if line.startswith('#'):
                 continue
             val_slot1, val_slot2 = line.strip().split('\t')[0:2]
+            # todo: temporary hack for street handling:
+            if slot1_orig == "street":
+                slot1 = "stop"
+                val_slot2 = "New York"
             # add to list of compatible values in both directions
             subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot1, set())
             ontology['compatible_values'][slot1 + '_' + slot2][val_slot1] = subset
@@ -473,7 +478,7 @@ def load_file_defined_slots(fname, surpress_warning=True):
                 print "ERROR: There is not enough fields to parse slot values in " + fname
                 break
             value = data[0]
-            slot = data[3].lower()
+            slot = "stop"  # data[3].lower() # TODO: tempmorary hack slot = stop
             prev_value = ontology['addinfo']['stop_category'].get(value, None)
             if prev_value and not surpress_warning:
                 print 'WARNING: slot ' + value + " already contains " + prev_value + " (overwriting with " + slot + ")!"
