@@ -571,7 +571,8 @@ class PTIENHDCSLU(SLUInterface):
             phrase_in(u, 'new link') and not any_word_in(u, "from"):
             cn.add(1.0, DialogueActItem("restart"))
 
-        if any_phrase_in(u, ['want to go', 'like to go', 'want to get', 'would like to get', 'want to take', 'want to travel', ]):
+        if any_phrase_in(u, ['want to go', 'like to go', 'want to get', 'would like to get', 'want to take',
+                             'want to travel', 'i am heading', ]):
             cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
         if any_phrase_in(u, ['what is weather', 'what is the weather', 'will be the weather', 'the forecast']):
