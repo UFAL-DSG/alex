@@ -3,14 +3,14 @@
 
 #TODO: docker acquire czech, checkout english, provide additional stuff and start docker with -v for english sources
 #BASE_FOLDER=${CURDIR}
-BASE_FOLDER=/mnt/data/repo
-SOURCE_FOLDER=${BASE_FOLDER}/alex
+#BASE_FOLDER=/mnt/data/repo
+#SOURCE_FOLDER=${BASE_FOLDER}/alex
+SOURCE_FOLDER="$(dirname $PWD/$0)"
 
 SRC_VOLUME="-v ${SOURCE_FOLDER}:/repo/alex"
 DOCKER_OPTS="--rm -i -t ${SRC_VOLUME}"
 
 docker run ${DOCKER_OPTS} ptien /bin/bash
-
 
 # Run an interactive shell in the ubuntu image,
 # allocate a tty, attach stdin and stdout

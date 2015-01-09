@@ -46,6 +46,7 @@ RUN python setup.py install
 #
 # =========================================================
 
+RUN apt-get install flac
 
 WORKDIR /repo/alex/alex/applications/PublicTransportInfoEN/
 CMD ["sh","./vhub_private_ext_google_only_hdc_slu"]
