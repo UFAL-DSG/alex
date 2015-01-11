@@ -198,6 +198,9 @@ class Utterance(object):
         for word in self._utterance:
             yield word
 
+    def insert(self, idx, val):
+        self._utterance.insert(idx, val)
+
     @property
     def utterance(self):
         return self._utterance

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 locdata=$1
 locdict=$2
@@ -25,11 +26,11 @@ perl local/make_baseform.pl \
 echo "--- Searching for OOV words ..."
 gawk 'NR==FNR{words[$1]; next;} !($1 in words)' \
   $locdict/cmudict-plain.txt $locdata/vocab-full.txt |\
-  egrep -v '<.?s>' > $locdict/vocab-oov.txt
+  egrep -v '<.?s>' > $locdict/vocab-oov.txt || echo No OOV words
 
 gawk 'NR==FNR{words[$1]; next;} ($1 in words)' \
   $locdata/vocab-full.txt $locdict/cmudict-plain.txt |\
-  egrep -v '<.?s>' > $locdict/lexicon.txt
+  egrep -v '<.?s>' > $locdict/lexicon.txt || echo No OOV words
 
 wc -l $locdict/vocab-oov.txt
 wc -l $locdict/lexicon.txt

@@ -13,6 +13,7 @@
 # MERCHANTABLITY OR NON-INFRINGEMENT.
 # See the Apache 2 License for the specific language governing permissions and
 # limitations under the License. #
+set -e
 
 train_text=""
 arpa_paths="build2"   

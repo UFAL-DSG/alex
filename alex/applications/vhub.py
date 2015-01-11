@@ -5,6 +5,9 @@ import time
 import argparse
 import os
 
+if __name__ == '__main__':
+    import autopath
+
 from alex.components.hub import Hub
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -458,7 +461,6 @@ class VoipHub(Hub):
 
 
 if __name__ == '__main__':
-    import autopath
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,

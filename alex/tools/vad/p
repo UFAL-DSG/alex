@@ -3,6 +3,8 @@
 """ 
 Graphing the results
 """
+
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
@@ -33,8 +35,6 @@ def parse_log(fn):
 
 
 def main():
-    import autopath
-    import argparse
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,

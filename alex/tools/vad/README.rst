@@ -66,3 +66,7 @@ The ``model_voip`` directory stores this speech parametrisation in ``*.npc`` fil
 There fore if new data is added, then these NPC files must be deleted.
 If there are no NPC files then they are automatically generated from the available WAV files.
 
+The ``data_voip_{cs,en}`` alignment files (mlf files) can be trained using scripts ``alex/alex/tools/htk`` or ``alex/alex/tools/kaldi``.
+See the ``train_voip_{cs,en}.sh`` scripts in one of the directories.
+Note that the Kaldi scripts first store alignment in ``ctm`` format and later converts it to ``mlf`` format.
+

@@ -4,6 +4,7 @@
 
 # This script produces CTM files from a training directory that has alignments
 # present.
+set -e
 
 
 # begin configuration section.

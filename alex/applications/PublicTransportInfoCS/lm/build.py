@@ -13,6 +13,21 @@ The training procedure is as follows:
 #. Append the selected sentences to the training data generated in the 1. step.
 #. Re-build the class based language model.
 """
+if __name__ == '__main__':
+    import autopath
+
+import os
+import xml.dom.minidom
+import glob
+import codecs
+import random
+
+
+import alex.corpustools.lm as lm
+import alex.utils.various as various
+
+from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
+from alex.corpustools.wavaskey import save_wavaskey
 
 def is_srilm_available():
     """Test whether SRILM is available in PATH."""
@@ -48,19 +63,6 @@ def exit_on_system_fail(cmd, msg=None):
 
 
 if __name__ == '__main__':
-    import os
-    import xml.dom.minidom
-    import glob
-    import codecs
-    import random
-
-    import autopath
-
-    import alex.corpustools.lm as lm
-    import alex.utils.various as various
-
-    from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
-    from alex.corpustools.wavaskey import save_wavaskey
 
     # Test if SRILM is available.
     require_srilm()

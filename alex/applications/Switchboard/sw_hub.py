@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import multiprocessing
 import time
@@ -643,8 +645,8 @@ def run(cfg1, cfg2):
 #########################################################################
 #########################################################################
 
+
 if __name__ == '__main__':
-    import autopath
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,

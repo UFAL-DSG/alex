@@ -5,14 +5,6 @@
 set -e
 # set -x
 
-echo -e "\nTODO Debug this script which is based on egs/wsj/s5/local/online/run_nnet2_baseline.sh baseline online DNN decoding without ivectors\n"
-echo -e "\nTODO extend this script with ivectors based on egs/wsj/s5/local/online/run_nnet2.sh\n"
-
-# Load training parameters
-. ./env_voip_cs.sh
-# Source optional config if exists
-[ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
-
 . ./cmd.sh
 . ./path.sh
 
@@ -58,14 +50,6 @@ else
 fi
 
 
-
-# Train tri3b, which is LDA+MLLT+SAT
-local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
-  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
-
-local/check.sh steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
-  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
-
 local/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
     --num-epochs 8 --num-epochs-extra 4 \
     --splice-width 7 --feat-type raw \
@@ -73,7 +57,6 @@ local/check.sh steps/nnet2/train_pnorm_fast.sh --stage $train_stage \
     --num-threads "$num_threads" \
     --minibatch-size "$minibatch_size" \
     --parallel-opts "$parallel_opts" \
-    --num-jobs-nnet 6 \
     --num-hidden-layers 4 \
     --mix-up 4000 \
     --initial-learning-rate 0.02 --final-learning-rate 0.004 \

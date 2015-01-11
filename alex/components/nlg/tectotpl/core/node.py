@@ -357,7 +357,7 @@ class Node(object):
         "Return the depth, i.e. the distance to the root."
         node = self
         depth = 0
-        while node:
+        while not node.is_root:
             node = node.parent
             depth += 1
         return depth

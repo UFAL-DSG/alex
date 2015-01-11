@@ -1,8 +1,10 @@
 #!/bin/bash
-
 # Copyright 2012 Vassil Panayotov
 #           2013 Ondrej Platek
 # Apache 2.0
+
+set -e
+# set -x
 
 echo "===test_sets Formating data ..."
 langdir=$1; shift
@@ -23,7 +25,7 @@ for lm in $LMs ; do
     echo "--- Preparing the grammar transducer (G.fst) from $lmp in $tgt ..."
 
     for f in phones.txt words.txt phones.txt L.fst L_disambig.fst phones ; do
-        ln -s $langdir/$f $tgt/$f 2> /dev/null
+        ln -f -s $langdir/$f $tgt/$f 2> /dev/null
     done
 
     cat $lmp | utils/find_arpa_oovs.pl $tgt/words.txt > $tmpdir/oovs.txt
@@ -41,13 +43,13 @@ for lm in $LMs ; do
       utils/eps2disambig.pl | utils/s2eps.pl | fstcompile --isymbols=$tgt/words.txt \
         --osymbols=$tgt/words.txt  --keep_isymbols=false --keep_osymbols=false | \
       fstrmepsilon > $tgt/G.fst
-    fstisstochastic $tgt/G.fst
-    # The output is like:
-    # 9.14233e-05 -0.259833
-    # we do expect the first of these 2 numbers to be close to zero (the second is
-    # nonzero because the backoff weights make the states sum to >1).
-    # Because of the <s> fiasco for these particular LMs, the first number is not
-    # as close to zero as it could be.
+    fstisstochastic $tgt/G.fst || \
+      echo "*** Warning: if the output is like, it may be OK:
+        9.14233e-05 -0.259833
+        we do expect the first of these 2 numbers to be close to zero (the second is
+        nonzero because the backoff weights make the states sum to >1).
+        Because of the <s> fiasco for these particular LMs, the first number is not
+        as close to zero as it could be."
     
     # Everything below is only for diagnostic.
     # Checking that G has no cycles with empty words on them (e.g. <s>, </s>);

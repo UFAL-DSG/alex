@@ -15,14 +15,17 @@ Usage:
 -p = Strip punctuation off surface forms
 -l = Lowercase surface forms
 """
-
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
+
 import sys
 import re
 from collections import defaultdict
 import itertools
 import codecs
 from ufal.morphodita import Tagger, Forms, TaggedLemmas, TokenRanges, Morpho, TaggedLemmasForms
+
 from alex.utils.config import online_update
 from alex.utils.various import remove_dups_stable
 from getopt import getopt
