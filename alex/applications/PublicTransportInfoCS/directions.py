@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os.path
 import time
 import json
+import pprint
 from suds.client import Client
 from alex.applications.PublicTransportInfoCS.platform_info import \
     CRWSPlatformFinder
@@ -508,47 +509,92 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     def get_platform(self, platform_info):
         # try to map from-to to IDOS identifiers, default to originals
         self.system_logger.info("ALEX: Looking up platform for: %s -- %s" %
-                                (platform_info.from_station,
-                                 platform_info.to_station))
+                                (platform_info.from_stop,
+                                 platform_info.to_stop))
 
-        from_obj = self.search_train_station(platform_info.from_station)
-        to_obj = self.search_train_station(platform_info.to_station)
-
-        # Get the entries in the departure table at the from station.
-        response = self.client.service.SearchDepartureTableInfo(
-            self.user_id,
-            self.user_desc,
-            self.default_comb_id,
-            from_obj[0],
-            True,
-            datetime.min, # timestamp of arrival or departure
-            True,
-            SEARCHMODE.EXACT,
-            1,
-            REG.SMART,
-            TTINFODETAILS.STATIONSEXT,
-            None,
-            TTDETAILS.STANDS,
-            TTLANG.ENGLISH
-        )
-
-        self._log_response_json(_todict(response, '_origClassName'))
-
-        # Extract the departure table entry.
-        pfinder = CRWSPlatformFinder(response)
-        if platform_info.to_station != 'none':
-            self.system_logger.info("CRWS Looking by destination station.")
-            platform_res = pfinder.find_platform_by_station(to_obj)
-        elif platform_info.train_name != 'none':
-            self.system_logger.info("CRWS Looking by train name.")
-            platform_res = pfinder.find_platform_by_train_name(platform_info.train_name)
+        if platform_info.from_city != 'none' and platform_info.from_stop != \
+                'none':
+                from_obj = self.search_train_station("%s, %s" % (
+                                             platform_info.from_city,
+                                             platform_info.from_stop))
+        elif platform_info.from_city != 'none':
+            from_obj = self.search_train_station("%s" % (
+                                             platform_info.from_city, ))
+        elif platform_info.from_stop != 'none':
+            from_obj = self.search_train_station("%s" % (
+                                             platform_info.from_stop, ))
         else:
-            raise Exception("Incorrect state!")
+            raise Exception()
 
-        self.system_logger.info("CRWS PlatformFinder response:\n" + unicode(
-            platform_res))
 
-        return platform_res
+        if platform_info.to_city != 'none' and platform_info.to_stop != \
+                'none':
+                to_obj = self.search_train_station("%s, %s" % (
+                                             platform_info.to_city,
+                                             platform_info.to_stop))
+        elif platform_info.to_city != 'none':
+            to_obj = self.search_train_station("%s" % (
+                                             platform_info.to_city, ))
+        elif platform_info.to_stop != 'none':
+            to_obj = self.search_train_station("%s" % (
+                                             platform_info.to_stop, ))
+        else:
+            raise Exception()
+
+
+
+        self.system_logger.info("SEARCHING: from(%s, %s)" % (
+                                             platform_info.from_city,
+                                             platform_info.from_stop))
+        self.system_logger.info("SEARCHING: to(%s, %s)" % (
+                                             platform_info.to_city,
+                                             platform_info.to_stop))
+
+        self.system_logger.info("FROM" + pprint.pformat(from_obj))
+        self.system_logger.info("TO" + pprint.pformat(to_obj))
+
+        if from_obj and to_obj:
+            # Get the entries in the departure table at the from station.
+            response = self.client.service.SearchDepartureTableInfo(
+                self.user_id,
+                self.user_desc,
+                self.default_comb_id,
+                from_obj[0],
+                True,
+                datetime.min, # timestamp of arrival or departure
+                True,
+                SEARCHMODE.EXACT,
+                1,
+                REG.SMART,
+                TTINFODETAILS.STATIONSEXT,
+                None,
+                TTDETAILS.STANDS,
+                TTLANG.ENGLISH
+            )
+
+            self._log_response_json(_todict(response, '_origClassName'))
+
+            # Extract the departure table entry.
+            pfinder = CRWSPlatformFinder(response)
+            if platform_info.to_stop != 'none' or platform_info.to_city != \
+                    'none':
+                self.system_logger.info("CRWS Looking by destination station.")
+                platform_res = pfinder.find_platform_by_station(to_obj)
+            elif platform_info.train_name != 'none':
+                self.system_logger.info("CRWS Looking by train name.")
+                platform_res = pfinder.find_platform_by_train_name(platform_info.train_name)
+            else:
+                raise Exception("Incorrect state!")
+
+            self.system_logger.info("CRWS PlatformFinder response:\n" + unicode(
+                platform_res))
+
+            return platform_res
+        else:
+            self.system_logger.info("PlatformFinder from and to has not "
+                                    "been found:\n" + unicode(
+                platform_info))
+            return None
 
     @lru_cache(maxsize=10)
     def get_directions(self, travel, departure_time=None, arrival_time=None):

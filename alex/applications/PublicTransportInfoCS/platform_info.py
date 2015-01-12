@@ -1,8 +1,14 @@
 class PlatformInfo(object):
-    def __init__(self, from_station, to_station, train_name):
-        self.from_station = from_station
-        self.to_station = to_station
+    def __init__(self, from_stop, to_stop, from_city, to_city, train_name):
+        self.from_stop = from_stop
+        self.to_stop = to_stop
+        self.from_city = from_city
+        self.to_city = to_city
         self.train_name = train_name
+
+    def __unicode__(self):
+        return u"%s, %s -- %s, %s" % (self.from_stop, self.from_city,
+                                     self.to_stop, self.to_city, )
 
 
 class PlatformFinderResult(object):
@@ -31,16 +37,18 @@ class CRWSPlatformFinder(object):
         return res
 
     def find_platform_by_station(self, to_obj):
-        names = set(obj._sName for obj in to_obj[0])
+        def norm(x):
+            return x.upper()
+        names = set(norm(obj._sName) for obj in to_obj[0])
         for entry in self.crws_response.aoRecords:
             # Figure out whether this entry corresponds to the entry the user
             # is interested in.
             matched_obj = None
-            dst_matches = entry._sDestination in names
+            dst_matches = norm(entry._sDestination) in names
+            dir_matches = False
             if dst_matches:
                 matched_obj = entry._sDestination
             else:
-                dir_matches = False
                 for dir in getattr(entry, 'asDirection', []):
                     if dir in names:
                         dir_matches = True
@@ -50,7 +58,6 @@ class CRWSPlatformFinder(object):
             if dst_matches or dir_matches:
                 platform = getattr(entry, '_sStand', None)
                 track = getattr(entry, '_sTrack', None)
-
 
                 return PlatformFinderResult(platform, track, matched_obj)
 

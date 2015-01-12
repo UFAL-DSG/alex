@@ -359,14 +359,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                         res_da.append(DialogueActItem('inform', 'platform',
                                                       'not_found'))
                         res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_info.to_station))
+                                                      platform_info.to_stop))
                     else:
                         if platform_res.platform:
                             res_da.append(DialogueActItem('inform', 'platform',
                                                       platform_res.platform))
                             res_da.append(DialogueActItem('inform', 'track',
                                                       platform_res.track))
-                            if platform_info.train_name:
+                            if platform_info.train_name != 'none':
                                 res_da.append(DialogueActItem('inform',
                                                               'train_name',
                                                               platform_info.train_name))
@@ -805,25 +805,44 @@ class PTICSHDCPolicy(DialoguePolicy):
         req_da = DialogueAct()
 
         # retrieve the slot variables
-        from_station_val = (ds['from_city'].mpv() if 'from_city' in
+        from_stop_val = (ds['from_stop'].mpv() if 'from_stop' in
                             accepted_slots else 'none')
-        to_station_val = (ds['to_city'].mpv() if 'to_city' in accepted_slots
+        to_stop_val = (ds['to_stop'].mpv() if 'to_stop' in accepted_slots
                           else 'none')
         train_name_val = (ds['train_name'].mpv() if 'train_name' in
                           accepted_slots else 'none')
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+
+        if from_city_val != 'none' and from_stop_val == 'none':
+            from_stop_val = self.get_default_stop_for_city(from_city_val)
+
+            if from_stop_val == from_city_val:
+                from_city_val = 'none'
+
+        if to_city_val != 'none' and to_stop_val == 'none':
+            to_stop_val = self.get_default_stop_for_city(to_city_val)
+
+            if to_stop_val == to_city_val:
+                to_stop_val = 'none'
 
 
-        if from_station_val == 'none':
-            req_da.extend(DialogueAct('request(from_station)'))
-        elif to_station_val == 'none' and train_name_val == 'none':
+        if from_stop_val == 'none' and from_city_val == 'none':
+            req_da.extend(DialogueAct('request(from_stop)'))
+        elif (to_stop_val == 'none' and to_city_val == 'none') and \
+                        train_name_val == 'none':
             req_da.extend(DialogueAct('request(to_station_or_train_name)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
 
-        return req_da, iconfirm_da, PlatformInfo(from_station=from_station_val,
-                                                 to_station=to_station_val,
+        pi  = PlatformInfo(from_stop=from_stop_val,
+                                                 to_stop=to_stop_val,
+                                                 from_city=from_city_val,
+                                                 to_city=to_city_val,
                                                  train_name=train_name_val)
+        print 'PLATFORM INFO:', unicode(pi)
+        return req_da, iconfirm_da, pi
 
 
     def req_current_time(self):
