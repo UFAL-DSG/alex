@@ -27,6 +27,15 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
             num_norms.append(([unicode(num)], [word_for_number(num)]))
         self.text_normalization_mapping += num_norms
 
+        # map ordinal numbers for streets and avenues 1st - 200th
+        ord_norms = []
+        suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
+        for ord in xrange(1, 200):
+            suffix = suffixes[ord % 10] if ord < 10 or ord > 20 else 'th'
+            ord_form = str(ord) + suffix
+            ord_norms.append(([unicode(ord_form)], [word_for_number(ord, ordinary=True)]))
+        self.text_normalization_mapping += ord_norms
+
         self.text_normalization_mapping += [
             (["i'm"], ['i am']),
             (["it'll"], ['it will']),
