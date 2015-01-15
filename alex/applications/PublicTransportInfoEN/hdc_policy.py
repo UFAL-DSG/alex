@@ -413,7 +413,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem('inform', 'time_rel', time_rel))
             else:
                 if time_abs != 'none' or ampm != 'none':
-                    res_da.append(DialogueActItem('inform', 'time', weather_ts.strftime("%I:%M:%p")))
+                    res_da.append(DialogueActItem('inform', 'time', weather_ts.strftime("%I:%M:%p"))) # is time right?
                 if date_rel != 'none':
                     res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
         else:
@@ -463,6 +463,13 @@ class PTIENHDCPolicy(DialoguePolicy):
         :return: Returns utc time
         """
         return datetime.utcnow()
+
+    def convert_to_default_time_zone(self, date):
+        """
+        :return: Returns date which is in current (central europe) time zone and computes default (NY-pacific time)
+        """
+        return date + self.ontology['default_values']['time_zone_offset'] - (datetime.now() - datetime.utcnow())
+
 
     def backoff_action(self, ds):
         """Generate a random backoff dialogue act in case we don't know what to do.
@@ -937,7 +944,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
-                da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%I:%M:%p")))
+                da.append(DialogueActItem('inform', 'departure_time', self.convert_to_default_time_zone(step.departure_time.strftime("%I:%M:%p"))))
                 return da
 
     def req_departure_time_rel(self, dialogue_state):
@@ -981,7 +988,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%I:%M:%p")))
+                da.append(DialogueActItem('inform', 'arrival_time', self.convert_to_default_time_zone(step.arrival_time.strftime("%I:%M:%p"))))
                 return da
 
     def req_arrival_time_rel(self, dialogue_state):
@@ -1195,7 +1202,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
                 res.append("inform(departure_time=%s)" %
-                           step.departure_time.strftime("%I:%M:%p"))
+                           self.convert_to_default_time_zone(step.departure_time.strftime("%I:%M:%p")))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
                     res.append("inform(enter_at=%s)" % step.departure_stop)
@@ -1228,7 +1235,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         :return: the inferred time value + flag indicating the inferred time type ('abs' or 'rel')
         :rtype: tuple(datetime, string)
         """
-        now = self.get_default_local_time() if local else self.get_default_time()
+        now = self.get_default_time() if local else datetime.now()
         now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
