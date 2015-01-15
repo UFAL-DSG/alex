@@ -468,7 +468,10 @@ class PTIENHDCPolicy(DialoguePolicy):
         """
         :return: Returns date which is in current (central europe) time zone and computes default (NY-pacific time)
         """
-        return date + self.ontology['default_values']['time_zone_offset'] - (datetime.now() - datetime.utcnow())
+        if isinstance(date, datetime):
+            return date + self.ontology['default_values']['time_zone_offset'] - (datetime.now() - datetime.utcnow())
+        else:
+            return date
 
 
     def backoff_action(self, ds):
@@ -944,7 +947,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
-                da.append(DialogueActItem('inform', 'departure_time', self.convert_to_default_time_zone(step.departure_time.strftime("%I:%M:%p"))))
+                da.append(DialogueActItem('inform', 'departure_time', self.convert_to_default_time_zone(step.departure_time).strftime("%I:%M:%p")))
                 return da
 
     def req_departure_time_rel(self, dialogue_state):
@@ -988,7 +991,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrival_time', self.convert_to_default_time_zone(step.arrival_time.strftime("%I:%M:%p"))))
+                da.append(DialogueActItem('inform', 'arrival_time', self.convert_to_default_time_zone(step.arrival_time).strftime("%I:%M:%p")))
                 return da
 
     def req_arrival_time_rel(self, dialogue_state):
@@ -1202,7 +1205,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
                 res.append("inform(departure_time=%s)" %
-                           self.convert_to_default_time_zone(step.departure_time.strftime("%I:%M:%p")))
+                           self.convert_to_default_time_zone(step.departure_time).strftime("%I:%M:%p"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
                     res.append("inform(enter_at=%s)" % step.departure_stop)
