@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 
-DEV='cpu'
+DEV='gpu0'
 EP='100'
 MF='10000'
 MFS='10k'

@@ -308,6 +308,7 @@ class CRWSRouteStep(RouteStep):
                             'EuroNight': 'euronight_train',
                             'SuperCity': 'supercity_train',
                             'LEOExpress': 'train',
+                            'railjet': 'train',
                             'RegionalExpress': 'regional_fast_train',
                             'semi fast train': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',

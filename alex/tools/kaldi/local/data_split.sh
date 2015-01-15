@@ -32,7 +32,8 @@
 # _EHM_HMM_
 # _SIL_
 
-# renice 20 $$
+set -e
+# set -x
 
 every_n=1
 
@@ -41,7 +42,7 @@ every_n=1
 
 
 if [ $# -ne 4 ] ; then
-    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets> <tgt-dir>";
+    echo "Usage: $0 [--every-n 30] <data-directory>  <local-directory> <LMs> <Test-Sets>";
     exit 1;
 fi
 
@@ -49,7 +50,7 @@ DATA=$1; shift
 locdata=$1; shift
 LMs=$1; shift
 test_sets=$1; shift
-tgt_dir=$1; shift
+
 
 echo "LMs $LMs  test_sets $test_sets"
 
@@ -59,50 +60,64 @@ echo "--- Making test/train data split from $DATA taking every $every_n recordin
 
 mkdir -p $locdata
 
+
+
 i=0
 for s in $test_sets train ; do
-    mkdir -p $locdata/$s
-    ls $DATA/$s/ | sed -n /.*wav$/p |\
-    while read wav ; do
-        ((i++)) # bash specific
-        if [[ $i -ge $every_n ]] ; then
-            i=0
-            pwav=$DATA/$s/$wav
-            trn=`cat $DATA/$s/$wav.trn`
-            echo "$wav $pwav" >> $locdata/$s/wav.scp
-            echo "$wav $wav" >> $locdata/$s/utt2spk
-            echo "$wav $wav" >> $locdata/$s/spk2utt
-            echo "$wav $trn" >> $locdata/$s/trans.txt
-            # Ignoring gender -> label all recordings as male
-            echo "$wav M" >> $locdata/spk2gender
-        fi
-    done # while read wav 
+  mkdir -p $locdata/$s
 
-    for f in wav.scp utt2spk spk2utt trans.txt ; do
-       sort "$locdata/$s/$f" -k1 -u -o "$locdata/$s/$f"  # sort in place
-    done # for f
+  echo "Initializing set '$s' output files"
+  for f in spk2utt trans.txt utt2spk wav.scp ; do
+    echo -n "" > "$locdata/$s/$f"
+  done
+  echo -n "" > "$locdata/spk2gender"
+
+  ls $DATA/$s/ | sed -n /.*wav$/p |\
+  while read wav ; do
+    ((i++)) || true # bash specific
+    if [[ $i -ge $every_n ]] ; then
+      i=0
+      pwav=$DATA/$s/$wav
+      trn=`cat $DATA/$s/$wav.trn`
+      echo "$wav $wav" >> $locdata/$s/spk2utt
+      echo "$wav $trn" >> $locdata/$s/trans.txt
+      echo "$wav $wav" >> $locdata/$s/utt2spk
+      echo "$wav $pwav" >> $locdata/$s/wav.scp
+      # all male
+      echo "$wav m" >> $locdata/$s/spk2gender  
+    fi
+  done # while read wav 
+
+  for f in spk2gender spk2utt trans.txt utt2spk wav.scp ; do
+    sort "$locdata/$s/$f" -k1 -u -o "$locdata/$s/$f"  # sort in place
+  done
 
 done # for in $test_sets train
 
-echo "Set 1:1 relation for spk2utt: spk in $test_sets AND train, sort in place"
-sort "$locdata/spk2gender" -k1 -o "$locdata/spk2gender" 
 
 echo "--- Distributing the file lists to train and ($test_sets x $LMs) directories ..."
 mkdir -p $WORK/train
-cp $locdata/train/wav.scp $WORK/train/wav.scp || exit 1;
-cp $locdata/train/trans.txt $WORK/train/text || exit 1;
-cp $locdata/train/spk2utt $WORK/train/spk2utt || exit 1;
-cp $locdata/train/utt2spk $WORK/train/utt2spk || exit 1;
-utils/filter_scp.pl $WORK/train/spk2utt $locdata/spk2gender > $WORK/train/spk2gender || exit 1;
+cp -f $locdata/train/wav.scp $WORK/train/wav.scp || exit 1;
+cp -f $locdata/train/trans.txt $WORK/train/text || exit 1;
+cp -f $locdata/train/spk2utt $WORK/train/spk2utt || exit 1;
+cp -f $locdata/train/utt2spk $WORK/train/utt2spk || exit 1;
+cp -f $locdata/train/spk2gender $WORK/train/spk2gender || exit 1;
+# utils/filter_scp.pl $WORK/train/spk2utt $locdata/spk2gender \
+#   > $WORK/train/spk2gender || exit 1;
+utils/validate_data_dir.sh --no-feats $WORK/train || exit 1;
+echo DEBUG
 
 for s in $test_sets ; do 
-    for lm in $LMs; do
-        tgt_dir=$WORK/${s}_`basename ${lm}`
-        mkdir -p $tgt_dir
-        cp $locdata/${s}/wav.scp $tgt_dir/wav.scp || exit 1;
-        cp $locdata/${s}/trans.txt $tgt_dir/text || exit 1;
-        cp $locdata/${s}/spk2utt $tgt_dir/spk2utt || exit 1;
-        cp $locdata/${s}/utt2spk $tgt_dir/utt2spk || exit 1;
-        utils/filter_scp.pl $tgt_dir/spk2utt $locdata/spk2gender > $tgt_dir/spk2gender || exit 1;
-    done
+  for lm in $LMs; do
+    tgt_dir=$WORK/${s}_`basename ${lm}`
+    mkdir -p $tgt_dir
+    cp -f $locdata/${s}/wav.scp $tgt_dir/wav.scp || exit 1;
+    cp -f $locdata/${s}/trans.txt $tgt_dir/text || exit 1;
+    cp -f $locdata/${s}/spk2utt $tgt_dir/spk2utt || exit 1;
+    cp -f $locdata/${s}/utt2spk $tgt_dir/utt2spk || exit 1;
+    # utils/filter_scp.pl $tgt_dir/spk2utt $locdata/spk2gender \
+    #   > $tgt_dir/spk2gender || exit 1;  # fails here
+    cp -f $locdata/${s}/spk2gender $tgt_dir/spk2gender || exit 1
+    utils/validate_data_dir.sh --no-feats $tgt_dir || exit 1;
+  done
 done

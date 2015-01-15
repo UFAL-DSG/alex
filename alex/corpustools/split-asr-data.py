@@ -3,15 +3,15 @@
 """
 Splits a wave files in a data driectory into train, dev, test directories according to a list of dev and test wave files.
 """
+# Make sure the alex package is visible.
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import os
 import os.path
 import sys
 
-# Make sure the alex package is visible.
-if __name__ == '__main__':
-    import autopath
 
 from alex.utils.fs import find
 
@@ -72,5 +72,3 @@ if __name__ == '__main__':
         else:
             os.system("ln -s {src} {tgt}".format(src = os.path.join('..', args.all, base_fn), tgt = os.path.join(args.train, base_fn)))
             os.system("ln -s {src} {tgt}".format(src = os.path.join('..', args.all, base_fn+'.trn'), tgt = os.path.join(args.train, base_fn+'.trn')))
-       
-

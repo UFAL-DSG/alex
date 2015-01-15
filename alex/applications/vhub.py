@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 import multiprocessing
 import time
 import argparse
 import os
 
-import autopath
+if __name__ == '__main__':
+    import autopath
 
 from alex.components.hub import Hub
 from alex.components.hub.vio import VoipIO
