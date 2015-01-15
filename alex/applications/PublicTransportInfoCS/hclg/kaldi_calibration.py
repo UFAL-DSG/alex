@@ -166,14 +166,14 @@ def scores_equal_size_bins(wp_2_match):
     for xx, ss, f in zip(x, s, sig1(x, *popt)):
         print xx, ss, f
 
-    f = P.figure()
-    p = f.add_subplot(2,1,1)
-    p.bar(x, s)
-    # p = f.add_subplot(2,1,2)
-    p.plot(fitx,fity)
-    p.grid(True)
+#    f = P.figure()
+#    p = f.add_subplot(2,1,1)
+#    p.bar(x, s)
+#    # p = f.add_subplot(2,1,2)
+#    p.plot(fitx,fity)
+#    p.grid(True)
 
-    P.savefig('kaldi_calibration_scores_equal_size_bins.pdf')
+#    P.savefig('kaldi_calibration_scores_equal_size_bins.pdf')
 
     print "Calibration table"
 
@@ -190,8 +190,8 @@ def scores_equal_size_bins(wp_2_match):
             last_f = f
             last_min = min
     else:
-        print 0.0, f
-        cal_list.append((0.0, last_min, f))
+        print -2.0, f
+        cal_list.append((-2.0, last_min, f))
 
     def find_approx(x):
         for i, (min, max, f) in enumerate(cal_list):
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
     wp_2_match.sort()
 
-    scores_distribution(wp_2_match)
+#    scores_distribution(wp_2_match)
 
     scores_equal_size_bins(wp_2_match)
 

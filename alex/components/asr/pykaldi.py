@@ -112,7 +112,7 @@ class KaldiASR(ASRInterface):
         # Get hypothesis
         self.decoder.finalize_decoding()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
-        self.decoder.reset(reset_pipeline=False)
+        self.decoder.reset(reset_pipeline=True)
 
         if self.calibration_table:
             lat = lattice_calibration(lat, self.calibration_table)

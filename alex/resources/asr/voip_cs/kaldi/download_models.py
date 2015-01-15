@@ -8,9 +8,9 @@ if __name__ == '__main__':
 
     # Description files
     online_update('resources/asr/voip_cs/kaldi/results.log')
-    online_update('resources/asr/voip_cs/kaldi/experiment_bash_vars.log')
-    online_update('resources/asr/voip_cs/kaldi/alex_gitlog.log')
-    online_update('resources/asr/voip_cs/kaldi/alex_gitdiff.log')
+#    online_update('resources/asr/voip_cs/kaldi/experiment_bash_vars.log')
+#    online_update('resources/asr/voip_cs/kaldi/alex_gitlog.log')
+#    online_update('resources/asr/voip_cs/kaldi/alex_gitdiff.log')
 
     # Models
     online_update('resources/asr/voip_cs/kaldi/mfcc.conf')

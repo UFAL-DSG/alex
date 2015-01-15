@@ -7,3 +7,4 @@ mfcc
 steps
 *.log
 graph.svg
+*CUSTOM.sh
