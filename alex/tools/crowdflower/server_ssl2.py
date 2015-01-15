@@ -118,7 +118,7 @@ class SSLTCPServer(SocketServer.TCPServer):
             self.server_bind()
             self.server_activate()
 
-def test(ServerClass = SSLTCPServer):
+def run(ServerClass = SSLTCPServer):
     httpd = ServerClass(('', 443), Handler)
     sa = httpd.socket.getsockname()
     print "Serving HTTPS on", sa[0], "port", sa[1], "..."
@@ -130,4 +130,4 @@ def test(ServerClass = SSLTCPServer):
 
 
 if __name__ == '__main__':
-    test()
+    run()
