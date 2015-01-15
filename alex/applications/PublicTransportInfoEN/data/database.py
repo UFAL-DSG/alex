@@ -41,8 +41,8 @@ database = {
     "stop": {
     },
     "vehicle": {
-        "dontcare": ["anything", "whatever", "no matter", "any way", "any means",
-                     "don't care how", "do not care how"],
+        "dontcare": ["whatever", "no matter how", "not matter", "don't matter", "doesn't matter",
+                     "any way possible", "any possible way", "any means", "don't care how", "do not care how"],
         "bus": ["bus", "buses", "coach"],
         "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms"],
         "subway": ["metro", "sub", "subway", "tube", "underground"],
