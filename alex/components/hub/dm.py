@@ -152,6 +152,13 @@ class DM(multiprocessing.Process):
         self.cfg['Logging']['session_logger'].dialogue_act("system", da)
         self.commands.send(DMDA(da, 'DM', 'HUB'))
 
+    def epilogue_final_apology(self):
+        # apology for not reaching minimum number of turns
+        text = self.cfg['DM']['epilogue']['final_code_text_min_turn_count_not_reached']
+        da = DialogueAct('say(text="{text}")'.format(text=text))
+        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+        self.commands.send(DMDA(da, 'DM', 'HUB'))
+
     def epilogue_final_code(self):
         code = self.codes.pop()
 
@@ -171,6 +178,7 @@ class DM(multiprocessing.Process):
 
         self.final_code_given = True
 
+
     def epilogue(self):
         """ Gives the user last information before hanging up.
 
@@ -180,9 +188,10 @@ class DM(multiprocessing.Process):
             self.epilogue_final_question()
             return 'final_question'
         elif self.cfg['DM']['epilogue']['final_code_url']:
-            if self.dm.dialogue_state.turn_number >= self.cfg['DM']['epilogue']['final_code_min_turn_count']:
+            if self.dm.dialogue_state.turn_number < self.cfg['DM']['epilogue']['final_code_min_turn_count']:
+                self.epilogue_final_apology()
+            else:
                 self.epilogue_final_code()
-                return 'final_code'
 
         return None
 
