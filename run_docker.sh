@@ -3,9 +3,8 @@
 
 #TODO: docker acquire czech, checkout english, provide additional stuff and start docker with -v for english sources
 #BASE_FOLDER=${CURDIR}
-#BASE_FOLDER=/mnt/data/repo
-#SOURCE_FOLDER=${BASE_FOLDER}/alex
-SOURCE_FOLDER="$(dirname $PWD/$0)"
+BASE_FOLDER=/mnt/data/repo
+SOURCE_FOLDER=${BASE_FOLDER}/alex
 
 SRC_VOLUME="-v ${SOURCE_FOLDER}:/repo/alex"
 DOCKER_OPTS="--rm -i -t ${SRC_VOLUME}"
