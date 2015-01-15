@@ -15,6 +15,7 @@ import xml.dom.minidom
 import fnmatch
 import argparse
 import time
+import multiprocessing
 
 import alex.utils.various as various
 
@@ -27,11 +28,13 @@ from alex.corpustools.asrscore import score
 from alex.utils.config import Config
 from alex.utils.audio import load_wav, wav_duration
 
+asr = None
+cfg = None
 
 def save_lattice(lat, output_dir, wav_path):
     lat.write(os.path.join(output_dir, os.path.basename(wav_path).replace('wav','fst')))
 
-def rec_wav_file(asr, cfg, output_dir, wav_path):
+def rec_wav_file(output_dir, wav_path):
     """ Recognise speech in wav file and profile speech recognition.
 
     The decoding and ASR output extraction times are estimated.
@@ -59,7 +62,7 @@ def rec_wav_file(asr, cfg, output_dir, wav_path):
     return res, rec_in_end - start, hyp_out_end - rec_in_end
 
 
-def decode_info(asr, cfg, output_dir, wav_path, reference=None):
+def decode_info(p):
     """
     Presents the statistics of wav speech recognition.
 
@@ -68,6 +71,8 @@ def decode_info(asr, cfg, output_dir, wav_path, reference=None):
         wav_path(str): Path to Wave file which is recognised
         reference(str, optional): Gold transcription of Wave file
     """
+    output_dir, wav_path, reference = p
+
     print "-"*120
     print
     print '    Wav file:  %s' % str(wav_path)
@@ -76,7 +81,7 @@ def decode_info(asr, cfg, output_dir, wav_path, reference=None):
 
     wav_dur = wav_duration(wav_path)
 
-    dec_trans, rec_in_dur, hyp_out_dur = rec_wav_file(asr, cfg, output_dir, wav_path)
+    dec_trans, rec_in_dur, hyp_out_dur = rec_wav_file(output_dir, wav_path)
     fw_dur = rec_in_dur
     dec_dur = max(rec_in_dur, wav_dur) + hyp_out_dur
     best = unicode(dec_trans.get_best())
@@ -90,7 +95,7 @@ def decode_info(asr, cfg, output_dir, wav_path, reference=None):
     print '    NBest list:'
     print '    ' + u'\n    '.join(['%.5f %s' % (p, t) for p, t in dec_trans.n_best if p > 0.0001])
 
-    return best, dec_dur, fw_dur, wav_dur
+    return best, dec_dur, fw_dur, wav_dur, wav_path
 
 
 def compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict):
@@ -191,20 +196,9 @@ def compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwle
     hypothesis = os.path.join(outdir, 'dec_trn.txt')
 
     score(reference, hypothesis)
-    # corr, sub, dels, ins, wer, nwords = score_file(trn_dict, dec_dict)
-
-    # print """
-    # Please note that the scoring is implicitly ignoring all non-speech events.
-
-    # |==============================================================================================|
-    # |            | # Sentences  |  # Words  |   Corr   |   Sub    |   Del    |   Ins    |   Err    |
-    # |----------------------------------------------------------------------------------------------|
-    # | Sum/Avg    |{num_sents:^14}|{num_words:^11.0f}|{corr:^10.2f}|{sub:^10.2f}|{dels:^10.2f}|{ins:^10.2f}|{wer:^10.2f}|
-    # |==============================================================================================|
-    # """.format(num_sents=len(trn_dict), num_words=nwords, corr=corr, sub=sub, dels=dels, ins=ins, wer=wer)
 
 
-def decode_with_reference(reference, outdir, cfg):
+def decode_with_reference(reference, outdir, num_workers):
     """
     Launch the decoding
 
@@ -213,18 +207,29 @@ def decode_with_reference(reference, outdir, cfg):
         outdir(str): Path to directory where to save log files.
         cfg(dict): Alex configuration file
     """
-    asr = asr_factory(cfg)
     trn_dict = load_wavaskey(reference, Utterance)
     declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
 
-    for wav_path, reference in sorted(trn_dict.items()):
-        best, dec_dur, fw_dur, wav_dur = decode_info(asr, cfg, outdir, wav_path, reference)
+    params = [ (outdir, wav_path, reference) for wav_path, reference in trn_dict.items()]
+    p_decode_wavs = multiprocessing.Pool(num_workers)
+    decoded_wavs = p_decode_wavs.map(decode_info, params, 100)
+
+    for best, dec_dur, fw_dur, wav_dur, wav_path in decoded_wavs:
         dec_dict[wav_path] = best
         wavlen_dict[wav_path] = wav_dur
         declen_dict[wav_path] = dec_dur
         fwlen_dict[wav_path] = fw_dur
 
-        compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
+    # compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
+
+    # for wav_path, reference in sorted(trn_dict.items()):
+    #     best, dec_dur, fw_dur, wav_dur, wav_path = decode_info(asr, cfg, outdir, wav_path, reference)
+    #     dec_dict[wav_path] = best
+    #     wavlen_dict[wav_path] = wav_dur
+    #     declen_dict[wav_path] = dec_dur
+    #     fwlen_dict[wav_path] = fw_dur
+    #
+    #     compute_rt_factor(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
     compute_save_stat(outdir, trn_dict, dec_dict, wavlen_dict, declen_dict, fwlen_dict)
 
@@ -315,6 +320,8 @@ if __name__ == '__main__':
                         help='The computed statistics are saved the out-dir directory')
     parser.add_argument('-f', default=False, action='store_true',
                         help='If out-dir exists write the results there anyway')
+    parser.add_argument('-n', '--num-workers', action="store", default=1, type=int,
+                        help='number of workers used for ASR: default %d' % 1)
 
     subparsers = parser.add_subparsers(dest='command',
                                        help='Either extract wav list from xml or expect reference and wavs')
@@ -344,10 +351,11 @@ if __name__ == '__main__':
                 raise exc
 
     cfg = Config.load_configs(args.configs, use_default=True)
+    asr = asr_factory(cfg)
 
     if args.command == 'extract':
         extract_from_xml(args.indomain_data_dir, args.out_dir, cfg)
     elif args.command == 'load':
-        decode_with_reference(args.reference, args.out_dir, cfg)
+        decode_with_reference(args.reference, args.out_dir, args.num_workers)
     else:
         raise Exception('Argparse mechanism failed: Should never happen')
