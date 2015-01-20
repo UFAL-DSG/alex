@@ -284,7 +284,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -331,7 +330,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -458,12 +456,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         """
         return datetime.utcnow() + self.ontology['default_values']['time_zone_offset']  # timedelta(hours=-5)
 
-    def get_default_time(self):
-        """
-        :return: Returns utc time
-        """
-        return datetime.utcnow()
-
     def convert_to_default_time_zone(self, date):
         """
         :return: Returns date which is in current (central europe) time zone and computes default (NY-pacific time)
@@ -520,6 +512,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             elif ds_alternative == "next":
                 ds["route_alternative"] += 1
                 try:
+                    ds.directions[ds['route_alternative']] # just for failing
                     res_da.extend(self.get_directions(ds, "next"))
                 except:
                     ds["route_alternative"] -= 1
@@ -968,7 +961,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 # construct relative time from now to departure
                 now = self.get_default_local_time()  # datetime.now()
                 now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
-                departure_time_rel = (step.departure_time - now)
+                departure_time_rel = (self.convert_to_default_time_zone(step.departure_time) - now)
 
                 # the connection was missed
                 if departure_time_rel.days < 0:
@@ -1237,14 +1230,14 @@ class PTIENHDCPolicy(DialoguePolicy):
                           'evening': "18:00",
                           'night': "00:00"}
 
-    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time, local=False):
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time, utc=False):
         """Interpret time, given current dialogue state most probable values for
         relative and absolute time and date, plus the corresponding last-talked-about value.
 
         :return: the inferred time value + flag indicating the inferred time type ('abs' or 'rel')
         :rtype: tuple(datetime, string)
         """
-        now = self.get_default_time() if local else datetime.now()
+        now = datetime.utcnow() if utc else self.convert_to_default_time_zone(datetime.now())
         now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
