@@ -265,10 +265,11 @@ ontology = {
         #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
         #       "from_city"
 
-        'street': set(['from_street', 'to_street',]),
-        'stop': set(['from_stop', 'to_stop', 'via_stop',]),
-        'city': set(['from_city', 'to_city', 'via_city', 'in_city',]),
-        'state': set(['in_state',]),
+        'street': set(['from_street', 'to_street', ]),
+        'stop': set(['from_stop', 'to_stop', 'via_stop', ]),
+        # added from/to city -> where do yo want to go from / new york (won't work if KEY is not suffix to slots (CITY->from_CITY))
+        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop' ]),
+        'state': set(['in_state', ]),
     },
 
     'reset_on_change': {

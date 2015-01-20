@@ -263,7 +263,7 @@ class PTIENHDCSLU(SLUInterface):
                     cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name))
                 # backoff 2: let the DM decide in context resolution
                 else:
-                    cn.add(1.0, DialogueActItem(dai_type, '', wp_name))
+                    cn.add(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name))
 
                 last_wp_pos = i + 1
 
@@ -379,6 +379,9 @@ class PTIENHDCSLU(SLUInterface):
 
                     slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
                     cn.add(1.0, DialogueActItem(act_type, slot, value))
+                else:
+                    pass
+                    # TODO: cn.add(1.0, DialogueActItem("inform", "time", value))  # let context handle the rest
 
                 last_time = i + 1
 

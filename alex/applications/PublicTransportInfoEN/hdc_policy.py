@@ -808,6 +808,12 @@ class PTIENHDCPolicy(DialoguePolicy):
             elif to_stop_val == 'none':
                 req_da.extend(DialogueAct('request(to_stop)'))
 
+        # we know nothing, lets ask about stops first:
+        elif from_stop_val == 'none':
+            req_da.extend(DialogueAct('request(from_stop)'))
+        elif to_stop_val == 'none':
+            req_da.extend(DialogueAct('request(to_stop)'))
+
         # we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))

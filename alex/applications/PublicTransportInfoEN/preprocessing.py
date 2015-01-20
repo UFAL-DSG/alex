@@ -167,10 +167,14 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         :param time: The 12hr numerical time value in a string, e.g. '08:05:pm'
         :return: time string with all numerals written out as words
         """
+        period = ""
+        if len(time.split(':')) > 2:
+            hours, mins, period = time.split(':')[0:3]
+        elif len(time.split(':')) > 1:
+            hours, mins, = time.split(':')[0:2]
+        else:
+            return time  # 'now' and similar
 
-        if ':' not in time:  # 'now' and similar
-            return time
-        hours, mins, period = time.split(':')
         hours = int(hours)
         mins = int(mins)
         # hack for TTS
