@@ -6,7 +6,7 @@ The Alex project is developed in Python and tested with version 2.7.
 It may be necessary to have exactly this version of Python for the project
 to work correctly.
 
-Ubuntu 12.04
+Ubuntu 14.04
 ------------
 Ask the root on the computer to run:
 
