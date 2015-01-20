@@ -158,19 +158,6 @@ To install ``morfodita``, follow these instructions:
   sudo cp ./ufal_morphodita.so /usr/local/lib/python2.7/dist-packages
 
 
-OpenJulius
-~~~~~~~~~~
-Get the supported Open Julius ASR decoder (4.2.3 tested) from our fork at GitHub.
-To install ``openjulius``, follow the following instructions:
-
-.. code-block:: bash
-
-  git clone git@github.com:UFAL-DSG/openjulius.git
-  cd openjulius
-  ./configure
-  make
-  make install
-
 Optimised ATLAS and LAPACK libraries
 ------------------------------------
 If you need optimised ATLAS and LAPACK libraries then you have to compile them on your own.
