@@ -9,18 +9,16 @@ function getLocation() {
     glocation += ":";
     glocation += google.loader.ClientLocation.address.city;
   }
-
+  
   if (glocation.lastIndexOf('US', 0) != 0) {
     document.getElementById("locationWarning").innerHTML = "This Job can be completed only by native speakers of English from USA. If it is found that this Job was completed from other location than USA then it will be automatically rejected.";
   }
 }
 
-
 // this part is for calling synchronously my own web server
 var success = false;
 var isIE8 = window.XDomainRequest ? true : false;
 var invocation = createCrossDomainRequest();
-
 
 function createCrossDomainRequest(url, handler) {
     var request;
@@ -31,7 +29,6 @@ function createCrossDomainRequest(url, handler) {
     }
     return request;
 }
-
 
 function callOtherDomain(value) {
     if (success)  // end early
@@ -54,7 +51,6 @@ function callOtherDomain(value) {
     }
 }
 
-
 function handler(evtXHR) {
     if (invocation.readyState == 4) {
         if (invocation.status == 200) {
@@ -65,16 +61,12 @@ function handler(evtXHR) {
     }
 }
 
-
 function outputResult() {
     var response = invocation.responseText;
     json = JSON.parse(response)
     if (json.response == "yes")
         success = true;
 }
-
-
-
 
 
 
@@ -100,7 +92,6 @@ if (!_cf_cml.digging_gold) {
         }]
     ]);
 }
-
 
 // This is the method that will evaluate your validation
 // value is the user submitted content of the form element you are validating

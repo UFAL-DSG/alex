@@ -42,7 +42,7 @@ class DM(multiprocessing.Process):
         self.dm.new_dialogue()
 
         self.codes = ["%04d" % i for i in range(0, 10000)]
-        random.seed(self.cfg['DM']['epilogue']['code_seed'])
+        # random.seed(self.cfg['DM']['epilogue']['code_seed'])
         random.shuffle(self.codes)
 
     def process_pending_commands(self):

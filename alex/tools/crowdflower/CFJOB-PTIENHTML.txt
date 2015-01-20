@@ -1,22 +1,21 @@
-﻿<script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
-
+﻿<script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>  
 
 <div style="height:120px" class="head border">
-  <img style="float:left;margin:5px;" class="img_cuni" src="http://certik.ruk.cuni.cz/asuk/statutarni/predpisy/registrovane/karelIII.jpg">
+  <img style="float:left;margin:5px;" class="img_cuni" src="http://certik.ruk.cuni.cz/asuk/statutarni/predpisy/registrovane/karelIII.jpg">  
   <img style="float:right;margin:5px;" class="img_cuni" src="http://www.mff.cuni.cz/fakulta/symboly/logo300.gif">
   <h2 style="padding-left:100px;padding-right:100px;text-align:center;">
     Evaluate and rate automated Public Transport Information service.
   </h2>
   <h2 style="color:red;text-align:center;" id="locationWarning"></h2>
 </div>
-<div class="collapse-container">
-  <div class="collapse-group">
+<div class="collapse-container">  
+  <div class="collapse-group"> 
     <a target="_blank" data-toggle="collapse" data-target=".collapse-one" class="collapse-header text-center definition">
       <h2>Intro</h2>
     </a>
     <div class="in collapse collapse-one collapse-body text-left">
       <div class="intro border">
-
+        
         <div>
           <p>
             <ul>
@@ -43,36 +42,36 @@
     <a target="_blank" data-toggle="collapse" data-target=".collapse-two" class="collapse-header text-center definition">
       <h2>Instructions</h2>
     </a>
-    <div class="collapse collapse-two collapse-body text-left">
+    <div class="collapse collapse-two collapse-body text-left">      
       <div class="briefing border">
-        <img alt="Crowdflower logo." src="http://upload.wikimedia.org/wikipedia/en/e/e1/Crowdflower-logo.png"style="width:100px;float:right;margin:15px;">
+        <img alt="Crowdflower logo." src="http://upload.wikimedia.org/wikipedia/en/e/e1/Crowdflower-logo.png" style="width:100px;float:right;margin:15px;">
         <div>
           <p>
-            You will be given a task which will require you to ask for information about a <i>connection from one place to another</i>, about the<i>number of transfers</i>, <i>next connection</i>, <i>time of departure</i>, <i>weather across the US</i>, <i>what is the time</i>, etc.
+            You will be given a task which will require you to ask for information about a <i>connection from one place to another</i>, about the <i>number of transfers</i>, <i>next connection</i>, <i>time of departure</i>, <i>weather across the US</i>, <i>what is the time</i>, etc.
           </p>
           <p>You can say <i>"Help."</i> for hints how to use the service. If it seems confused, you can say <i>"Reset."</i> or <i>"New entry."</i> to start over. The service can pick up what you are saying and ask you questions as the dialogue goes along.
           </p>
           <ul>
-            <li>Call a US toll free number <strong>1-888-826-5115</strong> and you will be connected with the automated Public Transport Information service.</li>
+            <li>Call a US toll free number <strong>1-855-528-7350</strong> and you will be connected with the automated Public Transport Information service.</li>
             <li>After you are connected, please try to talk naturaly about the topic presented in the green box at the bottom.</li>
             <li>The call is finished by saying <span style="color: red;">"Thank you. Good bye."</span> to the system.</li>
             <li>At the end of the call, the system will give you a <strong>four digit code</strong> which you have to enter into a field down below, once the call is terminated. This is used to verify the authenticity of Job submissions.</li>
-            <li>The code will be provided after some time limit has passed, so do not rush the dialogue towards the end too quickly. Just chat a litte.</li>
+            <li>You will not be given any code if you do not exchange at least three sentences with the system, so do not rush the dialogue towards the end too quickly. Just chat a litte.</li>
             <li>When correct code is entered, it will allow you to fill in a short feedback form.</li>
-            <li>Also you are more than wellcome to enter general comments and observations.</li>
+            <li>You are more than wellcome to enter general comments and observations.</li>
           </ul>
         </div>
-        <p>The feedback is very important as only the calls with the correct code and completed feedback will be approved</p>
+        <p>The feedback is very important as only the calls with the correct code and completed feedback will be accepted.</p>
       </div>
     </div>
     <a target="_blank" data-toggle="collapse" data-target=".collapse-three" class="collapse-header text-center definition">
       <h2>Example call</h2>
     </a>
-    <div class="collapse collapse-three collapse-body text-left">
-      <div class="example border">
+    <div class="collapse collapse-three collapse-body text-left">      
+      <div class="example border">      
         <p>
           This is an example of a dialogue where a user is looking for a connection from Roosvelt avenue at Union street to Central Park.
-          Later, the user changes asks about the weather in Baltimore.
+          Later, the user asks about the weather in Baltimore.
         </p>
         <table id="customers">
           <tbody>
@@ -106,7 +105,7 @@
             </tr>
             <tr>
               <td>System</td>
-              <td>You want to go to central park. I have found the following connection. Take the bus line Q66 at 9.00AM from the Roosevelt avenue at Main street towards LI City queens plaza via Northern boulevard. Get of at the Northern boulevard at Broadway. Walk to Northern boulevard. Take the subway E 9.36AM from the Northern boulevard towards World trade center. Transfer at 42nd street and Port authority bus terminal to a subway A, that goes at 10.12AM towards Inwood and 207th. Get of at 86th street and walk to your destination.</td>
+              <td>You want to go to central park. I have found the following connection. Take the bus line Q66 at 9.00AM from the Roosevelt avenue at Main street towards LI City queens plaza via Northern boulevard. Get of at the Northern boulevard at Broadway. Walk to Northern boulevard. Take the subway E 9.36AM from the Northern boulevard towards World trade center. Transfer at 42nd street and Port authority bus terminal to a subway A, that goes at 10.12AM towards Inwood and 207th. Get of at 86th street and walk to your destination.</td>              
             </tr>
             <tr class="alt">
               <td>User</td>
@@ -139,7 +138,7 @@
             <tr>
               <td>System</td>
               <td>It takes about 45 minutes.</td>
-            </tr>
+            </tr>           
             <tr class="alt">
               <td>User</td>
               <td>WHEN DOES IT LEAVE?</td>
@@ -166,7 +165,7 @@
             </tr>
             <tr class="alt">
               <td>User</td>
-              <td>MARYLAND.</td>
+              <td>IN MARYLAND.</td>
             </tr>
             <tr>
               <td>System</td>
@@ -186,7 +185,7 @@
             </tr>
             <tr>
               <td>System</td>
-              <td>Your code is 1234. I repeat. Your code is 1234.</td>
+              <td>Your code is 1234. I repeat. Your code is 1234. I repeat. Your code is 1234.</td>
             </tr>
             <tr>
               <td>System</td>
@@ -199,8 +198,8 @@
     <a target="_blank" data-toggle="collapse" data-target=".collapse-four" class="collapse-header text-center definition">
       <h2>Consent</h2>
     </a>
-    <div class="collapse collapse-four collapse-body text-left">
-      <div class="consent border">
+    <div class="collapse collapse-four collapse-body text-left">      
+      <div class="consent border">      
         <p>
           ÚFAL MFF UK (Linguistics)
           <br> Malostranské náměstí 25
@@ -212,7 +211,7 @@
           You have volunteered to participate in a study conducted in the Institute of Formal and Applied Linguistics at the Charles University in Prague.
         </p>
         <p>
-          This study is concerned with how people interact with spoken dialogue systems. In the course of this study, you will be interacting with a dialogue system. All interactions with the dialogue system will be recorded for further study. After completion of the task(s) you will be asked several questions about your experiences. There are no known expected physical discomforts or risks involved in your participation.
+          This study is concerned with how people interact with spoken dialogue systems. In the course of this study, you will be interacting with a dialogue system. All interactions with the dialogue system will be recorded for further study and commercial deployment of spoken dialogue systems and similar applications involving spoken speech. After completion of the task(s) you will be asked several questions about your experiences. There are no known expected physical discomforts or risks involved in your participation.
         </p>
         <p>
           For the purposes of the Czech Republic 101/2000 Data Protection Act, you give your permission for audio and video recordings, transcriptions, and non-identifying information (e.g. gender, age, mother tongue) to be electronically stored, utilised and shared for purposes of research, development, and commercial deployment of spoken dialogue systems and similar applications involving spoken speech. No identifying information, gathered in this study will be disclosed to any persons other than the researchers and their collaborators.
@@ -234,22 +233,22 @@
   <strong> Please try to talk about the following topic: </strong>
 </p>
 <div class="task">
-  <strong>You want to find a bus connection from <i>68th Street - Hunter College</i> to <i>Times Sqare - 42 Street</i>. Ask about the time requirements and find out later link. Make sure You get the weather forecast and time in <i>Lancaster, California</i>.</strong>
+  <strong>You want to find a bus connection from <i>Central park</i> to <i>Empire State Building</i>. Ask about the time requirements and find out the next connection. Make sure You get the weather forecast and time in <i>your favourite or home town</i>.</strong>
 </div>
 <div align="center">
-  <div class="warning"> To complete the Job, call this toll free phone number: (US) <strong>1-888-826-5115</strong>.<br/>To end the call say<strong>"Thank you. Good bye!"</strong></div>
+  <div class="warning"> To complete the Job, call this toll free phone number: (US) <strong>1-855-528-7350</strong>.<br/>To end the call say <strong>"Thank you. Good bye!"</strong></div>
   <div class="feedback">
     <cml:text label="Dialogue Code validation field:" name="code_field" validates="required yext_no_international_url" instructions="In order to obtain this Code you have to successfully complete the call. Please wait until the code is verified." />
-
-    <cml:radios validates="required" only-if="code_field" label="Have you found what you were looking for?">
+    
+    <cml:radios validates="required" label="Have you found what you were looking for?">
       <cml:radio label="Yes" />
       <cml:radio label="No" />
     </cml:radios>
-
-    <cml:ratings validates="required" only-if="code_field" points="4" from="Very poorly" to="Very well" label="The system understood me:" />
-    <cml:ratings validates="required" only-if="code_field" points="4" from="Very poor" to="Very good" label="The phrasing of the system's response was:"/>
-    <cml:ratings validates="required" only-if="code_field" points="4" from="Very poor" to="Very good" label="The quality of the system's voice was:" />
-
+    
+    <cml:ratings validates="required" points="4" from="Very poorly" to="Very well" label="The system understood me:" />
+    <cml:ratings validates="required" points="4" from="Very poor" to="Very good" label="The phrasing of the system's response was:" />
+    <cml:ratings validates="required" points="4" from="Very poor" to="Very good" label="The quality of the system's voice was:" />
+    
     <cml:textarea label="General comments (optional)" />
   </div>
 </div>

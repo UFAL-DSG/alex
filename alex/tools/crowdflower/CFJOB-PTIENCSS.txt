@@ -1,25 +1,22 @@
 ﻿.collapse-header {
   display: block;
   padding: 8px 15px;
-  cursor: pointer;
+  cursor: pointer;   
   color: #00A6E0;
   background-color: rgb(244,244,244);
   border-radius: 3px;
 }
-
 
 .collapse-body.in {
   padding: 9px 15px;
   border-top: 1px solid #D5D9DB;
 }
 
-
 .collapse-group {
   margin-bottom: 2px;
   border: 1px solid #D5D9DB;
   border-radius: 4px;
 }
-
 
 li {
 font-family: "Lato",sans-serif;
@@ -28,28 +25,23 @@ font-size: 13pt;
 line-height: 26px;
 }
 
-
-th{
+th{ 
 font-size: 1em;
 }
-
 
 h2 {
 color: rgb(25,25,25);
 }
-
 
 .border {
     margin: 1em 0em;
     padding: 1em;
 }
 
-
 .img_cuni {
     height:120px;
     width:120px;
 }
-
 
 .head{
     border: green solid 3px;
@@ -58,24 +50,20 @@ color: rgb(25,25,25);
     padding: 1em;
 }
 
-
 .intro {
     border: blue solid 3px;
     border-color: #303C74;
 }
-
 
 .consent {
     border: blue solid 3px;
     border-color: #303C74;
 }
 
-
 .example {
     border: blue solid 3px;
     border-color: #AA9739;
 }
-
 
 .briefing {
     border: blue solid 3px;
@@ -83,10 +71,7 @@ color: rgb(25,25,25);
 }
 
 
-
-
 /* $Id: mturk.css,v 1.2 2010/05/12 18:53:18 fj228 Exp $ */
-
 
 /*--------------------------------------------------
   REQUIRED to hide the non-active tab content.
@@ -95,7 +80,6 @@ color: rgb(25,25,25);
 .tabberlive .tabbertabhide {
     display:none;
 }
-
 
 /*--------------------------------------------------
   .tabber = before the tabber interface is set up
@@ -106,7 +90,6 @@ color: rgb(25,25,25);
 .tabberlive {
     margin-top:1em;
 }
-
 
 /*--------------------------------------------------
   ul.tabbernav = the tab navigation list
@@ -120,14 +103,12 @@ ul.tabbernav
     font: bold 12px Verdana, sans-serif;
 }
 
-
 ul.tabbernav li
 {
     list-style: none;
     margin: 0;
     display: inline;
 }
-
 
 ul.tabbernav li a
 {
@@ -139,10 +120,8 @@ ul.tabbernav li a
     text-decoration: none;
 }
 
-
 ul.tabbernav li a:link { color: #448; }
 ul.tabbernav li a:visited { color: #667; }
-
 
 ul.tabbernav li a:hover
 {
@@ -151,13 +130,11 @@ ul.tabbernav li a:hover
     border-color: #227;
 }
 
-
 ul.tabbernav li.tabberactive a
 {
     background-color: #fff;
     border-bottom: 1px solid #fff;
 }
-
 
 ul.tabbernav li.tabberactive a:hover
 {
@@ -165,7 +142,6 @@ ul.tabbernav li.tabberactive a:hover
     background: white;
     border-bottom: 1px solid white;
 }
-
 
 /*--------------------------------------------------
   .tabbertab = the tab content
@@ -176,22 +152,16 @@ ul.tabbernav li.tabberactive a:hover
     border:1px solid #aaa;
     border-top:0;
 
-
     /* If you don't want the tab size changing whenever a tab is changed
        you can set a fixed height */
 
-
     /* height:200px; */
-
 
     /* If you set a fix height set overflow to auto and you will get a
        scrollbar when necessary */
 
-
     /* overflow:auto; */
 }
-
-
 
 
 /* Example of using an ID to set different styles for the tabs on the page */
@@ -203,7 +173,6 @@ ul.tabbernav li.tabberactive a:hover
     height:200px;
     overflow:auto;
 }
-
 
 #customers
 {
@@ -231,7 +200,6 @@ ul.tabbernav li.tabberactive a:hover
     background-color:#EAF2D3;
 }
 
-
 iframe {
     margin:0;
     padding:0;
@@ -239,7 +207,6 @@ iframe {
     display:block;
     border:none;
 }
-
 
 .task {
     background-color:#EAF2D3;
@@ -249,15 +216,13 @@ iframe {
     font-size: 1.5em;
 }
 
-
 .warning {
     background-color:#FDD;
     border:red solid 3px;
     margin: 0.66em;
     padding: 0.66em;
-    font-size: 1.5em;
+    font-size: 1.5em; 
 }
-
 
 .feedback {
     background-color:#ffd;
@@ -299,25 +264,21 @@ iframe {
     color: gray;
 }
 
-
 .valid {
     border-color: #00FF00;
     border-width: 3px;
 }
-
 
 .invalid {
     border-color: red;
     border-width: 3px;
 }
 
-
 .focused
 {
     color: green;
     text-decoration: underline;
 }
-
 
 .feedback-error
 {
