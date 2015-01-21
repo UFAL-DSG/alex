@@ -6,7 +6,7 @@ The Alex project is developed in Python and tested with version 2.7.
 It may be necessary to have exactly this version of Python for the project
 to work correctly.
 
-Ubuntu 12.04
+Ubuntu 14.04
 ------------
 Ask the root on the computer to run:
 
@@ -157,19 +157,6 @@ To install ``morfodita``, follow these instructions:
   sudo cp -R ./ufal /usr/local/lib/python2.7/dist-packages
   sudo cp ./ufal_morphodita.so /usr/local/lib/python2.7/dist-packages
 
-
-OpenJulius
-~~~~~~~~~~
-Get the supported Open Julius ASR decoder (4.2.3 tested) from our fork at GitHub.
-To install ``openjulius``, follow the following instructions:
-
-.. code-block:: bash
-
-  git clone git@github.com:UFAL-DSG/openjulius.git
-  cd openjulius
-  ./configure
-  make
-  make install
 
 Optimised ATLAS and LAPACK libraries
 ------------------------------------

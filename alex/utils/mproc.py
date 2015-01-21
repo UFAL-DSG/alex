@@ -301,12 +301,19 @@ class SystemLogger(object):
     def critical(self, message):
         self.log('CRITICAL', message)
 
+    def exception(self, message):
+        # We need to obtain the traceback BEFORE we switch to the asynchronous thread,
+        # otherwise the traceback will be empty.
+        tb = traceback.format_exc()
+        # Now log the whole exception, including the traceback.
+        self._log_exception(unicode(message) + '\n' + unicode(tb, 'utf8'))
+
     @async
     @etime('syslog_exception')
     @global_lock(lock)
-    def exception(self, message):
-        tb = traceback.format_exc()
-        self.log('EXCEPTION', unicode(message) + '\n' + unicode(tb, 'utf8'))
+    def _log_exception(self, message):
+        """This should only be called by :py:func:`exception` for asynchronous logging."""
+        self.log('EXCEPTION', message)
 
     @async
     @etime('syslog_error')
