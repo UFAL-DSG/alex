@@ -40,6 +40,7 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
             (["i'm"], ['i am']),
             (["it'll"], ['it will']),
             (["i'll"], ['i will']),
+            (["that's"], ['that is']),
             # (['ze'], ['z']),
             # # (['se'], ['s']), # do not use this, FJ
             # (['barandov'], ['barrandov']),

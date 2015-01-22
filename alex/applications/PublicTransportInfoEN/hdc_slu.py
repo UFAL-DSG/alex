@@ -509,7 +509,7 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("hello"))
 
         if (any_word_in(u, "bye byebye seeya goodbye") or
-                any_phrase_in(u, ['good bye', 'see you'])):
+                any_phrase_in(u, ['good bye', 'see you', 'nothing else', 'no further help needed', 'that was it', 'that is it', ])):
             cn.add(1.0, DialogueActItem("bye"))
 
         if not any_word_in(u, 'connection station option'):
@@ -531,7 +531,7 @@ class PTIENHDCSLU(SLUInterface):
         if len(u) == 1 and any_word_in(u, "excuse pardon sorry apology, apologise, apologies"):
             cn.add(1.0, DialogueActItem("apology"))
 
-        if not any_word_in(u, "dont want thank"):
+        if not any_word_in(u, "dont want thank thanks"):
             if any_word_in(u, "help hint"):
                 cn.add(1.0, DialogueActItem("help"))
 
@@ -633,7 +633,9 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until'):
-            if all_words_in(u, 'how long') and any_phrase_in(u, ['does it take', 'will it take', 'travel']):
+            if (all_words_in(u, 'how long') and \
+                any_phrase_in(u, ['does it take', 'would it take', 'will it take', 'will that take', "would that take", 'travel'])) or \
+                    any_phrase_in(u, ['time requirement', 'time requirements', ]):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have']):
@@ -645,7 +647,7 @@ class PTIENHDCSLU(SLUInterface):
             not any_word_in(u, 'time'):
             cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-        if any_word_in(u, 'connection alternatives alternative option options found choice'):
+        if any_word_in(u, 'connection alternatives alternative option options found choice link'):
             if any_word_in(u, 'arbitrary') and \
                 not any_word_in(u, 'first second third fourth one two three four'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
@@ -729,6 +731,7 @@ class PTIENHDCSLU(SLUInterface):
 
         abutterance = abutterance.replace(('how', 'CITY=Many'), ('how', 'many'))
         abutterance = abutterance.replace(('CITY=Tell', 'me'), ('tell', 'me'))
+        abutterance = abutterance.replace(('CITY=Best', ), ('best',))
         abutterance = abutterance.replace(('CITY=Transfer',), ('transfer',))
         if 'CITY=Ohio' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Ohio',), ('STATE=Ohio',))
@@ -744,6 +747,14 @@ class PTIENHDCSLU(SLUInterface):
             category_labels.add('STATE')
         if 'CITY=Maryland' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Maryland',), ('STATE=Maryland',))
+            # category_labels.remove('CITY')
+            category_labels.add('STATE')
+        if 'CITY=Nevada' in abutterance[:]:
+            abutterance = abutterance.replace(('CITY=Nevada',), ('STATE=Nevada',))
+            # category_labels.remove('CITY')
+            category_labels.add('STATE')
+        if 'CITY=Florida' in abutterance[:]:
+            abutterance = abutterance.replace(('CITY=Florida',), ('STATE=Florida',))
             # category_labels.remove('CITY')
             category_labels.add('STATE')
 

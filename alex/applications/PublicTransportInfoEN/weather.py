@@ -23,8 +23,9 @@ class WeatherPoint(object):
 
 class OpenWeatherMapWeather(Weather):
 
-    def __init__(self, input_json, substitutions, time=None, daily=False):
+    def __init__(self, input_json, substitutions, time=None, daily=False, celsius=True):
         # get current weather
+        self.celsius = celsius
 
         if time is None:
             self.temp = self._round_temp(input_json['main']['temp'])
@@ -52,7 +53,10 @@ class OpenWeatherMapWeather(Weather):
             self.condition = substitutions[input_json['list'][0]['weather'][0]['id']]
 
     def _round_temp(self, temp):
-        return int(round(temp - 273.15))
+        if self.celsius:
+            return int(round(temp - 273.15))
+        else:
+            return int(round((temp - 273.15) * 1.8 + 32))
 
     def __repr__(self):
         ret = self.condition + ', '
@@ -60,8 +64,9 @@ class OpenWeatherMapWeather(Weather):
             ret += str(self.min_temp) + ' – ' + str(self.max_temp)
         else:
             ret += str(self.temp)
-        return ret + ' °C'
 
+        units = ' °C' if self.celsius else ' °F'
+        return ret + units
 
 class WeatherFinder(object):
     """Abstract ancestor for transit direction finders."""
@@ -126,6 +131,6 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         self._log_response_json(response)
         if response['cod'] != 200:
             return None
-        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily)
+        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily, celsius=False)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather
