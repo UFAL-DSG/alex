@@ -23,8 +23,8 @@ database = {
         'weather': ['weather', ],
     },
     "time": {
-        "now": [ "now", "at once", "immediately", "offhand", "at the moment", "at this time",
-                 "the closest", "in the moment"],
+        "now": [ "now", "at once", "immediately", "offhand", "at this time",
+                 "the closest", "this instant"],
         "0:01": ["minute", ],
         "0:15": ["quarter of an hour", ],
         "0:30": ["half an hour", "half past"],
