@@ -8,6 +8,8 @@ renice 20 $$
 # Source optional config if exists
 [ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
 
+local/check_path.sh
+
 . ./path.sh
 
 # If you have cluster of machines running GridEngine you may want to
