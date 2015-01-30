@@ -94,11 +94,11 @@ local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 
 
 
 # Train tri3b, which is LDA+MLLT+SAT
-local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
-  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
+#local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
+#  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
 
-local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
-  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
+#local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
+#  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
 #./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
 #    --tgtdir $EXP/nnet2_online \
