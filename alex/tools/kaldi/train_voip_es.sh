@@ -4,9 +4,9 @@ set -e
 renice 20 $$
 
 # Load training parameters
-. ./env_voip_en.sh
+. ./env_voip_es.sh
 # Source optional config if exists
-[ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
+[ -f env_voip_es_CUSTOM.sh ] && . ./env_voip_es_CUSTOM.sh
 
 local/check_path.sh
 
@@ -29,7 +29,7 @@ local/check.sh local/create_LMs.sh \
     --arpa-paths "$LM_paths" --lm-names "$LM_names" \
     $WORK/local/lm || exit 1
 
-local/check.sh local/prepare_en_transcription.sh $WORK/local/lm $WORK/local/dict || exit 1
+local/check.sh local/prepare_dummy_transcription.sh $WORK/local/lm $WORK/local/dict || exit 1
 
 local/check.sh local/create_phone_lists.sh $WORK/local/dict || exit 1
 

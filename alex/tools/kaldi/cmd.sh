@@ -22,4 +22,4 @@ njobs=100
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
 #export train_cmd=run.pl
 #export decode_cmd=run.pl
-#njobs=16
+#njobs=6
