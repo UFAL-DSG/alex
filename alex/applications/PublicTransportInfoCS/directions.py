@@ -527,7 +527,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         else:
             raise Exception()
 
-
+        train_name = None
         if platform_info.to_city != 'none' and platform_info.to_stop != \
                 'none':
                 to_obj = self.search_train_station("%s, %s" % (
@@ -539,6 +539,9 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         elif platform_info.to_stop != 'none':
             to_obj = self.search_train_station("%s" % (
                                              platform_info.to_stop, ))
+        elif platform_info.train_name != 'none':
+            to_obj = None
+            train_name = platform_info.train_name
         else:
             raise Exception()
 
@@ -551,10 +554,10 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                                              platform_info.to_city,
                                              platform_info.to_stop))
 
-        self.system_logger.info("FROM" + pprint.pformat(from_obj))
-        self.system_logger.info("TO" + pprint.pformat(to_obj))
+        #self.system_logger.info("FROM" + pprint.pformat(from_obj))
+        #self.system_logger.info("TO" + pprint.pformat(to_obj))
 
-        if from_obj and to_obj:
+        if from_obj and (to_obj or train_name):
             # Get the entries in the departure table at the from station.
             response = self.client.service.SearchDepartureTableInfo(
                 self.user_id,
@@ -577,11 +580,10 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
             # Extract the departure table entry.
             pfinder = CRWSPlatformFinder(response)
-            if platform_info.to_stop != 'none' or platform_info.to_city != \
-                    'none':
+            if from_obj and to_obj:
                 self.system_logger.info("CRWS Looking by destination station.")
                 platform_res = pfinder.find_platform_by_station(to_obj)
-            elif platform_info.train_name != 'none':
+            elif from_obj and train_name:
                 self.system_logger.info("CRWS Looking by train name.")
                 platform_res = pfinder.find_platform_by_train_name(platform_info.train_name)
             else:

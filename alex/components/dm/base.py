@@ -21,31 +21,26 @@ class DiscreteValue(object):
 
     def prune(self, threshold=1e-3):
         """Prune all values with probability less then a threshold."""
-
         pass
 
     def normalise(self):
         """This function normalise the sum of all probabilities to 1.0"""
-
         pass
 
     def mph(self):
         """The function returns the most probable value and its probability
         in a tuple.
         """
-
         return None
 
     def mpv(self):
         """The function returns the most probable value.
         """
-
         return self.mph()[1]
 
     def mpvp(self):
         """The function returns the probability of the most probable value.
         """
-
         return self.mph()[0]
 
     def tmphs(self):
@@ -53,7 +48,6 @@ class DiscreteValue(object):
 
         The function returns a tuple consisting of two tuples (probability, value).
         """
-
         return None
 
     def tmpvs(self):
@@ -214,14 +208,3 @@ class DialogueManager(object):
         :return: none
         """
         self.dialogue_state.log_state()
-
-    def get_token(self):
-        import urllib2
-
-        token_url = self.cfg['DM'].get('token_url')
-        curr_session = self.cfg['Logging']['session_logger'].session_dir_name.value
-        if token_url is not None:
-            f_token = urllib2.urlopen(token_url.format(curr_session))
-            return f_token.read()
-        else:
-            raise Exception("Please configure the 'token_url' DM parameter in config.")

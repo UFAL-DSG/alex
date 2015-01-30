@@ -51,9 +51,10 @@ class AudioIO(multiprocessing.Process):
         self.audio_play = audio_play
         self.close_event = close_event
 
-        self.output_file_name = os.path.join(
-            self.cfg['AudioIO']['output_dir'],
-            'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
+        self.output_file_name = '/dev/null'
+        #os.path.join(
+        #    self.cfg['AudioIO']['output_dir'],
+        #    'all-' + datetime.now().isoformat('-').replace(':', '-') + '.wav')
 
     def process_pending_commands(self, p, stream, wf):
         """Process all pending commands.
@@ -170,7 +171,7 @@ class AudioIO(multiprocessing.Process):
 
     def run(self):
         try:
-            set_proc_name("Alex_AIO")
+            #set_proc_name("Alex_AIO")
 
             wf = wave.open(self.output_file_name, 'w')
             wf.setnchannels(2)
