@@ -115,7 +115,8 @@ local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
    $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1
 
 echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05"
-local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
+local/check.sh steps/train_mmi.sh --cmd "$train_cmd" \
+   --boost ${train_mmi_boost} $WORK/train $WORK/lang \
    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
 # Cleaning does not help a lot

@@ -41,4 +41,3 @@ export mmi_lat_beam=10.0
 
 # --fake -> NO CMVN; empty -> CMVN (pykaldi decoders can not handle CMVN -> fake)
 export fake="--fake"
-export fake="" # do CMNV
