@@ -7,6 +7,7 @@ import urllib
 from datetime import datetime
 from datetime import time as dttime
 import json
+import time
 
 from alex.utils.config import load_as_module
 from alex.tools.apirequest import APIRequest
@@ -23,18 +24,19 @@ class WeatherPoint(object):
 
 class OpenWeatherMapWeather(Weather):
 
-    def __init__(self, input_json, substitutions, time=None, daily=False, celsius=True):
+    def __init__(self, input_json, substitutions, date=None, daily=False, celsius=True):
         # get current weather
         self.celsius = celsius
 
-        if time is None:
+        if date is None:
             self.temp = self._round_temp(input_json['main']['temp'])
             self.condition = substitutions[input_json['weather'][0]['id']]
             return
         # get prediction
         if daily:  # set time to 13:00 for daily
-            time = datetime.combine(time.date(), dttime(19, 00)) #TODO: improve -> 19 - 6 is 13.00 in new york
-        ts = int(time.strftime("%s"))  # convert time to Unix timestamp
+            date = datetime.combine(date.date(), dttime(13, 00))
+        date = datetime.utcfromtimestamp(int(time.mktime(date.timetuple())))
+        ts = int(date.strftime("%s"))  # convert time to Unix timestamp
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
             if ts >= fc1['dt'] and ts <= fc2['dt']:
@@ -48,6 +50,7 @@ class OpenWeatherMapWeather(Weather):
                     self.temp = self._round_temp(fc1['temp']['day'])
                     self.min_temp = self._round_temp(fc1['temp']['min'])
                     self.max_temp = self._round_temp(fc1['temp']['max'])
+                break
         if not hasattr(self, 'temp'):
             self.temp = self._round_temp(input_json['list'][0]['main']['temp'])
             self.condition = substitutions[input_json['list'][0]['weather'][0]['id']]
@@ -129,7 +132,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             return None
         response = json.load(page)
         self._log_response_json(response)
-        if response['cod'] != 200:
+        if str(response['cod']) != "200":
             return None
         weather = OpenWeatherMapWeather(response, self.substitutions, time, daily, celsius=False)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))

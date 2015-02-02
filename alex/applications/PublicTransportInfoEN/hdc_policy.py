@@ -18,6 +18,7 @@ from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
 import re
+import os
 
 
 def randbool(n):
@@ -36,6 +37,7 @@ class PTIENHDCPolicy(DialoguePolicy):
     def __init__(self, cfg, ontology):
         super(PTIENHDCPolicy, self).__init__(cfg, ontology)
 
+        os.environ['TZ'] = ontology['default_values']['time_zone']
         directions_type = GoogleDirectionsFinder
         if 'directions' in cfg['DM'] and 'type' in cfg['DM']['directions']:
             directions_type = cfg['DM']['directions']['type']
@@ -52,6 +54,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTIENHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
+
 
     def reset_on_change(self, ds, changed_slots):
         """Reset slots which depends on changed slots.
@@ -396,7 +399,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         # check if any time is set to distinguish current/prediction
         weather_ts = None
         if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
-            weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time, local=True)
+            weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         else:
             time_type = ""
 
@@ -434,7 +437,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         else:
             cur_time, time_zone = self.time.get_time(place=place)
         if cur_time is None:
-            default_time = self.get_default_local_time()
+            default_time = datetime.now()
             default_state = self.ontology.get_default_value('in_state')
             d_time = default_time.strftime("%I:%M:%p")
             if in_state is not default_state:
@@ -449,22 +452,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         res_da.append(DialogueActItem('inform', 'time_zone',  time_zone))
 
         return res_da
-
-    def get_default_local_time(self):
-        """
-        :return: Returns utc time - 8 hours
-        """
-        return datetime.utcnow() + self.ontology['default_values']['time_zone_offset']  # timedelta(hours=-5)
-
-    def convert_to_default_time_zone(self, date):
-        """
-        :return: Returns date which is in current (central europe) time zone and computes default (NY-pacific time)
-        """
-        if isinstance(date, datetime):
-            return date + self.ontology['default_values']['time_zone_offset'] - (datetime.now() - datetime.utcnow())
-        else:
-            return date
-
 
     def backoff_action(self, ds):
         """Generate a random backoff dialogue act in case we don't know what to do.
@@ -851,7 +838,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 print "WARNING: there is no state compatible with this city: " + in_city_val
             elif len(in_states) == 1:
                 in_state_val = in_states.pop()
-                
+
         if in_city_val == 'none' and in_state_val == 'none':
             in_city_val = self.ontology.get_default_value('in_city')
             in_state_val = self.ontology.get_default_value('in_state')
@@ -946,7 +933,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
-                da.append(DialogueActItem('inform', 'departure_time', self.convert_to_default_time_zone(step.departure_time).strftime("%I:%M:%p")))
+                da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%I:%M:%p")))
                 return da
 
     def req_departure_time_rel(self, dialogue_state):
@@ -959,9 +946,9 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 # construct relative time from now to departure
-                now = self.get_default_local_time()  # datetime.now()
+                now = datetime.now()
                 now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
-                departure_time_rel = (self.convert_to_default_time_zone(step.departure_time) - now)
+                departure_time_rel = step.departure_time - now
 
                 # the connection was missed
                 if departure_time_rel.days < 0:
@@ -990,7 +977,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                da.append(DialogueActItem('inform', 'arrival_time', self.convert_to_default_time_zone(step.arrival_time).strftime("%I:%M:%p")))
+                da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%I:%M:%p")))
                 return da
 
     def req_arrival_time_rel(self, dialogue_state):
@@ -1004,8 +991,10 @@ class PTIENHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 # construct relative time from now to arrival
-                arrival_time_rel = (step.arrival_time - self.get_default_local_time()).seconds / 60
-                arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
+                arrival_time_rel = step.arrival_time - datetime.now()
+                arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel.seconds / 60, 60)
+                if arrival_time_rel.days > 0:
+                    arrival_time_rel_hrs += 24 * arrival_time_rel.days
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
                 return da
@@ -1125,8 +1114,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         # interpret departure and arrival time
         departure_ts, arrival_ts = None, None
         if arrival_time != 'none' or arrival_time_rel != 'none':
-            arrival_ts, _ = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel,
-                                                      ds['lta_arrival_time'].mpv())
+            arrival_ts, _ = self.interpret_time(arrival_time, ampm, arrival_time_rel, date_rel, ds['lta_arrival_time'].mpv())
         else:
             lta_departure_time = ds['lta_departure_time'].mpv()
             lta_time = ds['lta_time'].mpv()
@@ -1180,22 +1168,22 @@ class PTIENHDCPolicy(DialoguePolicy):
             # find out what will be the next departure stop (needed later)
             next_leave_stop = self.DESTIN
             if step_ndx < len(steps) - 2 and \
-                    steps[step_ndx + 1].travel_mode == step.MODE_WALKING:
+                            steps[step_ndx + 1].travel_mode == step.MODE_WALKING:
                 next_leave_stop = steps[step_ndx + 2].departure_stop
             elif step_ndx < len(steps) - 1 and \
-                    steps[step_ndx + 1].travel_mode == step.MODE_TRANSIT:
+                            steps[step_ndx + 1].travel_mode == step.MODE_TRANSIT:
                 next_leave_stop = steps[step_ndx + 1].departure_stop
 
             # walking
             if step.travel_mode == step.MODE_WALKING:
                 # walking to stops with different names
                 if (next_leave_stop == self.DESTIN and
-                    prev_arrive_stop != dialogue_state.directions.to_stop) or \
+                            prev_arrive_stop != dialogue_state.directions.to_stop) or \
                         (prev_arrive_stop == self.ORIGIN and
-                         next_leave_stop != dialogue_state.directions.from_stop) or \
+                                 next_leave_stop != dialogue_state.directions.from_stop) or \
                         (next_leave_stop != self.DESTIN and
-                         prev_arrive_stop != self.ORIGIN and
-                         next_leave_stop != prev_arrive_stop):
+                                 prev_arrive_stop != self.ORIGIN and
+                                 next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
                     #res.append("inform(duration=0:%02d)" % (step.duration / 60))
@@ -1203,8 +1191,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
                 res.append("inform(line=%s)" % step.line_name)
-                res.append("inform(departure_time=%s)" %
-                           self.convert_to_default_time_zone(step.departure_time).strftime("%I:%M:%p"))
+                res.append("inform(departure_time=%s)" % step.departure_time.strftime("%I:%M:%p"))
                 # only mention departure if it differs from previous arrival
                 if step.departure_stop != prev_arrive_stop:
                     res.append("inform(enter_at=%s)" % step.departure_stop)
@@ -1230,14 +1217,14 @@ class PTIENHDCPolicy(DialoguePolicy):
                           'evening': "18:00",
                           'night': "00:00"}
 
-    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time, utc=False):
+    def interpret_time(self, time_abs, time_ampm, time_rel, date_rel, lta_time):
         """Interpret time, given current dialogue state most probable values for
         relative and absolute time and date, plus the corresponding last-talked-about value.
 
         :return: the inferred time value + flag indicating the inferred time type ('abs' or 'rel')
         :rtype: tuple(datetime, string)
         """
-        now = datetime.utcnow() if utc else self.convert_to_default_time_zone(datetime.now())
+        now = datetime.now()
         now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
 
         # use only last-talked-about time (of any type -- departure/arrival)
@@ -1298,7 +1285,6 @@ class PTIENHDCPolicy(DialoguePolicy):
             elif time_abs < now:
                 time_abs += timedelta(days=1)
 
-        # time_en = dttime(hour=time_abs.hour, minute=time_abs.minute)
         return time_abs, time_type
 
     def get_limited_context_help(self, dialogue_state):

@@ -3,7 +3,6 @@
 
 from __future__ import unicode_literals
 from database import database
-from datetime import timedelta
 import codecs
 import os
 from alex.utils.config import online_update, to_project_path
@@ -350,7 +349,7 @@ ontology = {
     'default_values': {
         'in_city': 'New York',
         'in_state': 'New York',
-        'time_zone_offset': timedelta(hours=-5),  # new york is 5 hours earlier than utc
+        'time_zone': 'America/New_York',
     },
 
     'addinfo': {
