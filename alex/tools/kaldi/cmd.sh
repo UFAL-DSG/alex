@@ -11,10 +11,10 @@
 # # UFAL settings
 mem=2
 #  TODO # export train_cmd="queue.pl -hard -l mem_free=${mem}g -l h_vmem=`expr $mem + $mem`g -l act_mem_free=${mem}g"
-export train_cmd="queue.pl -V -l mem_free=1G,h_vmem=1G"
+export train_cmd="queue.pl -V -l mem_free=2G,h_vmem=2G"
 mem=3
 #  TODO # export decode_cmd="queue.pl -hard -l mem_free=${mem}g -l h_vmem=`expr $mem + $mem`g -l act_mem_free=${mem}g"
-export decode_cmd="queue.pl -V -l mem_free=4G,h_vmem=4G"
+export decode_cmd="queue.pl -V -l mem_free=8G,h_vmem=8G"
 njobs=100
 
 

@@ -25,6 +25,8 @@ if [ -z $cleandir ] ; then
   cleandir=${src_dir}_cleaned
 fi
 
+nj=`cat $srcdir/num_jobs` || exit 1;
+
 steps/cleanup/find_bad_utts.sh --nj $nj --cmd "$train_cmd" \
   $train_data $lang $srcdir $cleandir
 
