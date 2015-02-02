@@ -562,7 +562,7 @@ class PTIENHDCSLU(SLUInterface):
         if any_word_in(u, 'thanks thankyou thank cheers'):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if any_word_in(u, 'ok right well correct fine') and \
+        if any_word_in(u, 'ok well correct fine') or (any_word_in(u, 'right') and not any_word_in(u, 'now')) and \
             not any_word_in(u, "yes"):
             cn.add(1.0, DialogueActItem("ack"))
 
@@ -633,9 +633,8 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until'):
-            if (all_words_in(u, 'how long') and \
-                any_phrase_in(u, ['does it take', 'would it take', 'will it take', 'will that take', "would that take", 'travel'])) or \
-                    any_phrase_in(u, ['time requirement', 'time requirements', ]):
+            if (all_words_in(u, 'how long') and any_phrase_in(u, ['does it take', 'would it take', 'will it take',
+                'will that take', "would that take", 'travel'])) or any_phrase_in(u, ['time requirement', 'time requirements', ]):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
         if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have']):
