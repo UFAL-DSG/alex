@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 import urllib
-from datetime import datetime, timedelta
+from datetime import datetime
 import os.path
 import time
 import json
@@ -117,14 +117,6 @@ class RouteStep(object):
     MODE_TRANSIT = 'TRANSIT'
     MODE_WALKING = 'WALKING'
 
-    # TODO this should be done somehow more clever
-    # STOPS_MAPPING = {'Můstek - A': 'Můstek',
-    #                  'Můstek - B': 'Můstek',
-    #                  'Muzeum - A': 'Muzeum',
-    #                  'Muzeum - C': 'Muzeum',
-    #                  'Florenc - B': 'Florenc',
-    #                  'Florenc - C': 'Florenc'}
-
     def __init__(self, travel_mode):
         self.travel_mode = travel_mode
 
@@ -170,7 +162,7 @@ class DirectionsFinder(object):
 class GoogleDirections(Directions):
     """Traffic directions obtained from Google Maps API."""
 
-    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_json={}):
+    def __init__(self, from_city, from_stop, to_city, to_stop, vehicle=None, input_json={}, finder=None):
         super(GoogleDirections, self).__init__(from_city, from_stop, to_city, to_stop, vehicle=vehicle)
         for route in input_json['routes']:
             g_route = GoogleRoute(route)
@@ -180,6 +172,7 @@ class GoogleDirections(Directions):
                 route_vehicles = set([step.vehicle for leg in g_route.legs for step in leg.steps if hasattr(step, "vehicle")])
                 if (vehicle not in route_vehicles or len(route_vehicles) > 1) and len(route_vehicles) != 0:
                     continue
+            #TODO: here you might implement the no transfer stuff
 
             self.routes.append(g_route)
 
@@ -410,20 +403,34 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         Setting the correct date is compulsory!
         """
 
+        parameters = list()
         if not waypoints.from_geo:
-            origin = ('%s,%s' % (waypoints.from_stop, waypoints.from_city)).encode('utf-8')
+            if not waypoints.from_stop:
+                parameters.append(waypoints.from_stop)
+            if not waypoints.from_city:
+                parameters.append(waypoints.from_city)
         else:
-            origin = ('%s,%s' % (waypoints.from_geo['lat'], waypoints.from_geo['lon'])).encode('utf-8')
+            parameters.append(waypoints.from_geo['lat'])
+            parameters.append(waypoints.from_geo['lon'])
 
+        origin =  ','.join(parameters).encode('utf-8')
+
+        parameters = list()
         if not waypoints.to_geo:
-            destination = ('%s,%s' % (waypoints.to_stop, waypoints.to_city)).encode('utf-8')
+            if not waypoints.to_stop:
+                parameters.append(waypoints.to_stop)
+            if not waypoints.to_city:
+                parameters.append(waypoints.to_city)
         else:
-            destination = ('%s,%s' % (waypoints.to_geo['lat'], waypoints.to_geo['lon'])).encode('utf-8')
+            parameters.append(waypoints.to_geo['lat'])
+            parameters.append(waypoints.to_geo['lon'])
+
+        destination = ','.join(parameters).encode('utf-8')
+
         data = {
             'origin': origin,
             'destination': destination,
             'region': 'us',
-            # 'sensor': 'false',
             'alternatives': 'true',
             'mode': 'transit',
             'language': 'en',
