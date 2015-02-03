@@ -61,11 +61,11 @@ _NUMBERS = {0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
             6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
             11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen',
             15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen',
-            19: 'nineteen', 20: 'twenty', 30: 'thirty', 40: 'fourty',
+            19: 'nineteen', 20: 'twenty', 30: 'thirty', 40: 'forty',
             50: 'fifty', 60: 'sixty', 70: 'seventy', 80: 'eighty',
             90: 'ninety', 100: 'hundred', 200: 'two hundred', 300: 'three hundred',
             400: 'four hundred', 500: 'five hundred', 600: 'six hundred', 700: 'seven hundred',
-            800: 'eihgt hundred', 900: 'nine hundred', 1000: 'one thousand', 2000: 'two thousand',
+            800: 'eight hundred', 900: 'nine hundred', 1000: 'one thousand', 2000: 'two thousand',
             3000: 'three thousand', 4000: 'four thousand', 5000: 'five thousand',
             6000: 'six thousand', 7000: 'seven thousand', 8000: 'eight thousand', 9000: 'nine thousand'
 }
@@ -73,10 +73,10 @@ _NUMBERS_ORD = {0:"zero", 1:"first", 2: "second", 3: "third", 4: "fourth", 5: "f
                 # nultý - zero/prime?
                 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth", 11: "eleventh", 12: "twelfth",
                 13: "thirteenth", 14: "fourteenth", 15: "fifteenth", 16: "sixteenth", 17: "seventeenth",
-                18: "eighteenth", 19: "nineteenth", 20: "twentieth", 30: "thirtieth", 40: "fourtieth",
+                18: "eighteenth", 19: "nineteenth", 20: "twentieth", 30: "thirtieth", 40: "fortieth",
                 50: "fiftieth", 60: "sixtieth", 70: "seventieth", 80: "eightieth", 90: "ninetieth",
-                100: "hundredth", 200: "two hundredth", 300:"three hundredth", 400:"fourhundredth",
-                500: 'five hundredth', 600: 'six hundredth', 700: 'seven hundredth',800: 'eihgt hundredth',
+                100: "hundredth", 200: "two hundredth", 300:"three hundredth", 400:"four hundredth",
+                500: 'five hundredth', 600: 'six hundredth', 700: 'seven hundredth',800: 'eight hundredth',
                 900: 'nine hundredth', 1000: 'one thousandth',
 }
 

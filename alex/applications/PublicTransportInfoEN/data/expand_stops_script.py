@@ -50,8 +50,6 @@ def hack_stops(stops):
 def preprocess_line(line):
     line = line.strip().title()
     line = line.replace(" Th ", "Th ")
-    line = line.replace(" th ", "th ")
-    line = line.replace(" TH ", "TH ")
     return line
 
 
