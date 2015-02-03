@@ -1,0 +1,33 @@
+﻿Name:
+
+ALEX - Information about Public Transportation in New York
+
+Tagline:
+
+Alex is a Spoken Dialogue System, a phone service providing Information about Public Transportation in New York.
+
+Prize Category:
+
+Accessibility Innovation
+
+Platform Type:
+
+Desktop - PC
+
+MTA Datasets:
+
+All Static Data Feeds (GTFS Schedule Data):
+New York City Transit Subway
+New York City Transit Bus
+Bronx
+Brooklyn
+Manhattan
+Queens
+Staten Island
+Long Island Rail Road
+Metro-North Railroad
+Bus Company
+
+How did you hear about this challenge?:
+
+Initially I was looking for stop names, later I discovered MTA site and I wanted the datasets. That's when I saw the competition announcement.

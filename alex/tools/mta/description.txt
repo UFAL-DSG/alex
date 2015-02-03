@@ -1,0 +1,43 @@
+﻿> Story behind
+
+This app was developed as a part of my Master Thesis project under the supervision of [Dr. Filip Jurcicek](https://ufal.mff.cuni.cz/filip-jurcicek) at Charles University in Prague. Our group is focused on a research in the field of Spoken Dialogue Systems. My goal was to make a Public Transport Information system in English. I picked the greatest city - New York. I came across this competition about a month ago.
+
+> Target users
+
+1. Our target users are the visually-impaired. They don't need to type in origin and destination of their journey. They can use their own voice. Conventional apps supporting TTS (text to speech) may produce a spoken version of the information on the screen. With our application, these people quickly adapt to the voice interface and they can easily pick and ask the information they are interested in.
+
+2. It is suitable for other people as well, in fact our application addresses people that do not have or can not afford a smart phone. They can use a phone-booth to quickly access the information.
+
+3. We think we qualify for the "Application for Novice Transit Riders", because at any time, user can ask for help and the system will provide a hint of how to use the service.
+
+> Features
+
+1. We are most proud of the fact, that we bring a different take on providing Information about Public Transportation.
+
+2. You can ask for:   
+    * connection from/to stop   
+    * connection from/to city
+    * weather information - us cities
+    * time (time zones) - us cities/states   
+    * transfer count   
+    * trip duration   
+    * relative/absolute departure/arrival times   
+    * next/previous connection    
+
+3. at any time You can say:    
+
+    * "Can You repeat that?" for repeating the last utterance.    
+    * "New entry." for restarting the process (clear dialogue history).    
+    * "Help." for getting a hint of what to say.    
+
+>  Master Thesis
+
+The project is fully functional, although it is not complete yet. By May, we want to implement additional capabilities such as information about each transfer, send SMS with the connection data upon request, train our own acoustic/language model for better voice recognition, etc.
+
+We are also working on utilizing MTA API, but it is not in the submitted version yet. However during the judging period there may be some improvements released. Actualities will be mentioned at our website.
+
+We also wanted to use a toll-free-number, but apparently we do not have sufficient funds.
+
+Call our service at **1-631-832-1179**.
+
+Our website [http://m2rtin.github.io/alex-site](http://m2rtin.github.io/alex-site) has all the information in detail.
