@@ -162,19 +162,19 @@ class DM(multiprocessing.Process):
     def epilogue_final_code(self):
         code = self.codes.pop()
 
+        # pull the url
+        url = self.cfg['DM']['epilogue']['final_code_url'].format(code = code)
+        urllib.urlopen(url)
+
         text = [c for c in code]
-        text = "  ".join(text)
+        text = ", ".join(text)
         text = self.cfg['DM']['epilogue']['final_code_text'].format(code = text)
-        text = [text,]*4
+        text = [text,]*3
         text = self.cfg['DM']['epilogue']['final_code_text_repeat'].join(text)
 
         da = DialogueAct('say(text="{text}")'.format(text=text))
         self.cfg['Logging']['session_logger'].dialogue_act("system", da)
         self.commands.send(DMDA(da, 'DM', 'HUB'))
-
-        # pull the url
-        url = self.cfg['DM']['epilogue']['final_code_url'].format(code = code)
-        urllib.urlopen(url)
 
         self.final_code_given = True
 
