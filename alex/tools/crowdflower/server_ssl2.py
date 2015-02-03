@@ -112,7 +112,12 @@ class SSLTCPServer(SocketServer.TCPServer):
         cert_file = os.path.join(dir, '/etc/apache2/ssl/apache.crt')
 
         import ssl
-        self.socket = ssl.wrap_socket(self.socket, keyfile=key_file, certfile=cert_file, cert_reqs=ssl.CERT_NONE)
+        self.socket = ssl.wrap_socket(self.socket,
+                                      keyfile=key_file,
+                                      certfile=cert_file,
+                                      cert_reqs=ssl.CERT_NONE,
+                                      ssl_version=ssl.PROTOCOL_TLSv1
+        )
 
         if bind_and_activate:
             self.server_bind()
