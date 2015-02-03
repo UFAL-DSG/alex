@@ -69,6 +69,7 @@ class PTIENHDCSLU(SLUInterface):
         super(PTIENHDCSLU, self).__init__(preprocessing, cfg)
         self.cldb = self.preprocessing.cldb
 
+
     def abstract_utterance(self, utterance):
         """
         Return a list of possible abstractions of the utterance.
@@ -508,8 +509,10 @@ class PTIENHDCSLU(SLUInterface):
                 any_phrase_in(u, ['good day', "what's up", 'what is up'])):
             cn.add(1.0, DialogueActItem("hello"))
 
-        if (any_word_in(u, "bye byebye seeya goodbye") or
-                any_phrase_in(u, ['good bye', 'see you', 'nothing else', 'no further help needed', 'that was it', 'that is it', ])):
+        if any_word_in(u, "bye byebye seeya goodbye") or \
+                any_phrase_in(u, ['good bye', 'see you', 'nothing else', 'no further help needed', ]) or \
+                (any_phrase_in(u, ['that is', 'that was', "that's", ]) and any_phrase_in(u, ['all', 'it', ])):
+
             cn.add(1.0, DialogueActItem("bye"))
 
         if not any_word_in(u, 'connection station option'):
@@ -562,7 +565,7 @@ class PTIENHDCSLU(SLUInterface):
         if any_word_in(u, 'thanks thankyou thank cheers'):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if any_word_in(u, 'ok well correct fine') or (any_word_in(u, 'right') and not any_word_in(u, 'now')) and \
+        if any_word_in(u, 'ok well correct fine understand, understood') or (any_word_in(u, 'right') and not any_word_in(u, 'now')) and \
             not any_word_in(u, "yes"):
             cn.add(1.0, DialogueActItem("ack"))
 
@@ -609,28 +612,22 @@ class PTIENHDCSLU(SLUInterface):
             all_words_in(u, "where terminate"):
             cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
-        if not any_phrase_in(u, ['will be', 'will arrive', 'will stop', 'will get to']):
-            if (any_phrase_in(u, ["what time"]) and any_phrase_in(u, ["is the", "does", ])) or \
-                any_phrase_in(u, ["when does", "when is", ]) or \
-                (all_words_in(u, 'when time') and any_word_in(u, 'leave departure go')):
-                cn.add(1.0, DialogueActItem('request', 'departure_time'))
+        if not any_word_in(u, 'arrival arrive arrives arriving stop stops stopping get gets destination target terminal'):
+            if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is']) and any_word_in(u, 'next leave leaves leaving go goes going deparutre departures destination'):
+                if not any_word_in(u, "till until before"):
+                    cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
-        if not any_phrase_in(u, ['will be', 'arrive', 'arrives', 'arriving', 'arrival', 'will stop', 'get', 'gets',
-            'destination', 'target station', 'terminal station', ]):
-            if all_words_in(u, "how") and any_word_in(u, "till until before"):
-                cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
+            if any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
+                if not any_word_in(u, "there"):
+                    cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
-        if (all_words_in(u, 'when will') and any_word_in(u, 'be arrive')) or \
-            (all_words_in(u, 'when will i') and any_word_in(u, 'be arrive')) or \
-            (all_words_in(u, 'what time will') and any_word_in(u, 'be arrive')) or \
-            all_words_in(u, 'time of arrival') or (any_word_in(u, 'when time') and any_word_in(u, 'arrival arrive')):
-            cn.add(1.0, DialogueActItem('request', 'arrival_time'))
+        if not any_word_in(u, 'departure, leave leaves leaving go goes going departure departures destination'):
+            if any_phrase_in(u, ['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there', 'be there']):
+                if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is', 'time of']):
+                    cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-#tohle celý přepsat, žádný any_word_in 'fráze', a vůbec je to nějaký divný tady kolem
-        if all_words_in(u, 'how') and any_word_in(u, 'till until before') and \
-            any_phrase_in(u, ['will be', 'arrive', 'arrives', 'arriving', 'arrival', 'will stop', 'get',
-                              'gets', 'destination', 'target station', 'terminal station', ]):
-            cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
+                if any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
+                    cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until'):
             if (all_words_in(u, 'how long') and any_phrase_in(u, ['does it take', 'would it take', 'will it take',
@@ -640,13 +637,13 @@ class PTIENHDCSLU(SLUInterface):
         if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have']):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
-        if (all_words_in(u, 'how many') or all_words_in(u, 'number of')) and \
+        if any_phrase_in(u, ['how many', 'there any', 'number', ]) and \
             any_word_in(u, 'transfer transfers transformer transformers transferring changing change changes'
                            'interchange interchanging interchanges') and \
             not any_word_in(u, 'time'):
             cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-        if any_word_in(u, 'connection alternatives alternative option options found choice link'):
+        if any_word_in(u, 'connection alternatives alternative option options found choice link possibility'):
             if any_word_in(u, 'arbitrary') and \
                 not any_word_in(u, 'first second third fourth one two three four'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
@@ -684,7 +681,7 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
-            (all_words_in(u, "and the following") or all_words_in(u, "and afterwards") or
+            (all_words_in(u, "the following") or all_words_in(u, "and afterwards") or
              all_words_in(u, "and later")):
             cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
@@ -732,6 +729,7 @@ class PTIENHDCSLU(SLUInterface):
         abutterance = abutterance.replace(('CITY=Tell', 'me'), ('tell', 'me'))
         abutterance = abutterance.replace(('CITY=Best', ), ('best',))
         abutterance = abutterance.replace(('CITY=Transfer',), ('transfer',))
+        abutterance = abutterance.replace(('CITY=Day',), ('day',))
         if 'CITY=Ohio' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Ohio',), ('STATE=Ohio',))
             # category_labels.remove('CITY')
@@ -754,6 +752,10 @@ class PTIENHDCSLU(SLUInterface):
             category_labels.add('STATE')
         if 'CITY=Florida' in abutterance[:]:
             abutterance = abutterance.replace(('CITY=Florida',), ('STATE=Florida',))
+            # category_labels.remove('CITY')
+            category_labels.add('STATE')
+        if 'CITY=Kansas' in abutterance[:]:
+            abutterance = abutterance.replace(('CITY=Kansas',), ('STATE=Kansas',))
             # category_labels.remove('CITY')
             category_labels.add('STATE')
 

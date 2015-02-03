@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import random
+from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
 
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
@@ -789,10 +790,10 @@ class PTIENHDCPolicy(DialoguePolicy):
                 req_da.extend(DialogueAct('request(to_stop)'))
 
         # we know nothing, lets ask about stops first:
-        elif from_stop_val == 'none':
-            req_da.extend(DialogueAct('request(from_stop)'))
         elif to_stop_val == 'none':
             req_da.extend(DialogueAct('request(to_stop)'))
+        elif from_stop_val == 'none':
+            req_da.extend(DialogueAct('request(from_stop)'))
 
         # we need to know the cities -- ask about them
         elif from_city_val == 'none':
@@ -933,6 +934,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
+                da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%I:%M:%p")))
                 return da
 
@@ -950,12 +952,15 @@ class PTIENHDCPolicy(DialoguePolicy):
                 now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
                 departure_time_rel = step.departure_time - now
 
+                da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
+
                 # the connection was missed
                 if departure_time_rel.days < 0:
                     da.append(DialogueActItem('apology'))
                     da.append(DialogueActItem('inform', 'missed_connection', 'true'))
                 # the connection is right now
                 elif departure_time_rel.days == 0 and departure_time_rel.seconds == 0:
+                    da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                     da.append(DialogueActItem('inform', 'departure_time_rel', 'now'))
                 # future connections
                 else:
@@ -977,6 +982,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
+                da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%I:%M:%p")))
                 return da
 
@@ -990,8 +996,12 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
+                da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 # construct relative time from now to arrival
-                arrival_time_rel = step.arrival_time - datetime.now()
+                now = datetime.now()
+                now -= timedelta(seconds=now.second, microseconds=now.microsecond)  # floor to minute start
+
+                arrival_time_rel = step.arrival_time - now
                 arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel.seconds / 60, 60)
                 if arrival_time_rel.days > 0:
                     arrival_time_rel_hrs += 24 * arrival_time_rel.days
@@ -1167,23 +1177,20 @@ class PTIENHDCPolicy(DialoguePolicy):
 
             # find out what will be the next departure stop (needed later)
             next_leave_stop = self.DESTIN
-            if step_ndx < len(steps) - 2 and \
-                            steps[step_ndx + 1].travel_mode == step.MODE_WALKING:
+            if step_ndx < len(steps) - 2 and steps[step_ndx + 1].travel_mode == step.MODE_WALKING:
                 next_leave_stop = steps[step_ndx + 2].departure_stop
-            elif step_ndx < len(steps) - 1 and \
-                            steps[step_ndx + 1].travel_mode == step.MODE_TRANSIT:
+            elif step_ndx < len(steps) - 1 and steps[step_ndx + 1].travel_mode == step.MODE_TRANSIT:
                 next_leave_stop = steps[step_ndx + 1].departure_stop
 
             # walking
             if step.travel_mode == step.MODE_WALKING:
                 # walking to stops with different names
-                if (next_leave_stop == self.DESTIN and
-                            prev_arrive_stop != dialogue_state.directions.to_stop) or \
-                        (prev_arrive_stop == self.ORIGIN and
-                                 next_leave_stop != dialogue_state.directions.from_stop) or \
-                        (next_leave_stop != self.DESTIN and
-                                 prev_arrive_stop != self.ORIGIN and
-                                 next_leave_stop != prev_arrive_stop):
+                # todo: delete those after merging hdc slu with origin master
+                directions_to_stop = expand_stop(dialogue_state.directions.to_stop)
+                directions_from_stop = expand_stop(dialogue_state.directions.from_stop)
+                if (next_leave_stop == self.DESTIN and prev_arrive_stop != directions_to_stop) or \
+                    (prev_arrive_stop == self.ORIGIN and next_leave_stop != directions_from_stop) or \
+                    (next_leave_stop != self.DESTIN and prev_arrive_stop != self.ORIGIN and next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
                     #res.append("inform(duration=0:%02d)" % (step.duration / 60))

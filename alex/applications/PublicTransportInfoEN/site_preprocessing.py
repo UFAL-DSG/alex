@@ -102,7 +102,8 @@ def expand(element):
     return " ".join(words).lower()
 
 def expand_stop(stop):
-
+    if stop is None:
+        return None
     if '/' in stop:
         elements = stop.split('/') # lexington av/63 street
         conjunction = ' at '
