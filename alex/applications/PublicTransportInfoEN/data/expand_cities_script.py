@@ -14,7 +14,7 @@ import autopath
 import sys
 
 from alex.applications.PublicTransportInfoEN.data.expand_stops_script import handle_csv, read_expansions, \
-    read_first_column, merge, append, save_out, handle_compatibility
+    read_first_column, merge, append, save_out
 
 
 def all_to_lower(site_list):
@@ -32,7 +32,7 @@ def handle_cities(cities_in, cities_out, cities_append, no_cache=False):
     else:
         prev = read_expansions(cities_out)
     # manually added expansions of specific cities not covered by automatic expansion
-    manual_expansions = read_expansions(cities_append)
+    manual_expansions = {} if cities_append is None else read_expansions(cities_append)
     # new expanded cities
     expanded = all_to_lower(read_first_column(cities_in))
     # merged new and old expansions, old ones have greater priority (no appending)

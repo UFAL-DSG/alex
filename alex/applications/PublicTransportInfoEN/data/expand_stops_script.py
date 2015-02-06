@@ -47,6 +47,7 @@ def hack_stops(stops):
             extras.add(stop.replace("'s", "s"))
     stops.update(extras)
 
+
 def preprocess_line(line):
     line = line.strip().title()
     line = line.replace(" Th ", "Th ")
@@ -87,6 +88,7 @@ def expand_place(stop_list):
         hack_stops(stops[stop])
         stops[stop] = list(stops[stop])
     return stops
+
 
 def load_list(filename, skip_comments=True):
     data = []
@@ -170,7 +172,7 @@ def read_exports(filename):
 
             if line.startswith('#'):
                 continue
-            site, sub_site, rest = line.split('\t',2)
+            site, sub_site, rest = line.split('\t', 2)
             key = site + '\t' + sub_site
             data[key] = rest
     return data
@@ -204,7 +206,7 @@ def process_places(places_in, place_out, places_add, no_cache=False):
     else:
         prev = read_expansions(place_out)
     # manually added expansions of specific places not covered by automatic expansion
-    manual_expansions = read_expansions(places_add)
+    manual_expansions = {} if places_add is None else read_expansions(places_add)
     # new expanded places
     expanded = expand_place(read_first_column(places_in))
     # merged new and old expansions, old ones have greater priority (no appending)
@@ -255,7 +257,7 @@ def main():
     stops_out = "./stops.expanded.txt"
     csv_out = "./stops.locations.csv"
     # compatibility_out = "./city.stop.txt"
-    
+
     parser = OptionParser()
     parser.add_option("--stops", metavar="STOP_FILE", help="read input stops from STOP_FILE")
     parser.add_option("--append-stops", metavar="STOP_EXPANSIONS", help="appends expansions to current expansions")
@@ -270,6 +272,7 @@ def main():
     process_places(options.stops, stops_out, stops_append, no_cache=options.no_cache)
     handle_csv(options.stops, csv_out, no_cache=options.no_cache)
     # handle_compatibility(options.stops, compatibility_out, no_cache=options.no_cache)
+
 
 if __name__ == '__main__':
     main()

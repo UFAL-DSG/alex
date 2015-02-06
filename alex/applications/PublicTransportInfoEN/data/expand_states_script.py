@@ -23,7 +23,7 @@ def handle_states(states_in, states_out, states_append, no_cache=False):
     else:
         prev = read_expansions(states_out)
     # manually added expansions of specific states not covered by automatic expansion
-    manual_expansions = read_expansions(states_append)
+    manual_expansions = {} if states_append is None else read_expansions(states_append)
     # new expanded states
     expanded = all_to_lower(read_first_column(states_in))
     # merged new and old expansions, old ones have greater priority (no appending)
