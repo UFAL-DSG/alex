@@ -218,8 +218,9 @@ class PTIENHDCPolicy(DialoguePolicy):
             dialogue_state["ludait"].reset()
 
         elif ludait == "help":
-            # NLG("Pomoc.")
-            res_da = DialogueAct("help()")
+            # NLG("Help.") based on context
+            res_da = self.get_help_res_da(dialogue_state, accepted_slots, state_changed)
+            # res_da = DialogueAct("help()")
             dialogue_state["ludait"].reset()
 
         elif ludait == "thankyou":
@@ -1338,3 +1339,26 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem("silence"))
 
         return res_da
+
+    def get_help_res_da(self, ds, accepted_slots, state_changed):
+        # na stránky: help me with finding connection -> blbabalkfj
+
+        topics_alternatives = ['inform="alternative_abs"', 'inform="alternative_prev"', 'inform="alternative_next"',
+                               'inform="alternative_last"', ]
+        topics_stops = ['inform="from_stop"', 'inform="to_stop"', 'request="from_stop"', 'request="to_stop"',
+                        'request="num_transfers"', ]
+        topics_time = ['inform="departure_time"', 'request="current_time"', ]
+        topics_general = ['', 'repeat', 'inform="hangup"', ]
+        topics_weather = ['task="weather"', ]
+        topics_connection = topics_alternatives + topics_stops + topics_time
+
+        task = ds['task'].mpv() if 'task' in accepted_slots else ''
+
+        if task == "weather":
+            topics = topics_weather
+        elif task == 'find_connection':
+            topics = topics_connection
+        else:
+            topics = topics_general
+        rand_theme = topics[random.randint(0, len(topics) - 1)]
+        return DialogueAct("help(%s)" % rand_theme)
