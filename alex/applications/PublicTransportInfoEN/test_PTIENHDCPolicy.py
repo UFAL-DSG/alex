@@ -1,20 +1,170 @@
 from datetime import datetime, timedelta
 from unittest import TestCase
 from datetime import time as dttime
-from alex.applications.PublicTransportInfoEN.directions import GoogleDirections
+from alex.applications.PublicTransportInfoEN.directions import GoogleDirections, Waypints
 
 from alex.applications.PublicTransportInfoEN.hdc_policy import PTIENHDCPolicy
 from alex.components.dm import Ontology
 from alex.components.dm.dddstate import DeterministicDiscriminativeDialogueState
+from alex.components.slu.da import DialogueAct
 from alex.utils.config import Config, as_project_path
 
 
 class TestPTIENHDCPolicy(TestCase):
+
+    # ===== GATHERING CONNECTION INFORMATION =====
+
+    def test_gather_connection_info_from_streets_to_stops(self):
+        self.set_ds_street_connection_info(from_street1="105 St", from_street2="5 Ave")
+        self.set_ds_connection_info(to_stop="Central Park")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals('105th street and 5th avenue', conn_info.from_stop)
+        self.assertEquals('Central Park', conn_info.to_stop)
+        self.assertEquals('New York', conn_info.to_city)
+
+    def test_gather_connection_info_infer_from_borough(self):
+        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="101 Ave", to_borough="Brooklyn")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals('Brooklyn', conn_info.from_city)
+        self.assertEquals('1st avenue', conn_info.from_stop)
+        self.assertEquals('Brooklyn', conn_info.to_city)
+        self.assertEquals('101st avenue', conn_info.to_stop)
+
+    def test_gather_connection_info_request_to_borough(self):
+        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="101 St")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct('request(to_borough)'),str(req_da))
+        self.assertEquals('New York', conn_info.from_city)
+        self.assertEquals('1st avenue', conn_info.from_stop)
+        self.assertEquals('New York', conn_info.to_city)
+        self.assertEquals('101st street', conn_info.to_stop)
+
+    # def test_gather_connection_info_street_infer_from_city(self):
+    #     self.set_ds_street_connection_info(from_street1="1 Av", to_borough="Bronx")
+    #     req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+    #     self.assertEquals(DialogueAct('iconfirm(to_city="Baltimore")&iconfirm(from_city="New York")'), iconfirm_da)
+    #     self.assertEquals(0, len(req_da))
+    #     self.assertEquals('Bronx', conn_info.to_city)
+    #     self.assertEquals('Bronx', conn_info.from_city)
+    #     self.assertEquals('1 Av', conn_info.from_street1)
+
+    def test_gather_connection_info_street_infer_to_borough(self):
+        self.set_ds_street_connection_info(to_street1="1 Ct", from_borough="Manhattan")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct('request(from_stop)'),str(req_da))
+        self.assertEquals('1st court', conn_info.to_stop)
+        self.assertEquals('Brooklyn', conn_info.to_city)
+        self.assertEquals('Manhattan', conn_info.from_city)
+
+    def test_gather_connection_info_street_infer_from_to_borough(self):
+        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="1 Ct")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals('1st avenue', conn_info.from_stop)
+        self.assertEquals('Brooklyn', conn_info.to_city)
+        self.assertEquals('1st court', conn_info.to_stop)
+        self.assertEquals('Brooklyn', conn_info.from_city)
+
+    def test_gather_connection_info_request_from_street(self):
+        self.set_ds_street_connection_info(to_street1="1 Ct")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct('request(from_stop)'),str(req_da))
+        self.assertEquals('1st court', conn_info.to_stop)
+
+    def test_gather_connection_info_request_to_street(self):
+        self.set_ds_street_connection_info(from_street1="1 Ave")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct('request(to_stop)'), str(req_da))
+        self.assertEquals('1st avenue', conn_info.from_stop)
+
+
+
+
+
+    def test_gather_connection_info_infer_from_city(self):
+        self.set_ds_connection_info(from_stop="City Hall", to_stop="Broadway", to_city="New York")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals('New York', conn_info.from_city)
+        self.assertEquals('City Hall', conn_info.from_stop)
+        self.assertEquals('New York', conn_info.to_city)
+        self.assertEquals('Broadway', conn_info.to_stop)
+
+    def test_gather_connection_info_request_to_city(self):
+        self.set_ds_connection_info(from_stop="City Hall", to_stop="Broadway")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct('request(to_city)'),str(req_da))
+        self.assertIsNone(conn_info.from_city)
+        self.assertEquals('City Hall', conn_info.from_stop)
+        self.assertIsNone(conn_info.to_city)
+        self.assertEquals('Broadway', conn_info.to_stop)
+
+    def test_gather_connection_info_infer_from_city_iconfirm(self):
+        self.set_ds_connection_info(from_stop="Wall Street", to_city="Baltimore")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals(DialogueAct('iconfirm(to_city="Baltimore")&iconfirm(from_city="New York")'), iconfirm_da)
+        self.assertEquals('Baltimore', conn_info.to_city)
+        self.assertEquals('New York', conn_info.from_city)
+        self.assertEquals('Wall Street', conn_info.from_stop)
+
+    def test_gather_connection_info_infer_to_city(self):
+        self.set_ds_connection_info(to_stop="Central Park", from_city="Ohio")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals(DialogueAct('iconfirm(to_city="New York")&iconfirm(from_city="Ohio")'), iconfirm_da)
+        self.assertEquals('Central Park', conn_info.to_stop)
+        self.assertEquals('New York', conn_info.to_city)
+        self.assertEquals('Ohio', conn_info.from_city)
+
+    def test_gather_connection_info_infer_from_to_city(self):
+        self.set_ds_connection_info(to_stop="Central Park", from_stop="Wall Street")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals('Central Park', conn_info.to_stop)
+        self.assertEquals('New York', conn_info.to_city)
+        self.assertEquals('Wall Street', conn_info.from_stop)
+        self.assertEquals('New York', conn_info.from_city)
     
+    def test_gather_connection_info_request_to_stop_from_empty(self):
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct("request(to_stop)"),str(req_da))
+
+    def test_gather_connection_info_request_from_stop(self):
+        self.set_ds_connection_info(to_stop="Central Park")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct("request(from_stop)"),str(req_da))
+        self.assertEquals('Central Park', conn_info.to_stop)
+        self.assertEquals('New York', conn_info.to_city)
+        
+    def test_gather_connection_info_request_to_stop(self):
+        self.set_ds_connection_info(from_stop="Wall Street")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(DialogueAct("request(to_stop)"),str(req_da))
+        self.assertEquals('Wall Street', conn_info.from_stop)
+        self.assertEquals('New York', conn_info.from_city)
+
+        
+
     # ===== DEPARTURE TIMES =====
 
     def test_req_departure_time_rel_missed(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         self.ds.directions[0].legs[0].steps[1].departure_time = self.now - timedelta(minutes=1)
 
         dialogue_act = self.policy.req_departure_time_rel(self.ds)
@@ -25,7 +175,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('inform(missed_connection="true")', str(dialogue_act.dais[2]))
 
     def test_req_departure_time_rel_now(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         self.ds.directions[0].legs[0].steps[1].departure_time = self.now
 
         dialogue_act = self.policy.req_departure_time_rel(self.ds)
@@ -36,7 +186,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('inform(departure_time_rel="now")', str(dialogue_act.dais[2]))
 
     def test_req_departure_time_rel_in_five_minutes(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         self.ds.directions[0].legs[0].steps[1].departure_time = self.now + timedelta(minutes=5)
 
         dialogue_act = self.policy.req_departure_time_rel(self.ds)
@@ -47,7 +197,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('inform(departure_time_rel="0:05")', str(dialogue_act.dais[2]))
 
     def test_req_departure_time_abs(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         dialogue_act = self.policy.req_departure_time(self.ds)
 
         self.assertEquals(3, len(dialogue_act.dais))
@@ -58,7 +208,7 @@ class TestPTIENHDCPolicy(TestCase):
      # ===== ARRIVAL TIMES =====
 
     def test_req_arrival_time_rel_in_five_minutes(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         self.ds.directions[0].legs[0].steps[1].arrival_time = self.now + timedelta(minutes=5)
 
         dialogue_act = self.policy.req_arrival_time_rel(self.ds)
@@ -69,7 +219,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('inform(arrival_time_rel="0:05")', str(dialogue_act.dais[2]))    
 
     def test_req_arrival_time_abs(self):
-        self.ds['route_alternative'] = 0
+        self.set_ds_directions()
         dialogue_act = self.policy.req_arrival_time(self.ds)
 
         self.assertEquals(3, len(dialogue_act.dais))
@@ -110,8 +260,59 @@ class TestPTIENHDCPolicy(TestCase):
 
     # ===== SET UP AND CONSTANTS =====
 
+    def set_ds_directions(self):
+        waypoints = Waypints('New York', 'Wall street', 'New York', 'Central park')
+        self.ds.directions = GoogleDirections(waypoints, self.get_directions_json())
+        self.ds['route_alternative'] = 0
+
+    def set_ds_connection_info(self, to_stop='none', from_stop='none', to_city='none', from_city='none'):
+        self.ds.slots['to_stop'].scale(0.0)
+        self.ds.slots['to_stop'].add(to_stop, 1.0)
+        self.ds.slots['from_stop'].scale(0.0)
+        self.ds.slots['from_stop'].add(from_stop, 1.0)
+        self.ds.slots['to_city'].scale(0.0)
+        self.ds.slots['to_city'].add(to_city, 1.0)
+        self.ds.slots['from_city'].scale(0.0)
+        self.ds.slots['from_city'].add(from_city, 1.0)
+        
+    def set_ds_street_connection_info(self, to_street1='none', to_street2='none', to_borough='none', from_street1='none', from_street2='none', from_borough='none'):
+        self.ds.slots['to_street1'].scale(0.0)
+        self.ds.slots['to_street1'].add(to_street1, 1.0)
+        self.ds.slots['to_street2'].scale(0.0)
+        self.ds.slots['to_street2'].add(to_street2, 1.0)
+        self.ds.slots['to_borough'].scale(0.0)
+        self.ds.slots['to_borough'].add(to_borough, 1.0)
+        self.ds.slots['from_street1'].scale(0.0)
+        self.ds.slots['from_street1'].add(from_street1, 1.0)
+        self.ds.slots['from_street2'].scale(0.0)
+        self.ds.slots['from_street2'].add(from_street2, 1.0)
+        self.ds.slots['from_borough'].scale(0.0)
+        self.ds.slots['from_borough'].add(from_borough, 1.0)
+
+
+    def get_clean_ds(self):
+        ds =  DeterministicDiscriminativeDialogueState(self.cfg, self.ontology)
+        # add time so it wont randomly (1/10) ask for departure_time
+        ds.slots['time'].scale(0.0)
+        ds.slots['time'].add('value', 1.0)
+        return ds
+
     def setUp(self):
-        c = {
+
+        self.cfg = Config.load_configs(log=False)
+        self.cfg.update(self.get_config())
+        self.ontology = Ontology(self.cfg['DM']['ontology'])
+        self.policy = PTIENHDCPolicy(self.cfg, self.ontology)
+
+        self.now = datetime.now()
+        self.now -= timedelta(seconds=self.now.second, microseconds=self.now.microsecond)
+        self.utcnow = datetime.utcnow()
+        self.utcnow -= timedelta(seconds=self.utcnow.second, microseconds=self.utcnow.microsecond)
+
+        self.ds = self.get_clean_ds()
+
+    def get_config(self):
+        return {
             'DM': {
                 'debug': True,
                 'type': 'basic',
@@ -156,19 +357,6 @@ class TestPTIENHDCPolicy(TestCase):
                 'ontology': as_project_path('applications/PublicTransportInfoEN/data/ontology.py'),
             },
         }
-        self.cfg = Config.load_configs(log=False)
-        self.cfg.update(c)
-        self.ontology = Ontology(self.cfg['DM']['ontology'])
-        self.policy = PTIENHDCPolicy(self.cfg, self.ontology)
-
-        self.now = datetime.now()
-        self.now -= timedelta(seconds=self.now.second, microseconds=self.now.microsecond)
-        self.utcnow = datetime.utcnow()
-        self.utcnow -= timedelta(seconds=self.utcnow.second, microseconds=self.utcnow.microsecond)
-
-
-        self.ds =  DeterministicDiscriminativeDialogueState(self.cfg, self.ontology)
-        self.ds.directions = GoogleDirections('New York', 'central park', 'New York', 'wall street', None, self.get_directions_json())
 
     def get_directions_json(self):
         return{

@@ -8,15 +8,16 @@ import os
 from alex.utils.config import online_update, to_project_path
 
 # tab-separated file containing street + city + lon|lat coordinates + slot_specification
-STREETS_LOCATIONS_FNAME = 'streets.locations.csv'
+STREETS_TYPES_FNAME = 'streets.types.csv'
 # tab-separated file containing stop + city + lon|lat coordinates
-STOPS_LOCATIONS_FNAME = 'stops.locations.csv'
+GENERAL_STOPS_LOCATIONS_FNAME = 'stops.locations.csv'
+BOROUGH_STOPS_LOCATIONS_FNAME = 'stops.borough.locations.csv'
 # tab-separated file containing city + state + lon|lat coordinates
 CITIES_LOCATIONS_FNAME = 'cities.locations.csv'
 
 # load new versions of the data files from the server
-online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_LOCATIONS_FNAME)))
-online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_LOCATIONS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_TYPES_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), GENERAL_STOPS_LOCATIONS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATIONS_FNAME)))
 
 ontology = {
@@ -33,13 +34,19 @@ ontology = {
         'from_stop': set(['Central Park', 'Wall Street', ]),
         'to_stop': set(['Central Park', 'Wall Street', ]),
         'via_stop': set(['Central Park', 'Wall Street', ]),
-        'from_street': set(['123 St', ]),
-        'to_street': set(['100 Av', ]),
+        'from_street1': set(),
+        'from_street2': set(),
+        'to_street1': set(),
+        'to_street2': set(),
         'city': set([]),
         'from_city': set([]),
         'to_city': set([]),
         'via_city': set([]),
         'in_city': set([]),
+        'from_borough': set([]),
+        'to_borough': set([]),
+        'in_borough': set([]),
+        'borough': set([]),
         'in_state': set([]),
         'state': set([]),
         'departure_time': set([]),
@@ -89,6 +96,9 @@ ontology = {
         'city': [
             'user_informs',
         ],
+        'borough': [
+            'user_informs',
+        ],
 		'state': [
             'user_informs',
         ],
@@ -102,12 +112,22 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
-         'from_street': [
+        'from_street1': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
-        'to_street': [
+       'from_street2': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_requests', 'system_confirms',
+            'system_iconfirms', 'system_selects',
+        ],
+        'to_street1': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_requests', 'system_confirms',
+            'system_iconfirms', 'system_selects',
+        ],
+        'to_street2': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
@@ -131,6 +151,18 @@ ontology = {
             'system_confirms', 'system_iconfirms',
         ],
         'in_city': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'from_borough': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'to_borough': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_confirms', 'system_iconfirms',
+        ],
+        'in_borough': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_confirms', 'system_iconfirms',
         ],
@@ -264,10 +296,11 @@ ontology = {
         #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
         #       "from_city"
 
-        'street': set(['from_street', 'to_street', ]),
-        'stop': set(['from_stop', 'to_stop', 'via_stop', ]),
+        'street': set(['from_street1', 'from_street2', 'to_street1', 'to_street2', 'from_stop', 'to_stop']),
+        'stop': set(['from_stop', 'to_stop', 'via_stop', 'from_street1', 'from_street2', 'to_street1', 'to_street2', ]),
         # added from/to city -> where do yo want to go from / new york (won't work if KEY is not suffix to slots (CITY->from_CITY))
-        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop' ]),
+        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop', 'from_street1', 'from_street2', 'to_street1', 'to_street2', ]),
+        'borough': set(['from_borough', 'to_borough', 'in_borough', 'from_city', 'to_city', 'from_stop', 'to_stop']),
         'state': set(['in_state', ]),
     },
 
@@ -323,21 +356,18 @@ ontology = {
         },
     },
 
-    'compatibility': {
-        'city_street':[
-            'from_street', 'to_street',
-        ],
-        'stop_city': [
-            'from_stop', 'to_stop', 'via_stop',
-        ],
-        'city_stop': [
-            'from_city', 'to_city', 'via_city', 'in_city',
-        ],
-        'city_state': [
-            'in_state',
-        ],
-    },
+    # 'compatibility': {
+    #     'city_street': ['from_street1', 'from_street2', 'to_street1', 'to_street2', ],
+    #     'street_borough': ['in_borough', ],
+    #     'stop_city': ['from_stop', 'to_stop', 'via_stop', ],
+    #     'city_stop': ['from_city', 'to_city', 'via_city', 'in_city', ],
+    #     'city_state': ['in_state', ],
+    # },
     'compatible_values': {
+        'stop_borough': {},
+        'borough_stop': {},
+        'street_borough': {},
+        'borough_street': {},
         'street_city': {},
         'city_street': {},
         'stop_city': {},
@@ -355,7 +385,8 @@ ontology = {
     'addinfo': {
         'city': {},
         'state': {},
-        'stop_category' : {},
+        'borough': {},
+        'street_type': {},
     },
 
     # translation of the values for TTS output
@@ -407,8 +438,10 @@ def add_slot_values_from_database(slot, category, exceptions=set()):
             ontology['slots'][slot].add(value)
 
 add_slot_values_from_database('street', 'street')
-add_slot_values_from_database('from_street', 'street')
-add_slot_values_from_database('to_street', 'street')
+add_slot_values_from_database('from_street1', 'street')
+add_slot_values_from_database('from_street2', 'street')
+add_slot_values_from_database('to_street1', 'street')
+add_slot_values_from_database('to_street2', 'street')
 add_slot_values_from_database('stop', 'stop')
 add_slot_values_from_database('from_stop', 'stop')
 add_slot_values_from_database('to_stop', 'stop')
@@ -418,6 +451,10 @@ add_slot_values_from_database('from_city', 'city')
 add_slot_values_from_database('to_city', 'city')
 add_slot_values_from_database('via_city', 'city')
 add_slot_values_from_database('in_city', 'city')
+add_slot_values_from_database('borough', 'borough')
+add_slot_values_from_database('from_borough', 'borough')
+add_slot_values_from_database('to_borough', 'borough')
+add_slot_values_from_database('in_borough', 'in_borough')
 add_slot_values_from_database('state', 'state')
 add_slot_values_from_database('in_state', 'state')
 add_slot_values_from_database('departure_time', 'time', exceptions=set(['now']))
@@ -448,16 +485,11 @@ def load_geo_values(fname, slot1, slot2, surpress_warning=True):
 
 
 def load_compatible_values(fname, slot1, slot2):
-    slot1_orig = slot1  # TODO:hack as well
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
             if line.startswith('#'):
                 continue
             val_slot1, val_slot2 = line.strip().split('\t')[0:2]
-            # todo: temporary hack for street handling:
-            if slot1_orig == "street":
-                slot1 = "stop"
-                val_slot2 = "New York"
             # add to list of compatible values in both directions
             subset = ontology['compatible_values'][slot1 + '_' + slot2].get(val_slot1, set())
             ontology['compatible_values'][slot1 + '_' + slot2][val_slot1] = subset
@@ -467,31 +499,32 @@ def load_compatible_values(fname, slot1, slot2):
             subset.add(val_slot1)
 
 
-def load_file_defined_slots(fname, surpress_warning=True):
+def load_street_type_values(fname, surpress_warning=False):  # slot1=street, slot2=borugh
     # we expect to see these slots in column 'slot':  'avenue', 'street', 'place'
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
             if line.startswith('#'):
                 continue
             data = line.strip().split('\t')
-            if len(data) < 4:
+            if len(data) < 3:
                 print "ERROR: There is not enough fields to parse slot values in " + fname
                 break
-            value = data[0]
-            slot = "stop"  # data[3].lower() # TODO: tempmorary hack slot = stop
-            prev_value = ontology['addinfo']['stop_category'].get(value, None)
-            if prev_value and not surpress_warning:
-                print 'WARNING: slot ' + value + " already contains " + prev_value + " (overwriting with " + slot + ")!"
-            ontology['addinfo']['stop_category'][value] = slot
+            val_slot1= data[0]
+            type = data[2].lower()
+            prev_value = ontology['addinfo']['street_type'].get(val_slot1, None)
+            if prev_value and prev_value != type and not surpress_warning:
+                print 'WARNING: slot ' + val_slot1 + " already contains " + prev_value + " (overwriting with " + type + ")!"
+            ontology['addinfo']['street_type'][val_slot1] = type
 
 
 dirname = os.path.dirname(os.path.abspath(__file__))
-load_file_defined_slots(os.path.join(dirname, STREETS_LOCATIONS_FNAME))
+load_street_type_values(os.path.join(dirname, STREETS_TYPES_FNAME))
 
-load_compatible_values(os.path.join(dirname, STREETS_LOCATIONS_FNAME), 'street', 'city')
-load_compatible_values(os.path.join(dirname, STOPS_LOCATIONS_FNAME), 'stop', 'city')
+load_compatible_values(os.path.join(dirname, STREETS_TYPES_FNAME), 'street', 'borough')
+load_compatible_values(os.path.join(dirname, GENERAL_STOPS_LOCATIONS_FNAME), 'stop', 'city')
+load_compatible_values(os.path.join(dirname, BOROUGH_STOPS_LOCATIONS_FNAME), 'stop', 'borough')
 load_compatible_values(os.path.join(dirname, CITIES_LOCATIONS_FNAME), 'city', 'state')
 
-# load_geo_values(os.path.join(dirname, STREETS_LOCATIONS_FNAME), 'street', 'city')  # not supported - irrelevant, for places maybe, not for intersections tho
-load_geo_values(os.path.join(dirname, STOPS_LOCATIONS_FNAME), 'stop', 'city')
+load_geo_values(os.path.join(dirname, BOROUGH_STOPS_LOCATIONS_FNAME), 'stop', 'borough')
+load_geo_values(os.path.join(dirname, GENERAL_STOPS_LOCATIONS_FNAME), 'stop', 'city')
 load_geo_values(os.path.join(dirname, CITIES_LOCATIONS_FNAME), 'city', 'state')

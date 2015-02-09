@@ -32,10 +32,10 @@ def all_words_in(utterance, words):
 
 
 def phrase_in(utterance, words):
-    return phrase_pos(utterance, words) != -1
+    return first_phrase_pos(utterance, words) != -1
 
 
-def phrase_pos(utterance, words):
+def first_phrase_pos(utterance, words):
     """Returns the position of the given phrase in the given utterance, or -1 if not found.
 
     :rtype: int
@@ -43,6 +43,23 @@ def phrase_pos(utterance, words):
     utterance = utterance if not isinstance(utterance, list) else Utterance(' '.join(utterance))
     words = words if not isinstance(words, basestring) else words.strip().split()
     return utterance.find(words)
+
+def last_phrase_pos(utterance, words):
+    """Returns the last position of a given phrase in the given utterance, or -1 if not found.
+
+    :rtype: int
+    """
+    list_utterance = utterance.utterance if not isinstance(utterance, list) else utterance
+    list_words = words.utterance if not isinstance(words, basestring) else words.strip().split()
+    # reverse to search from tail
+    utterance = Utterance(' '.join(list_utterance[::-1]))
+    words = Utterance(' '.join(list_words[::-1]))
+
+    index = utterance.find(words)
+    if index == -1:
+        return  -1
+    else:
+        return len(utterance.utterance) - index - 1
 
 
 def first_phrase_span(utterance, phrases):
@@ -54,7 +71,21 @@ def first_phrase_span(utterance, phrases):
     :rtype: tuple
     """
     for phrase in phrases:
-        pos = phrase_pos(utterance, phrase)
+        pos = first_phrase_pos(utterance, phrase)
+        if pos != -1:
+            return pos, pos + len(phrase)
+    return -1, -1
+
+def last_phrase_span(utterance, phrases):
+    """Returns the span (start, end+1) of the last phrase from the given list
+    that is found in the utterance. Returns (-1, -1) if no phrase is found.
+
+    :param utterance: The utterance to search in
+    :param phrases: a list of phrases to be tried (in the given order)
+    :rtype: tuple
+    """
+    for phrase in phrases:
+        pos = last_phrase_pos(utterance, phrase)
         if pos != -1:
             return pos, pos + len(phrase)
     return -1, -1
@@ -90,29 +121,32 @@ class PTIENHDCSLU(SLUInterface):
                 # print f
 
                 if f in self.cldb.form2value2cl:
-                    for v in self.cldb.form2value2cl[f]:
-                        slots = self.cldb.form2value2cl[f][v]
-                        # todo - fix this hack
-                        # # TODO: add STREET handling!
-                        # if "street" in slots:
-                        #     abs_utts = abs_utts.replace(f, ('STOP='+v,))
-                        #     category_labels.add('STOP')
-                        # elif "stop" in slots and ("city" in slots or "street" in slots):
-                        if "stop" in slots and ("city" in slots or "street" in slots):
-                            abs_utts = abs_utts.replace(f, ('STOP='+v,))
-                            category_labels.add('STOP')
-                        else:
-                            for c in slots:
-                                abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
-                                category_labels.add(c.upper())
-                                break
-                            else:
-                                continue
+                    entities = self.cldb.form2value2cl[f]
+                    slot_names = [(slot, name) for name in entities for slot in entities[name]]
+                    slots = [slot for slot,_ in slot_names]
 
-                        break
+                    def replace_slot(abs_utts, slot, slot_names):
+                        name = [n for s,n in slot_names if s == slot].pop()
+                        return abs_utts.replace(f, (slot.upper() + '=' + name,))
+
+                    if 'borough' in slots:
+                        abs_utts = replace_slot(abs_utts, 'borough', slot_names)
+                        category_labels.add('BOROUGH')
+                    elif 'street' in slots:
+                        abs_utts = replace_slot(abs_utts, 'street', slot_names)
+                        category_labels.add('STREET')
+                    elif 'stop' in slots and 'city' in slots:
+                        abs_utts = replace_slot(abs_utts, 'stop', slot_names)
+                        category_labels.add('STOP')
+                    elif 'city' in slots and 'state' in slots:
+                        abs_utts = replace_slot(abs_utts, 'city', slot_names)
+                        category_labels.add('CITY')
+                    else:
+                        slot = slots.pop()
+                        abs_utts = replace_slot(abs_utts, slot, slot_names)
+                        category_labels.add(slot.upper())
 
                     # print f
-
                     # skip all substring for this form
                     start = end
                     break
@@ -138,10 +172,33 @@ class PTIENHDCSLU(SLUInterface):
                                       'leave', ])),
                         ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination', 'be at'])),
-                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange', ]))]  # change line
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange', ]))]
 
-        #TODO: here we need to support more than one initial and destination point if it is a street!
+        # here we support more than one initial and destination point!
         self.parse_waypoint(abutterance, cn, 'STREET=', 'street', phr_wp_types)
+
+        dais = [dai_hyp[1] for dai_hyp in cn.items()]
+        for _ in dais:
+            # get first bare street and try to infer direction from previous
+            bare_dais = [i for i, dai in enumerate(dais) if dai.name == 'street']
+            if len(bare_dais) == 0:
+                break
+            index = bare_dais.pop()
+            if index > 0:
+                cn.cn[index][1] = DialogueActItem(dais[index].dat, dais[index-1].name, dais[index].value)
+
+        # here we tag each street with its sequential number
+        dais = [dai_hyp[1] for dai_hyp in cn.items()]
+        def replace_street(type):
+            street_indices = [i for i, dai in enumerate(dais) if dai.name == type]
+            number = 1
+            for i in street_indices:
+                cn.cn[i][1] = DialogueActItem(dais[i].dat, dais[i].name + str(number), dais[i].value)
+                number = max(number + 1, 2)
+
+        replace_street('from_street')
+        replace_street('to_street')
+
 
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -160,6 +217,7 @@ class PTIENHDCSLU(SLUInterface):
 
         self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types)
 
+
     def parse_state(self, abutterance, cn):
         """ Detects state in the input abstract utterance.
 
@@ -172,6 +230,24 @@ class PTIENHDCSLU(SLUInterface):
                 value = w[6:]
                 cn.add(1.0, DialogueActItem("inform", 'in_state', value))
 
+
+    def parse_borough(self, abutterance, cn):
+        """ Detects stops in the input abstract utterance.
+
+        :param abutterance: the input abstract utterance.
+        :param cn: The output dialogue act item confusion network.
+        """
+
+        # regular parsing
+        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
+                                      'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
+                        ('to', set(['to', 'into', 'in' 'end', 'ending', 'terminal', 'final',
+                                    'target', 'output', 'exit', 'destination',])),
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
+                        ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
+                       ]
+
+        self.parse_waypoint(abutterance, cn, 'BOROUGH=', 'borough', phr_wp_types, phr_in=['in', 'at'])
 
     def parse_city(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -225,7 +301,7 @@ class PTIENHDCSLU(SLUInterface):
                 # test short preceding context to find the stop type (from, to, via)
                 wp_precontext = {}
                 for cur_wp_type, phrases in phr_wp_types:
-                    wp_precontext[cur_wp_type] = first_phrase_span(u[max(last_wp_pos, i - 5):i], phrases)
+                    wp_precontext[cur_wp_type] = last_phrase_span(u[max(last_wp_pos, i - 6):i], phrases)
                 wp_types |= self._get_closest_wp_type(wp_precontext)
                 # test short following context (0 = from, 1 = to, 2 = via)
                 if not wp_types:
@@ -613,20 +689,22 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem('request', 'to_stop'))
 
         if not any_word_in(u, 'arrival arrive arrives arriving stop stops stopping get gets destination target terminal'):
-            if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is']) and any_word_in(u, 'next leave leaves leaving go goes going deparutre departures destination'):
+            if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is', 'give me', 'tell me', 'provide',]) and \
+                    any_word_in(u, 'leave leaves leaving go goes going departure departures destination') or\
+                    any_phrase_in(u, ['what time', 'when will', 'when does', 'when is', ]) and any_word_in(u, 'next'):
                 if not any_word_in(u, "till until before"):
                     cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
-            if any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
+            elif any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
                 if not any_word_in(u, "there"):
                     cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
-        if not any_word_in(u, 'departure, leave leaves leaving go goes going departure departures destination'):
-            if any_phrase_in(u, ['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there', 'be there']):
-                if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is', 'time of']):
+        if not any_word_in(u, 'departure, leave leaves leaving go goes going departure departures destination target terminal'):
+            if any_phrase_in(u, ['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there', 'be there', ]):
+                if any_phrase_in(u, ['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide']):
                     cn.add(1.0, DialogueActItem('request', 'arrival_time'))
 
-                if any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
+                elif any_phrase_in(u, ['how long', 'how much', 'give me', 'tell me', 'provide']) and any_word_in(u, "till until before"):
                     cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until'):
@@ -662,13 +740,11 @@ class PTIENHDCSLU(SLUInterface):
             if any_word_in(u, 'fourth four'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if any_word_in(u, "last before latest lattermost bottom repeat again") and \
+            if any_word_in(u, "last before latest latter most bottom repeat again") and \
                 not all_words_in(u, "previous precedent"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if any_word_in(u, "next different following subsequent later") or \
-                phrase_in(u, "once more") or \
-                phrase_in(u, "the next one"):
+            if any_word_in(u, "next different following subsequent later another"):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
 
             if any_word_in(u, "previous precedent"):
@@ -800,6 +876,8 @@ class PTIENHDCSLU(SLUInterface):
                 self.parse_street(abutterance, res_cn)
             if 'STOP' in category_labels:
                 self.parse_stop(abutterance, res_cn)
+            if 'BOROUGH' in category_labels:
+                self.parse_borough(abutterance, res_cn)
             if 'CITY' in category_labels:
                 self.parse_city(abutterance, res_cn)
             if 'STATE' in category_labels:

@@ -4,12 +4,11 @@
 from __future__ import unicode_literals
 
 import random
+from alex.applications.PublicTransportInfoEN.directions import Waypints
 from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
 
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
-# from alex.components.slu.da import DialogueActConfusionNetwork
-# from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
 from .time_zone import GoogleTimeFinder
@@ -277,6 +276,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                                               accepted_slots, changed_slots, state_changed)
             res_da.extend(t_da)
             res_da = self.filter_iconfirms(res_da)
+            #todo: refactoring (place, area) - remove this hack - streets share stop slot so we don't have to generate more nlg templates
+            res_da = self.transform_street_iconfirms(res_da)
 
         self.last_system_dialogue_act = res_da
 
@@ -721,16 +722,19 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         req_da = DialogueAct()
 
-        #TODO: here should be implemented the street/avenue handling.
-        #TODO: we need to support multiple from_/to_streets to apear in accepted slots
-
         # self.ontology['addinfo']['stop_category'].get(ds['from_street'].mpv())
 
         # retrieve the slot variables
-        from_stop_val = self.get_accepted_mpv(ds, 'from_stop', accepted_slots)
-        to_stop_val = self.get_accepted_mpv(ds, 'to_stop', accepted_slots)
         from_city_val = self.get_accepted_mpv(ds, 'from_city', accepted_slots)
+        from_borough_val = self.get_accepted_mpv(ds, 'from_borough', accepted_slots)
+        from_stop_val = self.get_accepted_mpv(ds, 'from_stop', accepted_slots)
+        from_street1_val = self.get_accepted_mpv(ds, 'from_street1', accepted_slots)
+        from_street2_val = self.get_accepted_mpv(ds, 'from_street2', accepted_slots)
         to_city_val = self.get_accepted_mpv(ds, 'to_city', accepted_slots)
+        to_borough_val = self.get_accepted_mpv(ds, 'to_borough', accepted_slots)
+        to_stop_val = self.get_accepted_mpv(ds, 'to_stop', accepted_slots)
+        to_street1_val = self.get_accepted_mpv(ds, 'to_street1', accepted_slots)
+        to_street2_val = self.get_accepted_mpv(ds, 'to_street2', accepted_slots)
         vehicle_val = self.get_accepted_mpv(ds, 'vehicle', accepted_slots)
 
         # infer cities based on stops
@@ -747,19 +751,74 @@ class PTIENHDCPolicy(DialoguePolicy):
                 to_city_val = to_cities.pop()
                 stop_city_inferred = True
 
-        # infer cities based on the other
+        # infer cities based on stops
+        from_boroughs, to_boroughs = None, None
+        stop_borough_inferred = False
+        if from_stop_val != 'none' and from_borough_val == 'none':
+            from_boroughs = self.ontology.get_compatible_vals('stop_borough', from_stop_val)
+            if len(from_boroughs) == 1:
+                from_borough_val = from_boroughs.pop()
+                stop_borough_inferred = True
+        if to_stop_val != 'none' and to_borough_val == 'none':
+            to_boroughs = self.ontology.get_compatible_vals('stop_borough', to_stop_val)
+            if len(to_boroughs) == 1:
+                to_borough_val = to_boroughs.pop()
+                stop_borough_inferred = True
+
+        # infer boroughs based on streets
+        from_boroughs_st, to_boroughs_st = None, None
+        street_borough_inferred = False
+        if to_street1_val != 'none' and to_borough_val == 'none':
+            to_boroughs_st = self.ontology.get_compatible_vals('street_borough', to_street1_val)
+            if len(to_boroughs_st) == 1:
+                to_borough_val = to_boroughs_st.pop()
+                street_borough_inferred = True
+        if from_street1_val != 'none' and from_borough_val == 'none':
+            from_boroughs_st = self.ontology.get_compatible_vals('street_borough', from_street1_val)
+            if len(from_boroughs_st) == 1:
+                from_borough_val = from_boroughs_st.pop()
+                street_borough_inferred = True
+
+
+        # infer cities based on each other
         if from_stop_val != 'none' and from_city_val == 'none' and to_city_val in from_cities:
             from_city_val = to_city_val
-        if to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
+        elif to_stop_val != 'none' and to_city_val == 'none' and from_city_val in to_cities:
             to_city_val = from_city_val
-        if (to_cities is not None and from_cities is not None and
-                from_city_val == 'none' and to_city_val == 'none'):
-            # more cities for each side of the route -- try to intersect the lists
-            intersect = [c for c in from_cities if c in to_cities]
-            if len(intersect) == 1:
-                from_city_val = intersect.pop()
+
+        # infer boroughs based on each other
+        # from stops
+        if from_stop_val != 'none' and from_borough_val == 'none' and to_borough_val in from_boroughs:
+            from_borough_val = to_borough_val
+        elif to_stop_val != 'none' and to_borough_val == 'none' and from_borough_val in to_boroughs:
+            to_borough_val = from_borough_val
+        # from streets
+        if from_street1_val != 'none' and from_borough_val == 'none' and to_borough_val in from_boroughs_st:
+            from_borough_val = to_borough_val
+        elif to_street1_val != 'none' and to_borough_val == 'none' and from_borough_val in to_boroughs_st:
+            to_borough_val = from_borough_val
+
+        # try to infer cities from intersection
+        if to_cities is not None and from_cities is not None and from_city_val == 'none' and to_city_val == 'none':
+            intersect_c = [c for c in from_cities if c in to_cities]
+            if len(intersect_c) == 1:
+                from_city_val = intersect_c.pop()
                 to_city_val = from_city_val
                 stop_city_inferred = True
+
+        # try infer boroughs from intersection
+        if to_boroughs is not None and from_boroughs is not None and from_borough_val == 'none' and to_borough_val == 'none':
+            intersect_b = [b for b in from_boroughs if b in to_boroughs]
+            if len(intersect_b) == 1:
+                from_borough_val = intersect_b.pop()
+                to_borough_val = from_borough_val
+                stop_borough_inferred = True
+        if to_boroughs_st is not None and from_boroughs_st is not None and from_borough_val == 'none' and to_borough_val == 'none':
+            intersect_bs = [b for b in from_boroughs_st if b in to_boroughs_st]
+            if len(intersect_bs) == 1:
+                from_borough_val = intersect_bs.pop()
+                to_borough_val = from_borough_val
+                street_borough_inferred = True
 
         # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
         if self.infer_default_stops:
@@ -767,7 +826,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 from_stop_val = self.get_default_stop_for_city(from_city_val)
             if to_city_val != 'none' and to_stop_val == 'none':
                 to_stop_val = self.get_default_stop_for_city(to_city_val)
-        else:
+        else:  # this block is never executed (we don't use CRWS)
             if from_city_val != 'none' and from_stop_val == 'none' and (to_city_val == 'none' or
                                                                         from_city_val != to_city_val):
                 from_stop_val = '__ANY__'
@@ -775,49 +834,93 @@ class PTIENHDCPolicy(DialoguePolicy):
                                                                     from_city_val != to_city_val):
                 to_stop_val = '__ANY__'
 
-        # check all state variables and output one request dialogue act
-        # once upon a time, request departure time before requesting stops
-        if from_stop_val == 'none' and to_stop_val == 'none' and ('departure_time' not in accepted_slots or
-                                                                  'time' not in accepted_slots) and randbool(10):
+
+        # place can be specified by street or stop and area by city or borough or another street
+        has_from_place = (from_stop_val != 'none' or from_street1_val != 'none')
+        has_from_area = (from_borough_val !='none' or from_street2_val != 'none' or from_city_val != 'none')
+        from_info_complete = has_from_place and has_from_area
+                             
+        has_to_place = (to_stop_val != 'none' or to_street1_val != 'none')
+        has_to_area = (to_borough_val !='none' or to_street2_val != 'none' or to_city_val != 'none')
+        to_info_complete = has_to_place and has_to_area
+        
+        if not from_info_complete and not to_info_complete and \
+                        'departure_time' not in accepted_slots and 'time' not in accepted_slots and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
-
-        # we know the cities, but it's not an intercity connection -- request stops if required
-        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
-            if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
-                req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
-            elif from_stop_val == 'none':
-                req_da.extend(DialogueAct("request(from_stop)"))
-            elif to_stop_val == 'none':
-                req_da.extend(DialogueAct('request(to_stop)'))
-
-        # we know nothing, lets ask about stops first:
-        elif to_stop_val == 'none':
+        elif not has_to_place:
             req_da.extend(DialogueAct('request(to_stop)'))
-        elif from_stop_val == 'none':
+        elif not has_from_place:
             req_da.extend(DialogueAct('request(from_stop)'))
-
-        # we need to know the cities -- ask about them
-        elif from_city_val == 'none':
-            req_da.extend(DialogueAct('request(from_city)'))
-        elif to_city_val == 'none':
-            req_da.extend(DialogueAct('request(to_city)'))
+        elif not has_to_area:
+            if to_city_val == 'none' and to_street1_val == 'none':
+                req_da.extend(DialogueAct('request(to_city)'))
+            else:
+                req_da.extend(DialogueAct('request(to_borough)'))
+        elif not has_from_area:
+            if from_city_val == 'none' and from_street1_val == 'none':
+                req_da.extend(DialogueAct('request(from_city)'))
+            else:
+                req_da.extend(DialogueAct('request(from_borough)'))
+        elif has_from_area and has_to_area:
+            if not has_from_place and to_city_val == 'New York':
+                req_da.extend(DialogueAct('request(to_stop)'))
+            if not has_to_place and from_city_val == 'New York':
+                req_da.extend(DialogueAct('request(from_stop)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
+        default_city = self.ontology.get_default_value('city')  # don't iconfirm borrough if new york is the other city, because all boroughs are in new york
         iconfirm_da = DialogueAct()
-        if stop_city_inferred and len(req_da) == 0 and from_city_val != to_city_val:
-            iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
-            iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
+        if len(req_da) == 0:
+            if stop_city_inferred and from_city_val != to_city_val:
+                if to_city_val != 'none':
+                    # append iconfirm only if it is not new york and from area is not borough - all boroughs are in new york
+                    if to_city_val != 'New York' or not has_from_area or from_city_val != 'none':
+                        iconfirm_da.append(DialogueActItem('iconfirm', 'to_city', to_city_val))
+                if from_city_val != 'none':
+                    # append iconfirm only if it is not new york and to area is not borough - all boroughs are in new york
+                    if from_city_val != 'New York' or not has_to_area or to_city_val != 'none':
+                        iconfirm_da.append(DialogueActItem('iconfirm', 'from_city', from_city_val))
+            if (stop_borough_inferred or street_borough_inferred) and from_borough_val != to_borough_val:
+                if to_borough_val != 'none':
+                    iconfirm_da.append(DialogueActItem('iconfirm', 'to_borough', to_borough_val))
+                if from_borough_val != 'none':
+                    iconfirm_da.append(DialogueActItem('iconfirm', 'from_borough', from_borough_val))
 
         # retrieve additional geo location data:
-        # we only need geo locations for stop, str(city + stop) is greater information than geolocation of city
+        # we only need geo locations for stops, str(city + stop) is more informative than geo location of a city!
         from_stop_geo = self.ontology['addinfo']['city'].get(from_city_val, {}).get(from_stop_val, None)
-        if not from_stop_geo is None:
-            from_stop_geo = None if from_stop_geo['lat'].lower() == 'nan' or from_stop_geo['lon'].lower() == 'nan' else from_stop_geo
+        if from_stop_geo:
+            from_stop_geo = None if from_stop_geo['lat'].isalnum() or from_stop_geo['lon'].isalnum() else from_stop_geo
         to_stop_geo = self.ontology['addinfo']['city'].get(to_city_val, {}).get(to_stop_val, None)
-        if not to_stop_geo is None:
-            to_stop_geo = None if to_stop_geo['lat'].lower() == 'nan' or to_stop_geo['lon'].lower() == 'nan' else to_stop_geo
+        if to_stop_geo:
+            to_stop_geo = None if to_stop_geo['lat'].isalnum() or to_stop_geo['lon'].isalnum() else to_stop_geo
 
-        return req_da, iconfirm_da, Travel(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo, vehicle_val)
+        # express boroughs as cities if city values are not set
+        if from_city_val == 'none':
+            from_city_val = from_borough_val
+        if to_city_val == 'none':
+            to_city_val = to_borough_val
+            
+        from_street1_val = expand_stop(from_street1_val, spell_numbers=False)
+        from_street2_val = expand_stop(from_street2_val, spell_numbers=False)
+        to_street1_val = expand_stop(to_street1_val, spell_numbers=False)
+        to_street2_val = expand_stop(to_street2_val, spell_numbers=False)
+        from_streets = " and ".join([street for street in [from_street1_val, from_street2_val] if street not in ['none', None]])
+        to_streets = " and ".join([street for street in [to_street1_val, to_street2_val] if street not in ['none', None]])
+
+        if from_stop_val == 'none':
+            from_stop_val = from_streets
+            if from_city_val == 'none':
+                from_city_val = self.ontology.get_default_value('in_city')
+        if to_stop_val == 'none':
+            to_stop_val = to_streets
+            if to_city_val == 'none':
+                to_city_val = self.ontology.get_default_value('in_city')
+
+        # todo - this would be sufficient: Waypoints(from_place, from_area, from_geo, to_place, to_area, to_geo, vehicle)
+        waypoints = Waypints(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo, vehicle_val)
+                             # from_streets, to_streets, vehicle_val)
+        return req_da, iconfirm_da, Travel(waypoints=waypoints)
 
     def gather_weather_info(self, ds, accepted_slots):
         """Handles in_city and in_state to be properly filled. If needed, a Request DA is formed for missing slots to be filled.
@@ -937,7 +1040,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%I:%M:%p")))
-                return da
+                break
+        return da
 
     def req_departure_time_rel(self, dialogue_state):
         """Return a DA informing the user about the relative time until the
@@ -1054,6 +1158,9 @@ class PTIENHDCPolicy(DialoguePolicy):
         :rtype: DialogueAct
         :return: apology dialogue act in case of conflict, or None
         """
+        # TODO: This is artificially added because streets now share stop slot and we don't need to check street compatibility
+        if wp.to_stop in self.ontology.ontology[u'slots'][u'stop'] or wp.from_stop in self.ontology.ontology[u'slots'][u'stop']:
+            return None
         # origin and destination are the same
         if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
             apology_da = DialogueAct('apology()&inform(stops_conflict="thesame")')
@@ -1341,8 +1448,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         return res_da
 
     def get_help_res_da(self, ds, accepted_slots, state_changed):
-        # na stránky: help me with finding connection -> blbabalkfj
-
         topics_alternatives = ['inform="alternative_abs"', 'inform="alternative_prev"', 'inform="alternative_next"',
                                'inform="alternative_last"', ]
         topics_stops = ['inform="from_stop"', 'inform="to_stop"', 'request="from_stop"', 'request="to_stop"',
@@ -1362,3 +1467,26 @@ class PTIENHDCPolicy(DialoguePolicy):
             topics = topics_general
         rand_theme = topics[random.randint(0, len(topics) - 1)]
         return DialogueAct("help(%s)" % rand_theme)
+
+    def transform_street_iconfirms(self, da):
+        res_da = DialogueAct()
+        # filter out iconfirms
+        iconfirms = [dai for dai in da if dai.dat == 'iconfirm']
+        # add all others
+        others = [dai for dai in da if dai.dat != 'iconfirm']
+        # get from and to iconfirms
+        from_list = ['from_street1', 'from_street2', 'from_stop']
+        from_stop_vals = [dai.value for dai in iconfirms if dai.name in from_list]
+        to_list = ['to_street1', 'to_street2', 'to_stop']
+        to_stop_vals = [dai.value for dai in iconfirms if dai.name in to_list]
+        # add all others
+        other_iconrirms =[dai for dai in iconfirms if dai.name not in from_list and dai.name not in to_list]
+        # append new iconfirms
+        if from_stop_vals:
+            res_da.append(DialogueActItem('iconfirm', 'from_stop', ' and '.join(from_stop_vals)))
+        if to_stop_vals:
+            res_da.append(DialogueActItem('iconfirm', 'to_stop', ' and '.join(to_stop_vals)))
+        res_da.extend(other_iconrirms)
+        res_da.extend(others)
+
+        return res_da

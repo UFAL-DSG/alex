@@ -60,6 +60,8 @@ database = {
     },
     "city": {
     },
+    "borough": {
+    },
     "state": {
     },
 }
@@ -83,12 +85,14 @@ NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
 # form.
 STREETS_FNAME = "streets.expanded.txt"
 STOPS_FNAME = "stops.expanded.txt"
+BOROUGHS_FNAME = "boroughs.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
 STATES_FNAME = "states.expanded.txt"
 
 # load new stops & cities list from the server if needed
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), BOROUGHS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STATES_FNAME)))
 
@@ -229,13 +233,15 @@ def add_from_file(category_label, fname):
 
 def add_streets():
     """Add street names from the streets file."""
-    # todo: temporary hack street = stop for street handling
-    add_from_file('stop', STREETS_FNAME)
+    add_from_file('street', STREETS_FNAME)
 
 def add_stops():
     """Add stop names from the stops file."""
     add_from_file('stop', STOPS_FNAME)
 
+def add_boroughs():
+    """Add borough names from the static list of boroughs."""
+    add_from_file('borough', BOROUGHS_FNAME)
 
 def add_cities():
     """Add city names from the cities file."""
@@ -303,6 +309,7 @@ def save_SRILM_classes(file_name):
 add_time()
 add_streets()
 add_stops()
+add_boroughs()
 add_cities()
 add_states()
 
