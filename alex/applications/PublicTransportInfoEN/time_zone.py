@@ -8,6 +8,8 @@ from datetime import datetime
 import json
 
 # from alex.utils.cache import lru_cache
+from alex.tools.apirequest import APIRequest
+
 
 class Time(object):
     pass
@@ -28,7 +30,10 @@ class Time(object):
 
 
 
-class GoogleTimeFinder:
+class GoogleTimeFinder(APIRequest):
+
+    def __init__(self, cfg):
+        APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
 
 
     def obtain_geo_codes(self, place='New York'):
@@ -60,15 +65,15 @@ class GoogleTimeFinder:
                 'timestamp': int(datetime.utcnow().strftime('%s')),
                 'language':'en'}
 
-        # self.system_logger.info("GoogleTime request:\n" + ' + ' + str(data))
+        self.system_logger.info("GoogleTime request:\n" + ' + ' + str(data))
 
         page = urllib.urlopen('https://maps.googleapis.com/maps/api/timezone/json?' + urllib.urlencode(data))
         if page.getcode() != 200:
             return None, None
         response = json.load(page)
-        # self._log_response_json(response)
+        self._log_response_json(response)
         time, time_zone = self.parse_time(response)
-        # self.system_logger.info("GoogleTime response:\n" + unicode(weather))
+        self.system_logger.info("GoogleTime response:\n" + unicode(time) + "," + unicode(time_zone))
         return time, time_zone
 
     def parse_time(self, response):

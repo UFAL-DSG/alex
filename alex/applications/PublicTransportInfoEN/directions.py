@@ -56,13 +56,13 @@ class Travel(object):
         in the form of a stringified inform() dialogue act."""
         res = []
         #todo: here maybe resolve the thing about from manhattan to new york  iconfirsm
-        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):  # or (bool(self.from_street != bool(self.to_street))):
+        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):
             res.append("inform(from_city='%s')" % self.from_city)
         if self.from_stop is not None:
             res.append("inform(from_stop='%s')" % self.from_stop)
         # if self.from_street is not None:
         #     res.append("inform(from_street='%s')" % self.from_street)
-        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):  # or (bool(self.from_street) != bool(self.to_street)):
+        if self.from_city != self.to_city or (bool(self.from_stop) != bool(self.to_stop)):
             res.append("inform(to_city='%s')" % self.to_city)
         if self.to_stop is not None:
             res.append("inform(to_stop='%s')" % self.to_stop)
@@ -425,7 +425,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         # TODO: from_area = from_borough || from_city
         parameters = list()
         if not waypoints.from_geo:
-            from_waypoints =[waypoints.from_stop, waypoints.from_city]  # [waypoints.from_street, waypoints.from_stop, waypoints.from_city]
+            from_waypoints =[expand_stop(waypoints.from_stop, False), expand_stop(waypoints.from_city, False)]
             parameters.extend([wp for wp in from_waypoints if wp and wp != 'none'])
         else:
             parameters.append(waypoints.from_geo['lat'])
@@ -435,7 +435,7 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
 
         parameters = list()
         if not waypoints.to_geo:
-            to_waypoints = [waypoints.to_stop, waypoints.to_city]
+            to_waypoints = [expand_stop(waypoints.to_stop, False), expand_stop(waypoints.to_city, False)]
             parameters.extend([wp for wp in to_waypoints if wp and wp != 'none'])
         else:
             parameters.append(waypoints.to_geo['lat'])

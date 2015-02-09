@@ -43,7 +43,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             directions_type = cfg['DM']['directions']['type']
         self.directions = directions_type(cfg=cfg)
         self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
-        self.time = GoogleTimeFinder()
+        self.time = GoogleTimeFinder(cfg=cfg)
         self.infer_default_stops = directions_type == GoogleDirectionsFinder
 
         self.das = []
@@ -224,6 +224,8 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         elif ludait == "thankyou":
             # NLG("Díky.")
+            if not changed_slots:  # plain thank you, nothing else sayed
+                dialogue_state.restart()
             res_da = DialogueAct('inform(cordiality="true")&hello()')
             dialogue_state["ludait"].reset()
 
@@ -275,9 +277,9 @@ class PTIENHDCPolicy(DialoguePolicy):
             t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
                                               accepted_slots, changed_slots, state_changed)
             res_da.extend(t_da)
-            res_da = self.filter_iconfirms(res_da)
             #todo: refactoring (place, area) - remove this hack - streets share stop slot so we don't have to generate more nlg templates
-            res_da = self.transform_street_iconfirms(res_da)
+            res_da = self.transform_street_and_borough_iconfirms(res_da)
+            res_da = self.filter_iconfirms(res_da)
 
         self.last_system_dialogue_act = res_da
 
@@ -900,11 +902,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             from_city_val = from_borough_val
         if to_city_val == 'none':
             to_city_val = to_borough_val
-            
-        from_street1_val = expand_stop(from_street1_val, spell_numbers=False)
-        from_street2_val = expand_stop(from_street2_val, spell_numbers=False)
-        to_street1_val = expand_stop(to_street1_val, spell_numbers=False)
-        to_street2_val = expand_stop(to_street2_val, spell_numbers=False)
+
         from_streets = " and ".join([street for street in [from_street1_val, from_street2_val] if street not in ['none', None]])
         to_streets = " and ".join([street for street in [to_street1_val, to_street2_val] if street not in ['none', None]])
 
@@ -1159,7 +1157,10 @@ class PTIENHDCPolicy(DialoguePolicy):
         :return: apology dialogue act in case of conflict, or None
         """
         # TODO: This is artificially added because streets now share stop slot and we don't need to check street compatibility
-        if wp.to_stop in self.ontology.ontology[u'slots'][u'stop'] or wp.from_stop in self.ontology.ontology[u'slots'][u'stop']:
+        if wp.to_stop not in self.ontology.ontology[u'slots'][u'stop'] or wp.from_stop not in self.ontology.ontology[u'slots'][u'stop']:
+            return None
+        # TODO: This is artificially added because boroughs now share city slot and we don't need to check borough compatibility
+        if wp.to_city in self.ontology.ontology[u'slots'][u'borough'] or wp.from_city in self.ontology.ontology[u'slots'][u'borough']:
             return None
         # origin and destination are the same
         if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
@@ -1468,25 +1469,67 @@ class PTIENHDCPolicy(DialoguePolicy):
         rand_theme = topics[random.randint(0, len(topics) - 1)]
         return DialogueAct("help(%s)" % rand_theme)
 
-    def transform_street_iconfirms(self, da):
-        res_da = DialogueAct()
-        # filter out iconfirms
-        iconfirms = [dai for dai in da if dai.dat == 'iconfirm']
-        # add all others
-        others = [dai for dai in da if dai.dat != 'iconfirm']
-        # get from and to iconfirms
-        from_list = ['from_street1', 'from_street2', 'from_stop']
-        from_stop_vals = [dai.value for dai in iconfirms if dai.name in from_list]
-        to_list = ['to_street1', 'to_street2', 'to_stop']
-        to_stop_vals = [dai.value for dai in iconfirms if dai.name in to_list]
-        # add all others
-        other_iconrirms =[dai for dai in iconfirms if dai.name not in from_list and dai.name not in to_list]
-        # append new iconfirms
-        if from_stop_vals:
-            res_da.append(DialogueActItem('iconfirm', 'from_stop', ' and '.join(from_stop_vals)))
-        if to_stop_vals:
-            res_da.append(DialogueActItem('iconfirm', 'to_stop', ' and '.join(to_stop_vals)))
-        res_da.extend(other_iconrirms)
-        res_da.extend(others)
+    def transform_street_and_borough_iconfirms(self, da):
 
+        from_list_stop = ['from_street1', 'from_street2', 'from_stop']
+        from_list_city = ['from_borough', 'from_city']
+        to_list_city = ['to_borough', 'to_city']
+        to_list_stop = ['to_street1', 'to_street2', 'to_stop']
+        
+        from_stop_i = [i for i,dai in enumerate(da) if dai.dat == 'iconfirm' and dai.name in from_list_stop]
+        from_city_i = [i for i,dai in enumerate(da) if dai.dat == 'iconfirm' and dai.name in from_list_city]
+        to_stop_i = [i for i,dai in enumerate(da) if dai.dat == 'iconfirm' and dai.name in to_list_stop]
+        to_city_i = [i for i,dai in enumerate(da) if dai.dat == 'iconfirm' and dai.name in to_list_city]
+
+        if from_stop_i:
+            from_stop_vals = [da[i].value for i in from_stop_i]
+            first = from_stop_i.pop()
+            da[first] = DialogueActItem('iconfirm', 'from_stop', ' and '.join(from_stop_vals))
+        if from_city_i:
+            from_city_vals = [da[i].value for i in from_city_i]
+            first = from_city_i.pop()
+            da[first] = DialogueActItem('iconfirm', 'from_city', ' and '.join(from_city_vals))
+        if to_stop_i:
+            to_stop_vals = [da[i].value for i in to_stop_i]
+            first = to_stop_i.pop()
+            da[first] = DialogueActItem('iconfirm', 'to_stop', ' and '.join(to_stop_vals))
+        if to_city_i:
+            to_city_vals = [da[i].value for i in to_city_i]
+            first = to_city_i.pop()
+            da[first] = DialogueActItem('iconfirm', 'to_city', ' and '.join(to_city_vals))
+
+        ignore_i = [i for category in [from_city_i, from_stop_i, to_city_i, to_stop_i] for i in category]
+        res_da = DialogueAct()
+        result_dais = [dai for i, dai in enumerate(da) if i not in ignore_i]
+        res_da.extend(result_dais)
         return res_da
+        #
+        # # filter out iconfirms
+        # iconfirms = [dai for dai in da if dai.dat == 'iconfirm']
+        # # add all others
+        # others = [dai for dai in da if dai.dat != 'iconfirm']
+        # from_stop_vals = [dai.value for dai in iconfirms if dai.name in from_list_stop]
+        # from_city_vals = [dai.value for dai in iconfirms if dai.name in from_list_city]
+        # to_stop_vals = [dai.value for dai in iconfirms if dai.name in to_list_stop]
+        # to_city_vals = [dai.value for dai in iconfirms if dai.name in to_list_city]
+        # # add all others
+        # selected_iconfirms = [item for list in [from_list_city, from_list_stop, to_list_city, to_list_stop, ] for item in list]
+        # res_da.extend(others)
+        # other_iconrirms = [dai for dai in iconfirms if dai.name not in selected_iconfirms]
+        # res_da.extend(other_iconrirms)
+        # # append new iconfirms
+        # if from_stop_vals:
+        #     res_da.append(DialogueActItem('iconfirm', 'from_stop', ' and '.join(from_stop_vals)))
+        # if to_stop_vals:
+        #     res_da.append(DialogueActItem('iconfirm', 'to_stop', ' and '.join(to_stop_vals)))
+        # if from_city_vals:
+        #     res_da.append(DialogueActItem('iconfirm', 'from_city', ' and '.join(from_city_vals)))
+        # if to_city_vals:
+        #     res_da.append(DialogueActItem('iconfirm', 'to_city', ' and '.join(to_city_vals)))
+        # # sort dais
+        # res_da.merge_same_dais()
+        #
+        # # the same stuff for boroughs:
+        #
+        #
+        # return res_da
