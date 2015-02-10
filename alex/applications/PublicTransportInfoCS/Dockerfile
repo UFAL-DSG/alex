@@ -1,4 +1,4 @@
-FROM alex-base
+FROM alex
 MAINTAINER Lukas Zilka <lukas@zilka.me>
 
 # Download models.
