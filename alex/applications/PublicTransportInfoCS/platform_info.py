@@ -52,17 +52,20 @@ class CRWSPlatformFinder(object):
         return True
 
     def _normalize_name(self, name):
-        res = ""
-        last_was_alpha = None
-        for i in name:
-            curr_is_alpha = i.isalpha()
-            if not last_was_alpha == curr_is_alpha and last_was_alpha is \
-                    not None:
-                res += " "
-            last_was_alpha = curr_is_alpha
-            res += i
+        if name:
+            res = ""
+            last_was_alpha = None
+            for i in name:
+                curr_is_alpha = i.isalpha()
+                if not last_was_alpha == curr_is_alpha and last_was_alpha is \
+                        not None:
+                    res += " "
+                last_was_alpha = curr_is_alpha
+                res += i
 
-        return res
+            return res
+        else:
+            return name
 
     def find_platform_by_station(self, to_obj):
         def norm(x):
