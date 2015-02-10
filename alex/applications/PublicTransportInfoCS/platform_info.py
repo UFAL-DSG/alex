@@ -51,6 +51,18 @@ class CRWSPlatformFinder(object):
 
         return True
 
+    def _normalize_name(self, name):
+        res = ""
+        last_was_alpha = None
+        for i in name:
+            curr_is_alpha = i.isalpha()
+            if not last_was_alpha == curr_is_alpha and last_was_alpha is \
+                    not None:
+                res += " "
+            last_was_alpha = curr_is_alpha
+            res += i
+
+        return res
 
     def find_platform_by_station(self, to_obj):
         def norm(x):
@@ -84,9 +96,11 @@ class CRWSPlatformFinder(object):
                     break
 
             if dst_matches or dir_matches:
-                print 'found match', dst_matches, dir_matches
                 platform = getattr(entry, '_sStand', None)
                 track = getattr(entry, '_sTrack', None)
+
+                platform = self._normalize_name(platform)
+                track = self._normalize_name(track)
 
                 return PlatformFinderResult(platform, track, matched_obj)
 
