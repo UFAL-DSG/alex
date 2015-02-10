@@ -1,4 +1,4 @@
-FROM alex
+FROM dsgprod/alex-base
 MAINTAINER Lukas Zilka <lukas@zilka.me>
 
 # Download models.
