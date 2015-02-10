@@ -891,7 +891,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                  from_city=from_city_val,
                                                  to_city=to_city_val,
                                                  train_name=train_name_val)
-        print 'PLATFORM INFO:', unicode(pi)
         return req_da, iconfirm_da, pi
 
 

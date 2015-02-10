@@ -15,3 +15,12 @@ pip install pystache cython flask theano
 easy_install pysox
 rm /tmp/alex-requirements.txt
 
+cd /app/
+git clone https://github.com/UFAL-DSG/pjsip.git
+cd /app/pjsip
+./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC
+make dep
+make
+make install
+cd /app/pjsip/pjsip-apps/src/python/
+python setup-pjsuaxt.py install
