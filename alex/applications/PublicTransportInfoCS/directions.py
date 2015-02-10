@@ -11,7 +11,7 @@ import json
 import pprint
 from suds.client import Client
 from alex.applications.PublicTransportInfoCS.platform_info import \
-    CRWSPlatformFinder
+    CRWSPlatformInfo
 from crws_enums import *
 import pickle
 import gzip
@@ -579,13 +579,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             self._log_response_json(_todict(response, '_origClassName'))
 
             # Extract the departure table entry.
-            pfinder = CRWSPlatformFinder(response)
+            platform_info = CRWSPlatformInfo(response, self)
             if from_obj and to_obj:
                 self.system_logger.info("CRWS Looking by destination station.")
-                platform_res = pfinder.find_platform_by_station(to_obj)
+                platform_res = platform_info.find_platform_by_station(to_obj)
             elif from_obj and train_name:
                 self.system_logger.info("CRWS Looking by train name.")
-                platform_res = pfinder.find_platform_by_train_name(platform_info.train_name)
+                platform_res = platform_info.find_platform_by_train_name(platform_info.train_name)
             else:
                 raise Exception("Incorrect state!")
 

@@ -28,11 +28,12 @@ class PlatformFinderResult(object):
             unicode(self.direction), )
 
 
-class CRWSPlatformFinder(object):
+class CRWSPlatformInfo(object):
     station_name_splitter = re.compile(r'[^a-zěščřžýáíéďťňóůú]*', re.UNICODE)
 
-    def __init__(self, crws_response):
+    def __init__(self, crws_response, finder):
         self.crws_response = crws_response
+        self.finder = finder
 
     def _matches(self, crws_stop, stop):
         #alex_stop = self.fn_idos_to_alex_stop(crws_stop)
@@ -104,6 +105,7 @@ class CRWSPlatformFinder(object):
 
                 platform = self._normalize_name(platform)
                 track = self._normalize_name(track)
+                matched_obj = self.finder.get_stop_full_name(matched_obj)
 
                 return PlatformFinderResult(platform, track, matched_obj)
 

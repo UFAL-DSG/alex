@@ -377,6 +377,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da = DialogueAct()
                     platform_res = self.directions.get_platform(platform_info)
 
+
                     if not platform_res:
                         res_da.append(DialogueActItem('inform', 'platform',
                                                       'not_found'))
