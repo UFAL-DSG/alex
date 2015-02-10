@@ -881,7 +881,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             req_da.extend(DialogueAct('request(from_stop)'))
         elif (to_stop_val == 'none' and to_city_val == 'none') and \
                         train_name_val == 'none':
-            req_da.extend(DialogueAct('request(to_station_or_train_name)'))
+            req_da.extend(DialogueAct('request(to_stop)&request(train_name)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
