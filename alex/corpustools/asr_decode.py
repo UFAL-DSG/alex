@@ -55,7 +55,10 @@ def rec_wav_file(output_dir, wav_path):
     res = asr.hyp_out()
     hyp_out_end = time.time()
 
-    save_lattice(asr.get_last_lattice(), output_dir, wav_path)
+    try:
+        save_lattice(asr.get_last_lattice(), output_dir, wav_path)
+    except AttributeError:
+        pass
 
     asr.flush()
 
