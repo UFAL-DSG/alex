@@ -127,7 +127,7 @@ def expand_stop(stop, spell_numbers=True):
         return None
     if '/' in stop:
         elements = stop.split('/')  # lexington av/63 street
-        conjunction = ' at '
+        conjunction = ' and '
     elif '-' in stop:
         elements = stop.split('-')
         conjunction = ' and '

@@ -38,6 +38,7 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
 
         self.text_normalization_mapping += [
             (["i'm"], ['i am']),
+            (["im"], ['i am']),
             (["it'll"], ['it will']),
             (["i'll"], ['i will']),
             (["that's"], ['that is']),
