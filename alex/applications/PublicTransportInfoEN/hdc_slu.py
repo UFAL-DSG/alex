@@ -240,7 +240,7 @@ class PTIENHDCSLU(SLUInterface):
         # regular parsing
         phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
                                       'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
-                        ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
+                        ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination',])),
                         ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
