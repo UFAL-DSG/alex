@@ -73,7 +73,7 @@ def first_phrase_span(utterance, phrases):
     for phrase in phrases:
         pos = first_phrase_pos(utterance, phrase)
         if pos != -1:
-            return pos, pos + len(phrase)
+            return pos, pos + len(phrase.split())
     return -1, -1
 
 def last_phrase_span(utterance, phrases):
@@ -87,7 +87,7 @@ def last_phrase_span(utterance, phrases):
     for phrase in phrases:
         pos = last_phrase_pos(utterance, phrase)
         if pos != -1:
-            return pos, pos + len(phrase)
+            return pos, pos + len(phrase.split())
     return -1, -1
 
 
@@ -240,7 +240,7 @@ class PTIENHDCSLU(SLUInterface):
         # regular parsing
         phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
                                       'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
-                        ('to', set(['to', 'into', 'in' 'end', 'ending', 'terminal', 'final',
+                        ('to', set(['to', 'into', 'in', 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination',])),
                         ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
@@ -258,9 +258,9 @@ class PTIENHDCSLU(SLUInterface):
         # regular parsing
         phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
                                       'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
-                        ('to', set(['to', 'into', 'in' 'end', 'ending', 'terminal', 'final',
+                        ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
                                     'target', 'output', 'exit', 'destination',])),
-                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
+                        ('via', set(['via', 'through a', 'transfer', 'transferring', 'interchange' ])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
                        ]
 
@@ -338,7 +338,7 @@ class PTIENHDCSLU(SLUInterface):
                         next_wp_type = self._get_closest_wp_type(wp_precontext)
                         if next_wp_type:
                             for j in [1,2,]:
-                                if i >= j and '=' in u[i-j] and u[i-j].split('=')[0].lower() in ['stop', 'street']:
+                                if i >= j and '=' in u[i-j] and u[i-j].split('=')[0].lower() in ['stop', 'street'] and wp_slot_suffix in ['city', 'borough']:
                                     wp_types.pop()
                                     wp_types = next_wp_type
                                     break
@@ -720,7 +720,8 @@ class PTIENHDCSLU(SLUInterface):
                     cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'till until before'):
-            if (all_words_in(u, 'how long') and (any_phrase_in(u, ['does it take', 'would it take', 'will it take', 'will that take', 'would that take',]) or any_word_in(u, 'travel connection trip train bus sub subway link'))) or\
+            if (all_words_in(u, 'how long') and ((any_word_in(u, 'would will does') and any_word_in(u, 'it that the') and all_words_in(u, 'take')) or \
+                     any_word_in(u, 'travel connection trip train bus sub subway link'))) or \
                     any_phrase_in(u, ['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or \
                     (all_words_in(u, 'duration') and any_word_in(u, 'trip travel journey ride tour bus train sub subway')):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
