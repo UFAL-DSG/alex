@@ -34,9 +34,9 @@ ontology = {
         'from_stop': set(['Central Park', 'Wall Street', ]),
         'to_stop': set(['Central Park', 'Wall Street', ]),
         'via_stop': set(['Central Park', 'Wall Street', ]),
-        'from_street1': set(),
+        'from_street': set(),
         'from_street2': set(),
-        'to_street1': set(),
+        'to_street': set(),
         'to_street2': set(),
         'city': set([]),
         'from_city': set([]),
@@ -112,7 +112,7 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
-        'from_street1': [
+        'from_street': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
@@ -122,7 +122,7 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
-        'to_street1': [
+        'to_street': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
@@ -296,10 +296,10 @@ ontology = {
         #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
         #       "from_city"
 
-        'street': set(['from_street1', 'from_street2', 'to_street1', 'to_street2', 'from_stop', 'to_stop']),
-        'stop': set(['from_stop', 'to_stop', 'via_stop', 'from_street1', 'from_street2', 'to_street1', 'to_street2', ]),
+        'street': set(['from_street', 'from_street2', 'to_street', 'to_street2', 'from_stop', 'to_stop']),
+        'stop': set(['from_stop', 'to_stop', 'via_stop', 'from_street', 'from_street2', 'to_street', 'to_street2', ]),
         # added from/to city -> where do yo want to go from / new york (won't work if KEY is not suffix to slots (CITY->from_CITY))
-        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop', 'from_street1', 'from_street2', 'to_street1', 'to_street2', ]),
+        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop', 'from_street', 'from_street2', 'to_street', 'to_street2', ]),
         'borough': set(['from_borough', 'to_borough', 'in_borough', 'from_city', 'to_city', 'from_stop', 'to_stop']),
         'state': set(['in_state', ]),
     },
@@ -357,7 +357,7 @@ ontology = {
     },
 
     # 'compatibility': {
-    #     'city_street': ['from_street1', 'from_street2', 'to_street1', 'to_street2', ],
+    #     'city_street': ['from_street', 'from_street2', 'to_street', 'to_street2', ],
     #     'street_borough': ['in_borough', ],
     #     'stop_city': ['from_stop', 'to_stop', 'via_stop', ],
     #     'city_stop': ['from_city', 'to_city', 'via_city', 'in_city', ],
@@ -438,9 +438,9 @@ def add_slot_values_from_database(slot, category, exceptions=set()):
             ontology['slots'][slot].add(value)
 
 add_slot_values_from_database('street', 'street')
-add_slot_values_from_database('from_street1', 'street')
+add_slot_values_from_database('from_street', 'street')
 add_slot_values_from_database('from_street2', 'street')
-add_slot_values_from_database('to_street1', 'street')
+add_slot_values_from_database('to_street', 'street')
 add_slot_values_from_database('to_street2', 'street')
 add_slot_values_from_database('stop', 'stop')
 add_slot_values_from_database('from_stop', 'stop')

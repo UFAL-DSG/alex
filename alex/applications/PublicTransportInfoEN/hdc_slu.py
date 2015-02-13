@@ -189,15 +189,14 @@ class PTIENHDCSLU(SLUInterface):
 
         # here we tag each street with its sequential number
         dais = [dai_hyp[1] for dai_hyp in cn.items()]
-        def replace_street(type):
-            street_indices = [i for i, dai in enumerate(dais) if dai.name == type]
-            number = 1
-            for i in street_indices:
+        def fix_second_street(type):
+            street_indices = [i for i, dai in enumerate(dais) if dai.name == type][1:]
+            number = 2
+            for i in street_indices:  # all slots are from_street2
                 cn.cn[i][1] = DialogueActItem(dais[i].dat, dais[i].name + str(number), dais[i].value)
-                number = max(number + 1, 2)
 
-        replace_street('from_street')
-        replace_street('to_street')
+        fix_second_street('from_street')
+        fix_second_street('to_street')
 
 
     def parse_stop(self, abutterance, cn):
@@ -333,6 +332,16 @@ class PTIENHDCSLU(SLUInterface):
 
                 # add waypoint to confusion network (standard case: just single type is decided)
                 if len(wp_types) == 1:
+                    # TODO: remove this hack - way: zapisovat do uterance - replace STREET with FROM_STREET, a pak tady bych mohl hledat v kontextu 2 slov, jeslti se nevyskytuje FROM_*
+                    if 'in' in wp_types:  # catching following instances: from/to street/stop in city/borough -> from_stop & from_city
+                        wp_precontext['in'] = (-1,-1)
+                        next_wp_type = self._get_closest_wp_type(wp_precontext)
+                        if next_wp_type:
+                            for j in [1,2,]:
+                                if i >= j and '=' in u[i-j] and u[i-j].split('=')[0].lower() in ['stop', 'street']:
+                                    wp_types.pop()
+                                    wp_types = next_wp_type
+                                    break
                     cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name))
                 # backoff 1: add both 'from' and 'to' waypoint slots
                 elif 'from' in wp_types and 'to' in wp_types:
@@ -586,7 +595,7 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("hello"))
 
         if any_word_in(u, "bye byebye seeya goodbye") or \
-                any_phrase_in(u, ['good bye', 'see you', 'nothing else', 'no further help needed', ]) or \
+                any_phrase_in(u, ['good bye', 'take baths', 'see you', 'see ya' 'nothing else', 'no further help needed', ]) or \
                 (any_phrase_in(u, ['that is', 'that was', "that's", ]) and any_phrase_in(u, ['all', 'it', ])):
 
             cn.add(1.0, DialogueActItem("bye"))
@@ -596,10 +605,8 @@ class PTIENHDCSLU(SLUInterface):
                     phrase_in(u, 'anything else'):
                 cn.add(1.0, DialogueActItem("reqalts"))
 
-        if not any_word_in(u, 'connection station option options last offer offered found beginning begin where going'):
-            if (any_word_in(u, 'repeat again') or
-                phrase_in(u, "come again") or
-                phrase_in(u, "once more")):
+        if not any_word_in(u, 'connection station option options last offer offered found beginning begin where going time'):
+            if any_phrase_in(u, ['repeat', 'that again', 'come again', 'once more', 'say again', 'it again']):
                 cn.add(1.0, DialogueActItem("repeat"))
 
         if phrase_in(u, "repeat the last sentence") or \
@@ -641,7 +648,7 @@ class PTIENHDCSLU(SLUInterface):
         if any_word_in(u, 'thanks thankyou thank cheers'):
             cn.add(1.0, DialogueActItem("thankyou"))
 
-        if any_word_in(u, 'ok well correct fine understand, understood') or (any_word_in(u, 'right') and not any_word_in(u, 'now')) and \
+        if any_word_in(u, 'ok okay well correct fine understand understood') or (any_word_in(u, 'right') and not any_word_in(u, 'now')) and \
             not any_word_in(u, "yes"):
             cn.add(1.0, DialogueActItem("ack"))
 
@@ -665,6 +672,8 @@ class PTIENHDCSLU(SLUInterface):
             all_words_in(u, 'where departure ') or \
             all_words_in(u, 'where departuring') or \
             all_words_in(u, 'where departures') or \
+            all_words_in(u, "what's origin") or \
+            all_words_in(u, "what is origin") or \
             all_words_in(u, 'where starts') or \
             all_words_in(u, 'where goes from') or \
             all_words_in(u, 'where does go from') or \
@@ -683,6 +692,8 @@ class PTIENHDCSLU(SLUInterface):
             all_words_in(u, 'what is target') or \
             all_words_in(u, 'where is target') or \
             all_words_in(u, 'where destination') or \
+            all_words_in(u, 'what is destination') or \
+            all_words_in(u, "what's destination") or \
             all_words_in(u, 'where terminates') or \
             all_words_in(u, "where terminal") or \
             all_words_in(u, "where terminate"):
@@ -695,7 +706,8 @@ class PTIENHDCSLU(SLUInterface):
                 if not any_word_in(u, "till until before"):
                     cn.add(1.0, DialogueActItem('request', 'departure_time'))
 
-            elif any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before"):
+            elif (any_phrase_in(u, ['how long', 'how much', ]) and any_word_in(u, "till until before")) or \
+                    (any_phrase_in(u, ['how many', ]) and any_phrase_in(u, ['minutes', 'hours'])):
                 if not any_word_in(u, "there"):
                     cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
 
@@ -707,12 +719,13 @@ class PTIENHDCSLU(SLUInterface):
                 elif any_phrase_in(u, ['how long', 'how much', 'give me', 'tell me', 'provide']) and any_word_in(u, "till until before"):
                     cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
-        if not any_word_in(u, 'till until'):
-            if (all_words_in(u, 'how long') and any_phrase_in(u, ['does it take', 'would it take', 'will it take',
-                'will that take', "would that take", 'travel'])) or any_phrase_in(u, ['time requirement', 'time requirements', ]):
+        if not any_word_in(u, 'till until before'):
+            if (all_words_in(u, 'how long') and (any_phrase_in(u, ['does it take', 'would it take', 'will it take', 'will that take', 'would that take',]) or any_word_in(u, 'travel connection trip train bus sub subway link'))) or\
+                    any_phrase_in(u, ['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or \
+                    (all_words_in(u, 'duration') and any_word_in(u, 'trip travel journey ride tour bus train sub subway')):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
-        if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have']):
+        if any_phrase_in(u, ['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in']):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
         if any_phrase_in(u, ['how many', 'there any', 'number', ]) and \
@@ -721,7 +734,8 @@ class PTIENHDCSLU(SLUInterface):
             not any_word_in(u, 'time'):
             cn.add(1.0, DialogueActItem('request', 'num_transfers'))
 
-        if any_word_in(u, 'connection alternatives alternative option options found choice link possibility'):
+        if any_word_in(u, 'connection alternatives alternative option options found choice link possibility bus train sub subway') and \
+                not any_word_in(u, 'street stop city borough avenue road parkway court from in'):
             if any_word_in(u, 'arbitrary') and \
                 not any_word_in(u, 'first second third fourth one two three four'):
                 cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))

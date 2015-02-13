@@ -9,17 +9,27 @@ from alex.utils.config import as_project_path
 
 class TestPTIENHDCSLU(TestCase):
 
-    # def test_parse_next_connection_time(self):
-    #     utterance = Utterance("when is the next connection")
-    #     utterance = Utterance("when is the next train leaving")
-    #     cn = self.slu.parse_1_best({'utt': utterance})
-    #     self.assertEquals('inform(from_street1="5 Ave")', str(cn[0][1]))
-    #     self.assertEquals('inform(from_borough="Manhattan")', str(cn[1][1]))
+    def test_parse_to_city_to_stop2(self):
+        utterance = Utterance("to central park in new york")
+        cn = self.slu.parse_1_best({'utt': utterance})
+        self.assertEquals('inform(to_stop="Central Park")', str(cn[0][1]))
+        self.assertEquals('inform(to_city="New York")', str(cn[1][1]))
+
+    def test_parse_to_borough_to_street(self):
+        utterance = Utterance("TO BROADWAY IN BRONX")
+        cn = self.slu.parse_1_best({'utt': utterance})
+        self.assertEquals('inform(to_street="Broadway")', str(cn[0][1]))
+        self.assertEquals('inform(to_borough="Bronx")', str(cn[1][1]))
+
+    def test_parse_next_connection_time(self):
+        utterance = Utterance("what time does that leave again")
+        cn = self.slu.parse_1_best({'utt': utterance})
+        self.assertEquals('request(departure_time)', str(cn[0][1]))
 
     def test_parse_from_borough_from_street(self):
         utterance = Utterance("from fifth avenue manhattan")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="5 Ave")', str(cn[0][1]))
+        self.assertEquals('inform(from_street="5 Ave")', str(cn[0][1]))
         self.assertEquals('inform(from_borough="Manhattan")', str(cn[1][1]))
 
     def test_parse_to_city_to_stop(self):
@@ -31,7 +41,7 @@ class TestPTIENHDCSLU(TestCase):
     def test_parse_form_street_to_stop(self):
         utterance = Utterance("i would like to go from cypress avenue to the lincoln center")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="Cypress Ave")', str(cn[0][1]))
+        self.assertEquals('inform(from_street="Cypress Ave")', str(cn[0][1]))
         self.assertEquals('inform(to_stop="Lincoln Center")', str(cn[1][1]))
 
     def test_parse_from_to_city(self):
@@ -64,34 +74,34 @@ class TestPTIENHDCSLU(TestCase):
     def test_parse_street_at_streets(self):
         utterance = Utterance("i am at the corner of third street and beacon court")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="3 St")', str(cn[0][1]))
+        self.assertEquals('inform(from_street="3 St")', str(cn[0][1]))
         self.assertEquals('inform(from_street2="Beacon Ct")', str(cn[1][1]))
 
     def test_parse_street_from_street_to_streets(self):
         utterance = Utterance("third street to beacon court at beamer court")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="3 St")', str(cn[0][1]))
-        self.assertEquals('inform(to_street1="Beacon Ct")', str(cn[1][1]))
+        self.assertEquals('inform(from_street="3 St")', str(cn[0][1]))
+        self.assertEquals('inform(to_street="Beacon Ct")', str(cn[1][1]))
         self.assertEquals('inform(to_street2="Beamer Ct")', str(cn[2][1]))
 
     def test_parse_street_from_streets_to_streets(self):
         utterance = Utterance("from third street and twenty third avenue to beacon court and beamer court")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="3 St")', str(cn[0][1]))
+        self.assertEquals('inform(from_street="3 St")', str(cn[0][1]))
         self.assertEquals('inform(from_street2="23 Ave")', str(cn[1][1]))
-        self.assertEquals('inform(to_street1="Beacon Ct")', str(cn[2][1]))
+        self.assertEquals('inform(to_street="Beacon Ct")', str(cn[2][1]))
         self.assertEquals('inform(to_street2="Beamer Ct")', str(cn[3][1]))
 
     def test_parse_street_to_streets(self):
         utterance = Utterance("to beacon court and beamer court")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(to_street1="Beacon Ct")', str(cn[0][1]))
+        self.assertEquals('inform(to_street="Beacon Ct")', str(cn[0][1]))
         self.assertEquals('inform(to_street2="Beamer Ct")', str(cn[1][1]))
 
     def test_parse_street_from_streets(self):
         utterance = Utterance("from third street and twenty third avenue")
         cn = self.slu.parse_1_best({'utt': utterance})
-        self.assertEquals('inform(from_street1="3 St")', str(cn[0][1]))
+        self.assertEquals('inform(from_street="3 St")', str(cn[0][1]))
         self.assertEquals('inform(from_street2="23 Ave")', str(cn[1][1]))
 
     @classmethod

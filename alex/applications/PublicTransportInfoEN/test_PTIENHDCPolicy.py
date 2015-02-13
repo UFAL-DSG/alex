@@ -13,9 +13,38 @@ from alex.utils.config import Config, as_project_path
 class TestPTIENHDCPolicy(TestCase):
 
     # ===== GATHERING CONNECTION INFORMATION =====
+ # find a bus connection from Broadway Queens to seventh avenue and forty second street
+
+    def test_gather_connection_info_from_street_to_stop(self):
+        self.set_ds_connection_info(from_stop="Central Park")
+        self.set_ds_street_connection_info(to_street="Wall St")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(1, len(req_da))
+        self.assertEquals('Central Park', conn_info.from_stop)
+        self.assertEquals('Wall St', conn_info.to_stop)
+
+    def test_gather_connection_info_combined(self):
+        self.set_ds_connection_info(to_city="Queens")
+        self.set_ds_street_connection_info(to_street="42 St", to_street2="7 Ave", from_street="58 Dr")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals('Queens', conn_info.to_city)
+        self.assertEquals('42 St and 7 Ave', conn_info.to_stop)
+        self.assertEquals('58 Dr', conn_info.from_stop)
+        self.assertEquals('Queens', conn_info.from_city)
+
+    def test_gather_connection_info_from_streets_to_stops2(self):
+        self.set_ds_connection_info(to_city="New York", from_city="Baltimore")
+        req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
+        self.assertEquals(0, len(iconfirm_da))
+        self.assertEquals(0, len(req_da))
+        self.assertEquals('Baltimore', conn_info.from_city)
+        self.assertEquals('New York', conn_info.to_city)
 
     def test_gather_connection_info_from_streets_to_stops(self):
-        self.set_ds_street_connection_info(from_street1="105 St", from_street2="5 Ave")
+        self.set_ds_street_connection_info(from_street="105 St", from_street2="5 Ave")
         self.set_ds_connection_info(to_stop="Central Park")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
@@ -25,7 +54,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('New York', conn_info.to_city)
 
     def test_gather_connection_info_infer_from_borough(self):
-        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="101 Ave", to_borough="Brooklyn")
+        self.set_ds_street_connection_info(from_street="1 Ave", to_street="101 Ave", to_borough="Brooklyn")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(req_da))
         self.assertEquals(0, len(iconfirm_da))
@@ -35,7 +64,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('101 Ave', conn_info.to_stop)
 
     def test_gather_connection_info_request_to_borough(self):
-        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="101 St")
+        self.set_ds_street_connection_info(from_street="1 Ave", to_street="101 St")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(DialogueAct('request(to_borough)'),str(req_da))
@@ -45,16 +74,16 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('101 St', conn_info.to_stop)
 
     # def test_gather_connection_info_street_infer_from_city(self):
-    #     self.set_ds_street_connection_info(from_street1="1 Av", to_borough="Bronx")
+    #     self.set_ds_street_connection_info(from_street="1 Av", to_borough="Bronx")
     #     req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
     #     self.assertEquals(DialogueAct('iconfirm(to_city="Baltimore")&iconfirm(from_city="New York")'), iconfirm_da)
     #     self.assertEquals(0, len(req_da))
     #     self.assertEquals('Bronx', conn_info.to_city)
     #     self.assertEquals('Bronx', conn_info.from_city)
-    #     self.assertEquals('1 Av', conn_info.from_street1)
+    #     self.assertEquals('1 Av', conn_info.from_street)
 
     def test_gather_connection_info_street_infer_to_borough(self):
-        self.set_ds_street_connection_info(to_street1="1 Ct", from_borough="Manhattan")
+        self.set_ds_street_connection_info(to_street="1 Ct", from_borough="Manhattan")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(DialogueAct('request(from_stop)'),str(req_da))
@@ -63,7 +92,7 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('Manhattan', conn_info.from_city)
 
     def test_gather_connection_info_street_infer_from_to_borough(self):
-        self.set_ds_street_connection_info(from_street1="1 Ave", to_street1="1 Ct")
+        self.set_ds_street_connection_info(from_street="1 Ave", to_street="1 Ct")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(0, len(req_da))
@@ -73,14 +102,14 @@ class TestPTIENHDCPolicy(TestCase):
         self.assertEquals('Brooklyn', conn_info.from_city)
 
     def test_gather_connection_info_request_from_street(self):
-        self.set_ds_street_connection_info(to_street1="1 Ct")
+        self.set_ds_street_connection_info(to_street="1 Ct")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(DialogueAct('request(from_stop)'),str(req_da))
         self.assertEquals('1 Ct', conn_info.to_stop)
 
     def test_gather_connection_info_request_to_street(self):
-        self.set_ds_street_connection_info(from_street1="1 Ave")
+        self.set_ds_street_connection_info(from_street="1 Ave")
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(DialogueAct('request(to_stop)'), str(req_da))
@@ -275,15 +304,15 @@ class TestPTIENHDCPolicy(TestCase):
         self.ds.slots['from_city'].scale(0.0)
         self.ds.slots['from_city'].add(from_city, 1.0)
         
-    def set_ds_street_connection_info(self, to_street1='none', to_street2='none', to_borough='none', from_street1='none', from_street2='none', from_borough='none'):
-        self.ds.slots['to_street1'].scale(0.0)
-        self.ds.slots['to_street1'].add(to_street1, 1.0)
+    def set_ds_street_connection_info(self, to_street='none', to_street2='none', to_borough='none', from_street='none', from_street2='none', from_borough='none'):
+        self.ds.slots['to_street'].scale(0.0)
+        self.ds.slots['to_street'].add(to_street, 1.0)
         self.ds.slots['to_street2'].scale(0.0)
         self.ds.slots['to_street2'].add(to_street2, 1.0)
         self.ds.slots['to_borough'].scale(0.0)
         self.ds.slots['to_borough'].add(to_borough, 1.0)
-        self.ds.slots['from_street1'].scale(0.0)
-        self.ds.slots['from_street1'].add(from_street1, 1.0)
+        self.ds.slots['from_street'].scale(0.0)
+        self.ds.slots['from_street'].add(from_street, 1.0)
         self.ds.slots['from_street2'].scale(0.0)
         self.ds.slots['from_street2'].add(from_street2, 1.0)
         self.ds.slots['from_borough'].scale(0.0)
@@ -313,6 +342,9 @@ class TestPTIENHDCPolicy(TestCase):
 
     def get_config(self):
         return {
+            'PublicTransportInfoEN': {
+                'max_turns': 120,
+              },
             'DM': {
                 'debug': True,
                 'type': 'basic',
