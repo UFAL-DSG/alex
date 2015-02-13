@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from alex.components.dm.base import DiscreteValue, DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
-from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 
 
 class D3DiscreteValue(DiscreteValue):
@@ -350,8 +350,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                                     system_dai.name in self.ontology['context_resolution'][user_dai.name] and \
                                     self.ontology.slot_has_value(system_dai.name.split('_')[0]+ "_" + user_dai.name, user_dai.value):
                         # added a support of request("from_city") & inform(city="New York") -> inform(from_city="New York")
-                        new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0]+ "_" + user_dai.name, user_dai.value)
-
+                        # hack for street and street2 handling
+                        if [dai for (p,dai) in new_user_da if dai.dat == 'inform' and dai.name == system_dai.name.split('_')[0]+ "_" + user_dai.name] and \
+                                user_dai.name == 'street':
+                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0]+ "_" + user_dai.name + "2", user_dai.value)
+                        else:
+                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0]+ "_" + user_dai.name, user_dai.value)
                     elif system_dai.dat == "request" and system_dai.name != "" and \
                                     user_dai.dat == "affirm" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")
