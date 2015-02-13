@@ -56,7 +56,7 @@ database = {
         "am": [ "forenoon", "a.m." ],
         "pm": [ "afternoon", "p.m."],
         "evening": ["evening", "dusk", ],
-        "night": ["night", "nighttime"],
+        "night": ["night", "nighttime", "midnight"],
     },
     "city": {
     },
