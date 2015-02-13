@@ -17,7 +17,7 @@ from alex.applications.PublicTransportInfoEN.data.expand_stops_script import pro
 
 def main():
     streets_out = "./streets.expanded.txt"
-    csv_out = "./streets.locations.csv"
+    csv_out = "./streets.types.csv"
     # compatibility_out = "./city.street.txt"
     
     parser = OptionParser()

@@ -255,7 +255,7 @@ def handle_compatibility(file_in, file_out, no_cache=False):
 
 def main():
     stops_out = "./stops.expanded.txt"
-    csv_out = "./stops.types.csv"
+    csv_out = "./stops.locations.csv"
     # compatibility_out = "./city.stop.txt"
 
     parser = OptionParser()
