@@ -31,4 +31,4 @@ pushd $lm_dir
 python download_models.py
 popd
 
-./build_hclg.sh $AM $tree $mfcc $mat $sil $dict $vocab $LM $localdir $langdir $outputdir $oov
+../../../corpustools/kaldi_build_hclg.sh $AM $tree $mfcc $mat $sil $dict $vocab $LM $localdir $langdir $outputdir $oov

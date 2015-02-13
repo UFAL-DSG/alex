@@ -73,11 +73,16 @@ def decode_info(p):
     """
     output_dir, wav_path, reference = p
 
+
     print "-"*120
     print
     print '    Wav file:  %s' % str(wav_path)
     print
     print '    Reference: %s' % reference
+
+
+    if not os.path.exists(wav_path):
+        print "Does not exists!"
 
     wav_dur = wav_duration(wav_path)
 
@@ -211,8 +216,14 @@ def decode_with_reference(reference, outdir, num_workers):
     declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
 
     params = [ (outdir, wav_path, reference) for wav_path, reference in trn_dict.items()]
-    p_decode_wavs = multiprocessing.Pool(num_workers)
-    decoded_wavs = p_decode_wavs.map(decode_info, params, 100)
+    if num_workers > 1:
+        p_decode_wavs = multiprocessing.Pool(num_workers)
+        decoded_wavs = p_decode_wavs.map(decode_info, params, 100)
+    else:
+        decoded_wavs = []
+
+        for p in params:
+            decoded_wavs.append(decode_info(p))
 
     for best, dec_dur, fw_dur, wav_dur, wav_path in decoded_wavs:
         dec_dict[wav_path] = best
