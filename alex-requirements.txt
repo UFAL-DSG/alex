@@ -1,7 +1,6 @@
 numpy
 scipy
 scikit-learn
-matplotlib
 
 pysqlite
 sqlalchemy
@@ -21,3 +20,6 @@ wget
 ipdb
 nose
 sphinxcontrib-napoleon
+
+flask
+theano

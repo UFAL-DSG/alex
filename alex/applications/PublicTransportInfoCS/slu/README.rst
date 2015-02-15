@@ -23,8 +23,8 @@ The script generates the following files:
 The script accepts ``--uniq`` parameter for fast generation of unique HDC SLU annotations.
 This is useful when tuning the HDC SLU.
 
-Building the models
--------------------
+Building the DAILogRegClassifier models
+---------------------------------------
 
 First, prepare the data. Link the directories with the in-domain data into the ``indomain_data`` directory. Then run the
 following command:
@@ -37,6 +37,7 @@ following command:
 Second, train and test the models.
 
 ::
+    cd ./dailogregclassifier
 
     ./train.py && ./test_trn.py && ./test_hdc.py && ./test_bootstrap_trn.py && ./test_bootsrap_hdc.py
 

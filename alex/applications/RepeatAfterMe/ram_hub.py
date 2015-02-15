@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import multiprocessing
 import time
@@ -10,8 +12,6 @@ import cPickle as pickle
 import argparse
 import codecs
 import re
-
-import autopath
 
 from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
@@ -94,6 +94,7 @@ def ram():
 #########################################################################
 #########################################################################
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
@@ -156,6 +157,7 @@ if __name__ == '__main__':
     cfg['Logging']['session_logger'].start()
 
     # init the system
+    call_connected = False
     call_start = 0
     count_intro = 0
     intro_played = False
@@ -167,6 +169,7 @@ if __name__ == '__main__':
     s_last_voice_activity_time = 0
     u_voice_activity = False
     u_last_voice_activity_time = 0
+    n_calls = 0
 
     db = load_database(cfg['RepeatAfterMe']['call_db'])
 
@@ -288,12 +291,14 @@ if __name__ == '__main__':
                             last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
                         tts_commands.send(Command('synthesize(text="%s")' % cfg['RepeatAfterMe']['rejected'], 'HUB', 'TTS'))
+                        call_connected = True
                         reject_played = True
                         s_voice_activity = True
                         vio_commands.send(Command('black_list(remote_uri="%s",expire="%d")' % (remote_uri, time.time() + cfg['RepeatAfterMe']['blacklist_for']), 'HUB', 'VoipIO'))
                         m.append('CALL REJECTED')
                     else:
                         # init the system
+                        call_connected = True
                         call_start = time.time()
                         count_intro = 0
                         intro_played = False
@@ -345,6 +350,8 @@ if __name__ == '__main__':
                         pass
 
                     intro_played = False
+                    call_connected = False
+                    n_calls += 1
 
                 if command.parsed['__name__'] == "play_utterance_start":
                     cfg['Logging']['system_logger'].info(command)
@@ -429,6 +436,9 @@ if __name__ == '__main__':
 
                 cfg['Logging']['system_logger'].info('\n'.join(m))
 
+        if not call_connected and n_calls >= 1:
+            break
+
     # stop processes
     vio_commands.send(Command('stop()', 'HUB', 'VoipIO'))
     vad_commands.send(Command('stop()', 'HUB', 'VAD'))
@@ -444,10 +454,13 @@ if __name__ == '__main__':
             c.recv()
 
     # wait for processes to stop
-    vio.join()
-    system_logger.debug('VIO stopped.')
-    vad.join()
-    system_logger.debug('VAD stopped.')
-    tts.join()
-    system_logger.debug('TTS stopped.')
+    # do not join, because in case of exception the join will not be successful
+    #vio.join()
+    #system_logger.debug('VIO stopped.')
+    #vad.join()
+    #system_logger.debug('VAD stopped.')
+    #tts.join()
+    #system_logger.debug('TTS stopped.')
 
+    print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+    close_event.set()

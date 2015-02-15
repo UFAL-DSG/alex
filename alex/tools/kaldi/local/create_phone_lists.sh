@@ -22,6 +22,8 @@
 # _EHM_HMM_
 # _SIL_
 
+set -e
+
 locdict=$1; shift
 
 echo "--- Prepare nonsilence phone lists ..."

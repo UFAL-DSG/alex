@@ -31,7 +31,3 @@ if [ "$2" = "text" ]; then
 	rmdir $TEMP_DIR/out
 	rm $TEMP_DIR/empty
 fi
-
-# Create Julius ASR binary AM models.
-mkbinhmm -htkconf $WORK_DIR/export_models/config $WORK_DIR/export_models/hmmdefs $WORK_DIR/export_models/julius_hmmdefs
-mkbinhmmlist $WORK_DIR/export_models/hmmdefs $WORK_DIR/export_models/tiedlist $WORK_DIR/export_models/julius_tiedlist

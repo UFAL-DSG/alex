@@ -286,6 +286,7 @@ class GrepFilter(Process):
             sleep(.1)
 
 
+# TODO Fix this and remove this file from nose2.cfg.
 # XXX This is very provisional.
 def test_grep_filter():
     # from StringIO import StringIO

@@ -3,13 +3,15 @@
 
 from __future__ import unicode_literals
 
+if __name__ == '__main__':
+    import autopath
 import codecs
 import os
 import re
 import sys
 
-from alex.utils.config import online_update, to_project_path
 
+from alex.utils.config import online_update, to_project_path
 
 __all__ = ['database']
 
@@ -22,13 +24,11 @@ database = {
         "find_platform": ["najít nástupiště", "zjistit nástupiště", ],
         'weather': ['počasí', ],
     },
+    "number": {
+        "1": ["jednu"]
+    },
     "time": {
-        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli"],
-        "0:01": ["minutu", ],
-        "0:15": ["čtvrt hodiny", ],
-        "0:30": ["půl hodiny", ],
-        "0:45": ["tři čtvrtě hodiny", ],
-        "1:00": ["hodinu", ],
+        "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli", "co nejdřív"],
     },
     "date_rel": {
         "today": ["dnes", "dneska",
@@ -44,9 +44,9 @@ database = {
     "vehicle": {
         "dontcare": ["čímkoliv", "jakkoliv", "jakýmkoliv způsobem", "jakýmkoliv prostředkem",
                      "jakýmkoliv dopravním prostředkem", "libovolným dopravním prostředkem"],
-        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové"],
+        "bus": ["bus", "busem", "autobus", "autobusy", "autobusem", "autobusové", "autobusovýho"],
         "tram": ["tram", "tramvaj", "tramvajový", "tramvaje", "tramvají", "tramvajka", "tramvajkou", "šalina", "šalinou"],
-        "subway": ["metro", "metrem", "metrema", "metru", "krtek", "krtkem", "podzemka", "podzemkou"],
+        "subway": ["metro", "metrem", "metrema", "metru", "metra", "krtek", "krtkem", "podzemka", "podzemkou"],
         "train": ["vlak", "vlakem", "vláčkem", "vlaky", "vlakovém", "rychlík", "rychlíky", "rychlíkem", "panťák", "panťákem"],
         "cable_car": ["lanovka", "lanovky", "lanovce", "lanovkou", "lanová dráha", "lanovou dráhou"],
         "ferry": ["přívoz", "přívozy", "přívozem", "přívozu", "loď", "lodí"],
@@ -62,9 +62,10 @@ database = {
     },
 }
 
-NUMBERS_1 = ["nula", "jedna", "dvě", "tři", "čtyři", "pět", "šest", "sedm",
-             "osm", "devět", ]
-NUMBERS_10 = ["", "deset", "dvacet", "třicet", "čtyřicet", "padesát",
+# TODO tens, hundreds? "dvacátý/á/ou/ třetí"?
+NUMBERS_1 = ["nula", "jedna", ["dvě", "dva"], "tři", ["čtyři", "čtyry"], "pět", "šest", ["sedm", "sedum"],
+             ["osm", "osum"], "devět", ]
+NUMBERS_10 = ["", "deset", "dvacet", "třicet", ["čtyřicet", "čtyrycet"], "padesát",
               "šedesát", ]
 NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
                 "patnáct", "šestnáct", "sedmnáct", "osmnáct", "devatenáct"]
@@ -113,116 +114,61 @@ def db_add(category_label, value, form):
 
     database[category_label].setdefault(value, set()).add(form)
 
-
-# TODO allow "jednadvacet" "dvaadvacet" etc.
 def spell_number(num):
-    """Spells out the number given in the argument."""
+    """Spells out the number given in the argument.
+
+    Returns various forms for each number including:
+        - basic and reversed form ("dvacetdva"/"dvaadvacet")
+        - one- and two-word form ("čtyřicetšest"/"čtyřicet šest")
+        - alternative pronounciations ("čtyry", "sedum")
+    """
     tens, units = num / 10, num % 10
-    tens_str = NUMBERS_10[tens]
-    units_str = NUMBERS_1[units]
+    tens_strs = [NUMBERS_10[tens]] if not isinstance(NUMBERS_10[tens], list) else NUMBERS_10[tens]
+    units_strs = [NUMBERS_1[units]] if not isinstance(NUMBERS_1[units], list) else NUMBERS_1[units]
     if tens == 1:
-        return NUMBERS_TEEN[units]
+        return [NUMBERS_TEEN[units]]
     elif tens:
         if units:
-            return "{t} {u}".format(t=tens_str, u=units_str)
-        return "{t}".format(t=tens_str)
+            spellings = []
+            spellings += ["{t} {u}".format(t=tens_str, u=units_str) for units_str in units_strs for tens_str in tens_strs]
+            spellings += ["{t}{u}".format(t=tens_str, u=units_str) for units_str in units_strs for tens_str in tens_strs]
+            spellings += ["{u}{a}{t} ".format(t=tens_str, u=units_str, a='' if units is 1 else 'a')
+                          for units_str in units_strs for tens_str in tens_strs]
+            return spellings
+        return ["{t}".format(t=tens_str) for tens_str in tens_strs]
     else:
-        return units_str
+        return units_strs
 
 
-def add_time():
+def add_numbers():
     """
-    Basic approximation of all known explicit time expressions.
+    Basic approximation of all known explicit number expressions.
 
     Handles:
-        <hour>
-        <hour> hodin(a/y)
-        <hour> hodin(a/y) <minute>
-        <hour> <minute>
-        půl/čtvrt/tři čtvrtě <hour>
-        <minute> minut(u/y)
-    where <hour> and <minute> are spelled /given as numbers.
-
-    Cannot yet handle:
-        za pět osm
-        dvacet dvě hodiny
+        fractions (půl/čtvrt/tři čtvrtě)
+        cardinal numbers <1, 59>
+        ordinal numbers <1, 23>
     """
-    # ["nula", "jedna", ..., "padesát devět"]
-    numbers_str = [spell_number(num) for num in xrange(60)]
-    hr_id_stem = 'hodin'
-    hr_endings = {1: [('u', 'u'), ('a', 'a')],
-                  2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
 
-    min_id_stem = 'minut'
-    min_endings = {1: [('u', 'u'), ('a', 'a')],
-                   2: [('y', '')], 3: [('y', '')], 4: [('y', '')]}
+    for fraction, fraction_spelling in [(0.25,'čtvrt'),(0.5,'půl'),(0.75,'tři čtrtě')]:
+        add_db_number(fraction, fraction_spelling)
 
-    for hour in xrange(24):
-        # set stems for hours (cardinal), hours (ordinal)
-        hr_str_stem = numbers_str[hour]
-        if hour == 22:
-            hr_str_stem = 'dvacet dva' # místo dvacet dvě
-        hr_ord = NUMBERS_ORD[hour]
+    for cardinal in xrange(60):
+        for cardinal_spelling in spell_number(cardinal):
+            add_db_number(cardinal, cardinal_spelling)
+
+    for ordinal in xrange(24):
+        hr_ord = NUMBERS_ORD[ordinal]
+        if ordinal == 1:
+            hr_ord = 'jedný'
+        add_db_number(ordinal, hr_ord)
         if hr_ord.endswith('ý'):
-            hr_ord = hr_ord[:-1] + 'é'
-        if hour == 1:
-            hr_ord = 'jedné'
-            hr_str_stem = 'jedn'
+            add_db_number(ordinal, hr_ord[:-1] + 'é')
+            add_db_number(ordinal, hr_ord[:-1] + 'ou')
 
-        # some time expressions are not declined -- use just 1st ending
-        _, hr_str_end = hr_endings.get(hour, [('', '')])[0]
-        # X:00
-        add_db_time(hour, 0, "{ho} hodině", {'ho': hr_ord}) # druhé hodině
-
-        if hour >= 1 and hour <= 12:
-            # (X-1):15 quarter past (X-1)
-            add_db_time(hour - 1, 15, "čtvrt na {h}",
-                        {'h': hr_str_stem + hr_str_end}) # čtvrt na dvě
-            # (X-1):30 half past (X-1)
-            add_db_time(hour - 1, 30, "půl {ho}", {'ho': hr_ord}) # půl druhé
-            # (X-1):45 quarter to X
-            add_db_time(hour - 1, 45, "tři čtvrtě na {h}",
-                        {'h': hr_str_stem + hr_str_end}) # třičtvrtě na dvě
-
-        # some must be declined (but variants differ only for hour=1)
-        for hr_id_end, hr_str_end in hr_endings.get(hour, [('', '')]):
-            # X:00
-            add_db_time(hour, 0, "{h}", {'h': hr_str_stem + hr_str_end}) # dvě
-            add_db_time(hour, 0, "{h} {hi}", {'h': hr_str_stem + hr_str_end,#jedn-a, hodin-a
-                                              'hi': hr_id_stem + hr_id_end})
-            # X:YY
-            for minute in xrange(60):
-                min_str = numbers_str[minute]
-                add_db_time(hour, minute, "{h} {hi} {m}",
-                            {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str}) #dvě hodiny nula
-                add_db_time(hour, minute, "{h} {hi} a {m}",
-                            {'h': hr_str_stem + hr_str_end,
-                             'hi': hr_id_stem + hr_id_end, 'm': min_str})#jedna hodina a jedna
-                if minute < 10:
-                    min_str = 'nula ' + min_str
-                add_db_time(hour, minute, "{h} {m}",
-                            {'h': hr_str_stem + hr_str_end, 'm': min_str})#jedna nula jedna
-
-    # YY minut(u/y)
-    for minute in xrange(60):
-        min_str_stem = numbers_str[minute]
-        if minute == 22:
-            min_str_stem = 'dvacet dva'
-        if minute == 1:
-            min_str_stem = 'jedn'
-
-        for min_id_end, min_str_end in min_endings.get(minute, [('', '')]):
-            add_db_time(0, minute, "{m} {mi}", {'m': min_str_stem + min_str_end,
-                                                'mi': min_id_stem + min_id_end})
-
-
-def add_db_time(hour, minute, format_str, replacements):
-    """Add a time expression to the database
-    (given time, format string and all replacements as a dict)."""
-    time_val = "%d:%02d" % (hour, minute)
-    db_add("time", time_val, format_str.format(**replacements))
-
+def add_db_number(number, spelling):
+    """Add a number expression to the database (given number and its spelling)."""
+    db_add("number", str(number), spelling)
 
 def preprocess_cl_line(line):
     """Process one line in the category label database file."""
@@ -273,6 +219,7 @@ def save_c2v2f(file_name):
             f.write(' => '.join(x))
             f.write('\n')
 
+
 def save_surface_forms(file_name):
     surface_forms = []
     for k in database:
@@ -309,11 +256,13 @@ def save_SRILM_classes(file_name):
 ########################################################################
 #                  Automatically expand the database                   #
 ########################################################################
-add_time()
+add_numbers()
 add_stops()
 add_cities()
 
-if "dump" in sys.argv or "--dump" in sys.argv:
-    save_c2v2f('database_c2v2f.txt')
-    save_surface_forms('database_surface_forms.txt')
-    save_SRILM_classes('database_SRILM_classes.txt')
+
+if __name__ == '__main__':
+    if "dump" in sys.argv or "--dump" in sys.argv:
+        save_c2v2f('database_c2v2f.txt')
+        save_surface_forms('database_surface_forms.txt')
+        save_SRILM_classes('database_SRILM_classes.txt')

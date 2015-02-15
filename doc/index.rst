@@ -12,7 +12,7 @@ spoken dialogue systems.
 Contents
 ----------------------------------------------------------
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    _man_rst/README
    _man_rst/INSTALL
@@ -22,7 +22,7 @@ Alex modules
 ------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    _rst/alex
 

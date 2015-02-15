@@ -13,7 +13,6 @@ import time
 
 from alex.components.asr.common import asr_factory
 from alex.components.asr.exceptions import ASRException
-from alex.components.asr.julius import JuliusASRTimeoutException
 from alex.components.asr.utterance import UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.hub.messages import Command, Frame, ASRHyp
 from alex.utils.procname import set_proc_name

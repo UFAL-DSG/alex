@@ -13,7 +13,7 @@ import cPickle as pickle
 
 from collections import defaultdict
 from sklearn.linear_model import LogisticRegression
-from scipy.sparse import lil_matrix, coo_matrix
+from scipy.sparse import lil_matrix
 
 from alex.components.asr.utterance import Utterance, UtteranceHyp, UtteranceNBList, UtteranceConfusionNetwork
 from alex.components.slu.exceptions import DAILRException
@@ -72,12 +72,13 @@ class Features(object):
 
         :param remove_features: a set of features to be pruned.
         """
-        for f in list(self.set):
+        for f in list(self.features.keys()):
             if f in remove_features:
-                self.set.discard(f)
-
                 if f in self.features:
                     del self.features[f]
+
+        # reclaim the freed memory by recreating the self.features dictionary
+        self.features = dict(self.features)
 
     def scale(self, scale=1.0):
         """
@@ -113,8 +114,6 @@ class Features(object):
                 else:
                     self.features[(prefix,)+f] = 1.0
 
-        self.set = set(self.features.keys())
-
 
 class UtteranceFeatures(Features):
     """
@@ -131,6 +130,7 @@ class UtteranceFeatures(Features):
             self.parse(utterance)
 
     def parse(self, utt):
+        self.features[('_bias_',)] = 1.0
         self.features[('_empty_',)] = 1.0 if not utt else 0.0
 
         utt = ['<s>', ] + utt.utterance + ['</s>', ]
@@ -141,28 +141,22 @@ class UtteranceFeatures(Features):
                     if i + k > len(utt):
                         break
 
-                    # self.features[tuple(utt[i:i + k])] += 1.0
                     self.features[tuple(utt[i:i + k])] = 1.0
 
         new_features = defaultdict(float)
         for f in self.features:
             if len(f) == 3:
-                # new_features[(f[0], '*1', f[2])] += 1.0
                 new_features[(f[0], '*1', f[2])] = 1.0
             if len(f) == 4:
-                # new_features[(f[0], '*2', f[3])] += 1.0
                 new_features[(f[0], '*2', f[3])] = 1.0
             if len(f) == 5:
-                # new_features[(f[0], '*3', f[4])] += 1.0
                 new_features[(f[0], '*3', f[4])] = 1.0
             if len(f) == 6:
-                # new_features[(f[0], '*4', f[4])] += 1.0
-                new_features[(f[0], '*4', f[4])] = 1.0
+                new_features[(f[0], '*4', f[5])] = 1.0
 
         for f in new_features:
-            self.features[f] += new_features[f]
+            self.features[f] = 1.0
 
-        self.set = set(self.features.keys())
 
 
 class DAILogRegClassifier(SLUInterface):
@@ -531,24 +525,94 @@ class DAILogRegClassifier(SLUInterface):
         for k in sorted(self.classifiers):
             print('%40s = %d' % (k, self.classifiers[k]))
 
-    def gen_classifiers_data(self, verbose=False):
+    def prune_features(self, clser, min_pos_feature_count, min_neg_feature_count, verbose=False):
+        print 'Pruning the features'
+        print
+
+        features_counts = defaultdict(int)
+        for feat in self.classifiers_features[clser]:
+            for f in feat:
+                features_counts[f] += 1
+
+        if verbose:
+            print "  Number of features: ", len(features_counts)
+
+
+        features_counts = defaultdict(lambda: [0, 0])
+        for feat, output in zip(self.classifiers_features[clser], self.classifiers_outputs[clser]):
+            output = 0 if output < 0.5 else 1
+
+            for f in feat:
+                features_counts[f][output] += 1
+
+        remove_features = []
+        for f in features_counts:
+            negative, positive = features_counts[f]
+
+            if positive >= min_pos_feature_count + len(f):
+                # keep it
+                continue
+
+
+            if negative >= min_neg_feature_count + len(f):
+                # keep it
+                continue
+
+            # remove the feature since it does not meet the criteria
+            remove_features.append(f)
+
+        if verbose:
+            print "  Number of features occurring less then %d positive times and %d negative times: %d" % \
+                  (min_pos_feature_count, min_neg_feature_count, len(remove_features))
+
+        remove_features = set(remove_features)
+        for feat in self.classifiers_features[clser]:
+            feat.prune(remove_features)
+
+
+        # count the features again and report the result
+        features_counts = defaultdict(int)
+        for feat in self.classifiers_features[clser]:
+            for f in feat:
+                features_counts[f] += 1
+
+        self.classifiers_features_list[clser] = features_counts.keys()
+
+        self.classifiers_features_mapping[clser] = {}
+        for i, f in enumerate(self.classifiers_features_list[clser]):
+            self.classifiers_features_mapping[clser][f] = i
+
+        if verbose:
+            print "  Number of features after pruning: ", len(features_counts)
+
+
+
+    def gen_classifiers_data(self, min_pos_feature_count = 5, min_neg_feature_count = 5, verbose=False, verbose2 = False):
         # generate training data
         self.classifiers_outputs = defaultdict(list)
         self.classifiers_cls = defaultdict(list)
         self.classifiers_features = defaultdict(list)
+        self.classifiers_features_list = {}
+        self.classifiers_features_mapping = {}
+
 
         self.parsed_classifiers = {}
         for clser in self.classifiers:
             self.parsed_classifiers[clser] = DialogueActItem()
             self.parsed_classifiers[clser].parse(clser)
 
-        for utt_idx in self.utterances_list:
-            if verbose:
-                print "-" * 120
-                print unicode(self.utterances[utt_idx])
-                print unicode(self.das[utt_idx])
+        for n, clser in enumerate(sorted(self.classifiers)):
+            if verbose or verbose2:
+                print '=' * 120
+                print 'Generating the training data for the classifier', clser , ' #', n+1 , '/', len(self.classifiers)
+                print '-' * 120
 
-            for clser in self.classifiers:
+            for utt_idx in self.utterances_list:
+                # if verbose:
+                #     print "-" * 120
+                #     print unicode(self.utterances[utt_idx])
+                #     print unicode(self.das[utt_idx])
+
                 if self.parsed_classifiers[clser].value and self.parsed_classifiers[clser].value.startswith('CL_'):
                     # process abstracted classifiers
                     for i, (dai, (f, v, c)) in enumerate(zip(self.das_abstracted[utt_idx], self.das_category_labels[utt_idx])):
@@ -592,61 +656,13 @@ class DAILogRegClassifier(SLUInterface):
                     if verbose:
                         print "  @", clser
 
-        for clser in self.classifiers:
             self.classifiers_outputs[clser] = np.array(self.classifiers_outputs[clser])
 
             if verbose:
                 print clser
                 print zip(self.classifiers_outputs[clser], self.classifiers_cls[clser])
 
-    def prune_features(self, min_feature_count=5, verbose=False):
-
-        self.classifiers_features_list = {}
-        self.classifiers_features_mapping = {}
-
-        if verbose:
-            print '=' * 120
-            print 'Pruning features'
-            print '-' * 120
-
-        for clser in sorted(self.classifiers):
-            if verbose:
-                print "Classifier: ", clser
-
-            features_counts = defaultdict(int)
-            for feat in self.classifiers_features[clser]:
-                for f in feat:
-                    features_counts[f] += 1
-
-            if verbose:
-                print "  Number of features: ", len(features_counts)
-
-            remove_features = []
-            for f in features_counts:
-                if features_counts[f] < min_feature_count + len(f):
-                    remove_features.append(f)
-
-            if verbose:
-                print "  Number of features occurring less then %d times: %d" % (min_feature_count, len(remove_features))
-
-            remove_features = set(remove_features)
-            for feat in self.classifiers_features[clser]:
-                feat.prune(remove_features)
-
-            features_counts = defaultdict(int)
-            for feat in self.classifiers_features[clser]:
-                for f in feat:
-                    features_counts[f] += 1
-
-            self.classifiers_features_list[clser] = features_counts.keys()
-
-            self.classifiers_features_mapping[clser] = {}
-            for i, f in enumerate(self.classifiers_features_list[clser]):
-                self.classifiers_features_mapping[clser][f] = i
-
-            if verbose:
-                print "  Number of features after pruning: ", len(features_counts)
-
+            self.prune_features(clser, min_pos_feature_count, min_neg_feature_count, verbose = (verbose or verbose2))
 
     def train(self, inverse_regularisation=1.0, verbose=True):
         self.trained_classifiers = {}
@@ -654,20 +670,19 @@ class DAILogRegClassifier(SLUInterface):
         if verbose:
             print '=' * 120
             print 'Training'
-            print '-' * 120
 
-        for clser in sorted(self.classifiers):
+        for n, clser in enumerate(sorted(self.classifiers)):
             if verbose:
-                print "Training classifier: ", clser
+                print '-' * 120
+                print "Training classifier: ", clser, ' #', n+1 , '/', len(self.classifiers)
                 print "  Matrix:            ", (len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser]))
 
-            classifier_input = lil_matrix((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
+            classifier_input = np.zeros((len(self.classifiers_outputs[clser]), len(self.classifiers_features_list[clser])))
             for i, feat in enumerate(self.classifiers_features[clser]):
-                classifier_input.data[i], classifier_input.rows[i] = feat.get_feature_vector_lil(self.classifiers_features_mapping[clser])
+                classifier_input[i] = feat.get_feature_vector(self.classifiers_features_mapping[clser])
 
-            classifier_input = classifier_input.tocsr()
+            lr = LogisticRegression('l2', C=inverse_regularisation, tol=1e-6)
 
-            lr = LogisticRegression('l2', dual=True, C=inverse_regularisation, tol=1e-6)
             lr.fit(classifier_input, self.classifiers_outputs[clser])
             self.trained_classifiers[clser] = lr
 

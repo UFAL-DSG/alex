@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" 
+Graphing the results
+"""
 
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
-import autopath
-
-""" Graphing the results
-
-"""
 
 def parse_log(fn):
     t = []
@@ -29,10 +27,15 @@ def parse_log(fn):
                 t.append(acc)
                 
     return [t, c]
+
                 
-##################################################
+#######################################################################
+#                               main()                                #
+#######################################################################
+
 
 def main():
+
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""This program graphs NN VAD training.

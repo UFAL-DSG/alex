@@ -357,7 +357,7 @@ class Node(object):
         "Return the depth, i.e. the distance to the root."
         node = self
         depth = 0
-        while node:
+        while not node.is_root:
             node = node.parent
             depth += 1
         return depth
@@ -531,6 +531,13 @@ class Ordered(object):
         """
         next_node = self.get_next_node()
         return next_node is None
+
+    @property
+    def is_right_child(self):
+        """Return True if this node has a greater ord than its parent. Returns None for a root."""
+        if self.parent is None:
+            return None
+        return self.parent.ord < self.ord
 
 
 class EffectiveRelations(object):

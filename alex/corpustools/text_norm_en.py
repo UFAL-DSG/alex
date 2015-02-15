@@ -21,19 +21,23 @@ _nonspeech_map = {
     '_SIL_': (
         '(SIL)',
         '(QUIET)',
-        '(CLEARING)'),
+        '(CLEARING)',
+    ),
     '_INHALE_': (
         '(INHALE)',
         '(BREATH)',
         '(BREATHING)',
-        '(SNIFFING)'),
+        '(SNIFFING)',
+    ),
     '_LAUGH_': (
         '(LAUGH)',
-        '(LAUGHING)'),
+        '(LAUGHING)',
+    ),
     '_EHM_HMM_': (
         '(EHM_HMM)',
         '(HESITATION)',
-        '(HUM)'),
+        '(HUM)',
+    ),
     '_NOISE_': (
         '(COUCHING)',
         '(COUGH)',
@@ -55,7 +59,7 @@ _nonspeech_map = {
         '(SCRAPE)',
         '(STATIC)',
         '(SQUEAK)',
-        '(TVNOISE)'
+        '(TVNOISE)',
     ),
     '_EXCLUDE_': (
         '(EXCLUDE)',
@@ -681,7 +685,7 @@ def normalise_text(text):
     for word in _hesitation:
         text = word.sub(' (HESITATION) ', text)
     text = _more_spaces.sub(' ', text).strip()
-    
+
     # Handle non-speech events (separate them from words they might be
     # agglutinated to, remove doubled parentheses, and substitute the known
     # non-speech events with the forms with underscores).

@@ -106,7 +106,7 @@ def is_update_server_reachble():
 
     if __is_update_server_reachable is None:
         try:
-            print "Testing connection to update server.."
+            print "Testing connection to the update server.."
             urllib2.urlopen(online_update_server, timeout = 1)
             __is_update_server_reachable = True
         except urllib2.URLError as err:

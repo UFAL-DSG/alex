@@ -5,6 +5,8 @@ all.*
 uniq.trn
 uniq.trn.sem
 uniq.trn.hdc.sem
+uniq.trn.tmp*
+*.sem.tmp*
 *.model
 *.model.all
 *.sem.out

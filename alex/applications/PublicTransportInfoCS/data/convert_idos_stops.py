@@ -24,13 +24,14 @@ Output:
 """
 
 from __future__ import unicode_literals
-import autopath
 import codecs
 import sys
 import re
 from add_cities_to_stops import load_list, get_city_for_stop
 from alex.utils.various import remove_dups_stable
 from alex.components.nlg.tools.cs import word_for_number
+if __name__ == '__main__':
+    import autopath
 
 
 # a regex to strip weird stop name suffixes (request stop etc.)

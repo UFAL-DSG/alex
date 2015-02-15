@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+if __name__ == '__main__':
+    import autopath
 
 import argparse
 import sys
 import numpy as np
 import datetime
 import random
-
-import autopath
 
 from alex.utils.htk import *
 from alex.ml import ffnn
@@ -54,10 +54,6 @@ learning_rate_decay = 100.0
 weight_l2=1e-6
 batch_size= 500000 
 
-fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
-                              usec0, usedelta, useacc, mel_banks_only)
-
 
 def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     """ Loads a MLF file and creates normalised MLF class.
@@ -74,6 +70,11 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf.sub('_noise_', 'sil')
     mlf.sub('_laugh_', 'sil')
     mlf.sub('_inhale_', 'sil')
+    mlf.sub('SIL', 'sil')
+    mlf.sub('SP', 'sil')
+    mlf.sub('_NOISE_', 'sil')
+    mlf.sub('_LAUGH_', 'sil')
+    mlf.sub('_INHALE_', 'sil')
     # map everything except of sil to speech
     mlf.sub('sil', 'speech', False)
     mlf.merge()
@@ -83,6 +84,7 @@ def load_mlf(train_data_sil_aligned, max_files, max_frames_per_segment):
     mlf.shorten_segments(max_frames_per_segment)
 
     return mlf
+
 
 def gen_features(speech_data, speech_alignment):
     vta = MLFMFCCOnlineAlignedArray(usec0=usec0,n_last_frames=0, usedelta = usedelta, useacc = useacc, mel_banks_only = mel_banks_only)
@@ -157,8 +159,8 @@ def gen_features(speech_data, speech_alignment):
     train_x -= tx_m
     train_x /= tx_std
 
-    print 'Saving data to:', fetures_file_name
-    f = open(fetures_file_name, "wb")
+    print 'Saving data to:', features_file_name
+    f = open(features_file_name, "wb")
     np.save(f, crossvalid_x) 
     np.save(f, crossvalid_y)
     np.save(f, train_x)
@@ -187,7 +189,7 @@ def train_nn(speech_data, speech_alignment):
     print
     random.seed(0)
     try:
-        f = open(fetures_file_name, "rb")
+        f = open(features_file_name, "rb")
         crossvalid_x = np.load(f) 
         crossvalid_y = np.load(f)
         train_x = np.load(f)
@@ -197,7 +199,7 @@ def train_nn(speech_data, speech_alignment):
         f.close()
     except IOError:  
         crossvalid_x, crossvalid_y, train_x, train_y, tx_m, tx_std = gen_features(speech_data, speech_alignment)
-
+    
     input_size = train_x.shape[1] * (prev_frames + 1 + next_frames)
 
     print "The shape of non-multiplied training data: ", train_x.shape, train_y.shape
@@ -311,13 +313,14 @@ def train_nn(speech_data, speech_alignment):
 ##################################################
 
 def main():
+
     global method, batch_size, hact
     global max_frames, max_files, max_frames_per_segment, trim_segments, max_epoch
     global hidden_units, hidden_layers, hidden_layers_add, next_frames, prev_frames, amplify_center_frame
     global crossvalid_frames, usec0
     global hidden_dropouts, weight_l2
     global mel_banks_only
-    global fetures_file_name
+    global features_file_name
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -378,12 +381,11 @@ def main():
     prev_frames = args.prev_frames
     next_frames = args.next_frames
     amplify_center_frame = args.amplify_center_frame
-    crossvalid_frames = int((0.20 * max_frames ))  # cca 20 % of all training data
+    crossvalid_frames = int((0.20 * max_frames))  # cca 20 % of all training data
     usec0 = args.usec0
     mel_banks_only = args.mel_banks_only
     hidden_dropouts = args.hidden_dropouts
     weight_l2 = args.weight_l2
-
 
     # add all the training data
     train_speech = []
@@ -398,8 +400,8 @@ def main():
     train_speech.append('data_voip_cs/train/*.wav')
     train_speech_alignment.append('model_voip_cs/aligned_best.mlf')
 
-    fetures_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
-                             (max_frames, max_files, max_frames_per_segment, trim_segments, 
+    features_file_name = "model_voip/vad_sds_mfcc_mfr%d_mfl%d_mfps%d_ts%d_usec0%d_usedelta%d_useacc%d_mbo%d.npc" % \
+                             (max_frames, max_files, max_frames_per_segment, trim_segments,
                               usec0, usedelta, useacc, mel_banks_only)
 
     print datetime.datetime.now()

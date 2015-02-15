@@ -5,6 +5,8 @@
 
 import unittest
 
+if __name__ == '__main__':
+    import autopath
 from alex.ml.bn.factor import Factor
 from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 
@@ -343,3 +345,7 @@ class TestNode(unittest.TestCase):
         f.update()
         f.message_to(theta)
         print theta.alpha
+
+
+if __name__ == '__main__':
+    unittest.main()

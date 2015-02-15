@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import re
 import argparse
 import sys
-
-import autopath
 
 from alex.corpustools.wavaskey import load_wavaskey
 from alex.components.asr.utterance import Utterance
@@ -66,6 +66,7 @@ def score(fn_reftext, fn_testtext, outfile = sys.stdout):
     outfile.write("\n")
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description="""
     Compute ASR scores for ASR output against reference text.

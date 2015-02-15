@@ -10,5 +10,3 @@ settings, e.g. one for VOIP and the other for desktop mic recordings.
 
 Up to now, only VOIP acoustic models have been trained.
 
-The ``reports`` directory contains some evaluation data for the models
-trained.

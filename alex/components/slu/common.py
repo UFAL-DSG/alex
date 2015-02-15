@@ -40,7 +40,7 @@ def slu_factory(cfg, slu_type=None):
     elif inspect.isclass(slu_type) and issubclass(slu_type, SLUInterface):
         cldb = CategoryLabelDatabase(cfg['SLU'][slu_type]['cldb_fname'])
         preprocessing = cfg['SLU'][slu_type]['preprocessing_cls'](cldb)
-        slu = slu_type(preprocessing)
+        slu = slu_type(preprocessing, cfg)
         return slu
 
     raise SLUException('Unsupported SLU parser: %s' % slu_type)

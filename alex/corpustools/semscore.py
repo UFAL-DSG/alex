@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
-import re
 import argparse
+import re
 import sys
 import codecs
 
 from collections import defaultdict
-
-import autopath
 
 from alex.utils.text import split_by
 
@@ -46,7 +46,7 @@ def score_da(ref_da, test_da, daid):
     epp = []
 
     for i in test_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :)(]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :\-)(]+")', r'\1="*"', i, flags=re.UNICODE)
         if i in ref_da:
             tp += 1.0
             statsp[ri]['tp'] += 1.0
@@ -60,7 +60,7 @@ def score_da(ref_da, test_da, daid):
   when compared with ref da: {refda}\n""".format(daid=daid, hypda='&'.join(test_da), dai=i, refda='&'.join(ref_da)))
 
     for i in ref_da:
-        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :]+")', r'\1="*"', i, flags=re.UNICODE)
+        ri = re.sub(ur'([\w]+|\B)(="[\w\'!\., :\-)(]+")', r'\1="*"', i, flags=re.UNICODE)
         if i not in test_da:
             fn += 1.0
             statsp[ri]['fn'] += 1.0

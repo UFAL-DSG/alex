@@ -1,7 +1,7 @@
 Dejvická	Dejvice; Kulaťák
 Depo Hostivař	Hostivař
 Hradčanská	Hradčany
-I. P. Pavlova	I. P. Pavlovy; I. P. Pavlova; I. P. Pavlovu; Ípák; Ípáku; Aj Pí Pavlova; Ajpí Pavlova; Ajpí Pavlovy; Ajpák; Ajpáku; Pavlák
+I. P. Pavlova	I. P. Pavlovy; I. P. Pavlova; I. P. Pavlovu; Ípák; Ípáku; Aj Pí Pavlova; Ajpí Pavlova; Ajpí Pavlovy; Ajpák; Ajpáku; Pavlák; Ivana Pavloviče Pavlova; Ípé Pavlov
 Karlovo náměstí	Karlák
 Letiště Václava Havla (Terminál dvě)	Letiště Václava Havla; Praha Letiště; Letiště Praha; Letiště Ruzyně; Ruzyňské Letiště; Václav Havel; Václava Havla; Letiště v Ruzyni; Ruzyně; Ruzyň
 Lhotka	Písnická
@@ -12,7 +12,7 @@ Nádraží Zbraslav	Zbraslav
 Náměstí Míru	Mírák
 Pod Karlovem	Karlov
 Sídliště Barrandov	Barrandov
-Smíchovské nádraží	Smíchov
+Smíchovské nádraží	Smíchov; Smíchovské Nádraži
 Spojovací	Jarov
 Strašnická	Strašnice
 Trojská	Troja
@@ -28,14 +28,38 @@ Výtoň	Vyšehrady
 Plynárna Michle	Michelská Plynárna; Michelské Plynárny; Michelské Plynárně
 Nádraží Vršovice	Vršovické Nádraží
 Jiráskovo náměstí	Jiráskovém náměstí
-Spiritka	Spiritky; Spiritku
+Spiritka	Spiritky; Spiritku; Spiritká
 Dvorce	Žluté Lázně
 Hradčanská	Hradčanské Náměstí
 Nemocnice Motol	Motol nemocnice
 Dědina	Sídliště Dědina
 Nemocnice Krč	Krčská nemocnice
-Nádraží Modřany	Modřany
+Nádraží Modřany	Modřany; Modřan
 Nové Sady	Nové St Sady; Nových Sadů
 Dlouhá Loučka, Plinkout, Jednota	Plinkout Jednota; Plinkouta Jednota; Plinkout; Plinkouta
 Dlouhá Loučka, Valšův Důl, točna	Dlouhá Loučka Valšův Důl; Dlouhé Loučky Valšova Dolu
-Dlouhá Loučka, Valšův Důl, točna	Valšův Důl; Valšova Dolu; Valšovského Dolu; Valšovým Dolem 
+Dlouhá Loučka, Valšův Důl, točna	Valšův Důl; Valšova Dolu; Valšovského Dolu; Valšovým Dolem
+Newtonova	Ňutnová; Ňútnova
+U Kaštanu	U Kaštanů
+Petřín , LD	Lanovka; Lanovku; Lanovky
+Amforová	Amfórová; Amfórova
+Koh-i-noor	Kohinor; Koh In Or; Kohinorka
+Breitcetlova	Brejsekova; Brajcetlova; Braicetlova
+Knovízská	Knovíská
+Flora	Flóra
+Veletržní palác	Veletržní palac; Veletržní
+Morseova	Morzeova
+Schodová	Schodova
+Hlavní nádraží	Hlavní Nádráží
+Krčská	Krčska
+Jinonická	Jinonicka
+Myslíkova	Myslíkové
+Palmovka	Palmovká
+Karlovy Vary	Karlových Varů
+Malostranské náměstí	Malostarnského Náměstí; Malostranského
+Hercovka	Hercovky; Hercovská
+Bucharova	Bucharka
+Sídliště Řepy	Řepy
+Náměstí Bratří Synků	Bratří Synků
+Laurová	Laurova
+Raichlova	Rajchlova; Rajchlová

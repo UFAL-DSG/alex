@@ -1,6 +1,5 @@
 import inspect
 
-import autopath
 import alex.components.tts.google as GTTS
 import alex.components.tts.flite as FTTS
 import alex.components.tts.speechtech as STTS

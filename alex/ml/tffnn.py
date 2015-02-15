@@ -58,8 +58,6 @@ class TheanoFFNN(object):
         if n_inputs:
             self.build_model(n_hidden_units, n_hidden_layers)
 
-        self.rprop_init()
-
     def build_model(self, n_hidden_units, n_hidden_layers, old_params = None):
         # Model definition.
         x = T.fmatrix('X')
@@ -83,13 +81,15 @@ class TheanoFFNN(object):
         
         # Iterate over pairs of adjacent layers.
         for i, (n1, n2, act) in enumerate(zip(layers[:-1], layers[1:], activations)):
+            #print i, n1, n2, act
+            
             if old_params and (2*i < len(old_params)):
-                # print "using old params"
+                #print "using old params"
                 # init an existing layer
                 w = theano.shared(old_params[2*i], 'W%d' % i, borrow=True)
                 b = theano.shared(old_params[2*i+1], 'b%d' % (i + 1))
             else:
-                # print "sampling new params"
+                #print "sampling new params"
                 w = theano.shared(
                                    np.asarray(rng.uniform(
                                                           low=-np.sqrt(6. / (n1 + n2)),
@@ -108,7 +108,7 @@ class TheanoFFNN(object):
         # Define the loss function.
         true_y = T.ivector('true_Y')  # The desired output vector.
         loss = T.log(y[T.arange(y.shape[0]), true_y])  # log-likelihood.
-        loss = T.mean(loss)                            # SUM log-likelihood.
+        loss = T.mean(loss)                            # MEAN log-likelihood.
 
         # Add regularization.
         l2 = 0
@@ -170,6 +170,44 @@ class TheanoFFNN(object):
         self.input_m = m
         self.input_std = std
 
+    def set_params(self, params):
+        """ Set new NN params and build the network model.
+        """
+        self.input_m, \
+        self.input_std, \
+        old_params, \
+        self.n_hidden, \
+        self.hidden_activation, \
+        self.n_inputs, \
+        self.n_outputs, \
+        self.weight_l2, \
+        self.prev_frames, \
+        self.next_frames, \
+        self.batch_size, \
+        self.amp, \
+        self.amp_vec = params
+
+        self.build_model(0, 0, old_params = old_params)
+                
+    def get_params(self):
+        """ Get all NN params.
+        """
+        params = (self.input_m, 
+		            self.input_std, 
+		            [p.get_value() for p in self.params],
+		            self.n_hidden,
+		            self.hidden_activation,
+		            self.n_inputs,
+		            self.n_outputs,
+		            self.weight_l2,
+		            self.prev_frames,
+		            self.next_frames,
+		            self.batch_size,
+		            self.amp,
+		            self.amp_vec,
+		            )
+        return params
+    
     def load(self, file_name):
         """ Loads saved NN.
 
@@ -177,22 +215,7 @@ class TheanoFFNN(object):
         :return: None
         """
         with open(file_name, "rb") as f:
-            self.input_m, \
-            self.input_std, \
-            old_params, \
-            self.n_hidden, \
-            self.hidden_activation, \
-            self.n_inputs, \
-            self.n_outputs, \
-            self.weight_l2, \
-            self.prev_frames, \
-            self.next_frames, \
-            self.batch_size, \
-            self.amp, \
-            self.amp_vec = pickle.load(f)
-
-        self.build_model(0, 0, old_params = old_params)
-
+            self.set_params(pickle.load(f))
 
     def save(self, file_name):
         """ Saves the NN into a file.
@@ -201,21 +224,7 @@ class TheanoFFNN(object):
         :return: None
         """
         with open(file_name, "wb") as f:
-            data = (self.input_m, 
-                    self.input_std, 
-                    [p.get_value() for p in self.params],
-                    self.n_hidden,
-                    self.hidden_activation,
-                    self.n_inputs,
-                    self.n_outputs,
-                    self.weight_l2,
-                    self.prev_frames,
-                    self.next_frames,
-                    self.batch_size,
-                    self.amp,
-                    self.amp_vec,
-                    )
-            pickle.dump(data, f)
+            pickle.dump(self.get_params(), f)
                 
     def predict(self, data_x, batch_size = 0, prev_frames = 0, next_frames = 0, data_y = None):
         if not batch_size:
@@ -256,58 +265,6 @@ class TheanoFFNN(object):
         
         return self.predict(input)
         
-    def rprop_init(self):
-        self.d_max = 1e+2
-        self.d_min = 1e-6
-
-        self.n_plus = 1.2
-        self.n_minus = 0.5
-
-        self.old_grad = {}
-        self.rprop_d = {}
-
-    def rprop(self, grad, id = 0, learning_rate = 0.1):
-        if id not in self.old_grad:
-            # new gradient, and we do not have old
-            self.old_grad[id] = grad
-            learning_rate = 0.001
-            self.rprop_d[id] = learning_rate*np.ones_like(grad)
-            change = np.multiply(np.sign(grad), self.rprop_d[id])
-            return change
-
-        for i in np.ndindex(grad.shape):
-            # print i
-            if self.old_grad[id][i]*grad[i] > 0:
-                # directions agree
-                self.rprop_d[id][i] = min(self.rprop_d[id][i]*self.n_plus, self.d_max)
-            elif self.old_grad[id][i]*grad[i] < 0:
-                # directions disagree
-                self.rprop_d[id][i] = max(self.rprop_d[id][i]*self.n_minus, self.d_min)
-                grad[i] = 0
-
-        self.old_grad[id] = grad
-
-        change = np.multiply(np.sign(grad), self.rprop_d[id])
-
-        return change
-
-    def sgrad_minibatch(self, data_x, data_y, prediction = False):
-        """ Standard gradient of a minibatch fo data.
-        :param data:
-        :return:
-        """
-        if prediction:
-            loss = self.f_loss(data_x, data_y)
-            acc = np.mean(np.equal(np.argmax(self.f_y(data_x), axis=1), data_y))
-        else:
-            loss = 0.0
-            acc = 1.0
-
-        # compute gradient
-        gradients = self.f_g_loss(data_x, data_y)
-        
-        return loss, acc, gradients
-
     def frame_multiply_x(self, x, prev_frames, next_frames):
         rows = [(c, c + len(x) - (self.prev_frames + 1 + self.next_frames)) for c in range(0, self.prev_frames + 1 + self.next_frames)]
          
@@ -318,7 +275,7 @@ class TheanoFFNN(object):
         my = y[prev_frames:len(y) - 1 - next_frames]
         return my
 
-    def train(self, method = 'ng', n_iters = 1, learning_rate = 0.1):
+    def train(self, method = 'fixedlr', n_iters = 1, learning_rate = 0.1):
         # Do batch-gradient descent to learn the parameters.
 
         if self.batch_size > 0 and self.batch_size <= len(self.training_set_x):
@@ -337,9 +294,10 @@ class TheanoFFNN(object):
                 for m in random.sample(range(n_minibatches), n_minibatches):
                     mini_x = self.training_set_x[m*self.batch_size:(m+1)*self.batch_size]
                     mini_y = self.training_set_y[m*self.batch_size:(m+1)*self.batch_size]
-        
-                    mini_x = self.frame_multiply_x(mini_x, self.prev_frames, self.next_frames)
-                    mini_y = self.frame_multiply_y(mini_y, self.prev_frames, self.next_frames)
+
+                    if self.prev_frames or self.next_frames:
+                        mini_x = self.frame_multiply_x(mini_x, self.prev_frames, self.next_frames)
+                        mini_y = self.frame_multiply_y(mini_y, self.prev_frames, self.next_frames)
                     
                     log_lik = self.f_train_ret_loss(mini_x, mini_y, learning_rate)
 										
@@ -347,44 +305,6 @@ class TheanoFFNN(object):
 
                     if (m % m_minibatches) == 0:
                         print "iteration (%d)" % ni, "minibatch (%d)" % m, "log likelihood %.4f" % log_lik
-
-        elif 'rprop' in method:
-            gradients_all_mb = []
-
-            print 'Minibatch size:', self.batch_size, '# minibatches:', n_minibatches, "# total data:", len(self.training_set_x)
-            for ni in range(n_iters):
-                for m in range(n_minibatches):
-                    mini_x = self.training_set_x[m*self.batch_size:(m+1)*self.batch_size]
-                    mini_y = self.training_set_y[m*self.batch_size:(m+1)*self.batch_size]
-
-                    mini_x = self.frame_multiply_x(mini_x, self.prev_frames, self.next_frames)
-                    mini_y = self.frame_multiply_y(mini_y, self.prev_frames, self.next_frames)
-
-                    if (m % m_minibatches) == 0:
-                        log_lik, acc, gradients = self.sgrad_minibatch(mini_x, mini_y, prediction = True)
-                        print "iteration (%d)" % ni, "minibatch (%d)" % m, "log likelihood %.4f" % log_lik, "accuracy %.2f" % (acc*100.0)
-                    else:
-                        log_lik, acc, gradients = self.sgrad_minibatch(mini_x, mini_y, prediction = False)
-
-                    gradients_all_mb.append(gradients)
-
-
-            # compute the total gradients
-            gradients = {}
-
-            for mg in gradients_all_mb:
-                for j, g in enumerate(mg):
-                    if j in gradients:
-                        gradients[j] += g
-                    else:
-                        gradients[j] = g
-
-            gradients = [gradients[k] for k in sorted(gradients.keys())]
-
-            # iRPROP- update of parameters
-            for j, (p, g) in enumerate(zip(self.params, gradients)):
-                # gradient update
-                p.set_value(p.get_value() +  self.rprop(g, j, learning_rate))
         else:
             print "Unknown update method"
             return
