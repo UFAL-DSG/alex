@@ -52,8 +52,10 @@
           <p>You can say <i>"Help."</i> for hints how to use the service. If it seems confused, you can say <i>"Reset."</i> or <i>"New entry."</i> to start over. The service can pick up what you are saying and ask you questions as the dialogue goes along.
           </p>
           <ul>
-            <li>Call a US toll free number <strong>1-855-528-7350</strong> and you will be connected with the automated Public Transport Information service.</li>
-            <li>After you are connected, please try to talk naturaly about the topic presented in the green box at the bottom.</li>
+            <li>Make sure you are in a quiet place, turn off disturbing elements such as TV, for the system may pick up other sources of noise and therefore misbehave.</li>
+            <li>Call a US toll free number <strong>1-888-826-5115</strong> and you will be connected with the automated Public Transport Information service.</li>
+            <li>After you are connected, please try to talk naturaly about the topic presented in the green box at the bottom.</li>            
+            <li>Talk in whole sentences, don't say just key words.</li>
             <li>The call is finished by saying <span style="color: red;">"Thank you. Good bye."</span> to the system.</li>
             <li>At the end of the call, the system will give you a <strong>four digit code</strong> which you have to enter into a field down below, once the call is terminated. This is used to verify the authenticity of Job submissions.</li>
             <li>You will not be given any code if you do not exchange at least three sentences with the system, so do not rush the dialogue towards the end too quickly. Just chat a litte.</li>
@@ -233,10 +235,10 @@
   <strong> Please try to talk about the following topic: </strong>
 </p>
 <div class="task">
-  <strong>You want to find a bus connection from <i>Central park</i> to <i>Empire State Building</i>. Ask about the time requirements and find out the next connection. Make sure You get the weather forecast and time in <i>your favourite or home town</i>.</strong>
+  <strong>You want to find a subway connection from <i>Broadway, Queens</i> to <i>7th avenue and 42nd street</i>. Ask about the duration of the trip and find out connection <i>at 5PM</i>. Make sure You get the weather forecast or/and time in <i>your favourite or home town</i>.</strong>
 </div>
 <div align="center">
-  <div class="warning"> To complete the Job, call this toll free phone number: (US) <strong>1-855-528-7350</strong>.<br/>To end the call say <strong>"Thank you. Good bye!"</strong></div>
+  <div class="warning"> To complete the Job, call this toll free phone number: (US) <strong>1-888-826-5115</strong>.<br/>To end the call say <strong>"Thank you. Good bye!"</strong></div>
   <div class="feedback">
     <cml:text label="Dialogue Code validation field:" name="code_field" validates="required yext_no_international_url" instructions="In order to obtain this Code you have to successfully complete the call. Please wait until the code is verified." />
     
