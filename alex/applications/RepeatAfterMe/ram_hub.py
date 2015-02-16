@@ -80,10 +80,11 @@ def get_stats(db, remote_uri):
 
 
 def play_intro(cfg, tts_commands, intro_id, last_intro_id):
+    cfg['Logging']['session_logger'].turn("system")
     for i in range(len(cfg['RepeatAfterMe']['introduction'])):
         last_intro_id = str(intro_id)
         intro_id += 1
-        tts_commands.send(Command('synthesize(user_id="%s",text="%s")' % (last_intro_id, cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
+        tts_commands.send(Command('synthesize(user_id="%s",text="%s",log="true")' % (last_intro_id, cfg['RepeatAfterMe']['introduction'][i]), 'HUB', 'TTS'))
 
     return intro_id, last_intro_id
 
@@ -290,7 +291,8 @@ if __name__ == '__main__':
                     if last24_num_calls > cfg['RepeatAfterMe']['last24_max_num_calls'] or \
                             last24_total_time > cfg['RepeatAfterMe']['last24_max_total_time']:
 
-                        tts_commands.send(Command('synthesize(text="%s")' % cfg['RepeatAfterMe']['rejected'], 'HUB', 'TTS'))
+                        cfg['Logging']['session_logger'].turn("system")
+                        tts_commands.send(Command('synthesize(text="%s",log="true")' % cfg['RepeatAfterMe']['rejected'], 'HUB', 'TTS'))
                         call_connected = True
                         reject_played = True
                         s_voice_activity = True
@@ -399,12 +401,13 @@ if __name__ == '__main__':
             tts_commands.send(Command('flush()', 'HUB', 'VoipIO'))
 
         if intro_played and current_time - call_start > cfg['RepeatAfterMe']['max_call_length'] and s_voice_activity == False:
-            # hovor trval jiz vice nez deset minut
+            # too long call
             if not end_played:
                 s_voice_activity = True
                 last_intro_id = str(intro_id)
                 intro_id += 1
-                tts_commands.send(Command('synthesize(text="%s")' % cfg['RepeatAfterMe']['closing'], 'HUB', 'TTS'))
+                cfg['Logging']['session_logger'].turn("system")
+                tts_commands.send(Command('synthesize(text="%s",log="true")' % cfg['RepeatAfterMe']['closing'], 'HUB', 'TTS'))
                 end_played = True
             else:
                 intro_played = False
@@ -419,13 +422,14 @@ if __name__ == '__main__':
             u_voice_activity == False and \
             current_time - s_last_voice_activity_time > 5 and current_time - u_last_voice_activity_time > 0.6:
 
-            if not cfg['RepeatAfterMe']['silence']:
+            if 'silence' not in cfg['RepeatAfterMe'] or not cfg['RepeatAfterMe']['silence']:
                 s_voice_activity = True
 
                 s1 = ram()
-                tts_commands.send(Command('synthesize(text="%s")' % s1, 'HUB', 'TTS'))
+                cfg['Logging']['session_logger'].turn("system")
+                tts_commands.send(Command('synthesize(text="%s",log="true")' % s1, 'HUB', 'TTS'))
                 s2 = sample_sentence(sample_sentences)
-                tts_commands.send(Command('synthesize(text="%s")' % s2, 'HUB', 'TTS'))
+                tts_commands.send(Command('synthesize(text="%s",log="true")' % s2, 'HUB', 'TTS'))
 
                 s = s1 + ' ' + s2
 
