@@ -8,6 +8,8 @@ renice 20 $$
 # Source optional config if exists
 [ -f env_voip_en_CUSTOM.sh ] && . ./env_voip_en_CUSTOM.sh
 
+local/check_path.sh
+
 . ./path.sh
 
 # If you have cluster of machines running GridEngine you may want to
@@ -94,26 +96,27 @@ local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 
 
 
 # Train tri3b, which is LDA+MLLT+SAT
-local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
-  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
+#local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
+#  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
 
-local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
-  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
+#local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
+#  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
-./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
-    --tgtdir $EXP/nnet2_online \
-    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+#./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
+#    --tgtdir $EXP/nnet2_online \
+#    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
-./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
-    --srcdir $EXP/nnet2_online \
-    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+#./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
+#    --srcdir $EXP/nnet2_online \
+#    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
    --beam $mmi_beam --lattice-beam $mmi_lat_beam \
    $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_denlats || exit 1
 
 echo "Train MMI on top of LDA+MLLT with boosting. train_mmi_boost is a e.g. 0.05"
-local/check.sh steps/train_mmi.sh  --boost ${train_mmi_boost} $WORK/train $WORK/lang \
+local/check.sh steps/train_mmi.sh --cmd "$train_cmd" \
+   --boost ${train_mmi_boost} $WORK/train $WORK/lang \
    $EXP/tri2b_ali $EXP/tri2b_denlats $EXP/tri2b_mmi_b${train_mmi_boost} || exit 1
 
 # Cleaning does not help a lot

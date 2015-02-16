@@ -45,7 +45,7 @@ Example of ``env_voip_en_CUSTOM.sh``
     # uses every utterance for the recipe every_N=10 is nice for debugging
     export EVERY_N=1   
     # path to built Kaldi library and scripts
-    export KALDI_ROOT=/ha/work/people/oplatek/pykaldi-cluster
+    export KALDI_ROOT=/net/projects/vystadial/lib/kronos/pykaldi/kaldi
 
     export DATA_ROOT=/net/projects/vystadial/data/asr/cs/voip/
     export LM_paths="build0 $DATA_ROOT/arpa_bigram"
