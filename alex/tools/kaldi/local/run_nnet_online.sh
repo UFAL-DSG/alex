@@ -49,17 +49,19 @@ else
   dir=${tgtdir}_NOGPU
 fi
 
+nj=`cat $EXP/tri2b/num_jobs` || exit 1;
+
 mkdir -p $EXP/nnet2_online
 
 # To train a diagonal UBM we don't need TODO very much data, but we still use full one
 # the tri2b is the input dir; the choice of this is not critical as we just use
 # it for the LDA matrix.  Since the iVectors don't make a great deal of difference,
 # we'll use 256 Gaussians for speed.
-local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj 10 --num-frames 200000 \
+local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj $nj --parallel-opts '-pe smp 4' --num-threads 4 --num-frames 200000 \
     $WORK/train 256 $EXP/tri2b $EXP/nnet2_online/diag_ubm
 
 # even though $nj is just 10, each job uses multiple processes and threads.
-local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj 1 \
+local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj --num-processes 1 --num-threads 4 \
 $WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
 
 # TODO probably useless but nice for debugging
@@ -70,7 +72,7 @@ $WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
 local/check.sh steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 $WORK/train $WORK/train_max2
 
 local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj 1 \
+    --cmd "$train_cmd" --nj $nj \
     $WORK/train_max2 $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_train || exit 1;
 
 
@@ -109,7 +111,7 @@ local/check.sh steps/nnet2/train_pnorm_simple.sh --stage $train_stage \
 
 for s in $TEST_SETS ; do
   local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj 1 \
+    --cmd "$train_cmd" --nj $nj \
     $WORK/local/${s} $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_${s} || exit 1;
 done
 
