@@ -21,14 +21,12 @@ tgtdir=$EXP/nnet2
 
 . utils/parse_options.sh
 
-if [ $# -ne 4 ] ; then
-    echo usage $0: WORK EXP LM_names TEST_SETS
+if [ $# -ne 2 ] ; then
+    echo usage $0: WORK EXP
     exit 1
 fi
 WORK=$1
 EXP=$2
-LM_names="$3"
-TEST_SETS="$4"
 
 if $use_gpu; then
     if ! cuda-compiled; then
@@ -69,7 +67,7 @@ local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" 
 local/check.sh steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 $WORK/train $WORK/train_max2
 
 local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$gpu_cmd" --nj $nj \
+    --cmd "$train_cmd" --nj $nj \
     $WORK/train_max2 $tgtdir/extractor $tgtdir/ivectors_train || exit 1;
 
 # Because we have a lot of data here and we don't want the training to take
@@ -106,7 +104,7 @@ local/check.sh steps/nnet2/train_pnorm_simple2.sh --stage $train_stage \
 
 for s in $TEST_SETS ; do
     local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-        --cmd "$gpu_cmd" --nj $nj \
+        --cmd "$train_cmd" --nj $nj \
         $WORK/local/${s} $tgtdir/extractor $tgtdir/ivectors_${s} || exit 1;
 done
 

@@ -20,14 +20,12 @@ tgtdir=$EXP/nnet2_smbr
 
 . utils/parse_options.sh
 
-if [ $# -ne 4 ] ; then
-    echo usage $0: WORK EXP LM_names TEST_SETS
+if [ $# -ne 2 ] ; then
+    echo usage $0: WORK EXP
     exit 1
 fi
 WORK=$1
 EXP=$2
-LM_names="$3"
-TEST_SETS="$4"
 
 if $use_gpu; then
     if ! cuda-compiled; then
@@ -50,13 +48,13 @@ nj=`cat $srcdir/num_jobs` || exit 1;
 
 mkdir -p $tgtdir
 
-local/check.sh steps/nnet2/make_denlats.sh --nj "$gpu_nj" --cmd "$gpu_cmd" \
+local/check.sh steps/nnet2/make_denlats.sh --nj "$nj" --cmd "$train_cmd" \
     --sub-split 40 --num-threads 1 --parallel-opts "-pe smp 1" \
     --online-ivector-dir $srcdir/ivectors_train \
     --beam $smbr_beam --lattice-beam $smbr_lat_beam \
     $WORK/train $WORK/lang $srcdir ${srcdir}_denlats
 
-local/check.sh steps/nnet2/align.sh --nj "$gpu_nj" --cmd "$gpu_cmd" \
+local/check.sh steps/nnet2/align.sh --nj "$nj" --cmd "$train_cmd" \
     --online-ivector-dir $srcdir/ivectors_train \
     $WORK/train $WORK/lang $srcdir ${srcdir}_ali
 
