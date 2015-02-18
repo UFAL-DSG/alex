@@ -44,6 +44,7 @@ class DM(multiprocessing.Process):
         self.codes = ["%04d" % i for i in range(0, 10000)]
         # random.seed(self.cfg['DM']['epilogue']['code_seed'])
         random.shuffle(self.codes)
+        self.test_code_server_connection()
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -287,3 +288,13 @@ class DM(multiprocessing.Process):
 
         print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
         self.close_event.set()
+
+    def test_code_server_connection(self):
+        """ this opens a test connection to our code server, the response is not important (the response is "online")
+            if our server is down this call will fail and the vm will crash. this is more sensible to CF people,
+            otherwise cf contributor would call in and tell us all the data, but wouldn't get paid, which is robbing people basically.
+
+        """
+        if self.cfg['DM']['epilogue']['final_question'] == None and self.cfg['DM']['epilogue']['final_code_url'] is not None:
+            url = self.cfg['DM']['epilogue']['final_code_url'].format(code = 'test')
+            urllib.urlopen(url)
