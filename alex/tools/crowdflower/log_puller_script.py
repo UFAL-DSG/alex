@@ -12,16 +12,16 @@ def pull_data(xml_file):
     turns = root.findall("turn")
     for turn in turns:
         speaker = turn.attrib['speaker']
-        if speaker == 'system':
+        if speaker == 'system' and turn.find("dialogue_act") != None:
             print "system_act:" + 15*' ' + turn.find("dialogue_act").text
             if turn.find("text") is not None:
                 print "system_text:" + 14*' ' + turn.find("text").text
         else:
-            if turn.find('asr') is None:
+            if turn.find('asr') is None or turn.find('slu') is None:
                 continue
             hypothesis = turn.find('asr').find('hypothesis')
             interpretation = turn.find('slu').find('interpretation')
-            print "user_hypothesis:" + 10*' ' + hypothesis.text
+            print "user_hypothesis:" + 10*' ' + '"' + hypothesis.text + '"'
             print "user_interpretation:" + 6*' ' + interpretation.text
         print
 
