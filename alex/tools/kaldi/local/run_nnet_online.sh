@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# This is our online neural net build.
+# This is a basic online neural net training.
 # After this you can do discriminative training with run_nnet2_discriminative.sh.
 set -e
-# set -x
+#set -x
 
 . ./cmd.sh
 . ./path.sh
@@ -13,10 +13,11 @@ train_stage=-10
 use_gpu=true
 test_sets=
 nj=8
-num_jobs_nnet=8
+num_jobs_nnet=4
 gauss=19200
 pdf=9000
-tgtdir=$EXP/nnet2_online
+srcdir=$EXP/tri2b
+tgtdir=$EXP/nnet2
 
 . utils/parse_options.sh
 
@@ -31,38 +32,35 @@ TEST_SETS="$4"
 
 if $use_gpu; then
   if ! cuda-compiled; then
-    cat <<EOF && exit 1 
-This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA 
+    cat <<EOF && exit 1
+This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
 If you want to use GPUs (and have them), go to src/, and configure and make on a machine
 where "nvcc" is installed.
 EOF
   fi
-  parallel_opts="-l gpu=1" 
+  parallel_opts="-l gpu=1"
   num_threads=1
   minibatch_size=512
-  dir=$tgtdir
 else
-  # with just 4 jobs this might be a little slow.
-  num_threads=16
-  parallel_opts="-pe smp $num_threads" 
+  num_threads=4
+  parallel_opts="-pe smp $num_threads"
   minibatch_size=128
-  dir=${tgtdir}_NOGPU
 fi
 
-nj=`cat $EXP/tri2b/num_jobs` || exit 1;
+nj=`cat $srcdir/num_jobs` || exit 1;
 
-mkdir -p $EXP/nnet2_online
+mkdir -p $tgtdir
 
 # To train a diagonal UBM we don't need TODO very much data, but we still use full one
-# the tri2b is the input dir; the choice of this is not critical as we just use
+# the $srcdir (tri2b) is the input dir; the choice of this is not critical as we just use
 # it for the LDA matrix.  Since the iVectors don't make a great deal of difference,
 # we'll use 256 Gaussians for speed.
-local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj $nj --parallel-opts '-pe smp 4' --num-threads 4 --num-frames 200000 \
-    $WORK/train 256 $EXP/tri2b $EXP/nnet2_online/diag_ubm
+local/check.sh  steps/online/nnet2/train_diag_ubm.sh --cmd "$train_cmd" --nj $nj --parallel-opts '-pe smp 1' --num-threads 1 --num-frames 200000 \
+    $WORK/train 256 $srcdir $tgtdir/diag_ubm
 
 # even though $nj is just 10, each job uses multiple processes and threads.
-local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj --num-processes 1 --num-threads 4 \
-$WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
+local/check.sh steps/online/nnet2/train_ivector_extractor.sh --cmd "$train_cmd" --nj $nj --num-processes 1 --num-threads 1 \
+$WORK/train $tgtdir/diag_ubm $tgtdir/extractor || exit 1;
 
 # TODO probably useless but nice for debugging
 # We extract iVectors on all the $WORK/train data, which will be what we
@@ -72,9 +70,8 @@ $WORK/train $EXP/nnet2_online/diag_ubm $EXP/nnet2_online/extractor || exit 1;
 local/check.sh steps/online/nnet2/copy_data_dir.sh --utts-per-spk-max 2 $WORK/train $WORK/train_max2
 
 local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj $nj \
-    $WORK/train_max2 $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_train || exit 1;
-
+    --cmd "$gpu_cmd" --nj $nj \
+    $WORK/train_max2 $tgtdir/extractor $tgtdir/ivectors_train || exit 1;
 
 # Because we have a lot of data here and we don't want the training to take
 # too long so we reduce the number of epochs from the defaults (15 + 5) to (8
@@ -92,10 +89,10 @@ local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
 # wouldn't be able to decode in real-time using a CPU.
 #
 # I copied the learning rates from wsj/s5/local/nnet2/run_5d.sh
-local/check.sh steps/nnet2/train_pnorm_simple.sh --stage $train_stage \
+local/check.sh steps/nnet2/train_pnorm_simple2.sh --stage $train_stage \
   --num-epochs 12 \
   --splice-width 7 --feat-type raw \
-  --online-ivector-dir $EXP/nnet2_online/ivectors_train \
+  --online-ivector-dir $tgtdir/ivectors_train \
   --cmvn-opts "--norm-means=false --norm-vars=false" \
   --num-threads "$num_threads" \
   --minibatch-size "$minibatch_size" \
@@ -104,39 +101,38 @@ local/check.sh steps/nnet2/train_pnorm_simple.sh --stage $train_stage \
   --num-hidden-layers 4 \
   --mix-up 4000 \
   --initial-learning-rate 0.02 --final-learning-rate 0.004 \
-  --cmd "$decode_cmd" \
+  --cmd "$gpu_cmd" \
   --pnorm-input-dim 2400 \
   --pnorm-output-dim 300 \
-  $WORK/train $WORK/lang $EXP/tri3b_ali $dir || exit 1;
+  --combine-num-threads 1 \
+  --combine-parallel-opts "$parallel_opts" \
+  $WORK/train $WORK/lang ${srcdir}_ali $tgtdir || exit 1;
 
 for s in $TEST_SETS ; do
   local/check.sh steps/online/nnet2/extract_ivectors_online.sh \
-    --cmd "$train_cmd" --nj $nj \
-    $WORK/local/${s} $EXP/nnet2_online/extractor $EXP/nnet2_online/ivectors_${s} || exit 1;
+    --cmd "$gpu_cmd" --nj $nj \
+    $WORK/local/${s} $tgtdir/extractor $tgtdir/ivectors_${s} || exit 1;
 done
 
 
 for lm in $LM_names ; do
-  graph_dir=$EXP/tri3b/graph_${lm}
-  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $tgtdir $tgtdir/graph_${lm} || exit 1
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
-    local/check.sh steps/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
-      --online-ivector-dir $EXP/nnet2_online/ivectors_${s} \
-      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $dir/decode_${tgt_dir} || exit 1
+    local/check.sh steps/nnet2/decode.sh --nj $gpu_nj --cmd "$gpu_cmd" \
+      --online-ivector-dir $tgtdir/ivectors_${s} \
+      $tgtdir/graph_${lm} $WORK/$tgt_dir $tgtdir/decode_${tgt_dir} || exit 1
   done
 done
 
 local/check.sh steps/online/nnet2/prepare_online_decoding.sh $WORK/lang \
-  $EXP/nnet2_online/extractor $dir ${dir}_online || exit 1
+  $tgtdir/extractor $tgtdir ${tgtdir}_online || exit 1
 
 for lm in $LM_names ; do
-  graph_dir=$EXP/tri3b/graph_${lm}
   for s in $TEST_SETS ; do
     tgt_dir=${s}_${lm}
-    # Decode. the --per-utt true option makes no difference to the results here
-    local/check.sh steps/online/nnet2/decode.sh --nj $nj --cmd "$decode_cmd" \
-      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir ${dir}_online/decode_${tgt_dir} || exit 1
+    local/check.sh steps/online/nnet2/decode.sh --nj $gpu_nj --cmd "$gpu_cmd" \
+      $tgtdir/graph_${lm} $WORK/$tgt_dir ${tgtdir}_online/decode_${tgt_dir} || exit 1
   done
 done
 
