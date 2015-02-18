@@ -93,9 +93,8 @@ echo "Train nnet"
 echo
 echo "Train nnet discriminatively [SMBR]"
 ./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
-    --graphdir $EXP/tri2b \
     --srcdir $EXP/nnet2 \
-    --tgrdir $EXP/nnet2_smbr \
+    --tgtdir $EXP/nnet2_smbr \
     $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1
 
 # Cleaning does not help a lot
@@ -115,6 +114,7 @@ for lm in $LM_names ; do
   # local/check.sh utils/mkgraph.sh --mono $WORK/lang_${lm} $EXP/mono $EXP/mono/graph_${lm} || exit 1
   # local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri1 $EXP/tri1/graph_${lm} || exit 1
   local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri2b $EXP/tri2b/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/nnet2 $EXP/nnet2/graph_${lm} || exit 1
 done
 
 
@@ -153,6 +153,17 @@ for s in $TEST_SETS ; do
     # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
     #   --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
     #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}_cleaned/decode_it4_${tgt_dir};
+
+    echo "Decode nnet2 online"
+    local/check.sh steps/online/nnet2/decode.sh --nj $gpu_nj --cmd "$gpu_cmd" \
+      --config common/decode.conf --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+      $EXP/nnet2/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_online/decode_${tgt_dir} || exit 1
+
+    echo "Decode nnet2 discriminative [SMBR] online"
+    local/check.sh steps/online/nnet2/decode.sh --nj $gpu_nj --cmd "$gpu_cmd" \
+      --config common/decode.conf --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+      $EXP/nnet2/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_smbr_online/decode_${tgt_dir} || exit 1;
+
 
   done
 done

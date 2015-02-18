@@ -22,7 +22,7 @@ export njobs=100
 # This is a command to run the code on a CUDA enabled machine at UFAL. We do not have CUDA machines at the cluster.
 # You must run the training from a CUDA enabled manchine!
 export gpu_cmd=run.pl
-export gpu_nj=32
+export gpu_nj=16
 
 # The number of parallel jobs to be started for some parts of the recipe
 # Make sure you have enough resources(CPUs and RAM) to accomodate this number of jobs
