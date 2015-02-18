@@ -61,6 +61,9 @@ ontology = {
         'date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
         'num_transfers': set([]),
+        'time_transfers': set([]),
+        'time_transfers_stop': set([]),
+        'time_transfers_limit': set([]),
         'vehicle': set(["dontcare", "bus", "tram", "subway", "train", "cable_car", "ferry", "monorail"]),
         'alternative': set(['dontcare', '1', '2', '3', '4', 'last', 'next', 'prev', ]),
     },
@@ -239,8 +242,19 @@ ontology = {
             'system_iconfirms', 'system_selects',
         ],
         'num_transfers': [
+            'user_informs', 'user_requests', 'user_confirms',
+            'system_informs', 'system_confirms',
+            'system_iconfirms', 'system_selects',
+        ],
+        'time_transfers': [
             'user_requests',
+        ],
+        'time_transfers_stop': [
             'system_informs',
+        ],
+        'time_transfers_limit': [
+            'system_informs',
+            'relative_time',
         ],
         'vehicle': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -311,10 +325,9 @@ ontology = {
             '^departure_time$', '^departure_time_rel$',
             '^arrival_time$', '^arrival_time_rel$',
             '^to_city$', '^from_city$', '^via_city$',
+            '^to_street[2]*$', '^from_street[2]*$',
+            '^to_borough$', '^from_borough$',
         ],
-#        'from_stop': ['^from_city$'],
-#        'to_stop': ['^to_city$'],
-#        'via_stop': ['^via_city$'],
     },
     'last_talked_about': {
         # introduces new slots as a marginalisation of different inputs
@@ -427,7 +440,15 @@ ontology = {
             'last': 'last',
             'next': 'next',
             'prev': 'previous',
-        }
+        },
+        'num_transfers': {
+            'dontcare': 'any number of transfers',
+            '0': 'no tranfers',
+            '1': 'one transfer',
+            '2': 'four transfer',
+            '3': 'three transfer',
+            '4': 'four transfer',
+        },
     },
 }
 

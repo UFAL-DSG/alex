@@ -10,6 +10,7 @@ from alex.components.slu.base import SLUPreprocessing
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.en import word_for_number
 import site_preprocessing
+import string
 
 
 class PTIENSLUPreprocessing(SLUPreprocessing):
@@ -24,7 +25,7 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
 
         num_norms = []
         for num in xrange(60):
-            num_norms.append(([unicode(num)], [word_for_number(num)]))
+            num_norms.append(([unicode(num)], word_for_number(num).split()))
         self.text_normalization_mapping += num_norms
 
         # map ordinal numbers for streets and avenues 1st - 200th
@@ -33,7 +34,7 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
         for ord in xrange(1, 200):
             suffix = suffixes[ord % 10] if ord < 10 or ord > 20 else 'th'
             ord_form = str(ord) + suffix
-            ord_norms.append(([unicode(ord_form)], [word_for_number(ord, ordinary=True)]))
+            ord_norms.append(([unicode(ord_form)], word_for_number(ord, ordinary=True).split()))
         self.text_normalization_mapping += ord_norms
 
         self.text_normalization_mapping += [
@@ -42,22 +43,13 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
             (["it'll"], ['it will']),
             (["i'll"], ['i will']),
             (["that's"], ['that is']),
-            # (['ze'], ['z']),
-            # # (['se'], ['s']), # do not use this, FJ
-            # (['barandov'], ['barrandov']),
-            # (['litňanská'], ['letňanská']),
-            # (['ípé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
-            # (['í', 'pé', 'pa', 'pavlova'], ['i', 'p', 'pavlova']),
-            # (['čaplinovo'], ['chaplinovo']),
-            # (['čaplinova'], ['chaplinova']),
-            # (['zologická'], ['zoologická']),
+            (["don't"], ['do not']),
+            (["doesn't"], ['does not']),
         ]
 
     def normalise_utterance(self, utterance):
         utterance = super(PTIENSLUPreprocessing, self).normalise_utterance(utterance)
-        #utterance = Utterance(" ".join(map(cz_stem, utterance)))
         return utterance
-
 
 
 class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
@@ -104,22 +96,24 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
         :return: The same dictionary, with modified values
         """
         # regular changes to slot values
-        for slot, val in svs_dict.iteritems():
+        for slot_id, val in svs_dict.iteritems():
+            # remove number suffixes from some slot IDs to produce actual slot names
+            slot_name = slot_id[:-1] if slot_id[-1] in string.digits else slot_id
             # spell out time expressions
-            if slot in self.rel_time_slots:
-                svs_dict[slot] = self.spell_time_relative(val)
-            elif slot in self.abs_time_slots:
-                svs_dict[slot] = self.spell_time_absolute(val)
+            if slot_name in self.rel_time_slots:
+                svs_dict[slot_id] = self.spell_time_relative(val)
+            elif slot_name in self.abs_time_slots:
+                svs_dict[slot_id] = self.spell_time_absolute(val)
             # spell out temperature expressions
-            elif slot in self.temp_slots:
-                svs_dict[slot] = self.spell_temperature(val, interval=False)
-            elif slot in self.temp_int_slots:
-                svs_dict[slot] = self.spell_temperature(val, interval=True)
+            elif slot_name in self.temp_slots:
+                svs_dict[slot_id] = self.spell_temperature(val, interval=False)
+            elif slot_name in self.temp_int_slots:
+                svs_dict[slot_id] = self.spell_temperature(val, interval=True)
             # translate some slot values (default to untranslated)
-            elif slot in self.translated_slots:
-                svs_dict[slot] = self.translations[slot].get(val, val)
-            elif slot in ['from_street', 'to_street', 'from_stop', 'to_stop', 'headsign', ]:
-                svs_dict[slot] = site_preprocessing.expand_stop(val.lower())
+            elif slot_name in self.translated_slots:
+                svs_dict[slot_id] = self.translations[slot_name].get(val, val)
+            elif slot_name in ['from_street', 'to_street', 'from_stop', 'to_stop', 'headsign', ]:
+                svs_dict[slot_id] = site_preprocessing.expand_stop(val.lower())
 
         # reflect changes to slot values stored in the template
         slot_modif = {}

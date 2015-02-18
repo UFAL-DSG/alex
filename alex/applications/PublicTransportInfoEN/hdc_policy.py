@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 
 import random
-from alex.applications.PublicTransportInfoEN.directions import Waypints
+import itertools
 from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
 
 from alex.components.dm import DialoguePolicy
@@ -32,6 +32,7 @@ def randbool(n):
     if random.randint(1, n) == 1:
         return True
     return False
+
 
 class PTIENHDCPolicy(DialoguePolicy):
     """The handcrafted policy for the PTI-EN system."""
@@ -215,7 +216,8 @@ class PTIENHDCPolicy(DialoguePolicy):
         elif ludait == "null" or ludait == "other":
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
-            res_da.extend(self.get_limited_context_help(dialogue_state))
+            if randbool(5):
+                res_da.extend(self.get_limited_context_help(dialogue_state))
             dialogue_state["ludait"].reset()
 
         elif ludait == "help":
@@ -226,7 +228,7 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         elif ludait == "thankyou":
             # NLG("Díky.")
-            if not changed_slots:  # plain thank you, nothing else sayed
+            if not changed_slots:  # plain thank you, nothing else said
                 dialogue_state.restart()
             res_da = DialogueAct('inform(cordiality="true")&hello()')
             dialogue_state["ludait"].reset()
@@ -259,7 +261,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         elif 'current_time' in slots_being_requested:
             # Respond to questions about current time
             # TODO: allow combining with other questions?
-
             res_da = self.get_current_time_res_da(dialogue_state, accepted_slots, state_changed)
 
         # topic-dependent
@@ -342,7 +343,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-
         # collect all necesary information
         req_da, ref_point = self.gather_weather_info(ds, accepted_slots)
         if len(req_da):
@@ -562,11 +562,13 @@ class PTIENHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_duration(ds))
                 elif slot == "num_transfers":
                     res_da.extend(self.req_num_transfers(ds))
+                elif slot == "time_transfers":
+                    res_da.extend(self.req_time_transfers(ds))
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
                             'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', ]:
+                            'duration', 'num_transfers', 'time_transfers', ]:
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
@@ -689,12 +691,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         for cand_stop_name in [city, 'Hlavní nádraží', 'CAN, Husova']:
             if cand_stop_name in stops:
                 return cand_stop_name
-        for cand_stop_suffix in [' main station', ' city', ' střed',
-                                 ', nádraží', ', autobusové stanoviště',
-                                 ', železniční zastávka', ', železniční stanice',
-                                 ', radnice', ', suburb', ', center', ', obec',
-                                 ', náves', ', obecní úřad', ', school', ', church',
-                                 ', rozcestí', ', hostinec']:
+        for cand_stop_suffix in [' main station', ' city', ]:
             stop = city + cand_stop_suffix
             if stop in stops:
                 return stop
@@ -727,10 +724,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct, dict
         """
-
         req_da = DialogueAct()
-
-        # self.ontology['addinfo']['stop_category'].get(ds['from_street'].mpv())
 
         # retrieve the slot variables
         from_city_val = self.get_accepted_mpv(ds, 'from_city', accepted_slots)
@@ -744,6 +738,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         to_street_val = self.get_accepted_mpv(ds, 'to_street', accepted_slots)
         to_street2_val = self.get_accepted_mpv(ds, 'to_street2', accepted_slots)
         vehicle_val = self.get_accepted_mpv(ds, 'vehicle', accepted_slots)
+        max_transfers_val = self.get_accepted_mpv(ds, 'num_transfers', accepted_slots)
 
         # infer cities based on stops
         from_cities, to_cities = None, None
@@ -827,21 +822,6 @@ class PTIENHDCPolicy(DialoguePolicy):
                 from_borough_val = intersect_bs.pop()
                 to_borough_val = from_borough_val
                 street_borough_inferred = True
-
-        # # infer stops based on cities (for Google) or add '__ANY__' to avoid further requests (for CRWS)
-        # if self.infer_default_stops:
-        #     if from_city_val != 'none' and from_stop_val == 'none':
-        #         from_stop_val = self.get_default_stop_for_city(from_city_val)
-        #     if to_city_val != 'none' and to_stop_val == 'none':
-        #         to_stop_val = self.get_default_stop_for_city(to_city_val)
-        # else:  # this block is never executed (we don't use CRWS)
-        #     if from_city_val != 'none' and from_stop_val == 'none' and (to_city_val == 'none' or
-        #                                                                 from_city_val != to_city_val):
-        #         from_stop_val = '__ANY__'
-        #     if to_city_val != 'none' and to_stop_val == 'none' and (from_city_val == 'none' or
-        #                                                             from_city_val != to_city_val):
-        #         to_stop_val = '__ANY__'
-
 
         # place can be specified by street or stop and area by city or borough or another street
         has_from_place = from_stop_val != 'none' or from_street_val != 'none' or from_city_val not in ['none', 'New York']
@@ -927,10 +907,12 @@ class PTIENHDCPolicy(DialoguePolicy):
             if to_city_val == 'none':
                 to_city_val = self.ontology.get_default_value('in_city')
 
-        # todo - this would be sufficient: Waypoints(from_place, from_area, from_geo, to_place, to_area, to_geo, vehicle)
-        waypoints = Waypints(from_city_val, from_stop_val, to_city_val, to_stop_val, from_stop_geo, to_stop_geo, vehicle_val)
-                             # from_streets, to_streets, vehicle_val)
-        return req_da, iconfirm_da, Travel(waypoints=waypoints)
+        # todo - this would be sufficient: from_place, from_area, from_geo, to_place, to_area, to_geo, vehicle
+
+        return req_da, iconfirm_da, Travel(from_city=from_city_val, from_stop=from_stop_val,
+                                           from_stop_geo=from_stop_geo, to_stop_geo=to_stop_geo,
+                                           to_city=to_city_val, to_stop=to_stop_val,
+                                           vehicle=vehicle_val, max_transfers=max_transfers_val)
 
     def gather_weather_info(self, ds, accepted_slots):
         """Handles in_city and in_state to be properly filled. If needed, a Request DA is formed for missing slots to be filled.
@@ -946,6 +928,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         # retrieve the slot variables
         in_state_val = ds['in_state'].mpv() if 'in_state' in accepted_slots else 'none'
         in_city_val = ds['in_city'].mpv() if 'in_city' in accepted_slots else 'none'
+        in_borough_val = ds['in_city'].mpv() if 'in_borough' in accepted_slots else 'none'
 
         if in_city_val != 'none' and in_state_val == 'none':
             in_states = self.ontology.get_compatible_vals('city_state', in_city_val)
@@ -955,7 +938,10 @@ class PTIENHDCPolicy(DialoguePolicy):
                 in_state_val = in_states.pop()
 
         if in_city_val == 'none' and in_state_val == 'none':
-            in_city_val = self.ontology.get_default_value('in_city')
+            if in_borough_val != 'none':
+                in_city_val = in_borough_val
+            else:
+                in_city_val = self.ontology.get_default_value('in_city')
             in_state_val = self.ontology.get_default_value('in_state')
 
         if in_state_val == 'none':
@@ -1147,6 +1133,8 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         duration = (arrival_time - departure_time).seconds / 60
         duration_hrs, duration_mins = divmod(duration, 60)
+        if duration_hrs == 0 and duration_mins == 0:
+            duration_mins = 1
         da.append(DialogueActItem('inform', 'duration', '%d:%02d' % (duration_hrs, duration_mins)))
         return da
 
@@ -1158,6 +1146,25 @@ class PTIENHDCPolicy(DialoguePolicy):
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
+        return da
+
+    def req_time_transfers(self, dialogue_state):
+        """Return a DA informing the user about transfer places and time needed for the trasfer in the
+        last recommended connection.
+        """
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+        # get only transit with some means of transport
+        transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT ]
+
+        # get_time counts difference between two datetime objects, returns a string h:min
+        get_time = lambda f,t: '%d:%02d' % divmod(((t - f).seconds / 60), 60)
+        # calculate time needed as "departure_time from next stop minus arrival time to the stop"
+        n =  [ (arrive_at.arrival_stop, get_time( arrive_at.arrival_time, depart_from.departure_time))
+                 for arrive_at, depart_from in itertools.izip(transits,transits[1:])]
+        names = [ 'inform(time_transfers_stop="%s")&inform(time_transfers_limit="%s")' % tuple_n for tuple_n in n ]
+
+        da = DialogueAct("&".join(names)) if len(names) > 0 else DialogueAct('inform(num_transfers="0")')
         return da
 
     def check_directions_conflict(self, wp):
@@ -1221,7 +1228,6 @@ class PTIENHDCPolicy(DialoguePolicy):
                 destination stops are different and issue a warning DA if not.
         :rtype: DialogueAct
         """
-
         conn_info = ds.conn_info
         # check for route conflicts
         if check_conflict:
@@ -1464,7 +1470,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         topics_alternatives = ['inform="alternative_abs"', 'inform="alternative_prev"', 'inform="alternative_next"',
                                'inform="alternative_last"', ]
         topics_stops = ['inform="from_stop"', 'inform="to_stop"', 'request="from_stop"', 'request="to_stop"',
-                        'request="num_transfers"', ]
+                        'request="num_transfers"', 'inform="num_transfers"',]
         topics_time = ['inform="departure_time"', 'request="current_time"', ]
         topics_general = ['', 'repeat', 'inform="hangup"', ]
         topics_weather = ['task="weather"', ]

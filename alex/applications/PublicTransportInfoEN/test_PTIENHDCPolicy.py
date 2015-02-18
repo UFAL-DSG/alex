@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from unittest import TestCase
 from datetime import time as dttime
-from alex.applications.PublicTransportInfoEN.directions import GoogleDirections, Waypints
+from alex.applications.PublicTransportInfoEN.directions import GoogleDirections, Travel
 
 from alex.applications.PublicTransportInfoEN.hdc_policy import PTIENHDCPolicy
 from alex.components.dm import Ontology
@@ -134,9 +134,9 @@ class TestPTIENHDCPolicy(TestCase):
         req_da, iconfirm_da, conn_info = self.policy.gather_connection_info(self.ds, self.ds.get_accepted_slots(0.8))
         self.assertEquals(0, len(iconfirm_da))
         self.assertEquals(DialogueAct('request(to_city)'),str(req_da))
-        self.assertIsNone(conn_info.from_city)
+        self.assertEquals('none', conn_info.from_city)
         self.assertEquals('City Hall', conn_info.from_stop)
-        self.assertIsNone(conn_info.to_city)
+        self.assertEquals('none', conn_info.to_city)
         self.assertEquals('Broadway', conn_info.to_stop)
 
     def test_gather_connection_info_infer_from_city_iconfirm(self):
@@ -290,8 +290,11 @@ class TestPTIENHDCPolicy(TestCase):
     # ===== SET UP AND CONSTANTS =====
 
     def set_ds_directions(self):
-        waypoints = Waypints('New York', 'Wall street', 'New York', 'Central park')
-        self.ds.directions = GoogleDirections(waypoints, self.get_directions_json())
+        travel = Travel(from_city='New York', from_stop='Wall street',
+                       from_stop_geo=None, to_stop_geo=None,
+                       to_city='New York', to_stop='Central park',
+                       vehicle='none', max_transfers='none')
+        self.ds.directions = GoogleDirections(input_json=self.get_directions_json(), travel=travel)
         self.ds['route_alternative'] = 0
 
     def set_ds_connection_info(self, to_stop='none', from_stop='none', to_city='none', from_city='none'):
@@ -346,48 +349,51 @@ class TestPTIENHDCPolicy(TestCase):
                 'max_turns': 120,
               },
             'DM': {
-                'debug': True,
-                'type': 'basic',
-                'epilogue': {
-                    # if set to None, no question is asked
-                    # 'final_question': u"I have one last question. Did you obtain desired information?",
-                    'final_question': None,
-                    # if set to None, no code is given
-                    # if set to a valid url, a code is given and reported to the url as "url.format(code=code)"
-                    # 'final_code_url': None,
-                    'final_code_url': 'https://147.251.253.9/?q={code}&a=1',
-                    # time in seconds before valid dialogue can successfully end (to prevent from saying hello, good bye)
-                    'final_code_min_turn_count': 4,
-                    'final_code_text_min_turn_count_not_reached': u"I'm sorry, You haven't met the minimum question count limit.",
-                    # the message is generated as "final_code_text.format(code=code)"
-                    'final_code_text': u'Your code is {code} .',
-                    'final_code_text_repeat': u' I repeat, ',
-                    # initialise the seed of the code generation algorithm
-                    'code_seed': 1,
-                },
-                'dialogue_policy': {
-                    'type': PTIENHDCPolicy,
-                    'PTIENHDCPolicy': {
-                        'accept_prob_ludait': 0.5,
-                        'accept_prob_being_requested': 0.8,
-                        'accept_prob_being_confirmed': 0.8,
-                        'accept_prob_being_selected': 0.8,
-                        'accept_prob_noninformed': 0.8,
-                        'accept_prob': 0.8,
-                        'confirm_prob': 0.4,
-                        'select_prob': 0.4,
-                        'min_change_prob': 0.1,
-                    }
-                },
-                'dialogue_state': {
-                    'type': DeterministicDiscriminativeDialogueState,
-                 },
-                'DeterministicDiscriminativeDialogueState': {
-                    #'type' : 'MDP',
-                    'type' : 'UFAL_DSTC_1.0_approx',
-                },
-                'ontology': as_project_path('applications/PublicTransportInfoEN/data/ontology.py'),
-            },
+    'debug': True,
+    'type': 'basic',
+    'epilogue': {
+        # if set to None, no question is asked
+        # 'final_question': u"I have one last question, have You obtained desired information?",
+        'final_question': None,
+        # if set to None, no code is given
+        # if set to a valid url, a code is given and reported to the url as "url.format(code=code)"
+        # 'final_code_url': None,
+        'final_code_url': 'https://147.251.253.9/?q={code}&a=1',
+        # time in seconds before valid dialogue can successfully end (to prevent from saying hello, good bye)
+        'final_code_min_turn_count': 5,
+        'final_code_text_min_turn_count_not_reached': u"I'm sorry, You haven't met the minimum question count limit.",
+        # the message is generated as "final_code_text.format(code=code)"
+        'final_code_text': u'Your code is {code} .',
+        'final_code_text_repeat': u' I repeat, ',
+        # initialise the seed of the code generation algorithm
+        'code_seed': 1,
+    },
+    'basic': {
+        'debug': True,
+    },
+    'ontology': as_project_path('applications/PublicTransportInfoEN/data/ontology.py'),
+    'dialogue_state': {
+        'type': DeterministicDiscriminativeDialogueState,
+     },
+    'DeterministicDiscriminativeDialogueState': {
+        #'type' : 'MDP',
+        'type' : 'UFAL_DSTC_1.0_approx',
+    },
+    'dialogue_policy': {
+        'type': PTIENHDCPolicy,
+        'PTIENHDCPolicy': {
+            'accept_prob_ludait': 0.5,
+            'accept_prob_being_requested': 0.8,
+            'accept_prob_being_confirmed': 0.8,
+            'accept_prob_being_selected': 0.8,
+            'accept_prob_noninformed': 0.8,
+            'accept_prob': 0.8,
+            'confirm_prob':  0.4,
+            'select_prob': 0.4,
+            'min_change_prob': 0.1,
+        }
+    },
+  },
         }
 
     def get_directions_json(self):

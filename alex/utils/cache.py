@@ -64,8 +64,7 @@ def lru_cache(maxsize=100):
                 wrapper.hits += 1
             except KeyError:
                 result = user_function(*args, **kwds)
-                if result != None:
-                    cache[key] = result
+                cache[key] = result
                 wrapper.misses += 1
 
                 # purge least recently used cache entry

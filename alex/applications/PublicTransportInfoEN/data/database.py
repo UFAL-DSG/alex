@@ -3,6 +3,8 @@
 
 from __future__ import unicode_literals
 
+if __name__ == '__main__':
+    import autopath
 import codecs
 import os
 import re
@@ -22,14 +24,11 @@ database = {
         "find_platform": ["find platform", "find out platform", ],
         'weather': ['weather', ],
     },
+    "number": {
+        str("1"): [str("one")]
+    },
     "time": {
-        "now": [ "now", "at once", "immediately", "offhand", "at this time",
-                 "the closest", "this instant"],
-        "0:01": ["minute", ],
-        "0:15": ["quarter of an hour", ],
-        "0:30": ["half an hour", "half past"],
-        "0:45": ["three quarters of an hour", ],
-        "1:00": ["hour", ],
+        "now": [ "now", "at once", "immediately", "offhand", "at this time", "the closest", "this instant"],
     },
     "date_rel": {
         "today": ["today", "this day", "todays", "this days"],
@@ -109,12 +108,6 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-#    for c in '{}+/&[],-':
-#        form = form.replace(' %s ' % c, ' ')
-#        form = form.replace(' %s' % c, ' ')
-#        form = form.replace('%s ' % c, ' ')
-#    form = form.strip()
-
     database[category_label].setdefault(value, set()).add(form)
 
 
@@ -133,81 +126,28 @@ def spell_number(num):
         return units_str
 
 
-def add_time():
+def add_numbers():
     """
-    Basic approximation of all known explicit time expressions.
+    Basic approximation of all known explicit number expressions.
 
     Handles:
-        <hour>
-        <hour> o'clock
-        <hour> hour(s)
-        <hour> hour(s) <minute>
-        <hour> <minute>
-        half past/quarter past/quarter to <hour>
-        <minute> minute(s)
-    where <hour> and <minute> are spelled /given as numbers.
-
-    Cannot yet handle:
-        five minutes to ten
+        fractions (quarter/half)
+        cardinal numbers <1, 59>
     """
-    # ["zero", "one", ..., "fifty nine"]
-    numbers_str = [spell_number(num) for num in xrange(60)]
 
-    for hour in xrange(24):
-        if hour == 1:
-            hr_id = 'hour'
-        else:
-            hr_id = 'hours'
+    for fraction, fraction_spelling in [(0.25, 'quarter'), (0.5, 'half')]:
+        add_db_number(fraction, fraction_spelling)
 
-        hr_str = numbers_str[hour]
+    for cardinal in xrange(60):
+        add_db_number(cardinal, spell_number(cardinal))
 
-        # X:00
-        add_db_time(hour, 0, '{ho} o\'clock', {'ho': hr_str})
+    for single_digit in xrange(9):
+        add_db_number(single_digit, "zero " + spell_number(single_digit))
+        add_db_number(single_digit, "o " + spell_number(single_digit))
 
-        if hour >= 1 and hour <= 12:
-            # (X-1):15 quarter past (X)
-            add_db_time(hour, 15, "quarter past {h}", {'h': hr_str})
-            # (X-1):30 half past (X)
-            add_db_time(hour, 30, "half past {ho}", {'ho': hr_str})
-            # (X-1):45 quarter to X
-            add_db_time(hour - 1, 45, "quarter to {h}", {'h': hr_str})
-
-        # some must be declined (but variants differ only for hour=1)
-        # X:00
-        add_db_time(hour, 0, "{h}", {'h': hr_str})
-        add_db_time(hour, 0, "{h} {hi}", {'h': hr_str, 'hi': hr_id})
-        # X:YY
-        for minute in xrange(60):
-            min_str = numbers_str[minute]
-            add_db_time(hour, minute, "{h} {hi} {m}", {'h': hr_str, 'hi': hr_id, 'm': min_str})
-            add_db_time(hour, minute, "{h} {hi} and {m}", {'h': hr_str, 'hi': hr_id, 'm': min_str})
-            if minute < 10:
-                add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': 'zero ' + min_str})
-                if minute > 0:
-                    add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': 'o ' + min_str})
-                #TODO: "van ou van"i
-            add_db_time(hour, minute, "{h} {m}", {'h': hr_str, 'm': min_str})
-
-    # YY minut(u/y)
-    for minute in xrange(60):
-        min_str = numbers_str[minute]
-
-        if minute == 1:
-            min_id = 'minute'
-        else:
-            min_id = "minutes"
-
-        add_db_time(0, minute, "{m} {mi}", {'m': min_str, 'mi': min_id})
-
-        # if minute < 10 and minute > 0:
-        #     add_db_time(0, minute, "{m} {mi}", {'m': 'o ' + min_str, 'mi': min_id})
-
-
-def add_db_time(hour, minute, format_str, replacements):
-    """Add a time expression to the database
-    (given time, format string and all replacements as a dict)."""
-    time_val = "%d:%02d" % (hour, minute)
-    db_add("time", time_val, format_str.format(**replacements))
+def add_db_number(number, spelling):
+    """Add a number expression to the database (given number and its spelling)."""
+    db_add("number", str(number), spelling)
 
 
 def preprocess_cl_line(line):
@@ -270,6 +210,7 @@ def save_c2v2f(file_name):
             f.write(' => '.join(x))
             f.write('\n')
 
+
 def save_surface_forms(file_name):
     surface_forms = []
     for k in database:
@@ -306,14 +247,16 @@ def save_SRILM_classes(file_name):
 ########################################################################
 #                  Automatically expand the database                   #
 ########################################################################
-add_time()
+add_numbers()
 add_streets()
 add_stops()
 add_boroughs()
 add_cities()
 add_states()
 
-if "dump" in sys.argv or "--dump" in sys.argv:
-    save_c2v2f('database_c2v2f.txt')
-    save_surface_forms('database_surface_forms.txt')
-    save_SRILM_classes('database_SRILM_classes.txt')
+
+if __name__ == '__main__':
+    if "dump" in sys.argv or "--dump" in sys.argv:
+        save_c2v2f('database_c2v2f.txt')
+        save_surface_forms('database_surface_forms.txt')
+        save_SRILM_classes('database_SRILM_classes.txt')

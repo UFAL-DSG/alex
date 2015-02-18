@@ -4,15 +4,15 @@ database_c2v2f*
 czech.tagger
 czech.dict
 cities*.txt
+boroughs*.txt
 stops*.txt
 states*.txt
 streets*.txt
 cities*.csv
+boroughs*.csv
 stops*.csv
 states*.csv
 streets*.csv
 stops-add.txt
 concat_stops.sh
-idos_map.tsv
 errors.txt
-stops-idos.tsv
