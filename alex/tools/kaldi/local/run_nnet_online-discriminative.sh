@@ -48,13 +48,13 @@ nj=`cat $srcdir/num_jobs` || exit 1;
 
 mkdir -p $tgtdir
 
-local/check.sh steps/nnet2/make_denlats.sh --nj "$nj" --cmd "$train_cmd" \
+local/check.sh steps/nnet2/make_denlats.sh --nj "$gpu_nj" --cmd "$gpu_cmd" \
     --sub-split 40 --num-threads 1 --parallel-opts "-pe smp 1" \
     --online-ivector-dir $srcdir/ivectors_train \
     --beam $smbr_beam --lattice-beam $smbr_lat_beam \
     $WORK/train $WORK/lang $srcdir ${srcdir}_denlats
 
-local/check.sh steps/nnet2/align.sh --nj "$nj" --cmd "$train_cmd" \
+local/check.sh steps/nnet2/align.sh --nj "$gpu_nj" --cmd "$gpu_cmd" \
     --online-ivector-dir $srcdir/ivectors_train \
     $WORK/train $WORK/lang $srcdir ${srcdir}_ali
 
