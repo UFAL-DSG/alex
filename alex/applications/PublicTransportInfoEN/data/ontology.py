@@ -60,6 +60,8 @@ ontology = {
         'date': set([]),
         'date_rel': set(['today', 'tomorrow', 'day_after_tomorrow', ]),
         'centre_direction': set(['dontcare', 'dontknow', 'to', 'from', '*', ]),
+        'distance': set([]),
+        'num_stops': set([]),
         'num_transfers': set([]),
         'time_transfers': set([]),
         'time_transfers_stop': set([]),
@@ -102,7 +104,7 @@ ontology = {
         'borough': [
             'user_informs',
         ],
-		'state': [
+        'state': [
             'user_informs',
         ],
         'from_stop': [
@@ -120,7 +122,7 @@ ontology = {
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
         ],
-       'from_street2': [
+        'from_street2': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
@@ -240,6 +242,12 @@ ontology = {
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
             'system_iconfirms', 'system_selects',
+        ],
+        'distance': [
+            'user_requests',
+        ],
+        'num_stops': [
+            'system_informs',
         ],
         'num_transfers': [
             'user_informs', 'user_requests', 'user_confirms',
@@ -443,11 +451,11 @@ ontology = {
         },
         'num_transfers': {
             'dontcare': 'any number of transfers',
-            '0': 'no tranfers',
+            '0': 'no transfers',
             '1': 'one transfer',
-            '2': 'four transfer',
-            '3': 'three transfer',
-            '4': 'four transfer',
+            '2': 'two transfers',
+            '3': 'three transfers',
+            '4': 'four transfers',
         },
     },
 }

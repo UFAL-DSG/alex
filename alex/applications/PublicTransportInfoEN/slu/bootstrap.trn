@@ -268,9 +268,12 @@ bootstrap_0320.wav => what is the weather going to be like in that time
 bootstrap_0321.wav => can you give me the time of the trip
 bootstrap_0322.wav => yes
 bootstrap_0323.wav => what's the duration time
-bootstrap_0324.wav =>
-bootstrap_0325.wav =>
-bootstrap_0326.wav =>
-bootstrap_0327.wav =>
-bootstrap_0328.wav =>
+bootstrap_0324.wav => tell me how far is the destination
+bootstrap_0325.wav => how far is it
+bootstrap_0326.wav => what is the distance of the trip
+bootstrap_0327.wav => give me the distance
+bootstrap_0328.wav => distance
+bootstrap_0329.wav => how far is it
+bootstrap_0330.wav => when does the third one go
+bootstrap_0331.wav => how far is the third trip
 

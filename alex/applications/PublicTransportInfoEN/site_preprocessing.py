@@ -130,7 +130,7 @@ def expand_stop(stop, spell_numbers=True):
         conjunction = ' and '
     elif '-' in stop:
         elements = stop.split('-')
-        conjunction = ' '
+        conjunction = ' , '
     elif '(' in stop:
         elements = stop.replace(')', '').split('(')  # cathedral pkwy (110 st)
         conjunction = ' on '

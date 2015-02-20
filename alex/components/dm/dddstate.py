@@ -353,9 +353,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                         # hack for street and street2 handling
                         if [dai for (p,dai) in new_user_da if dai.dat == 'inform' and dai.name == system_dai.name.split('_')[0]+ "_" + user_dai.name] and \
                                 user_dai.name == 'street':
-                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0]+ "_" + user_dai.name + "2", user_dai.value)
+                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0] + "_" + user_dai.name + "2", user_dai.value)
                         else:
-                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0]+ "_" + user_dai.name, user_dai.value)
+                            new_user_dai = DialogueActItem("inform", system_dai.name.split('_')[0] + "_" + user_dai.name, user_dai.value)
                     elif system_dai.dat == "request" and system_dai.name != "" and \
                                     user_dai.dat == "affirm" and self.ontology.slot_is_binary(system_dai.name):
                         new_user_dai = DialogueActItem("inform", system_dai.name, "true")

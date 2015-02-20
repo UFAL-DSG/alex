@@ -9,7 +9,6 @@ For usage write expand_stops_script.py -h
 
 from __future__ import unicode_literals
 import codecs
-import autopath
 from copy import copy
 from optparse import OptionParser
 from collections import defaultdict
@@ -275,4 +274,5 @@ def main():
 
 
 if __name__ == '__main__':
+    import autopath
     main()

@@ -194,6 +194,7 @@ class GoogleRouteLeg(RouteLeg):
         super(GoogleRouteLeg, self).__init__()
         for step in input_json['steps']:
             self.steps.append(GoogleRouteLegStep(step))
+        self.distance = input_json['distance']['value']
 
 
 class GoogleRouteLegStep(RouteStep):
@@ -241,6 +242,7 @@ class GoogleRouteLegStep(RouteStep):
             # normalize stop names
             self.departure_stop = expand_stop(self.departure_stop)
             self.arrival_stop = expand_stop(self.arrival_stop)
+            self.num_stops = data['num_stops']
 
         elif self.travel_mode == self.MODE_WALKING:
             self.duration = input_json['duration']['value']

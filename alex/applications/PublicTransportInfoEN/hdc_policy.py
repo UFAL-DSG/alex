@@ -504,12 +504,13 @@ class PTIENHDCPolicy(DialoguePolicy):
             return DialogueAct('inform(stop_conflict="no_stops")')
         else:
             ds_alternative = ds["alternative"].mpv()
+            type = ds_alternative
             if ds_alternative == "next":
                 increment = 1
-                type = "next"
             elif ds_alternative == "prev":
-                increment = - 1
-                type = "prev"
+                increment = -1
+            elif ds_alternative in ['last', 'dontcare']:
+                increment = 0
             else:
                 increment = int(ds_alternative) - ds["route_alternative"] - 1
                 type = "true"
@@ -527,11 +528,12 @@ class PTIENHDCPolicy(DialoguePolicy):
 
             if slots_being_requested:
                 res_da.append(DialogueActItem('inform', 'alternative', word_for_number(ds['route_alternative'] + 1, True)))
-                ds["route_alternative"] -= increment
                 res_da.extend(self.get_requested_info(slots_being_requested, ds, accepted_slots))
+                ds["route_alternative"] -= increment
                 return res_da
 
             res_da.extend(self.get_directions(ds, type))
+            # ds["route_alternative"] -= increment
             return res_da
 
     def get_requested_info(self, requested_slots, ds, accepted_slots):
@@ -564,11 +566,13 @@ class PTIENHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_num_transfers(ds))
                 elif slot == "time_transfers":
                     res_da.extend(self.req_time_transfers(ds))
+                elif slot == "distance":
+                    res_da.extend(self.req_distance(ds))
             else:
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
                             'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', 'time_transfers', ]:
+                            'duration', 'num_transfers', 'time_transfers', 'distance' ]:
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
@@ -1008,7 +1012,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
-                return da
+                break
+        return da
 
     def req_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
@@ -1020,7 +1025,8 @@ class PTIENHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                return da
+                break
+        return da
 
     def req_departure_time(self, dialogue_state):
         """Generates a dialogue act informing about the departure time from the origin stop of the last
@@ -1071,7 +1077,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                         departure_time_rel_hrs += 24 * departure_time_rel.days
                     da.append(DialogueActItem('inform', 'departure_time_rel',
                                               '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_arrival_time(self, dialogue_state):
         """Return a DA informing about the arrival time the destination stop of the last
@@ -1085,7 +1092,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%I:%M:%p")))
-                return da
+                break
+        return da
 
     def req_arrival_time_rel(self, dialogue_state):
         """Return a DA informing about the relative arrival time the destination stop of the last
@@ -1108,7 +1116,8 @@ class PTIENHDCPolicy(DialoguePolicy):
                     arrival_time_rel_hrs += 24 * arrival_time_rel.days
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_duration(self, dialogue_state):
         """Return a DA informing about journey time to the destination stop of the last
@@ -1137,6 +1146,23 @@ class PTIENHDCPolicy(DialoguePolicy):
             duration_mins = 1
         da.append(DialogueActItem('inform', 'duration', '%d:%02d' % (duration_hrs, duration_mins)))
         return da
+
+    def req_distance(self, dialogue_state):
+        """Return a DA informing the user about the distance and number of stops in the last recommended connection."""
+        def meters_to_miles(meters):
+            return meters * 0.000621371
+        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        leg = route.legs[0]
+
+        res_da = DialogueAct('inform(distance="%0.1f")' % meters_to_miles(leg.distance))
+
+        steps = [(step.num_stops, step.departure_stop, step.vehicle, step.line_name) for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]
+        for stop_count, from_stop, vehice, line in steps:
+            res_da.append(DialogueActItem('inform', 'num_stops', stop_count))
+            res_da.append(DialogueActItem('inform', 'from_stop', from_stop))
+            res_da.append(DialogueActItem('inform', 'vehicle', vehice))
+            res_da.append(DialogueActItem('inform', 'line', line))
+        return res_da
 
     def req_num_transfers(self, dialogue_state):
         """Return a DA informing the user about the number of transfers in the

@@ -877,7 +877,7 @@ class PTIENHDCSLU(SLUInterface):
             not dai.any_word_in("end over option offer surrender") :
             cn.add(1.0, DialogueActItem("affirm"))
 
-        if not dai.any_phrase_in(['not from', ]):
+        if not dai.any_phrase_in(['not from', 'not care']):
             if dai.any_word_in("no not nope nono") or \
                  dai.phrase_in('do not want') or \
                          len(u) == 2 and dai.all_words_in("not want") or \
@@ -952,9 +952,9 @@ class PTIENHDCSLU(SLUInterface):
         if dai.any_word_in('transfer transfers transferring transformer changing change changes interchange interchanging interchanges'):
             if dai.any_word_in('time take takes') or dai.any_phrase_in(['how long']):
                 cn.add(1.0, dai.build('request', 'time_transfers'))
-            elif dai.any_word_in('number count') or dai.any_phrase_in(['how many', 'there any']) and not dai.any_word_in('regardless'):
+            elif dai.any_word_in('number count') or dai.any_phrase_in(['how many', 'there any']) and not dai.any_word_in('regardless not care'):
                 cn.add(1.0, dai.build('request', 'num_transfers'))
-            elif dai.any_word_in('zero no any not'):
+            elif dai.any_word_in('zero no not') or dai.any_phrase_in(['any transfers']):
                 cn.add(1.0, dai.build('inform', 'num_transfers', '0'))
             elif dai.any_word_in('one once single mono'):
                 cn.add(1.0, dai.build('inform', 'num_transfers', '1'))
@@ -964,7 +964,8 @@ class PTIENHDCSLU(SLUInterface):
                 cn.add(1.0, dai.build('inform', 'num_transfers', '3'))
             elif dai.any_word_in('four quadro'):
                 cn.add(1.0, dai.build('inform', 'num_transfers', '4'))
-            elif dai.any_word_in('arbitrary arbitrarily with') or dai.any_phrase_in(['any means', 'regardless', 'not care']):
+            elif dai.any_word_in('arbitrary arbitrarily with') or \
+                    dai.any_phrase_in(['any means', 'regardless', 'not care', 'any number', 'any count']):
                 cn.add(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
 
         if (dai.all_words_in('direct') and dai.any_word_in('line connection link')) or \
@@ -987,10 +988,14 @@ class PTIENHDCSLU(SLUInterface):
                     (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time')):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
+            if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take')):
+                cn.add(1.0, DialogueActItem('request', 'distance'))
+
         if dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it']):
             cn.add(1.0, DialogueActItem('request', 'current_time'))
 
-        if dai.any_word_in('connection alternatives alternative option options found choice link possibility bus train sub subway') and \
+        if (dai.any_word_in('time found connection alternatives alternative option options possibility choice trip travel journey ride tour link bus train sub subway') or
+                dai.any_phrase_in(['next one', 'previous one', 'last one', 'first one', 'second one', 'third one', 'fourth one'])) and \
                 not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum'):
             if dai.any_word_in('arbitrary') and \
                 not dai.any_word_in('first second third fourth one two three four'):
