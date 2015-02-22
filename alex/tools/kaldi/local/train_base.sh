@@ -118,7 +118,9 @@ for lm in $LM_names ; do
   # local/check.sh utils/mkgraph.sh --mono $WORK/lang_${lm} $EXP/mono $EXP/mono/graph_${lm} || exit 1
   # local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri1 $EXP/tri1/graph_${lm} || exit 1
   local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri2b $EXP/tri2b/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
   local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/nnet2 $EXP/nnet2/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/nnet2_smbr $EXP/nnet2_smbr/graph_${lm} || exit 1
 done
 
 
@@ -142,16 +144,21 @@ for s in $TEST_SETS ; do
     #    --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
     #   $EXP/tri1/graph_${lm} $WORK/$tgt_dir $EXP/tri1/decode_${tgt_dir}
     #
-    # echo "Decode tri2b [LDA+MLLT]"
-    # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-    #    --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-    #   $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir};
+     echo "Decode tri2b [LDA+MLLT]"
+     local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+        --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b/decode_${tgt_dir};
 
     # Note: change --iter option to select the best model. 4.mdl == final.mdl
-    echo "Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05"
+    echo "Decode tri2b_mmi_b${train_mmi_boost} [LDA+MLLT with MMI + boosting]. train_mmi_boost is a number e.g. 0.05"
     local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
        --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_it4_${tgt_dir}
+      $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_${tgt_dir}
+
+    echo "Decode tri3b [LDA+MLLT+SAT]"
+    local/check.sh steps/decode_fmllr.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $EXP/tri3b/decode_${tgt_dir}
 
     # echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05: RESULTS on vystadial 0.95% of all data and WER improvement of 0.02 for tri2 + bMMI_b005 model"
     # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
@@ -166,7 +173,7 @@ for s in $TEST_SETS ; do
     echo "Decode nnet2 discriminative [SMBR] online"
     local/check.sh steps/online/nnet2/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/nnet2/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_smbr_online/decode_${tgt_dir}
+      $EXP/nnet2_smbr/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_smbr_online/decode_${tgt_dir}
 
   done
 done

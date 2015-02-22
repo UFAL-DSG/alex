@@ -26,7 +26,7 @@ export DICTIONARY="build"
 # Borders for estimating LM model weight.
 # LMW is tuned on development set and applied on test set.
 export min_lmw=4
-export max_lmw=15
+export max_lmw=20
 
 # Number of states for phonem training
 export pdf=1200
