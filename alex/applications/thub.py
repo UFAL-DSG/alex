@@ -220,11 +220,9 @@ class TextHub(Hub):
 
         except KeyboardInterrupt:
             print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
-            #self.close_event.set()
             return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
-            #self.close_event.set()
             raise
 
 
