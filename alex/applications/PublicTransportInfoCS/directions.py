@@ -555,9 +555,6 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                                              platform_info.to_city,
                                              platform_info.to_stop))
 
-        #self.system_logger.info("FROM" + pprint.pformat(from_obj))
-        #self.system_logger.info("TO" + pprint.pformat(to_obj))
-
         if from_obj and (to_obj or train_name):
             # Get the entries in the departure table at the from station.
             response = self.client.service.SearchDepartureTableInfo(

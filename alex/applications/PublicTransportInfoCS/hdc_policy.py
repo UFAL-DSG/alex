@@ -373,10 +373,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if len(req_da) == 0:
                 if state_changed:
                     # we know everything we need -> start searching
-                    #ds.platform_info = platform_info
                     res_da = DialogueAct()
                     platform_res = self.directions.get_platform(platform_info)
-
 
                     if not platform_res:
                         res_da.append(DialogueActItem('inform', 'platform',
@@ -403,9 +401,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                       'none'))
                             res_da.append(DialogueActItem('inform', 'direction',
                                                       platform_res.direction))
-
-                    # Construct platform info.
-
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -841,17 +836,12 @@ class PTICSHDCPolicy(DialoguePolicy):
 
 
     def gather_platform_info(self, ds, accepted_slots):
-        """!!!!!!!!
-        change
+        """Return a DA requesting further information for the platform search.
 
-        Return a DA requesting further information needed to search
-        for traffic directions and a dictionary containing the known information.
-        Infers city names based on stop names and vice versa.
-
-        If the request DA is empty, the search for directions may be commenced immediately.
+        If the request DA is empty there is no need to ask further.
 
         :param ds: The current dialogue state
-        :rtype: DialogueAct, dict
+        :rtype: DialogueAct, DialogueAct, dict
         """
         req_da = DialogueAct()
 
@@ -864,19 +854,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                           accepted_slots else 'none')
         from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
         to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
-        #city_val = ds['city'].mpv() if 'city' in accepted_slots else 'none'
-
-        """if from_city_val != 'none' and from_stop_val == 'none':
-            from_stop_val = self.get_default_stop_for_city(from_city_val)
-
-            if from_stop_val == from_city_val:
-                from_city_val = 'none'
-        """
-        """if to_city_val != 'none' and to_stop_val == 'none':
-            to_stop_val = self.get_default_stop_for_city(to_city_val)
-
-            if to_stop_val == to_city_val:
-                to_stop_val = 'none'"""
 
         if from_stop_val == 'none' and from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_stop)'))
