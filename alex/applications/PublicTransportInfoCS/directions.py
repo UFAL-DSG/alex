@@ -305,6 +305,7 @@ class CRWSRouteStep(RouteStep):
                             'metro': 'subway',
                             'local train': 'local_train',
                             'fast train': 'fast_train',
+                            'higher quality fast train': 'fast_train',
                             'Express': 'express_train',
                             'Intercity': 'intercity_train',
                             'Eurocity': 'eurocity_train',

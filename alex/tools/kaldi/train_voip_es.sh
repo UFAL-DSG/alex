@@ -4,9 +4,9 @@ set -e
 renice 20 $$
 
 # Load training parameters
-. ./env_voip_cs.sh
+. ./env_voip_es.sh
 # Source optional config if exists
-[ -f env_voip_cs_CUSTOM.sh ] && . ./env_voip_cs_CUSTOM.sh
+[ -f env_voip_es_CUSTOM.sh ] && . ./env_voip_es_CUSTOM.sh
 
 local/check_path.sh
 
@@ -29,7 +29,7 @@ local/check.sh local/create_LMs.sh \
     --arpa-paths "$LM_paths" --lm-names "$LM_names" \
     $WORK/local/lm || exit 1
 
-local/check.sh local/prepare_cs_transcription.sh $WORK/local/lm $WORK/local/dict || exit 1
+local/check.sh local/prepare_dummy_transcription.sh $WORK/local/lm $WORK/local/dict || exit 1
 
 local/check.sh local/create_phone_lists.sh $WORK/local/dict || exit 1
 
@@ -102,13 +102,13 @@ local/check.sh ./local/ctm2mlf.py $EXP/tri2b_ali/ctm $EXP/tri2b_ali/mlf || exit 
 #local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
 #  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
-#./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
-#    --tgtdir $EXP/nnet2_online \
-#    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
+    --tgtdir $EXP/nnet2_online \
+    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
-#./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
-#    --srcdir $EXP/nnet2_online \
-#    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
+./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
+    --srcdir $EXP/nnet2_online \
+    $WORK $EXP "$LM_names" "$TEST_SETS" || exit 1 
 
 local/check.sh steps/make_denlats.sh  --nj $njobs --cmd "$train_cmd" \
    --beam $mmi_beam --lattice-beam $mmi_lat_beam \

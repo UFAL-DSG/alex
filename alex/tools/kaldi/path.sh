@@ -10,31 +10,8 @@ fi
 # adding Kaldi binaries to path
 export PATH=$KALDI_ROOT/src/bin:$KALDI_ROOT/tools/openfst/bin:$KALDI_ROOT/tools/irstlm/bin/:$KALDI_ROOT/src/fstbin/:$KALDI_ROOT/src/gmmbin/:$KALDI_ROOT/src/featbin/:$KALDI_ROOT/src/lm/:$KALDI_ROOT/src/sgmmbin/:$KALDI_ROOT/src/sgmm2bin/:$KALDI_ROOT/src/fgmmbin/:$KALDI_ROOT/src/kwsbin/:$KALDI_ROOT/src/latbin/:$KALDI_ROOT/src/nnet2bin/:$KALDI_ROOT/src/nnetbin/:$KALDI_ROOT/src/lmbin/:$KALDI_ROOT/src/ivectorbin:$KALDI_ROOT/src/online2bin:$KALDI_ROOT/src/onlinebin:$PWD:$PATH
 
-# creating symlinks to scripts which wraps kaldi binaries
-symlinks="$KALDI_ROOT/egs/wsj/s5/steps $KALDI_ROOT/egs/wsj/s5/utils"
-for syml in $symlinks ; do
-  name=`basename $syml`
-  if [ ! -e "$name" ] ; then
-    ln -f -s "$syml"
-    if [ -e $name ] ; then
-        echo "Created symlink $syml -> $name"
-    else
-        echo "Failed to create symlink $syml -> $name"
-        exit 1
-    fi
-  elif [ "$syml"  != `readlink -f $name` ] ; then
-    echo -e "Relinking symlink '$name' according to new KALDI_ROOT \n$KALDI_ROOT"
-    ln -f -s "$syml"
-  fi
-  export PATH="$PWD/$name":$PATH
-done
+export PATH=$PWD/utils:$PWD/steps:$PATH
+export LD_LIBRARY_PATH=$KALDI_ROOT/tools/openfst/lib:$KALDI_ROOT/tools/openfst/lib/fst:$LD_LIBRARY_PATH
 
-srilm_bin=$KALDI_ROOT/tools/srilm/bin/
-if [ ! -e "$srilm_bin" ] ; then
-  echo "SRILM is not installed in $KALDI_ROOT/tools."
-  echo "May not be able to create LMs!"
-fi
-srilm_sub_bin=`find "$srilm_bin" -type d`
-for d in $srilm_sub_bin ; do
-    export PATH=$d:$PATH
-done
+# Fix for loading cuda on all computers also without the GPU e.g. on CLUSTER
+export LD_LIBRARY_PATH=/opt/lib/CUDA/cuda-6.5/lib64:/opt/lib/CUDA/cuda-6.5/lib:$LD_LIBRARY_PATH

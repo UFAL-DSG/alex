@@ -645,7 +645,7 @@ def run(cfg1, cfg2):
         close_event.set()
         raise
 
-    print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
+    print 'SW_HUB: Exiting: %s. Setting close event' % multiprocessing.current_process().name
     close_event.set()
 
 #########################################################################

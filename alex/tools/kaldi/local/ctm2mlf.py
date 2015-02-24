@@ -16,7 +16,7 @@
 # limitations under the License. #
 from __future__ import absolute_import, division, unicode_literals, print_function
 import argparse
-
+import codecs
 
 def write_mlf_recording(wf, name, alignment, second_split=10000000):
     wf.write('"%s"\n' % name)
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     parser.add_argument('mlfali', type=str, action='store',
                         help='Onput alignments in HTK mlf format.')
     args = parser.parse_args()
-    with open(args.ctmali, 'r') as ctmr:
-        with open(args.mlfali, 'w') as mlfw:
+    with codecs.open(args.ctmali, 'r', 'utf8') as ctmr:
+        with codecs.open(args.mlfali, 'w', 'utf8') as mlfw:
             ctm2mlf(ctmr, mlfw)

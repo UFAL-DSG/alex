@@ -26,7 +26,7 @@ import random
 import alex.corpustools.lm as lm
 import alex.utils.various as various
 
-from alex.corpustools.text_norm_cs import normalise_text, exclude_lm
+from alex.corpustools.text_norm_en import normalise_text, exclude_lm
 from alex.corpustools.wavaskey import save_wavaskey
 
 def is_srilm_available():
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     bootstrap_text                  = "bootstrap.txt"
     classes                         = "../data/database_SRILM_classes.txt"
     indomain_data_dir               = "indomain_data"
-    gen_data                        = lm.download_general_LM_data('cs')
+    gen_data                        = lm.download_general_LM_data('en')
 
     fn_pt_trn                       = "reference_transcription_trn.txt"
     fn_pt_dev                       = "reference_transcription_dev.txt"
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 #            print "Processing:", fn
             doc = xml.dom.minidom.parse(fn)
             turns = doc.getElementsByTagName("turn")
-            
+
             for turn in turns:
                 recs_list = turn.getElementsByTagName("rec")
                 trans_list = turn.getElementsByTagName("asr_transcription")
@@ -182,6 +182,37 @@ if __name__ == '__main__':
                     wav_path = os.path.realpath(os.path.join(os.path.dirname(fn), wav_file))
 
                     pt.append((wav_path, t))
+
+# this is only for testing
+        files = []
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*.trn')))
+        files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*.trn')))
+        files = various.flatten(files)
+
+        for fn in files:
+#            print "Processing:", fn
+
+            with codecs.open(fn, 'UTF8') as f:
+                t = ' '.join([l.strip() for l in f])
+                t = t.replace('_NOISE_', '(NOISE)')
+                t = t.replace('_EHM_HMM_', '(EHM_HMM)')
+                t = t.replace('_INHALE_', '(INHALE)')
+                t = t.replace('_LAUGH_', '(LAUGH)')
+                t = normalise_text(t)
+
+                if exclude_lm(t):
+                    continue
+
+                # The silence does not have a label in the language model.
+                t = t.replace('_SIL_', '')
+
+                tt.append(t)
+
+                wav_file = fn.replace('.trn', '')
+                wav_path = os.path.realpath(wav_file.replace('.trn', ''))
+
+                pt.append((wav_path, t))
+# this is only for testing
 
         random.seed(10)
         sf = [(a, b) for a, b in zip(tt, pt)]
@@ -394,9 +425,32 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "perl ../../../tools/htk/bin/PhoneticTranscriptionCS.pl %s %s" % \
-              (final_lm_vocab,
-               final_lm_dict)
+        # prepare CMU-based dictionary in 'dict_full'
+        cmd = "TRAIN_SCRIPTS=%s/bin TRAIN_COMMON=%s/common TEMP_DIR=. WORK_DIR=. %s/bin/prep_cmu_dict.sh" % \
+                tuple(['../../../tools/htk']*3)
+        print cmd
+        exit_on_system_fail(cmd)
+
+        # build final dictionary for words in vocab
+        cmd = "perl ../../../tools/htk/bin/WordsToDictionary.pl %s %s %s" % \
+                (final_lm_vocab,
+                'dict_full',
+                final_lm_dict)
+        print cmd
+        exit_on_system_fail(cmd)
+
+        # build final dictionary for words in vocab
+        cmd = "cat %s | grep -v 'UNKNOWN' > %s " % \
+                (final_lm_dict,
+                 final_lm_dict+'.tmp',
+                )
+        print cmd
+        exit_on_system_fail(cmd)
+
+        cmd = "mv %s %s " % \
+                (final_lm_dict+'.tmp',
+                 final_lm_dict,
+                )
         print cmd
         exit_on_system_fail(cmd)
 
