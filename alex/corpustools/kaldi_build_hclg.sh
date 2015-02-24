@@ -46,7 +46,7 @@ if [[  $# -ne 12 ]]; then
   exit 1;
 fi
 
-#. utils/parse_options.sh
+. utils/parse_options.sh
 
 model=$1; shift
 tree=$1; shift
