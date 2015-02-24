@@ -473,6 +473,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         self.mapping, self.reverse_mapping = self._load_stops_mapping()
 
     def search_stop(self, stop_mask, city=None, max_count=0, skip_count=0):
+        """Search the given stop database in IDOS for the given city."""
         return self.client.service.SearchGlobalListItemInfo(
             self.user_id,
             self.user_desc,
@@ -487,6 +488,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         )
 
     def search_train_station(self, stop_mask, max_count=0, skip_count=0):
+        """Seach train station database in IDOS."""
         return self.client.service.SearchGlobalListItemInfo(
             self.user_id,
             self.user_desc,
@@ -514,10 +516,9 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                                 (platform_info.from_stop,
                                  platform_info.to_stop))
 
-        if platform_info.from_city != 'none' and platform_info.from_stop != \
-                'none':
+        if platform_info.from_city != 'none' and platform_info.from_stop != 'none':
                 from_obj = self.search_train_station("%s, %s" % (
-                                             platform_info.from_city,
+                                             platform_info.from_city,c
                                              platform_info.from_stop))
         elif platform_info.from_city != 'none':
             from_obj = self.search_train_station("%s" % (

@@ -176,7 +176,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         # reset all slots depending on changed slots
         self.reset_on_change(dialogue_state, changed_slots)
 
-        c = {
+        # These facts are used in the dialog-controlling conditions that follow.
+        # They are named so that the dialog-controlling code is more readable.
+        fact = {
             'max_turns_exceeded': dialogue_state.turn_number > self.cfg[
                 'PublicTransportInfoCS']['max_turns'],
             'dialog_begins': len(self.system_das) == 0,
@@ -200,15 +202,15 @@ class PTICSHDCPolicy(DialoguePolicy):
 
 
         # topic-independent behavior
-        if c['max_turns_exceeded']:
+        if fact['max_turns_exceeded']:
             # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
 
-        elif c['dialog_begins']:
+        elif fact['dialog_begins']:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
 
-        elif c['user_did_not_say_anything']:
+        elif fact['user_did_not_say_anything']:
             # at this moment the silence and the explicit null act
             # are treated the same way: NLG("")
             silence_time = dialogue_state['silence_time']
@@ -219,60 +221,60 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct("silence()")
             dialogue_state["ludait"].reset()
 
-        elif c['user_said_bye']:
+        elif fact['user_said_bye']:
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
             dialogue_state["ludait"].reset()
             dialogue_state["lta_bye"].reset()
 
-        elif c['we_did_not_understand']:
+        elif fact['we_did_not_understand']:
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
             dialogue_state["ludait"].reset()
 
-        elif c['user_wants_help']:
+        elif fact['user_wants_help']:
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
             dialogue_state["ludait"].reset()
 
-        elif c['user_thanked']:
+        elif fact['user_thanked']:
             # NLG("Díky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
             dialogue_state["ludait"].reset()
 
-        elif c['user_wants_restart']:
+        elif fact['user_wants_restart']:
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
             dialogue_state["ludait"].reset()
 
-        elif c['user_wants_us_to_repeat']:
+        elif fact['user_wants_us_to_repeat']:
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
             dialogue_state["ludait"].reset()
 
-        elif c['there_is_something_to_be_selected']:
+        elif fact['there_is_something_to_be_selected']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # select between two values for a slot that is not certain
             res_da.extend(self.select_info(slots_tobe_selected))
             res_da = self.filter_iconfirms(res_da)
 
-        elif c['there_is_something_to_be_confirmed']:
+        elif fact['there_is_something_to_be_confirmed']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # confirm all slots that are not certain
             res_da.extend(self.confirm_info(slots_tobe_confirmed))
             res_da = self.filter_iconfirms(res_da)
 
-        elif c['user_wants_to_know_the_time']:
+        elif fact['user_wants_to_know_the_time']:
             # Respond to questions about current weather
             # TODO: allow combining with other questions?
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif c['user_wants_to_know_the_weather']:
+        elif fact['user_wants_to_know_the_weather']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
 
@@ -281,7 +283,7 @@ class PTICSHDCPolicy(DialoguePolicy):
                                            accepted_slots, changed_slots, has_state_changed)
             res_da.extend(w_da)
             res_da = self.filter_iconfirms(res_da)
-        elif c['user_wants_to_find_the_platform']:
+        elif fact['user_wants_to_find_the_platform']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
 

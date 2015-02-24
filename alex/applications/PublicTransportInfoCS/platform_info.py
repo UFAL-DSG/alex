@@ -29,7 +29,7 @@ class PlatformFinderResult(object):
 
 
 class CRWSPlatformInfo(object):
-    station_name_splitter = re.compile(r'[^a-zěščřžýáíéďťňóůú]*', re.UNICODE)
+    station_name_splitter = re.compile(r'\W*', re.UNICODE)
 
     def __init__(self, crws_response, finder):
         self.crws_response = crws_response
