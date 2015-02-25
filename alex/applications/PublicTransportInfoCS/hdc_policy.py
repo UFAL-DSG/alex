@@ -177,7 +177,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.reset_on_change(dialogue_state, changed_slots)
 
         # These facts are used in the dialog-controlling conditions that follow.
-        # They are named so that the dialog-controlling code is more readable.
+        # They are named so that the dialog-controlling code is more readable.o
         fact = {
             'max_turns_exceeded': dialogue_state.turn_number > self.cfg[
                 'PublicTransportInfoCS']['max_turns'],
