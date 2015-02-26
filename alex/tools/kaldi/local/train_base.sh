@@ -78,27 +78,26 @@ local/check.sh steps/train_mmi.sh --cmd "$train_cmd" \
 local/check.sh steps/align_si.sh  --nj $njobs --cmd "$train_cmd" \
   --use-graphs true $WORK/train $WORK/lang $EXP/tri2b $EXP/tri2b_mmi_b${train_mmi_boost}_ali || exit 1
 
-echo
-echo "Train tri3b, which is LDA+MLLT+SAT"
-local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
-  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
+#echo
+#echo "Train tri3b, which is LDA+MLLT+SAT"
+#local/check.sh steps/train_sat.sh --cmd "$train_cmd" \
+#  $pdf $gauss $WORK/train $WORK/lang $EXP/tri2b_ali $EXP/tri3b || exit 1;
 
-local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
-  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
+#local/check.sh steps/align_fmllr.sh --nj $njobs --cmd "$train_cmd" \
+#  $WORK/train $WORK/lang $EXP/tri3b $EXP/tri3b_ali || exit 1;
 
-#    --srcdir $EXP/tri2b_mmi_b${train_mmi_boost} \
 echo
 echo "Train nnet"
 ./local/run_nnet_online.sh --gauss $gauss --pdf $pdf \
-    --srcdir $EXP/tri3b \
-    --tgtdir $EXP/nnet2 \
+    --srcdir $EXP/tri2b \
+    --tgtdir $EXP/tri4_nnet2 \
     $WORK $EXP || exit 1
 
 echo
 echo "Train nnet discriminatively [SMBR]"
 ./local/run_nnet_online-discriminative.sh --gauss $gauss --pdf $pdf \
-    --srcdir $EXP/nnet2 \
-    --tgtdir $EXP/nnet2_smbr \
+    --srcdir $EXP/tri4_nnet2 \
+    --tgtdir $EXP/tri4_nnet2_smbr \
     $WORK $EXP || exit 1
 
 # Cleaning does not help a lot
@@ -118,9 +117,9 @@ for lm in $LM_names ; do
   # local/check.sh utils/mkgraph.sh --mono $WORK/lang_${lm} $EXP/mono $EXP/mono/graph_${lm} || exit 1
   # local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri1 $EXP/tri1/graph_${lm} || exit 1
   local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri2b $EXP/tri2b/graph_${lm} || exit 1
-  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
-  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/nnet2 $EXP/nnet2/graph_${lm} || exit 1
-  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/nnet2_smbr $EXP/nnet2_smbr/graph_${lm} || exit 1
+#  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri3b $EXP/tri3b/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri4_nnet2 $EXP/tri4_nnet2/graph_${lm} || exit 1
+  local/check.sh utils/mkgraph.sh $WORK/lang_${lm} $EXP/tri4_nnet2_smbr $EXP/tri4_nnet2_smbr/graph_${lm} || exit 1
 done
 
 
@@ -155,10 +154,10 @@ for s in $TEST_SETS ; do
        --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri2b/graph_${lm} $WORK/$tgt_dir $EXP/tri2b_mmi_b${train_mmi_boost}/decode_${tgt_dir}
 
-    echo "Decode tri3b [LDA+MLLT+SAT]"
-    local/check.sh steps/decode_fmllr.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $EXP/tri3b/decode_${tgt_dir}
+#    echo "Decode tri3b [LDA+MLLT+SAT]"
+#    local/check.sh steps/decode_fmllr.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
+#       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
+#      $EXP/tri3b/graph_${lm} $WORK/$tgt_dir $EXP/tri3b/decode_${tgt_dir}
 
     # echo "On Cleaned data:Decode MMI on top of LDA+MLLT with boosting. train_mmi_boost is a number e.g. 0.05: RESULTS on vystadial 0.95% of all data and WER improvement of 0.02 for tri2 + bMMI_b005 model"
     # local/check.sh steps/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
@@ -168,12 +167,12 @@ for s in $TEST_SETS ; do
     echo "Decode nnet2 online"
     local/check.sh steps/online/nnet2/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf  --nj $njobs --cmd "$decode_cmd" \
-      $EXP/nnet2/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_online/decode_${tgt_dir}
+      $EXP/tri4_nnet2/graph_${lm} $WORK/$tgt_dir $EXP/tri4_nnet2_online/decode_${tgt_dir}
 
     echo "Decode nnet2 discriminative [SMBR] online"
     local/check.sh steps/online/nnet2/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
       --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
-      $EXP/nnet2_smbr/graph_${lm} $WORK/$tgt_dir $EXP/nnet2_smbr_online/decode_${tgt_dir}
+      $EXP/tri4_nnet2_smbr/graph_${lm} $WORK/$tgt_dir $EXP/tri4_nnet2_smbr_online/decode_${tgt_dir}
 
   done
 done
