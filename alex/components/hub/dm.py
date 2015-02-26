@@ -290,11 +290,10 @@ class DM(multiprocessing.Process):
         self.close_event.set()
 
     def test_code_server_connection(self):
-        """ this opens a test connection to our code server, the response is not important (the response is "online")
+        """ this opens a test connection to our code server, content of the response is not important
             if our server is down this call will fail and the vm will crash. this is more sensible to CF people,
-            otherwise cf contributor would call in and tell us all the data, but wouldn't get paid, which is robbing people basically.
-
+            otherwise CF contributor would do the job without getting paid.
         """
-        if self.cfg['DM']['epilogue']['final_question'] == None and self.cfg['DM']['epilogue']['final_code_url'] is not None:
-            url = self.cfg['DM']['epilogue']['final_code_url'].format(code = 'test')
+        if self.cfg['DM']['epilogue']['final_question'] is None and self.cfg['DM']['epilogue']['final_code_url'] is not None:
+            url = self.cfg['DM']['epilogue']['final_code_url'].format(code='test')
             urllib.urlopen(url)
