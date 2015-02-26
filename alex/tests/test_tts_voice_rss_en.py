@@ -41,8 +41,8 @@ if __name__ == '__main__':
     print 'calling TTS'
     wav = tts.synthesize(text)
 
-    print 'saving the TTS audio in /tmp/tts.wav'
-    audio.save_wav(cfg, '/tmp/tts.wav', wav)
+    print 'saving the TTS audio in ./tmp/voice_rss_tts.wav'
+    audio.save_wav(cfg, './tmp/voice_rss_tts.wav', wav)
 
     print 'playing audio'
     audio.play(cfg, wav)
