@@ -21,10 +21,10 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from urlparse import urlparse
 import os
 import SocketServer
-import shutil
 
 
 code_path = "./codes"
+lod_path = "./log"
 
 class Handler(BaseHTTPRequestHandler):
 
@@ -53,18 +53,17 @@ class Handler(BaseHTTPRequestHandler):
             for line in data:
                 print >> fh_out, line
 
+    def log_GET(self, path, get):
+        with codecs.open(path, "a", 'UTF-8') as fh_out:
+            print >> fh_out, get
+
     #handle GET command
     def do_GET(self):
+        response = ""
         try:
-            codes = self.read_codes(code_path)
+            self.log_GET(lod_path, str(self.path))
 
-            if '/js.js' in self.path:
-                self.send_response(200)
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                with open("./js.js", 'rb') as f:
-                    shutil.copyfileobj(f, self.wfile)
-                return
+            codes = self.read_codes(code_path)
 
             query = urlparse(self.path).query
             query_components = dict(qc.split("=") for qc in query.split("&"))
@@ -72,7 +71,7 @@ class Handler(BaseHTTPRequestHandler):
 
             add = query_components["a"] if query_components.has_key("a") else "0"
             remove = query_components["r"] if query_components.has_key("r") else "0"
-            callback = query_components["callback"] if query_components.has_key("callback") else ""
+            # callback = query_components["callback"] if query_components.has_key("callback") else ""
 
             if query_code == "test":
                 response = "online"
@@ -93,11 +92,11 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
         # for jsonp calls
-        if len(callback):
-            self.wfile.write( callback + '(' + json.dumps({'response':response}) + ')' )
+        # if len(callback):
+        #     self.wfile.write( callback + '(' + json.dumps({'response':response}) + ')' )
             # self.request.sendall( callback + '(' + json.dumps({'response':response}) + ')')
-        else:
-            self.wfile.write(json.dumps({'response':response}))
+        # else:
+        self.wfile.write(json.dumps({'response':response}))
             # self.request.sendall(json.dumps({'response':response}))
 
 
