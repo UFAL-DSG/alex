@@ -102,8 +102,6 @@ def is_update_server_reachble():
     global __is_update_server_reachable
     global online_update_server
 
-    #return False
-
     if __is_update_server_reachable is None:
         try:
             print "Testing connection to the update server.."
@@ -122,7 +120,7 @@ def online_update(file_name):
 
     The original file name is transformed into absolute name using as_project_path function.
 
-    :param fn: the file name which should be downloaded from the server
+    :param file_name: the file name which should be downloaded from the server
     :return: a file name of the local copy of the file downloaded from the server
     """
 
@@ -208,7 +206,6 @@ def load_as_module(path, force=False, encoding='UTF-8', text_transforms=list()):
             temp_file = os.fdopen(temp_fd, 'wb')
             temp_file.write(text.encode(encoding))
             temp_file.close()
-            path = temp_path
             do_delete_temp = True
         else:
             raise ValueError(("Path `{path}' should be loaded as module but "
