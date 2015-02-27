@@ -347,8 +347,7 @@ class CRWSRouteStep(RouteStep):
             # replace train numbers with names (e.g. 'Hutník', 'Pendolino' etc.) or nothing
             if self.vehicle.endswith('train'):
                 self.line_name = (input_data.oTrainData.oInfo._sNum2
-                                  if hasattr(input_data.oTrainData.oInfo, '_sNum2')
-                                  and input_data.oTrainData.oInfo
+                                  if hasattr(input_data.oTrainData.oInfo, '_sNum2') and input_data.oTrainData.oInfo
                                   else '')
                 if self.line_name:  # strip train type shortcut if it's contained in the name
                     train_type_shortcut = input_data.oTrainData.oInfo._sType
@@ -518,7 +517,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
         if platform_info.from_city != 'none' and platform_info.from_stop != 'none':
                 from_obj = self.search_train_station("%s, %s" % (
-                                             platform_info.from_city,c
+                                             platform_info.from_city,
                                              platform_info.from_stop))
         elif platform_info.from_city != 'none':
             from_obj = self.search_train_station("%s" % (
