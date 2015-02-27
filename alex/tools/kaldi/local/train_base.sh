@@ -166,7 +166,7 @@ for s in $TEST_SETS ; do
 
     echo "Decode nnet2 online"
     local/check.sh steps/online/nnet2/decode.sh --scoring-opts "--min-lmw $min_lmw --max-lmw $max_lmw" \
-      --config common/decode.conf  --nj $njobs --cmd "$decode_cmd" \
+      --config common/decode.conf --nj $njobs --cmd "$decode_cmd" \
       $EXP/tri4_nnet2/graph_${lm} $WORK/$tgt_dir $EXP/tri4_nnet2_online/decode_${tgt_dir}
 
     echo "Decode nnet2 discriminative [SMBR] online"
