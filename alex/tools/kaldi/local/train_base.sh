@@ -182,6 +182,7 @@ for x in $EXP/*/decode*; do [ -d $x ] && grep WER $x/wer_* | utils/best_wer.sh; 
 # for d in `find $EXP/ -name '*decode*' -type d` ; do local/call_runtime.sh $d ; done
 
 local/results.py $EXP | tee $EXP/results.log
+cp $EXP/results.log $WORK/../results/`date -u +"%Y-%m-%d--%H-%M-%S"`-results-`basename $WORK`.log
 
 echo "Successfully trained and evaluated all the experiments"
 local/export_models.sh $TGT_MODELS $EXP $WORK/lang
