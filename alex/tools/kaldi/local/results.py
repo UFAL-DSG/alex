@@ -47,7 +47,7 @@ def extractResults(path):
             dataset = decode_dir.split('_')[-2]
             lm_w = int(wer_f[4:])  # strip wer_ from wer_19
             wer, ser = extract_stat(wf)
-            table.append((exp, dataset, lm,  lm_w, wer, ser))
+            table.append((exp, dataset, lm, lm_w, wer, ser))
         except Exception as e:
             print >> sys.stderr, 'failed to parse %s' % wf
             print >> sys.stderr, str(e)
