@@ -705,8 +705,11 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, dai.build("hello"))
 
         if (dai.any_word_in("nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
-                            "naschledanou čau čauky čaues shledanó") or dai.phrase_in("dobrou noc") or
+                            "naschledanou shledanó") or dai.phrase_in("dobrou noc") or
                 (not any_word_in(u, "nechci") and dai.phrase_in("ukončit hovor"))):
+            cn.add(1.0, dai.build("bye"))
+
+        if len(u) == 1 and dai.any_word_in("čau čauky čaues"):
             cn.add(1.0, dai.build("bye"))
 
         if not any_word_in(u, 'spojení zastávka stanice možnost varianta'):
