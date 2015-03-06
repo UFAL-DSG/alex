@@ -198,6 +198,17 @@ class ConfusionNetwork(Hypothesis):
         """Append a fact to the confusion network."""
         self.cn.append([probability, fact])
 
+    def remove(self, fact_to_remove):
+        fact_ndx = -1
+        for i, (prob, fact) in enumerate(self.cn):
+            if fact == fact_to_remove:
+                fact_ndx = i
+                break
+        else:
+            raise Exception('Fact has not been found.')
+
+        self.cn.remove(self.cn[fact_ndx])
+
     @classmethod
     def from_fact(cls, fact):
         """\

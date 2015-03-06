@@ -254,7 +254,11 @@ class SystemLogger(object):
         if self.stdout:
             # Log to stdout.
             if (SystemLogger.levels[lvl] >= SystemLogger.levels[self.stdout_log_level]):
-                print msg
+                try:
+                    print msg
+                except UnicodeEncodeError:
+                    print msg.encode('ascii', errors='replace')
+
                 sys.stdout.flush()
 
         if self.output_dir:
