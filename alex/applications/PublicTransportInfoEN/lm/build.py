@@ -124,7 +124,7 @@ if __name__ == '__main__':
     print
     print "Data for the general language model:", gen_data
     print "-"*120
-###############################################################################################
+    ###############################################################################################
 
     if not os.path.exists(gen_data_norm):
         print "Normalizing general data"
@@ -168,6 +168,7 @@ if __name__ == '__main__':
                     trans = trans_list[-1]
 
                     t = various.get_text_from_xml_node(trans)
+                    t = [str(various.get_text_from_xml_node(t)) for t in trans.childNodes if str(various.get_text_from_xml_node(t))][0]
                     t = normalise_text(t)
 
                     if exclude_lm(t):
@@ -183,7 +184,7 @@ if __name__ == '__main__':
 
                     pt.append((wav_path, t))
 
-# this is only for testing
+        # this is only for testing
         files = []
         files.append(glob.glob(os.path.join(indomain_data_dir, '*.trn')))
         files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*.trn')))
@@ -212,7 +213,7 @@ if __name__ == '__main__':
                 wav_path = os.path.realpath(wav_file.replace('.trn', ''))
 
                 pt.append((wav_path, t))
-# this is only for testing
+        # this is only for testing
 
         random.seed(10)
         sf = [(a, b) for a, b in zip(tt, pt)]
@@ -470,7 +471,7 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-###############################################################################################
+    ###############################################################################################
     print
     print "Test language models"
 

@@ -78,7 +78,7 @@ please find the tram from Hoboken to Newark
 please when is the next tram to Newark i am at Hoboken
 i am standing at Hoboken and i need to get to Newark
 i am standing in Hoboken and i need to get at Newark
-i need to find out how to get to Newark i am at Hoboken in the moment
+i need to find out how to get to Newark i am at Hoboken right now
 in ten minutes i want to take the tram from Hoboken to Newark
 in ten minutes i want to go from Hoboken to Newark
 What time is the next bus from Hoboken to Newark
@@ -144,16 +144,16 @@ can you tell me the next connection
 i would like to go now
 repeat option
 good bye
-tell me the options once more
+tell me another option
 do you have anything else
 thanks bye
-lets try it again
+lets say it again
 thanks that is enough that is fine
 from what station
 today i want to be at lincoln center at half past two
 help
 i need you to help me
-i would like to go from cypress avenue to the lincoln center today at fourteen o'clock.
+i would like to go from cypress avenue to the lincoln center today at fourteen o'clock
 washington square
 bye thanks
 and later
@@ -207,7 +207,7 @@ i want the last connection
 i want to go from New York to Baltimore
 from Baltimore
 Baltimore
-from Florenc New York to Baltimore Main Station
+from Wall Street New York to Baltimore Main Station
 to Main Station New York
 we're starting over
 we are starting over
@@ -220,3 +220,59 @@ what is the weather like in Baltimore
 what's the weather like at Baltimore
 I want to know the weather in new york
 what is the time in ohio
+when will i be leaving
+provide me with the time of the departure
+give me the departure time
+give me the time of departure
+tell me the time of departure
+tell me when it leaves
+when is the next connection
+when is the next train leaving
+provide me with the time of the arrival
+give me the arrival time
+give me the time of arrival
+tell me the time of arrival
+tell me when it arrives
+can you tell me the time in chicago
+okay do you happen to have the weather forecast for that day
+how long will that take
+yes what time does that leave again
+what time is it now in New York
+how long will it take me to go
+i'm traveling from central park
+what time did you say that leave
+how many transfers is there
+how long for travel
+travel time
+length of trip
+how long is the trip
+and what time would the next connection be
+when is the next connection
+how many minutes left do i have
+what's the destination
+find a bus connection from Broadway Queens to seventh avenue and forty second street
+how about the duration of the trip
+how long does the next train take
+how long does the next connection take
+how long till the second train departs
+how long till the fourth connection arrives
+when will the third connection leave
+how long will take the third option
+about how long is the duration of this trip
+I would like to know the duration of the trip
+yes i do
+i want to go directly
+find a direct connection to baltimore
+find a connection with a maximum of one transfer to baltimore
+what is the weather going to be like in that time
+can you give me the time of the trip
+yes
+what's the duration time
+tell me how far is the destination
+how far is it
+what is the distance of the trip
+give me the distance
+distance
+how far is it
+when does the third one go
+how far is the third trip
