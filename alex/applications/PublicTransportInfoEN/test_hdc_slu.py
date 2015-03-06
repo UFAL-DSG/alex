@@ -136,7 +136,8 @@ class TestPTIENHDCSLU(TestCase):
         utterance = Utterance("what time does that leave again")
         cn = self.slu.parse_1_best({'utt': utterance})
         self.assertEquals('request(departure_time)', str(cn[0][1]))
-        self.assertEquals(1, len(cn))
+        self.assertEquals('inform(alternative="last")', str(cn[1][1]))
+        self.assertEquals(2, len(cn))
 
     def test_parse_from_borough_from_street(self):
         utterance = Utterance("from fifth avenue manhattan")

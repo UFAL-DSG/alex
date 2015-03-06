@@ -858,7 +858,7 @@ class PTIENHDCSLU(SLUInterface):
             cn.add(1.0, DialogueActItem("apology"))
 
         if not dai.any_word_in("dont want thank thanks"):
-            if dai.any_word_in("help hint"):
+            if dai.any_word_in("help hint") or dai.any_phrase_in(['what can you do', 'what do you do', 'who are you' 'your possibilities', 'your capabilities']):
                 cn.add(1.0, DialogueActItem("help"))
 
         if dai.any_word_in("hallo") or \
@@ -988,7 +988,7 @@ class PTIENHDCSLU(SLUInterface):
                     (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time')):
                 cn.add(1.0, DialogueActItem('request', 'duration'))
 
-            if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take')):
+            if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take travel duration')):
                 cn.add(1.0, DialogueActItem('request', 'distance'))
 
         if dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it']):

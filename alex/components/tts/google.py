@@ -42,7 +42,7 @@ class GoogleTTS(TTSInterface):
 
         baseurl = "http://translate.google.com/translate_tts"
         values = {'q': text.encode('utf8'), 'tl': language, 'rate': rate}
-        if self.cfg['ASR']['Google']['debug']:
+        if self.cfg['TTS']['Google']['debug']:
             print values
 
         data = urllib.urlencode(values)
@@ -59,8 +59,6 @@ class GoogleTTS(TTSInterface):
         Synthesize the text and returns it in a string with audio in default
         format and sample rate.
         """
-        wav = b""
-
         try:
             if text:
                 text = self.preprocessing.process(text)
@@ -79,5 +77,3 @@ class GoogleTTS(TTSInterface):
             m = unicode(e) + " Text: %s" % text
             self.cfg['Logging']['system_logger'].exception(m)
             return b""
-
-        return wav
