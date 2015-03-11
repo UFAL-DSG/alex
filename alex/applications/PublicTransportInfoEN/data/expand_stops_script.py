@@ -6,8 +6,8 @@ A script that creates an expansion from a list of stops
 
 For usage write expand_stops_script.py -h
 """
-
 from __future__ import unicode_literals
+import autopath
 import codecs
 from copy import copy
 from optparse import OptionParser
@@ -16,7 +16,6 @@ import sys
 
 from alex.applications.PublicTransportInfoEN.site_preprocessing import expand
 from os.path import isfile
-
 
 def file_check(filename, message="reading file"):
     if not filename:
@@ -274,5 +273,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import autopath
     main()

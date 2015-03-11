@@ -18,6 +18,7 @@ Resources used by public transport direction finders and weather service
 The sources of the data that are loaded by the application are:
 
 * ``cities.expanded.txt`` -- list of known cities and towns in the USA. (tab-separated: slot value name + possible forms separated by semicolons; lines starting with '#' are ignored)
+* ``states.expanded.txt`` -- list of us state names (same format).
 * ``stops.expanded.txt`` -- list of known stop names (same format) in NY.
 * ``stops.expanded.txt`` -- list of known stop names (same format) in NY.
 * ``streets.expanded.txt`` -- list of known street names (same format)
@@ -27,7 +28,7 @@ The sources of the data that are loaded by the application are:
 * ``stops.borough.locations.csv`` -- tab separated list of stops, their boroughs and geo location (longitude|latitude).
 * ``streets.types.locations.csv`` -- tab separated list of streets, their boroughs and type (Avenue, Street, Court etc.)
 
-All of these files are generated from ``cities-in.csv``, ``stops-in.csv``, ``streets-in.csv`` and ``boroughs-in.csv`` located at ``./preprocessing/resources`` using the ``expand_cities.py``, ``expand_stops.py``, ``expand_streets.py`` and ``expand_boroughs.py`` script respectively.
+All of these files are generated from ``states-in.csv``, ``cities-in.csv``, ``stops-in.csv``, ``streets-in.csv`` and ``boroughs-in.csv`` located at ``./preprocessing/resources`` using the ``expand_states_script.py``, ``expand_cities_script.py``, ``expand_stops_script.py``, ``expand_streets_script.py`` and ``expand_boroughs_script.py`` script respectively.
 Please note that all forms in ``*.expanded.txt`` files are lowercased and do not include any punctuation.
 
 Colloquial name variants that are added by hand are located in the ``./preprocessing/resources/*-add.txt`` files for each slot and are appended to
