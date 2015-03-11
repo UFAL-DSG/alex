@@ -18,22 +18,23 @@ __all__ = ['database']
 
 database = {
     "task": {
-        "find_connection": ["find connection", "find a connection", "find out connection", "find link", "find a link"
-                            "find out link", "looking for a connection", 'connection', 'link',
+        "find_connection": ["find connection", "find a connection", "give me directions", "find link", "find a link",
+                            "directions", "find out link", "looking for a connection", "search for a connection",
+                            'connection', 'link',
                            ],
-        "find_platform": ["find platform", "find out platform", ],
+        "find_platform": ["find a platform", "search for a platform", "give me a platform", "looking for a platform", ],
         'weather': ['weather', ],
     },
     "number": {
         str("1"): [str("one")]
     },
     "time": {
-        "now": [ "now", "at once", "immediately", "offhand", "at this time", "the closest", "this instant"],
+        "now": ["now", "at once", "immediately", "offhand", "at this time", "the closest", "this instant"],
     },
     "date_rel": {
         "today": ["today", "this day", "todays", "this days"],
         "tomorrow": ["tomorrow", "tomorrows", "morrow", "morrows"],
-        "day_after_tomorrow": ["day after tomorrow", "after tomorrow" ,"after tomorrows"],
+        "day_after_tomorrow": ["day after tomorrow", "after tomorrow", "after tomorrows"],
     },
     "street": {
     },
@@ -41,21 +42,22 @@ database = {
     },
     "vehicle": {
         "dontcare": ["whatever", "no matter how", "not matter", "don't matter", "doesn't matter",
-                     "any way possible", "any possible way", "any means", "don't care how", "do not care how"],
+                     "any way possible", "any possible way", "any means", "don't care how", "do not care how", ],
         "bus": ["bus", "buses", "coach"],
-        "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms"],
-        "subway": ["metro", "sub", "subway", "tube", "underground"],
-        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "railstation", "express", "fast train", "speed train", "rail", "rails"],
-        "cable_car": ["cable car", "cablecar", "air railway"],
+        "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms", ],
+        "subway": ["metro", "sub", "subway", "tube", "underground", ],
+        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "rail station", "railstation",
+                  "express", "fast train", "speed train", "rail", "rails", "light rail", ],
+        "cable_car": ["cable car", "cablecar", "funicular", ],
         "ferry": ["ferry", "boat", "ferryboat", "gondola", ],
-        "monorail": ["monorail", "single rail"]
+        "monorail": ["monorail", "single rail", ]
     },
     "ampm": {
-        "morning": ["morning", "dawn"],
-        "am": [ "forenoon", "a.m." ],
-        "pm": [ "afternoon", "p.m."],
+        "morning": ["morning", "dawn", ],
+        "am": [ "forenoon", "a.m.", ],
+        "pm": [ "afternoon", "p.m.", ],
         "evening": ["evening", "dusk", ],
-        "night": ["night", "nighttime", "midnight"],
+        "night": ["night", "nighttime", "midnight", ],
     },
     "city": {
     },

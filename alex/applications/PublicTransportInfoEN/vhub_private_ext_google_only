@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ..
-
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/private_ext.cfg  ./PublicTransportInfoEN/google.cfg

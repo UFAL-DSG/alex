@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-A script that takes us cities file and state-codes and it preprocesses them
+A script that takes us cities (city\tstate_code)file and state-codes and it joins them
 
 Usage:
 
-./us_cities_to_intermidiate.py [-o: output_file] cities.txt state-codes.txt
+./us_cities_to_csv.py [-o: output_file] cities.txt state-codes.txt
 """
 
 from __future__ import unicode_literals
@@ -156,19 +156,12 @@ def main():
     file_stops = files[0]
     file_state_codes = files[1]
 
-    # load list of stops
+    # load list of cities
     state_dictionary = load_state_code_dict(file_state_codes)
     lines, header = load_list(file_stops)
     data = extract_fields(lines, header, state_dictionary)
     print "writing to " + os.path.abspath(file_out)
     write_data(file_out, data)
-
-    # stderr = codecs.getwriter('UTF-8')(sys.stderr)
-    # # print any errors
-    # if unresolved:
-    #     print >> stderr, 'Could not resolve:'
-    #     for stop in unresolved:
-    #         print >> stderr, stop
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,4 @@
-Public Transport Info, Czech - telephone service
+Public Transport Info, English - telephone service
 ============================================================
 
 Running the system at UFAL with the full UFAL access
@@ -10,19 +10,14 @@ on what telephone extension you want to run the system.
 
 Within UFAL, we run the system using the following commands:
 
-- ``vhub_live`` - deployment of our live system on our toll-free phone number, with the default configuration
-- ``vhub_live_b1`` - a system deployed to backup the system above
-- ``vhub_live_b2`` - a system deployed to backup the system above
-- ``vhub_live_kaldi`` - a version of our live system explicitly using Kaldi ASR
+- ``vhub_mta1`` - deployment of our live system on a 1-855-528-7350 phone number, with the default configuration
+- ``vhub_mta2`` - a system deployed to backup the system above
+- ``vhub_mta3`` - a system deployed to backup the system above
+- ``vhub_mta_btn`` - a system deployed to backup the system above accessible via web page http://alex-ptien.com
 
 To test the system we use:
 
-- ``vhub_test`` - default test version of our system deployed on our test extension, logging locally into ``../call_logs``
-- ``vhub_test_google_only`` - test version of our system on our test extension, using Google ASR, TTS, Directions, logging locally into ``../call_logs``
-- ``vhub_test_google_kaldi`` - test version of our system on our test extension, using Google TTS, Directions, and Kaldi ASR, logging locally into ``../call_logs``
-- ``vhub_test_hdc_slu`` - default test version of our system deployed on our test extension, using HDC SLU, logging locally into ``../call_logs``
-- ``vhub_test_kaldi`` - default test version of our system deployed on our test extension, using KALDI ASR, logging locally into ``../call_logs``
-- ``vhub_test_kaldi_nfs`` - default test version of our system deployed on our test extension, using KALDI ASR and logging to NFS
+- ``vhub_devel`` - default devel version of our system deployed on our test extension, logging locally into ``../call_logs``
 
 
 Running the system without the full UFAL access
@@ -30,8 +25,8 @@ Running the system without the full UFAL access
 
 Users outside UFAL can run the system using the following commands:
 
-- ``vhub_private_ext_google_only`` - default version of our system deployed on private extension specified in ``private_ext.cfg``, using Google ASR, TTS, Directions, and KALDI ASR, logging locally into ``../call_logs``
-- ``vhub_private_ext_google_kaldi`` - default version of our system deployed on private extension specified in ``private_ext.cfg``, using Google TTS, Directions, and KALDI ASR, logging locally into ``../call_logs``
+- ``vhub_private_ext_google_only_hdc_slu`` - default version of our system deployed on private extension specified in ``private_ext.cfg``, using HDC_SLU, Google ASR, TTS, Directions, logging locally into ``../call_logs``
+- ``vhub_private_ext_google_kaldi_hdc_slu`` - default version of our system deployed on private extension specified in ``private_ext.cfg``, using HDC_SLU, Google TTS, Directions, and KALDI ASR, logging locally into ``../call_logs``
 
 If you want to test the system on your private extension, then modify the ``private_ext.cfg`` config. You must set your
 SIP domain including the port, user login, and password. Please make sure that you do not commit your login information

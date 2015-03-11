@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-A script that takes mta stops file and preprocesses it
-TODO: it sometimes generates +1 column, need to fix this bug
+A script that takes mta stops file and it selects important fields and saves them (works with GTFS mainly)
 Usage:
 
-./mta_to_intermidiate.py [-m: main_city] [-o: output_file] stops.txt
+./mta_to_csv.py [-m: main_city] [-o: output_file] stops.txt
 """
 
 from __future__ import unicode_literals

@@ -15,10 +15,7 @@ import string
 
 class PTIENSLUPreprocessing(SLUPreprocessing):
     """
-    Extends SLUPreprocessing for some transformations specific for Czech:
-        - devocalisation of prepositions
-        (- stemming).
-
+    Extends SLUPreprocessing for some transformations:
     """
     def __init__(self, *args, **kwargs):
         super(PTIENSLUPreprocessing, self).__init__(*args, **kwargs)
@@ -53,10 +50,9 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
 
 
 class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
-    """Template NLG preprocessing routines for Czech public transport information.
+    """Template NLG preprocessing routines for English public transport information.
 
     This serves for spelling out relative and absolute time expressions,
-    as well as translating certain slot values into Czech.
     """
 
     def __init__(self, ontology):
@@ -191,7 +187,7 @@ class PTIENNLGPreprocessing(TemplateNLGPreprocessing):
                 e.g. '1' or '-10'.
         :param interval: Boolean indicating whether to treat this as a start \
                 of an interval, i.e. omit the degrees word.
-        :return: Czech temperature expression as string
+        :return: temperature expression as string
         """
         ret = ''
         value = int(value)

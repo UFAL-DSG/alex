@@ -1,16 +1,15 @@
-Public Transport Info, Czech - telephone service
+Public Transport Info, English - telephone service
 ============================================================
 
 Description
 -----------
 
-This application provides information about public transport connections in Czech Republic 
-using the Czech language.  Just say (in Czech) your origin and destination stops and the 
-application will find and tell you about the available connections. You can also specify a departure or 
-arrival time if necessary. It offers bus, tram and metro city connections, and bus and train inter-city 
-connections.
+This application provides information about public transport connections in New York using English language.
+Just say origin and destination stops and the application will find and tell you about the available connections.
+You can also specify a departure or arrival time if necessary. It offers bus, tram and metro city connections,
+and bus and train inter-city connections.
 
-The application is available at the toll-free telephone number +420 800 899 998. 
+The application is available at the telephone number 1-855-528-7350.
 
 You can also:
 
@@ -28,12 +27,6 @@ You can also:
 In addition, the application provides also information about:
 
 - weather forecast
-- the current time
-
-Representation of semantics
----------------------------
-Suggestion (MK): It would be better to treat the specification of hours and
-minutes separately. When they are put together, all ways the whole time
-expression can be said have to be enumerated in the CLDB manually.
+- current time
 
 

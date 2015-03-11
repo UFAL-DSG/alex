@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-A script that takes mta stops file and preprocesses it
+A script that takes mta stops, it splits them by special characters and each item takes for a street
 
-Usage:
-
-./mta_to_intermidiate.py [-m: main_city] [-o: output_file] stops.txt
 """
 
 from __future__ import unicode_literals

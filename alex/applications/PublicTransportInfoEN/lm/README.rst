@@ -1,4 +1,4 @@
-Building the language model for the Public Transport Info telephone service (Czech)
+Building the language model for the Public Transport Info telephone service (English)
 ============================================================================
 
 ::

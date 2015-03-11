@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-A script that creates an expansion from a preprocessed list of cities
+A script that basically creates a csv file that contains a list of places from INPUT_FILE sith second
+column of a STRING_SAME_FOR_ALL and the benefit is that it can merge with already existing OUTPUT_FILE
+ unless -c flag is set.
 
-For usage write expand_cities_script.py -h
+Usage:
+/.compatibility_script_manual --name OUTPUT_FILE --main-place STRING_SAME_FOR_ALL --list INPUT_FILE [-c]
 """
 
 from __future__ import unicode_literals

@@ -21,7 +21,7 @@ class TestVoiceRssTTS(TestCase):
                     'language': 'en-us',
                     'preprocessing': as_project_path("resources/tts/prep_voicerss_en.cfg"),
                     'tempo': 1.0,
-                    'api_key' : 'ea29b823c83a426bbfe99f4cbce109f6'
+                    'api_key': 'ea29b823c83a426bbfe99f4cbce109f6'
                 }
             }
         }

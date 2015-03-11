@@ -1,8 +1,8 @@
 database_surface_forms*
 database_SRILM_*
 database_c2v2f*
-czech.tagger
-czech.dict
+english.tagger
+english.dict
 cities*.txt
 boroughs*.txt
 stops*.txt

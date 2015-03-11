@@ -91,7 +91,8 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         APIRequest.__init__(self, cfg, 'openweathermap', 'OpenWeatherMap query')
         self.weather_url = 'http://api.openweathermap.org/data/2.5/'
 
-        self.cfg = cfg # refine?! - neni potřeba tam dávat celý cfg, jen suffix a default_place
+        self.celsius = True if cfg['weather']['units'] == 'celsius' else False
+        self.suffix = cfg['weather']['suffix']
         self.load(cfg['weather']['dictionary'])
 
     def load(self, file_name):
@@ -114,7 +115,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
             data['lon'] = lon
         else:
             # if no state is specified get default state, city is optional
-            state = state if state is not None else self.cfg['weather']['suffix']
+            state = state if state is not None else self.suffix
             query = ','.join([city, state]) if city is not None else state
             # set the city
             data['q'] = query.encode('utf-8')
@@ -134,6 +135,6 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         self._log_response_json(response)
         if str(response['cod']) != "200":
             return None
-        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily, celsius=False)
+        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily, celsius=self.celsius)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather

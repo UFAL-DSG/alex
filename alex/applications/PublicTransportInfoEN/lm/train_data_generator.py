@@ -185,7 +185,6 @@ def generate(n, method):
 
     print 'Sampling took ' + str(datetime.now() - timestamp)
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Training data grammar generator')
     parser.add_argument('-n', default=n_samples, type=int, help='generated sentences count (default: %d)' % n_samples)

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-pushd ..
-
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/ptien_live.cfg ../resources/private/ext-800899998.cfg ./PublicTransportInfoEN/kaldi.cfg
-
-popd
-

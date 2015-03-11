@@ -1,5 +1,0 @@
-#!/bin/bash
-
-cd ..
-
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/ptien_live.cfg ../resources/private/ext-800899998b2.cfg

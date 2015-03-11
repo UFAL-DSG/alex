@@ -1,7 +1,0 @@
-#!/bin/bash
-
-pushd ..
-
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/kaldi.cfg ./PublicTransportInfoEN/nfs.cfg
-
-popd

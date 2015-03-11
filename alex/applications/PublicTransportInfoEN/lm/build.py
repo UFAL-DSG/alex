@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This script builds the domain specific language model for the Public Transport Info domain (Czech)
+This script builds the domain specific language model for the Public Transport Info domain (English)
 
 The training procedure is as follows:
 
