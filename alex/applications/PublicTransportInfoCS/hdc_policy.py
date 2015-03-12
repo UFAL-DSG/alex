@@ -12,7 +12,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder, Travel
+from .directions import GoogleDirectionsFinder, Travel, MethodNotSupported
 from .platform_info import  PlatformInfo
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
@@ -376,33 +376,36 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if state_changed:
                     # we know everything we need -> start searching
                     res_da = DialogueAct()
-                    platform_res = self.directions.get_platform(platform_info)
+                    try:
+                        platform_res = self.directions.get_platform(platform_info)
 
-                    if not platform_res:
-                        res_da.append(DialogueActItem('inform', 'platform',
-                                                      'not_found'))
-                        res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_info.to_stop))
-                    else:
-                        if platform_res.platform:
+                        if not platform_res:
                             res_da.append(DialogueActItem('inform', 'platform',
-                                                      platform_res.platform))
-                            res_da.append(DialogueActItem('inform', 'track',
-                                                      platform_res.track))
-                            if platform_info.train_name != 'none':
-                                res_da.append(DialogueActItem('inform',
-                                                              'train_name',
-                                                              platform_info.train_name))
-                            else:
-                                res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_res.direction))
-                        else:
-                            res_da.append(DialogueActItem('inform', 'platform',
-                                                      'none'))
-                            res_da.append(DialogueActItem('inform', 'track',
-                                                      'none'))
+                                                          'not_found'))
                             res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_res.direction))
+                                                          platform_info.to_stop))
+                        else:
+                            if platform_res.platform:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          platform_res.platform))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          platform_res.track))
+                                if platform_info.train_name != 'none':
+                                    res_da.append(DialogueActItem('inform',
+                                                                  'train_name',
+                                                                  platform_info.train_name))
+                                else:
+                                    res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                            else:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                    except MethodNotSupported:
+                        res_da.append(DialogueActItem('inform', 'get_platform_not_supported'))
                 else:
                     res_da = self.backoff_action(ds)
             else:
