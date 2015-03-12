@@ -166,7 +166,7 @@ class DirectionsFinderException(Exception):
     pass
 
 
-class MethodNotSupported(DirectionsFinderException):
+class NotSupported(DirectionsFinderException):
     pass
 
 
@@ -179,7 +179,7 @@ class DirectionsFinder(object):
 
     def get_platform(self, platform_info):
         """Retrieve the platform information for the given platform parameters."""
-        raise MethodNotSupported()
+        raise NotSupported()
 
 
 class GoogleDirections(Directions):

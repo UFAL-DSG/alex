@@ -12,7 +12,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder, Travel, MethodNotSupported
+from .directions import GoogleDirectionsFinder, Travel, NotSupported
 from .platform_info import  PlatformInfo
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
@@ -48,8 +48,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.system_das = []
         self.last_system_dialogue_act = None
 
-        self.debug = cfg['DM']['basic']['debug']
-        self.session_logger = cfg['Logging']['session_logger']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
@@ -404,8 +403,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                           'none'))
                                 res_da.append(DialogueActItem('inform', 'direction',
                                                           platform_res.direction))
-                    except MethodNotSupported:
-                        res_da.append(DialogueActItem('inform', 'get_platform_not_supported'))
+                    except NotSupported:
+                        res_da.append(DialogueActItem('inform', 'not_supported'))
                 else:
                     res_da = self.backoff_action(ds)
             else:
