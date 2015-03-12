@@ -62,7 +62,6 @@ class TestPTICSHDCPolicy(TestCase):
 
         state = DeterministicDiscriminativeDialogueState(self.cfg, self.ontology)
 
-
         system_input = DialogueActConfusionNetwork()
 
         res = hdc_policy.get_da(state)
