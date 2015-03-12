@@ -74,4 +74,4 @@ class TestPTICSHDCPolicy(TestCase):
         state.update(user_input, system_input)
         res = hdc_policy.get_da(state)
 
-        self.assert_('inform(get_platform_not_supported)' in res)
+        self.assert_('inform(not_supported)' in res)
