@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 from alex.components.slu.base import SLUPreprocessing
 from alex.components.asr.utterance import Utterance
-from alex.utils.czech_stemmer import cz_stem
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
 import re

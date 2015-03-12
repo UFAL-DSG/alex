@@ -24,6 +24,7 @@ from alex.utils.exceptions import ConfigException
 
 config = None
 
+# TODO: Move this to config.
 online_update_server = "https://vystadial.ms.mff.cuni.cz/download/alex/"
 
 

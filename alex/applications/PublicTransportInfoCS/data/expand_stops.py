@@ -28,7 +28,7 @@ import codecs
 from ufal.morphodita import Tagger, Forms, TaggedLemmas, TokenRanges, Morpho, TaggedLemmasForms
 
 from alex.utils.config import online_update
-from alex.utils.various import remove_dups_stable
+from alex.utils.various import list_remove_duplicates_keep_ordering
 from getopt import getopt
 
 
@@ -131,7 +131,7 @@ class ExpandStops(object):
                 if line.startswith('#'):  # skip comments
                     continue
                 stop, variants = self.parse_line(line)
-                self.stops[stop] = list(remove_dups_stable(variants + self.stops[stop]))
+                self.stops[stop] = list(list_remove_duplicates_keep_ordering(variants + self.stops[stop]))
 
     def expand_file(self, fname):
         """Load a list of stops from a file and expand it."""
@@ -156,9 +156,9 @@ class ExpandStops(object):
                             prev_tag = word[2]
                         # use all possible combinations if there are more variants for this case
                         inflected = map(self.__postprocess_func,
-                                        remove_dups_stable([' '.join(var)
+                                        list_remove_duplicates_keep_ordering([' '.join(var)
                                                             for var in itertools.product(*forms)]))
-                        self.stops[stop] = list(remove_dups_stable(self.stops[stop] + inflected))
+                        self.stops[stop] = list(list_remove_duplicates_keep_ordering(self.stops[stop] + inflected))
                 ctr += 1
                 if ctr % 1000 == 0:
                     print >> sys.stderr, '.',

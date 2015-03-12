@@ -6,6 +6,7 @@
 
 # Stolen and adapted from
 # http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python.
+# TODO: Rename this to get_terminal_size and move directly to alex.utils.
 def getTerminalSize():
     """ Retrieves the size of the current terminal window.
 

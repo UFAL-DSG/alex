@@ -39,6 +39,3 @@ if __name__ == '__main__':
 
     print 'saving the TTS audio in ./tmp/google_tts.wav'
     audio.save_wav(cfg, './tmp/google_tts.wav', wav)
-
-    print 'playing audio'
-    audio.play(cfg, wav)

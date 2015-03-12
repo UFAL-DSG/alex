@@ -16,6 +16,7 @@ from itertools import ifilterfalse
 from heapq import nsmallest
 from operator import itemgetter
 
+# TODO: Move this to config. This is evil.
 persistent_cache_directory = '~/.alex_persistent_cache'
 
 
@@ -229,6 +230,8 @@ def persistent_cache(method=False, file_prefix='', file_suffix=''):
 
     return decorator
 
+
+# TODO: Fix.
 persistent_cache_directory = os.path.expanduser(persistent_cache_directory)
 if not os.path.exists(persistent_cache_directory):
     os.makedirs(persistent_cache_directory)

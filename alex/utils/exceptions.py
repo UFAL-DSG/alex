@@ -1,3 +1,4 @@
+# TODO: Move the exceptions to the objects that raise them.
 from alex import AlexException
 
 
@@ -8,8 +9,6 @@ class ConfigException(AlexException):
 class SessionLoggerException(AlexException):
     pass
 
-class SessionLoggerException(AlexException):
-    pass
 
 class SessionClosedException(AlexException):
     pass

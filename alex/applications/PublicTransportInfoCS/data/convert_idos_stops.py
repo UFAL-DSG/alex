@@ -28,7 +28,7 @@ import codecs
 import sys
 import re
 from add_cities_to_stops import load_list, get_city_for_stop
-from alex.utils.various import remove_dups_stable
+from alex.utils.various import list_remove_duplicates_keep_ordering
 from alex.components.nlg.tools.cs import word_for_number
 if __name__ == '__main__':
     import autopath
@@ -463,7 +463,7 @@ def expand_abbrevs(stop_name):
         try:
             # replacement variants
             if type(repls) == list:
-                variants = list(remove_dups_stable([regex.sub(repl, var)
+                variants = list(list_remove_duplicates_keep_ordering([regex.sub(repl, var)
                                                     for repl in repls for var in variants]))
             # just a single replacement
             else:

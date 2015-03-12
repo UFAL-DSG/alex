@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
+# TODO: Move this to alex/components/asr.
 '''
 This module stores functionality which requires pysft module installed.
 See https://github.com/UFAL-DSG/pyfst

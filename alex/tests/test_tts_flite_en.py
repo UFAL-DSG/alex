@@ -40,6 +40,3 @@ if __name__ == '__main__':
 
     print 'saving the TTS audio in ./tmp/flite_tts.wav'
     audio.save_wav(cfg, './tmp/flite_tts.wav', wav)
-
-    print 'playing audio'
-    audio.play(cfg, wav)
