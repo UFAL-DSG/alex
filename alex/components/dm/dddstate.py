@@ -195,7 +195,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         self.slots = defaultdict(D3DiscreteValue)
         self.turns = []
         self.turn_number = 0
-        self.debug = cfg['DM']['basic']['debug']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.type = cfg['DM']['DeterministicDiscriminativeDialogueState']['type']
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
