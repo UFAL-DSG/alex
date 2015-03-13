@@ -5,22 +5,21 @@ from __future__ import unicode_literals
 
 import random
 import itertools
-from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
-
-from alex.components.dm import DialoguePolicy
-from alex.components.dm.dddstate import D3DiscreteValue
-from alex.components.nlg.tools.en import word_for_number
-from alex.components.slu.da import DialogueAct, DialogueActItem
-
 from datetime import timedelta
-from .time_zone import GoogleTimeFinder
-from .directions import GoogleDirectionsFinder, Travel
-from .weather import OpenWeatherMapWeatherFinder, WeatherPoint
 from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
 import re
 import os
+
+from alex.applications.PublicTransportInfoEN.site_preprocessing import expand_stop
+from alex.components.dm import DialoguePolicy
+from alex.components.dm.dddstate import D3DiscreteValue
+from alex.components.nlg.tools.en import word_for_number
+from alex.components.slu.da import DialogueAct, DialogueActItem
+from .time_zone import GoogleTimeFinder
+from .directions import GoogleDirectionsFinder, Travel
+from alex.applications.utils.weather import OpenWeatherMapWeatherFinder, WeatherPoint
 
 
 def randbool(n):
@@ -286,7 +285,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         elif fact['user_wants_to_know_the_time']:
             # Respond to questions about current time
             # TODO: allow combining with other questions?
-            res_da = self.get_current_time_res_da(dialogue_state, accepted_slots, state_changed)
+            res_da = self.get_current_time_res_da(dialogue_state, accepted_slots, has_state_changed)
 
         # topic-dependent
         elif fact['user_wants_to_know_the_weather']:
@@ -366,7 +365,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
+        :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
         # collect all necesary information

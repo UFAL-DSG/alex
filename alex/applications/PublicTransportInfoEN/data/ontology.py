@@ -317,13 +317,14 @@ ontology = {
         # it is used DM belief tracking context that
         #   if the systems asks (request) about "from_city" and user responds (inform) "city" then it means (inform)
         #       "from_city"
+        # the resolution is 'resolved': [list of slots asked that accept the resolved slot for an answer]
 
         'street': set(['from_street', 'from_street2', 'to_street', 'to_street2', 'from_stop', 'to_stop']),
         'stop': set(['from_stop', 'to_stop', 'via_stop', 'from_street', 'from_street2', 'to_street', 'to_street2', ]),
         # added from/to city -> where do yo want to go from / new york (won't work if KEY is not suffix to slots (CITY->from_CITY))
-        'city': set(['from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop', 'from_street', 'from_street2', 'to_street', 'to_street2', ]),
+        'city': set(['in_state', 'from_city', 'to_city', 'via_city', 'in_city', 'from_stop', 'to_stop', 'from_street', 'from_street2', 'to_street', 'to_street2', ]),
         'borough': set(['from_borough', 'to_borough', 'in_borough', 'from_city', 'to_city', 'from_stop', 'to_stop']),
-        'state': set(['in_state', ]),
+        'state': set(['in_state', 'in_city']),
     },
 
     'reset_on_change': {
