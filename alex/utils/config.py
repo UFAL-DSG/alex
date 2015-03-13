@@ -276,6 +276,18 @@ class Config(object):
     def get(self, i, default=None):
         return self.config.get(i, default)
 
+    def getpath(self, path, default=None):
+        path_components = path.split('/')
+        curr_config = self.config
+        for component in path_components:
+            if component in curr_config:
+                curr_config = curr_config[component]
+            else:
+                curr_config = default
+                break
+
+        return curr_config
+
     def __delitem__(self, i):
         del self.config[i]
 
