@@ -358,10 +358,19 @@ class PTIENHDCSLU(SLUInterface):
         :param cn: The output dialogue act item confusion network.
         """
 
-        for i, w in enumerate(abutterance):
-            if w.startswith("STATE="):
-                value = w[6:]
-                cn.add(1.0, DialogueActItem("inform", 'in_state', value))
+        # for i, w in enumerate(abutterance):
+        #     if w.startswith("STATE="):
+        #         value = w[6:]
+        #         cn.add(1.0, DialogueActItem("inform", 'in_state', value))
+
+        # regular parsing
+        phr_wp_types = [('from', set()), # I'm at, I'm in ?
+                        ('to', set()),
+                        ('via', set()),
+                        ('in', set()),  # ? ['pro', 'po']
+                       ]
+
+        self.parse_waypoint(abutterance, cn, 'STATE=', 'state', phr_wp_types, phr_in=['in', 'at'])
 
 
     def parse_borough(self, abutterance, cn):
@@ -1055,17 +1064,32 @@ class PTIENHDCSLU(SLUInterface):
 
         abutterance = abutterance.replace(('how', 'CITY=Many'), ('how', 'many'))
         abutterance = abutterance.replace(('CITY=Tell', 'me'), ('tell', 'me'))
-        abutterance = abutterance.replace(('CITY=Best', ), ('best',))
-        abutterance = abutterance.replace(('CITY=Call', ), ('call',))
-        abutterance = abutterance.replace(('CITY=Transfer',), ('transfer',))
-        abutterance = abutterance.replace(('CITY=Day',), ('day',))
-        abutterance = abutterance.replace(('CITY=Ohio',), ('STATE=Ohio',))
-        abutterance = abutterance.replace(('CITY=California',), ('STATE=California',))
-        abutterance = abutterance.replace(('CITY=Washington',), ('STATE=Washington',))
-        abutterance = abutterance.replace(('CITY=Maryland',), ('STATE=Maryland',))
-        abutterance = abutterance.replace(('CITY=Nevada',), ('STATE=Nevada',))
-        abutterance = abutterance.replace(('CITY=Florida',), ('STATE=Florida',))
-        abutterance = abutterance.replace(('CITY=Kansas',), ('STATE=Kansas',))
+        abutterance = abutterance.replace('CITY=Best', 'best')
+        abutterance = abutterance.replace('CITY=Call', 'call')
+        abutterance = abutterance.replace('CITY=Transfer', 'transfer')
+        abutterance = abutterance.replace('CITY=Day', 'day')
+        abutterance = abutterance.replace('CITY=Ohio', 'STATE=Ohio')
+        abutterance = abutterance.replace('CITY=California', 'STATE=California')
+        abutterance = abutterance.replace('CITY=Washington', 'STATE=Washington')
+        abutterance = abutterance.replace('CITY=Maryland', 'STATE=Maryland')
+        abutterance = abutterance.replace('CITY=Nevada', 'STATE=Nevada')
+        abutterance = abutterance.replace('CITY=Florida', 'STATE=Florida')
+        abutterance = abutterance.replace('CITY=Kansas', 'STATE=Kansas')
+        state_of = ['state', 'of']
+        city = ['city']
+        if state_of in abutterance:
+            i = abutterance.index(state_of)
+            if i + 2 < len(abutterance) and abutterance[i + 2].startswith('CITY'):
+                state_val = abutterance[i + 2][5:]
+                abutterance = abutterance.replace(abutterance[i + 2], 'STATE=' + state_val)
+        if city in abutterance:
+            i = abutterance.index(city)
+            if i >= 0 and abutterance[i - 1].startswith('STATE'):
+                city_val = abutterance[i - 1][6:]
+                abutterance = abutterance.replace(abutterance[i - 1], 'CITY=' + city_val)
+            # elif i + 1 < len(abutterance) and abutterance[i + 1].startswith('CITY'):
+            #     city_val = abutterance[i + 1][6:]
+            #     abutterance = abutterance.replace(abutterance[i + 1], 'CITY=' + city_val)
         return abutterance
 
     def parse_1_best(self, obs, verbose=False, *args, **kwargs):
