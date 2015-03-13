@@ -24,13 +24,13 @@ class WeatherPoint(object):
 
 class OpenWeatherMapWeather(Weather):
 
-    def __init__(self, input_json, substitutions, date=None, daily=False, celsius=True):
+    def __init__(self, input_json, condition_transl, date=None, daily=False, celsius=True):
         # get current weather
         self.celsius = celsius
 
         if date is None:
             self.temp = self._round_temp(input_json['main']['temp'])
-            self.condition = substitutions[input_json['weather'][0]['id']]
+            self.condition = condition_transl[input_json['weather'][0]['id']]
             return
         # get prediction
         if daily:  # set time to 13:00 for daily
@@ -40,7 +40,7 @@ class OpenWeatherMapWeather(Weather):
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
             if ts >= fc1['dt'] and ts <= fc2['dt']:
-                self.condition = substitutions[fc1['weather'][0]['id']]
+                self.condition = condition_transl[fc1['weather'][0]['id']]
                 # hourly forecast -- interpolate temperature
                 if not daily:
                     slope = (fc2['main']['temp'] - fc1['main']['temp']) / (fc2['dt'] - fc1['dt'])
@@ -53,7 +53,7 @@ class OpenWeatherMapWeather(Weather):
                 break
         if not hasattr(self, 'temp'):
             self.temp = self._round_temp(input_json['list'][0]['main']['temp'])
-            self.condition = substitutions[input_json['list'][0]['weather'][0]['id']]
+            self.condition = condition_transl[input_json['list'][0]['weather'][0]['id']]
 
     def _round_temp(self, temp):
         if self.celsius:
@@ -97,10 +97,10 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
 
     def load(self, file_name):
         tp_mod = load_as_module(file_name, force=True)
-        if not hasattr(tp_mod, 'substitutions'):
-            raise Exception("Weather config does not define the 'substitutions' object!")
+        if not hasattr(tp_mod, 'CONDITION_TRANSL'):
+            raise Exception("Weather config does not define the 'CONDITION_TRANSL' object!")
 
-        self.substitutions = tp_mod.substitutions
+        self.condition_transl = tp_mod.CONDITION_TRANSL
 
     @lru_cache(maxsize=10)
     def get_weather(self, time=None, daily=False, city=None, state=None, lat=None, lon=None):
@@ -135,6 +135,6 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         self._log_response_json(response)
         if str(response['cod']) != "200":
             return None
-        weather = OpenWeatherMapWeather(response, self.substitutions, time, daily, celsius=self.celsius)
+        weather = OpenWeatherMapWeather(response, self.condition_transl, time, daily, celsius=self.celsius)
         self.system_logger.info("OpenWeatherMap response:\n" + unicode(weather))
         return weather

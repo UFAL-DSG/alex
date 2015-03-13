@@ -8,13 +8,13 @@ import itertools
 
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
+from alex.applications.utils.weather import OpenWeatherMapWeatherFinder
 # from alex.components.slu.da import DialogueActConfusionNetwork
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
 from .directions import GoogleDirectionsFinder, Travel
-from .platform_info import  PlatformInfo
-from .weather import OpenWeatherMapWeatherFinder
+from .platform_info import PlatformInfo
 from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
@@ -314,7 +314,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
+        :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -415,7 +415,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
+        :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
         res_da = None
@@ -462,7 +462,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         else:
             lon, lat = None, None
         # request the weather
-        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, lon=lon, lat=lat)
+        weather = self.weather.get_weather(time=weather_ts, daily=daily, city=in_city, lon=lon, lat=lat)
         # check errors
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")' % in_city)
