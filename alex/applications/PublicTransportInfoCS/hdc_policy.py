@@ -1056,7 +1056,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         # origin and destination are the same
         if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
             apology_da = DialogueAct('apology()&inform(stops_conflict="thesame")')
-            apology_da.extend(DialogueAct(wp.get_minimal_info()))
+            apology_da.extend(DialogueAct('inform(from_stop="%s")&inform(to_stop="%s")' %
+                                          (wp.from_stop, wp.to_stop)))
             return apology_da
         # origin stop incompatible with origin city
         elif not self.ontology.is_compatible('city_stop', wp.from_city, wp.from_stop):
