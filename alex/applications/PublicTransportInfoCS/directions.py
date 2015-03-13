@@ -162,18 +162,24 @@ class RouteStep(object):
         return ret
 
 
+class DirectionsFinderException(Exception):
+    pass
+
+
+class NotSupported(DirectionsFinderException):
+    pass
+
+
 class DirectionsFinder(object):
     """Abstract ancestor for transit direction finders."""
 
-    def get_directions(self, from_city, from_stop, to_city, to_stop,
-                       departure_time=None, arrival_time=None, parameters=None):
-        """
-        Retrieve the transit directions from the given stop to the given stop
-        at the given time.
-
-        Should be implemented in derived classes.
-        """
+    def get_directions(self, travel, departure_time=None, arrival_time=None):
+        """Retrieve the directions for the given travel route at the given time."""
         raise NotImplementedError()
+
+    def get_platform(self, platform_info):
+        """Retrieve the platform information for the given platform parameters."""
+        raise NotSupported()
 
 
 class GoogleDirections(Directions):

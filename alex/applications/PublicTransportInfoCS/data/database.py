@@ -91,6 +91,7 @@ TRAIN_NAMES_FNAME = "train_names.expanded.txt"
 # load new stops & cities list from the server if needed
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), TRAIN_NAMES_FNAME)))
 
 
 def db_add(category_label, value, form):
