@@ -208,6 +208,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif fact['dialog_begins']:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
+            dialogue_state['lta_task'].set('find_connection', 1.0)
 
         elif fact['user_did_not_say_anything']:
             # at this moment the silence and the explicit null act
