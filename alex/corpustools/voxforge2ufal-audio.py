@@ -7,22 +7,8 @@
 This program processes a VoxForge corpus and copies all WAVs into
 a destination directory along with their transcriptions.
 
-In each subdirectory of the given directory, it looks for WAVs in
-the 'wav' directory and for transcriptions in 'etc/PROMPTS'.
-
-An example ignore list file could contain the following three lines:
-
-/some-path/call-logs/log_dir/some_id.wav
-some_id.wav
-jurcic-??[13579]*.wav
-
-The first one is an example of an ignored path. On UNIX, it has to start with
-a slash. On other platforms, an analogic convention has to be used.
-
-The second one is an example of a literal glob.
-
-The last one is an example of a more advanced glob. It says basically that
-all odd dialogue turns should be ignored.
+In each subdirectory of the given directory, it looks for audio files in
+the 'wav' or 'flac' directory and for transcriptions in 'etc/PROMPTS'.
 
 """
 
@@ -51,9 +37,6 @@ _LANG2NORMALISATION_MOD = {
     'es': 'alex.corpustools.text_norm_es',
 }
 
-
-from alex.corpustools.cued import find_with_ignorelist
-
 def save_transcription(trs_fname, trs):
     """
     Echoes `trs' into `trs_fname'. Returns True iff the
@@ -67,6 +50,14 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
+def flac_to_wav(flac_path, wav_path):
+    sox_in = pysox.CSoxStream(flac_path)
+    sox_signal = sox_in.get_signal()
+    sox_out = pysox.CSoxStream(wav_path, 'w', sox_signal, fileType='wav')
+    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.flow_effects()
+    sox_out.close()
+
 def convert(args):
     """
     Looks for recordings and transcriptions under the `args.infname'
@@ -79,10 +70,8 @@ def convert(args):
         number of collisions (files at different paths with same basename)
         number of overwrites (files with the same basename as previously
                              present in `args.outdir')
-        number of ignored files (file basenames referred in transcription logs
-                                but missing in the file system, presumably
-                                because specified by one of the ignoring
-                                mechanisms)
+        number of missing files (file basenames referred in transcription logs
+                                but missing in the file system)
 
     """
 
@@ -91,11 +80,11 @@ def convert(args):
     outdir = args.outdir
     lang = args.language
     verbose = args.verbose
-    ignore_list_file = args.ignore
     dict_file = args.dictionary
 
     size = 0
     n_overwrites = 0
+    n_missing_audio = 0
 
     # Import the appropriate normalisation module.
     norm_mod_name = _LANG2NORMALISATION_MOD[lang]
@@ -116,6 +105,10 @@ def convert(args):
         if verbose:
             print "Processing", subdir
 
+        if not os.path.isdir(os.path.join(subdir, 'wav')) and \
+                not os.path.isdir(os.path.join(subdir, 'flac')):
+                    print "WARNING: no 'wav' or 'flac' found in", subdir
+
         txt_path = os.path.join(subdir, 'etc', 'PROMPTS')
         with codecs.open(txt_path, 'r', 'UTF-8') as txt_file:
             for line in txt_file:
@@ -124,12 +117,23 @@ def convert(args):
                 
                 wav_name = wav_id.split('/')[2]
                 fname = wav_id.replace('/', '_')
-                fnames += [fname]
 
-                # Copy audio file
+                # Copy or convert audio file
                 src_wav_path = os.path.join(subdir, 'wav', wav_name + '.wav')
+                src_flac_path = os.path.join(subdir, 'flac', wav_name + '.flac')
                 tgt_wav_path = os.path.join(outdir, fname + '.wav')
-                shutil.copyfile(src_wav_path, tgt_wav_path)
+                if os.path.isfile(src_wav_path):
+                    shutil.copyfile(src_wav_path, tgt_wav_path)
+                elif os.path.isfile(src_flac_path):
+                    flac_to_wav(src_flac_path, tgt_wav_path)
+                else:
+                    if verbose:
+                        print "Lost audio file:", wav_name
+                    n_missing_audio += 1
+                    continue
+
+                fnames += [fname]
+                    
                 size += os.path.getsize(tgt_wav_path)
         
                 # Write transcription
@@ -158,7 +162,7 @@ def convert(args):
 
     n_collisions = len(fnames) - len(set(fnames))
 
-    return size, n_collisions, n_overwrites
+    return size, n_collisions, n_overwrites, n_missing_audio
 
 
 if __name__ == '__main__':
@@ -172,8 +176,8 @@ if __name__ == '__main__':
       This program processes a VoxForge corpus and copies all WAVs into
       a destination directory along with their transcriptions.
 
-      In each subdirectory of the given directory, it looks for WAVs in
-      the 'wav' directory and for transcriptions in 'etc/PROMPTS'.
+      In each subdirectory of the given directory, it looks for audio files in
+      the 'wav' or 'flac' directory and for transcriptions in 'etc/PROMPTS'.
       """)
 
     arger.add_argument('infname', action="store",
@@ -192,14 +196,6 @@ if __name__ == '__main__':
                             'what words should be allowed in transcriptions. '
                             'The dictionary is expected to contain the words '
                             'in the first whitespace-separated column.')
-    arger.add_argument('-i', '--ignore',
-                       type=argparse.FileType('r'),
-                       metavar='FILE',
-                       help='Path towards a file listing globs of '
-                            'transcription files that should be ignored.\n'
-                            'The globs are interpreted wrt. the current '
-                            'working directory. For an example, see the '
-                            'source code.')
     arger.add_argument('-l', '--language',
                        default='en',
                        metavar='CODE',
@@ -210,16 +206,19 @@ if __name__ == '__main__':
                        help='Path towards an output file to contain a list '
                             'of words that appeared in the transcriptions, '
                             'one word per line.')
-   # For an example of the ignore list file, see the top of the script.
     args = arger.parse_args()
 
     # Do the copying.
-    size, n_collisions, n_overwrites = convert(args)
+    size, n_collisions, n_overwrites, n_missing_audio = convert(args)
 
     # Report.
     print "Size of copied audio data:", size
-    msg = ("# collisions: {0};  # overwrites: {1}").format(n_collisions, n_overwrites)
+    msg = ("# collisions: {0};  # overwrites: {1}; # missing recordings: {2}").format(n_collisions, n_overwrites, n_missing_audio)
     print msg
+
+    sec = size / (16000 * 2)
+    hour = sec / 3600.0
+    print "Length of audio data in hours (for 16kHz 16b WAVs):", hour
 
     # Print out the contents of the word counter to 'word_list'.
     with codecs.open(args.word_list, 'w', 'UTF-8') as word_list_file:
