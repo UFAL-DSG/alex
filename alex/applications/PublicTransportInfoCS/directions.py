@@ -329,7 +329,8 @@ class CRWSRouteStep(RouteStep):
                             'trolley bus': 'trolleybus',
                             'trolleybus': 'trolleybus',
                             'ship': 'ferry',
-                            'substitute traffic': 'substitute_traffic'}
+                            'substitute traffic': 'substitute_traffic',
+                            'substitute traffic - Bus': 'substitute_bus'}
 
     def __init__(self, travel_mode, input_data, finder=None):
         super(CRWSRouteStep, self).__init__(travel_mode)
