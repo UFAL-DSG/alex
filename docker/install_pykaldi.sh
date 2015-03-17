@@ -5,8 +5,8 @@ apt-get install -y build-essential libatlas-base-dev python-dev python-pip git w
 # Addid pykaldi source files
 cd /app
 git clone --recursive https://github.com/UFAL-DSG/pykaldi.git
-git checkout 1a71ef6a1f1b6a228c72c3637410bb86daea0d5c
 cd /app/pykaldi
+git checkout 1a71ef6a1f1b6a228c72c3637410bb86daea0d5c
 make install
 ldconfig
 
