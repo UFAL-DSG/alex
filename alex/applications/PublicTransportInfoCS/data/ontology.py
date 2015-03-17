@@ -354,6 +354,7 @@ ontology = {
             'ferry': 'přívozem',
             'trolleybus': 'trolejbusem',
             'substitute_traffic': 'náhradní dopravou',
+            'substitute_bus': 'náhradním autobusem',
         },
         'date_rel': {
             'today': 'dnes',
