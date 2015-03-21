@@ -8,6 +8,7 @@ if __name__ == '__main__':
     import autopath
 
 import argparse
+import codecs
 import multiprocessing
 
 from alex.applications.exceptions import TextHubException
@@ -55,6 +56,11 @@ class TextHub(Hub):
         if tts_preproc_output:
             tts_type = get_tts_type(cfg)
             self.tts = tts_factory(tts_type, cfg)
+
+        self.f_output_script = None
+
+    def hook_up_output_recording(self, f):
+        self.f_output_script = f
 
     def parse_input_utt(self, l):
         """Converts a text including a dialogue act and its probability into
@@ -130,10 +136,11 @@ class TextHub(Hub):
         i = 1
         while i < 100:
             l = raw_input("User %d:    " % i)
-            try:
-                l = l.decode('utf8')
-            except:  # if we use ipdb, it already gives us UTF-8-encoded input :-(
-                pass
+
+            l = l.decode('utf8')
+            if self.f_output_script:
+                self.f_output_script.write(l + '\n')
+
             if l.startswith("."):
                 print
                 break
@@ -213,7 +220,6 @@ class TextHub(Hub):
 
         except KeyboardInterrupt:
             print 'KeyboardInterrupt exception in: %s' % multiprocessing.current_process().name
-            self.close_event.set()
             return
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in THUB process.')
@@ -250,7 +256,12 @@ if __name__ == '__main__':
                         help='automated scripts')
     parser.add_argument('-t', '--tts-preprocessing', '--tts', dest='tts_preprocessing',
                         action='store_true', help='output TTS preprocessing results')
+    parser.add_argument('-o', '--output_script', help='file where the script '
+                                                      'should be saved to',
+                        default='/dev/null')
     args = parser.parse_args()
+
+    out_text_script = codecs.open(args.output_script, 'w', encoding='utf8')
 
     cfg = Config.load_configs(args.configs)
 
@@ -268,6 +279,7 @@ if __name__ == '__main__':
     cfg['Logging']['session_logger'].input_source("text")
 
     thub = TextHub(cfg, args.tts_preprocessing)
+    thub.hook_up_output_recording(out_text_script)
 
     if args.scripts:
         for script in args.scripts:
@@ -276,6 +288,7 @@ if __name__ == '__main__':
                     thub.process_dm()
                     ln = ln.decode('utf8').strip()
                     print "SCRIPT: %s" % ln
+                    out_text_script.write(ln + '\n')
                     thub.process_utterance_hyp({'utt': Utterance(ln)})
 
     thub.run()

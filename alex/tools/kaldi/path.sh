@@ -12,3 +12,6 @@ export PATH=$KALDI_ROOT/src/bin:$KALDI_ROOT/tools/openfst/bin:$KALDI_ROOT/tools/
 
 export PATH=$PWD/utils:$PWD/steps:$PATH
 export LD_LIBRARY_PATH=$KALDI_ROOT/tools/openfst/lib:$KALDI_ROOT/tools/openfst/lib/fst:$LD_LIBRARY_PATH
+
+# Fix for loading cuda on all computers also without the GPU e.g. on CLUSTER
+export LD_LIBRARY_PATH=/opt/lib/CUDA/cuda-6.5/lib64:/opt/lib/CUDA/cuda-6.5/lib:$LD_LIBRARY_PATH

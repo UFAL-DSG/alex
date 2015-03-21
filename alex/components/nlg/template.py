@@ -392,9 +392,11 @@ class TemplateNLG(AbstractTemplateNLG):
 
         Applies template NLG pre- and postprocessing, if applicable.
         """
+
         svs_dict = dict(svs)
         if self.preprocessing is not None:
             tpl, svs_dict = self.preprocessing.preprocess(tpl, svs_dict)
+
         out_text = tpl.format(**svs_dict)
         if self.postprocessing is not None:
             return self.postprocessing.postprocess(out_text)
