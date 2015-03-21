@@ -397,7 +397,7 @@ class VoipIO(multiprocessing.Process):
                     # flush the recorded data
                     while self.mem_capture.get_read_available():
                         data_rec = self.mem_capture.get_frame()
-                    #self.mem_capture.flush()
+                    self.mem_capture.flush()
                     self.audio_recording = False
 
                     self.commands.send(Command("flushed()", 'VoipIO', 'HUB'))

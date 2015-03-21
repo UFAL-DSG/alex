@@ -22,6 +22,7 @@ import shutil
 import sys
 import codecs
 import pysox
+import random
 
 from xml.etree import ElementTree
 
@@ -110,18 +111,31 @@ def convert(args):
                     print "WARNING: no 'wav' or 'flac' found in", subdir
 
         txt_path = os.path.join(subdir, 'etc', 'PROMPTS')
+        if not os.path.exists(txt_path):
+            print "WARNING: no PROMTS found in", txt_path
+            continue
+        
         with codecs.open(txt_path, 'r', 'UTF-8') as txt_file:
             for line in txt_file:
                 # Each line contains an identifier of the audio file and the transcription
                 (wav_id, trs) = line.split(' ', 1)
+
+                wav_name = wav_id.split('/')
                 
-                wav_name = wav_id.split('/')[2]
+                if len(wav_name) < 3:
+                    continue
+                
+                wav_name = wav_name[2]
                 fname = wav_id.replace('/', '_')
 
                 # Copy or convert audio file
                 src_wav_path = os.path.join(subdir, 'wav', wav_name + '.wav')
                 src_flac_path = os.path.join(subdir, 'flac', wav_name + '.flac')
-                tgt_wav_path = os.path.join(outdir, fname + '.wav')
+                tgt_wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), fname + '.wav')
+
+                if not os.path.exists(os.path.dirname(tgt_wav_path)):
+                    os.makedirs(os.path.dirname(tgt_wav_path))
+
                 if os.path.isfile(src_wav_path):
                     shutil.copyfile(src_wav_path, tgt_wav_path)
                 elif os.path.isfile(src_flac_path):

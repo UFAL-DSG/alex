@@ -164,6 +164,10 @@ class NBList(Hypothesis):
         return self
 
 
+class ConfusionNetworkException(Exception):
+    pass
+
+
 # UNDER CONSTRUCTION
 class ConfusionNetwork(Hypothesis):
     """\
@@ -173,6 +177,7 @@ class ConfusionNetwork(Hypothesis):
     """
     def __init__(self):
         self.cn = list()
+        self.current_facts = set()
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -188,7 +193,7 @@ class ConfusionNetwork(Hypothesis):
         return self.cn[i]
 
     def __contains__(self, fact):
-        return self.get_marginal(fact) is not None
+        return fact in self.current_facts
 
     def __iter__(self):
         for fact in self.cn:
@@ -196,7 +201,22 @@ class ConfusionNetwork(Hypothesis):
 
     def add(self, probability, fact):
         """Append a fact to the confusion network."""
-        self.cn.append([probability, fact])
+        if fact in self.current_facts:
+            raise ConfusionNetworkException("Cannot add facts already in the network.")
+        self.cn.append((probability, fact))
+        self.current_facts.add(fact)
+
+    def remove(self, fact_to_remove):
+        fact_ndx = -1
+        for i, (prob, fact) in enumerate(self.cn):
+            if fact == fact_to_remove:
+                fact_ndx = i
+                break
+        else:
+            raise Exception('Fact has not been found.')
+
+        self.current_facts.remove(self.cn[fact_ndx][1])
+        self.cn.remove(self.cn[fact_ndx])
 
     @classmethod
     def from_fact(cls, fact):
@@ -205,8 +225,9 @@ class ConfusionNetwork(Hypothesis):
         `fact'.  Note that `fact' has to be an iterable of elementary acts.
 
         """
-        # Create a new object of our class.
         inst = cls()
-        # Add the fact as the only hypothesis to the network.
-        inst.cn.extend([1., efact] for efact in fact)
+
+        for efact in fact:
+            inst.add(1.0, efact)
+
         return inst

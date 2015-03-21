@@ -37,6 +37,7 @@ import shutil
 import sys
 import codecs
 import pysox
+import random
 
 from xml.etree import ElementTree
 
@@ -135,7 +136,14 @@ def convert(args):
 
                 # Process audio file
                 flac_path = os.path.join(path_prefix, flac_name + '.flac')
-                wav_path = os.path.join(outdir, flac_name + '.wav')
+                wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), flac_name + '.wav')
+
+                if not os.path.exists(os.path.dirname(wav_path)):
+                    os.makedirs(os.path.dirname(wav_path))
+
+                if not os.path.isfile(flac_path):
+                    continue
+                    
                 to_wav(flac_path, wav_path)
                 size += os.path.getsize(wav_path)
         

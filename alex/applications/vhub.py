@@ -480,7 +480,7 @@ if __name__ == '__main__':
       """)
 
     parser.add_argument('-c', '--configs', nargs='+', help='additional configuration files')
-    parser.add_argument('-n', '--ncalls', help='number of calls accepeted before the hub automatically exits', type=int, default=0)
+    parser.add_argument('-n', '--ncalls', help='number of calls accepted before the hub automatically exits', type=int, default=0)
 
     args = parser.parse_args()
 

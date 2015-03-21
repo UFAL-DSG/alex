@@ -37,6 +37,7 @@ import shutil
 import sys
 import codecs
 import pysox
+import random
 
 from xml.etree import ElementTree
 
@@ -165,7 +166,12 @@ def convert(args):
             trs = utt['trs']
 
             wav_name = '%s_%03d.wav' % (src_name, i)
-            wav_path = os.path.join(outdir, wav_name)
+#            wav_path = os.path.join(outdir, wav_name)
+            wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), wav_name)
+
+            if not os.path.exists(os.path.dirname(wav_path)):
+                os.makedirs(os.path.dirname(wav_path))
+
 
             if verbose:
                 print

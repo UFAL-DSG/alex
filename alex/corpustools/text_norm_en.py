@@ -28,10 +28,12 @@ _nonspeech_map = {
         '(BREATH)',
         '(BREATHING)',
         '(SNIFFING)',
+        '[SIGH]',
     ),
     '_LAUGH_': (
         '(LAUGH)',
         '(LAUGHING)',
+        '[LAUGHTER]',
     ),
     '_EHM_HMM_': (
         '(EHM_HMM)',
@@ -60,6 +62,8 @@ _nonspeech_map = {
         '(STATIC)',
         '(SQUEAK)',
         '(TVNOISE)',
+        '[NOISE]',
+        '[LIPSMACK]',
     ),
     '_EXCLUDE_': (
         '(EXCLUDE)',
@@ -662,7 +666,7 @@ _hesitation = ['AAAA', 'AAA', 'AA', 'AAH', 'A-', "-AH-", "AH-", "AH.", "AH",
                "ERRM", "HUMN", "UM", "UMN", "URM", "AH", "ER", "ERM", "HUH",
                "HUMPH", "HUMN", "HUM", "HU", "SH", "UH", "UHUM", "UM", "UMH",
                "URUH", "MMMM", "MMM", "OHM", "UMMM", "MHMM", "EMPH", "HMPH",
-               "UGH", "UHH", "UMMMMM", "SHH", "OOH", ]
+               "UGH", "UHH", "UMMMMM", "SHH", "OOH", "MHM", ]
 # }}}
 for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))

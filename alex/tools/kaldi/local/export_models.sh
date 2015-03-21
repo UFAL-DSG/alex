@@ -32,8 +32,26 @@ cp -f $exp/tri2b/final.mdl $tgt/tri2b.mdl
 cp -f $exp/tri2b/tree $tgt/tri2b.tree
 cp -f $exp/tri2b/final.mat $tgt/tri2b.mat
 
-cp -f $exp/tri2b_mmi_b*/final.mdl $tgt/tri2b_bmmi.mdl
+cp -f $exp/tri2b_mmi_b*[0-9]/final.mdl $tgt/tri2b_bmmi.mdl
 cp -f $exp/tri2b/tree $tgt/tri2b_bmmi.tree
-cp -f $exp/tri2b_mmi_b*/final.mat $tgt/tri2b_bmmi.mat
+cp -f $exp/tri2b_mmi_b*[0-9]/final.mat $tgt/tri2b_bmmi.mat
+
+
+rm -fr $tgt/tri4_nnet2_online_conf
+rm -fr $tgt/tri4_nnet2_online_ivector_extractor
+
+cp -f $exp/tri4_nnet2/final.mdl $tgt/tri4_nnet2.mdl
+cp -f $exp/tri4_nnet2/tree $tgt/tri4_nnet2.tree
+cp -fr $exp/tri4_nnet2_online/conf $tgt/tri4_nnet2_online_conf
+cp -fr $exp/tri4_nnet2_online/ivector_extractor $tgt/tri4_nnet2_online_ivector_extractor
+
+
+rm -fr $tgt/tri4_nnet2_smbr_online_conf
+rm -fr $tgt/tri4_nnet2_smbr_online_ivector_extractor
+
+cp -f $exp/tri4_nnet2_smbr/final.mdl $tgt/tri4_nnet2_smbr.mdl
+cp -f $exp/tri4_nnet2_smbr/tree $tgt/tri4_nnet2_smbr.tree
+cp -fr $exp/tri4_nnet2_smbr_online/conf $tgt/tri4_nnet2_smbr_online_conf
+cp -fr $exp/tri4_nnet2_smbr_online/ivector_extractor $tgt/tri4_nnet2_smbr_online_ivector_extractor
 
 cp -f $lang/phones.txt $lang/phones/silence.csl $tgt

@@ -16,3 +16,7 @@ echo 'Expanding stops...' 1>&2
 
 echo 'Expanding cities...' 1>&2
 ./expand_stops.py -c 1,2,3,4,6 -l -p cities.txt cities.expanded.txt || die 'Could not expand cities'
+
+echo 'Expanding train names...'
+# TODO: Add proper expanding.
+paste train_names.txt train_names.txt | tr "[A-Z]" "[a-z]" > train_names.expanded.txt

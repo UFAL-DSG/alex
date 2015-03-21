@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-Expanding Czech stop/city names with inflection forms in all given morphological cases.
+Expanding Czech stop/city/train names with inflection forms in all given morphological cases.
 
 Usage:
 
-./expand_stops.py [-c 1,2,4] [-l] [-p] [-m previous.expanded.txt] stops.txt [stops-2.txt ...] stops.expanded.txt
+./expand_stops.py [-c 1,2,4] [-n] [-l] [-p] [-m previous.expanded.txt] stops.txt [stops-2.txt ...] stops.expanded.txt
 
 -c = Required morphological cases (possible values: numbers 1-7, comma-separated).
         Defaults to 1,2,4 (nominative, genitive, accusative).
@@ -14,6 +14,7 @@ Usage:
         expanded file are expanded to speed up the process and preserve hand-written forms.
 -p = Strip punctuation off surface forms
 -l = Lowercase surface forms
+-n = Inflecting personal names (use this for train names, do not use for stop/city names)
 """
 from __future__ import unicode_literals
 if __name__ == '__main__':
@@ -75,14 +76,18 @@ class Generator(object):
 class ExpandStops(object):
     """This handles inflecting stop names into all desired cases in Czech."""
 
-    def __init__(self, cases_list, strip_punct, lowercase_forms):
+    def __init__(self, cases_list, strip_punct, lowercase_forms, personal_names):
         """Initialize the expander object, initialize the morphological analyzer and generator.
 
         @param cases_list: List of cases (given as strings) to be used for generation \
                 (Czech numbers 1-7 are used)
+        @param strip_punct: Strip all punctuation ?
+        @param lowercase_forms: Lowercase all forms on the output?
+        @param personal_names: Are we inflecting personal names?
         """
         self.stops = defaultdict(list)
         self.cases_list = cases_list
+        self.personal_names = personal_names
         # initialize postprocessing
         postprocess_func = ((lambda text: re.sub(r' ([\.,])', r'\1', text))
                             if not strip_punct
@@ -165,9 +170,9 @@ class ExpandStops(object):
         # inflect each word in nominative not following a noun in nominative
         # (if current case is not nominative), avoid numbers
         if (re.match(r'^[^C]...1', tag) and
-            not re.match(r'^NN..1', prev_tag) and
-            not form in ['římská'] and
-            case != '1'):
+                (not re.match(r'^NN..1', prev_tag) or self.personal_names) and
+                form not in ['římská'] and
+                case != '1'):
             # change the case in the tag, allow all variants
             new_tag = re.sub(r'^(....)1(.*).$', r'\g<1>' + case + r'\g<2>?', tag)
             # -ice: test both sg. and pl. versions
@@ -183,12 +188,12 @@ class ExpandStops(object):
 
 
 def main():
-    import autopath
     cases = ['1', '2', '4']
     merge_file = None
     strip_punct = False
     lowercase_forms = False
-    opts, files = getopt(sys.argv[1:], 'c:m:pl')
+    personal_names = False
+    opts, files = getopt(sys.argv[1:], 'c:m:pln')
     for opt, arg in opts:
         if opt == '-c':
             cases = re.split('[, ]+', arg)
@@ -198,11 +203,13 @@ def main():
             strip_punct = True
         elif opt == '-l':
             lowercase_forms = True
+        elif opt == '-n':
+            personal_names = True
     if len(files) < 2:
         sys.exit(__doc__)
     in_files = files[:-1]
     out_file = files[-1]
-    es = ExpandStops(cases, strip_punct, lowercase_forms)
+    es = ExpandStops(cases, strip_punct, lowercase_forms, personal_names)
     if merge_file:
         es.load_file(merge_file)
     for in_file in in_files:

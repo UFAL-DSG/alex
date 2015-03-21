@@ -646,6 +646,23 @@ class PTICSHDCSLU(SLUInterface):
                 else:
                     cn.add(1.0, DialogueActItem("inform", 'task', value, alignment={i}))
 
+    def parse_train_name(self, abutterance, cn):
+        """Detects the train name in the input abstract utterance.
+
+        :param abutterance:
+        :param cn:
+        """
+        category_label = "TRAIN_NAME="
+
+        u = abutterance
+
+        for i, w in enumerate(u):
+            if w.startswith(category_label):
+                value = w[len(category_label):]
+
+                cn.add(1.0, DialogueActItem("inform", 'train_name', value))
+
+
     def parse_non_speech_events(self, utterance, cn):
         """
         Processes non-speech events in the input utterance.
@@ -688,8 +705,11 @@ class PTICSHDCSLU(SLUInterface):
             cn.add(1.0, dai.build("hello"))
 
         if (dai.any_word_in("nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
-                            "naschledanou čau čauky čaues shledanó") or dai.phrase_in("dobrou noc") or
+                            "naschledanou shledanó") or dai.phrase_in("dobrou noc") or
                 (not any_word_in(u, "nechci") and dai.phrase_in("ukončit hovor"))):
+            cn.add(1.0, dai.build("bye"))
+
+        if len(u) == 1 and dai.any_word_in("čau čauky čaues"):
             cn.add(1.0, dai.build("bye"))
 
         if not any_word_in(u, 'spojení zastávka stanice možnost varianta'):
@@ -758,6 +778,9 @@ class PTICSHDCSLU(SLUInterface):
 
         if dai.any_phrase_in(['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
             cn.add(1.0, dai.build('inform', 'task', 'weather'))
+
+        if any_word_in(u, 'nástupiště'):
+            cn.add(1.0, DialogueActItem("inform", "task", "find_platform"))
 
         if (dai.all_words_in('od to jede') or
                 dai.all_words_in('z jake jede') or
@@ -1002,6 +1025,8 @@ class PTICSHDCSLU(SLUInterface):
                 self.parse_vehicle(abutterance, res_cn)
             if 'TASK' in category_labels:
                 self.parse_task(abutterance, res_cn)
+            if 'TRAIN_NAME' in category_labels:
+                self.parse_train_name(abutterance, res_cn)
 
             self.parse_meta(utterance, abutterance_lenghts, res_cn)
 
