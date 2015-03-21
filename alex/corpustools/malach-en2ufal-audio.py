@@ -211,12 +211,12 @@ if __name__ == '__main__':
     arger = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-      This program processes the Fisher Part 2 corpus, converts all audio files
-      to WAVs, extracts individual utterances and copies them into a destination
-      directory along with their transcriptions.
+        This program processes the MALACH corpus, converts all audio files
+        to WAVs, extracts individual utterances and copies them into a destination
+        directory along with their transcriptions.
 
-      It looks for '*.txt' files to extract transcriptions and names
-      of audio files.
+        It looks for '*.trs' files to extract transcriptions and names
+        of audio files.
       """)
 
     arger.add_argument('infname', action="store",
