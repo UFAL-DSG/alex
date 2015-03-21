@@ -50,11 +50,11 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
-def flac_to_wav(flac_path, wav_path):
-    sox_in = pysox.CSoxStream(flac_path)
-    sox_signal = sox_in.get_signal()
-    sox_out = pysox.CSoxStream(wav_path, 'w', sox_signal, fileType='wav')
+def to_wav(src_path, wav_path):
+    sox_in = pysox.CSoxStream(src_path)
+    sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
     sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect('rate', ['16000']))
     sox_chain.flow_effects()
     sox_out.close()
 
@@ -125,7 +125,7 @@ def convert(args):
                 if os.path.isfile(src_wav_path):
                     shutil.copyfile(src_wav_path, tgt_wav_path)
                 elif os.path.isfile(src_flac_path):
-                    flac_to_wav(src_flac_path, tgt_wav_path)
+                    to_wav(src_flac_path, tgt_wav_path)
                 else:
                     if verbose:
                         print "Lost audio file:", wav_name

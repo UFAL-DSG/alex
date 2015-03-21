@@ -68,11 +68,11 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
-def flac_to_wav(flac_path, wav_path):
-    sox_in = pysox.CSoxStream(flac_path)
-    sox_signal = sox_in.get_signal()
-    sox_out = pysox.CSoxStream(wav_path, 'w', sox_signal, fileType='wav')
+def to_wav(src_path, wav_path):
+    sox_in = pysox.CSoxStream(src_path)
+    sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
     sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect('rate', ['16000']))
     sox_chain.flow_effects()
     sox_out.close()
 
@@ -136,7 +136,7 @@ def convert(args):
                 # Process audio file
                 flac_path = os.path.join(path_prefix, flac_name + '.flac')
                 wav_path = os.path.join(outdir, flac_name + '.wav')
-                flac_to_wav(flac_path, wav_path)
+                to_wav(flac_path, wav_path)
                 size += os.path.getsize(wav_path)
         
                 # Process transcription
