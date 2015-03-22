@@ -4,26 +4,25 @@
 # http://www.python.org/dev/peps/pep-0008.
 
 """
-This program processes a LibriSpeech corpus, converts all audio files
-to WAVs and copies them into a destination directory along with their
-transcriptions.
+This program processes the MALACH corpus, converts all audio files
+to WAVs, extracts individual utterances and copies them into a destination
+directory along with their transcriptions.
 
-It looks for '*.trans.txt' files to extract transcriptions and names
+It looks for '*.trs' files to extract transcriptions and names
 of audio files.
 
 An example ignore list file could contain the following three lines:
 
-/some-path/call-logs/log_dir/some_id.flac
-some_id.wav
-jurcic-??[13579]*.wav
+/some-path/some_id.trs
+some_id.trs
+??[13579]*.trs
 
 The first one is an example of an ignored path. On UNIX, it has to start with
 a slash. On other platforms, an analogic convention has to be used.
 
 The second one is an example of a literal glob.
 
-The last one is an example of a more advanced glob. It says basically that
-all odd dialogue turns should be ignored.
+The last one is an example of a more advanced glob.
 
 """
 
@@ -33,13 +32,13 @@ import argparse
 import collections
 import os
 import os.path
+import subprocess
 import shutil
 import sys
 import codecs
 import pysox
-import random
+import xml.dom.minidom
 
-from xml.etree import ElementTree
 
 # Make sure the alex package is visible.
 if __name__ == '__main__':
@@ -69,11 +68,13 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
-def to_wav(src_path, wav_path):
+def segment_to_wav(src_path, wav_path, start, end):
     sox_in = pysox.CSoxStream(src_path)
-    sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
+    #sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
+    sox_out = pysox.CSoxStream(wav_path, 'w', sox_in.get_signal(), fileType='wav')
     sox_chain = pysox.CEffectsChain(sox_in, sox_out)
-    sox_chain.add_effect(pysox.CEffect('rate', ['16000']))
+    sox_chain.add_effect(pysox.CEffect('trim', [str(start), str(end - start)]))
+    #sox_chain.add_effect(pysox.CEffect("rate", ['16000']))
     sox_chain.flow_effects()
     sox_out.close()
 
@@ -81,18 +82,19 @@ def convert(args):
     """
     Looks for recordings and transcriptions under the `args.infname'
     directory.  Converts audio files to WAVs and copies the .wav files
-    and their transcriptions to `args.outdir' using the `extract_wavs_trns'
-    function. `args.dictionary' may refer to an open file listing the only
-    words to be allowed in transcriptions in the first whitespace-separated column.
+    and their transcriptions to `args.outdir' function. `args.dictionary' may
+    refer to an open file listing the only words to be allowed in
+    transcriptions in the first whitespace-separated column.
 
     Returns a tuple of:
+        total audio size
+        total audio length in seconds
         number of collisions (files at different paths with same basename)
         number of overwrites (files with the same basename as previously
                              present in `args.outdir')
-        number of ignored files (file basenames referred in transcription logs
-                                but missing in the file system, presumably
-                                because specified by one of the ignoring
-                                mechanisms)
+        number of missing files (file basenames referred in transcription logs
+                                but missing in the file system)
+        number of missing transcriptions
 
     """
 
@@ -105,7 +107,10 @@ def convert(args):
     dict_file = args.dictionary
 
     size = 0
+    seconds = 0
     n_overwrites = 0
+    n_missing_audio = 0
+    n_missing_trs = 0
 
     # Import the appropriate normalisation module.
     norm_mod_name = _LANG2NORMALISATION_MOD[lang]
@@ -119,61 +124,83 @@ def convert(args):
         known_words = None
 
     # Find transcription files.
-    txt_paths = find_with_ignorelist(args.infname, '*.trans.txt', ignore_list_file)
+    trs_paths = find_with_ignorelist(infname, '*.trs', ignore_list_file)
+    trs_dict = {os.path.split(fpath)[1]: fpath for fpath in trs_paths}
+
+    # Find all audio files, create dictionary of paths by basename.
+    audio_paths = find_with_ignorelist(infname, '*.mp2')
+    audio_dict = {os.path.splitext(os.path.split(fpath)[1])[0]: fpath for fpath in audio_paths}
+    n_collisions = len(audio_paths) - len(audio_dict)
 
     # Process the files.
-    flac_names = []
-    for txt_path in txt_paths:
+    for trs_path in trs_dict.values():
         if verbose:
-            print "Processing", txt_path
+            print "Processing", trs_path
 
-        path_prefix = os.path.split(txt_path)[0]
-        with codecs.open(txt_path, 'r', 'UTF-8') as txt_file:
-            for line in txt_file:
-                # Each line contains the name of the audio file and the transcription
-                (flac_name, trs) = line.split(' ', 1)
-                flac_names += [flac_name]
+        # Parse the file.
+        doc = xml.dom.minidom.parse(trs_path)
+        fname = doc.getElementsByTagName("Trans")[0].attributes['audio_filename'].value
+        if not fname in audio_dict or not os.path.isfile(audio_dict[fname]):
+            if verbose:
+                print "Lost audio file:", fname
+            n_missing_audio += 1
+            continue
+        audio_path = audio_dict[fname]
 
-                # Process audio file
-                flac_path = os.path.join(path_prefix, flac_name + '.flac')
-                wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), flac_name + '.wav')
+        uturns = doc.getElementsByTagName("Sync")
 
-                if not os.path.exists(os.path.dirname(wav_path)):
-                    os.makedirs(os.path.dirname(wav_path))
+        i = 0
+        for uturn in uturns:
+            i += 1
 
-                if not os.path.isfile(flac_path):
-                    continue
-                    
-                to_wav(flac_path, wav_path)
-                size += os.path.getsize(wav_path)
-        
-                # Process transcription
-                if verbose:
-                    print
-                    print "# f:", flac_name + '.flac'
-                    print "orig transcription:", trs.upper().strip()
+            # Retrieve the user turn's data.
+            starttime = float(uturn.getAttribute('time').strip())
+            if uturn.nextSibling.nodeType == uturn.TEXT_NODE:
+                trs = uturn.nextSibling.data.strip()
+            else:
+                trs = ''
+                n_missing_trs += 1
+            try:
+                endtime = float(
+                    uturn.nextSibling.nextSibling.getAttribute('time').strip())
+            except:
+                endtime = 9999.000
 
-                trs = norm_mod.normalise_text(trs)
+            wav_name = '%s_%03d.wav' % (fname, i)
+            wav_path = os.path.join(outdir, wav_name)
 
-                if verbose:
-                    print "normalised trans:  ", trs
+            if verbose:
+                print
+                print "src:", os.path.split(audio_path)[1]
+                print "tgt:", wav_name
+                print "time:", starttime, endtime
+                print "orig transcription:", trs.upper().strip()
 
-                if known_words is not None:
-                    excluded = norm_mod.exclude_by_dict(trs, known_words)
-                else:
-                    excluded = norm_mod.exclude_asr(trs)
-                if verbose and excluded:
-                    print "... excluded"
-                    continue
+            trs = norm_mod.normalise_text(trs)
 
-                wc.update(trs.split())
+            if verbose:
+                print "normalised trans:  ", trs
 
-                if save_transcription(wav_path + '.trn', trs):
-                    n_overwrites += 1
+            if known_words is not None:
+                excluded = norm_mod.exclude_by_dict(trs, known_words)
+            else:
+                excluded = norm_mod.exclude_asr(trs)
+            if verbose and excluded:
+                print "... excluded"
+                continue
 
-    n_collisions = len(flac_names) - len(set(flac_names))
+            wc.update(trs.split())
 
-    return size, n_collisions, n_overwrites
+            if save_transcription(wav_path + '.trn', trs):
+                n_overwrites += 1
+
+            # Extract utterance from audio, save as WAV.
+            segment_to_wav(audio_path, wav_path, starttime, endtime)
+            size += os.path.getsize(wav_path)
+            seconds += endtime - starttime
+
+
+    return size, seconds, n_collisions, n_overwrites, n_missing_audio, n_missing_trs
 
 
 if __name__ == '__main__':
@@ -184,12 +211,12 @@ if __name__ == '__main__':
     arger = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
-      This program processes a LibriSpeech corpus, converts all audio files
-      to WAVs and copies them into a destination directory along with their
-      transcriptions.
+        This program processes the MALACH corpus, converts all audio files
+        to WAVs, extracts individual utterances and copies them into a destination
+        directory along with their transcriptions.
 
-      It looks for '*.trans.txt' files to extract transcriptions and names
-      of audio files.
+        It looks for '*.trs' files to extract transcriptions and names
+        of audio files.
       """)
 
     arger.add_argument('infname', action="store",
@@ -226,15 +253,16 @@ if __name__ == '__main__':
                        help='Path towards an output file to contain a list '
                             'of words that appeared in the transcriptions, '
                             'one word per line.')
-   # For an example of the ignore list file, see the top of the script.
+    # For an example of the ignore list file, see the top of the script.
     args = arger.parse_args()
-
+    
     # Do the copying.
-    size, n_collisions, n_overwrites = convert(args)
+    size, seconds, n_collisions, n_overwrites, n_missing_audio, n_missing_trs = convert(args)
 
     # Report.
-    print "Size of transcoded audio data:", size
-    msg = ("# collisions: {0};  # overwrites: {1}").format(n_collisions, n_overwrites)
+    print "Size of extracted audio data:", size
+    print "Length of audio data in hours:", seconds/3600
+    msg = ("# collisions: {0};  # overwrites: {1}; # missing recordings: {2}; # missing transcriptions: {3}").format(n_collisions, n_overwrites, n_missing_audio, n_missing_trs)
     print msg
 
     # Print out the contents of the word counter to 'word_list'.

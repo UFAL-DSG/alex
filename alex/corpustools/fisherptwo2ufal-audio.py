@@ -69,6 +69,14 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
+def to_wav(src_path, wav_path):
+    sox_in = pysox.CSoxStream(src_path)
+    sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
+    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
+    sox_chain.add_effect(pysox.CEffect('rate', ['16000']))
+    sox_chain.flow_effects()
+    sox_out.close()
+
 def convert(args):
     """
     Looks for recordings and transcriptions under the `args.infname'
@@ -198,8 +206,13 @@ def convert(args):
                 n_overwrites += 1
 
             # Extract utterance from audio
-            cmd = ['sph2pipe', '-f', 'wav', '-t', '%f:%f' % (utt['start'], utt['end']), '-c', str(utt['channel']), sph_path, wav_path]
+            tmp_path = wav_path + '.tmp'
+            cmd = ['sph2pipe', '-f', 'wav', '-t', '%f:%f' % (utt['start'], utt['end']), '-c', str(utt['channel']), sph_path, tmp_path]
             subprocess.call(cmd)
+
+            # Convert to valid WAV
+            to_wav(tmp_path, wav_path)
+            os.remove(tmp_path)
             size += os.path.getsize(wav_path)
             seconds += utt['end'] - utt['start']
 
