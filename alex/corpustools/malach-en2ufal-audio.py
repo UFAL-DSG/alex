@@ -69,20 +69,14 @@ def save_transcription(trs_fname, trs):
     return existed
 
 def segment_to_wav(src_path, wav_path, start, end):
-    sox_in = pysox.CSoxStream(src_path)
-    #sox_out = pysox.CSoxStream(wav_path, 'w', pysox.CSignalInfo(16000, 1, 16), fileType='wav')
-    sox_out = pysox.CSoxStream(wav_path, 'w', sox_in.get_signal(), fileType='wav')
-    sox_chain = pysox.CEffectsChain(sox_in, sox_out)
-    sox_chain.add_effect(pysox.CEffect('trim', [str(start), str(end - start)]))
-    #sox_chain.add_effect(pysox.CEffect("rate", ['16000']))
-    sox_chain.flow_effects()
-    sox_out.close()
+    cmd = ['sox', '--ignore-length', src_path, '-c', '1', '-r', '16000', '-b', '16', wav_path, 'trim', str(start), str(end - start)]
+    subprocess.call(cmd)
 
 def convert(args):
     """
     Looks for recordings and transcriptions under the `args.infname'
     directory.  Converts audio files to WAVs and copies the .wav files
-    and their transcriptions to `args.outdir' function. `args.dictionary' may
+    and their transcriptions to `args.outdir' directory. `args.dictionary' may
     refer to an open file listing the only words to be allowed in
     transcriptions in the first whitespace-separated column.
 
