@@ -217,14 +217,12 @@ class ConfusionNetwork(Hypothesis):
 
     def remove(self, fact_to_remove):
         fact_ndx = -1
-        for i, (prob, fact) in enumerate(self.cn):
-            if fact == fact_to_remove:
-                fact_ndx = i
-                break
+        if fact_to_remove in self.current_facts:
+            fact_ndx = self.current_facts[fact_to_remove]
         else:
             raise Exception('Fact has not been found.')
 
-        del self.current_facts[self.cn[fact_ndx][1]]
+        del self.current_facts[fact_to_remove]
         self.cn.remove(self.cn[fact_ndx])
 
     def extend(self, conf_net):
