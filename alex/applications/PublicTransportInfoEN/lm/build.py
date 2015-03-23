@@ -168,10 +168,10 @@ if __name__ == '__main__':
                     trans = trans_list[-1]
 
                     t = various.get_text_from_xml_node(trans)
-                    t = [str(various.get_text_from_xml_node(t)) for t in trans.childNodes if str(various.get_text_from_xml_node(t))][0]
                     t = normalise_text(t)
 
                     if exclude_lm(t):
+                        print t + " was excluded!"
                         continue
 
                     # The silence does not have a label in the language model.
