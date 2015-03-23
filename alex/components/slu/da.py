@@ -735,14 +735,6 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         return "\n".join(ret)
 
-    def __iter__(self):
-        for dai_hyp in self.cn:
-            yield dai_hyp
-
-    def __reversed__(self):
-        for dai_hyp in reversed(self.cn):
-            yield dai_hyp
-
     def items(self):
         return self.cn
 
@@ -773,26 +765,6 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                       'arit': _combine_arit.__func__,
                       'harm': _combine_harm.__func__}
 
-    def make_dict(self):
-        """
-        Creates a dictionary mapping a simplified tuple representation of a DAI
-        to that DAI for DAIs present in this DA confnet.
-
-        """
-        daitup2dai = dict()
-        for prob, dai in self.cn:
-            if dai.name is None:
-                daitup2dai[dai.dat] = dai
-            else:
-                daitup2dai[(dai.dat, dai.name)] = dai
-        return daitup2dai
-
-    def extend(self, conf_net):
-        if not isinstance(conf_net, ConfusionNetwork):
-            raise DialogueActConfusionNetworkException("Only DialogueActConfusionNetwork can be added.")
-        self.cn.extend(conf_net.cn)
-        return self
-
     def add_merge(self, probability, dai, combine='max'):
         """Combines the probability mass of the given dialogue act item with an
         existing dialogue act item or adds a new dialogue act item.
@@ -806,9 +778,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         """
         combine_meth = self._combine_meths[combine]
-        for dai_idx, (prob_orig, dai_orig) in enumerate(self.cn):
+        for dai_idx, (prob_orig, dai_orig) in enumerate(self):
             if dai == dai_orig:
-                self.cn[dai_idx][0] = combine_meth(prob_orig, probability)
+                self.update_prob(combine_meth(prob_orig, probability), dai_orig)
                 break
         else:
             # If the DAI was not present, add it.
@@ -839,7 +811,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         if res[0].dat == "null":
             da = DialogueAct()
-            for prob, dai in self.cn:
+            for prob, dai in sorted(self.cn, reverse=True):
                 if dai.name is not None and len(dai.name) > 0:
                     da.append(dai)
                     break
@@ -899,11 +871,14 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         # probabilities.
         return DialogueActHyp(logprob if use_log else prob, da)
 
-    def get_prob(self, hyp_index):
+    def _get_prob(self, hyp_index, cn=None):
         """Return a probability of the given hypothesis."""
 
+        if not cn:
+            cn = self.cn
+
         prob = 1.0
-        for i, (p, dai) in zip(hyp_index, self.cn):
+        for i, (p, dai) in zip(hyp_index, cn):
             if i == 0:
                 prob *= p
             else:
@@ -911,23 +886,19 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         return prob
 
-    def get_marginal(self, dai):
-        for prob, my_dai in self.cn:
-            if my_dai == dai:
-                return prob
-        return None
-
-    def get_next_worse_candidates(self, hyp_index):
+    def _get_next_worse_candidates(self, hyp_index, cn=None):
         """
         Returns such hypotheses that will have lower probability.
 
         """
+        if not cn:
+            cn = self.cn
         worse_hyp = []
 
         for i in range(len(hyp_index)):
             wh = list(hyp_index)
             wh[i] += 1
-            if self.cn[i][0] < 0.5 and wh[i] >= 2:
+            if cn[i][0] < 0.5 and wh[i] >= 2:
                 wh[i] = 0
 
             if wh[i] >= 2:
@@ -940,9 +911,12 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         return worse_hyp
 
-    def get_hyp_index_dialogue_act(self, hyp_index):
+    def _get_hyp_index_dialogue_act(self, hyp_index, cn=None):
+        if not cn:
+            cn = self.cn
+
         da = DialogueAct()
-        for i, (p, dai) in zip(hyp_index, self.cn):
+        for i, (p, dai) in zip(hyp_index, cn):
             if i == 0:
                 da.append(dai)
 
@@ -950,19 +924,6 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
             da.append(DialogueActItem('null'))
 
         return da
-
-    def get_da_nblist_naive(self, n=10, prune_prob=0.005):
-        """For each CN item creates a NB list item."""
-
-        res = []
-        for cn_item in self.cn:
-            nda = DialogueAct()
-            nda.append(cn_item[1])
-
-            res += [(cn_item[0], nda)]
-
-        res.sort(reverse=True)
-        return res
 
     def get_da_nblist(self, n=10, prune_prob=0.005):
         """Parses the input dialogue act item confusion network and generates N-best hypotheses.
@@ -980,18 +941,20 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         open_hyp = []
         closed_hyp = {}
 
-        for j, (p, dai) in enumerate(self.cn):
+        cn = sorted(self, reverse=True)
+
+        for j, (p, dai) in enumerate(cn):
             if p < 0.5:
                 i = j
                 break
         else:
-            i = len(self.cn)
+            i = len(cn)
 
         # create index for the best hypothesis
-        best_hyp = tuple([0,] * i + [1,] * (len(self.cn) - i))
-        best_prob = self.get_prob(best_hyp)
+        best_hyp = tuple([0,] * i + [1,] * (len(cn) - i))
+        best_prob = self._get_prob(best_hyp, cn=cn)
         open_hyp.append((best_prob, best_hyp))
-        # print "i, bp, bh", i, best_prob, best_hyp
+        #print "i, bp, bh", i, best_prob, best_hyp
 
         i = 0
         while open_hyp and i < n*100:
@@ -1005,9 +968,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
                 closed_hyp[current_hyp_index] = current_prob
                 # print "current_prob, current_hyp_index:", current_prob, current_hyp_index
 
-                for hyp_index in self.get_next_worse_candidates(current_hyp_index):
+                for hyp_index in self._get_next_worse_candidates(current_hyp_index, cn=cn):
                     # print hyp_index
-                    prob = self.get_prob(hyp_index)
+                    prob = self._get_prob(hyp_index, cn=cn)
                     open_hyp.append((prob, hyp_index))
 
                 open_hyp.sort(reverse=True)
@@ -1017,8 +980,8 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         nblist = DialogueActNBList()
         for idx in closed_hyp:
-            # print "p = ",closed_hyp[idx], "hyp = ", self.get_hyp_index_dialogue_act(idx)
-            nblist.add(closed_hyp[idx], self.get_hyp_index_dialogue_act(idx))
+            # print "p = ",closed_hyp[idx], "hyp = ", self._get_hyp_index_dialogue_act(idx)
+            nblist.add(closed_hyp[idx], self._get_hyp_index_dialogue_act(idx, cn=cn))
 
         #print nblist
         #print
@@ -1061,15 +1024,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
     def prune(self, prune_prob=0.005):
         """Prune all low probability dialogue act items."""
-        pruned_cn = []
-        for prob, dai in self.cn:
+        for prob, dai in self:
             if prob < prune_prob:
-                # prune out
-                continue
-
-            pruned_cn.append([prob, dai])
-
-        self.cn = pruned_cn
+                self.remove(dai)
 
     def normalise(self):
         """Makes sure that all probabilities add up to one. They should
@@ -1080,41 +1037,6 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
             if p >= 1.0:
                 raise DialogueActConfusionNetworkException(("The probability of the {dai!s} dialogue act item is " +
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
-
-    def normalise_by_slot(self):
-        """Ensures that probabilities for alternative values for the same slot
-        sum up to one (taking account for the `other' value).
-        """
-        slot_sums = {dai.name: 0.0 for (p, dai) in self.cn if dai.name}
-        dai_weights = list()
-        has_prob1 = list()
-        slot_1probs = {dai_name: 0.0 for dai_name in slot_sums}
-        for p, dai in self.cn:
-            this_has_prob1 = True  # whatever, these values will be overwritten
-            dai_weight = 1.        # or never used
-            if dai.name:
-                # Resolve the special case of p == 1.
-                if p == 1.:
-                    slot_1probs[dai.name] += 1
-                else:
-                    this_has_prob1 = False
-                    dai_weight = p / (1. - p)
-                    slot_sums[dai.name] += dai_weight
-            dai_weights.append(dai_weight)
-            has_prob1.append(this_has_prob1)
-        # Add the probability for any other alternative.
-        for slot in slot_sums:
-            slot_sums[slot] += 1
-        for idx, (p, dai) in enumerate(self.cn):
-            if dai.name:
-                n_ones = slot_1probs[dai.name]
-                # Handle slots where a value had p == 1.
-                if n_ones:
-                    self.cn[idx][0] = (1. / n_ones) if has_prob1[idx] else 0.
-                # The standard case.
-                else:
-                    self.cn[idx][0] = dai_weights[idx] / slot_sums[dai.name]
-        return self
 
     def sort(self):
         self.cn.sort(reverse=True)

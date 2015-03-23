@@ -177,7 +177,7 @@ class ConfusionNetwork(Hypothesis):
     """
     def __init__(self):
         self.cn = list()
-        self.current_facts = set()
+        self.current_facts = {}
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -199,12 +199,21 @@ class ConfusionNetwork(Hypothesis):
         for fact in self.cn:
             yield fact
 
+    def __reversed__(self):
+        for dai_hyp in reversed(self.cn):
+            yield dai_hyp
+
     def add(self, probability, fact):
         """Append a fact to the confusion network."""
         if fact in self.current_facts:
             raise ConfusionNetworkException("Cannot add facts already in the network.")
         self.cn.append((probability, fact))
-        self.current_facts.add(fact)
+        self.current_facts[fact] = len(self.cn) - 1
+
+    def update_prob(self, probability, fact):
+        """Update the probability of a fact in the confusion network."""
+        ndx = self.current_facts[fact]
+        self.cn[ndx] = (probability, fact)
 
     def remove(self, fact_to_remove):
         fact_ndx = -1
@@ -215,8 +224,14 @@ class ConfusionNetwork(Hypothesis):
         else:
             raise Exception('Fact has not been found.')
 
-        self.current_facts.remove(self.cn[fact_ndx][1])
+        del self.current_facts[self.cn[fact_ndx][1]]
         self.cn.remove(self.cn[fact_ndx])
+
+    def extend(self, conf_net):
+        if not isinstance(conf_net, ConfusionNetwork):
+            raise ConfusionNetworkException("Only ConfusionNetwork instances can be added.")
+        self.cn.extend(conf_net.cn)
+        return self
 
     @classmethod
     def from_fact(cls, fact):
