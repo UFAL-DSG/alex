@@ -12,7 +12,7 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder, Travel
+from .directions import GoogleDirectionsFinder, Travel, NotSupported
 from .platform_info import  PlatformInfo
 from .weather import OpenWeatherMapWeatherFinder
 from datetime import datetime
@@ -48,8 +48,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.system_das = []
         self.last_system_dialogue_act = None
 
-        self.debug = cfg['DM']['basic']['debug']
-        self.session_logger = cfg['Logging']['session_logger']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
@@ -209,6 +208,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         elif fact['dialog_begins']:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
+            dialogue_state['lta_task'].set('find_connection', 1.0)
 
         elif fact['user_did_not_say_anything']:
             # at this moment the silence and the explicit null act
@@ -376,33 +376,36 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if state_changed:
                     # we know everything we need -> start searching
                     res_da = DialogueAct()
-                    platform_res = self.directions.get_platform(platform_info)
+                    try:
+                        platform_res = self.directions.get_platform(platform_info)
 
-                    if not platform_res:
-                        res_da.append(DialogueActItem('inform', 'platform',
-                                                      'not_found'))
-                        res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_info.to_stop))
-                    else:
-                        if platform_res.platform:
+                        if not platform_res:
                             res_da.append(DialogueActItem('inform', 'platform',
-                                                      platform_res.platform))
-                            res_da.append(DialogueActItem('inform', 'track',
-                                                      platform_res.track))
-                            if platform_info.train_name != 'none':
-                                res_da.append(DialogueActItem('inform',
-                                                              'train_name',
-                                                              platform_info.train_name))
-                            else:
-                                res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_res.direction))
-                        else:
-                            res_da.append(DialogueActItem('inform', 'platform',
-                                                      'none'))
-                            res_da.append(DialogueActItem('inform', 'track',
-                                                      'none'))
+                                                          'not_found'))
                             res_da.append(DialogueActItem('inform', 'direction',
-                                                      platform_res.direction))
+                                                          platform_info.to_stop))
+                        else:
+                            if platform_res.platform:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          platform_res.platform))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          platform_res.track))
+                                if platform_info.train_name != 'none':
+                                    res_da.append(DialogueActItem('inform',
+                                                                  'train_name',
+                                                                  platform_info.train_name))
+                                else:
+                                    res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                            else:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                    except NotSupported:
+                        res_da.append(DialogueActItem('inform', 'not_supported'))
                 else:
                     res_da = self.backoff_action(ds)
             else:
@@ -1056,7 +1059,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         # origin and destination are the same
         if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
             apology_da = DialogueAct('apology()&inform(stops_conflict="thesame")')
-            apology_da.extend(DialogueAct(wp.get_minimal_info()))
+            apology_da.extend(DialogueAct('inform(from_stop="%s")&inform(to_stop="%s")' %
+                                          (wp.from_stop, wp.to_stop)))
             return apology_da
         # origin stop incompatible with origin city
         elif not self.ontology.is_compatible('city_stop', wp.from_city, wp.from_stop):

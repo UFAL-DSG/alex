@@ -188,17 +188,18 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     It uses only the best dialogue act from the input.
     Based on this it updates its state.
     """
+    slots = None
 
     def __init__(self, cfg, ontology):
         super(DeterministicDiscriminativeDialogueState, self).__init__(cfg, ontology)
 
-        self.slots = defaultdict(D3DiscreteValue)
         self.turns = []
         self.turn_number = 0
-        self.debug = cfg['DM']['basic']['debug']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.type = cfg['DM']['DeterministicDiscriminativeDialogueState']['type']
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
+        self.restart()
 
     def __unicode__(self):
         """Get the content of the dialogue state in a human readable form."""
@@ -387,13 +388,14 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
             if new_user_dais:
                 for nudai in new_user_dais:
-                    new_user_da.add(prob, nudai)
+                    if not nudai in new_user_da:
+                        new_user_da.add(prob, nudai)
 
         # In case of collisions, prefer the current last talked about values.
         invalid_das = set()
-        for prob, da in new_user_da:
+        for prob, da in set(new_user_da):
             if da.name in colliding_slots:
-                if not da.value == self[da.name]:
+                if not da.value == self[da.name].mpv():
                     invalid_das.add(da)
 
         for invalid_da in invalid_das:
