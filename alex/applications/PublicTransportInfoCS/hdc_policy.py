@@ -572,7 +572,32 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in requested_slots:
-            if ds['route_alternative'] in [0, 1, 2, 3]:
+            # for these, we don't need any route information, we can answer straight away
+            if slot not in ['from_stop', 'to_stop',
+                            'departure_time', 'departure_time_rel',
+                            'arrival_time', 'arrival_time_rel',
+                            'duration', 'num_transfers', 'time_transfers', ]:
+                dai = DialogueActItem("inform", slot, requested_slots[slot])
+                res_da.append(dai)
+                # remember that we answered
+                ds["rh_" + slot].reset()
+                continue
+
+            # try to find a route if we don't know it yet
+            if not isinstance(ds['route_alternative'], int):
+                req_da, iconfirm_da, conn_info = self.gather_connection_info(ds, accepted_slots)
+                # we have all information we need, start searching
+                if len(req_da) == 0:
+                    ds.conn_info = conn_info
+                    res_da = iconfirm_da
+                    # search for directions, but do not return the output DAs
+                    self.get_directions(ds, check_conflict=True)
+                # we don't know enough, ask about the rest
+                else:
+                    res_da = req_da
+
+            # we have a route, so return information about it
+            if isinstance(ds['route_alternative'], int):
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':
@@ -591,26 +616,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_num_transfers(ds))
                 elif slot == "time_transfers":
                     res_da.extend(self.req_time_transfers(ds))
-            else:
-                if slot in ['from_stop', 'to_stop',
-                            'departure_time', 'departure_time_rel',
-                            'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', 'time_transfers', ]:
-                    dai = DialogueActItem("inform", "stops_conflict", "no_stops")
-                    res_da.append(dai)
 
-                    if 'from_stop' not in accepted_slots:
-                        dai = DialogueActItem("help", "inform", "from_stop")
-                        res_da.append(dai)
-                    elif 'to_stop' not in accepted_slots:
-                        dai = DialogueActItem("help", "inform", "to_stop")
-                        res_da.append(dai)
-                else:
-                    dai = DialogueActItem("inform", slot, requested_slots[slot])
-                    res_da.append(dai)
-                    ds["rh_" + slot].reset()
-
-            ds["rh_" + slot].reset()
+                # remember that we answered
+                ds["rh_" + slot].reset()
 
         return res_da
 
