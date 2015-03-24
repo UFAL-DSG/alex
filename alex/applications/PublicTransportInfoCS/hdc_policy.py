@@ -590,13 +590,18 @@ class PTICSHDCPolicy(DialoguePolicy):
                 if len(req_da) == 0:
                     ds.conn_info = conn_info
                     res_da = iconfirm_da
-                    # search for directions, but do not return the output DAs
-                    self.get_directions(ds, check_conflict=True)
+                    # the search will change ds['route_alternative'] if a route is found
+                    dir_da = self.get_directions(ds, check_conflict=True)
+                    # only return the output DAs if no route is found (i.e., the error message),
+                    # otherwise we go on to return the specific information requested
+                    if not isinstance(ds['route_alternative'], int):
+                        res_da.extend(dir_da)
                 # we don't know enough, ask about the rest
                 else:
                     res_da = req_da
 
             # we have a route, so return information about it
+            # NB: ds['route_alternative'] might have changed in the meantime if a route has been found
             if isinstance(ds['route_alternative'], int):
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
