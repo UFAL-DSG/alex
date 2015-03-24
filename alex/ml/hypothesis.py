@@ -211,9 +211,14 @@ class ConfusionNetwork(Hypothesis):
         self.current_facts[fact] = len(self.cn) - 1
 
     def update_prob(self, probability, fact):
-        """Update the probability of a fact in the confusion network."""
+        """Update the probability of a fact."""
         ndx = self.current_facts[fact]
         self.cn[ndx] = (probability, fact)
+
+    def get_prob(self, fact):
+        """Get the probability of the fact."""
+        ndx = self.current_facts[fact]
+        return self.cn[ndx][0]
 
     def remove(self, fact_to_remove):
         fact_ndx = -1

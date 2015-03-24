@@ -719,6 +719,13 @@ class DAILogRegClassifier(SLUInterface):
             (self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
              self.parsed_classifiers, self.features_size) = pickle.load(model_file)
 
+    def _add_or_update_confnet(self, da_confnet, p, dai):
+        if dai in da_confnet:
+            prob = max(p, da_confnet.get_prob(dai))
+            da_confnet.update_prob(prob, dai)
+        else:
+            da_confnet.add(p, dai)
+
     def parse_X(self, utterance, verbose=False):
         if verbose:
             print '='*120
@@ -763,7 +770,7 @@ class DAILogRegClassifier(SLUInterface):
                             print '  Probability:', p
 
                         dai = DialogueActItem(self.parsed_classifiers[clser].dat, self.parsed_classifiers[clser].name, v)
-                        da_confnet.add(p[0][1], dai)
+                        self._add_or_update_confnet(da_confnet, p[0][1], dai)
             else:
                 # process concrete classifiers
                 classifiers_features = self.get_features(utterance, (None, None, None), utterance_fvcs)
@@ -779,7 +786,8 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print '  Probability:', p
 
-                da_confnet.add(p[0][1], self.parsed_classifiers[clser])
+                dai = self.parsed_classifiers[clser]
+                self._add_or_update_confnet(da_confnet, p[0][1], dai)
 
         da_confnet.sort().merge().prune()
 
