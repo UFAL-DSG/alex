@@ -125,7 +125,6 @@ def online_update(file_name):
     """
 
     fn = as_project_path(file_name)
-    return fn
 
     if not is_update_server_reachble():
         return fn
