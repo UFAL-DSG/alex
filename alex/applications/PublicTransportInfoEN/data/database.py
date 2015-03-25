@@ -10,57 +10,72 @@ import os
 import re
 import sys
 
-
 from alex.utils.config import online_update, to_project_path
+
 
 __all__ = ['database']
 
 
 database = {
     "task": {
-        "find_connection": ["find",
+        "find_connection": ["find connection", "find a connection", "give me directions", "find link", "find a link",
+                            "directions", "find out link", "looking for a connection", "search for a connection",
+                            'connection', 'link',
                            ],
-        "find_platform": ["platform", ],
+        "find_platform": ["find a platform", "search for a platform", "give me a platform", "looking for a platform", ],
         'weather': ['weather', ],
     },
     "number": {
-        "1": ["one"]
+        str("1"): [str("one")]
     },
     "time": {
-        "now": ["now", "immediately", ],
+        "now": ["now", "at once", "immediately", "offhand", "at this time", "the closest", "this instant"],
+    },
+    "date_rel": {
+        "today": ["today", "this day", "todays", "this days"],
+        "tomorrow": ["tomorrow", "tomorrows", "morrow", "morrows"],
+        "day_after_tomorrow": ["day after tomorrow", "after tomorrow", "after tomorrows"],
+    },
+    "street": {
+    },
+    "stop": {
     },
     "vehicle": {
-        "dontcare": ["dontcare", ],
-        "bus": ["bus", ],
-        "tram": ["tram", ],
-        "subway": ["metro", "subway", ],
-        "train": ["train", "fast train", "express train"],
-        "cable_car": ["cable car", ],
-        "ferry": ["ferry", ],
+        "dontcare": ["whatever", "no matter how", "not matter", "don't matter", "doesn't matter",
+                     "any way possible", "any possible way", "any means", "don't care how", "do not care how", ],
+        "bus": ["bus", "buses", "coach"],
+        "tram": ["tram", "trams", "streetcar", "streetcars", "tramcar", "tramcars", "trammy", "tramm", "tramms", ],
+        "subway": ["metro", "sub", "subway", "tube", "underground", ],
+        "train": ["train", "choo-choo", "choochoo", "choo choo", "railway", "rail station", "railstation",
+                  "express", "fast train", "speed train", "rail", "rails", "light rail", ],
+        "cable_car": ["cable car", "cablecar", "funicular", ],
+        "ferry": ["ferry", "boat", "ferryboat", "gondola", ],
+        "monorail": ["monorail", "single rail", ]
     },
     "ampm": {
-        "morning": ["morning", ],
-        "am": ["am",],
-        "pm": ["pm", ],
-        "evening": ["evening", ],
-        "night": ["night", ],
+        "morning": ["morning", "dawn", ],
+        "am": [ "forenoon", "a.m.", ],
+        "pm": [ "afternoon", "p.m.", ],
+        "evening": ["evening", "dusk", ],
+        "night": ["night", "nighttime", "midnight", ],
     },
     "city": {
     },
+    "borough": {
+    },
+    "state": {
+    },
 }
 
-# TODO tens, hundreds? "dvacátý/á/ou/ třetí"?
-NUMBERS_1 = ["nula", "jedna", ["dvě", "dva"], "tři", ["čtyři", "čtyry"], "pět", "šest", ["sedm", "sedum"],
-             ["osm", "osum"], "devět", ]
-NUMBERS_10 = ["", "deset", "dvacet", "třicet", ["čtyřicet", "čtyrycet"], "padesát",
-              "šedesát", ]
-NUMBERS_TEEN = ["deset", "jedenáct", "dvanáct", "třináct", "čtrnáct",
-                "patnáct", "šestnáct", "sedmnáct", "osmnáct", "devatenáct"]
-NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "šestý",
-               "sedmý", "osmý", "devátý", "desátý", "jedenáctý", "dvanáctý",
-               "třináctý", "čtrnáctý", "patnáctý", "šestnáctý", "sedmnáctý",
-               "osmnáctý", "devatenáctý", "dvacátý", "jednadvacátý",
-               "dvaadvacátý", "třiadvacátý"]
+NUMBERS_1 = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", ]
+NUMBERS_10 = ["", "ten", "twenty", "thirty", "forty", "fifty", "sixty", ]
+NUMBERS_TEEN = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+                "sixteen", "seventeen", "eighteen", "nineteen"]
+# NUMBERS_ORD = ["zero", "first", "second", "third", "fourth", "fifth", "sixth", # nultý - zero/prime?
+#                "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
+#                "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+#                "eighteenth", "nineteenth", "twentieth", "twenty first",
+#                "twenty second", "twenty third"]
 
 # name of the file with one stop per line, assumed to reside in the same
 # directory as this script
@@ -69,12 +84,18 @@ NUMBERS_ORD = ["nultý", "první", "druhý", "třetí", "čtvrtý", "pátý", "�
 #   <value>; <phrase>; <phrase>; ...
 # where <value> is the value for a slot and <phrase> is its possible surface
 # form.
+STREETS_FNAME = "streets.expanded.txt"
 STOPS_FNAME = "stops.expanded.txt"
+BOROUGHS_FNAME = "boroughs.expanded.txt"
 CITIES_FNAME = "cities.expanded.txt"
+STATES_FNAME = "states.expanded.txt"
 
 # load new stops & cities list from the server if needed
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STOPS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), BOROUGHS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STATES_FNAME)))
 
 
 def db_add(category_label, value, form):
@@ -89,42 +110,22 @@ def db_add(category_label, value, form):
     if value in database[category_label] and isinstance(database[category_label][value], list):
         database[category_label][value] = set(database[category_label][value])
 
-#    if category_label == 'stop':
-#        if value in set(['Nová','Praga','Metra','Konečná','Nádraží',]):
-#            return
-
-#    for c in '{}+/&[],-':
-#        form = form.replace(' %s ' % c, ' ')
-#        form = form.replace(' %s' % c, ' ')
-#        form = form.replace('%s ' % c, ' ')
-#    form = form.strip()
-
     database[category_label].setdefault(value, set()).add(form)
 
-def spell_number(num):
-    """Spells out the number given in the argument.
 
-    Returns various forms for each number including:
-        - basic and reversed form ("dvacetdva"/"dvaadvacet")
-        - one- and two-word form ("čtyřicetšest"/"čtyřicet šest")
-        - alternative pronounciations ("čtyry", "sedum")
-    """
+def spell_number(num):
+    """Spells out the number given in the argument. not greater than 69"""
     tens, units = num / 10, num % 10
-    tens_strs = [NUMBERS_10[tens]] if not isinstance(NUMBERS_10[tens], list) else NUMBERS_10[tens]
-    units_strs = [NUMBERS_1[units]] if not isinstance(NUMBERS_1[units], list) else NUMBERS_1[units]
+    tens_str = NUMBERS_10[tens]
+    units_str = NUMBERS_1[units]
     if tens == 1:
-        return [NUMBERS_TEEN[units]]
+        return NUMBERS_TEEN[units]
     elif tens:
         if units:
-            spellings = []
-            spellings += ["{t} {u}".format(t=tens_str, u=units_str) for units_str in units_strs for tens_str in tens_strs]
-            spellings += ["{t}{u}".format(t=tens_str, u=units_str) for units_str in units_strs for tens_str in tens_strs]
-            spellings += ["{u}{a}{t} ".format(t=tens_str, u=units_str, a='' if units is 1 else 'a')
-                          for units_str in units_strs for tens_str in tens_strs]
-            return spellings
-        return ["{t}".format(t=tens_str) for tens_str in tens_strs]
+            return "{t} {u}".format(t=tens_str, u=units_str)
+        return "{t}".format(t=tens_str)
     else:
-        return units_strs
+        return units_str
 
 
 def add_numbers():
@@ -132,30 +133,24 @@ def add_numbers():
     Basic approximation of all known explicit number expressions.
 
     Handles:
-        fractions (půl/čtvrt/tři čtvrtě)
+        fractions (quarter/half)
         cardinal numbers <1, 59>
-        ordinal numbers <1, 23>
     """
 
-    for fraction, fraction_spelling in [(0.25,'čtvrt'),(0.5,'půl'),(0.75,'tři čtrtě')]:
+    for fraction, fraction_spelling in [(0.25, 'quarter'), (0.5, 'half')]:
         add_db_number(fraction, fraction_spelling)
 
     for cardinal in xrange(60):
-        for cardinal_spelling in spell_number(cardinal):
-            add_db_number(cardinal, cardinal_spelling)
+        add_db_number(cardinal, spell_number(cardinal))
 
-    for ordinal in xrange(24):
-        hr_ord = NUMBERS_ORD[ordinal]
-        if ordinal == 1:
-            hr_ord = 'jedný'
-        add_db_number(ordinal, hr_ord)
-        if hr_ord.endswith('ý'):
-            add_db_number(ordinal, hr_ord[:-1] + 'é')
-            add_db_number(ordinal, hr_ord[:-1] + 'ou')
+    for single_digit in xrange(9):
+        add_db_number(single_digit, "zero " + spell_number(single_digit))
+        add_db_number(single_digit, "o " + spell_number(single_digit))
 
 def add_db_number(number, spelling):
     """Add a number expression to the database (given number and its spelling)."""
     db_add("number", str(number), spelling)
+
 
 def preprocess_cl_line(line):
     """Process one line in the category label database file."""
@@ -178,15 +173,26 @@ def add_from_file(category_label, fname):
             for form in val_surface_forms:
                 db_add(category_label, val_name, form)
 
+def add_streets():
+    """Add street names from the streets file."""
+    add_from_file('street', STREETS_FNAME)
 
 def add_stops():
     """Add stop names from the stops file."""
     add_from_file('stop', STOPS_FNAME)
 
+def add_boroughs():
+    """Add borough names from the static list of boroughs."""
+    add_from_file('borough', BOROUGHS_FNAME)
 
 def add_cities():
     """Add city names from the cities file."""
     add_from_file('city', CITIES_FNAME)
+
+
+def add_states():
+    """Add state names from the states file."""
+    add_from_file('state', STATES_FNAME)
 
 
 def save_c2v2f(file_name):
@@ -243,9 +249,12 @@ def save_SRILM_classes(file_name):
 ########################################################################
 #                  Automatically expand the database                   #
 ########################################################################
-#add_numbers()
-#add_stops()
-#add_cities()
+add_numbers()
+add_streets()
+add_stops()
+add_boroughs()
+add_cities()
+add_states()
 
 
 if __name__ == '__main__':

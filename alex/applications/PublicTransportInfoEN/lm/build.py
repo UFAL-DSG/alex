@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This script builds the domain specific language model for the Public Transport Info domain (Czech)
+This script builds the domain specific language model for the Public Transport Info domain (English)
 
 The training procedure is as follows:
 
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     print
     print "Data for the general language model:", gen_data
     print "-"*120
-###############################################################################################
+    ###############################################################################################
 
     if not os.path.exists(gen_data_norm):
         print "Normalizing general data"
@@ -171,6 +171,7 @@ if __name__ == '__main__':
                     t = normalise_text(t)
 
                     if exclude_lm(t):
+                        print t + " was excluded!"
                         continue
 
                     # The silence does not have a label in the language model.
@@ -183,7 +184,7 @@ if __name__ == '__main__':
 
                     pt.append((wav_path, t))
 
-# this is only for testing
+        # this is only for testing
         files = []
         files.append(glob.glob(os.path.join(indomain_data_dir, '*.trn')))
         files.append(glob.glob(os.path.join(indomain_data_dir, '*', '*.trn')))
@@ -212,7 +213,7 @@ if __name__ == '__main__':
                 wav_path = os.path.realpath(wav_file.replace('.trn', ''))
 
                 pt.append((wav_path, t))
-# this is only for testing
+        # this is only for testing
 
         random.seed(10)
         sf = [(a, b) for a, b in zip(tt, pt)]
@@ -470,7 +471,7 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-###############################################################################################
+    ###############################################################################################
     print
     print "Test language models"
 
