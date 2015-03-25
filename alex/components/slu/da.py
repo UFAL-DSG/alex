@@ -691,7 +691,6 @@ class DialogueActNBList(SLUHypothesis, NBList):
             for dai in da:
                 confnet.add_merge(prob, dai, combine='add')
 
-        confnet.merge()
         confnet.sort()
         return confnet
 
@@ -730,67 +729,18 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
     def __unicode__(self):
         # DAs in a DA confnet are in no particular order, so we sort them here.
         ret = []
-        for prob, dai in sorted(self.cn, reverse=True):
+        for prob, dai in sorted(self, reverse=True):
             ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
         return "\n".join(ret)
 
     def items(self):
-        return self.cn
-
-    @staticmethod
-    def _combine_new(prob1, prob2):
-        return prob2
-
-    @staticmethod
-    def _combine_max(prob1, prob2):
-        return max(prob1, prob2)
-
-    @staticmethod
-    def _combine_add(prob1, prob2):
-        return prob1 + prob2
-
-    @staticmethod
-    def _combine_arit(prob1, prob2):
-        return .5 * (prob1 + prob2)
-
-    @staticmethod
-    def _combine_harm(prob1, prob2):
-        return (0. if prob1 * prob2 == 0
-                else .5 * (prob1 + prob2) / (prob1 * prob2))
-
-    _combine_meths = {'new': _combine_new.__func__,
-                      'max': _combine_max.__func__,
-                      'add': _combine_add.__func__,
-                      'arit': _combine_arit.__func__,
-                      'harm': _combine_harm.__func__}
-
-    def add_merge(self, probability, dai, combine='max'):
-        """Combines the probability mass of the given dialogue act item with an
-        existing dialogue act item or adds a new dialogue act item.
-
-        Arguments:
-            probability -- probability of the DAI being added
-            dai -- the DAI being added
-            combine -- can be one of {'new', 'max', 'add', 'arit', 'harm'}, and
-                    determines how two probabilities should be merged
-                    (default: 'max')
-
-        """
-        combine_meth = self._combine_meths[combine]
-        for dai_idx, (prob_orig, dai_orig) in enumerate(self):
-            if dai == dai_orig:
-                self.update_prob(combine_meth(prob_orig, probability), dai_orig)
-                break
-        else:
-            # If the DAI was not present, add it.
-            self.add(probability, dai)
-        return self
+        return list(self)
 
     def get_best_da(self):
         """Return the best dialogue act (one with the highest probability)."""
         da = DialogueAct()
-        for prob, dai in self.cn:
+        for prob, dai in self:
             if prob >= 0.5:
                 da.append(dai)
 
@@ -811,7 +761,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         if res[0].dat == "null":
             da = DialogueAct()
-            for prob, dai in sorted(self.cn, reverse=True):
+            for prob, dai in sorted(self, reverse=True):
                 if dai.name is not None and len(dai.name) > 0:
                     da.append(dai)
                     break
@@ -849,7 +799,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
             logprob = 0.
         else:
             prob = 1.0
-        for edge_p, dai in self.cn:
+        for edge_p, dai in self:
             if edge_p > thresholds[dai]:
                 da.append(dai)
                 # multiply with probability of presence of a dialogue act
@@ -875,7 +825,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
         """Return a probability of the given hypothesis."""
 
         if not cn:
-            cn = self.cn
+            cn = self
 
         prob = 1.0
         for i, (p, dai) in zip(hyp_index, cn):
@@ -892,7 +842,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         """
         if not cn:
-            cn = self.cn
+            cn = list(self)
         worse_hyp = []
 
         for i in range(len(hyp_index)):
@@ -913,7 +863,7 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
     def _get_hyp_index_dialogue_act(self, hyp_index, cn=None):
         if not cn:
-            cn = self.cn
+            cn = self
 
         da = DialogueAct()
         for i, (p, dai) in zip(hyp_index, cn):
@@ -994,53 +944,8 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
 
         return nblist
 
-    def merge(self, combine='max'):
-        """Adds up probabilities for the same hypotheses.
 
-        Arguments:
-            combine -- can be one of {'new', 'max', 'add', 'arit', 'harm'}, and
-                    determines how two probabilities should be merged
-                    (default: 'max')
 
-        XXX As yet, we know that different values for the same slot are
-        contradictory (and in general, the set of contradicting attr-value
-        pairs could be larger).  We should therefore consider them alternatives
-        to each other.
-
-        """
-        combine_meth = self._combine_meths[combine]
-        new_cn = list()
-        dai_idxs = dict()  # :: [dai-> dai_idx]
-        for dai_idx, (prob, dai) in enumerate(self.cn):
-            if dai in dai_idxs:
-                new_dai_idx = dai_idxs[dai]
-                prob_orig = new_cn[new_dai_idx][0]
-                new_cn[new_dai_idx][0] = combine_meth(prob_orig, prob)
-            else:
-                dai_idxs[dai] = len(new_cn)
-                new_cn.append([prob, dai])
-        self.cn = new_cn
-        return self
-
-    def prune(self, prune_prob=0.005):
-        """Prune all low probability dialogue act items."""
-        for prob, dai in self:
-            if prob < prune_prob:
-                self.remove(dai)
-
-    def normalise(self):
-        """Makes sure that all probabilities add up to one. They should
-        implicitly sum to one: p + (1-p) == 1.0
-
-        """
-        for p, dai in self.cn:
-            if p >= 1.0:
-                raise DialogueActConfusionNetworkException(("The probability of the {dai!s} dialogue act item is " +
-                     "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
-
-    def sort(self):
-        self.cn.sort(reverse=True)
-        return self
 
     @classmethod
     def make_from_da(self, da):
@@ -1079,7 +984,7 @@ def merge_slu_confnets(confnet_hyps):
         if not isinstance(confnet, DialogueActConfusionNetwork):
             raise SLUException("Cannot merge something that is not a DialogueActConfusionNetwork.")
 
-        for prob, dai in confnet.cn:
+        for prob, dai in confnet:
             # it is not clear why I wanted to remove all other() dialogue acts
             # if dai.dat == "other":
             #     continue

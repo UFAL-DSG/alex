@@ -12,6 +12,7 @@ import __init__
 
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
     DialogueActConfusionNetwork, DialogueActConfusionNetworkException, merge_slu_nblists, merge_slu_confnets
+from alex.ml.hypothesis import ConfusionNetworkException
 
 
 class TestDA(unittest.TestCase):
@@ -143,7 +144,6 @@ class TestDialogueActConfusionNetwork(TestCase):
         self.assertEqual(len(da), 1)
         self.assertEqual(da.dais[0], DialogueActItem(dai='inform(food=null)'))
 
-
     def test_get_best_nonnull_da(self):
         dacn = DialogueActConfusionNetwork()
         dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
@@ -229,7 +229,6 @@ class TestDialogueActConfusionNetwork(TestCase):
         self.assertEqual(len(best_hyp.da), 2)
         self.assertTrue(DialogueActItem(dai='inform(food=czech)') in best_hyp.da)
 
-
     def test_get_prob(self):
         dacn = DialogueActConfusionNetwork()
         dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
@@ -262,10 +261,6 @@ class TestDialogueActConfusionNetwork(TestCase):
         expected_da = DialogueAct(da_str='inform(food=czech)&inform(food=russian)')
         self.assertEqual(best_da, expected_da)
 
-    def test_merge(self):
-        # TODO: Remove this method as this should be redundant.
-        pass
-
     def test_prune(self):
         dacn = DialogueActConfusionNetwork()
         dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
@@ -283,7 +278,7 @@ class TestDialogueActConfusionNetwork(TestCase):
         dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
         dacn.add(1.9, DialogueActItem(dai='inform(food=czech)'))
         dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
-        self.assertRaises(DialogueActConfusionNetworkException, dacn.normalise)
+        self.assertRaises(ConfusionNetworkException, dacn.normalise)
 
     def test_sort(self):
         dacn = DialogueActConfusionNetwork()
@@ -301,6 +296,18 @@ class TestDialogueActConfusionNetwork(TestCase):
         da = DialogueAct('inform(food=czech)&inform(area=north)')
         dacn = DialogueActConfusionNetwork.make_from_da(da)
         self.assertEqual(dacn.get_best_da(), da)
+
+    def test_merge(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
+
+        dacn.merge(dacn, combine='max')
+
+        # Russian food should be pruned.
+        dacn.sort().prune()
+        self.assertTrue(not DialogueActItem(dai='inform(food=russian)') in dacn)
 
 
 if __name__ == '__main__':
