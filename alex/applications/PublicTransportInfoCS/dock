@@ -1,4 +1,0 @@
-#!/bin/bash
-MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../../../" && pwd )"
-
-docker run --rm -i -t -v ${MYDIR}:/app/alex alex-ptics /bin/bash
