@@ -18,6 +18,7 @@ CITIES_LOCATIONS_FNAME = 'cities.locations.csv'
 # load new versions of the data files from the server
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), STREETS_TYPES_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), GENERAL_STOPS_LOCATIONS_FNAME)))
+online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), BOROUGH_STOPS_LOCATIONS_FNAME)))
 online_update(to_project_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), CITIES_LOCATIONS_FNAME)))
 
 ontology = {

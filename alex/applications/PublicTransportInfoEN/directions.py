@@ -255,7 +255,11 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
     def __init__(self, cfg):
         DirectionsFinder.__init__(self)
         APIRequest.__init__(self, cfg, 'google-directions', 'Google directions query')
-        self.directions_url = 'http://maps.googleapis.com/maps/api/directions/json'
+        self.directions_url = 'https://maps.googleapis.com/maps/api/directions/json'
+        if 'key' in cfg['DM']['directions'].keys():
+            self.api_key = cfg['DM']['directions']['key']
+        else:
+            self.api_key = None
 
     @lru_cache(maxsize=10)
     def get_directions(self, waypoints, departure_time=None, arrival_time=None):
@@ -296,12 +300,18 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
             'alternatives': 'true',
             'mode': 'transit',
             'language': 'en',
-            # 'key': 'AIzaSyDKQ9N8e8oE8PWe3eo_9wDxyyNVM_OnTIU'
         }
         if departure_time:
             data['departure_time'] = int(time.mktime(departure_time.timetuple()))
         elif arrival_time:
             data['arrival_time'] = int(time.mktime(arrival_time.timetuple()))
+
+        # add "premium" parameters
+        if self.api_key:
+            data['key'] = self.api_key
+            if waypoints.vehicle:
+                data['transit_mode'] = self.map_vehicle(waypoints.vehicle)
+            data['transit_routing_preference'] = 'fewer_transfers' if waypoints.max_transfers else 'less_walking'
 
         self.system_logger.info("Google Directions request:\n" + str(data))
 
@@ -313,6 +323,20 @@ class GoogleDirectionsFinder(DirectionsFinder, APIRequest):
         self.system_logger.info("Google Directions response:\n" +
                                 unicode(directions))
         return directions
+
+    def map_vehicle(self, vehicle):
+        """maps PTIEN vehicle type to GOOGLE DIRECTIONS query vehicle"""
+        # any of standard google inputs
+        if vehicle in ['bus', 'subway', 'train', 'tram', 'rail']:
+            return vehicle
+        # anything on the rail
+        if vehicle in ['monorail', 'night_tram', 'monorail']:
+            return 'rail'
+        # anything on the wheels
+        if vehicle in ['trolleybus', 'intercity_bus', 'night_bus']:
+            return 'bus'
+        # dontcare
+        return 'bus|rail'
 
 
 def _todict(obj, classkey=None):
