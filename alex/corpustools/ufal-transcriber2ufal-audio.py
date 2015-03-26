@@ -122,8 +122,13 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
         # Construct various involved file names.
         src_wav_fname = _file.replace('.trs', '.wav')
         tgt_ext = u'-{start:07.2f}-{end:07.2f}.wav'.format(start=starttime, end=endtime)
-        tgt_wav_fname = os.path.join(
-            outdir, os.path.basename(_file).replace('.trs', tgt_ext))
+        tgt_wav_fname = os.path.basename(_file).replace('.trs', tgt_ext)
+        tgt_wav_fname = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), tgt_wav_fname)
+
+        if not os.path.exists(os.path.dirname(tgt_wav_fname)):
+            os.makedirs(os.path.dirname(tgt_wav_fname))
+        
+        
         transcription_file_name = tgt_wav_fname + '.trn'
 
         if verbose:

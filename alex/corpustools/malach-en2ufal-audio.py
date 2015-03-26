@@ -38,6 +38,7 @@ import sys
 import codecs
 import pysox
 import xml.dom.minidom
+import random
 
 
 # Make sure the alex package is visible.
@@ -189,7 +190,11 @@ def convert(args):
                     n_missing_trs += 1
 
                 wav_name = '%s_%02d_%04d.wav' % (fname, i, j)
-                wav_path = os.path.join(outdir, wav_name)
+                #wav_path = os.path.join(outdir, wav_name)
+                wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), wav_name)
+
+                if not os.path.exists(os.path.dirname(wav_path)):
+                    os.makedirs(os.path.dirname(wav_path))
 
                 if verbose:
                     print

@@ -36,6 +36,7 @@ import os.path
 import shutil
 import sys
 import codecs
+import random
 
 from xml.etree import ElementTree
 
@@ -175,7 +176,10 @@ def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_word
 
             wc.update(trs.split())
 
-            trs_fname = os.path.join(outdir, wav_basename + '.trn')
+            sub_dir = "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99))
+            trs_fname = os.path.join(outdir, sub_dir[0], sub_dir[1], wav_basename + '.trn')
+            if not os.path.exists(os.path.dirname(trs_fname)):
+                os.makedirs(os.path.dirname(trs_fname))
 
             try:
                 size += os.path.getsize(wav_fname)
@@ -184,7 +188,7 @@ def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_word
             else:
                 try:
                     #shutil.copy2(wav_fname, outdir)
-                    tgt = os.path.join(outdir, os.path.basename(wav_fname))
+                    tgt = os.path.join(outdir, sub_dir[0], sub_dir[1], os.path.basename(wav_fname))
                     cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=wav_fname, tgt=tgt)
                     print cmd
                     os.system(cmd)

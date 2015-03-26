@@ -763,7 +763,7 @@ class DAILogRegClassifier(SLUInterface):
                             print '  Probability:', p
 
                         dai = DialogueActItem(self.parsed_classifiers[clser].dat, self.parsed_classifiers[clser].name, v)
-                        da_confnet.add(p[0][1], dai)
+                        da_confnet.add_merge(p[0][1], dai, combine='max')
             else:
                 # process concrete classifiers
                 classifiers_features = self.get_features(utterance, (None, None, None), utterance_fvcs)
@@ -779,9 +779,10 @@ class DAILogRegClassifier(SLUInterface):
                 if verbose:
                     print '  Probability:', p
 
-                da_confnet.add(p[0][1], self.parsed_classifiers[clser])
+                dai = self.parsed_classifiers[clser]
+                da_confnet.add_merge(p[0][1], dai, combine='max')
 
-        da_confnet.sort().merge().prune()
+        da_confnet.sort().prune()
 
         return da_confnet
 

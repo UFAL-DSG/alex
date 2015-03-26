@@ -43,7 +43,7 @@ class CategoryLabelDatabase(object):
 
 
     """
-    def __init__(self, file_name):
+    def __init__(self, file_name=None):
         self.database = {}
         self.synonym_value_category = []
         self.forms = []
@@ -88,10 +88,11 @@ class CategoryLabelDatabase(object):
                  sorted(upnames_vals4form.viewitems(), key=lambda item:-len(item[0]))]
         return self._form_upnames_vals
 
-    def load(self, file_name):
-        db_mod = load_as_module(file_name, force=True)
-        if not hasattr(db_mod, 'database'):
-            raise SLUException("The category label database does not define the `database' object!")
+    def load(self, file_name=None, db_mod=None):
+        if not db_mod:
+            db_mod = load_as_module(file_name, force=True)
+            if not hasattr(db_mod, 'database'):
+                raise SLUException("The category label database does not define the `database' object!")
         self.database = db_mod.database
 
         self.normalise_database()

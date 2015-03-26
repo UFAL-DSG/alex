@@ -1,5 +1,6 @@
 from alex import AlexException
 
+from alex.ml.hypothesis import ConfusionNetworkException
 
 class SLUException(AlexException):
     pass
@@ -33,5 +34,5 @@ class DialogueActNBListException(SLUException):
     pass
 
 
-class DialogueActConfusionNetworkException(SLUException):
+class DialogueActConfusionNetworkException(SLUException, ConfusionNetworkException):
     pass

@@ -779,7 +779,7 @@ class PTICSHDCSLU(SLUInterface):
         if dai.any_phrase_in(['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
             cn.add(1.0, dai.build('inform', 'task', 'weather'))
 
-        if any_word_in(u, 'nástupiště'):
+        if any_word_in(u, 'nástupiště kolej koleje'):
             cn.add(1.0, DialogueActItem("inform", "task", "find_platform"))
 
         if (dai.all_words_in('od to jede') or

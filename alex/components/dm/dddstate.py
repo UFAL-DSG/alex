@@ -363,7 +363,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     if new_user_dai:
                         new_user_da.add(prob, new_user_dai)
 
-        old_user_da.extend(new_user_da)
+        old_user_da.merge(new_user_da, combine='max')
 
         return old_user_da
 
@@ -401,7 +401,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         for invalid_da in invalid_das:
             new_user_da.remove(invalid_da)
 
-        old_user_da.extend(new_user_da)
+        old_user_da.merge(new_user_da, combine='max')
 
         return old_user_da
 
