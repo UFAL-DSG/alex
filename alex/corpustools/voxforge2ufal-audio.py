@@ -165,8 +165,9 @@ def convert(args):
                     excluded = norm_mod.exclude_by_dict(trs, known_words)
                 else:
                     excluded = norm_mod.exclude_asr(trs)
-                if verbose and excluded:
-                    print "... excluded"
+                if excluded:
+                    if verbose:
+                        print "... excluded"
                     continue
 
                 wc.update(trs.split())
