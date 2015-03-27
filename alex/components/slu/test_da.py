@@ -288,9 +288,10 @@ class TestDialogueActConfusionNetwork(TestCase):
 
         dacn.sort()
 
-        self.assertEqual(dacn.cn[0][1], DialogueActItem(dai='inform(food=czech)'))
-        self.assertEqual(dacn.cn[1][1], DialogueActItem(dai='inform(food=chinese)'))
-        self.assertEqual(dacn.cn[2][1], DialogueActItem(dai='inform(food=russian)'))
+        cn = list(dacn)
+        self.assertEqual(cn[0][1], DialogueActItem(dai='inform(food=czech)'))
+        self.assertEqual(cn[1][1], DialogueActItem(dai='inform(food=chinese)'))
+        self.assertEqual(cn[2][1], DialogueActItem(dai='inform(food=russian)'))
 
     def test_make_from_da(self):
         da = DialogueAct('inform(food=czech)&inform(area=north)')

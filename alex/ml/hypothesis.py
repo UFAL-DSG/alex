@@ -250,7 +250,7 @@ class ConfusionNetwork(Hypothesis):
 
     def sort(self, reverse=True):
         new_cn = OrderedDict()
-        for fact, p in sorted(self.cn.iteritems(), reverse=reverse):
+        for fact, p in sorted(self.cn.iteritems(), key=lambda x: x[1], reverse=reverse):
             new_cn[fact] = p
 
         self.cn = new_cn
@@ -287,7 +287,7 @@ class ConfusionNetwork(Hypothesis):
         implicitly sum to one: p + (1-p) == 1.0
 
         """
-        for p, dai in self.cn:
+        for p, dai in self:
             if p >= 1.0:
                 raise ConfusionNetworkException(("The probability of the {dai!s} dialogue act item is " +
                      "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))

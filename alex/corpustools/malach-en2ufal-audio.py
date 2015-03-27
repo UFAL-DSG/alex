@@ -38,6 +38,7 @@ import sys
 import codecs
 import pysox
 import xml.dom.minidom
+import random
 
 
 # Make sure the alex package is visible.
@@ -68,9 +69,14 @@ def save_transcription(trs_fname, trs):
         trs_file.write(trs)
     return existed
 
-def segment_to_wav(src_path, wav_path, start, end):
-    cmd = ['sox', '--ignore-length', src_path, '-c', '1', '-r', '16000', '-b', '16', wav_path, 'trim', str(start), str(end - start)]
+def to_wav(src_path, wav_path):
+    cmd = ['sox', '--ignore-length', src_path, '-c', '1', '-r', '16000', '-b', '16', wav_path]
     subprocess.call(cmd)
+
+def segment_to_wav(src_path, wav_path, start, end):
+    cmd = ['sox', src_path, '-c', '1', '-r', '16000', '-b', '16', wav_path, 'trim', str(start), str(end - start)]
+    subprocess.call(cmd)
+    
 
 def convert(args):
     """
@@ -141,57 +147,88 @@ def convert(args):
             continue
         audio_path = audio_dict[fname]
 
-        uturns = doc.getElementsByTagName("Sync")
+        # Convert audio to wav.
+        tmp_wav_path = os.path.join(outdir, fname + '.wav')
+        to_wav(audio_path, tmp_wav_path)
+
+        turns = doc.getElementsByTagName("Turn")
+
 
         i = 0
-        for uturn in uturns:
+        for turn in turns:
             i += 1
 
-            # Retrieve the user turn's data.
-            starttime = float(uturn.getAttribute('time').strip())
-            if uturn.nextSibling.nodeType == uturn.TEXT_NODE:
-                trs = uturn.nextSibling.data.strip()
-            else:
-                trs = ''
-                n_missing_trs += 1
-            try:
-                endtime = float(
-                    uturn.nextSibling.nextSibling.getAttribute('time').strip())
-            except:
-                endtime = 9999.000
+            currtime = float(turn.getAttribute('startTime'))
+            currtext = ''
 
-            wav_name = '%s_%03d.wav' % (fname, i)
-            wav_path = os.path.join(outdir, wav_name)
+            utterances = []
 
-            if verbose:
-                print
-                print "src:", os.path.split(audio_path)[1]
-                print "tgt:", wav_name
-                print "time:", starttime, endtime
-                print "orig transcription:", trs.upper().strip()
+            # Process all child nodes.
+            for node in turn.childNodes:
+                if node.nodeType == node.ELEMENT_NODE and node.tagName == 'Sync':
+                    starttime = currtime
+                    currtime = float(node.getAttribute('time'))
 
-            trs = norm_mod.normalise_text(trs)
+                    if currtime > starttime:
+                        utterances += [(currtext, starttime, currtime)]
 
-            if verbose:
-                print "normalised trans:  ", trs
+                    currtext = ''
+                elif node.nodeType == node.TEXT_NODE:
+                    currtext += ' ' + node.data.strip()
 
-            if known_words is not None:
-                excluded = norm_mod.exclude_by_dict(trs, known_words)
-            else:
-                excluded = norm_mod.exclude_asr(trs)
-            if verbose and excluded:
-                print "... excluded"
-                continue
+            # Add the last utterance, which is not followed by a Sync tag.
+            starttime = currtime
+            currtime = float(turn.getAttribute('endTime'))
+            if currtime > starttime:
+                utterances += [(currtext, starttime, currtime)]
 
-            wc.update(trs.split())
+            j = 0
+            for (trs, starttime, endtime) in utterances:
+                j += 1
 
-            if save_transcription(wav_path + '.trn', trs):
-                n_overwrites += 1
+                if not trs: # empty transcription
+                    n_missing_trs += 1
 
-            # Extract utterance from audio, save as WAV.
-            segment_to_wav(audio_path, wav_path, starttime, endtime)
-            size += os.path.getsize(wav_path)
-            seconds += endtime - starttime
+                wav_name = '%s_%02d_%04d.wav' % (fname, i, j)
+                #wav_path = os.path.join(outdir, wav_name)
+                wav_path = os.path.join(outdir, "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99)), wav_name)
+
+                if not os.path.exists(os.path.dirname(wav_path)):
+                    os.makedirs(os.path.dirname(wav_path))
+
+                if verbose:
+                    print
+                    print "src:", os.path.split(audio_path)[1]
+                    print "tgt:", wav_name
+                    print "time:", starttime, endtime
+                    print "orig transcription:", trs.upper().strip()
+
+                trs = norm_mod.normalise_text(trs)
+
+                if verbose:
+                    print "normalised trans:  ", trs
+
+                if known_words is not None:
+                    excluded = norm_mod.exclude_by_dict(trs, known_words)
+                else:
+                    excluded = norm_mod.exclude_asr(trs)
+
+                if excluded:
+                    if verbose:
+                        print "... excluded"
+                    continue
+
+                wc.update(trs.split())
+
+                if save_transcription(wav_path + '.trn', trs):
+                    n_overwrites += 1
+
+                # Extract utterance from audio.
+                segment_to_wav(tmp_wav_path, wav_path, starttime, endtime)
+                size += os.path.getsize(wav_path)
+                seconds += endtime - starttime
+        
+        os.remove(tmp_wav_path)
 
 
     return size, seconds, n_collisions, n_overwrites, n_missing_audio, n_missing_trs
