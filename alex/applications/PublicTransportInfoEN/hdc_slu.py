@@ -1159,6 +1159,4 @@ class PTIENHDCSLU(SLUInterface):
 
             self.parse_meta(utterance, abutterance_lenghts, res_cn)
 
-        res_cn.merge()
-
         return res_cn
