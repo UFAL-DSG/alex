@@ -73,7 +73,11 @@ if __name__ == '__main__':
         mdine(os.path.join(args.dev, sub_dir[0], sub_dir[1]))
         mdine(os.path.join(args.test, sub_dir[0], sub_dir[1]))
         mdine(os.path.join(args.train, sub_dir[0], sub_dir[1]))
-        
+
+        if not os.path.exists(real_fn) or not os.path.exists(real_fn+'.trn'):
+            print "Deas not exists {rf} or {rft}".format(rf=real_fn, rft=real_fn+'.trn')
+            continue
+
         if base_fn in dev_files:
             os.system("ln -s {src} {tgt}".format(src = real_fn, tgt = os.path.join(args.dev, sub_dir[0], sub_dir[1], base_fn)))
             os.system("ln -s {src} {tgt}".format(src = real_fn+'.trn', tgt = os.path.join(args.dev, sub_dir[0], sub_dir[1], base_fn+'.trn')))

@@ -178,7 +178,11 @@ def convert(args):
 
             # Add the last utterance, which is not followed by a Sync tag.
             starttime = currtime
-            currtime = float(turn.getAttribute('endTime'))
+            try:
+                currtime = float(turn.getAttribute('endTime'))
+            except ValueError:
+                currtime = float(turn.getAttribute('endTime').split()[0])
+            
             if currtime > starttime:
                 utterances += [(currtext, starttime, currtime)]
 
