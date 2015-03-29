@@ -1,0 +1,82 @@
+﻿Access to a telephone is needed for the testing of this application. Alternatively, You can use our "Call-us-now" button on our website (http://m2rtin.github.io/alex-site).
+
+We have currently 3 machines deployed for serving telephone lines and 1 for serving the button. So there is a possibility, that the button will not be always available.
+
+Before You proceed, please make sure You are in a quiet place if possible, with disturbing elements (TV, Radio) off. If You decide to use the website button, please use headphones, for the system may pick up the speaker-microphone echo which causes the system to misbehave. Also make sure You have a working microphone on Your device.
+
+NOTE: We are currently in the process of collecting data for training our new acoustic/language model. This means that we do not have excellent voice recognition capabilities particularly in noisy places. This issue will be eliminated by introducing the new model.
+
+Now, either call "1-631-832-1179" or click a "Call-us-Now" button on our website.
+
+The following dialogue might take place as an example:
+
+Alex: Hello this is Alex, the call is recorded, how may I help You?
+You: I'M LOOKING FOR A CONNECTION.
+Alex: Where are You traveling from?
+You: I WANT TO GO FROM CANAL STREET .
+Alex: Alright, from Canal Street. Where do You want to go to?
+You:  I WANT TO GO TO NINETY SIXTH STREET.
+Alex: Alright, to 96th Street. I have found the following connection. Take the subway C at 8.52 AM from Canal Street towards 168th Street. Get of at the 96th Street.
+
+Now You may want to ask additional questions or specify like:
+
+You: I WANT TO GO AT NINE P.M.
+Alex: In the afternoon. I have found the following connection. Take the subway C at 9.04 PM from Canal Street towards 168th Street. Get of at the 96th Street.
+You: HOW LONG DOES IT TAKE?
+Alex: It takes about 19 minutes.
+You: HOW MANY TRANSFERS ARE THERE?
+Alex: There are no transfers on this path.
+You: WHEN DOES IT ARRIVE?
+Alex: The subway arrives at 96th Street at 9.24 PM
+You: HOW LONG TILL IT LEAVES?
+Alex: The subway leaves Canal Street in 12 hours and 8 minutes.
+You: I WANT TO GO BY BUS.
+Alex: I am sorry, connection from Canal Street to 96th Street was not found.
+You: I WANT TO GO FROM HOUSTON STREET
+Alex: I am sorry, connection from Houston Street to 96th Street was not found.
+YOU: I WANT TO GO BY ANY MEANS.
+Alex: Alright, You want to go by any means. As a first possibility I have found the following connection. Walk to spring street. Take the subway C at 9.06 AM from Spring Street towards 168th Street. Get of at the 96th Street.
+
+You may want to ask about the weather and time:
+
+You: WHAT TIME IS IT?
+Alex: it is 9.00 AM, Eastern Standard Time.
+You: WHAT IS THE TIME IN TEXAS?
+Alex: In Texas, it is 8.00 AM, Central Standard Time.
+You: WHAT IS THE WEATHER LIKE IN LOS ANGELES?
+Alex: I'm sorry, I don't understand, the city Los Angeles is not located in Texas.
+
+NOTE: Please notice here, that we have detected a conflict. This is where You would use "New entry." keywords for starting over. Or You could say: "No, not in texas."
+Solution for this problem that arises when asking for orthogonal information is as follows:
+
+First solution:
+
+You: NEW ENTRY.
+Alex: Alright, let's start over.
+You: WHAT IS THE WEATHER LIKE IN LOS ANGELES?
+Alex: In Los Angeles, It is forty degrees and overcast clouds.
+
+Second solution:
+
+You: NO, NOT IN TEXAS.
+Alex: Please, specify the state.
+You. CALIFORNIA.
+Alex: In Los Angeles, It is forty degrees and overcast clouds.
+
+Alrigh, You may want to try the help feature:
+
+You: HELP.
+Alex: Please, tell me where You want to travel from and where to. Eventually when You want to go.
+
+To end the conversation, just say "Good Bye!":
+
+You: THANK YOU, GOOD BYE!
+Alex: Thank You for calling, Good Bye.
+...hangup()
+
+For testing, You can choose stops by your own selection and even some cities:
+
+You: I WANT TO GO FROM NEW YORK TO BALTIMORE
+Alex: Alright, from New York to Baltimore. I have found the following connection. Take the train Acela Express at 1:00 PM  from  NY Penn Station towards Washington Union Station. Get of at Baltimore Penn Station
+
+You can visit our website to try the button and check out the examples (http://m2rtin.github.io/alex-site/examples.html) for some more example dialogues.

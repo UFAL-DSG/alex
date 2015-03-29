@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
 import alex.utils.audio as audio
 from alex.components.tts.google import GoogleTTS
-from alex.utils.config import Config
+from alex.utils.config import Config, as_project_path
 
 if __name__ == '__main__':
 
@@ -14,8 +14,8 @@ if __name__ == '__main__':
     print "=" * 120
     print
 
-    text = 'Hello. Thank you for calling.'
-    language = 'en'
+    text = 'Hello, this is alex. Thank you for calling.'
+    language = 'en-us'
 
     print "Synthesize text:", text
     print "Language:       ", language
@@ -25,6 +25,8 @@ if __name__ == '__main__':
         'TTS': {
             'Google': {
                 'debug': False,
+                'preprocessing': as_project_path("resources/tts/prep_speechtech_en.cfg"),
+                'tempo': 1.0,
                 'language': language
             }
         }

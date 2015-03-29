@@ -41,9 +41,10 @@ class DM(multiprocessing.Process):
         self.dm = dm_factory(dm_type, cfg)
         self.dm.new_dialogue()
 
-        self.codes = ["%04d" % i  for i in range(0, 10000)]
-        random.seed(self.cfg['DM']['epilogue']['code_seed'])
+        self.codes = ["%04d" % i for i in range(0, 10000)]
+        # random.seed(self.cfg['DM']['epilogue']['code_seed'])
         random.shuffle(self.codes)
+        self.test_code_server_connection()
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -152,24 +153,32 @@ class DM(multiprocessing.Process):
         self.cfg['Logging']['session_logger'].dialogue_act("system", da)
         self.commands.send(DMDA(da, 'DM', 'HUB'))
 
+    def epilogue_final_apology(self):
+        # apology for not reaching minimum number of turns
+        text = self.cfg['DM']['epilogue']['final_code_text_min_turn_count_not_reached']
+        da = DialogueAct('say(text="{text}")'.format(text=text))
+        self.cfg['Logging']['session_logger'].dialogue_act("system", da)
+        self.commands.send(DMDA(da, 'DM', 'HUB'))
+
     def epilogue_final_code(self):
         code = self.codes.pop()
 
+        # pull the url
+        url = self.cfg['DM']['epilogue']['final_code_url'].format(code = code)
+        urllib.urlopen(url)
+
         text = [c for c in code]
-        text = "  ".join(text)
+        text = ", ".join(text)
         text = self.cfg['DM']['epilogue']['final_code_text'].format(code = text)
-        text = [text,]*4
+        text = [text,]*3
         text = self.cfg['DM']['epilogue']['final_code_text_repeat'].join(text)
 
         da = DialogueAct('say(text="{text}")'.format(text=text))
         self.cfg['Logging']['session_logger'].dialogue_act("system", da)
         self.commands.send(DMDA(da, 'DM', 'HUB'))
 
-        # pull the url
-        url = self.cfg['DM']['epilogue']['final_code_url'].format(code = code)
-        urllib.urlopen(url)
-
         self.final_code_given = True
+
 
     def epilogue(self):
         """ Gives the user last information before hanging up.
@@ -180,8 +189,10 @@ class DM(multiprocessing.Process):
             self.epilogue_final_question()
             return 'final_question'
         elif self.cfg['DM']['epilogue']['final_code_url']:
-            self.epilogue_final_code()
-            return 'final_code'
+            if self.dm.dialogue_state.turn_number < self.cfg['DM']['epilogue']['final_code_min_turn_count']:
+                self.epilogue_final_apology()
+            else:
+                self.epilogue_final_code()
 
         return None
 
@@ -277,3 +288,12 @@ class DM(multiprocessing.Process):
 
         print 'Exiting: %s. Setting close event' % multiprocessing.current_process().name
         self.close_event.set()
+
+    def test_code_server_connection(self):
+        """ this opens a test connection to our code server, content of the response is not important
+            if our server is down this call will fail and the vm will crash. this is more sensible to CF people,
+            otherwise CF contributor would do the job without getting paid.
+        """
+        if self.cfg['DM']['epilogue']['final_question'] is None and self.cfg['DM']['epilogue']['final_code_url'] is not None:
+            url = self.cfg['DM']['epilogue']['final_code_url'].format(code='test')
+            urllib.urlopen(url)

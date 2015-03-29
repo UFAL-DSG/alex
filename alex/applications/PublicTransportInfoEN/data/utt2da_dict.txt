@@ -1,0 +1,11 @@
+# This file contains data for "utt2da" dictionary that is a part of HDC SLU.
+# It provides utterance->dialoge_act mapping for utterances
+# that are either too complicated or too unique to be parsed by HDC SLU rules.
+# Add one utterance per line in format: <UTTERANCE>/t<dialogue act string>
+# Empty lines and lines starting with # are ignored.
+
+# ack
+i'm here	ack()
+
+# canthearyou
+it refuses to communicate	canthearyou()

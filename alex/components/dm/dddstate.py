@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from alex.components.dm.base import DiscreteValue, DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
-from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 
 
 class D3DiscreteValue(DiscreteValue):
