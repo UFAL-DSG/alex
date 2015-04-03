@@ -190,6 +190,10 @@ def convert(args):
             for (trs, starttime, endtime) in utterances:
                 j += 1
 
+                if (endtime - starttime) < 0.2:
+                    print "Too short segment"
+                    continue
+                    
                 if not trs: # empty transcription
                     n_missing_trs += 1
 

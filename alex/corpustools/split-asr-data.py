@@ -70,20 +70,24 @@ if __name__ == '__main__':
         base_fn = os.path.basename(fn)
 
         sub_dir = "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99))
-        mdine(os.path.join(args.dev, sub_dir[0], sub_dir[1]))
-        mdine(os.path.join(args.test, sub_dir[0], sub_dir[1]))
-        mdine(os.path.join(args.train, sub_dir[0], sub_dir[1]))
 
         if not os.path.exists(real_fn) or not os.path.exists(real_fn+'.trn'):
-            print "Deas not exists {rf} or {rft}".format(rf=real_fn, rft=real_fn+'.trn')
+            print "Does not exists {rf} or {rft}".format(rf=real_fn, rft=real_fn+'.trn')
             continue
 
+        if os.path.getsize(real_fn) < 5000:
+            print "Too small wave file {fn}".format(fn=real_fn)
+            continue
+            
         if base_fn in dev_files:
+            mdine(os.path.join(args.dev, sub_dir[0], sub_dir[1]))
             os.system("ln -s {src} {tgt}".format(src = real_fn, tgt = os.path.join(args.dev, sub_dir[0], sub_dir[1], base_fn)))
             os.system("ln -s {src} {tgt}".format(src = real_fn+'.trn', tgt = os.path.join(args.dev, sub_dir[0], sub_dir[1], base_fn+'.trn')))
         elif base_fn in test_files:
+            mdine(os.path.join(args.test, sub_dir[0], sub_dir[1]))
             os.system("ln -s {src} {tgt}".format(src = real_fn, tgt = os.path.join(args.test, sub_dir[0], sub_dir[1], base_fn)))
             os.system("ln -s {src} {tgt}".format(src = real_fn+'.trn', tgt = os.path.join(args.test, sub_dir[0], sub_dir[1], base_fn+'.trn')))
         else:
+            mdine(os.path.join(args.train, sub_dir[0], sub_dir[1]))
             os.system("ln -s {src} {tgt}".format(src = real_fn, tgt = os.path.join(args.train, sub_dir[0], sub_dir[1], base_fn)))
             os.system("ln -s {src} {tgt}".format(src = real_fn+'.trn', tgt = os.path.join(args.train, sub_dir[0], sub_dir[1], base_fn+'.trn')))
