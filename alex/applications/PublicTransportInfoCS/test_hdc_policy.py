@@ -1,3 +1,5 @@
+# encoding: utf8
+
 from unittest import TestCase
 
 import alex.applications.PublicTransportInfoCS.hdc_policy as hdc_policy
@@ -9,6 +11,8 @@ from alex.components.dm.dddstate import DeterministicDiscriminativeDialogueState
 from alex.components.slu.da import DialogueActConfusionNetwork, DialogueActItem
 from alex.components.dm.ontology import Ontology
 
+import mox
+
 class TestPTICSHDCPolicy(TestCase):
 
     def setUp(self):
@@ -16,6 +20,7 @@ class TestPTICSHDCPolicy(TestCase):
 
         self.cfg = self._get_cfg()
         self.ontology = Ontology(self.cfg['DM']['ontology'])
+        self.mox = mox.Mox()
 
     def _get_cfg(self):
         cfg = Config(config={
@@ -50,6 +55,11 @@ class TestPTICSHDCPolicy(TestCase):
             'Logging': {
                 'system_logger': alex.utils.DummyLogger(),
                 'session_logger': alex.utils.DummyLogger()
+            },
+            'weather': {
+                'dictionary': as_project_path('applications/PublicTransportInfoCS/weather_cs.cfg'),
+                'suffix': 'CZ',
+                'units': 'celsius',
             }
         })
         return cfg
@@ -75,3 +85,48 @@ class TestPTICSHDCPolicy(TestCase):
         res = hdc_policy.get_da(state)
 
         self.assert_('inform(not_supported)' in res)
+
+    def test_switching_tasks(self):
+        hdc_policy = self._build_policy()
+        self.mox.StubOutWithMock(hdc_policy.weather, 'get_weather')
+        self.mox.StubOutWithMock(hdc_policy, 'get_directions')
+
+        hdc_policy.weather.get_weather(city=u'Praha',
+                                       daily=False,
+                                       lat=u'50.0755381',
+                                       lon=u'14.4378005',
+                                       time=None).AndReturn(None)
+        hdc_policy.get_directions(mox.IgnoreArg(),
+                                  check_conflict=True).AndReturn([DialogueActItem(dai="inform(time=10:00)")])
+
+        self.mox.ReplayAll()
+
+        state = DeterministicDiscriminativeDialogueState(self.cfg, self.ontology)
+
+        system_input = DialogueActConfusionNetwork()
+
+        res = hdc_policy.get_da(state)
+
+        # User says she wants weather so the task should be weather.
+        user_input = self._build_user_input("inform(task=weather)")
+        state.update(user_input, system_input)
+        res = hdc_policy.get_da(state)
+        self.assertEqual(state['lta_task'].mpv(), 'weather')
+
+        # User wants to find a connection so the task should be find_connection.
+        user_input = self._build_user_input(u"inform(task=find_connection)",
+                                            u"inform(to_stop=Malostranská)",
+                                            u"inform(from_stop=Anděl)")
+        state.update(user_input, system_input)
+        res = hdc_policy.get_da(state)
+        self.assertEqual(state['lta_task'].mpv(), 'find_connection')
+
+        self.mox.VerifyAll()
+
+
+    def _build_user_input(self, *args):
+        user_input = DialogueActConfusionNetwork()
+        for arg in args:
+            user_input.add(1.0, DialogueActItem(dai=arg))
+
+        return user_input
