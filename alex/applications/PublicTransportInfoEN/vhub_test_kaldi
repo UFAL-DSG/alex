@@ -2,6 +2,12 @@
 
 pushd ..
 
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/ptien_hdc_slu.cfg ./PublicTransportInfoEN/google.cfg ./PublicTransportInfoEN/voicerss.cfg ./PublicTransportInfoEN/kaldi.cfg
+./vhub.py -c \
+    ./PublicTransportInfoEN/ptien.cfg \
+    ./PublicTransportInfoEN/ptien_hdc_slu.cfg \
+    ./PublicTransportInfoEN/google.cfg \
+    ./PublicTransportInfoEN/voicerss.cfg \
+    ./PublicTransportInfoEN/kaldi.cfg \
+
 
 popd
