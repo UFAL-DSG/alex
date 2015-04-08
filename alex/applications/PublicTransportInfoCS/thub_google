@@ -5,6 +5,9 @@ export LC_ALL="$LANG"
 export LANGUAGE="$LANG"
 
 
-cd ..
+vhub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $vhub_dir 
 
 ./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg -t
+
+popd
