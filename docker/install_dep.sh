@@ -1,7 +1,7 @@
 apt-get update
 
 # Alex prerequisites.
-apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev liblapack3 gfortran  git python python-pip libsqlite3-dev wget libsox-fmt-mp3 libsox-dev
+apt-get install -y build-essential libpng12-dev libfreetype6-dev python-dev libopenblas-dev libopenblas-base liblapack-dev liblapack3 gfortran  git python python-pip libsqlite3-dev wget libsox-fmt-mp3 libsox-dev flac
 apt-get clean
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8
