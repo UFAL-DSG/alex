@@ -5,6 +5,7 @@ czech.tagger
 czech.dict
 cities.*.txt
 stops*.txt
+train_names.expanded.txt
 cities_stops.tsv
 idos_map.tsv
 errors.txt
