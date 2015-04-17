@@ -1,7 +1,7 @@
 # encoding: utf8
 import numpy as np
+import os
 import shutil
-import theano
 import tempfile
 from unittest import TestCase
 
@@ -14,7 +14,8 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 class TestDAINNClassifier(TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
-        theano.config.base_compiledir = self.tmp_dir
+        os.environ["THEANO_FLAGS"] = "base_compiledir=%s" % self.tmp_dir
+        import theano
 
     def tearDown(self):
         assert self.tmp_dir != '' and self.tmp_dir.startswith('/tmp/')
