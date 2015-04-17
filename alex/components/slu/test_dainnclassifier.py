@@ -16,13 +16,14 @@ class TestDAINNClassifier(TestCase):
         os.environ["THEANO_FLAGS"] = "base_compiledir=%s" % self.tmp_dir
         import theano
         theano.config.floatX = 'float32'
-        from alex.components.slu.dainnclassifier import DAINNClassifier
 
     def tearDown(self):
         assert self.tmp_dir != '' and self.tmp_dir.startswith('/tmp/')
         shutil.rmtree(self.tmp_dir)
 
     def test_parse_X(self):
+        from alex.components.slu.dainnclassifier import DAINNClassifier
+        
         np.random.seed(0)
 
         cldb = CategoryLabelDatabase()
