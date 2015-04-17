@@ -16,6 +16,7 @@ class TestDAINNClassifier(TestCase):
         self.tmp_dir = tempfile.mkdtemp()
         os.environ["THEANO_FLAGS"] = "base_compiledir=%s" % self.tmp_dir
         import theano
+        theano.config.floatX = 'float32'
 
     def tearDown(self):
         assert self.tmp_dir != '' and self.tmp_dir.startswith('/tmp/')
@@ -45,7 +46,6 @@ class TestDAINNClassifier(TestCase):
         cldb.load(db_mod=db)
 
         preprocessing = SLUPreprocessing(cldb)
-        theano.config.floatX = 'float32'
         clf = DAINNClassifier(cldb, preprocessing, features_size=4)
 
         # Train a simple classifier.
