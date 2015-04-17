@@ -1,16 +1,25 @@
 # encoding: utf8
-import theano
 import numpy as np
+import shutil
+import theano
+import tempfile
 from unittest import TestCase
 
 from alex.components.slu.dainnclassifier import DAINNClassifier
-
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.da import DialogueAct, DialogueActItem
 
 
 class TestDAINNClassifier(TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.mkdtemp()
+        theano.config.compile_dir = self.tmp_dir
+
+    def tearDown(self):
+        assert self.tmp_dir != '' and self.tmp_dir.startswith('/tmp/')
+        shutil.rmtree(self.tmp_dir)
+
     def test_parse_X(self):
         np.random.seed(0)
 
