@@ -44,21 +44,22 @@ class TestDAILogRegClassifier(TestCase):
             '2': Utterance('hned'),
             '3': Utterance('jak bude'),
         }
-        clf.extract_classifiers(das, utterances, verbose=True)
+        clf.extract_classifiers(das, utterances, verbose=False)
         clf.prune_classifiers(min_classifier_count=0)
-        clf.print_classifiers()
         clf.gen_classifiers_data(min_pos_feature_count=0,
                                  min_neg_feature_count=0,
-                                 verbose2 = True)
+                                 verbose2=False)
 
-        clf.train(inverse_regularisation=1e1, verbose=True)
+        clf.train(inverse_regularisation=1e1, verbose=False)
 
         # Parse some sentences.
         utterance_list = UtteranceNBList()
         utterance_list.add(0.7, Utterance('pocasi'))
         utterance_list.add(0.7, Utterance('pocasi jak bude'))
         utterance_list.add(0.2, Utterance('hned'))
-        da_confnet = clf.parse_X(utterance_list, verbose=True)
+
+        da_confnet = clf.parse_X(utterance_list, verbose=False)
+
 
         self.assertTrue(da_confnet.get_prob(DialogueActItem(dai='inform(task=weather)')) > 0.5)
         self.assertTrue(da_confnet.get_prob(DialogueActItem(dai='inform(time=now)')) < 0.5)

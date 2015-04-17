@@ -1,4 +1,6 @@
 # encoding: utf8
+import theano
+import numpy as np
 from unittest import TestCase
 
 from alex.components.slu.dainnclassifier import DAINNClassifier
@@ -10,6 +12,8 @@ from alex.components.slu.da import DialogueAct, DialogueActItem
 
 class TestDAINNClassifier(TestCase):
     def test_parse_X(self):
+        np.random.seed(0)
+
         cldb = CategoryLabelDatabase()
         class db:
             database = {
@@ -27,11 +31,10 @@ class TestDAINNClassifier(TestCase):
                     "now": ["nyní", "teď", "teďka", "hned", "nejbližší", "v tuto chvíli", "co nejdřív"],
                 },
             }
-        print 'x'
+
         cldb.load(db_mod=db)
 
         preprocessing = SLUPreprocessing(cldb)
-        import theano
         theano.config.floatX = 'float32'
         clf = DAINNClassifier(cldb, preprocessing, features_size=4)
 
@@ -48,14 +51,13 @@ class TestDAINNClassifier(TestCase):
             '3': Utterance('jak bude jak bude jak bude jak bude'),
             '4': Utterance('kdy a odkat mi to jede'),
         }
-        clf.extract_classifiers(das, utterances, verbose=True)
+        clf.extract_classifiers(das, utterances, verbose=False)
         clf.prune_classifiers(min_classifier_count=0)
-        clf.print_classifiers()
         clf.gen_classifiers_data(min_pos_feature_count=0,
                                  min_neg_feature_count=0,
-                                 verbose2 = True)
+                                 verbose2=False)
 
-        clf.train(inverse_regularisation=1e1, verbose=True)
+        clf.train(inverse_regularisation=1e1, verbose=False)
 
         # Parse some sentences.
         utterance_list = UtteranceNBList()
@@ -63,7 +65,7 @@ class TestDAINNClassifier(TestCase):
         utterance_list.add(0.7, Utterance('jak bude pocasi'))
         utterance_list.add(0.2, Utterance('hned'))
         utterance_list.add(0.2, Utterance('hned'))
-        da_confnet = clf.parse_X(utterance_list, verbose=True)
+        da_confnet = clf.parse_X(utterance_list, verbose=False)
 
         self.assertTrue(da_confnet.get_prob(DialogueActItem(dai='inform(task=weather)')) != 0.0)
         self.assertTrue(da_confnet.get_prob(DialogueActItem(dai='inform(time=now)')) != 0.0)
