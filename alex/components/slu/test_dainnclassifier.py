@@ -5,7 +5,6 @@ import shutil
 import tempfile
 from unittest import TestCase
 
-from alex.components.slu.dainnclassifier import DAINNClassifier
 from alex.components.slu.base import CategoryLabelDatabase, SLUPreprocessing
 from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.da import DialogueAct, DialogueActItem
@@ -17,6 +16,7 @@ class TestDAINNClassifier(TestCase):
         os.environ["THEANO_FLAGS"] = "base_compiledir=%s" % self.tmp_dir
         import theano
         theano.config.floatX = 'float32'
+        from alex.components.slu.dainnclassifier import DAINNClassifier
 
     def tearDown(self):
         assert self.tmp_dir != '' and self.tmp_dir.startswith('/tmp/')
