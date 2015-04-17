@@ -749,7 +749,6 @@ class TestFactor(unittest.TestCase):
 
         expected_value_sum = reduce(operator.add, expected_values)
 
-        print w0
 
 if __name__ == '__main__':
     unittest.main()

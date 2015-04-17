@@ -526,8 +526,9 @@ class DAILogRegClassifier(SLUInterface):
             print('%40s = %d' % (k, self.classifiers[k]))
 
     def prune_features(self, clser, min_pos_feature_count, min_neg_feature_count, verbose=False):
-        print 'Pruning the features'
-        print
+        if verbose:
+            print 'Pruning the features'
+            print
 
         features_counts = defaultdict(int)
         for feat in self.classifiers_features[clser]:
@@ -690,6 +691,7 @@ class DAILogRegClassifier(SLUInterface):
                 mean_accuracy = lr.score(classifier_input, self.classifiers_outputs[clser])
                 print "  Prediction mean accuracy on the training data: %6.2f" % (100.0 * mean_accuracy, )
                 print "  Size of the params:", lr.coef_.shape
+
 
     def save_model(self, file_name, gzip=None):
         data = [self.classifiers_features_list, self.classifiers_features_mapping, self.trained_classifiers,
