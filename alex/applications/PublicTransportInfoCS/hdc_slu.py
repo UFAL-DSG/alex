@@ -58,7 +58,7 @@ def first_phrase_span(utterance, phrases):
     for phrase in phrases:
         pos = phrase_pos(utterance, phrase)
         if pos != -1:
-            return pos, pos + len(phrase)
+            return pos, pos + len(phrase.split())
     return -1, -1
 
 
@@ -211,7 +211,7 @@ class PTICSHDCSLU(SLUInterface):
 
         abs_utts = copy.deepcopy(utterance)
         category_labels = set()
-        abs_utt_lenghts = [1] * len(abs_utts)
+        abs_utt_lengths = [1] * len(abs_utts)
         start = 0
         while start < len(utterance):
             end = len(utterance)
@@ -224,7 +224,7 @@ class PTICSHDCSLU(SLUInterface):
                     for v in self.cldb.form2value2cl[f]:
                         for c in self.cldb.form2value2cl[f][v]:
                             abs_utts = abs_utts.replace(f, (c.upper() + '='+v,))
-                            abs_utt_lenghts[start:end] = [len(f)]
+                            abs_utt_lengths[start] = len(f)
                             category_labels.add(c.upper())
                             break
                         else:
@@ -240,8 +240,15 @@ class PTICSHDCSLU(SLUInterface):
                 end -= 1
             else:
                 start += 1
+        # normalize abstract utterance lengths
+        norm_abs_utt_lengths = []
+        i = 0
+        while i < len(abs_utt_lengths):
+            l = abs_utt_lengths[i]
+            norm_abs_utt_lengths.append(l)
+            i += l
+        return abs_utts, category_labels, norm_abs_utt_lengths
 
-        return abs_utts, category_labels, abs_utt_lenghts
 
     def __repr__(self):
         return "PTICSHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
