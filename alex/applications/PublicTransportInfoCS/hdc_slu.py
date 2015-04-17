@@ -208,7 +208,6 @@ class PTICSHDCSLU(SLUInterface):
         :param utterance: an Utterance instance
         :return: a list of abstracted utterance, form, value, category label tuples
         """
-
         abs_utts = copy.deepcopy(utterance)
         category_labels = set()
         abs_utt_lengths = [1] * len(abs_utts)
@@ -583,11 +582,14 @@ class PTICSHDCSLU(SLUInterface):
                 value = w[9:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'date_rel', value, alignment={i}))
+                    dai = DialogueActItem("confirm", 'date_rel', value, alignment={i})
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'date_rel', value, alignment={i}))
+                    dai = DialogueActItem("deny", 'date_rel', value, alignment={i})
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'date_rel', value, alignment={i}))
+                    dai = DialogueActItem("inform", 'date_rel', value, alignment={i})
+
+                if not dai in cn:
+                    cn.add(1.0, dai)
 
     def parse_ampm(self, abutterance, cn):
         """Detects the ampm in the input abstract utterance.
@@ -1012,6 +1014,7 @@ class PTICSHDCSLU(SLUInterface):
         category_labels.add('CITY')
         category_labels.add('VEHICLE')
         category_labels.add('NUMBER')
+
 
         if len(res_cn) == 0:
             if 'STOP' in category_labels:
