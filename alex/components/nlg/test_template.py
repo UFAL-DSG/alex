@@ -47,7 +47,6 @@ class TestTemplateNLG(unittest.TestCase):
         s.append("Generated text:")
         s.append(unicode(generated_text))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(correct_text), unicode(generated_text))
 
@@ -57,7 +56,7 @@ class TestTemplateNLG(unittest.TestCase):
         nlg = TemplateNLG(cfg)
 
         da = DialogueAct('affirm()&inform(from_stop=Sparta)').sort()
-        correct_text = "Ano. Jede to ze zastávky Sparta."
+        correct_text = "Ano, jede to ze zastávky Sparta."
         generated_text = nlg.generate(da)
 
         s = []
@@ -71,7 +70,6 @@ class TestTemplateNLG(unittest.TestCase):
         s.append("Generated text:")
         s.append(unicode(generated_text))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(correct_text), unicode(generated_text))
 

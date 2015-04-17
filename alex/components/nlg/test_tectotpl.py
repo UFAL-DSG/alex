@@ -77,7 +77,7 @@ class TestTectoTemplateNLG(unittest.TestCase):
             s.append("Generated text:")
             s.append(generated_text)
             s.append("")
-            print "\n".join(s)
+
             # test the result
             self.assertEqual(correct_text, generated_text)
 

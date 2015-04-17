@@ -11,7 +11,7 @@ mkdir /app
 cd /app
 
 pip install -r /tmp/alex-requirements.txt
-pip install pystache cython flask theano
+pip install pystache cython flask theano nose2
 easy_install pysox
 rm /tmp/alex-requirements.txt
 

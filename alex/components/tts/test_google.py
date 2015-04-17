@@ -33,4 +33,5 @@ class TestGoogleTTS(TestCase):
         file = wave.open(wav_path)
 
         wav_length = float(file.getnframes()) / file.getframerate()
-        self.assertEquals(3.06, wav_length)
+        self.assertGreaterEqual(3.5, wav_length)
+        self.assertLessEqual(2.5, wav_length)
