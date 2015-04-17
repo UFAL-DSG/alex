@@ -80,9 +80,6 @@ ontology = {
         'stop': [
             'user_informs',
         ],
-        'city': [
-            'user_informs',
-        ],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
@@ -310,14 +307,6 @@ ontology = {
         },
     },
 
-    'compatibility': {
-        'stop_city': [
-            'from_stop', 'to_stop', 'via_stop',
-        ],
-        'city_stop': [
-            'from_city', 'to_city', 'via_city', 'in_city',
-        ],
-    },
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},

@@ -916,7 +916,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
-                return da
+                break
+        return da
 
     def req_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
@@ -928,7 +929,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                return da
+                break
+        return da
 
     def req_departure_time(self, dialogue_state):
         """Generates a dialogue act informing about the departure time from the origin stop of the last
@@ -943,7 +945,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_departure_time_rel(self, dialogue_state):
         """Return a DA informing the user about the relative time until the
@@ -974,7 +977,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                         departure_time_rel_hrs += 24 * departure_time_rel.days
                     da.append(DialogueActItem('inform', 'departure_time_rel',
                                               '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_arrival_time(self, dialogue_state):
         """Return a DA informing about the arrival time the destination stop of the last
@@ -987,7 +991,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_arrival_time_rel(self, dialogue_state):
         """Return a DA informing about the relative arrival time the destination stop of the last
@@ -1004,7 +1009,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_duration(self, dialogue_state):
         """Return a DA informing about journey time to the destination stop of the last
@@ -1018,14 +1024,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 departure_time = step.departure_time
                 break
         else:
-            return None
+            departure_time = datetime.fromtimestamp(0)
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 arrival_time = step.arrival_time
                 break
         else:
-            return None
+            arrival_time = datetime.fromtimestamp(leg.steps[0].duration)
 
         duration = (arrival_time - departure_time).seconds / 60
         duration_hrs, duration_mins = divmod(duration, 60)
