@@ -32,4 +32,4 @@ script:
     - python -c 'import pjsuaxt'
     - python -c 'import alex.applications.vhub'
     - python -c 'import fst'
-    - nose2
+    - nose2 -v
