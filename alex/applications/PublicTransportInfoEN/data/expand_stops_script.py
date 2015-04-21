@@ -62,7 +62,7 @@ def expand_place(stop_list):
         reverse = True
         conjunctions = [' and ', ' on ', ' at ', ' ']
 
-        elements = re.split(r'[\-/\(&]', stop.replace(')', '').replace(';','').replace('# ', ' ').replace("'", '').strip().rstrip('#'))
+        elements = re.split(r'[\\\-/\(&]', stop.lower().replace('[rr]', '').replace(')', '').replace(';', '').replace('# ', ' ').replace("'", '').strip().rstrip('#'))
         if not isinstance(elements, list):
             elements = [elements, ]
         # if '-' in stop:
