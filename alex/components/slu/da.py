@@ -117,6 +117,9 @@ class DialogueActItem(Abstracted):
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
 
+    def __repr__(self):
+        return str(self)
+
     def __unicode__(self):
         # Cache the value for repeated calls of this method are expected.
         # This check is needed for the DAI gets into a partially constructed
@@ -733,6 +736,9 @@ class DialogueActConfusionNetwork(SLUHypothesis, ConfusionNetwork):
             ret.append("{prob:.3f} {dai!s}".format(prob=prob, dai=unicode(dai)))
 
         return "\n".join(ret)
+
+    def __repr__(self):
+        return unicode(self)
 
     def items(self):
         return list(self)
