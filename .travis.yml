@@ -25,6 +25,8 @@ install:
     - sudo apt-get install -y libsox-dev &> /dev/null
     - easy_install pysox &> /dev/null
     - pip install nose2 &> /dev/null
+    - echo "[gcc] " > ~/.theanorc
+    - echo "cxxflags = -march=x86-64" >> ~/.theanorc
 
 script:
     - python -c 'import kaldi'
