@@ -69,6 +69,7 @@ if __name__ == '__main__':
 
     train_data_size                 = 0.90
     bootstrap_text                  = "bootstrap.txt"
+    grammar_output                  = "./gen_data/train.regular.gen.txt"
     classes                         = "../data/database_SRILM_classes.txt"
     indomain_data_dir               = "indomain_data"
     gen_data                        = lm.download_general_LM_data('en')
@@ -237,8 +238,9 @@ if __name__ == '__main__':
         save_wavaskey(fn_pt_dev, dict(pt_dev))
 
         # train data
-        cmd = r"cat %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+        cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
               (bootstrap_text,
+               grammar_output if os.path.exists(grammar_output) else "",
                indomain_data_text_trn,
                "'",
                indomain_data_text_trn_norm)

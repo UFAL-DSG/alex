@@ -2,4 +2,9 @@
 
 cd ..
 
-./vhub.py -c ./PublicTransportInfoEN/ptien.cfg ./PublicTransportInfoEN/ptien_hdc_slu.cfg ../resources/private/mta2.cfg  ./PublicTransportInfoEN/google.cfg
+./vhub.py -c \
+    ./PublicTransportInfoEN/ptien.cfg \
+    ./PublicTransportInfoEN/ptien_hdc_slu.cfg \
+    ../resources/private/mta2.cfg  \
+    ./PublicTransportInfoEN/google.cfg \
+    ./PublicTransportInfoEN/voicerss.cfg \
