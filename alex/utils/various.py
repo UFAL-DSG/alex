@@ -3,12 +3,14 @@
 # This code is PEP8-compliant. See http://www.python.org/dev/peps/pep-0008.
 #
 # pylint: disable-msg=E1101
+# TODO: Move directly to alex.utils.
 
 from collections import defaultdict
 import math
 import sys
 
 
+# TODO: Move this to alex.applications.utils.
 def split_to_bins(A, S=4):
     """Split the A array into bins of size N."""
     m, n = divmod(len(A), S)
@@ -60,31 +62,7 @@ class nesteddict(defaultdict):
                     yield key, value
 
 
-def crop_to_finite(val):
-    if math.isinf(val):
-        if isinstance(val, int):
-            ret = sys.maxint
-        else:
-            ret = sys.float_info.max
-        return (-1 + 2 * (val > 0)) * ret
-    return val
-
-
-def group_by(objects, attrs):
-    """Groups `objects' by the values of their attributes `attrs'.
-
-    Returns a dictionary mapping from a tuple of attribute values to a list of
-    objects with those attribute values.
-
-    """
-    groups = dict()
-    for obj in objects:
-        key = tuple(getattr(obj, attr) for attr in attrs)
-        groups.setdefault(key, []).append(obj)
-    return groups
-
-
-def remove_dups_stable(l):
+def list_remove_duplicates_keep_ordering(l):
     """Remove duplicates from a list but keep the ordering.
 
     @return: Iterator over unique values in the list

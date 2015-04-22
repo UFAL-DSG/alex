@@ -16,6 +16,7 @@ def findall(text, char, start=0, end=-1):
         nextidx = text.find(char, nextidx + 1, end)
     return idxs
 
+
 def split_by_comma(text):
     parentheses = 0
     splitList = []

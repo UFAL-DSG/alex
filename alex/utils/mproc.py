@@ -143,6 +143,7 @@ class InstanceID(object):
         return InstanceID.instance_id.value
 
 
+# TODO: Move this class to alex.utils.logger.
 class SystemLogger(object):
     """
     This is a multiprocessing-safe logger.  It should be used by all components in Alex.

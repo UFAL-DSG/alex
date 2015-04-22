@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # pylint: disable-msg=E1103
+# TODO: Move directly to alex.utils.
 
 import functools
 import traceback
