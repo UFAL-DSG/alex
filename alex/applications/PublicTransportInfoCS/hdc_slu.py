@@ -348,14 +348,14 @@ class PTICSHDCSLU(SLUInterface):
 
                 # add waypoint to confusion network (standard case: just single type is decided)
                 if len(wp_types) == 1:
-                    cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name, alignment={i}))
                 # backoff 1: add both 'from' and 'to' waypoint slots
                 elif 'from' in wp_types and 'to' in wp_types:
-                    cn.add(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name, alignment={i}))
-                    cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name, alignment={i}))
                 # backoff 2: let the DM decide in context resolution
                 else:
-                    cn.add(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name, alignment={i}))
 
                 last_wp_pos = i + 1
 
@@ -562,7 +562,7 @@ class PTICSHDCSLU(SLUInterface):
                 last_time_type = time_type
 
                 slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
-                cn.add(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i+num_len))))
+                cn.add_merge(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i+num_len))))
                 last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
@@ -589,7 +589,7 @@ class PTICSHDCSLU(SLUInterface):
                     dai = DialogueActItem("inform", 'date_rel', value, alignment={i})
 
                 if not dai in cn:
-                    cn.add(1.0, dai)
+                    cn.add_merge(1.0, dai)
 
     def parse_ampm(self, abutterance, cn):
         """Detects the ampm in the input abstract utterance.
@@ -609,11 +609,11 @@ class PTICSHDCSLU(SLUInterface):
 
                 if not (phrase_in(u, 'dobrou')):
                     if confirm:
-                        cn.add(1.0, DialogueActItem("confirm", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("confirm", 'ampm', value, alignment={i}))
                     elif deny:
-                        cn.add(1.0, DialogueActItem("deny", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("deny", 'ampm', value, alignment={i}))
                     else:
-                        cn.add(1.0, DialogueActItem("inform", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("inform", 'ampm', value, alignment={i}))
 
     def parse_vehicle(self, abutterance, cn):
         """Detects the vehicle (transport type) in the input abstract utterance.
@@ -632,11 +632,11 @@ class PTICSHDCSLU(SLUInterface):
                 value = w[8:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("confirm", 'vehicle', value, alignment={i}))
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("deny", 'vehicle', value, alignment={i}))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("inform", 'vehicle', value, alignment={i}))
 
     def parse_task(self, abutterance, cn):
         """Detects the task in the input abstract utterance.
@@ -651,9 +651,9 @@ class PTICSHDCSLU(SLUInterface):
             if w.startswith("TASK="):
                 value = w[5:]
                 if deny:
-                    cn.add(1.0, DialogueActItem("deny", 'task', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("deny", 'task', value, alignment={i}))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'task', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("inform", 'task', value, alignment={i}))
 
     def parse_train_name(self, abutterance, cn):
         """Detects the train name in the input abstract utterance.
@@ -669,7 +669,7 @@ class PTICSHDCSLU(SLUInterface):
             if w.startswith(category_label):
                 value = w[len(category_label):]
 
-                cn.add(1.0, DialogueActItem("inform", 'train_name', value))
+                cn.add_merge(1.0, DialogueActItem("inform", 'train_name', value))
 
 
     def parse_non_speech_events(self, utterance, cn):
@@ -683,13 +683,13 @@ class PTICSHDCSLU(SLUInterface):
         u = utterance
 
         if len(u.utterance) == 0 or "_silence_" == u or "__silence__" == u or "_sil_" == u:
-            cn.add(1.0, DialogueActItem("silence", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("silence", alignment={0}))
 
         if "_noise_" == u or "_laugh_" == u or "_ehm_hmm_" == u or "_inhale_" == u:
-            cn.add(1.0, DialogueActItem("null", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("null", alignment={0}))
 
         if "_other_" == u or "__other__" == u:
-            cn.add(1.0, DialogueActItem("other", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("other", alignment={0}))
 
     def parse_meta(self, utterance, abutt_lenghts, cn):
         """
@@ -711,56 +711,56 @@ class PTICSHDCSLU(SLUInterface):
 
         if (dai.any_word_in('ahoj áhoj nazdar zdar') or
                 dai.all_words_in('dobrý den')):
-            cn.add(1.0, dai.build("hello"))
+            cn.add_merge(1.0, dai.build("hello"))
 
         if (dai.any_word_in("nashledanou shledanou schledanou shle nashle sbohem bohem zbohem zbohem konec hledanou "
                             "naschledanou shledanó") or dai.phrase_in("dobrou noc") or
                 (not any_word_in(u, "nechci") and dai.phrase_in("ukončit hovor"))):
-            cn.add(1.0, dai.build("bye"))
+            cn.add_merge(1.0, dai.build("bye"))
 
         if len(u) == 1 and dai.any_word_in("čau čauky čaues"):
-            cn.add(1.0, dai.build("bye"))
+            cn.add_merge(1.0, dai.build("bye"))
 
         if not any_word_in(u, 'spojení zastávka stanice možnost varianta'):
             if dai.any_word_in('jiný jiné jiná jiného'):
-                cn.add(1.0, dai.build("reqalts"))
+                cn.add_merge(1.0, dai.build("reqalts"))
 
         if (dai.any_word_in("od začít začneme začněme začni začněte") and dai.any_word_in("začátku znova znovu") or
                 dai.any_word_in("reset resetuj restart restartuj zrušit") or
                 not any_word_in(u, "ze") and dai.any_phrase_in(['nové spojení', 'nový spojení', 'nové zadání', 'nový zadání', 'nový spoj']) or
                 dai.all_words_in("tak jinak") or dai.any_phrase_in(["tak znova", 'zkusíme to ještě jednou'])):
-            cn.add(1.0, dai.build("restart"))
+            cn.add_merge(1.0, dai.build("restart"))
         else:
             dai.clear()
             if not any_word_in(u, 'spojení zastávka stanice možnost spoj nabídnutý poslední nalezená opakuji'):
                 if (dai.any_word_in('zopakovat opakovat znova znovu opakuj zopakuj zopakujte zvopakovat') or
                         dai.phrase_in("ještě jednou")):
-                    cn.add(1.0, dai.build("repeat"))
+                    cn.add_merge(1.0, dai.build("repeat"))
             elif dai.any_word_in("zopakuj zopakujte zopakovat opakovat") and dai.phrase_in("poslední větu"):
-                cn.add(1.0, dai.build("repeat"))
+                cn.add_merge(1.0, dai.build("repeat"))
 
         if ((len(u) == 1 and dai.any_word_in("pardon pardón promiňte promiň sorry")) or
                 dai.any_phrase_in(['omlouvám se', 'je mi líto'])):
-            cn.add(1.0, dai.build("apology"))
+            cn.add_merge(1.0, dai.build("apology"))
 
         if not any_word_in(u, "nechci děkuji"):
             if (dai.any_word_in("nápověda nápovědu pomoc pomoct pomoci pomož pomohla pomohl pomůžete help nevím nevim nechápu") or
                     dai.any_word_in('co') and dai.any_word_in("zeptat říct dělat")):
-                cn.add(1.0, dai.build("help"))
+                cn.add_merge(1.0, dai.build("help"))
 
         if dai.any_word_in("neslyšíme neslyším halo haló nefunguje cože") or \
                 not phrase_in(u, "ano slyšíme se") and dai.phrase_in("slyšíme se"):
-            cn.add(1.0, dai.build('canthearyou'))
+            cn.add_merge(1.0, dai.build('canthearyou'))
 
         if (dai.all_words_in("nerozuměl jsem") or
                 dai.all_words_in("nerozuměla jsem") or
                 dai.all_words_in("taky nerozumím") or
                 dai.all_words_in("nerozumím vám") or
                 (len(u) == 1 and dai.any_word_in("nerozumím"))):
-            cn.add(1.0, dai.build('notunderstood'))
+            cn.add_merge(1.0, dai.build('notunderstood'))
 
         if not any_word_in(u, "nerozuměj nechci vzdávám čau možnost konec") and dai.any_word_in("ano jo jasně jojo"):
-            cn.add(1.0, dai.build("affirm"))
+            cn.add_merge(1.0, dai.build("affirm"))
 
         if not any_phrase_in(u, ['ne z', 'né do']):
             if (dai.any_word_in("ne né nene nené néé") or
@@ -768,28 +768,28 @@ class PTICSHDCSLU(SLUInterface):
                     len(u) == 1 and dai.any_word_in("nejedu nechci") or
                     len(u) == 2 and dai.all_words_in("ano nechci") or
                     dai.all_words_in("to je špatně")):
-                cn.add(1.0, dai.build("negate"))
+                cn.add_merge(1.0, dai.build("negate"))
 
         if dai.any_word_in('díky dikec děkuji dekuji děkuju děkují'):
-            cn.add(1.0, dai.build("thankyou"))
+            cn.add_merge(1.0, dai.build("thankyou"))
 
         if (not any_word_in(u, "ano") and
                 (dai.any_word_in('ok pořádku dobře správně stačí super fajn rozuměl rozuměla slyším') or
                  dai.any_phrase_in(['to je vše', 'je to vše', 'je to všechno', 'to bylo všechno', 'to bude všechno',
                                    'už s ničím', 'už s ničim', 'to jsem chtěl slyšet']) or
                  (not any_phrase_in(u, ['dobrý den', 'dobrý dén', 'dobrý večer']) and dai.any_word_in("dobrý")))):
-            cn.add(1.0, dai.build("ack"))
+            cn.add_merge(1.0, dai.build("ack"))
 
         if dai.any_phrase_in(['chci jet', 'chtěla jet', 'bych jet', 'bych jel', 'bychom jet',
                              'bych tam jet', 'jak se dostanu', 'se dostat']) or \
                 dai.any_word_in("trasa, trasou, trasy, trasu, trase"):
-            cn.add(1.0, dai.build('inform', 'task', 'find_connection'))
+            cn.add_merge(1.0, dai.build('inform', 'task', 'find_connection'))
 
         if dai.any_phrase_in(['jak bude', 'jak dnes bude', 'jak je', 'jak tam bude']):
-            cn.add(1.0, dai.build('inform', 'task', 'weather'))
+            cn.add_merge(1.0, dai.build('inform', 'task', 'weather'))
 
         if any_word_in(u, 'nástupiště kolej koleje'):
-            cn.add(1.0, DialogueActItem("inform", "task", "find_platform"))
+            cn.add_merge(1.0, DialogueActItem("inform", "task", "find_platform"))
 
         if (dai.all_words_in('od to jede') or
                 dai.all_words_in('z jake jede') or
@@ -801,7 +801,7 @@ class PTICSHDCSLU(SLUInterface):
                 dai.all_words_in('odkud jede') or
                 dai.all_words_in('odkud pojede') or
                 dai.all_words_in('od kud pojede')):
-            cn.add(1.0, dai.build('request', 'from_stop'))
+            cn.add_merge(1.0, dai.build('request', 'from_stop'))
 
         if (dai.all_words_in('kam to jede') or
                 dai.all_words_in('na jakou jede') or
@@ -814,7 +814,7 @@ class PTICSHDCSLU(SLUInterface):
                 dai.all_words_in('kde konečná') or
                 dai.all_words_in("kam jede") or
                 dai.all_words_in("kam pojede")):
-            cn.add(1.0, dai.build('request', 'to_stop'))
+            cn.add_merge(1.0, dai.build('request', 'to_stop'))
 
         if not any_word_in(u, 'za budu bude budem přijede přijedete přijedu dojedu dojede dorazí dorazím dorazíte'):
             if (dai.all_words_in("kdy jede") or
@@ -823,124 +823,124 @@ class PTICSHDCSLU(SLUInterface):
                     dai.all_words_in("kdy to pojede") or
                     (dai.any_word_in('kdy kolik') and dai.any_word_in('jede odjíždí odjede odjíždíš odjíždíte')) or
                     dai.phrase_in('časový údaj')):
-                cn.add(1.0, dai.build('request', 'departure_time'))
+                cn.add_merge(1.0, dai.build('request', 'departure_time'))
 
         if not any_word_in(u, 'budu bude budem přijede přijedete přijedu dojedu dorazí dorazím dorazíte'):
             if (dai.all_words_in("za jak") and dai.any_word_in('dlouho dlóho') or
                     dai.all_words_in("za kolik minut jede") or
                     dai.all_words_in("za kolik minut pojede") or
                     dai.all_words_in("za jak pojede") and dai.any_word_in('dlouho dlóho')):
-                cn.add(1.0, dai.build('request', 'departure_time_rel'))
+                cn.add_merge(1.0, dai.build('request', 'departure_time_rel'))
 
         if ((dai.all_words_in('kdy tam') and dai.any_word_in('budu bude budem')) or
                 (dai.all_words_in('v kolik') and dai.any_word_in('budu bude budem')) or
                 dai.all_words_in('čas příjezdu') or
                 (dai.any_word_in('kdy kolik') and dai.any_word_in('příjezd přijede přijedete přijedu přijedem '
                                                                   'dojedu dorazí dojede dorazím dorazíte'))):
-            cn.add(1.0, dai.build('request', 'arrival_time'))
+            cn.add_merge(1.0, dai.build('request', 'arrival_time'))
 
         if (dai.all_words_in('za jak') and dai.any_word_in('dlouho dlóho') and
                 dai.any_word_in('budu bude budem přijedu přijede přijedem přijedete dojedu dorazí dorazím dorazíte') and
                 dai.any_phrase_in(['tam', 'v cíli', 'do cíle', 'k cíli', 'cílové zastávce', 'cílové stanici'])):
-            cn.add(1.0, dai.build('request', 'arrival_time_rel'))
+            cn.add_merge(1.0, dai.build('request', 'arrival_time_rel'))
 
         if not any_word_in(u, 'za v přestup přestupy'):
             if (dai.all_words_in('jak') and dai.any_word_in('dlouho dlóho') and dai.any_word_in("jede pojede trvá trvat") or
                     dai.all_words_in("kolik minut") and dai.any_word_in("jede pojede trvá trvat")):
-                cn.add(1.0, dai.build('request', 'duration'))
+                cn.add_merge(1.0, dai.build('request', 'duration'))
 
         if (dai.all_words_in('kolik je hodin') or
                 dai.all_words_in('kolik máme hodin') or
                 dai.all_words_in('kolik je teď') or
                 dai.all_words_in('kolik je teďka')):
-            cn.add(1.0, dai.build('request', 'current_time'))
+            cn.add_merge(1.0, dai.build('request', 'current_time'))
 
         if dai.any_word_in('přestupů přestupu přestupy stupňů přestup přestupku přestupky přestupků '
                            'přestupovat přestupuju přestupuji přestupování přestupama přestupem'):
             if dai.any_word_in('čas času dlouho trvá trvají trvat'):
-                cn.add(1.0, dai.build('request', 'time_transfers'))
+                cn.add_merge(1.0, dai.build('request', 'time_transfers'))
             elif dai.any_word_in('kolik počet kolikrát jsou je'):
-                cn.add(1.0, dai.build('request', 'num_transfers'))
+                cn.add_merge(1.0, dai.build('request', 'num_transfers'))
             elif dai.any_word_in('nechci bez žádný žádné žáden'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '0'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
             elif dai.any_word_in('jeden jedním jednou'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '1'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '1'))
             elif dai.any_word_in('dva dvěma dvěmi dvakrát'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '2'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '2'))
             elif dai.any_word_in('tři třema třemi třikrát'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '3'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '3'))
             elif dai.any_word_in('čtyři čtyřma čtyřmi čtyřikrát'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '4'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '4'))
             elif (dai.any_word_in('libovolně libovolný libovolné')
-                  or dai.all_words_in('bez ohledu')
+                  or dai.all_words_in('bez ohledu')  # TODO: This cannot ever get triggered.
                   or dai.any_phrase_in(['s přestupem', 's přestupy', 's přestupama'])):
-                cn.add(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
 
         if dai.any_phrase_in(['přímý spoj', 'přímé spojení', 'přímé spoje', 'přímý spoje', 'přímej spoj',
                               'přímý spojení', 'jet přímo', 'pojedu přímo', 'dostanu přímo', 'dojedu přímo',
                               'dostat přímo']):
-            cn.add(1.0, dai.build('inform', 'num_transfers', '0'))
+            cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
 
         if dai.any_word_in('spoj spojení spoje možnost možnosti varianta alternativa cesta cestu cesty '
                            'zpoždění stažení nalezená nabídnuté'):
             if not any_word_in(u, 'první jedna druhá druhý třetí čtvrtá čtvrtý') and dai.any_word_in('libovolný'):
-                cn.add(1.0, dai.build("inform", "alternative", "dontcare"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "dontcare"))
 
             if (not any_word_in(u, 'druhá druhý třetí čtvrtá čtvrtý') and not all_words_in(u, 'ještě jedna') and
                     dai.any_word_in('první jedna')):
-                cn.add(1.0, dai.build("inform", "alternative", "1"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "1"))
 
             if not any_word_in(u, 'třetí čtvrtá čtvrtý další') and dai.any_word_in('druhé druhá druhý druhou dva'):
-                cn.add(1.0, dai.build("inform", "alternative", "2"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "2"))
 
             if dai.any_word_in('třetí tři'):
-                cn.add(1.0, dai.build("inform", "alternative", "3"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "3"))
 
             if dai.any_word_in('čtvrté čtvrtá čtvrtý čtvrtou čtyři'):
-                cn.add(1.0, dai.build("inform", "alternative", "4"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "4"))
 
             if dai.any_word_in('páté pátou'):
-                cn.add(1.0, dai.build("inform", "alternative", "5"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "5"))
 
             if dai.any_word_in("předchozí před"):
                 if dai.any_phrase_in(["nechci vědět předchozí", "nechci předchozí"]):
-                    cn.add(1.0, dai.build("deny", "alternative", "prev"))
+                    cn.add_merge(1.0, dai.build("deny", "alternative", "prev"))
                 else:
-                    cn.add(1.0, dai.build("inform", "alternative", "prev"))
+                    cn.add_merge(1.0, dai.build("inform", "alternative", "prev"))
 
             elif dai.any_word_in("poslední znovu znova opakovat zopakovat zopakujte zopakování"):
                 if dai.any_phrase_in(["nechci poslední"]):
-                    cn.add(1.0, dai.build("deny", "alternative", "last"))
+                    cn.add_merge(1.0, dai.build("deny", "alternative", "last"))
                 else:
-                    cn.add(1.0, dai.build("inform", "alternative", "last"))
+                    cn.add_merge(1.0, dai.build("inform", "alternative", "last"))
 
             elif (dai.any_word_in("další jiné jiná následující pozdější") or
                     dai.any_phrase_in(['ještě jedno', 'ještě jednu', 'ještě jedna', 'ještě jednou', 'ještě zeptat na jedno'])):
-                cn.add(1.0, dai.build("inform", "alternative", "next"))
+                cn.add_merge(1.0, dai.build("inform", "alternative", "next"))
 
         if ((len(u) == 1 and dai.any_word_in('další následující následují později')) or
                 dai.ending_phrases_in(['další', 'co dál'])):
-            cn.add(1.0, dai.build("inform", "alternative", "next"))
+            cn.add_merge(1.0, dai.build("inform", "alternative", "next"))
 
         if len(u) == 2 and (dai.all_words_in("a další") or dai.all_words_in("a později")):
-            cn.add(1.0, dai.build("inform", "alternative", "next"))
+            cn.add_merge(1.0, dai.build("inform", "alternative", "next"))
 
         if len(u) == 1 and dai.any_word_in("předchozí před"):
-            cn.add(1.0, dai.build("inform", "alternative", "prev"))
+            cn.add_merge(1.0, dai.build("inform", "alternative", "prev"))
 
         if dai.any_phrase_in(["jako v dne", "jako ve dne"]):
-            cn.add(1.0, dai.build('inform', 'ampm', 'pm'))
+            cn.add_merge(1.0, dai.build('inform', 'ampm', 'pm'))
 
         if dai.ending_phrases_in(["od", "z", "z nádraží"]):
-            cn.add(1.0, dai.build('inform', 'from', '*'))
+            cn.add_merge(1.0, dai.build('inform', 'from', '*'))
         elif dai.ending_phrases_in(["na", "do", "dó"]):
-            cn.add(1.0, dai.build('inform', 'to', '*'))
+            cn.add_merge(1.0, dai.build('inform', 'to', '*'))
         elif dai.ending_phrases_in(["z zastávky", "z stanice", "výchozí stanice je", "výchozí zastávku"]):
-            cn.add(1.0, dai.build('inform', 'from_stop', '*'))
+            cn.add_merge(1.0, dai.build('inform', 'from_stop', '*'))
         elif dai.ending_phrases_in(["na zastávku", "ná zastávků", "do zastávky", "do zástavky", "do zastavky"]) :
-            cn.add(1.0, dai.build('inform', 'to_stop', '*'))
+            cn.add_merge(1.0, dai.build('inform', 'to_stop', '*'))
         elif dai.ending_phrases_in(["přes"]):
-            cn.add(1.0, dai.build('inform', 'via', '*'))
+            cn.add_merge(1.0, dai.build('inform', 'via', '*'))
 
     def handle_false_abstractions(self, abutterance):
         """
@@ -995,7 +995,7 @@ class PTICSHDCSLU(SLUInterface):
         dict_da = self.utt2da.get(unicode(utterance), None)
         if dict_da:
             for dai in DialogueAct(dict_da):
-                res_cn.add(1.0, dai)
+                res_cn.add_merge(1.0, dai)
             return res_cn
 
         utterance = self.preprocessing.normalise_utterance(utterance)
