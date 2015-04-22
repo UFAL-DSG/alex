@@ -56,7 +56,7 @@ def require_srilm():
 def exit_on_system_fail(cmd, msg=None):
     system_res = os.system(cmd)
     if not system_res == 0:
-        err_msg = "Command failed, exitting."
+        err_msg = "Command failed, exiting."
         if msg:
             err_msg = "%s %s" % (err_msg, msg, )
         raise Exception(err_msg)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     train_data_size                 = 0.90
     bootstrap_text                  = "bootstrap.txt"
-    grammar_output                  = "./gen_data/train.regular.gen.txt"
+    grammar_output                  = "./gen_data/train.unique.gen.txt"
     classes                         = "../data/database_SRILM_classes.txt"
     indomain_data_dir               = "indomain_data"
     gen_data                        = lm.download_general_LM_data('en')
@@ -400,24 +400,6 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "ngram -lm %s -order 4 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_qg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 3 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_tg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 2 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_bg)
-        print cmd
-        exit_on_system_fail(cmd)
-
         cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' | grep -v 'CL_' | grep -v '{' | grep -v '_' > %s" % \
               (mixed_lm_vocab,
                final_lm_vocab)
@@ -435,14 +417,25 @@ if __name__ == '__main__':
         exit_on_system_fail(cmd)
 
         # build final dictionary for words in vocab
+        cmd = "cat %s %s | sort > %s" % ('dict_full', 'ptien.ext.dict', 'dict_full_ext')
+        print cmd
+        exit_on_system_fail(cmd)
+
+        # build final dictionary for words in vocab
         cmd = "perl ../../../tools/htk/bin/WordsToDictionary.pl %s %s %s" % \
                 (final_lm_vocab,
-                'dict_full',
+                'dict_full_ext',
                 final_lm_dict)
         print cmd
         exit_on_system_fail(cmd)
 
         # build final dictionary for words in vocab
+        cmd = "cat %s | grep 'UNKNOWN' | awk '{print $1}' > %s " % \
+                (final_lm_dict,
+                 final_lm_dict+'.unk',
+                )
+        print cmd
+        exit_on_system_fail(cmd)
         cmd = "cat %s | grep -v 'UNKNOWN' > %s " % \
                 (final_lm_dict,
                  final_lm_dict+'.tmp',
@@ -546,22 +539,3 @@ if __name__ == '__main__':
     print
 
 
-    print "-"*120
-    print "Final 4-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 3-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 2-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
-    print

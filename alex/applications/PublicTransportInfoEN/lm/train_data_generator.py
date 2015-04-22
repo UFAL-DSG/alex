@@ -15,8 +15,8 @@ import argparse
 from alex.components.nlg.tools.en import word_for_number
 from alex.corpustools.grammar_weighted import GrammarGen, O, A, UA, S
 
-n_samples = 1*1000*1000
-default_method = 'norm'#'uniq'#'test'#
+n_samples = 100*1000
+default_method = 'uniq' #'norm'#'test'#
 
 
 def save_data(fn, data):
