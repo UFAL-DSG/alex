@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
-#export KALDI_ROOT=/a/kronosh/oplatek/kaldi-kronos
-export KALDI_ROOT=/app/pykaldi/kaldi
+export KALDI_ROOT=/a/kronosh/oplatek/kaldi-kronos
+#export KALDI_ROOT=/app/pykaldi/kaldi
 
 source path.sh
 

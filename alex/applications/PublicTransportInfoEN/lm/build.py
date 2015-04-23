@@ -417,7 +417,7 @@ if __name__ == '__main__':
         exit_on_system_fail(cmd)
 
         # build final dictionary for words in vocab
-        cmd = "cat %s %s | sort > %s" % ('dict_full', 'ptien.ext.dict', 'dict_full_ext')
+        cmd = "cat %s %s | tr '[:lower:]' '[:upper:]' | sort > %s" % ('dict_full', 'ptien.ext.dict', 'dict_full_ext')
         print cmd
         exit_on_system_fail(cmd)
 
