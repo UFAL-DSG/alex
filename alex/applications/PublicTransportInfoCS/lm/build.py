@@ -400,21 +400,6 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = """
-        echo "_INHALE_	_inhale_" >> {dict} &&
-        echo "_LAUGH_	_laugh_" >> {dict} &&
-        echo "_EHM_HMM_	_ehm_hmm_" >> {dict} &&
-        echo "_NOISE_	_noise_" >> {dict} &&
-        echo "DONE"
-        """.format(dict=final_lm_dict)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "perl ../../../tools/htk/bin/AddSp.pl %s 1 > %s " % \
-              (final_lm_dict,
-              final_lm_dict_sp_sil)
-        print cmd
-        exit_on_system_fail(cmd)
 
 ###############################################################################################
     print
