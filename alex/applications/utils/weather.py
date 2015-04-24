@@ -35,7 +35,6 @@ class OpenWeatherMapWeather(Weather):
         # get prediction
         if daily:  # set time to 13:00 for daily
             date = datetime.combine(date.date(), dttime(13, 00))
-        date = datetime.utcfromtimestamp(int(time.mktime(date.timetuple())))
         ts = int(date.strftime("%s"))  # convert time to Unix timestamp
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
