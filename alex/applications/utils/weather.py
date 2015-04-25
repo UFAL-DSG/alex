@@ -7,7 +7,6 @@ import urllib
 from datetime import datetime
 from datetime import time as dttime
 import json
-import time
 
 from alex.utils.config import load_as_module
 from alex.tools.apirequest import APIRequest
