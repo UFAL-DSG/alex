@@ -51,8 +51,14 @@ class OpenWeatherMapWeather(Weather):
                     self.max_temp = self._round_temp(fc1['temp']['max'])
                 break
         if not hasattr(self, 'temp'):
-            self.temp = self._round_temp(input_json['list'][0]['main']['temp'])
-            self.condition = condition_transl[input_json['list'][0]['weather'][0]['id']]
+            first = input_json['list'][0]
+            self.condition = condition_transl[first['weather'][0]['id']]
+            if not daily:
+                self.temp = self._round_temp(first['main']['temp'])
+            else:
+                self.temp = self._round_temp(first['temp']['day'])
+                self.min_temp = self._round_temp(first['temp']['min'])
+                self.max_temp = self._round_temp(first['temp']['max'])
 
     def _round_temp(self, temp):
         if self.celsius:
