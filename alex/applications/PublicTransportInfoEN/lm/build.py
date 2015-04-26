@@ -110,7 +110,7 @@ if __name__ == '__main__':
     expanded_lm_vocab       = "26_expanded.vocab"
     expanded_lm_pg          = "26_expanded.pg.arpa"
 
-    mixing_weight           = "0.8"
+    mixing_weight           = "0.5"
     mixed_lm_vocab          = "27_mixed.vocab"
     mixed_lm_pg             = "27_mixed.pg.arpa"
 
@@ -132,9 +132,9 @@ if __name__ == '__main__':
         print "-"*120
         ###############################################################################################
 
-        cmd = r"zcat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % \
+        cmd = r"zcat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % \
               (gen_data,
-               "'",
+               "",
                gen_data_norm)
 
         print cmd
@@ -238,20 +238,20 @@ if __name__ == '__main__':
         save_wavaskey(fn_pt_dev, dict(pt_dev))
 
         # train data
-        cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+        cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
               (bootstrap_text,
                grammar_output if os.path.exists(grammar_output) else "",
                indomain_data_text_trn,
-               "'",
+               "",
                indomain_data_text_trn_norm)
 
         print cmd
         exit_on_system_fail(cmd)
 
         # dev data
-        cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+        cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
               (indomain_data_text_dev,
-              "'",
+              "",
               indomain_data_text_dev_norm)
         print cmd
         exit_on_system_fail(cmd)
