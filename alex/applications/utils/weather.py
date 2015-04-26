@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import urllib
 from datetime import datetime
-from datetime import time as dttime
 import json
 
 from alex.utils.config import load_as_module
@@ -32,9 +31,10 @@ class OpenWeatherMapWeather(Weather):
             self.condition = condition_transl[input_json['weather'][0]['id']]
             return
         # get prediction
-        if daily:  # set time to 13:00 for daily
-            date = datetime.combine(date.date(), dttime(13, 00))
-        ts = int(date.strftime("%s"))  # convert time to Unix timestamp
+        if daily:  # set time to whatever OpenWeatherMap returns in the timestamp for the 1st day
+            date = datetime.combine(date.date(), datetime.fromtimestamp(input_json['list'][0]['dt']).time())
+        # convert the date/time to Unix timestamp (timezone-independent)
+        ts = int(date.strftime("%s"))
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
             if ts >= fc1['dt'] and ts <= fc2['dt']:
@@ -49,15 +49,6 @@ class OpenWeatherMapWeather(Weather):
                     self.min_temp = self._round_temp(fc1['temp']['min'])
                     self.max_temp = self._round_temp(fc1['temp']['max'])
                 break
-        if not hasattr(self, 'temp'):
-            first = input_json['list'][0]
-            self.condition = condition_transl[first['weather'][0]['id']]
-            if not daily:
-                self.temp = self._round_temp(first['main']['temp'])
-            else:
-                self.temp = self._round_temp(first['temp']['day'])
-                self.min_temp = self._round_temp(first['temp']['min'])
-                self.max_temp = self._round_temp(first['temp']['max'])
 
     def _round_temp(self, temp):
         if self.celsius:
