@@ -6,9 +6,11 @@ from __future__ import unicode_literals
 
 from alex.components.slu.base import SLUPreprocessing
 from alex.components.asr.utterance import Utterance
-from alex.utils.czech_stemmer import cz_stem
+#from alex.utils.czech_stemmer import cz_stem
 from alex.components.nlg.template import TemplateNLGPreprocessing
 from alex.components.nlg.tools.cs import word_for_number
+from alex.applications.PublicTransportInfoCS.cs_morpho import Analyzer, Generator 
+from alex.utils.config import online_update
 import re
 import string
 
@@ -83,6 +85,11 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
             self.translations = self.ontology['value_translation']
             for slot in self.ontology['value_translation']:
                 self.translated_slots.add(slot)
+        analyzer_model = online_update('applications/PublicTransportInfoCS/data/czech.tagger')
+        generator_model = online_update('applications/PublicTransportInfoCS/data/czech.dict')
+        self._analyzer = Analyzer(analyzer_model)
+        self._generator = Generator(generator_model)
+
 
     def preprocess(self, template, svs_dict):
         """Preprocess values to be filled into an NLG template.
@@ -122,6 +129,14 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         for slot, modif in slot_modif.iteritems():
             if modif == 'Cap1':
                 svs_dict[slot] = svs_dict[slot][0].upper() + svs_dict[slot][1:]
+            elif modif.startswith('Infl'):
+                _, case, repl_word = modif.split(' ')
+                words = self._analyzer.analyze(svs_dict[slot])
+                forms = self._generator.inflect(words, case, check_fails=True)
+                if not forms:
+                    svs_dict[slot] = repl_word + ' ' + svs_dict[slot]
+                svs_dict[slot] = ' '.join([vars[0] for vars in forms])
+
         return template, svs_dict
 
     HR_ENDING = {1: 'u', 2: 'y', 3: 'y', 4: 'y'}
