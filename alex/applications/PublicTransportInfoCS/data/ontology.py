@@ -302,7 +302,8 @@ ontology = {
         'lta_task': {
             'weather': [('', '^task$', '^weather$'), ],
             'find_connection': [('', '^task$', '^find_connection$'), ('', '^departure_', ''), ('', '^arrival_', ''),
-                                ('', '^duration$', '')],
+                                ('', '^duration$', ''), 
+                                ('', '^from_stop$', ''), ('', '^to_stop$', ''),],
             'find_platform': [('', '^task$', '^find_platform$'),],
         },
     },

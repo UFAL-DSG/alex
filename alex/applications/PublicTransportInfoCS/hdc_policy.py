@@ -48,7 +48,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.system_das = []
         self.last_system_dialogue_act = None
 
-        self.debug = cfg.getpath('DM/basic/debug', False)
+        self.debug = cfg['DM']['basic']['debug']
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
@@ -269,7 +269,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             res_da = self.filter_iconfirms(res_da)
 
         elif fact['user_wants_to_know_the_time']:
-            # Respond to questions about current weather
+            # Respond to questions about current time
             # TODO: allow combining with other questions?
             res_da = self.req_current_time()
 
@@ -852,7 +852,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                                            to_city=to_city_val, to_stop=to_stop_val,
                                            vehicle=vehicle_val, max_transfers=max_transfers_val)
 
-
     def gather_platform_info(self, ds, accepted_slots):
         """Return a DA requesting further information for the platform search.
 
@@ -888,7 +887,6 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                  to_city=to_city_val,
                                                  train_name=train_name_val)
         return req_da, iconfirm_da, pi
-
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
