@@ -216,10 +216,6 @@ ontology = {
             'system_informs',
             'absolute_time',
         ],
-        'route_alternative': [
-            # this is necessary to be defined as it is a state variable used by the policy and automatically added to
-            # the dialogue state
-        ],
 
         'lta_task': [],
         'lta_bye': [],
@@ -245,6 +241,9 @@ ontology = {
             'user_informs'
         ]
     },
+
+    # additional variables that relate to the state but are not used as slots (initialized to None)
+    'variables': ['route_alternative', 'conn_info', 'directions'],
 
     'context_resolution': {
         # it is used DM belief tracking context that
