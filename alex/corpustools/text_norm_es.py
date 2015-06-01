@@ -129,7 +129,7 @@ for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
 
 _more_spaces = re.compile(r'\s{2,}')
-_sure_punct_rx = re.compile(r'[.?!",_]')
+_sure_punct_rx = re.compile(r'[.?!",_\n]')
 _parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
 
 
@@ -168,7 +168,7 @@ def normalise_text(text):
 
     return text
 
-_excluded_characters = set(['=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
+_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
                         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
 def exclude_asr(text):

@@ -52,6 +52,7 @@ ontology = {
         'time_transfers_limit': set([]),        
         'vehicle': set(["dontcare", "bus", "tram", "metro", "train", "cable_car", "ferry", "trolleybus"]),
         'alternative': set(['dontcare', '1', '2', '3', '4', 'last', 'next', 'prev', ]),
+        'train_name': set([]),
     },
 
     'slot_attributes': {
@@ -77,9 +78,6 @@ ontology = {
             'user_informs',
         ],
         'stop': [
-            'user_informs',
-        ],
-        'city': [
             'user_informs',
         ],
         'from_stop': [
@@ -243,6 +241,9 @@ ontology = {
         'max_temperature': [
             'temperature',
         ],
+        'train_name': [
+            'user_informs'
+        ]
     },
 
     'context_resolution': {
@@ -301,19 +302,11 @@ ontology = {
         'lta_task': {
             'weather': [('', '^task$', '^weather$'), ],
             'find_connection': [('', '^task$', '^find_connection$'), ('', '^departure_', ''), ('', '^arrival_', ''),
-                                ('', '^from_stop$', ''), ('', '^to_stop$', ''),
                                 ('', '^duration$', '')],
+            'find_platform': [('', '^task$', '^find_platform$'),],
         },
     },
 
-    'compatibility': {
-        'stop_city': [
-            'from_stop', 'to_stop', 'via_stop',
-        ],
-        'city_stop': [
-            'from_city', 'to_city', 'via_city', 'in_city',
-        ],
-    },
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},
@@ -349,6 +342,7 @@ ontology = {
             'ferry': 'přívozem',
             'trolleybus': 'trolejbusem',
             'substitute_traffic': 'náhradní dopravou',
+            'substitute_bus': 'náhradním autobusem',
         },
         'date_rel': {
             'today': 'dnes',
@@ -398,6 +392,7 @@ add_slot_values_from_database('arrival_time_rel', 'time')
 add_slot_values_from_database('time', 'time', exceptions=set(['now']))
 add_slot_values_from_database('time_rel', 'time')
 add_slot_values_from_database('date_rel', 'date_rel')
+add_slot_values_from_database('train_name', 'train_name')
 
 
 def load_compatible_values(fname, slot1, slot2):

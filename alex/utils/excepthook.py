@@ -11,6 +11,7 @@ import sys
 WEIRD_STUFF_MSG = "BE CAREFUL! Exception happened while executing an " \
                   "exception handler. Weird stuff can happen!"
 
+
 def hook_decorator(f):
     """Print the caution message when the decorated function raises an error."""
 
@@ -56,8 +57,6 @@ def log_hook(type_, value, tb):
       Traceback:
         {traceback}'''.format(type=type_, value=value, traceback=tb_msg)
     ExceptionHook._log(msg)
-
-
 
 
 @hook_decorator

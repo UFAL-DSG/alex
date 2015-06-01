@@ -1,6 +1,7 @@
 #!/bin/bash
 
-pushd ..
+vhub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $vhub_dir 
 
 for A in {1..1000}
 do

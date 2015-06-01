@@ -8,12 +8,13 @@ import itertools
 
 from alex.components.dm import DialoguePolicy
 from alex.components.slu.da import DialogueAct, DialogueActItem
+from alex.applications.utils.weather import OpenWeatherMapWeatherFinder
 # from alex.components.slu.da import DialogueActConfusionNetwork
 # from alex.components.asr.utterance import Utterance, UtteranceNBList, UtteranceConfusionNetwork
 
 from datetime import timedelta
-from .directions import GoogleDirectionsFinder, Travel
-from .weather import OpenWeatherMapWeatherFinder
+from .directions import GoogleDirectionsFinder, Travel, NotSupported
+from .platform_info import  PlatformInfo
 from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
@@ -44,11 +45,10 @@ class PTICSHDCPolicy(DialoguePolicy):
         self.weather = OpenWeatherMapWeatherFinder(cfg=cfg)
         self.infer_default_stops = directions_type == GoogleDirectionsFinder
 
-        self.das = []
+        self.system_das = []
         self.last_system_dialogue_act = None
 
-        self.debug = cfg['DM']['basic']['debug']
-        self.session_logger = cfg['Logging']['session_logger']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.system_logger = cfg['Logging']['system_logger']
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTICSHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
@@ -126,9 +126,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         :return: a dialogue act - the system action
         """
 
-        ludait_prob, ludait = dialogue_state["ludait"].mph()
+        ludait_prob, last_user_dai_type = dialogue_state["ludait"].mph()
         if ludait_prob < self.policy_cfg['accept_prob_ludait']:
-            ludait = 'none'
+            last_user_dai_type = 'none'
 
         # all slots being requested by the user
         slots_being_requested = dialogue_state.get_slots_being_requested(self.policy_cfg['accept_prob_being_requested'])
@@ -149,13 +149,13 @@ class PTICSHDCPolicy(DialoguePolicy):
         # all slots changed by a user in the last turn
         changed_slots = dialogue_state.get_changed_slots(self.accept_prob)
         # did the state changed at all?
-        state_changed = dialogue_state.state_changed(self.policy_cfg['min_change_prob'])
+        has_state_changed = dialogue_state.has_state_changed(self.policy_cfg['min_change_prob'])
 
         if self.debug:
             s = []
             s.append('PTICSHDCPolicy - Slot stats')
             s.append("")
-            s.append("ludait:                 %s" % unicode(ludait))
+            s.append("ludait:                 %s" % unicode(last_user_dai_type))
             s.append("Slots being requested:  %s" % unicode(slots_being_requested))
             s.append("Slots being confirmed:  %s" % unicode(slots_being_confirmed))
             s.append("Non-informed slots:     %s" % unicode(noninformed_slots))
@@ -164,7 +164,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             s.append("Slots to be confirmed:  %s" % unicode(slots_tobe_confirmed))
             s.append("Slots to be selected:   %s" % unicode(slots_tobe_selected))
             s.append("Changed slots:          %s" % unicode(changed_slots))
-            s.append("State changed?          %s" % unicode(state_changed))
+            s.append("State changed?          %s" % unicode(has_state_changed))
             s = '\n'.join(s)
 
             self.system_logger.debug(s)
@@ -175,16 +175,42 @@ class PTICSHDCPolicy(DialoguePolicy):
         # reset all slots depending on changed slots
         self.reset_on_change(dialogue_state, changed_slots)
 
+        # These facts are used in the dialog-controlling conditions that follow.
+        # They are named so that the dialog-controlling code is more readable.o
+        fact = {
+            'max_turns_exceeded': dialogue_state.turn_number > self.cfg[
+                'PublicTransportInfoCS']['max_turns'],
+            'dialog_begins': len(self.system_das) == 0,
+            'user_did_not_say_anything': last_user_dai_type == "silence",
+            'user_said_bye': "lta_bye" in accepted_slots,
+            'we_did_not_understand': last_user_dai_type == "null" or
+                                     last_user_dai_type == "other",
+            'user_wants_help': last_user_dai_type == "help",
+            'user_thanked': last_user_dai_type == "thankyou",
+            'user_wants_restart': last_user_dai_type == "restart",
+            'user_wants_us_to_repeat': last_user_dai_type == "repeat",
+            'there_is_something_to_be_selected': bool(slots_tobe_selected),
+            'there_is_something_to_be_confirmed': bool(slots_tobe_confirmed),
+            'user_wants_to_know_the_time': 'current_time' in
+                                           slots_being_requested,
+            'user_wants_to_know_the_weather': dialogue_state[
+                'lta_task'].test('weather', self.accept_prob),
+            'user_wants_to_find_the_platform': dialogue_state[
+                'lta_task'].test('find_platform', self.accept_prob),
+        }
+
+
         # topic-independent behavior
-        if dialogue_state.turn_number > self.cfg['PublicTransportInfoCS']['max_turns']:
+        if fact['max_turns_exceeded']:
             # Hang up if the talk has been too long
             res_da = DialogueAct('bye()&inform(toolong="true")')
 
-        elif len(self.das) == 0:
+        elif fact['dialog_begins']:
             # NLG("Dobrý den. Jak Vám mohu pomoci")
             res_da = DialogueAct("hello()")
+            dialogue_state['lta_task'].set('find_connection', 1.0)
 
-        elif ludait == "silence":
+        elif fact['user_did_not_say_anything']:
             # at this moment the silence and the explicit null act
             # are treated the same way: NLG("")
             silence_time = dialogue_state['silence_time']
@@ -195,81 +221,92 @@ class PTICSHDCPolicy(DialoguePolicy):
                 res_da = DialogueAct("silence()")
             dialogue_state["ludait"].reset()
 
-        elif "lta_bye" in accepted_slots:
+        elif fact['user_said_bye']:
             # NLG("Na shledanou.")
             res_da = DialogueAct("bye()")
             dialogue_state["ludait"].reset()
             dialogue_state["lta_bye"].reset()
 
-        elif ludait == "null" or ludait == "other":
+        elif fact['we_did_not_understand']:
             # NLG("Sorry, I did not understand. You can say...")
             res_da = DialogueAct("notunderstood()")
             res_da.extend(self.get_limited_context_help(dialogue_state))
             dialogue_state["ludait"].reset()
 
-        elif ludait == "help":
+        elif fact['user_wants_help']:
             # NLG("Pomoc.")
             res_da = DialogueAct("help()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "thankyou":
+        elif fact['user_thanked']:
             # NLG("Díky.")
             res_da = DialogueAct('inform(cordiality="true")&hello()')
             dialogue_state["ludait"].reset()
 
-        elif ludait == "restart":
+        elif fact['user_wants_restart']:
             # NLG("Dobře, zančneme znovu. Jak Vám mohu pomoci?")
             dialogue_state.restart()
             res_da = DialogueAct("restart()&hello()")
             dialogue_state["ludait"].reset()
 
-        elif ludait == "repeat":
+        elif fact['user_wants_us_to_repeat']:
             # NLG - use the last dialogue act
             res_da = DialogueAct("irepeat()")
             dialogue_state["ludait"].reset()
 
-        elif slots_tobe_selected:
+        elif fact['there_is_something_to_be_selected']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # select between two values for a slot that is not certain
             res_da.extend(self.select_info(slots_tobe_selected))
             res_da = self.filter_iconfirms(res_da)
 
-        elif slots_tobe_confirmed:
+        elif fact['there_is_something_to_be_confirmed']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # confirm all slots that are not certain
             res_da.extend(self.confirm_info(slots_tobe_confirmed))
             res_da = self.filter_iconfirms(res_da)
 
-        elif 'current_time' in slots_being_requested:
+        elif fact['user_wants_to_know_the_time']:
             # Respond to questions about current weather
             # TODO: allow combining with other questions?
             res_da = self.req_current_time()
 
         # topic-dependent
-        elif dialogue_state['lta_task'].test('weather', self.accept_prob):
+        elif fact['user_wants_to_know_the_weather']:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
 
             # talk about weather
-            w_da = self.get_weather_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                           accepted_slots, changed_slots, state_changed)
+            w_da = self.get_weather_res_da(dialogue_state, last_user_dai_type, slots_being_requested, slots_being_confirmed,
+                                           accepted_slots, changed_slots, has_state_changed)
             res_da.extend(w_da)
+            res_da = self.filter_iconfirms(res_da)
+        elif fact['user_wants_to_find_the_platform']:
+            # implicitly confirm all changed slots
+            res_da = self.get_iconfirm_info(changed_slots)
+
+            # talk about the platform nuber
+            da = self.get_platform_res_da(dialogue_state, last_user_dai_type,
+                                          slots_being_requested,
+                                          slots_being_confirmed, accepted_slots,
+                                          changed_slots, has_state_changed)
+            res_da.extend(da)
             res_da = self.filter_iconfirms(res_da)
         else:
             # implicitly confirm all changed slots
             res_da = self.get_iconfirm_info(changed_slots)
             # talk about public transport
-            t_da = self.get_connection_res_da(dialogue_state, ludait, slots_being_requested, slots_being_confirmed,
-                                              accepted_slots, changed_slots, state_changed)
+            t_da = self.get_connection_res_da(dialogue_state, last_user_dai_type, slots_being_requested, slots_being_confirmed,
+                                              accepted_slots, changed_slots, has_state_changed)
             res_da.extend(t_da)
             res_da = self.filter_iconfirms(res_da)
 
         self.last_system_dialogue_act = res_da
 
         # record the system dialogue acts
-        self.das.append(self.last_system_dialogue_act)
+        self.system_das.append(self.last_system_dialogue_act)
         return self.last_system_dialogue_act
 
     def get_connection_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
@@ -277,7 +314,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Handle the public transport connection dialogue topic.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
+        :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
 
@@ -319,12 +356,69 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return res_da
 
+    def get_platform_res_da(self, ds, ludait, slots_being_requested,
+                            slots_being_confirmed, accepted_slots,
+                            changed_slots, state_changed):
+        if slots_being_requested:
+            # inform about all requested slots
+            res_da = self.get_requested_info(slots_being_requested, ds, accepted_slots)
+
+        elif slots_being_confirmed:
+            # inform about all slots being confirmed by the user
+            res_da = self.get_confirmed_info(slots_being_confirmed, ds, accepted_slots)
+
+        else:
+            # gather known information about the connection
+            req_da, iconfirm_da, platform_info = self.gather_platform_info(ds,
+                    accepted_slots)
+
+            if len(req_da) == 0:
+                if state_changed:
+                    # we know everything we need -> start searching
+                    res_da = DialogueAct()
+                    try:
+                        platform_res = self.directions.get_platform(platform_info)
+
+                        if not platform_res:
+                            res_da.append(DialogueActItem('inform', 'platform',
+                                                          'not_found'))
+                            res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_info.to_stop))
+                        else:
+                            if platform_res.platform:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          platform_res.platform))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          platform_res.track))
+                                if platform_info.train_name != 'none':
+                                    res_da.append(DialogueActItem('inform',
+                                                                  'train_name',
+                                                                  platform_info.train_name))
+                                else:
+                                    res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                            else:
+                                res_da.append(DialogueActItem('inform', 'platform',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'track',
+                                                          'none'))
+                                res_da.append(DialogueActItem('inform', 'direction',
+                                                          platform_res.direction))
+                    except NotSupported:
+                        res_da.append(DialogueActItem('inform', 'not_supported'))
+                else:
+                    res_da = self.backoff_action(ds)
+            else:
+                res_da = req_da
+
+        return res_da
+
     def get_weather_res_da(self, ds, ludait, slots_being_requested, slots_being_confirmed,
                            accepted_slots, changed_slots, state_changed):
         """Handle the dialogue about weather.
 
         :param ds: The current dialogue state
-        :param requested_slots: The slots currently requested by the user
+        :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
         res_da = None
@@ -371,7 +465,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         else:
             lon, lat = None, None
         # request the weather
-        weather = self.weather.get_weather(time=weather_ts, daily=daily, place=in_city, lon=lon, lat=lat)
+        weather = self.weather.get_weather(time=weather_ts, daily=daily, city=in_city, lon=lon, lat=lat)
         # check errors
         if weather is None:
             return DialogueAct('apology()&inform(in_city="%s")' % in_city)
@@ -478,7 +572,37 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         for slot in requested_slots:
-            if ds['route_alternative'] in [0, 1, 2, 3]:
+            # for these, we don't need any route information, we can answer straight away
+            if slot not in ['from_stop', 'to_stop',
+                            'departure_time', 'departure_time_rel',
+                            'arrival_time', 'arrival_time_rel',
+                            'duration', 'num_transfers', 'time_transfers', ]:
+                dai = DialogueActItem("inform", slot, requested_slots[slot])
+                res_da.append(dai)
+                # remember that we answered
+                ds["rh_" + slot].reset()
+                continue
+
+            # try to find a route if we don't know it yet
+            if not isinstance(ds['route_alternative'], int):
+                req_da, iconfirm_da, conn_info = self.gather_connection_info(ds, accepted_slots)
+                # we have all information we need, start searching
+                if len(req_da) == 0:
+                    ds.conn_info = conn_info
+                    res_da = iconfirm_da
+                    # the search will change ds['route_alternative'] if a route is found
+                    dir_da = self.get_directions(ds, check_conflict=True)
+                    # only return the output DAs if no route is found (i.e., the error message),
+                    # otherwise we go on to return the specific information requested
+                    if not isinstance(ds['route_alternative'], int):
+                        res_da.extend(dir_da)
+                # we don't know enough, ask about the rest
+                else:
+                    res_da = req_da
+
+            # we have a route, so return information about it
+            # NB: ds['route_alternative'] might have changed in the meantime if a route has been found
+            if isinstance(ds['route_alternative'], int):
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':
@@ -497,26 +621,9 @@ class PTICSHDCPolicy(DialoguePolicy):
                     res_da.extend(self.req_num_transfers(ds))
                 elif slot == "time_transfers":
                     res_da.extend(self.req_time_transfers(ds))
-            else:
-                if slot in ['from_stop', 'to_stop',
-                            'departure_time', 'departure_time_rel',
-                            'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', 'time_transfers', ]:
-                    dai = DialogueActItem("inform", "stops_conflict", "no_stops")
-                    res_da.append(dai)
 
-                    if 'from_stop' not in accepted_slots:
-                        dai = DialogueActItem("help", "inform", "from_stop")
-                        res_da.append(dai)
-                    elif 'to_stop' not in accepted_slots:
-                        dai = DialogueActItem("help", "inform", "to_stop")
-                        res_da.append(dai)
-                else:
-                    dai = DialogueActItem("inform", slot, requested_slots[slot])
-                    res_da.append(dai)
-                    ds["rh_" + slot].reset()
-
-            ds["rh_" + slot].reset()
+                # remember that we answered
+                ds["rh_" + slot].reset()
 
         return res_da
 
@@ -745,6 +852,44 @@ class PTICSHDCPolicy(DialoguePolicy):
                                            to_city=to_city_val, to_stop=to_stop_val,
                                            vehicle=vehicle_val, max_transfers=max_transfers_val)
 
+
+    def gather_platform_info(self, ds, accepted_slots):
+        """Return a DA requesting further information for the platform search.
+
+        If the request DA is empty there is no need to ask further.
+
+        :param ds: The current dialogue state
+        :rtype: DialogueAct, DialogueAct, dict
+        """
+        req_da = DialogueAct()
+
+        # retrieve the slot variables
+        from_stop_val = (ds['from_stop'].mpv() if 'from_stop' in
+                            accepted_slots else 'none')
+        to_stop_val = (ds['to_stop'].mpv() if 'to_stop' in accepted_slots
+                          else 'none')
+        train_name_val = (ds['train_name'].mpv() if 'train_name' in
+                          accepted_slots else 'none')
+        from_city_val = ds['from_city'].mpv() if 'from_city' in accepted_slots else 'none'
+        to_city_val = ds['to_city'].mpv() if 'to_city' in accepted_slots else 'none'
+
+        if from_stop_val == 'none' and from_city_val == 'none':
+            req_da.extend(DialogueAct('request(from_stop)'))
+        elif (to_stop_val == 'none' and to_city_val == 'none') and \
+                        train_name_val == 'none':
+            req_da.extend(DialogueAct('request(to_stop)&request(train_name)'))
+
+        # generate implicit confirms if we inferred cities and they are not the same for both stops
+        iconfirm_da = DialogueAct()
+
+        pi  = PlatformInfo(from_stop=from_stop_val,
+                                                 to_stop=to_stop_val,
+                                                 from_city=from_city_val,
+                                                 to_city=to_city_val,
+                                                 train_name=train_name_val)
+        return req_da, iconfirm_da, pi
+
+
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
         :rtype: DialogueAct
@@ -771,7 +916,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
-                return da
+                break
+        return da
 
     def req_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
@@ -783,7 +929,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                return da
+                break
+        return da
 
     def req_departure_time(self, dialogue_state):
         """Generates a dialogue act informing about the departure time from the origin stop of the last
@@ -798,7 +945,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_departure_time_rel(self, dialogue_state):
         """Return a DA informing the user about the relative time until the
@@ -829,7 +977,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                         departure_time_rel_hrs += 24 * departure_time_rel.days
                     da.append(DialogueActItem('inform', 'departure_time_rel',
                                               '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_arrival_time(self, dialogue_state):
         """Return a DA informing about the arrival time the destination stop of the last
@@ -842,7 +991,8 @@ class PTICSHDCPolicy(DialoguePolicy):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_arrival_time_rel(self, dialogue_state):
         """Return a DA informing about the relative arrival time the destination stop of the last
@@ -859,7 +1009,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                 arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_duration(self, dialogue_state):
         """Return a DA informing about journey time to the destination stop of the last
@@ -873,14 +1024,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 departure_time = step.departure_time
                 break
         else:
-            return None
+            departure_time = datetime.fromtimestamp(0)
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 arrival_time = step.arrival_time
                 break
         else:
-            return None
+            arrival_time = datetime.fromtimestamp(leg.steps[0].duration)
 
         duration = (arrival_time - departure_time).seconds / 60
         duration_hrs, duration_mins = divmod(duration, 60)
@@ -927,7 +1078,8 @@ class PTICSHDCPolicy(DialoguePolicy):
         # origin and destination are the same
         if (wp.from_city == wp.to_city) and (wp.from_stop in [wp.to_stop, None]):
             apology_da = DialogueAct('apology()&inform(stops_conflict="thesame")')
-            apology_da.extend(DialogueAct(wp.get_minimal_info()))
+            apology_da.extend(DialogueAct('inform(from_stop="%s")&inform(to_stop="%s")' %
+                                          (wp.from_stop, wp.to_stop)))
             return apology_da
         # origin stop incompatible with origin city
         elif not self.ontology.is_compatible('city_stop', wp.from_city, wp.from_stop):

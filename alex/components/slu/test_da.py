@@ -3,13 +3,17 @@
 
 from copy import deepcopy
 import unittest
+from unittest import TestCase
+import math
 
 if __name__ == "__main__":
     import autopath
 import __init__
 
 from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, \
-    DialogueActConfusionNetwork, merge_slu_nblists, merge_slu_confnets
+    DialogueActConfusionNetwork, DialogueActConfusionNetworkException, merge_slu_nblists, merge_slu_confnets
+from alex.ml.hypothesis import ConfusionNetworkException
+
 
 class TestDA(unittest.TestCase):
     def test_swapping_merge_normalise(self):
@@ -29,7 +33,6 @@ class TestDA(unittest.TestCase):
         s.append("Using normalise().merge():")
         s.append(unicode(nblist2))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(nblist1, nblist2)
 
@@ -53,12 +56,12 @@ class TestDA(unittest.TestCase):
         merged_nblists = merge_slu_nblists(nblists)
 
         correct_merged_nblists = DialogueActNBList()
-        correct_merged_nblists.add(0.7*0.7, DialogueAct("hello()"))
-        correct_merged_nblists.add(0.7*0.2, DialogueAct("bye()"))
-        correct_merged_nblists.add(0.7*0.1, DialogueAct("other()"))
-        correct_merged_nblists.add(0.3*0.6, DialogueAct("hello()"))
-        correct_merged_nblists.add(0.3*0.3, DialogueAct("restart()"))
-        correct_merged_nblists.add(0.3*0.1, DialogueAct("other()"))
+        correct_merged_nblists.add(0.7 * 0.7, DialogueAct("hello()"))
+        correct_merged_nblists.add(0.7 * 0.2, DialogueAct("bye()"))
+        correct_merged_nblists.add(0.7 * 0.1, DialogueAct("other()"))
+        correct_merged_nblists.add(0.3 * 0.6, DialogueAct("hello()"))
+        correct_merged_nblists.add(0.3 * 0.3, DialogueAct("restart()"))
+        correct_merged_nblists.add(0.3 * 0.1, DialogueAct("other()"))
         correct_merged_nblists.merge().normalise()
         # correct_merged_nblists.normalise()
 
@@ -70,7 +73,6 @@ class TestDA(unittest.TestCase):
         s.append("Correct merged results:")
         s.append(unicode(correct_merged_nblists))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(merged_nblists), unicode(correct_merged_nblists))
 
@@ -88,13 +90,13 @@ class TestDA(unittest.TestCase):
         merged_confnets = merge_slu_confnets(confnets)
 
         correct_merged_confnet = DialogueActConfusionNetwork()
-        correct_merged_confnet.add_merge(0.7*0.7, DialogueActItem('hello'),
+        correct_merged_confnet.add_merge(0.7 * 0.7, DialogueActItem('hello'),
                                          combine='add')
-        correct_merged_confnet.add_merge(0.7*0.2, DialogueActItem('bye'),
+        correct_merged_confnet.add_merge(0.7 * 0.2, DialogueActItem('bye'),
                                          combine='add')
-        correct_merged_confnet.add_merge(0.3*0.6, DialogueActItem('hello'),
+        correct_merged_confnet.add_merge(0.3 * 0.6, DialogueActItem('hello'),
                                          combine='add')
-        correct_merged_confnet.add_merge(0.3*0.3, DialogueActItem('restart'),
+        correct_merged_confnet.add_merge(0.3 * 0.3, DialogueActItem('restart'),
                                          combine='add')
 
         s = []
@@ -105,9 +107,206 @@ class TestDA(unittest.TestCase):
         s.append("Correct merged results:")
         s.append(unicode(correct_merged_confnet))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(merged_confnets), unicode(correct_merged_confnet))
+
+
+class TestDialogueActConfusionNetwork(TestCase):
+    def test_add_merge(self):
+        dai = DialogueActItem(dai='inform(food=chinese)')
+        dacn = DialogueActConfusionNetwork()
+        dacn.add_merge(0.5, dai, combine='add')
+        self.assertEqual(dacn._get_prob([0]), 0.5)
+
+        dacn.add_merge(0.5, dai, combine='add')
+        self.assertEqual(dacn._get_prob([0]), 1.0)
+
+    def test_get_best_da(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.1, DialogueActItem(dai='inform(food=russian)'))
+
+        da = dacn.get_best_da()
+        self.assertEqual(len(da), 1)
+        self.assertEqual(da.dais[0], DialogueActItem(dai='inform(food=czech)'))
+
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.3, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=null)'))
+        dacn.add(0.1, DialogueActItem(dai='inform(food=russian)'))
+
+        da = dacn.get_best_nonnull_da()
+        self.assertEqual(len(da), 1)
+        self.assertEqual(da.dais[0], DialogueActItem(dai='inform(food=null)'))
+
+    def test_get_best_nonnull_da(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.1, DialogueActItem(dai='inform(food=russian)'))
+
+        da_nn = dacn.get_best_nonnull_da()
+        self.assertEqual(len(da_nn), 1)
+        self.assertEqual(da_nn.dais[0], DialogueActItem(dai='inform(food=czech)'))
+
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.075, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='null()'))
+        dacn.add(0.15, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.075, DialogueActItem(dai='inform(food=russian)'))
+
+        da_nn = dacn.get_best_nonnull_da()
+        self.assertEqual(len(da_nn), 1)
+
+        self.assertEqual(da_nn.dais[0], DialogueActItem(dai='inform(food=czech)'))
+
+    def test_get_best_da_hyp(self):
+        # Test case when only one dai should be included in the hyp.
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.1, DialogueActItem(dai='inform(food=russian)'))
+
+        best_hyp = dacn.get_best_da_hyp(use_log=False)
+        self.assertAlmostEqual(best_hyp.prob, 0.8 * 0.7 * 0.9)
+        self.assertEqual(len(best_hyp.da), 1)
+
+        # Test case when 2 dais should be included in the hyp.
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.1, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=russian)'))
+
+        best_hyp = dacn.get_best_da_hyp(use_log=False)
+        self.assertAlmostEqual(best_hyp.prob, 0.9 * 0.7 * 0.9)
+        self.assertEqual(len(best_hyp.da), 2)
+
+        # Test the case with logarithms.
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.1, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=russian)'))
+
+        best_hyp = dacn.get_best_da_hyp(use_log=True)
+        self.assertAlmostEqual(best_hyp.prob, math.log(0.9 * 0.7 * 0.9))
+        self.assertEqual(len(best_hyp.da), 2)
+
+        # Test the case with manual thresholds.
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.1, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=russian)'))
+
+        best_hyp = dacn.get_best_da_hyp(
+            use_log=True, threshold=0.1, thresholds={
+                DialogueActItem(dai='inform(food=chinese)'): 0.5,
+                DialogueActItem(dai='inform(food=czech)'): 0.9,
+                DialogueActItem(dai='inform(food=russian)'): 0.5
+            })
+        # Test food=czech should NOT be included.
+        self.assertAlmostEqual(best_hyp.prob, math.log(0.9 * 0.3 * 0.9))
+        self.assertEqual(len(best_hyp.da), 1)
+        self.assertTrue(not DialogueActItem(dai='inform(food=czech)') in best_hyp.da)
+
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.1, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=russian)'))
+
+        best_hyp = dacn.get_best_da_hyp(
+            use_log=True, threshold=0.1, thresholds={
+                DialogueActItem(dai='inform(food=chinese)'): 0.5,
+                DialogueActItem(dai='inform(food=czech)'): 0.5,
+                DialogueActItem(dai='inform(food=russian)'): 0.5
+            })
+        # Test food=czech should be included.
+        self.assertAlmostEqual(best_hyp.prob, math.log(0.9 * 0.7 * 0.9))
+        self.assertEqual(len(best_hyp.da), 2)
+        self.assertTrue(DialogueActItem(dai='inform(food=czech)') in best_hyp.da)
+
+    def test_get_prob(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.2, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.7, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.1, DialogueActItem(dai='inform(food=russian)'))
+
+        self.assertAlmostEqual(dacn._get_prob([0, 1, 1]), 0.2 * 0.3 * 0.9)
+        self.assertAlmostEqual(dacn._get_prob([0, 0, 0]), 0.2 * 0.7 * 0.1)
+
+    def test_get_da_nblist(self):
+        # Simple case with one good hypothesis.
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.05, DialogueActItem(dai='inform(food=russian)'))
+
+        nblist = dacn.get_da_nblist()
+        best_da = nblist.get_best_da()
+        expected_da = DialogueAct(da_str='inform(food=czech)')
+        self.assertEqual(best_da, expected_da)
+
+        # More good hypotheses
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=russian)'))
+
+        nblist = dacn.get_da_nblist()
+        best_da = nblist.get_best_da()
+        expected_da = DialogueAct(da_str='inform(food=czech)&inform(food=russian)')
+        self.assertEqual(best_da, expected_da)
+
+    def test_prune(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
+
+        # Russian food should be pruned.
+        self.assertEqual(len(dacn), 3)
+        dacn.prune()
+        self.assertEqual(len(dacn), 2)
+        self.assertTrue(not DialogueActItem(dai='inform(food=russian)') in dacn)
+
+    def test_normalise(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(1.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
+        self.assertRaises(ConfusionNetworkException, dacn.normalise)
+
+    def test_sort(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(1.0, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
+
+        dacn.sort()
+
+        cn = list(dacn)
+        self.assertEqual(cn[0][1], DialogueActItem(dai='inform(food=czech)'))
+        self.assertEqual(cn[1][1], DialogueActItem(dai='inform(food=chinese)'))
+        self.assertEqual(cn[2][1], DialogueActItem(dai='inform(food=russian)'))
+
+    def test_make_from_da(self):
+        da = DialogueAct('inform(food=czech)&inform(area=north)')
+        dacn = DialogueActConfusionNetwork.make_from_da(da)
+        self.assertEqual(dacn.get_best_da(), da)
+
+    def test_merge(self):
+        dacn = DialogueActConfusionNetwork()
+        dacn.add(0.05, DialogueActItem(dai='inform(food=chinese)'))
+        dacn.add(0.9, DialogueActItem(dai='inform(food=czech)'))
+        dacn.add(0.00005, DialogueActItem(dai='inform(food=russian)'))
+
+        dacn.merge(dacn, combine='max')
+
+        # Russian food should be pruned.
+        dacn.sort().prune()
+        self.assertTrue(not DialogueActItem(dai='inform(food=russian)') in dacn)
+
 
 if __name__ == '__main__':
     unittest.main()

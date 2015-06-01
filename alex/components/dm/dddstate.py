@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from alex.components.dm.base import DiscreteValue, DialogueState
 from alex.components.dm.exceptions import DeterministicDiscriminativeDialogueStateException
-from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActNBList, DialogueActConfusionNetwork
+from alex.components.slu.da import DialogueAct, DialogueActItem, DialogueActConfusionNetwork
 
 
 class D3DiscreteValue(DiscreteValue):
@@ -188,17 +188,18 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
     It uses only the best dialogue act from the input.
     Based on this it updates its state.
     """
+    slots = None
 
     def __init__(self, cfg, ontology):
         super(DeterministicDiscriminativeDialogueState, self).__init__(cfg, ontology)
 
-        self.slots = defaultdict(D3DiscreteValue)
         self.turns = []
         self.turn_number = 0
-        self.debug = cfg['DM']['basic']['debug']
+        self.debug = cfg.getpath('DM/basic/debug', False)
         self.type = cfg['DM']['DeterministicDiscriminativeDialogueState']['type']
         self.session_logger = cfg['Logging']['session_logger']
         self.system_logger = cfg['Logging']['system_logger']
+        self.restart()
 
     def __unicode__(self):
         """Get the content of the dialogue state in a human readable form."""
@@ -301,18 +302,18 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         if self.debug:
             self.system_logger.debug('D3State Dialogue Act in:\n%s' % user_da)
 
-        user_da = self.context_resolution(user_da, system_da)
+        user_da = self._resolve_user_da_in_context(user_da, system_da)
 
         if self.debug:
             self.system_logger.debug('Context Resolution - Dialogue Act: \n%s' % user_da)
 
-        user_da = self.last_talked_about(user_da, system_da)
+        user_da = self._infer_last_talked_about_slots(user_da, system_da)
 
         if self.debug:
             self.system_logger.debug('Last Talked About Inference - Dialogue Act: \n%s' % user_da)
 
         # perform the state update
-        self.state_update(user_da, system_da)
+        self._update_state(user_da, system_da)
         self.turn_number += 1
 
         # store the result
@@ -322,7 +323,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         if self.debug:
             self.system_logger.debug(unicode(self))
 
-    def context_resolution(self, user_da, system_da):
+    def _resolve_user_da_in_context(self, user_da, system_da):
         """Resolves and converts meaning of some user dialogue acts
         given the context."""
         old_user_da = deepcopy(user_da)
@@ -362,14 +363,17 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     if new_user_dai:
                         new_user_da.add(prob, new_user_dai)
 
-        old_user_da.extend(new_user_da)
+        old_user_da.merge(new_user_da, combine='max')
 
         return old_user_da
 
-    def last_talked_about(self, user_da, system_da):
+    def _infer_last_talked_about_slots(self, user_da, system_da):
         """This adds dialogue act items to support inference of the last slots the user talked about."""
         old_user_da = deepcopy(user_da)
         new_user_da = DialogueActConfusionNetwork()
+
+        colliding_slots = {}
+        done_slots = set()
 
         for prob, user_dai in user_da:
             new_user_dais = []
@@ -377,16 +381,37 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
             for name, value in lta_tsvs:
                 new_user_dais.append(DialogueActItem("inform", name, value))
+                if name in done_slots:
+                    if not name in colliding_slots:
+                        colliding_slots[name] = set()
+                    colliding_slots[name].add(value)
+                else:
+                    done_slots.add(name)
 
             if new_user_dais:
                 for nudai in new_user_dais:
-                    new_user_da.add(prob, nudai)
+                    if not nudai in new_user_da:
+                        new_user_da.add(prob, nudai)
 
-        old_user_da.extend(new_user_da)
+        # In case of collisions, prefer the current last talked about values if it is one of the colliding values.
+        # If there is a collision and the current last talked about value is not among the colliding values, do not
+        # consider the colliding DA's at all.
+        invalid_das = set()
+        for prob, da in set(new_user_da):
+            if da.name in colliding_slots and self[da.name].mpv() in colliding_slots[da.name]:
+                if not da.value == self[da.name].mpv():
+                    invalid_das.add(da)
+            elif da.name in colliding_slots:
+                invalid_das.add(da)
+
+        for invalid_da in invalid_das:
+            new_user_da.remove(invalid_da)
+
+        old_user_da.merge(new_user_da, combine='max')
 
         return old_user_da
 
-    def state_update(self, user_da, system_da):
+    def _update_state(self, user_da, system_da):
         """Records the information provided by the system and/or by the user."""
 
         # since there is a state update, the silence_time from the last from the user voice activity is 0.0
@@ -608,7 +633,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         else:
             return {}
 
-    def state_changed(self, cha_prob):
+    def has_state_changed(self, cha_prob):
         """Returns a boolean indicating whether the dialogue state changed significantly
         since the last turn. True is returned if at least one slot has at least one value
         whose probability has changed at least by the given threshold since last time.

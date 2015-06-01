@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
+#export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
+export KALDI_ROOT=/a/kronosh/oplatek/kaldi-kronos
 
 source path.sh
 
@@ -31,4 +32,4 @@ pushd $lm_dir
 python download_models.py
 popd
 
-./build_hclg.sh $AM $tree $mfcc $mat $sil $dict $vocab $LM $localdir $langdir $outputdir $oov
+../../../corpustools/kaldi_build_hclg.sh $AM $tree $mfcc $mat $sil $dict $vocab $LM $localdir $langdir $outputdir $oov

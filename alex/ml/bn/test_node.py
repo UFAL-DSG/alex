@@ -5,6 +5,8 @@
 
 import unittest
 
+if __name__ == '__main__':
+    import autopath
 from alex.ml.bn.factor import Factor
 from alex.ml.bn.node import DiscreteVariableNode, DiscreteFactorNode, DirichletFactorNode, DirichletParameterNode
 
@@ -142,7 +144,6 @@ class TestNode(unittest.TestCase):
         self.assertAlmostEqual(x0.belief[('x0_0',)], 3.0/4)
 
         factor.message_to(alpha)
-        print alpha.alpha
 
     def test_parameter(self):
         alpha = DirichletParameterNode('theta', Factor(
@@ -183,13 +184,12 @@ class TestNode(unittest.TestCase):
         x0.update()
 
         factor.message_to(alpha)
-        print alpha.alpha
 
         alpha.message_to(factor)
 
         factor.update()
         factor.message_to(alpha)
-        print alpha.alpha
+
         #self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 1.3892210400497993)
         #self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_1')], 8.2168830001373632)
         #self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_2')], 1.0325065031960947)
@@ -245,7 +245,6 @@ class TestNode(unittest.TestCase):
         f1.message_to(alpha)
         f2.message_to(alpha)
 
-        print alpha.alpha
         self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 2, places=5)
         self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
 
@@ -302,7 +301,6 @@ class TestNode(unittest.TestCase):
         f1.message_to(alpha)
         f2.message_to(alpha)
 
-        print alpha.alpha
         self.assertAlmostEqual(alpha.alpha[('x0_0', 'x1_0')], 2, places=5)
         self.assertAlmostEqual(alpha.alpha[('x0_1', 'x1_0')], 2, places=5)
 
@@ -334,7 +332,6 @@ class TestNode(unittest.TestCase):
         D.message_to(f)
         f.update()
         f.message_to(theta)
-        print theta.alpha
 
         theta.message_to(f)
 
@@ -342,4 +339,7 @@ class TestNode(unittest.TestCase):
         X.message_to(f)
         f.update()
         f.message_to(theta)
-        print theta.alpha
+
+
+if __name__ == '__main__':
+    unittest.main()

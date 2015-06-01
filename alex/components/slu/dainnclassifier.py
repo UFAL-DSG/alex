@@ -524,8 +524,9 @@ class DAINNClassifier(SLUInterface):
             print('%40s = %d' % (k, self.classifiers[k]))
 
     def prune_features(self, clser, min_pos_feature_count, min_neg_feature_count, verbose=False):
-        print 'Pruning the features'
-        print
+        if verbose:
+            print 'Pruning the features'
+            print
 
         features_counts = defaultdict(int)
         for feat in self.classifiers_features[clser]:
@@ -721,33 +722,39 @@ class DAINNClassifier(SLUInterface):
 
             max_crossvalid_mean_accuracy = 0.0
             for epoch in range(200):
-                print "Epoch", epoch
+                if verbose:
+                    print "Epoch", epoch
 
                 predictions_y = nn.predict(training_input, batch_size = batch_size)
                 training_mean_accuracy = np.mean(np.equal(np.argmax(predictions_y, axis=1), training_output))*100.0
 
-                print "  Prediction accuracy on the training data: %6.2f" % (training_mean_accuracy, )
-                print "                    the training data size: ",  training_input.shape
+                if verbose:
+                    print "  Prediction accuracy on the training data: %6.2f" % (training_mean_accuracy, )
+                    print "                    the training data size: ",  training_input.shape
 
                 predictions_y = nn.predict(crossvalid_input, batch_size = batch_size)
 
                 crossvalid_mean_accuracy = np.mean(np.equal(np.argmax(predictions_y, axis=1), crossvalid_output))*100.0
 
-                print "  Prediction accuracy on the crossvalid data: %6.2f" % (crossvalid_mean_accuracy, )
-                print "                    the crossvalid data size: ",  crossvalid_input.shape
+                if verbose:
+                    print "  Prediction accuracy on the crossvalid data: %6.2f" % (crossvalid_mean_accuracy, )
+                    print "                    the crossvalid data size: ",  crossvalid_input.shape
 
 
                 if max_crossvalid_mean_accuracy < crossvalid_mean_accuracy:
-                    print "  Storing the best classifiers so far"
+                    if verbose:
+                        print "  Storing the best classifiers so far"
                     self.trained_classifiers[clser] = nn
                     max_crossvalid_mean_accuracy = crossvalid_mean_accuracy
 
 
                 if training_mean_accuracy >= 99.99 or max_crossvalid_mean_accuracy >= 99.99:
-                    print "  Stop: It does not have to be better"
+                    if verbose:
+                        print "  Stop: It does not have to be better"
                     break
 
-                print "  Training "
+                if verbose:
+                    print "  Training "
                 nn.train(method = method, learning_rate=learning_rate*learning_rate_decay/(learning_rate_decay+epoch))
 
 
@@ -842,7 +849,7 @@ class DAINNClassifier(SLUInterface):
                             print '  Probability:', p
 
                         dai = DialogueActItem(self.parsed_classifiers[clser].dat, self.parsed_classifiers[clser].name, v)
-                        da_confnet.add(p[0][1], dai)
+                        da_confnet.add_merge(p[0][1], dai, combine='max')
             else:
                 # process concrete classifiers
                 classifiers_features = self.get_features(utterance, (None, None, None), utterance_fvcs)
@@ -858,9 +865,9 @@ class DAINNClassifier(SLUInterface):
                 if verbose:
                     print '  Probability:', p
 
-                da_confnet.add(p[0][1], self.parsed_classifiers[clser])
+                da_confnet.add_merge(p[0][1], self.parsed_classifiers[clser], combine='max')
 
-        da_confnet.sort().merge().prune()
+        da_confnet.sort().prune()
 
         return da_confnet
 

@@ -40,8 +40,8 @@ class Ontology(object):
         return value in self.ontology['slots'][name]
 
     def slot_is_binary(self, name):
-        """Check whether the given slot has a binary value (using the 'binary'
-        key in the 'slot_attributes' for the given slot name).
+        """Check whether the given slot has a binary value (using the 'binary' key in the 'slot_attributes' for the
+        given slot name).
 
         :param name: name of the slot being checked
         """
@@ -66,25 +66,25 @@ class Ontology(object):
         return [slot for slot in self.ontology['slots'] if 'system_selects' in self.ontology['slot_attributes'][slot]]
 
     @lru_cache(maxsize=1000)
-    def last_talked_about(self, dat, name, value):
+    def last_talked_about(self, da_type, name, value):
         """Returns a list of slots and values that should be used to for tracking about what was talked about recently,
         given the input dialogue acts.
 
-        :param dat: the source dialogue act type
+        :param da_type: the source dialogue act type
         :param name: the source slot name
         :param value: the source slot value
         :return: returns a list of target slot names and values used for tracking
         """
         lta_tsv = []
 
-        dat = dat if dat else ''
+        da_type = da_type if da_type else ''
         name = name if name else ''
         value = value if value else ''
 
         for target_slot, target_values in self.ontology['last_talked_about'].iteritems():
             for target_value, source_patterns in target_values.iteritems():
                 for source_dat, source_name, source_value in source_patterns:
-                    if re.match(source_dat, dat) and re.match(source_name, name) and re.match(source_value, value):
+                    if re.match(source_dat, da_type) and re.match(source_name, name) and re.match(source_value, value):
                         lta_tsv.append((target_slot, target_value))
 
         return lta_tsv
@@ -99,9 +99,8 @@ class Ontology(object):
             return False
 
     def get_compatible_vals(self, slot_pair, value):
-        """Given a slot pair (key to 'compatible_values' in ontology data), this returns the set of
-        compatible values for the given key. If there is no information about the given pair,
-        None is returned.
+        """Given a slot pair (key to 'compatible_values' in ontology data), this returns the set of compatible values
+        for the given key. If there is no information about the given pair, None is returned.
 
         :param slot_pair: key to 'compatible_values' in ontology data
         :param value: the subkey to check compatible values for
@@ -112,9 +111,9 @@ class Ontology(object):
         return None
 
     def is_compatible(self, slot_pair, val1, val2):
-        """Given a slot pair and a pair of values, this tests whether the values are compatible.
-        If there is no information about the slot pair or the first value, returns False.
-        If the second value is None, returns always True (i.e. None is compatible with anything).
+        """Given a slot pair and a pair of values, this tests whether the values are compatible. If there is no
+        information about the slot pair or the first value, returns False. If the second value is None, returns
+        always True (i.e. None is compatible with anything).
 
         :param slot_pair: key to 'compatible_values' in ontology data
         :param val1: value of the 1st slot

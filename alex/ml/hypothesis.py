@@ -7,8 +7,9 @@ value of a base type instance.
 """
 
 from __future__ import unicode_literals
+import operator
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from alex.ml.exceptions import NBListException
 # from operator import mul
 
@@ -164,6 +165,10 @@ class NBList(Hypothesis):
         return self
 
 
+class ConfusionNetworkException(Exception):
+    pass
+
+
 # UNDER CONSTRUCTION
 class ConfusionNetwork(Hypothesis):
     """\
@@ -171,8 +176,15 @@ class ConfusionNetwork(Hypothesis):
     a sequence of elementary acts.
 
     """
+    _merge_func = {'new': lambda p1, p2: p2,
+                   'max': max,
+                   'add': operator.add,
+                   'arit': lambda p1, p2: 0.5 * (p1 + p2),
+                   'harm': lambda p1, p2: (0. if p1 * p2 == 0
+                                              else .5 * (p1+ p2) / (p1 * p2))}
+
     def __init__(self):
-        self.cn = list()
+        self.cn = OrderedDict()
 
     def __str__(self):
         return unicode(self).encode('ascii', 'replace')
@@ -188,15 +200,98 @@ class ConfusionNetwork(Hypothesis):
         return self.cn[i]
 
     def __contains__(self, fact):
-        return self.get_marginal(fact) is not None
+        return fact in self.cn
 
     def __iter__(self):
         for fact in self.cn:
-            yield fact
+            yield (self.cn[fact], fact)
+
+    def __reversed__(self):
+        for dai_hyp in reversed(self.cn):
+            yield dai_hyp
 
     def add(self, probability, fact):
         """Append a fact to the confusion network."""
-        self.cn.append([probability, fact])
+        if fact in self.cn:
+            raise ConfusionNetworkException("Cannot add facts already in the network.")
+        self.cn[fact] = probability
+
+    def add_merge(self, p, fact, combine='max'):
+        """Add a fact and if it exists merge it according to the given combine strategy."""
+        merge_func = self._merge_func[combine]
+        if fact in self:
+            new_p = merge_func(p, self.get_prob(fact))
+            self.update_prob(new_p, fact)
+        else:
+            self.add(p, fact)
+
+    def update_prob(self, probability, fact):
+        """Update the probability of a fact."""
+        self.cn[fact] = probability
+
+    def get_prob(self, fact):
+        """Get the probability of the fact."""
+        return self.cn[fact]
+
+    def remove(self, fact_to_remove):
+        if fact_to_remove in self.cn:
+            del self.cn[fact_to_remove]
+        else:
+            raise Exception('Fact has not been found.')
+
+    def extend(self, conf_net):
+        if not isinstance(conf_net, ConfusionNetwork):
+            raise ConfusionNetworkException("Only ConfusionNetwork instances can be added.")
+
+        for p, fact in conf_net:
+           self.add(p, fact)
+
+        return self
+
+    def sort(self, reverse=True):
+        new_cn = OrderedDict()
+        for fact, p in sorted(self.cn.iteritems(), key=lambda x: x[1], reverse=reverse):
+            new_cn[fact] = p
+
+        self.cn = new_cn
+        return self
+
+    def merge(self, conf_net, combine='max'):
+        """Merges facts in the current and the given confusion networks.
+
+        Arguments:
+            combine -- can be one of {'new', 'max', 'add', 'arit', 'harm'}, and
+                    determines how two probabilities should be merged
+                    (default: 'max')
+
+        XXX As of now, we know that different values for the same slot are
+        contradictory (and in general, the set of contradicting attr-value
+        pairs could be larger).  We should therefore consider them alternatives
+        to each other.
+
+        """
+
+        for p, fact in conf_net:
+            self.add_merge(p, fact, combine=combine)
+
+        return self
+
+    def prune(self, prune_prob=0.005):
+        """Prune all low probability dialogue act items."""
+        for prob, dai in self:
+            if prob < prune_prob:
+                self.remove(dai)
+
+    def normalise(self):
+        """Makes sure that all probabilities add up to one. They should
+        implicitly sum to one: p + (1-p) == 1.0
+
+        """
+        for p, dai in self:
+            if p >= 1.0:
+                raise ConfusionNetworkException(("The probability of the {dai!s} dialogue act item is " +
+                     "larger than 1.0, namely {p:0.3f}").format(dai=dai, p=p))
+
 
     @classmethod
     def from_fact(cls, fact):
@@ -205,8 +300,9 @@ class ConfusionNetwork(Hypothesis):
         `fact'.  Note that `fact' has to be an iterable of elementary acts.
 
         """
-        # Create a new object of our class.
         inst = cls()
-        # Add the fact as the only hypothesis to the network.
-        inst.cn.extend([1., efact] for efact in fact)
+
+        for efact in fact:
+            inst.add(1.0, efact)
+
         return inst

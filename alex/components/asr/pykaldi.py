@@ -48,8 +48,6 @@ class KaldiASR(ASRInterface):
         self.wst = kaldi.utils.wst2dict(kcfg['wst'])
         self.max_dec_frames = kcfg['max_dec_frames']
         self.n_best = kcfg['n_best']
-        if not 'matrix' in kcfg:
-            kcfg['matrix'] = ''  # some models e.g. tri2a does not use matrix
 
         # specify all other options in config
         argv = ("--config=%(config)s --verbose=%(verbose)d %(extra_args)s "
@@ -73,7 +71,7 @@ class KaldiASR(ASRInterface):
         Returns:
             self - The instance of KaldiASR
         """
-        self.decoder.reset(keep_buffer_data=False)
+        self.decoder.reset(reset_pipeline=True)
         return self
 
     def rec_in(self, frame):
@@ -112,9 +110,9 @@ class KaldiASR(ASRInterface):
         start = time.time()
 
         # Get hypothesis
-        self.decoder.prune_final()
+        self.decoder.finalize_decoding()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
-        self.decoder.reset(keep_buffer_data=False)
+        self.decoder.reset(reset_pipeline=True)
 
         if self.calibration_table:
             lat = lattice_calibration(lat, self.calibration_table)
@@ -150,15 +148,15 @@ class KaldiASR(ASRInterface):
         """ This defines asynchronous interface for speech recognition.
 
         Returns:
-            ASR hypotheses in  about the input speech audio.
+            ASR hypotheses.
         """
 
         # Get hypothesis
-        self.decoder.prune_final()
+        self.decoder.finalize_decoding()
         utt_lik, lat = self.decoder.get_lattice()  # returns acceptor (py)fst.LogVectorFst
         self.last_lattice = lat
 
-        self.decoder.reset(keep_buffer_data=False)
+        self.decoder.reset(reset_pipeline=False)
 
         # Convert lattice to word nblist
         return lattice_to_word_posterior_lists(lat, self.n_best)

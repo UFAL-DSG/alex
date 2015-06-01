@@ -19,12 +19,13 @@ from numpy import mean
 import glob
 import sys
 import sqlite3
+import codecs
 
 
 def extract_stat(wer_file):
     wer, ser = None, None
     try:
-        with open(wer_file, 'r') as f:
+        with codecs.open(wer_file, 'r', 'utf8') as f:
             s = f.readlines()
             wer = float(s[1].split()[1])
             ser = float(s[2].split()[1])
@@ -46,7 +47,7 @@ def extractResults(path):
             dataset = decode_dir.split('_')[-2]
             lm_w = int(wer_f[4:])  # strip wer_ from wer_19
             wer, ser = extract_stat(wf)
-            table.append((exp, dataset, lm,  lm_w, wer, ser))
+            table.append((exp, dataset, lm, lm_w, wer, ser))
         except Exception as e:
             print >> sys.stderr, 'failed to parse %s' % wf
             print >> sys.stderr, str(e)

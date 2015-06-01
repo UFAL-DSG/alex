@@ -1,5 +1,8 @@
 #!/bin/bash
 
-cd ..
+vhub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $vhub_dir 
 
-./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg -t
+./thub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/google.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg ../resources/except_hook.cfg -t
+
+popd

@@ -9,6 +9,8 @@ import operator
 
 import numpy as np
 
+if __name__ == '__main__':
+    import autopath
 from alex.ml.bn.factor import Factor, to_log, from_log, logsubexp
 
 
@@ -747,4 +749,6 @@ class TestFactor(unittest.TestCase):
 
         expected_value_sum = reduce(operator.add, expected_values)
 
-        print w0
+
+if __name__ == '__main__':
+    unittest.main()

@@ -26,9 +26,6 @@ def asr_factory(cfg, asr_type=None):
     elif t == 'Google':
         from alex.components.asr.google import GoogleASR
         asr = GoogleASR(cfg)
-    elif t == 'Julius':
-        from alex.components.asr.julius import JuliusASR
-        asr = JuliusASR(cfg)
     else:
         raise ASRException('Unsupported ASR decoder: %s' % asr_type)
 

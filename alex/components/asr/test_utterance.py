@@ -114,7 +114,6 @@ class TestUtteranceConfusionNetwork(unittest.TestCase):
         s.append("Correct nblist:")
         s.append(unicode(correct_nblist))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(gen_nblist), unicode(correct_nblist))
 

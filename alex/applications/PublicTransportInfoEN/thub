@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd ..
+
+./thub.py -c \
+    ./PublicTransportInfoEN/ptien.cfg \
+    ./PublicTransportInfoEN/google.cfg \
+     -t \

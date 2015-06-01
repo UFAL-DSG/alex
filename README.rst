@@ -33,18 +33,18 @@ The main goals are:
 Implemented features:
 
 - VOIP using ``PJSIP 2.1`` with some modifications
-- ASR using ``OpenJulius``, ``GoogleASR``  or ``KALDI``
+- ASR using ``GoogleASR``  or ``KALDI``
 - VAD using Gaussian Mixure Models or Feed-Forward Neural Networks
 - SLU using a set of logistic regression classifiers for detecting dialogue acts
 - DM using probablistic discriminative dialogue state tracking and handcrafted policies
 - NLG using template based generation possibly with efficient inflection into the correct surface form for
   morphologically rich languages
 - TTS using ``flite``, ``VoiceRSS`` and ``SpeechTech``
-- evaluation of dialogue systems using Amazon Mechanical Turk crowdsourcing platform
-- building acoustic models using the HTK and KALDI toolkits
+- evaluation of dialogue systems using CrowdFlower crowdsourcing platform
 - example dialogue domains:
 
   - PTIcs: :doc:`alex.applications.PublicTransportInfoCS.README`
+  - PTIen: :doc:`alex.applications.PublicTransportInfoEN.README`
 
 Features implemented in different repositories:
 

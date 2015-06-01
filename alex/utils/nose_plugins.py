@@ -1,4 +1,5 @@
 import os
+import sys
 
 from nose2.events import Plugin
 
@@ -26,7 +27,8 @@ class TestSkipperPlugin(Plugin):
                 os.path.join(self.alex_root, p)
             ) for p in self.config.get('ignore_paths').split()]
 
-        print self.ignore_paths
+        for path in self.ignore_paths:
+            print >>sys.stderr, 'WARNING: Ignoring path:', path
 
     def matchPath(self, event):
         """Skip the configured tests."""

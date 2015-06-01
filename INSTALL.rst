@@ -6,7 +6,7 @@ The Alex project is developed in Python and tested with version 2.7.
 It may be necessary to have exactly this version of Python for the project
 to work correctly.
 
-Ubuntu 12.04
+Ubuntu 14.04
 ------------
 Ask the root on the computer to run:
 
@@ -66,51 +66,27 @@ the HTK's instructions.
 
 KALDI
 ~~~~~
-In order to use Kaldi decoder, build ``pykaldi`` fork of Kaldi from https://github.com/UFAL-DSG/pykaldi,
-install patched ``OpenFST`` from ``pykaldi``, then ``pyfst`` from https://github.com/UFAL-DSG/pyfst, and finally 
-install ``pykaldi`` Python extension.
-
-First,  build Kaldi fork ``pykaldi`` as follows:
+We are using our custom code based on Kaldi stored in separate project 
+https://github.com/UFAL-DSG/pykaldi.
+The repository itself contains kaldi and pyfst (https://github.com/UFAL-DSG/pyfst) as submodules.
+Pykaldi implements also standalone C++ recogniser but the main focus is to prepare Python wrapper of the recogniser for Alex.
+The python wrapper is supported for Ubuntu 14.04 (the C++ decoder is as platform independent as Kaldi).
+For debugging installation see ``pykaldi/Makefile`` and its ``install`` target.
+Note: If installations instructions are not working for you try to look at pykaldi/Docker file, and let us know.
 
 .. code-block:: bash
-
+  
   git clone https://github.com/UFAL-DSG/pykaldi
-  cd pykaldi/tools
-  make atlas   # Just downloads headers
-  make openfst_tgt  # Install patched OpenFST LOCALLY!
-  cd ../src
-  ./configure  # Should find ATLAS libraries which you have installed via apptitude (easier way).
-  make && make test
-  cd onl-rec && make && make test  # Directory needed for pykaldi Python wrapper
-
-Install patched ``OpenFST`` system wide. The following commands install the already built ``OpenFST`` 
-library from previous step:
-
-.. code-block:: bash
-
-    cd pykaldi/tools/openfst
-    ./configure  --prefix=/usr  # Sets the path to system wide installation directory
-    sudo make install  # Copies the already built and pathced libraries from 'make openfst_tgt' step.
-
-
-Install ``pyfst`` by
-
-.. code-block:: bash
-
-    sudo pip install --upgrade pystache pyyaml cython
-    
-    git clone https://github.com/UFAL-DSG/pyfst.git pyfst
-    cd pyfst
-    sudo python setup.py install
-
-
-Finally, install the ``pykaldi`` Python extension (a wrapper around Kaldi decoders):
-
-.. code-block:: bash
-
-    cd pykaldi/src/pykaldi
-    sudo make install
-
+  
+  # install system prerequisities
+  sudo apt-get update && sudo apt-get install -y build-essential libatlas3-base libatlas-base-dev python-dev python-pip git wget gfortran
+  # install python prerequisities
+  sudo pip install -r pykaldi/pykaldi-requirements.txt
+  
+  cd pykaldi
+  sudo make install
+  # for local installation
+  make deploy  # and add generated libraries to system paths and install generated eggs.
 
 SRILM
 ~~~~~
@@ -157,19 +133,6 @@ To install ``morfodita``, follow these instructions:
   sudo cp -R ./ufal /usr/local/lib/python2.7/dist-packages
   sudo cp ./ufal_morphodita.so /usr/local/lib/python2.7/dist-packages
 
-
-OpenJulius
-~~~~~~~~~~
-Get the supported Open Julius ASR decoder (4.2.3 tested) from our fork at GitHub.
-To install ``openjulius``, follow the following instructions:
-
-.. code-block:: bash
-
-  git clone git@github.com:UFAL-DSG/openjulius.git
-  cd openjulius
-  ./configure
-  make
-  make install
 
 Optimised ATLAS and LAPACK libraries
 ------------------------------------

@@ -36,6 +36,7 @@ import os.path
 import shutil
 import sys
 import codecs
+import random
 
 from xml.etree import ElementTree
 
@@ -68,7 +69,7 @@ def save_transcription(trs_fname, trs):
     return existed
 
 
-def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None, lang='cs', verbose=False):
+def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_words=None, lang='cs', verbose=False):
     """Extracts wavs and their transcriptions from the named in `sess_fname',
     a CUED call log file. Extracting means copying them to `outdir'. Recordings
     themselves are expected to reside in `dirname'.
@@ -100,7 +101,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
     uturns = doc.findall(".//turn")
 
     annotations = doc.findall('.//annotation')
-    if len(annotations) > 1:
+    if len(annotations) > 1 and not (args.first_annotation or args.last_annotation) :
         print "Transcription was rejected as we have more then two transcriptions and " \
               "we cannot decide which one is better."
         return 0, 0, 0, 0
@@ -132,9 +133,17 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
                 n_missing_trs += 1
             continue
         else:
-            # FIXME: Is the last transcription the right thing to be used? Probably. Must be checked!
-            trs = trs[-1].text
+            if args.first_annotation:
+                trs = trs[0].text
+            elif args.last_annotation:
+                trs = trs[-1].text
+            else:
+                # FIXME: Is the last transcription the right thing to be used? Probably. Must be checked!
+                trs = trs[-1].text
 
+        if not trs:
+            continue
+        
         # Check this is the wav from this directory.
         wav_basename = rec.attrib['fname'].strip()
         if wav_basename in wav_mapping:
@@ -167,7 +176,10 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
 
             wc.update(trs.split())
 
-            trs_fname = os.path.join(outdir, wav_basename + '.trn')
+            sub_dir = "{r:02}".format(r=random.randint(0, 99)), "{r:02}".format(r=random.randint(0, 99))
+            trs_fname = os.path.join(outdir, sub_dir[0], sub_dir[1], wav_basename + '.trn')
+            if not os.path.exists(os.path.dirname(trs_fname)):
+                os.makedirs(os.path.dirname(trs_fname))
 
             try:
                 size += os.path.getsize(wav_fname)
@@ -176,7 +188,7 @@ def extract_wavs_trns(dirname, sess_fname, outdir, wav_mapping, known_words=None
             else:
                 try:
                     #shutil.copy2(wav_fname, outdir)
-                    tgt = os.path.join(outdir, os.path.basename(wav_fname))
+                    tgt = os.path.join(outdir, sub_dir[0], sub_dir[1], os.path.basename(wav_fname))
                     cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=wav_fname, tgt=tgt)
                     print cmd
                     os.system(cmd)
@@ -279,7 +291,7 @@ def convert(args):
             print "Processing call log dir:", prefix
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(prefix, call_log, outdir, wav_mapping, known_words, lang, verbose)
+            extract_wavs_trns(args, prefix, call_log, outdir, wav_mapping, known_words, lang, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav
@@ -356,6 +368,16 @@ if __name__ == '__main__':
                        default=False,
                        help='output number of files ignored due to the -i '
                             'option')
+
+    arger.add_argument('--first-annotation',
+                       action="store_true",
+                       default=False,
+                       help='if there are multiple anotation use the first')
+    arger.add_argument('--last-annotation',
+                       action="store_true",
+                       default=False,
+                       help='if there are multiple anotation use the last')
+                       
     args = arger.parse_args()
 
     # Do the copying.
