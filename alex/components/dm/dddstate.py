@@ -270,8 +270,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         Nevertheless, remember the turn history.
         """
-
+        # initialize slots
         self.slots = defaultdict(D3DiscreteValue)
+        # initialize other variables
+        if 'variables' in self.ontology:
+            for var_name in self.ontology['variables']:
+                setattr(self, var_name, None)
 
     def update(self, user_da, system_da):
         """Interface for the dialogue act update.
