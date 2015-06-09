@@ -5,7 +5,6 @@ cd ..
 ./vhub.py -c \
     ./PublicTransportInfoEN/ptien.cfg \
     ./PublicTransportInfoEN/ptien_hdc_slu.cfg \
-    ./PublicTransportInfoEN/cf1.cfg  \
     ../resources/private/ext-277278100.cfg  \
     ./PublicTransportInfoEN/google.cfg \
     ./PublicTransportInfoEN/voicerss.cfg \
