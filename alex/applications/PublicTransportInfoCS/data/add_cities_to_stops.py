@@ -42,17 +42,22 @@ def get_city_for_stop(cities, stop, main_city):
     if stop in cities:
         return stop
     # try to split by ',' and '-' + some names occurring in train stops where no punctuation is used
-    for sepchar in [',', '-', ';', ' u ', ' nad ', ' pod ', ' v ', ' ve ', 'zastávka', 'město', '{', 
+    for sepchar in [',', '-', ';', ' u ', ' nad ', ' pod ', ' v ', ' ve ', 'zastávka', 'město', '{', '[', '/',
                     'hlavní nádraží', 'hl. n.', ' na ', 'klášter', 'obec', 'severní', 'jižní', 
                     'západ', 'východ', 'jih', 'sever', 'západní', 'východní', 'centrum',
                     'střed', 'zámecká zahrada', 'zálesí', 'kolonie', 'lázně', 'hlavní',
                     'střelnice', 'bazén', 'koupaliště', 'předměstí', 'místní', 'zámek',
-                    'horní', 'dolní', 'Cihelna', 'jeskyně', 'dílny', 'rybník', 'bažantnice',
-                    'Masarykovo', 'jedna', 'dvě']:
+                    'horní', 'dolní', 'Cihelna', 'jeskyně', 'dílny', 'rybník', 'bažantnice', 'nemocnice',
+                    'Masarykovo', 'jedna', 'dvě', 'závod', 'obec']:
         if sepchar in stop:
-            prefix, _ = [x.strip() for x in stop.split(sepchar, 1)]
+            prefix, suffix = [x.strip() for x in stop.split(sepchar, 1)]
             if prefix in cities:
                 return prefix
+            # city is separated by a '/' (after city part)
+            if sepchar == '/':
+                city = get_city_for_stop(cities, suffix, None)
+                if city is not None:
+                    return city
     # fallback to main city or store in list of unresolved
     if main_city is not None:
         return main_city

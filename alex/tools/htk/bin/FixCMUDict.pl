@@ -62,6 +62,8 @@ while ($line = <IN>)
       $rest =~ s/[0123456789]//g;
       $rest =~ s/[\n\r]//g;
       $rest = lc($rest);
+      $rest =~ s/^\s+//;
+      $rest =~ s/\s+$//;
 
 			# Convert the 'e' phone to 'eh'.
       $rest =~ s/\s(e\s)/ eh /g;

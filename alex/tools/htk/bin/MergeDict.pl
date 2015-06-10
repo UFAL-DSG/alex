@@ -33,7 +33,7 @@ while ($line = <IN>)
 {
     if (index($line, "#") != 0) 
 	{
-        $pos = index($line, " ");
+        $pos = index($line, "\t");
         $word = substr($line, 0, $pos);
 
         if (length($word) > 0)
@@ -64,7 +64,7 @@ while ($line = <IN>)
 {
     if (index($line, "#") != 0) 
 	{
-        $pos = index($line, " ");
+        $pos = index($line, "\t");
         $word = substr($line, 0, $pos);
 
         if (length($word) > 0)
