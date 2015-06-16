@@ -825,8 +825,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
 
-        # we know the cities, but it's not an intercity connection -- request stops if required
-        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
+        # we do not know the stops (and they weren't inferred based on cities)
+        elif from_stop_val == 'none' or to_stop_val == 'none':
             if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
                 req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
             elif from_stop_val == 'none':
@@ -834,7 +834,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif to_stop_val == 'none':
                 req_da.extend(DialogueAct('request(to_stop)'))
 
-        # we need to know the cities -- ask about them
+        # we know the stops, but we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
