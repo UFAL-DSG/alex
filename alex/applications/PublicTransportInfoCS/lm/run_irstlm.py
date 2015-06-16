@@ -35,6 +35,7 @@ indomain_data_text_trn_norm_cls_pg_arpa             = "07_indomain_data_trn_norm
 indomain_data_text_trn_norm_cls_pg_arpa             = "07_indomain_data_trn_norm_cls.pg.arpa"
 indomain_data_text_dev_norm                         = "05_indomain_data_dev_norm.txt"
 indomain_data_text_trn_norm                         = "04_indomain_data_trn_norm.txt"
+indomain_data_text_dev_norm_se = indomain_data_text_dev_norm + '_se'
 norm_data = indomain_data_text_trn_norm
 norm_data = "input.txt"  # TODO debug
 classes = "../data/database_SRILM_classes.txt"
@@ -77,12 +78,23 @@ if not isfile(plain_ngrams):
 if not isfile(plain_arpa):
     s('tlm -tr=%s -n=%d -lm=LinearWittenBell -oarpa=%s' % (plain_ngrams, class_ngrams_n, plain_arpa))
 
-# # perplexity on the training data using IRSTLM
-# if not isfile(norm_data_se):
-#     s('cat %s | add-start-end.sh > %s' % (norm_data, norm_data_se))
-# s('compile-lm %s --eval=%s' % (class_arpa, norm_data_se))
-
 from sys import exit; exit(0)  # TODO debug I have to install SRILM
+
+# perplexity on the training data using IRSTLM
+print 'IRSTLM perplexity of plain on trn data'
+s('compile-lm %s --eval=%s' % (plain_arpa, norm_data_se))
+print 'IRSTLM perplexity of CB LM on trn data'
+s('compile-lm %s --eval=%s' % (class_arpa, norm_data_se))
+
+
+if not isfile(indomain_data_text_dev_norm_se):
+    s('cat %s | add-start-end.sh > %s' % (indomain_data_text_dev_norm, indomain_data_text_dev_norm_se))
+
+print 'IRSTLM perplexity of plain on dev data'
+s('compile-lm %s --eval=%s' % (plain_arpa, indomain_data_text_dev_norm_se))
+print 'IRSTLM perplexity of CB LM on dev data'
+s('compile-lm %s --eval=%s' % (class_arpa, indomain_data_text_dev_norm_se))
+
 
 print "Test language models TOD still using SRILM"
 
