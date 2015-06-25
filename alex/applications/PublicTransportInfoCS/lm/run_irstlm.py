@@ -53,8 +53,8 @@ plain_arpa = "plain_arpa"
 ######################### script start #############################
 print 'Estimating classed based models with expanded classes\n'
 if (not isfile(indomain_data_text_trn_norm_cls_classes)) or (not isfile(norm_data_class)):
-    replace_with_classes_main(norm_data, classes, 
-            indomain_data_text_trn_norm_cls_classes, norm_data_class, 
+    replace_with_classes_main(norm_data, classes,
+            indomain_data_text_trn_norm_cls_classes, norm_data_class,
             add_n_smoothing=0, counts_only=True)
 
 if not isfile(norm_data_class_se):
@@ -96,7 +96,7 @@ print 'IRSTLM perplexity of CB LM on dev data'
 s('compile-lm %s --eval=%s' % (class_arpa, indomain_data_text_dev_norm_se))
 
 
-print "Test language models TOD still using SRILM"
+print "Test language models TODO still using SRILM"
 
 print "-"*120
 print "Class-based NEW approach trn 5-gram LM on trn data."
@@ -130,3 +130,7 @@ exit_on_system_fail("ngram -lm %s -classes %s -order 5 -ppl %s -zeroprob-word _N
                                                          indomain_data_text_trn_norm_cls_classes,
                                                          indomain_data_text_dev_norm))
 print
+
+
+
+TODO jak zintegrovat lower ngrams, and higher ngrams check format after ngt, ask Nicola what the ngt command do and what the format means
