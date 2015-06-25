@@ -125,5 +125,5 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--add-n-smoothing', default=1, type=int, help='Applies smoothing among class members.')
     parser.add_argument('-c', '--counts-only', default=False, action='store_true', help='Do not use the default normalization to probabilities and compute counts only for class count file')
     args = parser.parse_args()
-    replace_with_classes(parser.input_file, parser.class_file, parser.class_count_file,
-            parser.output_file, parser.add_n_smoothing, parser, counts_only)
+    main(args.input_file, args.class_file, args.class_count_file,
+            args.output_file, add_n_smoothing=args.add_n_smoothing, counts_only=args.counts_only)
