@@ -452,7 +452,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
         # check if any time is set to distinguish current/prediction
         weather_ts = None
-        if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
+        if time_abs != 'none' or time_rel not in ['none', 'now'] or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # find the coordinates of the city
         city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
