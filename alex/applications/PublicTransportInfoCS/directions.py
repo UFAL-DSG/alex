@@ -660,12 +660,18 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             COOR.DEFAULT,
             "", # no substitutions, textual format
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
+            0,  # price request (undocumented parameter added around 2015-07-05)
             TTLANG.ENGLISH,
-            0)
-        # (use this to log raw XML requests/responses)
-        # # xml_data = unicode(self.client.last_sent())
-        # # xml_data += "\n" + unicode(self.client.last_received())
-        # # self.session_logger.external_data_file(ftype, fname, xml_data.encode('UTF-8'))
+            0)  # iConnHandle -- default to 0
+
+        # # (use this to log raw XML requests/responses)
+        # xml_data = unicode(self.client.last_sent())
+        # xml_data += "\n" + unicode(self.client.last_received())
+        # fname = os.path.join(self.system_logger.get_session_dir_name(),
+        #                      'suds-dump-{t}.json'.format(t=datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f')))
+        # with open(fname, 'w') as fh:
+        #     fh.write(xml_data)
+
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
@@ -692,6 +698,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             COOR.DEFAULT,
             "", # no substitutions, textual format
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
+            0,  # price request (undocumented parameter added around 2015-07-05)
             TTLANG.ENGLISH)
         self._log_response_json(_todict(response, '_origClassName'))
         return response
