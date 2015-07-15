@@ -226,7 +226,7 @@ def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_
 
 def _filter_short_wavs(wavs, min_wav_duration):
     res = []
-    for wav in wavs:
+    for _, wav in wavs:
         fwav = wave.open(wav)
         frames = fwav.getnframes()
         rate = fwav.getframerate()
