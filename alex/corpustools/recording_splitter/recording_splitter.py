@@ -37,6 +37,29 @@ default_vad_cfg = {
     'filter_length': 2,
 }
 
+def pdb_on_error():
+    import sys
+
+    def info(type, value, tb):
+        if hasattr(sys, 'ps1') or not sys.stderr.isatty():
+        # we are in interactive mode or we don't have a tty-like
+        # device, so we call the default hook
+            sys.__excepthook__(type, value, tb)
+        else:
+            try:
+                import ipdb as pdb
+            except ImportError:
+                import pdb
+            import traceback
+            # we are NOT in interactive mode, print the exception
+            traceback.print_exception(type, value, tb)
+            print
+            #  then start the debugger in post-mortem mode.
+            # pdb.pm() # deprecated
+            pdb.post_mortem(tb) # more
+
+    sys.excepthook = info
+
 
 class RecordingSplitter(object):
     CHANGE_TO_NON_SPEECH = 2
@@ -216,8 +239,14 @@ def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_
             files = files[to_index:]
             bulk_out_dir = "%s_%d" % (file_out_dir, bulk_cntr, )
 
+            os.makedirs(bulk_out_dir)
+
             if min_wav_duration > 0.0:
                 bulk = _filter_short_wavs(bulk, min_wav_duration)
+
+            for _, wav_path in bulk:
+                wav_file_name = os.path.basename(wav_path)
+                os.rename(wav_path, os.path.join(bulk_out_dir, wav_file_name))
 
             _create_session_xml(bulk_out_dir, bulk)
 
@@ -226,14 +255,14 @@ def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_
 
 def _filter_short_wavs(wavs, min_wav_duration):
     res = []
-    for _, wav in wavs:
+    for wav_t, wav in wavs:
         fwav = wave.open(wav)
         frames = fwav.getnframes()
         rate = fwav.getframerate()
         duration = frames / float(rate)
 
         if duration >= min_wav_duration:
-            res.append(wav)
+            res.append((wav_t, wav))
 
     return res
 
@@ -300,6 +329,7 @@ def _create_session_xml(output_dir, files):
 
 
 if __name__ == '__main__':
+    pdb_on_error()
     import argparse
 
     parser = argparse.ArgumentParser()
