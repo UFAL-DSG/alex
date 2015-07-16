@@ -23,3 +23,5 @@ sphinxcontrib-napoleon
 
 flask
 theano
+
+ufal.morphodita

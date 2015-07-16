@@ -495,6 +495,20 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
     def search_train_station(self, stop_mask, max_count=0, skip_count=0):
         """Seach train station database in IDOS."""
+        #return self.client.service.SearchTimetableObjectInfo(
+        #    self.user_id,
+        #    self.user_desc,
+        #    self.default_comb_id,
+        #    self.train_list_id,
+        #    stop_mask, # mask
+        #    SEARCHMODE.EXACT | SEARCHMODE.USE_PRIORITY, # search mode
+        #    max_count, # max count
+        #    REG.SMART, # return regions
+        #    skip_count, # skip count
+        #    TTINFODETAILS.STATIONSEXT,
+        #    COOR.DEFAULT,
+        #    TTLANG.ENGLISH # language
+        #)
         return self.client.service.SearchGlobalListItemInfo(
             self.user_id,
             self.user_desc,
@@ -505,10 +519,23 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             max_count, # max count
             REG.SMART, # return regions
             skip_count, # skip count
-            TTINFODETAILS.STATIONSEXT,
-            COOR.DEFAULT,
+            #TTINFODETAILS.STATIONSEXT,
+            #COOR.DEFAULT,
             TTLANG.ENGLISH # language
         )
+
+        # SearchGlobalListItemInfo(
+        # xs:string sUserID,
+        # xs:string sUserDesc,
+        # xs:string sCombID,
+        # xs:int iListID,
+        # xs:string sMask,
+        # xs:int iSearchMode,
+        # xs:int iMaxCount,
+        # xs:int iRegMode,
+        # xs:int iSkipCount,
+        # xs:int iLang, )
+
 
     def search_city(self, city_mask):
         return self.search_stop(city_mask, self.city_list_id)
@@ -568,10 +595,11 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 self.user_id,
                 self.user_desc,
                 self.default_comb_id,
-                from_obj[0],
+                from_obj[0][0],
                 True,
                 datetime.min, # timestamp of arrival or departure
                 True,
+                None,
                 SEARCHMODE.EXACT,
                 1,
                 REG.SMART,

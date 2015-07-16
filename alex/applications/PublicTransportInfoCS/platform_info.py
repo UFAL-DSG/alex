@@ -73,7 +73,6 @@ class CRWSPlatformInfo(object):
             return x.upper()
 
         names = set(norm(obj._sName) for obj in to_obj[0])
-        print 'names', names
         for entry in self.crws_response.aoRecords:
             # Figure out whether this entry corresponds to the entry the user
             # is interested in.
