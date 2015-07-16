@@ -239,7 +239,8 @@ def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_
             files = files[to_index:]
             bulk_out_dir = "%s_%d" % (file_out_dir, bulk_cntr, )
 
-            os.makedirs(bulk_out_dir)
+            if not os.path.exists(bulk_out_dir):
+                os.makedirs(bulk_out_dir)
 
             if min_wav_duration > 0.0:
                 bulk = _filter_short_wavs(bulk, min_wav_duration)
