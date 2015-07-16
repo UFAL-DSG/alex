@@ -94,7 +94,7 @@ class FFNNVAD(FFNNVADGeneral):
         if self.cfg['VAD']['ffnn']['frontend'] != 'MFCC':
             raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['ffnn']['frontend'], ))
 
-        super(FFNNVADGeneral, self).__init__(
+        super(FFNNVAD, self).__init__(
             self.cfg['VAD']['ffnn']['model'],
             self.cfg['VAD']['ffnn']['filter_length'],
             self.cfg['Audio']['sample_rate'],
@@ -107,7 +107,7 @@ class FFNNVAD(FFNNVADGeneral):
             self.cfg['VAD']['ffnn']['zmeansource'], self.cfg['VAD']['ffnn']['usepower'],
             self.cfg['VAD']['ffnn']['usec0'], self.cfg['VAD']['ffnn']['usecmn'],
             self.cfg['VAD']['ffnn']['usedelta'], self.cfg['VAD']['ffnn']['useacc'],
-            self.cfg['VAD']['ffnn']['n_last_frames']+self.cfg['VAD']['ffnn']['n_prev_frames'],
+            self.cfg['VAD']['ffnn']['n_last_frames'], self.cfg['VAD']['ffnn']['n_prev_frames'],
             self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'],
             self.cfg['VAD']['ffnn']['mel_banks_only']
             )
