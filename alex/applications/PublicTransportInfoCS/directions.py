@@ -495,20 +495,6 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
 
     def search_train_station(self, stop_mask, max_count=0, skip_count=0):
         """Seach train station database in IDOS."""
-        #return self.client.service.SearchTimetableObjectInfo(
-        #    self.user_id,
-        #    self.user_desc,
-        #    self.default_comb_id,
-        #    self.train_list_id,
-        #    stop_mask, # mask
-        #    SEARCHMODE.EXACT | SEARCHMODE.USE_PRIORITY, # search mode
-        #    max_count, # max count
-        #    REG.SMART, # return regions
-        #    skip_count, # skip count
-        #    TTINFODETAILS.STATIONSEXT,
-        #    COOR.DEFAULT,
-        #    TTLANG.ENGLISH # language
-        #)
         return self.client.service.SearchGlobalListItemInfo(
             self.user_id,
             self.user_desc,
