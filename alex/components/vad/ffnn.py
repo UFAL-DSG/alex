@@ -91,6 +91,7 @@ class FFNNVADGeneral(object):
 
 class FFNNVAD(FFNNVADGeneral):
     def __init__(self, cfg):
+        self.cfg = cfg
         if self.cfg['VAD']['ffnn']['frontend'] != 'MFCC':
             raise ASRException('Unsupported frontend: %s' % (self.cfg['VAD']['ffnn']['frontend'], ))
 
@@ -111,4 +112,3 @@ class FFNNVAD(FFNNVADGeneral):
             self.cfg['VAD']['ffnn']['lofreq'], self.cfg['VAD']['ffnn']['hifreq'],
             self.cfg['VAD']['ffnn']['mel_banks_only']
             )
-        self.cfg = cfg
