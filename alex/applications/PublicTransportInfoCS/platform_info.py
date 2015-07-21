@@ -3,12 +3,13 @@ import re
 
 
 class PlatformInfo(object):
-    def __init__(self, from_stop, to_stop, from_city, to_city, train_name):
+    def __init__(self, from_stop, to_stop, from_city, to_city, train_name, directions):
         self.from_stop = from_stop
         self.to_stop = to_stop
         self.from_city = from_city
         self.to_city = to_city
         self.train_name = train_name
+        self.directions = directions
 
     def __unicode__(self):
         return u"%s, %s -- %s, %s" % (self.from_stop, self.from_city,
@@ -121,5 +122,3 @@ class CRWSPlatformInfo(object):
                 return PlatformFinderResult(platform, track, train_name)
 
         return None
-
-

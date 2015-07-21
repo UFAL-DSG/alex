@@ -320,6 +320,7 @@ class CRWSRouteStep(RouteStep):
                             'LEOExpress': 'train',
                             'railjet': 'train',
                             'RegionalExpress': 'regional_fast_train',
+                            'RegioJet': 'train',
                             'semi fast train': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',
                             'Regionalzug': 'local_train',
@@ -531,6 +532,12 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     @lru_cache(maxsize=10)
     def get_platform(self, platform_info):
         # try to map from-to to IDOS identifiers, default to originals
+        if platform_info.directions:
+            leg = platform_info.directions.legs[0]
+            step = leg.steps[0]
+            platform_info.to_city = 'none'
+            platform_info.to_stop = step.arrival_stop
+
         self.system_logger.info("ALEX: Looking up platform for: %s -- %s" %
                                 (platform_info.from_stop,
                                  platform_info.to_stop))
@@ -598,13 +605,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             self._log_response_json(_todict(response, '_origClassName'))
 
             # Extract the departure table entry.
-            platform_info = CRWSPlatformInfo(response, self)
+            crws_platform_info = CRWSPlatformInfo(response, self)
             if from_obj and to_obj:
                 self.system_logger.info("CRWS Looking by destination station.")
-                platform_res = platform_info.find_platform_by_station(to_obj)
+                platform_res = crws_platform_info.find_platform_by_station(to_obj)
             elif from_obj and train_name:
                 self.system_logger.info("CRWS Looking by train name.")
-                platform_res = platform_info.find_platform_by_train_name(platform_info.train_name)
+                platform_res = crws_platform_info.find_platform_by_train_name(platform_info.train_name)
             else:
                 raise Exception("Incorrect state!")
 
