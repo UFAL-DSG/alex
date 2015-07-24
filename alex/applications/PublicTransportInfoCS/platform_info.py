@@ -30,14 +30,13 @@ class PlatformFinderResult(object):
 
 
 class CRWSPlatformInfo(object):
-    station_name_splitter = re.compile(r'\W*', re.UNICODE)
+    station_name_splitter = re.compile(r'(\W*)', re.UNICODE)
 
     def __init__(self, crws_response, finder):
         self.crws_response = crws_response
         self.finder = finder
 
     def _matches(self, crws_stop, stop):
-        #alex_stop = self.fn_idos_to_alex_stop(crws_stop)
         crws_stop = crws_stop.lower()
         stop = stop.lower()
 
@@ -45,12 +44,36 @@ class CRWSPlatformInfo(object):
         stop_parts = self.station_name_splitter.split(stop)
 
         if len(crws_stop_parts) != len(stop_parts):
-            return False
+            if len(crws_stop_parts) > len(stop_parts):
+                longer = crws_stop_parts
+                shorter = stop_parts
+            else:
+                longer = stop_parts
+                shorter = crws_stop_parts
 
-        for p1, p2 in zip(crws_stop_parts, stop_parts):
-            if not (p1.startswith(p2) or p2.startswith(p1)):
+            # If the longer is longer only because of abbreviation punctuation ('.') it will be longer by 2.
+            if len(longer) != len(shorter) + 2 or longer[-1] != '':
                 return False
+            else:
+                shorter.append('')
+                longer.pop()
 
+        return self._do_parts_match(crws_stop_parts, stop_parts)
+
+    def _do_parts_match(self, crws_stop_parts, stop_parts):
+        for p1, p1next, p2, p2next in zip(crws_stop_parts, crws_stop_parts[1:] + [''], stop_parts,
+                                          stop_parts[1:] + ['']):
+            if p1 == p2:
+                continue
+            elif p1.startswith(p2) and p2next.startswith('.'):
+                continue
+            elif p2.startswith(p1) and p1next.startswith('.'):
+                continue
+            elif p1.replace('.', '').strip() == p2.replace('.', '').strip():
+                # It's okay if the parts are just whitespaces or whitespaces and periods.
+                continue
+            else:
+                return False
         return True
 
     def _normalize_name(self, name):
