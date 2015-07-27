@@ -12,7 +12,7 @@ from alex.components.hub.wsio import WSIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.asr import ASR
 from alex.components.hub.slu import SLU
-from alex.components.hub.dm import DM
+from alex.components.hub.dm import DM, DMDA
 from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command
@@ -103,7 +103,11 @@ class WSHub(Hub):
         call_back_uri = None
         call_start = time.time()
 
-        self.cfg['Logging']['system_logger'].session_start("@LOCAL_CALL")
+        self.cfg['Logging']['session_logger'].set_close_event(close_event)
+        self.cfg['Logging']['session_logger'].set_cfg(self.cfg)
+        self.cfg['Logging']['session_logger'].start()
+
+        self.cfg['Logging']['system_logger'].session_start("LOCAL_CALL")
         self.cfg['Logging']['system_logger'].session_system_log('config = ' + str(self.cfg))
 
         self.cfg['Logging']['session_logger'].session_start(
@@ -113,14 +117,20 @@ class WSHub(Hub):
             self.cfg['Logging']["system_name"], self.cfg['Logging']["version"])
         self.cfg['Logging']['session_logger'].input_source("aio")
 
+
+
         while 1:
             time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
-            if call_back_time != -1 and call_back_time < time.time():
-                aio_commands.send(Command('make_call(destination="%s")' %
-                                          call_back_uri, 'HUB', 'AIO'))
-                call_back_time = -1
-                call_back_uri = None
+            # read all messages
+            if aio_commands.poll():
+                command = aio_commands.recv()
+                self.cfg['Logging']['system_logger'].info(command)
+
+                if isinstance(command, Command):
+                    if command.parsed['__name__'] == "client_connected":
+                        dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
+
 
             if vad_commands.poll():
                 command = vad_commands.recv()
@@ -147,11 +157,20 @@ class WSHub(Hub):
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "hangup":
                         # prepare for ending the call
-                        pass
+                        hangup = True
+                        self.cfg['Analytics'].track_event('vhub', 'system_hangup')
 
-                    if command.parsed['__name__'] == "dm_da_generated":
-                        # record the time of the last system generated dialogue act
-                        pass
+                    if command.parsed['__name__'] == "flushed":
+                        # flush nlg, when flushed, tts will be flushed
+                        nlg_commands.send(Command('flush()', 'HUB', 'NLG'))
+
+                elif isinstance(command, DMDA):
+                    # record the time of the last system generated dialogue act
+                    s_last_dm_activity_time = time.time()
+
+                    if command.da != "silence()":
+                        # if the DM generated non-silence dialogue act, then continue in processing it
+                        nlg_commands.send(DMDA(command.da, "HUB", "NLG"))
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()

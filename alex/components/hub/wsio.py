@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import pyaudio
 from jinja2.loaders import FileSystemLoader
 from jinja2 import Environment
 
@@ -13,7 +12,7 @@ from datetime import datetime
 import urlparse
 import Queue
 import BaseHTTPServer
-from threading import Thread
+import threading
 import time
 
 from alex.utils.audio import load_wav
@@ -48,7 +47,7 @@ class WSIO(multiprocessing.Process):
         self.audio_play = audio_play
         self.close_event = close_event
 
-    def process_pending_commands(self, p, stream, wf):
+    def process_pending_commands(self):
         """Process all pending commands.
 
         Available commands:
@@ -73,12 +72,6 @@ class WSIO(multiprocessing.Process):
                     while self.audio_play.poll():
                         self.audio_play.recv()
 
-                    # stop recording and playing
-                    stream.stop_stream()
-                    stream.close()
-                    p.terminate()
-                    wf.close()
-
                     return True
 
                 if command.parsed['__name__'] == 'flush':
@@ -90,7 +83,7 @@ class WSIO(multiprocessing.Process):
 
         return False
 
-    def read_write_audio(self, p, stream, wf, play_buffer):
+    def read_write_audio(self): #, p, stream, wf, play_buffer):
         """Send some of the available data to the output.
         It should be a non-blocking operation.
 
@@ -99,26 +92,30 @@ class WSIO(multiprocessing.Process):
           2) send only if stream.get_write_available() is more then the frame size
         """
         if self.audio_play.poll():
-            while self.audio_play.poll() \
-                and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size'] \
-                    and stream.get_write_available() > self.cfg['Audio']['samples_per_frame']:
+            while self.audio_play.poll(): # \
+                #and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size']:
 
                 # send to play frames from input
                 data_play = self.audio_play.recv()
                 if isinstance(data_play, Frame):
-                    stream.write(data_play.payload)
+                    msg = AlexToClient()
+                    msg.speech.body = data_play.payload
+                    self.ws_conn.send(self.ws_protocol, msg.SerializeToString())
 
-                    play_buffer.append(data_play)
+                #if isinstance(data_play, Frame):
+                #    stream.write(data_play.payload)
+                #
+                #    play_buffer.append(data_play)
+                #
+                #    if self.cfg['AudioIO']['debug']:
+                #        print '.',
+                #        sys.stdout.flush()
 
-                    if self.cfg['AudioIO']['debug']:
-                        print '.',
-                        sys.stdout.flush()
-
-                elif isinstance(data_play, Command):
-                    if data_play.parsed['__name__'] == 'utterance_start':
-                        self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
-                    if data_play.parsed['__name__'] == 'utterance_end':
-                        self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
+                #elif isinstance(data_play, Command):
+                #    if data_play.parsed['__name__'] == 'utterance_start':
+                #        self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
+                #    if data_play.parsed['__name__'] == 'utterance_end':
+                #        self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
 
     def run(self):
         try:
@@ -127,15 +124,21 @@ class WSIO(multiprocessing.Process):
             global logger
             logger = self.cfg['Logging']['system_logger']
 
-            factory = WebSocketServerFactory("ws://0.0.0.0:9000", debug=False)
-            factory.protocol = AlexWebsocketProtocol
+            #factory = WebSocketServerFactory("ws://0.0.0.0:9000", debug=False)
+            #factory.protocol = create_alex_websocket_protocol(self)
 
-            def run_ws():
-                reactor.listenTCP(9000, factory)
-                reactor.run()
+            #def run_ws():
+            #    print 'running ws'
+            #    reactor.listenTCP(9000, factory)
+            #    reactor.run(installSignalHandlers=0)
 
-            t = Thread(target=lambda *args: run_ws)
-            t.start()
+            #t = Thread(target=run_ws) #lambda *args: run_ws())
+            #t.setDaemon(True)
+            #print 'starting thread'
+            #t.start()
+            self.ws_conn = Connection(self)
+            self.ws_conn.daemon = True
+            self.ws_conn.start()
 
             # process incoming audio play and send requests
             while 1:
@@ -144,47 +147,81 @@ class WSIO(multiprocessing.Process):
                 if self.close_event.is_set():
                     return
 
+                #import ipdb; ipdb.set_trace()
+
                 # process all pending commands
-                if self.process_pending_commands(p, stream, wf):
+                if self.process_pending_commands():
                     return
 
-                # process each web request
-                while not self.web_queue.empty():
-                    for filename in self.web_queue.get():
-                        try:
-                            self.send_wav(filename, stream)
-                        except:
-                            self.cfg['Logging']['system_logger'].exception(
-                                'Error processing file: ' + filename)
+                print '.'
 
-                # process audio data
-                self.read_write_audio(p, stream, wf, play_buffer)
+                # process each web request
+                #while not self.web_queue.empty():
+                #    for filename in self.web_queue.get():
+                #        try:
+                #            self.send_wav(filename, stream)
+                #        except:
+                #            self.cfg['Logging']['system_logger'].exception(
+                #                'Error processing file: ' + filename)
+
+                ## process audio data
+                self.read_write_audio() #p, stream, wf, play_buffer)
         except:
             self.cfg['Logging']['system_logger'].exception('Uncaught exception in VAD process.')
             self.close_event.set()
             raise
 
+    def on_client_connected(self, protocol, request):
+        self.commands.send(Command('client_connected()', 'WSIO', 'HUB'))
+        self.ws_protocol = protocol
+
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
 
+#from wshub_messages_pb2
+from wsio_messages_pb2 import ClientToAlex, AlexToClient
 
-class AlexWebsocketProtocol(WebSocketServerProtocol):
 
-    def onConnect(self, request):
-        print("Client connecting: {0}".format(request.peer))
+class Connection(threading.Thread):
+    def __init__(self, hub_instance):
+        super(Connection, self).__init__()
+        self.factory=WebSocketServerFactory("ws://localhost:9000", debug=True)
+        self.hub_instance = hub_instance
 
-    def onOpen(self):
-        print("WebSocket connection open.")
+    def run(self):
+        self.factory.protocol = create_ws_protocol(self.hub_instance)
+        reactor.listenTCP(9000, self.factory)
+        reactor.run(installSignalHandlers=0)
 
-    def onMessage(self, payload, isBinary):
-        if isBinary:
-            print("Binary message received: {0} bytes".format(len(payload)))
-        else:
-            print("Text message received: {0}".format(payload.decode('utf8')))
+    def send(self, proto, data):
+        reactor.callFromThread(proto.sendMessage, data, True)
 
-        # echo back message verbatim
-        self.sendMessage(payload, isBinary)
 
-    def onClose(self, wasClean, code, reason):
-        print("WebSocket connection closed: {0}".format(reason))
+
+
+def create_ws_protocol(hub):
+    class AlexWebsocketProtocol(WebSocketServerProtocol):
+        hub_instance = hub
+
+        def onConnect(self, request):
+            print self.factory, id(self)
+            print("Client connecting: {0}".format(request.peer))
+            self.hub_instance.on_client_connected(self, request)
+
+        def onOpen(self):
+            print("WebSocket connection open.")
+
+        def onMessage(self, payload, isBinary):
+            if isBinary:
+                msg = ClientToAlex()
+                msg.ParseFromString(payload)
+                self.hub_instance.audio_record.send(Frame(msg.speech.body))
+
+
+        def onClose(self, wasClean, code, reason):
+            print("WebSocket connection closed: {0}".format(reason))
+
+    return AlexWebsocketProtocol
+
+

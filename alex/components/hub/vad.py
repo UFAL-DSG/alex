@@ -166,6 +166,8 @@ class VAD(multiprocessing.Process):
                 decision = self.vad.decide(data_rec.payload)
                 vad, change = self.smoothe_decison(decision)
 
+                if change:
+                    print change
                 #d = (time.time() - s[0], time.clock() - s[1])
                 #if d[0] > 0.001:
                 #    print "VAD t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
