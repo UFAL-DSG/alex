@@ -6,6 +6,7 @@ from alex.utils.audio import load_wav
 from alex.utils import various
 from wsio_messages_pb2 import ClientToAlex
 import time
+import speex
 
 
 class MyClientProtocol(WebSocketClientProtocol):
@@ -35,6 +36,8 @@ class MyClientProtocol(WebSocketClientProtocol):
 
                 if i % 1 == 0 and buff:
                     msg = ClientToAlex()
+                    s = speex.new(10)
+                    buff = s.encode(buff)
                     msg.speech.body = buff
                     self.sendMessage(msg.SerializeToString(), isBinary=True)
 

@@ -225,6 +225,7 @@ class ASR(multiprocessing.Process):
                         self.session_logger.asr("user", fname, [(-1, asr_hyp)], None)
 
                     self.commands.send(Command('asr_end(fname="%s")' % fname, 'ASR', 'HUB'))
+                    self.commands.send(ASRHyp(asr_hyp, fname=fname))
                     self.asr_hypotheses_out.send(ASRHyp(asr_hyp, fname=fname))
             else:
                 raise ASRException('Unsupported input.')

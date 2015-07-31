@@ -15,7 +15,7 @@ from alex.components.hub.slu import SLU
 from alex.components.hub.dm import DM, DMDA
 from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command
+from alex.components.hub.messages import Command, ASRHyp, TTSText
 from alex.utils.config import Config
 
 
@@ -130,6 +130,7 @@ class WSHub(Hub):
                 if isinstance(command, Command):
                     if command.parsed['__name__'] == "client_connected":
                         dm_commands.send(Command('new_dialogue()', 'HUB', 'DM'))
+                        vad_commands.send(Command('flush()', 'HUB', 'VAD '))
 
 
             if vad_commands.poll():
@@ -145,6 +146,9 @@ class WSHub(Hub):
             if asr_commands.poll():
                 command = asr_commands.recv()
                 self.cfg['Logging']['system_logger'].info(command)
+
+                if isinstance(command, ASRHyp):
+                    aio_commands.send(command)
 
             if slu_commands.poll():
                 command = slu_commands.recv()
@@ -174,6 +178,10 @@ class WSHub(Hub):
 
             if nlg_commands.poll():
                 command = nlg_commands.recv()
+
+                if isinstance(command, TTSText):
+                    aio_commands.send(command)
+
                 # TODO HACK
                 # self.cfg['Logging']['system_logger'].info(command)
 

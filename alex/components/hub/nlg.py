@@ -48,6 +48,7 @@ class NLG(multiprocessing.Process):
             self.cfg['Logging']['session_logger'].text("system", text)
 
             self.commands.send(Command('nlg_text_generated()', 'NLG', 'HUB'))
+            self.commands.send(TTSText(text))
             self.text_out.send(TTSText(text))
         else:
             # the input dialogue is silence. Therefore, do not generate eny output.
