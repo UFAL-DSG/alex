@@ -64,6 +64,7 @@ class WSRouterServerFactory(WebSocketServerFactory):
         self.entry_timeout = entry_timeout
 
     def route_request(self):
+        print self.instances
         for addr in self.instances.keys():
             key, status = self.instances[addr]
             entry_is_time_outed = time.time() - self.timestamps[addr] > self.entry_timeout
