@@ -318,6 +318,8 @@ class VoiceHub(Hub):
                     command = asr_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
 
+                    if isinstance(command, ASRHyp):
+                        vio_commands.send(command)
                     if isinstance(command, Command):
                         if command.parsed['__name__'] == "flushed":
                             # flush slu, when flushed, dm will be flushed
@@ -375,6 +377,8 @@ class VoiceHub(Hub):
                     command = nlg_commands.recv()
                     self.cfg['Logging']['system_logger'].info(command)
 
+                    if isinstance(command, TTSText):
+                        vio_commands.send(command)
                     if isinstance(command, Command):
                         if command.parsed['__name__'] == "flushed":
                             # flush tts, when flushed, vio will be flushed
@@ -393,14 +397,20 @@ class VoiceHub(Hub):
 
                 s_diff = current_time - s_last_voice_activity_time
                 u_diff = current_time - u_last_voice_activity_time
+                t_diff = current_time - u_last_input_timeout
+                timeout = self.cfg['DM']['input_timeout']
+
+                print 'curr time', current_time
+
 
                 if call_connected and \
                     not s_voice_activity and not u_voice_activity and \
-                    s_diff > self.cfg['DM']['input_timeout'] and \
-                    u_diff > self.cfg['DM']['input_timeout'] and \
-                    current_time - u_last_input_timeout > self.cfg['DM']['input_timeout']:
+                    s_diff > timeout and \
+                    u_diff > timeout and \
+                    t_diff > timeout:
 
                     u_last_input_timeout = time.time()
+                    print 'timeout', time.time()
                     dm_commands.send(Command('timeout(silence_time="%0.3f")' % min(s_diff, u_diff), 'HUB', 'DM'))
 
                 if hangup and s_last_dm_activity_time + 2.0 < current_time and \
