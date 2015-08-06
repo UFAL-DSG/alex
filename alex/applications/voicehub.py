@@ -17,7 +17,7 @@ from alex.components.hub.slu import SLU
 from alex.components.hub.dm import DM
 from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command, DMDA
+from alex.components.hub.messages import Command, DMDA, ASRHyp, TTSText
 from alex.components.hub.calldb import CallDB
 from alex.utils.config import Config
 
