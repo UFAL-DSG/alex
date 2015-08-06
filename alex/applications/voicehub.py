@@ -400,9 +400,6 @@ class VoiceHub(Hub):
                 t_diff = current_time - u_last_input_timeout
                 timeout = self.cfg['DM']['input_timeout']
 
-                print 'curr time', current_time
-
-
                 if call_connected and \
                     not s_voice_activity and not u_voice_activity and \
                     s_diff > timeout and \
@@ -410,7 +407,7 @@ class VoiceHub(Hub):
                     t_diff > timeout:
 
                     u_last_input_timeout = time.time()
-                    print 'timeout', time.time()
+                    print 'timeout!!!!!', time.time()
                     dm_commands.send(Command('timeout(silence_time="%0.3f")' % min(s_diff, u_diff), 'HUB', 'DM'))
 
                 if hangup and s_last_dm_activity_time + 2.0 < current_time and \

@@ -58,6 +58,8 @@ class WSIO(multiprocessing.Process):
 
         self.alex_addr = self.cfg['WSIO']['alex_addr']
 
+        self.audio_playing = None
+
     def process_pending_commands(self):
         """Process all pending commands.
 
@@ -127,6 +129,32 @@ class WSIO(multiprocessing.Process):
                 if isinstance(data_play, Frame):
                     buffer = data_play.payload
                     self.audio_to_send += buffer
+                elif isinstance(data_play, Command):
+                    if data_play.parsed['__name__'] == 'utterance_start':
+                        self.audio_playing = data_play.parsed['fname']
+                        self.message_queue.append(
+                            (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
+                                        .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
+                                     'VoipIO', 'HUB'),
+                             self.last_frame_id))
+                        try:
+                            if data_play.parsed['log'] == "true":
+                                self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
+                        except SessionLoggerException as e:
+                            self.cfg['Logging']['system_logger'].exception(e)
+
+                    if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
+                        self.audio_playing = None
+                        self.message_queue.append(
+                            (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
+                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
+                                     'VoipIO', 'HUB'),
+                             self.last_frame_id))
+                        try:
+                            if data_play.parsed['log'] == "true":
+                                self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
+                        except SessionLoggerException as e:
+                            self.cfg['Logging']['system_logger'].exception(e)
 
 
 
