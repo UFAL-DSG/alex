@@ -213,13 +213,15 @@ class WSIO(multiprocessing.Process):
             raise
 
     def on_client_connected(self, protocol, request):
-        self.commands.send(Command('client_connected()', 'WSIO', 'HUB'))
+        #self.commands.send(Command('client_connected()', 'WSIO', 'HUB'))
+        self.commands.send(Command('call_confirmed(remote_uri="%s")' % "PubAlex", 'WSIO', 'HUB'))
         self.ws_protocol = protocol
         self.client_connected = True
 
     def on_client_closed(self):
         self.ws_protocol = None
-        self.commands.send(Command('client_connected()', 'WSIO', 'HUB'))
+        #self.commands.send(Command('client_connected()', 'WSIO', 'HUB'))
+        self.commands.send(Command('call_disconnected(remote_uri="%s", code="%s")' % ("PubAlex", "---"), 'VoipIO', 'HUB'))
         self.client_connected = False
         self.key = gen_key()
 
