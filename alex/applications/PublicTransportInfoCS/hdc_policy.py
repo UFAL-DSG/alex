@@ -519,7 +519,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-        if ds.route_alternative is not None:
+        if ds.route_alternative is None:
             return DialogueAct('request(from_stop)')
         else:
             ds.route_alternative += 1
