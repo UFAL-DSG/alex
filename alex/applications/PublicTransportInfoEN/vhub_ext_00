@@ -1,10 +1,20 @@
 #!/bin/bash
 
-cd ..
+vhub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $vhub_dir
 
-./vhub.py -c \
+for A in {1..1000}
+do
+
+  ./vhub.py -n 5 -c \
     ./PublicTransportInfoEN/ptien.cfg \
     ./PublicTransportInfoEN/ptien_hdc_slu.cfg \
     ../resources/private/ext-277278100.cfg  \
     ./PublicTransportInfoEN/google.cfg \
     ./PublicTransportInfoEN/voicerss.cfg \
+
+
+done
+
+popd
+
