@@ -254,6 +254,7 @@ class VoiceHub(Hub):
                             # flush vio, when flushed, vad will be flushed
                             vio_commands.send(Command('flush()', 'HUB', 'VoipIO'))
 
+
                             self.cfg['Logging']['system_logger'].session_end()
                             self.cfg['Logging']['session_logger'].session_end()
 
@@ -265,6 +266,8 @@ class VoiceHub(Hub):
                             ncalls += 1
 
                             self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
+
+                            dm_commands.send(Command('prepare_new_dialogue()', 'HUB', 'DM'))
 
                         if command.parsed['__name__'] == "play_utterance_start":
                             s_voice_activity = True

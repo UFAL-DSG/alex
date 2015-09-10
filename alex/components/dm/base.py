@@ -177,7 +177,6 @@ class DialogueManager(object):
         Initialises the dialogue manager and makes it ready for a new dialogue
         conversation.
         """
-
         self.dialogue_state = self.dialogue_state_class(self.cfg, self.ontology)
         self.policy = self.dialogue_policy_class(self.cfg, self.ontology)
         self.last_system_dialogue_act = None

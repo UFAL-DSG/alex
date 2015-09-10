@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import multiprocessing
+import select
 import time
 import random
 import urllib
@@ -59,6 +60,9 @@ class DM(multiprocessing.Process):
 
         while self.commands.poll():
             command = self.commands.recv()
+            print 'c', command
+            print ''
+            print ''
             if self.cfg['DM']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
 
@@ -77,9 +81,12 @@ class DM(multiprocessing.Process):
                     
                     return False
 
+                if command.parsed['__name__'] == 'prepare_new_dialogue':
+                    self.dm.new_dialogue()
+
                 if command.parsed['__name__'] == 'new_dialogue':
                     self.epilogue_state = None
-                    self.dm.new_dialogue()
+                    #self.dm.new_dialogue()
 
                     self.cfg['Logging']['session_logger'].turn("system")
                     self.dm.log_state()
@@ -262,9 +269,11 @@ class DM(multiprocessing.Process):
                     print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                #time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
                 s = (time.time(), time.clock())
+
+                select.select([self.commands, self.slu_hypotheses_in], [], [])
 
                 # process all pending commands
                 if self.process_pending_commands():

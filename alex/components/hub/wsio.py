@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from jinja2.loaders import FileSystemLoader
-from jinja2 import Environment
+import select
 
 import wave
 import multiprocessing
@@ -19,9 +17,10 @@ from alex.utils.audio import load_wav
 import alex.utils.various as various
 
 from alex.components.hub.messages import Command, Frame, ASRHyp, TTSText
+from alex.components.hub.voiceio import VoiceIO
 
 
-class WSIO(multiprocessing.Process):
+class WSIO(VoiceIO, multiprocessing.Process):
     """
     WebSocket IO.
     """
@@ -39,7 +38,8 @@ class WSIO(multiprocessing.Process):
 
         """
 
-        multiprocessing.Process.__init__(self)
+        #multiprocessing.Process.__init__(self)
+        super(WSIO, self).__init__(cfg, commands, audio_record, audio_play, close_event)
 
         self.cfg = cfg
         self.commands = commands
@@ -59,6 +59,8 @@ class WSIO(multiprocessing.Process):
         self.alex_addr = self.cfg['WSIO']['alex_addr']
 
         self.audio_playing = None
+        self.n_played_frames = None
+        self.curr_seq = 0
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -93,6 +95,19 @@ class WSIO(multiprocessing.Process):
                         self.audio_play.recv()
 
                     return False
+
+                if command.parsed['__name__'] == 'flush_out':
+                    print 'sending flush out!!!!!!!!!!!!!!!!!!!!'
+                    self.audio_to_send = ""
+                    while self.audio_play.poll():
+                        self.audio_play.recv()
+
+                    msg = AlexToClient()
+                    msg.type = AlexToClient.FLUSH_OUT_AUDIO
+                    msg.priority = -1
+                    msg.seq = self.curr_seq
+                    self.send_to_client(msg.SerializeToString())
+
             elif isinstance(command, ASRHyp):
                 hyp = command.hyp
                 asr_hyp = hyp.get_best()
@@ -100,14 +115,20 @@ class WSIO(multiprocessing.Process):
                 msg = AlexToClient()
                 msg.type = AlexToClient.ASR_RESULT
                 msg.asr_result = unicode(asr_hyp).lower()
+                msg.priority = -1
+                msg.seq = self.curr_seq
                 self.send_to_client(msg.SerializeToString())
             elif isinstance(command, TTSText):
                 txt = command.text
 
                 msg = AlexToClient()
                 msg.type = AlexToClient.SYSTEM_PROMPT
+                msg.priority = -1
+                msg.seq = self.curr_seq
                 msg.system_prompt = unicode(txt)
                 self.send_to_client(msg.SerializeToString())
+
+            self.process_command(command)
 
         return False
 
@@ -121,57 +142,12 @@ class WSIO(multiprocessing.Process):
         """
 
         if self.audio_play.poll():
-            while self.audio_play.poll(): # \
-                #and len(play_buffer) < self.cfg['AudioIO']['play_buffer_size']:
+            data_play = self.audio_play.recv()
+            if isinstance(data_play, Frame):
+                buffer = data_play.payload
+                self.audio_to_send += buffer
 
-                # send to play frames from input
-                data_play = self.audio_play.recv()
-                if isinstance(data_play, Frame):
-                    buffer = data_play.payload
-                    self.audio_to_send += buffer
-                elif isinstance(data_play, Command):
-                    if data_play.parsed['__name__'] == 'utterance_start':
-                        self.audio_playing = data_play.parsed['fname']
-                        self.message_queue.append(
-                            (Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
-                                        .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
-                                     'VoipIO', 'HUB'),
-                             self.last_frame_id))
-                        try:
-                            if data_play.parsed['log'] == "true":
-                                self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
-                        except SessionLoggerException as e:
-                            self.cfg['Logging']['system_logger'].exception(e)
-
-                    if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
-                        self.audio_playing = None
-                        self.message_queue.append(
-                            (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
-                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
-                                     'VoipIO', 'HUB'),
-                             self.last_frame_id))
-                        try:
-                            if data_play.parsed['log'] == "true":
-                                self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
-                        except SessionLoggerException as e:
-                            self.cfg['Logging']['system_logger'].exception(e)
-
-
-
-                #if isinstance(data_play, Frame):
-                #    stream.write(data_play.payload)
-                #
-                #    play_buffer.append(data_play)
-                #
-                #    if self.cfg['AudioIO']['debug']:
-                #        print '.',
-                #        sys.stdout.flush()
-
-                #elif isinstance(data_play, Command):
-                #    if data_play.parsed['__name__'] == 'utterance_start':
-                #        self.commands.send(Command('play_utterance_start()', 'AudioIO', 'HUB'))
-                #    if data_play.parsed['__name__'] == 'utterance_end':
-                #        self.commands.send(Command('play_utterance_end()', 'AudioIO', 'HUB'))
+            self.process_command(data_play)
 
         while len(self.audio_to_send) > 640:
             buffer = self.audio_to_send[:640]
@@ -181,8 +157,12 @@ class WSIO(multiprocessing.Process):
             msg = AlexToClient()
             msg.type = AlexToClient.SPEECH
             msg.speech = encoded
+            msg.seq = self.curr_seq
             self.send_to_client(msg.SerializeToString())
+            self.n_played_frames += 640 / 2
             print 'sending audio'
+
+        self.update_current_playback_buffer_position(self.n_played_frames)
 
     def run(self):
         try:
@@ -220,12 +200,14 @@ class WSIO(multiprocessing.Process):
 
             # process incoming audio play and send requests
             while 1:
-                time.sleep(1)
+                #time.sleep(1)
+                select.select([self.commands, self.audio_play], [], [], 1.0)
+
                 # Check the close event.
                 if self.close_event.is_set():
                     return
 
-                #import ipdb; ipdb.set_trace()
+                self.send_pending_messages()
 
                 # process all pending commands
                 if self.process_pending_commands():
@@ -245,6 +227,7 @@ class WSIO(multiprocessing.Process):
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % "PubAlex", 'WSIO', 'HUB'))
         self.ws_protocol = protocol
         self.client_connected = True
+        self.n_played_frames = 0
 
     def on_client_closed(self):
         self.ws_protocol = None
@@ -253,7 +236,12 @@ class WSIO(multiprocessing.Process):
         self.client_connected = False
         self.key = gen_key()
 
+    def on_update_current_playback_position(self, pos):
+        self.update_current_playback_position(pos)
+        print 'pos', pos
+
     def send_to_client(self, data):
+        self.curr_seq += 1
         if self.ws_protocol:
             reactor.callFromThread(self.ws_protocol.sendMessage, data, True)
         else:
@@ -300,8 +288,12 @@ def create_ws_protocol(wsio_):
                     #print decoded
                     #print len(msg.speech.body)
                     #decoded = msg.speech.body
+                    print 'recving mic input'
 
                     self.wsio.audio_record.send(Frame(decoded))  #msg.speech.body))
+                    self.wsio.on_update_current_playback_position(msg.currentPlaybackPosition)
+
+
 
 
         def onClose(self, wasClean, code, reason):

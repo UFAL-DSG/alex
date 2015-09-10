@@ -4,6 +4,8 @@ message ClientToAlex {
     optional string key = 1;
     optional bytes speech = 2;
     optional string location = 3;
+    optional int32 currentPlaybackPosition = 4;
+    optional bool isSystemSpeaking = 5;
 }
 
 message AlexToClient {
@@ -11,13 +13,15 @@ message AlexToClient {
         SPEECH = 0;
         SYSTEM_PROMPT = 1;
         ASR_RESULT = 2;
+        FLUSH_OUT_AUDIO = 3;
     }
 
     optional Type type = 1;
     optional bytes speech = 2;
     optional string system_prompt = 3;
     optional string asr_result = 4;
-
+    optional int32 priority = 5;
+    optional int32 seq = 6;
 }
 
 message PingProto {

@@ -153,6 +153,7 @@ class VAD(multiprocessing.Process):
         if self.local_audio_in:
             if len(self.local_audio_in) > 10:
                 print "VAD unprocessed frames:", len(self.local_audio_in)
+                self.local_audio_in = deque(list(self.local_audio_in)[-10:])
 
             # read recorded audio
             data_rec = self.local_audio_in.popleft()
@@ -204,7 +205,7 @@ class VAD(multiprocessing.Process):
                         # Send or save all potentially queued data.
                         #   - When there is change to speech, there will be
                         #     several frames of audio;
-                        #   - If there is no change, then there will be only
+                        #   - If there is no change, then thtere will be only
                         #     one queued frame.
 
                         data_rec = self.deque_audio_in.popleft()
