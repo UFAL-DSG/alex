@@ -1,5 +1,6 @@
 from collections import deque
 import os
+import shutil
 import wave
 import logging
 
@@ -181,7 +182,8 @@ class RecordingSplitter(object):
         res_files.append(((n_read_beg * 1.0 / bytes_per_second, n_read_end * 1.0 / bytes_per_second), res_file))
 
 
-def main(input_dir, pcm_sample_rate, output_dir, ignore_first, ignore_pcm_smaller_than, max_call_log_size, min_wav_duration, v):
+def main(input_dir, pcm_sample_rate, output_dir, ignore_first, ignore_pcm_smaller_than, max_call_log_size,
+         min_wav_duration, v, keep_aux_recordings):
     if v:
         logging.basicConfig(level=logging.DEBUG, format=LOGGING_FORMAT)
     else:
@@ -197,7 +199,8 @@ def main(input_dir, pcm_sample_rate, output_dir, ignore_first, ignore_pcm_smalle
 
     rs = RecordingSplitter(vad_cfg=vad_cfg)
 
-    _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_call_log_size, min_wav_duration)
+    _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_call_log_size, min_wav_duration,
+                 keep_aux_recordings)
 
 
 def _mkdir_if_not_exists(output_dir):
@@ -225,11 +228,12 @@ def _find_files_to_split(input_dir, ignore_pcm_smaller_than):
     return to_process
 
 
-def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_call_log_size, min_wav_duration):
+def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_call_log_size, min_wav_duration,
+                 keep_aux_recordings):
     logging.info('Processing files.')
     for file_name, root, abs_root in to_process:
         file_out_dir = os.path.join(output_dir, root, file_name)
-        print output_dir, file_name, root, file_out_dir
+
         files = _split_2chan_pcm(rs, abs_root, file_name, file_out_dir, pcm_sample_rate, root, ignore_first)
 
         bulk_cntr = 0
@@ -252,6 +256,9 @@ def _split_files(rs, output_dir, to_process, pcm_sample_rate, ignore_first, max_
             _create_session_xml(bulk_out_dir, bulk)
 
             bulk_cntr += 1
+
+        if not keep_aux_recordings:
+            shutil.rmtree(file_out_dir)
 
 
 def _filter_short_wavs(wavs, min_wav_duration):
@@ -350,6 +357,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_call_log_size', type=int, default=0)
     parser.add_argument('--min_wav_duration', type=float, default=0.0)
     parser.add_argument('-v', default=False, action='store_true')
+    parser.add_argument('--keep_aux_recordings', action='store_true', default=False)
 
     args = parser.parse_args()
 
