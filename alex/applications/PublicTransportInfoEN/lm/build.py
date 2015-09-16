@@ -345,7 +345,7 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] _]\+CL_'> %s" % \
+        cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] \'_]\+CL_'> %s" % \
               (extended_data_text_trn_norm_cls_pg_arpa,
                extended_data_text_trn_norm_cls_pg_arpa_filtered)
 
