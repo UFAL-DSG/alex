@@ -12,6 +12,7 @@ do
     ../resources/private/ext-277278100.cfg  \
     ./PublicTransportInfoEN/google.cfg \
     ./PublicTransportInfoEN/voicerss.cfg \
+    ./PublicTransportInfoEN/kaldi.cfg \
 
 
 done
