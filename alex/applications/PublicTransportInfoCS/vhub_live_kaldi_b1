@@ -5,7 +5,13 @@ pushd $vhub_dir
 
 for A in {1..1000}
 do
-    ./vhub.py -n 10 -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_live.cfg ../resources/private/ext-800899998b1.cfg ./PublicTransportInfoCS/kaldi.cfg ./PublicTransportInfoCS/nfs.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg
+    ./vhub.py -n 10 -c ./PublicTransportInfoCS/ptics.cfg \
+       ./PublicTransportInfoCS/ptics_live.cfg \
+       ../resources/private/ext-800899998b1.cfg \
+       ../resources/private/ptics-live-analytics.cfg \
+       ./PublicTransportInfoCS/kaldi.cfg \
+       ./PublicTransportInfoCS/nfs.cfg \
+       ./PublicTransportInfoCS/ptics_hdc_slu.cfg
 done
 
 popd

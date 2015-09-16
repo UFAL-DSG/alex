@@ -35,6 +35,13 @@ class OpenWeatherMapWeather(Weather):
             date = datetime.combine(date.date(), datetime.fromtimestamp(input_json['list'][0]['dt']).time())
         # convert the date/time to Unix timestamp (timezone-independent)
         ts = int(date.strftime("%s"))
+        # ensure that we are within the range returned by OpenWeatherMap
+        # (the weather might be wrong, but at least it doesn't crash if you ask for weather in 5 minutes 
+        # and the returned values start in an hour)
+        if ts < input_json['list'][0]['dt']:
+            ts = input_json['list'][0]['dt']
+        if ts > input_json['list'][-1]['dt']:
+            ts = input_json['list'][-1]['dt']
         for fc1, fc2 in zip(input_json['list'][:-1], input_json['list'][1:]):
             # find the appropriate time frame
             if ts >= fc1['dt'] and ts <= fc2['dt']:

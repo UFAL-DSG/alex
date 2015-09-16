@@ -485,14 +485,14 @@ class PTIENHDCSLU(SLUInterface):
                                     wp_types.pop()
                                     wp_types = next_wp_type
                                     break
-                    cn.add(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem(dai_type, wp_types.pop() + '_' + wp_slot_suffix, wp_name, alignment={i}))
                 # backoff 1: add both 'from' and 'to' waypoint slots
                 elif 'from' in wp_types and 'to' in wp_types:
-                    cn.add(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name, alignment={i}))
-                    cn.add(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(0.501, DialogueActItem(dai_type, 'from_' + wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(0.499, DialogueActItem(dai_type, 'to_' + wp_slot_suffix, wp_name, alignment={i}))
                 # backoff 2: let the DM decide in context resolution
                 else:
-                    cn.add(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem(dai_type, wp_slot_suffix, wp_name, alignment={i}))
 
                 last_wp_pos = i + 1
 
@@ -712,7 +712,7 @@ class PTIENHDCSLU(SLUInterface):
                 last_time_type = time_type
 
                 slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
-                cn.add(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i+num_len))))
+                cn.add_merge(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i+num_len))))
                 last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
@@ -732,11 +732,11 @@ class PTIENHDCSLU(SLUInterface):
                 value = w[9:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'date_rel', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("confirm", 'date_rel', value, alignment={i}))
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'date_rel', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("deny", 'date_rel', value, alignment={i}))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'date_rel', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("inform", 'date_rel', value, alignment={i}))
 
     def parse_ampm(self, abutterance, cn):
         """Detects the ampm in the input abstract utterance.
@@ -756,11 +756,11 @@ class PTIENHDCSLU(SLUInterface):
 
                 if not (phrase_in(u, 'good night')):
                     if confirm:
-                        cn.add(1.0, DialogueActItem("confirm", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("confirm", 'ampm', value, alignment={i}))
                     elif deny:
-                        cn.add(1.0, DialogueActItem("deny", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("deny", 'ampm', value, alignment={i}))
                     else:
-                        cn.add(1.0, DialogueActItem("inform", 'ampm', value, alignment={i}))
+                        cn.add_merge(1.0, DialogueActItem("inform", 'ampm', value, alignment={i}))
 
     def parse_vehicle(self, abutterance, cn):
         """Detects the vehicle (transport type) in the input abstract utterance.
@@ -779,11 +779,11 @@ class PTIENHDCSLU(SLUInterface):
                 value = w[8:]
 
                 if confirm:
-                    cn.add(1.0, DialogueActItem("confirm", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("confirm", 'vehicle', value, alignment={i}))
                 elif deny:
-                    cn.add(1.0, DialogueActItem("deny", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("deny", 'vehicle', value, alignment={i}))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'vehicle', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("inform", 'vehicle', value, alignment={i}))
 
     def parse_task(self, abutterance, cn):
         """Detects the task in the input abstract utterance.
@@ -798,9 +798,9 @@ class PTIENHDCSLU(SLUInterface):
             if w.startswith("TASK="):
                 value = w[5:]
                 if deny:
-                    cn.add(1.0, DialogueActItem("deny", 'task', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("deny", 'task', value, alignment={i}))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", 'task', value, alignment={i}))
+                    cn.add_merge(1.0, DialogueActItem("inform", 'task', value, alignment={i}))
 
     def parse_non_speech_events(self, utterance, cn):
         """
@@ -813,13 +813,13 @@ class PTIENHDCSLU(SLUInterface):
         u = utterance
 
         if len(u.utterance) == 0 or "_silence_" == u or "__silence__" == u or "_sil_" == u:
-            cn.add(1.0, DialogueActItem("silence", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("silence", alignment={0}))
 
         if "_noise_" == u or "_laugh_" == u or "_ehm_hmm_" == u or "_inhale_" == u:
-            cn.add(1.0, DialogueActItem("null", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("null", alignment={0}))
 
         if "_other_" == u or "__other__" == u:
-            cn.add(1.0, DialogueActItem("other", alignment={0}))
+            cn.add_merge(1.0, DialogueActItem("other", alignment={0}))
 
     def parse_meta(self, utterance, abutt_lenghts, cn):
         """
@@ -841,50 +841,50 @@ class PTIENHDCSLU(SLUInterface):
 
         if (dai.any_word_in('ahoy hello hey hi greetings') or
                 dai.any_phrase_in(['good day', "what's up", 'what is up'])):
-            cn.add(1.0, DialogueActItem("hello"))
+            cn.add_merge(1.0, DialogueActItem("hello"))
 
         if dai.any_word_in("bye byebye seeya goodbye") or \
                 dai.any_phrase_in(['good bye', 'take baths', 'see you', 'see ya' 'nothing else', 'no further help needed', ]) or \
                 (dai.any_phrase_in(['that is', 'that was', "that's", ]) and dai.any_phrase_in(['all', 'it', ])):
 
-            cn.add(1.0, DialogueActItem("bye"))
+            cn.add_merge(1.0, DialogueActItem("bye"))
 
         if not dai.any_word_in('connection station option'):
             if dai.any_word_in('different another') or\
                     dai.phrase_in('anything else'):
-                cn.add(1.0, DialogueActItem("reqalts"))
+                cn.add_merge(1.0, DialogueActItem("reqalts"))
 
         if not dai.any_word_in('connection station option options last offer offered found beginning begin where going time'):
             if dai.any_phrase_in(['repeat', 'that again', 'come again', 'once more', 'say again', 'it again']):
-                cn.add(1.0, DialogueActItem("repeat"))
+                cn.add_merge(1.0, DialogueActItem("repeat"))
 
         if dai.phrase_in("repeat the last sentence") or \
             dai.phrase_in("repeat what you've") or \
             dai.phrase_in("repeat what you have"):
-            cn.add(1.0, DialogueActItem("repeat"))
+            cn.add_merge(1.0, DialogueActItem("repeat"))
 
         if len(u) == 1 and dai.any_word_in("excuse pardon sorry apology, apologise, apologies"):
-            cn.add(1.0, DialogueActItem("apology"))
+            cn.add_merge(1.0, DialogueActItem("apology"))
 
         if not dai.any_word_in("dont want thank thanks"):
             if dai.any_word_in("help hint") or dai.any_phrase_in(['what can you do', 'what do you do', 'who are you' 'your possibilities', 'your capabilities']):
-                cn.add(1.0, DialogueActItem("help"))
+                cn.add_merge(1.0, DialogueActItem("help"))
 
         if dai.any_word_in("hallo") or \
                 dai.all_words_in('not hear you'):
 
-            cn.add(1.0, DialogueActItem('canthearyou'))
+            cn.add_merge(1.0, DialogueActItem('canthearyou'))
 
         if dai.all_words_in("did not understand") or \
             dai.all_words_in("didn\'t understand") or \
             dai.all_words_in("speek up") or \
             dai.all_words_in("can not hear you") or \
             (len(u) == 1 and dai.any_word_in("can\'t hear you")):
-            cn.add(1.0, DialogueActItem('notunderstood'))
+            cn.add_merge(1.0, DialogueActItem('notunderstood'))
 
         if dai.any_word_in("yes yeah sure correct") and \
             not dai.any_word_in("end over option offer surrender") :
-            cn.add(1.0, DialogueActItem("affirm"))
+            cn.add_merge(1.0, DialogueActItem("affirm"))
 
         if not dai.any_phrase_in(['not from', 'not care']):
             if dai.any_word_in("no not nope nono") or \
@@ -892,27 +892,27 @@ class PTIENHDCSLU(SLUInterface):
                          len(u) == 2 and dai.all_words_in("not want") or \
                          len(u) == 3 and dai.all_words_in("yes do not") or \
                  dai.all_words_in("is wrong"):
-                cn.add(1.0, DialogueActItem("negate"))
+                cn.add_merge(1.0, DialogueActItem("negate"))
 
         if dai.any_word_in('thanks thankyou thank cheers'):
-            cn.add(1.0, DialogueActItem("thankyou"))
+            cn.add_merge(1.0, DialogueActItem("thankyou"))
 
         if dai.any_word_in('ok okay well correct fine understand understood') or (dai.any_word_in('right') and not dai.any_word_in('now')) and \
             not dai.any_word_in("yes"):
-            cn.add(1.0, DialogueActItem("ack"))
+            cn.add_merge(1.0, DialogueActItem("ack"))
 
         if dai.any_word_in("from begin begins start starting") and dai.any_word_in("beginning scratch over") or \
             dai.any_phrase_in(['stop talking', 'new entry']) or \
             dai.any_word_in("reset restart reboot") or \
             not dai.phrase_in('from') and dai.any_phrase_in(['new connection', 'new link']):
-            cn.add(1.0, DialogueActItem("restart"))
+            cn.add_merge(1.0, DialogueActItem("restart"))
 
         if dai.any_phrase_in(['want to go', 'like to go', 'want to get', 'would like to get', 'want to take',
                              'want to travel', 'i am heading', ]):
-            cn.add(1.0, DialogueActItem('inform', 'task', 'find_connection'))
+            cn.add_merge(1.0, DialogueActItem('inform', 'task', 'find_connection'))
 
         if dai.any_phrase_in(['what is weather', 'what is the weather', 'will be the weather', 'the forecast']):
-            cn.add(1.0, DialogueActItem('inform', 'task', 'weather'))
+            cn.add_merge(1.0, DialogueActItem('inform', 'task', 'weather'))
 
         if dai.all_words_in('where does it start') or \
             dai.all_words_in('what is the initial') or \
@@ -927,7 +927,7 @@ class PTIENHDCSLU(SLUInterface):
             dai.all_words_in('from what station') or \
             dai.all_words_in('what is the starting') or \
             dai.all_words_in('where will from'):
-            cn.add(1.0, DialogueActItem('request', 'from_stop'))
+            cn.add_merge(1.0, DialogueActItem('request', 'from_stop'))
 
         if dai.all_words_in('where does it arrive') or \
             dai.all_words_in('where does it stop') or \
@@ -944,50 +944,50 @@ class PTIENHDCSLU(SLUInterface):
             dai.all_words_in('where terminates') or \
             dai.all_words_in("where terminal") or \
             dai.all_words_in("where terminate"):
-            cn.add(1.0, DialogueActItem('request', 'to_stop'))
+            cn.add_merge(1.0, DialogueActItem('request', 'to_stop'))
 
         if not dai.any_word_in('arrival arrive arrives arriving stop stops stopping get gets destination target terminal'):
             if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'give me', 'tell me', 'provide',]) and \
                     dai.any_word_in('leave leaves leaving go goes going departure departures destination') or\
                     dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', ]) and dai.any_word_in('next'):
                 if not dai.any_word_in("till until before"):
-                    cn.add(1.0, DialogueActItem('request', 'departure_time'))
+                    cn.add_merge(1.0, DialogueActItem('request', 'departure_time'))
 
             elif (dai.any_phrase_in(['how long', 'how much', ]) and dai.any_word_in("till until before")) or \
                     (dai.any_phrase_in(['how many', ]) and dai.any_phrase_in(['minutes', 'hours'])):
                 if not dai.any_word_in("there"):
-                    cn.add(1.0, DialogueActItem('request', 'departure_time_rel'))
+                    cn.add_merge(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if dai.any_word_in('transfer transfers transferring transformer changing change changes interchange interchanging interchanges'):
             if dai.any_word_in('time take takes') or dai.any_phrase_in(['how long']):
-                cn.add(1.0, dai.build('request', 'time_transfers'))
+                cn.add_merge(1.0, dai.build('request', 'time_transfers'))
             elif dai.any_word_in('number count') or dai.any_phrase_in(['how many', 'there any']) and not dai.any_word_in('regardless not care'):
-                cn.add(1.0, dai.build('request', 'num_transfers'))
+                cn.add_merge(1.0, dai.build('request', 'num_transfers'))
             elif dai.any_word_in('zero no not') or dai.any_phrase_in(['any transfers']):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '0'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
             elif dai.any_word_in('one once single mono'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '1'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '1'))
             elif dai.any_word_in('two twice double duo pair couple'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '2'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '2'))
             elif dai.any_word_in('three thrice triple trio triplet'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '3'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '3'))
             elif dai.any_word_in('four quadro'):
-                cn.add(1.0, dai.build('inform', 'num_transfers', '4'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', '4'))
             elif dai.any_word_in('arbitrary arbitrarily with') or \
                     dai.any_phrase_in(['any means', 'regardless', 'not care', 'any number', 'any count']):
-                cn.add(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
+                cn.add_merge(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
 
         if (dai.all_words_in('direct') and dai.any_word_in('line connection link')) or \
                 (dai.all_words_in('directly') and dai.any_word_in('go travel take get goes travels')):
-            cn.add(1.0, dai.build('inform', 'num_transfers', '0'))
+            cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
 
         if not dai.any_word_in('departure, leave leaves leaving go goes going departure departures destination target terminal'):
             if dai.any_phrase_in(['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there', 'be there', ]):
                 if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide']):
-                    cn.add(1.0, DialogueActItem('request', 'arrival_time'))
+                    cn.add_merge(1.0, DialogueActItem('request', 'arrival_time'))
 
                 elif dai.any_phrase_in(['how long', 'how much', 'give me', 'tell me', 'provide']) and dai.any_word_in("till until before"):
-                    cn.add(1.0, DialogueActItem('request', 'arrival_time_rel'))
+                    cn.add_merge(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not dai.any_word_in('till until before'):
             if (dai.all_words_in('how long') and ((dai.any_word_in('would will does') and dai.any_word_in('it that the') and dai.all_words_in('take')) or
@@ -995,61 +995,61 @@ class PTIENHDCSLU(SLUInterface):
                     dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or \
                     dai.all_words_in("give me time trip") or \
                     (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time')):
-                cn.add(1.0, DialogueActItem('request', 'duration'))
+                cn.add_merge(1.0, DialogueActItem('request', 'duration'))
 
             if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take travel duration')):
-                cn.add(1.0, DialogueActItem('request', 'distance'))
+                cn.add_merge(1.0, DialogueActItem('request', 'distance'))
 
         if dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it']):
-            cn.add(1.0, DialogueActItem('request', 'current_time'))
+            cn.add_merge(1.0, DialogueActItem('request', 'current_time'))
 
         if (dai.any_word_in('time found connection alternatives alternative option options possibility choice trip travel journey ride tour link bus train sub subway') or
                 dai.any_phrase_in(['next one', 'previous one', 'last one', 'first one', 'second one', 'third one', 'fourth one'])) and \
                 not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum'):
             if dai.any_word_in('arbitrary') and \
                 not dai.any_word_in('first second third fourth one two three four'):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "dontcare"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "dontcare"))
 
             if dai.any_word_in('first one') and \
                 not dai.any_word_in('second third fourth two three four'):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "1"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "1"))
 
             if dai.any_word_in('second two')and \
                 not dai.any_word_in('third fourth next'):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "2"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "2"))
 
             if dai.any_word_in('third three'):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "3"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "3"))
 
             if dai.any_word_in('fourth four'):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "4"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "4"))
 
             if dai.any_word_in("last before latest latter most bottom repeat again") and \
                 not dai.all_words_in("previous precedent"):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "last"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "last"))
 
             if dai.any_word_in("next different following subsequent later another"):
-                cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+                cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
             if dai.any_word_in("previous precedent"):
                 if dai.phrase_in("not want to know previous"):
-                    cn.add(1.0, DialogueActItem("deny", "alternative", "prev"))
+                    cn.add_merge(1.0, DialogueActItem("deny", "alternative", "prev"))
                 else:
-                    cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
+                    cn.add_merge(1.0, DialogueActItem("inform", "alternative", "prev"))
 
         if len(u) == 1 and dai.any_word_in('next following'):
-            cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+            cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
             (dai.all_words_in("the following") or dai.all_words_in("and afterwards") or
              dai.all_words_in("and later")):
-            cn.add(1.0, DialogueActItem("inform", "alternative", "next"))
+            cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 1 and dai.any_word_in("previous precedent"):
-            cn.add(1.0, DialogueActItem("inform", "alternative", "prev"))
+            cn.add_merge(1.0, DialogueActItem("inform", "alternative", "prev"))
 
         if dai.any_phrase_in(["by day", "of the day"]):
-            cn.add(1.0, DialogueActItem('inform', 'ampm', 'pm'))
+            cn.add_merge(1.0, DialogueActItem('inform', 'ampm', 'pm'))
 
 
 

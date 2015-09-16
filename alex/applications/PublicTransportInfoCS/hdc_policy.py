@@ -383,6 +383,13 @@ class PTICSHDCPolicy(DialoguePolicy):
                             res_da.append(DialogueActItem('inform', 'direction',
                                                           platform_info.to_stop))
                         else:
+                            if platform_info.directions:
+                                based_on_directions = 'true'
+                            else:
+                                based_on_directions = 'false'
+
+                            res_da.append(DialogueActItem('inform', 'based_on_directions', based_on_directions))
+
                             if platform_res.platform:
                                 res_da.append(DialogueActItem('inform', 'platform',
                                                           platform_res.platform))
@@ -452,7 +459,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
         # check if any time is set to distinguish current/prediction
         weather_ts = None
-        if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
+        if time_abs != 'none' or time_rel not in ['none', 'now'] or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # find the coordinates of the city
         city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
@@ -512,7 +519,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-        if ds.route_alternative is not None:
+        if ds.route_alternative is None:
             return DialogueAct('request(from_stop)')
         else:
             ds.route_alternative += 1
@@ -825,8 +832,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
 
-        # we know the cities, but it's not an intercity connection -- request stops if required
-        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
+        # we do not know the stops (and they weren't inferred based on cities)
+        elif from_stop_val == 'none' or to_stop_val == 'none':
             if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
                 req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
             elif from_stop_val == 'none':
@@ -834,7 +841,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif to_stop_val == 'none':
                 req_da.extend(DialogueAct('request(to_stop)'))
 
-        # we need to know the cities -- ask about them
+        # we know the stops, but we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
@@ -879,11 +886,16 @@ class PTICSHDCPolicy(DialoguePolicy):
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
 
+        directions = None
+        if ds.directions:
+            directions = ds.directions[ds.route_alternative]
+
         pi  = PlatformInfo(from_stop=from_stop_val,
-                                                 to_stop=to_stop_val,
-                                                 from_city=from_city_val,
-                                                 to_city=to_city_val,
-                                                 train_name=train_name_val)
+                           to_stop=to_stop_val,
+                           from_city=from_city_val,
+                           to_city=to_city_val,
+                           train_name=train_name_val,
+                           directions=directions)
         return req_da, iconfirm_da, pi
 
     def req_current_time(self):
