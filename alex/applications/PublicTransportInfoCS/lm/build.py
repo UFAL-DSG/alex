@@ -366,24 +366,6 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "ngram -lm %s -order 4 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_qg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 3 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_tg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 2 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_bg)
-        print cmd
-        exit_on_system_fail(cmd)
-
         cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' | grep -v 'CL_' | grep -v '{' | grep -v '_' > %s" % \
               (mixed_lm_vocab,
                final_lm_vocab)
@@ -473,23 +455,3 @@ if __name__ == '__main__':
     exit_on_system_fail("ngram -lm %s -order 5 -ppl %s" % (final_lm_pg, indomain_data_text_dev_norm))
     print
 
-
-    print "-"*120
-    print "Final 4-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 3-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 2-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
-    print
