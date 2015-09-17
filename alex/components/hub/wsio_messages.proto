@@ -4,16 +4,17 @@ message ClientToAlex {
     optional string key = 1;
     optional bytes speech = 2;
     optional string location = 3;
-    optional int32 currentPlaybackPosition = 4;
-    optional bool isSystemSpeaking = 5;
+    optional int32 currently_playing_utterance = 4;
 }
 
 message AlexToClient {
     enum Type {
         SPEECH = 0;
-        SYSTEM_PROMPT = 1;
-        ASR_RESULT = 2;
-        FLUSH_OUT_AUDIO = 3;
+        SPEECH_BEGIN = 1;
+        SPEECH_END = 2;
+        SYSTEM_PROMPT = 3;
+        ASR_RESULT = 4;
+        FLUSH_OUT_AUDIO = 5;
     }
 
     optional Type type = 1;
@@ -22,6 +23,7 @@ message AlexToClient {
     optional string asr_result = 4;
     optional int32 priority = 5;
     optional int32 seq = 6;
+    optional int32 utterance_id = 7;
 }
 
 message PingProto {

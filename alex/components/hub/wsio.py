@@ -61,6 +61,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
         self.audio_playing = None
         self.n_played_frames = None
         self.curr_seq = 0
+        self.utterance_id = 0
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -146,6 +147,26 @@ class WSIO(VoiceIO, multiprocessing.Process):
             if isinstance(data_play, Frame):
                 buffer = data_play.payload
                 self.audio_to_send += buffer
+                self.n_played_frames += len(buffer) / 2
+
+            elif isinstance(data_play, Command):
+                if data_play.parsed['__name__'] == 'utterance_start':
+                    msg = AlexToClient()
+                    msg.seq = self.curr_seq
+                    msg.type = AlexToClient.SPEECH_BEGIN
+                    msg.utterance_id = self.utterance_id
+                    self.send_to_client(msg.SerializeToString())
+                    print 'SENDING SPEECH BEGIN'
+
+                if data_play.parsed['__name__'] == 'utterance_end':
+                    msg = AlexToClient()
+                    msg.seq = self.curr_seq
+                    msg.type = AlexToClient.SPEECH_END
+                    msg.utterance_id = self.utterance_id
+                    self.send_to_client(msg.SerializeToString())
+                    print 'SENDING SPEECH END'
+
+                    self.utterance_id += 1
 
             self.process_command(data_play)
 
@@ -159,10 +180,9 @@ class WSIO(VoiceIO, multiprocessing.Process):
             msg.speech = encoded
             msg.seq = self.curr_seq
             self.send_to_client(msg.SerializeToString())
-            self.n_played_frames += 640 / 2
-            print 'sending audio'
+            #self.n_played_frames += 640 / 2
 
-        self.update_current_playback_buffer_position(self.n_played_frames)
+
 
     def run(self):
         try:
@@ -207,8 +227,6 @@ class WSIO(VoiceIO, multiprocessing.Process):
                 if self.close_event.is_set():
                     return
 
-                self.send_pending_messages()
-
                 # process all pending commands
                 if self.process_pending_commands():
                     return
@@ -236,9 +254,8 @@ class WSIO(VoiceIO, multiprocessing.Process):
         self.client_connected = False
         self.key = gen_key()
 
-    def on_update_current_playback_position(self, pos):
-        self.update_current_playback_position(pos)
-        print 'pos', pos
+    def on_update_current_utterance_id(self, utt_id):
+        self.update_current_utterance_id(utt_id)
 
     def send_to_client(self, data):
         self.curr_seq += 1
@@ -288,10 +305,9 @@ def create_ws_protocol(wsio_):
                     #print decoded
                     #print len(msg.speech.body)
                     #decoded = msg.speech.body
-                    print 'recving mic input'
 
                     self.wsio.audio_record.send(Frame(decoded))  #msg.speech.body))
-                    self.wsio.on_update_current_playback_position(msg.currentPlaybackPosition)
+                    self.wsio.on_update_current_utterance_id(msg.currently_playing_utterance)
 
 
 

@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='alex/components/hub/wsio_messages.proto',
   package='cz.cuni.mff.ufal.alex',
-  serialized_pb='\n\'alex/components/hub/wsio_messages.proto\x12\x15\x63z.cuni.mff.ufal.alex\"^\n\x0c\x43lientToAlex\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06speech\x18\x02 \x01(\x0c\x12\x10\n\x08location\x18\x03 \x01(\t\x12\x1f\n\x17\x63urrentPlaybackPosition\x18\x04 \x01(\x05\"\xec\x01\n\x0c\x41lexToClient\x12\x36\n\x04type\x18\x01 \x01(\x0e\x32(.cz.cuni.mff.ufal.alex.AlexToClient.Type\x12\x0e\n\x06speech\x18\x02 \x01(\x0c\x12\x15\n\rsystem_prompt\x18\x03 \x01(\t\x12\x12\n\nasr_result\x18\x04 \x01(\t\x12\x10\n\x08priority\x18\x05 \x01(\x05\x12\x0b\n\x03seq\x18\x06 \x01(\x05\"J\n\x04Type\x12\n\n\x06SPEECH\x10\x00\x12\x11\n\rSYSTEM_PROMPT\x10\x01\x12\x0e\n\nASR_RESULT\x10\x02\x12\x13\n\x0f\x46LUSH_OUT_AUDIO\x10\x03\"\x9d\x01\n\tPingProto\x12\x0c\n\x04\x61\x64\x64r\x18\x01 \x01(\t\x12;\n\x06status\x18\x02 \x01(\x0e\x32+.cz.cuni.mff.ufal.alex.PingProto.StatusType\x12\x0b\n\x03key\x18\x03 \x01(\t\"8\n\nStatusType\x12\r\n\tAVAILABLE\x10\x00\x12\x08\n\x04\x42USY\x10\x01\x12\x11\n\rSHUTTING_DOWN\x10\x02\"\xab\x01\n\x14WSRouterRequestProto\x12>\n\x04type\x18\x01 \x01(\x0e\x32\x30.cz.cuni.mff.ufal.alex.WSRouterRequestProto.Type\x12.\n\x04ping\x18\x02 \x01(\x0b\x32 .cz.cuni.mff.ufal.alex.PingProto\"#\n\x04Type\x12\x08\n\x04PING\x10\x00\x12\x11\n\rROUTE_REQUEST\x10\x01\"9\n\x1cWSRouterRoutingResponseProto\x12\x0c\n\x04\x61\x64\x64r\x18\x01 \x01(\t\x12\x0b\n\x03key\x18\x02 \x01(\t')
+  serialized_pb='\n\'alex/components/hub/wsio_messages.proto\x12\x15\x63z.cuni.mff.ufal.alex\"b\n\x0c\x43lientToAlex\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06speech\x18\x02 \x01(\x0c\x12\x10\n\x08location\x18\x03 \x01(\t\x12#\n\x1b\x63urrently_playing_utterance\x18\x04 \x01(\x05\"\xa4\x02\n\x0c\x41lexToClient\x12\x36\n\x04type\x18\x01 \x01(\x0e\x32(.cz.cuni.mff.ufal.alex.AlexToClient.Type\x12\x0e\n\x06speech\x18\x02 \x01(\x0c\x12\x15\n\rsystem_prompt\x18\x03 \x01(\t\x12\x12\n\nasr_result\x18\x04 \x01(\t\x12\x10\n\x08priority\x18\x05 \x01(\x05\x12\x0b\n\x03seq\x18\x06 \x01(\x05\x12\x14\n\x0cutterance_id\x18\x07 \x01(\x05\"l\n\x04Type\x12\n\n\x06SPEECH\x10\x00\x12\x10\n\x0cSPEECH_BEGIN\x10\x01\x12\x0e\n\nSPEECH_END\x10\x02\x12\x11\n\rSYSTEM_PROMPT\x10\x03\x12\x0e\n\nASR_RESULT\x10\x04\x12\x13\n\x0f\x46LUSH_OUT_AUDIO\x10\x05\"\x9d\x01\n\tPingProto\x12\x0c\n\x04\x61\x64\x64r\x18\x01 \x01(\t\x12;\n\x06status\x18\x02 \x01(\x0e\x32+.cz.cuni.mff.ufal.alex.PingProto.StatusType\x12\x0b\n\x03key\x18\x03 \x01(\t\"8\n\nStatusType\x12\r\n\tAVAILABLE\x10\x00\x12\x08\n\x04\x42USY\x10\x01\x12\x11\n\rSHUTTING_DOWN\x10\x02\"\xab\x01\n\x14WSRouterRequestProto\x12>\n\x04type\x18\x01 \x01(\x0e\x32\x30.cz.cuni.mff.ufal.alex.WSRouterRequestProto.Type\x12.\n\x04ping\x18\x02 \x01(\x0b\x32 .cz.cuni.mff.ufal.alex.PingProto\"#\n\x04Type\x12\x08\n\x04PING\x10\x00\x12\x11\n\rROUTE_REQUEST\x10\x01\"9\n\x1cWSRouterRoutingResponseProto\x12\x0c\n\x04\x61\x64\x64r\x18\x01 \x01(\t\x12\x0b\n\x03key\x18\x02 \x01(\t')
 
 
 
@@ -28,22 +28,30 @@ _ALEXTOCLIENT_TYPE = _descriptor.EnumDescriptor(
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='SYSTEM_PROMPT', index=1, number=1,
+      name='SPEECH_BEGIN', index=1, number=1,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='ASR_RESULT', index=2, number=2,
+      name='SPEECH_END', index=2, number=2,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='FLUSH_OUT_AUDIO', index=3, number=3,
+      name='SYSTEM_PROMPT', index=3, number=3,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='ASR_RESULT', index=4, number=4,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='FLUSH_OUT_AUDIO', index=5, number=5,
       options=None,
       type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=325,
-  serialized_end=399,
+  serialized_start=351,
+  serialized_end=459,
 )
 
 _PINGPROTO_STATUSTYPE = _descriptor.EnumDescriptor(
@@ -67,8 +75,8 @@ _PINGPROTO_STATUSTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=503,
-  serialized_end=559,
+  serialized_start=563,
+  serialized_end=619,
 )
 
 _WSROUTERREQUESTPROTO_TYPE = _descriptor.EnumDescriptor(
@@ -88,8 +96,8 @@ _WSROUTERREQUESTPROTO_TYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=698,
-  serialized_end=733,
+  serialized_start=758,
+  serialized_end=793,
 )
 
 
@@ -122,7 +130,7 @@ _CLIENTTOALEX = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='currentPlaybackPosition', full_name='cz.cuni.mff.ufal.alex.ClientToAlex.currentPlaybackPosition', index=3,
+      name='currently_playing_utterance', full_name='cz.cuni.mff.ufal.alex.ClientToAlex.currently_playing_utterance', index=3,
       number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -138,7 +146,7 @@ _CLIENTTOALEX = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=66,
-  serialized_end=160,
+  serialized_end=164,
 )
 
 
@@ -191,6 +199,13 @@ _ALEXTOCLIENT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='utterance_id', full_name='cz.cuni.mff.ufal.alex.AlexToClient.utterance_id', index=6,
+      number=7, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -201,8 +216,8 @@ _ALEXTOCLIENT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=163,
-  serialized_end=399,
+  serialized_start=167,
+  serialized_end=459,
 )
 
 
@@ -244,8 +259,8 @@ _PINGPROTO = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=402,
-  serialized_end=559,
+  serialized_start=462,
+  serialized_end=619,
 )
 
 
@@ -280,8 +295,8 @@ _WSROUTERREQUESTPROTO = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=562,
-  serialized_end=733,
+  serialized_start=622,
+  serialized_end=793,
 )
 
 
@@ -315,8 +330,8 @@ _WSROUTERROUTINGRESPONSEPROTO = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=735,
-  serialized_end=792,
+  serialized_start=795,
+  serialized_end=852,
 )
 
 _ALEXTOCLIENT.fields_by_name['type'].enum_type = _ALEXTOCLIENT_TYPE

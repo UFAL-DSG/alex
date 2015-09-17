@@ -2,6 +2,12 @@ from alex.components.hub.messages import Command
 from alex.utils.exceptions import SessionLoggerException
 
 
+class UtterancePlayInfo(object):
+    frame_begin = None
+    frame_end = None
+
+
+
 class VoiceIO(object):
     def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         super(VoiceIO, self).__init__()
@@ -10,73 +16,47 @@ class VoiceIO(object):
         self.commands = commands
         self.last_frame_id = 1
         self.last_played_frame = -1
+        self.last_utterance_data = None
+        self.buffered_utterances = []
+        self.curr_utt = -1
+        self.utt_ndx = 0
+        self.utt_info = {}
 
-    def get_num_played_frames(self):
-        raise NotImplementedError()
+    def update_current_utterance_id(self, utt_id):
+        print 'curr utterance id', self.curr_utt, 'new:', utt_id
+        if utt_id != self.curr_utt:
+            if self.curr_utt != -1:
+                self._send_play_cmd("end", self.curr_utt)
 
-    def update_current_playback_position(self, pos):
-        self.last_played_frame = pos
+            if utt_id != -1:
+                self._send_play_cmd("start", utt_id)
 
-    def update_current_playback_buffer_position(self, pos):
-        self.last_frame_id = pos
+        self.curr_utt = utt_id
 
-    def send_message(self, msg, f_id):
-        self.message_queue.append((msg, f_id))
-
-    def send_pending_messages(self):
-        """ Send all messages for which corresponding frame was already played.
-        """
-
-        del_messages = []
-
-        for i, (message, frame_id) in enumerate(self.message_queue):
-            if frame_id <= self.last_played_frame:
-                self.commands.send(message)
-                del_messages.append(frame_id)
-
-        # delete the messages which were already sent
-        self.message_queue = [x for x in self.message_queue if x[1] not in del_messages]
+    def _send_play_cmd(self, which, utt_id):
+        data = self.utt_info[utt_id]
+        cmd = Command('play_utterance_{which}(user_id="{uid}",fname="{fname})'
+                             .format(which=which, uid=data['user_id'], fname=data['fname']),
+                             'VoipIO', 'HUB')
+        self.commands.send(cmd)
 
     def process_command(self, data_play):
-        print 'xxxxx processing command voiceio'
         if isinstance(data_play, Command):
-            print data_play
             if data_play.parsed['__name__'] == 'utterance_start':
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                self.audio_playing = data_play.parsed['fname']
-                self.send_message(
-                    Command('play_utterance_start(user_id="{uid}",fname="{fname}")'
-                                .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
-                             'VoipIO', 'HUB'),
-                    self.last_frame_id)
+                self.utt_info[self.utt_ndx] = data_play.parsed
+                self.utt_ndx += 1
+
                 try:
                     if data_play.parsed['log'] == "true":
                         self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
                 except SessionLoggerException as e:
                     self.cfg['Logging']['system_logger'].exception(e)
 
-            if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                print 'utterance start'
-                self.audio_playing = None
-                self.message_queue.append(
-                    (Command('play_utterance_end(user_id="{uid}",fname="{fname})'
-                             .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
-                             'VoipIO', 'HUB'),
-                     self.last_frame_id))
+            if data_play.parsed['__name__'] == 'utterance_end':
                 try:
                     if data_play.parsed['log'] == "true":
                         self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
                 except SessionLoggerException as e:
                     self.cfg['Logging']['system_logger'].exception(e)
+
+
