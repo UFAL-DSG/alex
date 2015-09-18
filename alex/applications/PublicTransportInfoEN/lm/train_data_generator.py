@@ -1,4 +1,10 @@
-from __future__ import absolute_import, unicode_literals
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+if __name__ == '__main__':
+    import autopath
+
 import codecs
 
 from datetime import datetime
@@ -9,8 +15,8 @@ import argparse
 from alex.components.nlg.tools.en import word_for_number
 from alex.corpustools.grammar_weighted import GrammarGen, O, A, UA, S
 
-n_samples = 1*1000*1000
-default_method = 'norm'#'uniq'#'test'#
+n_samples = 50*1000
+default_method = 'uniq' #'norm'#'test'#
 
 
 def save_data(fn, data):

@@ -692,6 +692,8 @@ def normalise_text(text):
     """
     Normalises the transcription.  This is the main function of this module.
     """
+
+    text = text.replace('_NOISE_', '(NOISE)').replace('_LAUGH_', '(LAUGH)').replace('_INHALE_', '(INHALE)').replace('_EHM_HMM_', '(EHM_HMM)')
     text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
 

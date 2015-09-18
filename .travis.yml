@@ -11,11 +11,21 @@ python:
     - "2.7"
 compiler:
     - gcc
+    
+before_install:
+# Install miniconda to avoid compiling scipy
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b
+    - export PATH=/home/travis/miniconda/bin:$PATH
+    - conda update --yes conda
 
 install:
     # TODO should we not use only from from openblas or just atlas?
     - sudo apt-get update && sudo apt-get install -y build-essential libpng12-dev libfreetype6-dev libopenblas-dev libopenblas-base liblapack-dev gfortran  git python python-dev python-pip libsqlite3-dev wget libatlas-base-dev zip &> /dev/null
     - echo "/usr/lib/atlas-base" | sudo tee /etc/ld.so.conf.d/atlas-lib.conf && sudo ldconfig  # Hack: solution from http://unix.stackexchange.com/questions/52703/using-atlas-from-scipy
+    - conda create --yes -q -n pyenv mkl python=2.7 numpy=1.9.1 scipy nose pyparsing pip flake8
+    - source activate pyenv    
     - (pip install -r alex-requirements.txt 2>&1 > /tmp/pip_log.log & PIP_PID=$! ; while [ "$(ps -p ${PIP_PID} | wc -l)" -eq "2" ]; do sleep 60; echo "pip is still running"; done;)
     - echo "#####################"; echo "vvv PIP LOG vvv"; tail -n 100 /tmp/pip_log.log ; echo "#####################";
     # Install pjsip.
@@ -25,6 +35,8 @@ install:
     - sudo apt-get install -y libsox-dev &> /dev/null
     - easy_install pysox &> /dev/null
     - pip install nose2 &> /dev/null
+    - echo "[gcc] " > ~/.theanorc
+    - echo "cxxflags = -march=x86-64" >> ~/.theanorc
 
 script:
     - python -c 'import kaldi'
@@ -32,4 +44,4 @@ script:
     - python -c 'import pjsuaxt'
     - python -c 'import alex.applications.vhub'
     - python -c 'import fst'
-    - nose2 alex
+    - nose2 -v

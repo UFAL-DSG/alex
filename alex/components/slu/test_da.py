@@ -33,7 +33,6 @@ class TestDA(unittest.TestCase):
         s.append("Using normalise().merge():")
         s.append(unicode(nblist2))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(nblist1, nblist2)
 
@@ -74,7 +73,6 @@ class TestDA(unittest.TestCase):
         s.append("Correct merged results:")
         s.append(unicode(correct_merged_nblists))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(merged_nblists), unicode(correct_merged_nblists))
 
@@ -109,7 +107,6 @@ class TestDA(unittest.TestCase):
         s.append("Correct merged results:")
         s.append(unicode(correct_merged_confnet))
         s.append("")
-        print '\n'.join(s)
 
         self.assertEqual(unicode(merged_confnets), unicode(correct_merged_confnet))
 

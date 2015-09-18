@@ -23,6 +23,7 @@ suffixes = {
     'avs': 'avenues',
     'bl': 'boulevard',
     'blvd': 'boulevard',
+    'bklyn': 'brooklyn',
     'bx': 'bronx',
     'cir': 'circle',
     'ct': 'court',
@@ -58,11 +59,14 @@ suffixes = {
     'pz': 'plaza',
     'qn': 'queens',
     'rd': 'road',
+    'rd.': 'road',
     'rdwy': 'roadway',
     'rdy': 'roadway',
+    'rt': 'route',
     's': 'south',
     'st': 'street',
     'st.': 'street',
+    'st#': 'street',
     'sts': 'streets',
     'svc': 'service',
     'sq': 'square',
@@ -76,18 +80,18 @@ suffixes = {
 
 
 def spell_if_number(word, use_coupling, ordinal=True):
-    for suf in ['th', 'st', 'nd', 'rd']:
+    for suf in ['th', 'st', 'nd', 'rd', "'"]:
         if word.endswith(suf):
             word_stripped = word.rstrip(suf)
-            if word_stripped.isdigit():
+            if word_stripped.isdigit() and int(word_stripped) <= 1000:
                 return every_word_for_number(int(word_stripped), ordinal, use_coupling)
 
     if word.startswith('#'):
         word = word.lstrip('#')
-        if word.isdigit():
+        if word.isdigit() and int(word) <= 1000:
             return 'number ' + every_word_for_number(int(word), False, use_coupling)
 
-    if word.isdigit():
+    if word.isdigit() and int(word) <= 1000:
         return every_word_for_number(int(word), ordinal, use_coupling)
     else:
         return word

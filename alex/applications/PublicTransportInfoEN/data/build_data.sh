@@ -5,6 +5,8 @@
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
+mkdir -p preprocessing/resources
+
 echo 'Updating source files from the server...' 1>&2
 python -c \
     'import autopath; \

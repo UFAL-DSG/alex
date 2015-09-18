@@ -1,7 +1,9 @@
+#!/bin/bash
+
 # Needed for "correct" sorting
 export LC_ALL=C
 
-if [[ -z "$KALDI_ROOT" ]] ; then
+if [ -z "$KALDI_ROOT" ] ; then
     echo; echo "KALDI_ROOT need to be set"; echo
 fi
 

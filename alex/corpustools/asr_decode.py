@@ -16,6 +16,7 @@ import fnmatch
 import argparse
 import time
 import multiprocessing
+import random
 
 import alex.utils.various as various
 
@@ -86,6 +87,7 @@ def decode_info(p):
 
     if not os.path.exists(wav_path):
         print "Does not exists!"
+        return '', 0.11, 0.1, 0.1, wav_path
 
     wav_dur = wav_duration(wav_path)
 
@@ -219,6 +221,8 @@ def decode_with_reference(reference, outdir, num_workers):
     declen_dict, fwlen_dict, wavlen_dict, dec_dict = {}, {}, {}, {}
 
     params = [ (outdir, wav_path, reference) for wav_path, reference in trn_dict.items()]
+    random.shuffle(params)
+
     if num_workers > 1:
         p_decode_wavs = multiprocessing.Pool(num_workers)
         decoded_wavs = p_decode_wavs.map(decode_info, params, 100)

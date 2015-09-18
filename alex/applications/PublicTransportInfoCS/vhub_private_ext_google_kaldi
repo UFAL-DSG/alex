@@ -1,5 +1,8 @@
 #!/bin/bash
 
-cd ..
+vhub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $vhub_dir 
 
 ./vhub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/private_ext.cfg ./PublicTransportInfoCS/google.cfg ./PublicTransportInfoCS/kaldi.cfg
+
+popd

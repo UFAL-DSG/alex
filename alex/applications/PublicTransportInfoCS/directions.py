@@ -320,6 +320,7 @@ class CRWSRouteStep(RouteStep):
                             'LEOExpress': 'train',
                             'railjet': 'train',
                             'RegionalExpress': 'regional_fast_train',
+                            'RegioJet': 'train',
                             'semi fast train': 'regional_fast_train',
                             'Tanie Linie Kolejowe': 'train',
                             'Regionalzug': 'local_train',
@@ -505,10 +506,23 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             max_count, # max count
             REG.SMART, # return regions
             skip_count, # skip count
-            TTINFODETAILS.STATIONSEXT,
-            COOR.DEFAULT,
+            #TTINFODETAILS.STATIONSEXT,
+            #COOR.DEFAULT,
             TTLANG.ENGLISH # language
         )
+
+        # SearchGlobalListItemInfo(
+        # xs:string sUserID,
+        # xs:string sUserDesc,
+        # xs:string sCombID,
+        # xs:int iListID,
+        # xs:string sMask,
+        # xs:int iSearchMode,
+        # xs:int iMaxCount,
+        # xs:int iRegMode,
+        # xs:int iSkipCount,
+        # xs:int iLang, )
+
 
     def search_city(self, city_mask):
         return self.search_stop(city_mask, self.city_list_id)
@@ -518,6 +532,12 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
     @lru_cache(maxsize=10)
     def get_platform(self, platform_info):
         # try to map from-to to IDOS identifiers, default to originals
+        if platform_info.directions:
+            leg = platform_info.directions.legs[0]
+            step = leg.steps[0]
+            platform_info.to_city = 'none'
+            platform_info.to_stop = step.arrival_stop
+
         self.system_logger.info("ALEX: Looking up platform for: %s -- %s" %
                                 (platform_info.from_stop,
                                  platform_info.to_stop))
@@ -568,10 +588,11 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
                 self.user_id,
                 self.user_desc,
                 self.default_comb_id,
-                from_obj[0],
+                from_obj[0][0],
                 True,
                 datetime.min, # timestamp of arrival or departure
                 True,
+                None,
                 SEARCHMODE.EXACT,
                 1,
                 REG.SMART,
@@ -584,13 +605,13 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             self._log_response_json(_todict(response, '_origClassName'))
 
             # Extract the departure table entry.
-            platform_info = CRWSPlatformInfo(response, self)
+            crws_platform_info = CRWSPlatformInfo(response, self)
             if from_obj and to_obj:
                 self.system_logger.info("CRWS Looking by destination station.")
-                platform_res = platform_info.find_platform_by_station(to_obj)
+                platform_res = crws_platform_info.find_platform_by_station(to_obj)
             elif from_obj and train_name:
                 self.system_logger.info("CRWS Looking by train name.")
-                platform_res = platform_info.find_platform_by_train_name(platform_info.train_name)
+                platform_res = crws_platform_info.find_platform_by_train_name(platform_info.train_name)
             else:
                 raise Exception("Incorrect state!")
 
@@ -660,12 +681,18 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             COOR.DEFAULT,
             "", # no substitutions, textual format
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
+            0,  # price request (undocumented parameter added around 2015-07-05)
             TTLANG.ENGLISH,
-            0)
-        # (use this to log raw XML requests/responses)
-        # # xml_data = unicode(self.client.last_sent())
-        # # xml_data += "\n" + unicode(self.client.last_received())
-        # # self.session_logger.external_data_file(ftype, fname, xml_data.encode('UTF-8'))
+            0)  # iConnHandle -- default to 0
+
+        # # (use this to log raw XML requests/responses)
+        # xml_data = unicode(self.client.last_sent())
+        # xml_data += "\n" + unicode(self.client.last_received())
+        # fname = os.path.join(self.system_logger.get_session_dir_name(),
+        #                      'suds-dump-{t}.json'.format(t=datetime.now().strftime('%Y-%m-%d--%H-%M-%S.%f')))
+        # with open(fname, 'w') as fh:
+        #     fh.write(xml_data)
+
         # log the response
         self._log_response_json(_todict(response, '_origClassName'))
         # parse the results
@@ -692,6 +719,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
             COOR.DEFAULT,
             "", # no substitutions, textual format
             TTDETAILS.ROUTE_FROMTO | TTDETAILS.ROUTE_CHANGE | TTDETAILS.TRAIN_INFO,
+            0,  # price request (undocumented parameter added around 2015-07-05)
             TTLANG.ENGLISH)
         self._log_response_json(_todict(response, '_origClassName'))
         return response

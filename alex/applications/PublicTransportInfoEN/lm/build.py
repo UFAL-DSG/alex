@@ -56,7 +56,7 @@ def require_srilm():
 def exit_on_system_fail(cmd, msg=None):
     system_res = os.system(cmd)
     if not system_res == 0:
-        err_msg = "Command failed, exitting."
+        err_msg = "Command failed, exiting."
         if msg:
             err_msg = "%s %s" % (err_msg, msg, )
         raise Exception(err_msg)
@@ -69,6 +69,7 @@ if __name__ == '__main__':
 
     train_data_size                 = 0.90
     bootstrap_text                  = "bootstrap.txt"
+    grammar_output                  = "./gen_data/train.unique.gen.txt"
     classes                         = "../data/database_SRILM_classes.txt"
     indomain_data_dir               = "indomain_data"
     gen_data                        = lm.download_general_LM_data('en')
@@ -109,7 +110,7 @@ if __name__ == '__main__':
     expanded_lm_vocab       = "26_expanded.vocab"
     expanded_lm_pg          = "26_expanded.pg.arpa"
 
-    mixing_weight           = "0.8"
+    mixing_weight           = "0.5"
     mixed_lm_vocab          = "27_mixed.vocab"
     mixed_lm_pg             = "27_mixed.pg.arpa"
 
@@ -131,9 +132,9 @@ if __name__ == '__main__':
         print "-"*120
         ###############################################################################################
 
-        cmd = r"zcat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % \
+        cmd = r"zcat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g | gzip > %s" % \
               (gen_data,
-               "'",
+               "",
                gen_data_norm)
 
         print cmd
@@ -237,19 +238,20 @@ if __name__ == '__main__':
         save_wavaskey(fn_pt_dev, dict(pt_dev))
 
         # train data
-        cmd = r"cat %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+        cmd = r"cat %s %s %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
               (bootstrap_text,
+               grammar_output if os.path.exists(grammar_output) else "",
                indomain_data_text_trn,
-               "'",
+               "",
                indomain_data_text_trn_norm)
 
         print cmd
         exit_on_system_fail(cmd)
 
         # dev data
-        cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
+        cmd = r"cat %s | iconv -f UTF-8 -t UTF-8//IGNORE | sed 's/\. /\n/g' | sed 's/[[:digit:]]/ /g; s/[^[:alnum:]_\x27]/ /g; s/[ˇ]/ /g; s/ \+/ /g' | sed 's/[[:lower:]]*/\U&/g' | sed s/[\%s→€…│]//g > %s" % \
               (indomain_data_text_dev,
-              "'",
+              "",
               indomain_data_text_dev_norm)
         print cmd
         exit_on_system_fail(cmd)
@@ -343,7 +345,7 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] _]\+CL_'> %s" % \
+        cmd = "cat %s | grep -v 'CL_[[:alnum:]_]\+[[:alnum:] \'_]\+CL_'> %s" % \
               (extended_data_text_trn_norm_cls_pg_arpa,
                extended_data_text_trn_norm_cls_pg_arpa_filtered)
 
@@ -398,24 +400,6 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = "ngram -lm %s -order 4 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_qg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 3 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_tg)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "ngram -lm %s -order 2 -write-lm %s -prune-lowprobs -prune 0.0000001 -renorm" \
-                  % (mixed_lm_pg,
-                     final_lm_bg)
-        print cmd
-        exit_on_system_fail(cmd)
-
         cmd = "cat %s | grep -v '\-pau\-' | grep -v '<s>' | grep -v '</s>' | grep -v '<unk>' | grep -v 'CL_' | grep -v '{' | grep -v '_' > %s" % \
               (mixed_lm_vocab,
                final_lm_vocab)
@@ -433,14 +417,25 @@ if __name__ == '__main__':
         exit_on_system_fail(cmd)
 
         # build final dictionary for words in vocab
+        cmd = "cat %s %s | tr '[:lower:]' '[:upper:]' | sort | uniq > %s" % ('dict_full', 'ptien.ext.dict', 'dict_full_ext')
+        print cmd
+        exit_on_system_fail(cmd)
+
+        # build final dictionary for words in vocab
         cmd = "perl ../../../tools/htk/bin/WordsToDictionary.pl %s %s %s" % \
                 (final_lm_vocab,
-                'dict_full',
+                'dict_full_ext',
                 final_lm_dict)
         print cmd
         exit_on_system_fail(cmd)
 
         # build final dictionary for words in vocab
+        cmd = "cat %s | grep 'UNKNOWN' | awk '{print $1}' > %s " % \
+                (final_lm_dict,
+                 final_lm_dict+'.unk',
+                )
+        print cmd
+        exit_on_system_fail(cmd)
         cmd = "cat %s | grep -v 'UNKNOWN' > %s " % \
                 (final_lm_dict,
                  final_lm_dict+'.tmp',
@@ -455,21 +450,6 @@ if __name__ == '__main__':
         print cmd
         exit_on_system_fail(cmd)
 
-        cmd = """
-        echo "_INHALE_	_inhale_" >> {dict} &&
-        echo "_LAUGH_	_laugh_" >> {dict} &&
-        echo "_EHM_HMM_	_ehm_hmm_" >> {dict} &&
-        echo "_NOISE_	_noise_" >> {dict} &&
-        echo "DONE"
-        """.format(dict=final_lm_dict)
-        print cmd
-        exit_on_system_fail(cmd)
-
-        cmd = "perl ../../../tools/htk/bin/AddSp.pl %s 1 > %s " % \
-              (final_lm_dict,
-              final_lm_dict_sp_sil)
-        print cmd
-        exit_on_system_fail(cmd)
 
     ###############################################################################################
     print
@@ -544,22 +524,3 @@ if __name__ == '__main__':
     print
 
 
-    print "-"*120
-    print "Final 4-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -order 4 -ppl %s" % (final_lm_qg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 3-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_tg, indomain_data_text_dev_norm))
-    print
-
-
-    print "-"*120
-    print "Final 2-gram LM on dev data."
-    print "-"*120
-    exit_on_system_fail("ngram -lm %s -ppl %s" % (final_lm_bg, indomain_data_text_dev_norm))
-    print

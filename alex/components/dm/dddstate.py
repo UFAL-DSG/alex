@@ -270,8 +270,12 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
 
         Nevertheless, remember the turn history.
         """
-
+        # initialize slots
         self.slots = defaultdict(D3DiscreteValue)
+        # initialize other variables
+        if 'variables' in self.ontology:
+            for var_name in self.ontology['variables']:
+                setattr(self, var_name, None)
 
     def update(self, user_da, system_da):
         """Interface for the dialogue act update.
@@ -372,7 +376,7 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
         old_user_da = deepcopy(user_da)
         new_user_da = DialogueActConfusionNetwork()
 
-        colliding_slots = set()
+        colliding_slots = {}
         done_slots = set()
 
         for prob, user_dai in user_da:
@@ -382,7 +386,9 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
             for name, value in lta_tsvs:
                 new_user_dais.append(DialogueActItem("inform", name, value))
                 if name in done_slots:
-                    colliding_slots.add(name)
+                    if not name in colliding_slots:
+                        colliding_slots[name] = set()
+                    colliding_slots[name].add(value)
                 else:
                     done_slots.add(name)
 
@@ -391,12 +397,16 @@ class DeterministicDiscriminativeDialogueState(DialogueState):
                     if not nudai in new_user_da:
                         new_user_da.add(prob, nudai)
 
-        # In case of collisions, prefer the current last talked about values.
+        # In case of collisions, prefer the current last talked about values if it is one of the colliding values.
+        # If there is a collision and the current last talked about value is not among the colliding values, do not
+        # consider the colliding DA's at all.
         invalid_das = set()
         for prob, da in set(new_user_da):
-            if da.name in colliding_slots:
+            if da.name in colliding_slots and self[da.name].mpv() in colliding_slots[da.name]:
                 if not da.value == self[da.name].mpv():
                     invalid_das.add(da)
+            elif da.name in colliding_slots:
+                invalid_das.add(da)
 
         for invalid_da in invalid_das:
             new_user_da.remove(invalid_da)

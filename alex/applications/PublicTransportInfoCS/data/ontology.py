@@ -80,9 +80,6 @@ ontology = {
         'stop': [
             'user_informs',
         ],
-        'city': [
-            'user_informs',
-        ],
         'from_stop': [
             'user_informs', 'user_requests', 'user_confirms',
             'system_informs', 'system_requests', 'system_confirms',
@@ -219,10 +216,6 @@ ontology = {
             'system_informs',
             'absolute_time',
         ],
-        'route_alternative': [
-            # this is necessary to be defined as it is a state variable used by the policy and automatically added to
-            # the dialogue state
-        ],
 
         'lta_task': [],
         'lta_bye': [],
@@ -248,6 +241,9 @@ ontology = {
             'user_informs'
         ]
     },
+
+    # additional variables that relate to the state but are not used as slots (initialized to None)
+    'variables': ['route_alternative', 'conn_info', 'directions'],
 
     'context_resolution': {
         # it is used DM belief tracking context that
@@ -305,20 +301,11 @@ ontology = {
         'lta_task': {
             'weather': [('', '^task$', '^weather$'), ],
             'find_connection': [('', '^task$', '^find_connection$'), ('', '^departure_', ''), ('', '^arrival_', ''),
-                                ('', '^from_stop$', ''), ('', '^to_stop$', ''),
                                 ('', '^duration$', '')],
-            'find_platform': [('', '^task$', '^find_platform$'), ('', '^from_stop$', ''), ('', '^to_stop$', ''),],
+            'find_platform': [('', '^task$', '^find_platform$'),],
         },
     },
 
-    'compatibility': {
-        'stop_city': [
-            'from_stop', 'to_stop', 'via_stop',
-        ],
-        'city_stop': [
-            'from_city', 'to_city', 'via_city', 'in_city',
-        ],
-    },
     'compatible_values': {
         'stop_city': {},
         'city_stop': {},

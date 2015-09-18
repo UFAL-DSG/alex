@@ -11,4 +11,7 @@ uniq.trn.tmp*
 *.model.all
 *.sem.out
 *.sem.out.score
-
+old_experiments
+dawn*
+dainn*
+dailogreg*

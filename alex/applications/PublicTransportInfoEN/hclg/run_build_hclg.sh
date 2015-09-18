@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #export KALDI_ROOT=/ha/projects/vystadial/lib/kronos/pykaldi
-#export KALDI_ROOT=/a/kronosh/oplatek/kaldi-kronos
-export KALDI_ROOT=/app/pykaldi/kaldi
+export KALDI_ROOT=/a/kronosh/oplatek/kaldi-kronos
+#export KALDI_ROOT=/app/pykaldi/kaldi
 
 source path.sh
 
@@ -11,7 +11,7 @@ localdir=$tmpdir/local # temporary directory
 langdir=$tmpdir/lang  # temporary directory for lexicon related files
 outputdir=models
 oov='_SIL_'  # OOV words will be mapped to $oov 
-am_dir=../../../resources/asr/voip_en/kaldi
+am_dir=$tmpdir/model
 AM=$am_dir/tri2b_bmmi.mdl   # acoustic model
 tree=$am_dir/tri2b_bmmi.tree  # decision phonetic tree
 lm_dir=../lm/
@@ -25,9 +25,19 @@ sil=$am_dir/silence.csl
 
 rm -rf $tmpdir
 
+mkdir -p $am_dir
 pushd $am_dir
-python download_models.py
+MODEL_NAME='en_super_no_dnn-2015-04-16--17-44-34-s4k-g100k'
+echo "Using model:" $MODEL_NAME
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/tri2b_bmmi.mdl
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/tri2b_bmmi.tree
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/tri2b_bmmi.mat
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/mfcc.conf
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/silence.csl
+wget --timestamping  https://vystadial.ms.mff.cuni.cz/download/kams/$MODEL_NAME/phones.txt
+
 popd
+
 pushd $lm_dir
 python download_models.py
 popd

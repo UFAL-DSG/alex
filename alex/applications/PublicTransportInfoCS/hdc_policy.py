@@ -14,7 +14,7 @@ from alex.applications.utils.weather import OpenWeatherMapWeatherFinder
 
 from datetime import timedelta
 from .directions import GoogleDirectionsFinder, Travel, NotSupported
-from .platform_info import  PlatformInfo
+from .platform_info import PlatformInfo
 from datetime import datetime
 from datetime import time as dttime
 from collections import defaultdict
@@ -125,7 +125,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param dialogue_state: the belief state provided by the tracker
         :return: a dialogue act - the system action
         """
-
         ludait_prob, last_user_dai_type = dialogue_state["ludait"].mph()
         if ludait_prob < self.policy_cfg['accept_prob_ludait']:
             last_user_dai_type = 'none'
@@ -317,7 +316,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param slots_being_requested: The slots currently requested by the user
         :rtype: DialogueAct
         """
-
         # output DA
         res_da = None
 
@@ -385,6 +383,13 @@ class PTICSHDCPolicy(DialoguePolicy):
                             res_da.append(DialogueActItem('inform', 'direction',
                                                           platform_info.to_stop))
                         else:
+                            if platform_info.directions:
+                                based_on_directions = 'true'
+                            else:
+                                based_on_directions = 'false'
+
+                            res_da.append(DialogueActItem('inform', 'based_on_directions', based_on_directions))
+
                             if platform_res.platform:
                                 res_da.append(DialogueActItem('inform', 'platform',
                                                           platform_res.platform))
@@ -454,7 +459,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         daily = (time_abs == 'none' and ampm == 'none' and date_rel != 'none' and lta_time != 'time_rel')
         # check if any time is set to distinguish current/prediction
         weather_ts = None
-        if time_abs != 'none' or time_rel != 'none' or ampm != 'none' or date_rel != 'none':
+        if time_abs != 'none' or time_rel not in ['none', 'now'] or ampm != 'none' or date_rel != 'none':
             weather_ts, time_type = self.interpret_time(time_abs, ampm, time_rel, date_rel, lta_time)
         # find the coordinates of the city
         city_addinfo = self.ontology['addinfo']['city'].get(in_city, None)
@@ -514,11 +519,11 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-        if 'route_alternative' not in ds:
+        if ds.route_alternative is None:
             return DialogueAct('request(from_stop)')
         else:
-            ds['route_alternative'] += 1
-            ds['route_alternative'] %= len(ds.directions) if ds.directions is not None else 1
+            ds.route_alternative += 1
+            ds.route_alternative %= len(ds.directions) if ds.directions is not None else 1
             return self.get_directions(ds)
 
     def get_requested_alternative(self, ds):
@@ -529,31 +534,31 @@ class PTICSHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        if 'route_alternative' in ds:
+        if ds.route_alternative is not None:
             ds_alternative = ds["alternative"].mpv()
 
             if ds_alternative == "last":
                 res_da.extend(self.get_directions(ds, "last"))
             elif ds_alternative == "next":
-                ds["route_alternative"] += 1
+                ds.route_alternative += 1
                 try:
-                    ds.directions[ds['route_alternative']]
+                    ds.directions[ds.route_alternative]
                     res_da.extend(self.get_directions(ds, "next"))
                 except:
-                    ds["route_alternative"] -= 1
+                    ds.route_alternative -= 1
                     res_da.append(DialogueActItem("inform", "found_directions", "no_next"))
 
             elif ds_alternative == "prev":
-                ds["route_alternative"] -= 1
+                ds.route_alternative -= 1
 
-                if ds["route_alternative"] == -1:
-                    ds["route_alternative"] += 1
+                if ds.route_alternative == -1:
+                    ds.route_alternative += 1
                     res_da.append(DialogueActItem("inform", "found_directions", "no_prev"))
                 else:
                     res_da.extend(self.get_directions(ds, "prev"))
 
             else:
-                ds["route_alternative"] = int(ds_alternative) - 1
+                ds.route_alternative = int(ds_alternative) - 1
                 res_da.extend(self.get_directions(ds))
 
         else:
@@ -584,25 +589,25 @@ class PTICSHDCPolicy(DialoguePolicy):
                 continue
 
             # try to find a route if we don't know it yet
-            if not isinstance(ds['route_alternative'], int):
+            if ds.route_alternative is None:
                 req_da, iconfirm_da, conn_info = self.gather_connection_info(ds, accepted_slots)
                 # we have all information we need, start searching
                 if len(req_da) == 0:
                     ds.conn_info = conn_info
                     res_da = iconfirm_da
-                    # the search will change ds['route_alternative'] if a route is found
+                    # the search will change ds.route_alternative if a route is found
                     dir_da = self.get_directions(ds, check_conflict=True)
                     # only return the output DAs if no route is found (i.e., the error message),
                     # otherwise we go on to return the specific information requested
-                    if not isinstance(ds['route_alternative'], int):
+                    if ds.route_alternative is None:
                         res_da.extend(dir_da)
                 # we don't know enough, ask about the rest
                 else:
                     res_da = req_da
 
             # we have a route, so return information about it
-            # NB: ds['route_alternative'] might have changed in the meantime if a route has been found
-            if isinstance(ds['route_alternative'], int):
+            # NB: ds.route_alternative might have changed in the meantime if a route has been found
+            if ds.route_alternative is not None:
                 if slot == 'from_stop':
                     res_da.extend(self.req_from_stop(ds))
                 elif slot == 'to_stop':
@@ -827,8 +832,8 @@ class PTICSHDCPolicy(DialoguePolicy):
                                                                   'time' not in accepted_slots) and randbool(10):
             req_da.extend(DialogueAct('request(departure_time)'))
 
-        # we know the cities, but it's not an intercity connection -- request stops if required
-        elif stop_city_inferred or (from_city_val == to_city_val and from_city_val != 'none'):
+        # we do not know the stops (and they weren't inferred based on cities)
+        elif from_stop_val == 'none' or to_stop_val == 'none':
             if from_stop_val == 'none' and to_stop_val == 'none' and randbool(3):
                 req_da.extend(DialogueAct("request(from_stop)&request(to_stop)"))
             elif from_stop_val == 'none':
@@ -836,7 +841,7 @@ class PTICSHDCPolicy(DialoguePolicy):
             elif to_stop_val == 'none':
                 req_da.extend(DialogueAct('request(to_stop)'))
 
-        # we need to know the cities -- ask about them
+        # we know the stops, but we need to know the cities -- ask about them
         elif from_city_val == 'none':
             req_da.extend(DialogueAct('request(from_city)'))
         elif to_city_val == 'none':
@@ -851,7 +856,6 @@ class PTICSHDCPolicy(DialoguePolicy):
         return req_da, iconfirm_da, Travel(from_city=from_city_val, from_stop=from_stop_val,
                                            to_city=to_city_val, to_stop=to_stop_val,
                                            vehicle=vehicle_val, max_transfers=max_transfers_val)
-
 
     def gather_platform_info(self, ds, accepted_slots):
         """Return a DA requesting further information for the platform search.
@@ -882,13 +886,17 @@ class PTICSHDCPolicy(DialoguePolicy):
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
 
-        pi  = PlatformInfo(from_stop=from_stop_val,
-                                                 to_stop=to_stop_val,
-                                                 from_city=from_city_val,
-                                                 to_city=to_city_val,
-                                                 train_name=train_name_val)
-        return req_da, iconfirm_da, pi
+        directions = None
+        if ds.directions:
+            directions = ds.directions[ds.route_alternative]
 
+        pi  = PlatformInfo(from_stop=from_stop_val,
+                           to_stop=to_stop_val,
+                           from_city=from_city_val,
+                           to_city=to_city_val,
+                           train_name=train_name_val,
+                           directions=directions)
+        return req_da, iconfirm_da, pi
 
     def req_current_time(self):
         """Generates a dialogue act informing about the current time.
@@ -907,7 +915,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         :rtype : DialogueAct
         """
-        route = ds.directions[ds['route_alternative']]
+        route = ds.directions[ds.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -916,19 +924,21 @@ class PTICSHDCPolicy(DialoguePolicy):
                 da.append(DialogueActItem('inform', 'vehicle', step.vehicle))
                 da.append(DialogueActItem('inform', 'line', step.line_name))
                 da.append(DialogueActItem('inform', 'headsign', step.headsign))
-                return da
+                break
+        return da
 
     def req_to_stop(self, ds):
         """Return a DA informing about the destination stop of the last
         recommended connection.
         """
-        route = ds.directions[ds['route_alternative']]
+        route = ds.directions[ds.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
-                return da
+                break
+        return da
 
     def req_departure_time(self, dialogue_state):
         """Generates a dialogue act informing about the departure time from the origin stop of the last
@@ -936,20 +946,21 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         :rtype : DialogueAct
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'from_stop', step.departure_stop))
                 da.append(DialogueActItem('inform', 'departure_time', step.departure_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_departure_time_rel(self, dialogue_state):
         """Return a DA informing the user about the relative time until the
         last recommended connection departs.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -974,26 +985,28 @@ class PTICSHDCPolicy(DialoguePolicy):
                         departure_time_rel_hrs += 24 * departure_time_rel.days
                     da.append(DialogueActItem('inform', 'departure_time_rel',
                                               '%d:%02d' % (departure_time_rel_hrs, departure_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_arrival_time(self, dialogue_state):
         """Return a DA informing about the arrival time the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 da.append(DialogueActItem('inform', 'to_stop', step.arrival_stop))
                 da.append(DialogueActItem('inform', 'arrival_time', step.arrival_time.strftime("%H:%M")))
-                return da
+                break
+        return da
 
     def req_arrival_time_rel(self, dialogue_state):
         """Return a DA informing about the relative arrival time the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in reversed(leg.steps):
@@ -1004,13 +1017,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 arrival_time_rel_hrs, arrival_time_rel_mins = divmod(arrival_time_rel, 60)
                 da.append(DialogueActItem('inform', 'arrival_time_rel',
                                           '%d:%02d' % (arrival_time_rel_hrs, arrival_time_rel_mins)))
-                return da
+                break
+        return da
 
     def req_duration(self, dialogue_state):
         """Return a DA informing about journey time to the destination stop of the last
         recommended connection.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         da = DialogueAct()
         for step in leg.steps:
@@ -1018,14 +1032,14 @@ class PTICSHDCPolicy(DialoguePolicy):
                 departure_time = step.departure_time
                 break
         else:
-            return None
+            departure_time = datetime.fromtimestamp(0)
 
         for step in reversed(leg.steps):
             if step.travel_mode == step.MODE_TRANSIT:
                 arrival_time = step.arrival_time
                 break
         else:
-            return None
+            arrival_time = datetime.fromtimestamp(leg.steps[0].duration)
 
         duration = (arrival_time - departure_time).seconds / 60
         duration_hrs, duration_mins = divmod(duration, 60)
@@ -1036,7 +1050,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing the user about the number of transfers in the
         last recommended connection.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         n = sum([1 for step in leg.steps if step.travel_mode == step.MODE_TRANSIT]) - 1
         da = DialogueAct('inform(num_transfers="%d")' % n)
@@ -1046,7 +1060,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         """Return a DA informing the user about transfer places and time needed for the trasfer in the
         last recommended connection.
         """
-        route = dialogue_state.directions[dialogue_state['route_alternative']]
+        route = dialogue_state.directions[dialogue_state.route_alternative]
         leg = route.legs[0]
         # get only transit with some means of transport
         transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT ]
@@ -1107,9 +1121,9 @@ class PTICSHDCPolicy(DialoguePolicy):
         if check_conflict:
             apology_da = self.check_directions_conflict(conn_info)
             if apology_da is not None:
-                if 'route_alternative' in ds:
+                if ds.route_alternative is not None:
                     ds.directions = None
-                    del ds['route_alternative']
+                    ds.route_alternative = None
                 return apology_da
 
         # get dialogue state values
@@ -1153,19 +1167,19 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param route_type: the route type requested by the user ("last", "next" etc.)
         :rtype: DialogueAct
         """
-        if not isinstance(dialogue_state['route_alternative'], int):
-            dialogue_state['route_alternative'] = 0
+        if dialogue_state.route_alternative is None:
+            dialogue_state.route_alternative = 0
 
         try:
             # get the alternative we want to say now
-            route = dialogue_state.directions[dialogue_state['route_alternative']]
+            route = dialogue_state.directions[dialogue_state.route_alternative]
             # only 1 leg should be present in case we have no waypoints
             steps = route.legs[0].steps
         except IndexError:
             # this will lead to apology that no route has been found
             steps = []
             #dialogue_state.directions = None
-            del dialogue_state['route_alternative']
+            dialogue_state.route_alternative = None
 
         res = []
 
@@ -1173,7 +1187,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         if len(dialogue_state.directions) > 1:
             res.append('inform(found_directions="%s")' % route_type)
             if route_type != "last":
-                res.append("inform(alternative=%d)" % (dialogue_state['route_alternative'] + 1))
+                res.append("inform(alternative=%d)" % (dialogue_state.route_alternative + 1))
 
         # route description
         prev_arrive_stop = self.ORIGIN  # remember previous arrival stop
@@ -1306,7 +1320,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         # if we do not understand the input then provide the context sensitive help
-        if not 'route_alternative' in dialogue_state:
+        if dialogue_state.route_alternative is None:
             # before something is offered
             if randbool(10):
                 res_da.append(DialogueActItem("help", "task", "weather"))

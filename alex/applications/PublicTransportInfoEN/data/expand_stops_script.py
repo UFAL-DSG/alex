@@ -7,6 +7,7 @@ A script that creates an expansion from a list of stops
 For usage write expand_stops_script.py -h
 """
 from __future__ import unicode_literals
+import re
 import autopath
 import codecs
 from copy import copy
@@ -17,12 +18,14 @@ import sys
 from alex.applications.PublicTransportInfoEN.site_preprocessing import expand
 from os.path import isfile
 
+
+
 def file_check(filename, message="reading file"):
     if not filename:
         print "WARNING: " + message + " - No file specified!"
         return False
     if not isfile(filename):
-        print "WARNING: " + filename + " is not a valid path!"
+        print "WARNING: " + filename + " is not a valid path! " + message
         return False
     return True
 
@@ -57,24 +60,30 @@ def expand_place(stop_list):
 
     for stop in stop_list:
         reverse = True
-        conjunctions = [' and ', ' on ', ' at ', ]
+        conjunctions = [' and ', ' on ', ' at ', ' ']
 
-        if '-' in stop:
-            elements = stop.split('-')
-        elif '(' in stop:
-            elements = stop.replace(')', '').split('(')
-            reverse = False
-            # lexington av/63 street
-        elif '/' in stop:
-            elements = stop.split('/')
-            # cathedral pkwy (110 st)
-        elif '&' in stop:
-            elements = stop.split('&')
-            # BARUCH INFORMATION & TECH BLDG
-        else:
-            elements = [stop, ]
+        elements = re.split(r'[\\\-/\(&]', stop.lower().replace('[rr]', '').replace(')', '').replace(';', '').replace('# ', ' ').replace("'", '').strip().rstrip('#'))
+        if not isinstance(elements, list):
+            elements = [elements, ]
+        # if '-' in stop:
+        #     elements = stop.split('-')
+        # elif '/' in stop:
+        #     elements = stop.split('/')
+        #     # cathedral pkwy (110 st)
+        # elif '(' in stop:
+        #     elements = stop.replace(')', '').split('(')
+        #     reverse = False
+        #     # lexington av/63 street
+        # elif '&' in stop:
+        #     elements = stop.split('&')
+        #     # BARUCH INFORMATION & TECH BLDG
+        # else:
+        #     elements = [stop, ]
 
         expansion = [expand(el) for el in elements if len(el) > 0]
+
+        if len([e for e in expansion if re.match(r"[0-9']", e)]):
+            continue
 
         stops[stop] = set([" ".join(expansion), " ".join(expansion[::-1]), ])
         if len(expansion) > 1:
