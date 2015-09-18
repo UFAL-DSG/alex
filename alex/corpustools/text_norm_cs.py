@@ -23,6 +23,7 @@ _nonspeech_map = {
         '(QUIET)',
         '(CLEARING)',
         '<SILENCE>',
+        '[SIL]',
     ),
     '_INHALE_': (
         '(INHALE)',
@@ -72,6 +73,11 @@ _nonspeech_map = {
         '(SQUEAK)',
         '(TVNOISE)',
         '<NOISE>',
+        '[NOISE]',
+        '[NOISE-PEAK]',
+        '[NOISE-HIGH]',
+        '[NOISE-LOW]',
+        '//NOISE//',
     ),
     '_EXCLUDE_': (
         '(EXCLUDE)',
@@ -79,6 +85,11 @@ _nonspeech_map = {
         '(VULGARISM)',
         '(UNINTELLIGIBLE)',
         '(UNINT)',
+        '[UNINTELLIGIBLE]',
+        '[BACKGROUND SPEECH]',
+        '[BACKGROUND-SPEECH]',
+        '[BACKGROUND_SPEECH]',
+        '[BACKGROUND=SPEECH]',
     )
 }
 #}}}
@@ -317,6 +328,17 @@ _subst = [
           ('MALOSTARNSKÉHO', 'MALOSTRANSKÉHO'),
           ('POLIKLLINIKY', 'POLIKLINIKY'),
           ('JSEMSE', 'JSEM SE'),
+          ('%', 'PROCENT'),
+          ('JEDNA /', 'JEDNA LOMENO'),
+          ('DVA /', 'DVA LOMENO'),
+          ('TŘI /', 'TŘI LOMENO'),
+          ('ČTYŘI /', 'ČTYŘI LOMENO'),
+          ('PĚT /', 'PĚT LOMENO'),
+          ('ŠEST /', 'ŠEST LOMENO'),
+          ('SEDM /', 'SEDM LOMENO'),
+          ('OSM /', 'OSM LOMENO'),
+          ('DĚVET /', 'DEVĚT LOMENO'),
+          ('DESET /', 'DESET LOMENO'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
@@ -365,7 +387,7 @@ def normalise_text(text):
     # non-speech events with the forms with underscores).
     #
     # This step can incur superfluous whitespace.
-    if '(' in text or '<' in text:
+    if '(' in text or '<' in text or '[' in text:
         text = _parenthesized_rx.sub(r' (\1) ', text)
         for parenized, uscored in _nonspeech_trl.iteritems():
             text = text.replace(parenized, uscored)
@@ -381,7 +403,7 @@ def normalise_text(text):
 
     return text
 
-_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>',
+_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', ':', '&', "''",
                         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Ŕ'])
 
 def exclude_asr(text):

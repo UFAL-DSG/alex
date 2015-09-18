@@ -116,17 +116,37 @@ def extract_wavs_trns(_file, outdir, trs_only=False, lang='cs', verbose=False):
 
         # Retrieve the user turn's data.
         starttime = float(uturn.getAttribute('time').strip())
-        if uturn.nextSibling.nodeType == uturn.TEXT_NODE:
-            transcription = uturn.nextSibling.data.strip()
-        else:
-            transcription = ''
-            n_missing_trs += 1
-        try:
-            endtime = float(
-                uturn.nextSibling.nextSibling.getAttribute('time').strip())
-        except:
-            endtime = 9999.000
+        # default 0 segment
+        endtime = starttime
+        
+        sibling = uturn.nextSibling
+        transcription = ''
+        while True:
+            #print 'loop'
+            if sibling.nodeType == sibling.TEXT_NODE:
+                transcription += ' ' + sibling.data.strip()
 
+            if sibling.nodeType == sibling.ELEMENT_NODE and sibling.hasAttribute('time'):
+                endtime = float(sibling.getAttribute('time').strip())
+                #print 'break found'
+                break
+                
+            sibling = sibling.nextSibling
+            #print transcription
+
+            if sibling is None:
+                endtime = float(uturn.parentNode.getAttribute('endTime').strip())
+                #print 'break NOT found'
+                break
+                
+        if starttime == endtime:
+            continue
+
+        transcription = transcription.strip()
+        
+        #print starttime, endtime, transcription
+        #print "="*80
+        
         # Construct various involved file names.
         src_wav_fname = _file.replace('.trs', '.wav')
         tgt_ext = u'-{start:07.2f}-{end:07.2f}.wav'.format(start=starttime, end=endtime)
