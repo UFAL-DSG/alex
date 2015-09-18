@@ -90,6 +90,20 @@ _nonspeech_map = {
         '[BACKGROUND-SPEECH]',
         '[BACKGROUND_SPEECH]',
         '[BACKGROUND=SPEECH]',
+        'ČL.',
+        'EL.',
+        'PÍSM.',
+        'ATD.',
+        'ING.',
+        'TZV.',
+        'ODST.',
+        'APOD.',
+        'DR.',
+        'O.S.Ř.',
+        'S.R.O.',
+        'S. R. O.',
+        'PROF.',
+        'DOC.',
     )
 }
 #}}}
@@ -339,6 +353,7 @@ _subst = [
           ('OSM /', 'OSM LOMENO'),
           ('DĚVET /', 'DEVĚT LOMENO'),
           ('DESET /', 'DESET LOMENO'),
+          ('SB.', 'SBÍRKY'),
           ]
 #}}}
 for idx, tup in enumerate(_subst):
@@ -403,7 +418,7 @@ def normalise_text(text):
 
     return text
 
-_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', ':', '&', "''",
+_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', ':', '&', '/', "''",
                         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Ŕ'])
 
 def exclude_asr(text):
