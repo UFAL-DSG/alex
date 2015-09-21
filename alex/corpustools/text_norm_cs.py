@@ -90,20 +90,6 @@ _nonspeech_map = {
         '[BACKGROUND-SPEECH]',
         '[BACKGROUND_SPEECH]',
         '[BACKGROUND=SPEECH]',
-        'ČL.',
-        'EL.',
-        'PÍSM.',
-        'ATD.',
-        'ING.',
-        'TZV.',
-        'ODST.',
-        'APOD.',
-        'DR.',
-        'O.S.Ř.',
-        'S.R.O.',
-        'S. R. O.',
-        'PROF.',
-        'DOC.',
     )
 }
 #}}}
@@ -116,7 +102,25 @@ for uscored, forms in _nonspeech_map.iteritems():
 _subst = [
           ('UNINTELLIGIBLE', '_EXCLUDE_'),
           ('UNINT', '_EXCLUDE_'),
-          ('6E', ' '),
+          ('NOISE', '_EXCLUDE_'),
+          ('BACKGROUND', '_EXCLUDE_'),
+          ('SPEECH', '_EXCLUDE_'),
+          ('ČL.', '_EXCLUDE_'),
+          ('EL.', '_EXCLUDE_'),
+          ('PÍSM.', '_EXCLUDE_'),
+          ('ATD.', '_EXCLUDE_'),
+          ('ING.', '_EXCLUDE_'),
+          ('TZV.', '_EXCLUDE_'),
+          ('ODST.', '_EXCLUDE_'),
+          ('APOD.', '_EXCLUDE_'),
+          ('DR.', '_EXCLUDE_'),
+          ('O.S.Ř.', '_EXCLUDE_'),
+          ('S.R.O.', '_EXCLUDE_'),
+          ('S. R. O.', '_EXCLUDE_'),
+          ('PROF.', '_EXCLUDE_'),
+          ('DOC.', '_EXCLUDE_'),
+          ('PS', '_EXCLUDE_'),
+          ('6E', ' '), 
           ('AČAKOLIV', 'AČKOLIV'),
           ('ADRESTÁ', 'ADRESÁT'),
           ('ÁHOJ', 'AHOJ'),
@@ -380,19 +384,27 @@ for idx, word in enumerate(_hesitation):
     _hesitation[idx] = re.compile(r'(^|\s){word}($|\s)'.format(word=word))
 
 _more_spaces = re.compile(r'\s{2,}')
-_sure_punct_rx = re.compile(r'[.?!",_\t]')
+_sure_punct_rx = re.compile(r'[.?!",\t]')
 _parenthesized_rx = re.compile(r'\(+([^)]*)\)+')
+_bracketized_rx = re.compile(r'\[+([^\[]*)\]+')
 
 
 def normalise_text(text):
     """
     Normalises the transcription.  This is the main function of this module.
     """
-    text = _sure_punct_rx.sub(' ', text)
     text = text.strip().upper()
-    # Do dictionary substitutions.
+
+    # Do dictionary substitutions
     for pat, sub in _subst:
         text = pat.sub(sub, text)
+
+    text = _sure_punct_rx.sub(' ', text)
+
+    # Do dictionary substitutions after removing puctuation again.
+    for pat, sub in _subst:
+        text = pat.sub(sub, text)
+        
     for word in _hesitation:
         text = word.sub(' (HESITATION) ', text)
     text = _more_spaces.sub(' ', text).strip()
@@ -402,10 +414,13 @@ def normalise_text(text):
     # non-speech events with the forms with underscores).
     #
     # This step can incur superfluous whitespace.
-    if '(' in text or '<' in text or '[' in text:
+    if '(' in text or '<' in text or '[' in text or '/' in text:
         text = _parenthesized_rx.sub(r' (\1) ', text)
+        text = _bracketized_rx.sub(r' (\1) ', text)
+        
         for parenized, uscored in _nonspeech_trl.iteritems():
             text = text.replace(parenized, uscored)
+        
         text = _more_spaces.sub(' ', text.strip())
 
     # remove duplicate non-speech events
@@ -418,8 +433,9 @@ def normalise_text(text):
 
     return text
 
-_excluded_characters = set(['\n', '=', '-', '*', '+', '~', '(', ')', '[', ']', '{', '}', '<', '>', ':', '&', '/', "''",
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Ŕ'])
+_excluded_characters = set(['\n', '=', '-', '*', '+', '~', ':', '&', '/', '§', "''", '|', '_',
+                           '(', ')', '[', ']', '{', '}', '<', '>', 
+                           '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Ŕ'])
 
 def exclude_asr(text):
     """
