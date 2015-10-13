@@ -15,10 +15,12 @@ from alex.utils.cache import lru_cache
 class Weather(object):
     pass
 
+
 class WeatherPoint(object):
     def __init__(self, in_city=None, in_state=None):
-        self.in_city = in_city if not in_city is 'none' else None
-        self.in_state = in_state if not in_state is 'none' else None
+        self.in_city = in_city if in_city is not 'none' else None
+        self.in_state = in_state if in_state is not 'none' else None
+
 
 class OpenWeatherMapWeather(Weather):
 
@@ -95,6 +97,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
 
         self.celsius = True if cfg['weather']['units'] == 'celsius' else False
         self.suffix = cfg['weather']['suffix']
+        self.api_key = cfg['weather']['api_key']
         self.load(cfg['weather']['dictionary'])
 
     def load(self, file_name):
@@ -110,7 +113,7 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
 
         The time/date should be given as a datetime.datetime object.
         """
-        data = {}
+        data = {'APPID': self.api_key}
         # prefer using longitude and latitude, if they are set
         if lat is not None and lon is not None:
             data['lat'] = lat
@@ -128,7 +131,9 @@ class OpenWeatherMapWeatherFinder(WeatherFinder, APIRequest):
         elif time is not None:
             method = 'forecast'
 
-        self.system_logger.info("OpenWeatherMap request:\n" + method + ' + ' + str(data))
+        # log the request (without the API key)
+        self.system_logger.info("OpenWeatherMap request:\n" + method + ' + ' +
+                                str({k: v for k, v in data.iteritems() if k != 'APPID'}))
 
         page = urllib.urlopen(self.weather_url + method + '?' + urllib.urlencode(data))
         if page.getcode() != 200:
