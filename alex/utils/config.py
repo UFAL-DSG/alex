@@ -314,6 +314,8 @@ class Config(object):
 
         It removes all lines which include word:
             - password
+            - api_key
+            - user_id
 
         to prevent password logging.
         """
