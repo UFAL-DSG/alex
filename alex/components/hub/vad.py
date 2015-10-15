@@ -167,8 +167,6 @@ class VAD(multiprocessing.Process):
                 decision = self.vad.decide(data_rec.payload)
                 vad, change = self.smoothe_decison(decision)
 
-                if change:
-                    print change
                 #d = (time.time() - s[0], time.clock() - s[1])
                 #if d[0] > 0.001:
                 #    print "VAD t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
@@ -205,7 +203,7 @@ class VAD(multiprocessing.Process):
                         # Send or save all potentially queued data.
                         #   - When there is change to speech, there will be
                         #     several frames of audio;
-                        #   - If there is no change, then thtere will be only
+                        #   - If there is no change, then there will be only
                         #     one queued frame.
 
                         data_rec = self.deque_audio_in.popleft()

@@ -24,5 +24,3 @@ make
 make install
 cd /app/pjsip/pjsip-apps/src/python/
 python setup-pjsuaxt.py install
-
-apt-get install libspeex-dev libspeexdsp-dev
