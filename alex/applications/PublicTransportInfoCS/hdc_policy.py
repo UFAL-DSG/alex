@@ -383,6 +383,13 @@ class PTICSHDCPolicy(DialoguePolicy):
                             res_da.append(DialogueActItem('inform', 'direction',
                                                           platform_info.to_stop))
                         else:
+                            if platform_info.directions:
+                                based_on_directions = 'true'
+                            else:
+                                based_on_directions = 'false'
+
+                            res_da.append(DialogueActItem('inform', 'based_on_directions', based_on_directions))
+
                             if platform_res.platform:
                                 res_da.append(DialogueActItem('inform', 'platform',
                                                           platform_res.platform))
@@ -512,7 +519,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         :param ds: The current dialogue state
         :rtype: DialogueAct
         """
-        if ds.route_alternative is not None:
+        if ds.route_alternative is None:
             return DialogueAct('request(from_stop)')
         else:
             ds.route_alternative += 1
@@ -879,11 +886,16 @@ class PTICSHDCPolicy(DialoguePolicy):
         # generate implicit confirms if we inferred cities and they are not the same for both stops
         iconfirm_da = DialogueAct()
 
+        directions = None
+        if ds.directions:
+            directions = ds.directions[ds.route_alternative]
+
         pi  = PlatformInfo(from_stop=from_stop_val,
-                                                 to_stop=to_stop_val,
-                                                 from_city=from_city_val,
-                                                 to_city=to_city_val,
-                                                 train_name=train_name_val)
+                           to_stop=to_stop_val,
+                           from_city=from_city_val,
+                           to_city=to_city_val,
+                           train_name=train_name_val,
+                           directions=directions)
         return req_da, iconfirm_da, pi
 
     def req_current_time(self):

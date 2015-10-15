@@ -41,14 +41,21 @@ class GoogleTTS(TTSInterface):
         """
 
         baseurl = "http://translate.google.com/translate_tts"
-        values = {'q': text.encode('utf8'), 'tl': language, 'rate': rate}
+        values = {'q': text.encode('utf8'),
+                  'tl': language,
+                  'rate': rate,
+                  'ie': 'UTF-8',
+                  'total': 1,
+                  'idx': 0,
+                  'client': 't'}
         if self.cfg['TTS']['Google']['debug']:
             print values
 
         data = urllib.urlencode(values)
-        request = urllib2.Request(baseurl, data)
-        request.add_header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.163 Safari/535.19")
-        request.add_header('Referer', 'http://www.gstatic.com/translate/sound_player2.swf')
+        # not using the "data" parameter of urllib2.Request => GET method will be used
+        request = urllib2.Request(baseurl + '?' + str(data))
+        request.add_header("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:41.0) Gecko/20100101 Firefox/41.0")
+        request.add_header("Accept", "*/*")
 
         mp3response = urllib2.urlopen(request)
 

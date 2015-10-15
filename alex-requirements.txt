@@ -27,3 +27,5 @@ theano
 twisted
 autobahn
 protobuf
+
+ufal.morphodita

@@ -155,6 +155,9 @@ def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_word
         else:
             missing_wav = True
 
+        # ignore the previous check, we have collisions in the data
+        missing_wav = False
+
         if not missing_wav:
             if verbose:
                 term_width = getTerminalSize()[1] or 80
