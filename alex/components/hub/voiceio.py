@@ -2,13 +2,9 @@ from alex.components.hub.messages import Command
 from alex.utils.exceptions import SessionLoggerException
 
 
-class UtterancePlayInfo(object):
-    frame_begin = None
-    frame_end = None
-
-
 
 class VoiceIO(object):
+    """Abstract class that provides high-level functionality for any voice input/output sub-class."""
     def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         super(VoiceIO, self).__init__()
         self.cfg = cfg

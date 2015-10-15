@@ -3,14 +3,12 @@
 
 import multiprocessing
 import time
-import argparse
 import os
 
 if __name__ == '__main__':
-    import autopath
+    pass
 
 from alex.components.hub import Hub
-from alex.components.hub.vio import VoipIO
 from alex.components.hub.vad import VAD
 from alex.components.hub.asr import ASR
 from alex.components.hub.slu import SLU
@@ -19,12 +17,14 @@ from alex.components.hub.nlg import NLG
 from alex.components.hub.tts import TTS
 from alex.components.hub.messages import Command, DMDA, ASRHyp, TTSText
 from alex.components.hub.calldb import CallDB
-from alex.utils.config import Config
 
 
 class VoiceHub(Hub):
     """
-    VoiceHub is an abstract hub for any voice input.
+    VoiceHub is an abstract class that represents a hub for any voice input.
+
+    It expects that voice_io_cls member will be specified in the derived classes. This member is a class that implements
+    the input/output protocol of interest.
     """
     voice_io_cls = None
 

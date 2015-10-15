@@ -248,16 +248,15 @@ class WSIO(VoiceIO, multiprocessing.Process):
     def build_ping_message(self):
         msg = WSRouterRequestProto()
         msg.type = WSRouterRequestProto.PING
-        if self.wsio.client_connected:
+        if self.client_connected:
             msg.ping.status = PingProto.BUSY
         else:
             msg.ping.status = PingProto.AVAILABLE
 
-        msg.ping.key = self.wsio.key
-        msg.ping.addr = self.wsio.alex_addr
+        msg.ping.key = self.key
+        msg.ping.addr = self.alex_addr
 
         return msg
-
 
 
 class AlexServerFactory(WebSocketClientFactory):

@@ -5,20 +5,20 @@
 
 import time
 import multiprocessing
-import os.path
 import os
 import threading
 import re
-import pjsuaxt as pj
-
 from datetime import datetime
 from collections import deque, defaultdict
+
+import pjsuaxt as pj
 
 from alex.components.hub.messages import Command, Frame
 from alex.utils.exceptions import SessionLoggerException
 from alex.components.hub.exceptions import VoipIOException
 from alex.utils.exdec import catch_ioerror
 from alex.utils.procname import set_proc_name
+
 
 # Logging callback
 logger = None
