@@ -174,7 +174,10 @@ class WSIO(VoiceIO, multiprocessing.Process):
             buffer = self.audio_to_send[:640]
             self.audio_to_send = self.audio_to_send[640:]
 
-            encoded, self.speex_state = audiospeex.lin2speex(buffer, sample_rate=16000, state=self.speex_state)
+            #(encoded, self.speex_state) = audioop.lin2adpcm(buffer, 2, self.speex_state)
+            encoded = buffer
+            #encoded, self.speex_state = audiospeex.lin2speex(buffer, sample_rate=16000, state=self.speex_state)
+
             msg = AlexToClient()
             msg.type = AlexToClient.SPEECH
             msg.speech = encoded
@@ -266,7 +269,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
 
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol, WebSocketServerFactory, WebSocketClientFactory, WebSocketClientProtocol
-import audiospeex
+import audioop
 
 #from wshub_messages_pb2
 from wsio_messages_pb2 import ClientToAlex, AlexToClient, WSRouterRequestProto, PingProto
@@ -296,7 +299,9 @@ def create_ws_protocol(wsio_):
                 msg = ClientToAlex()
                 msg.ParseFromString(payload)
                 if msg.key == self.wsio.key:
-                    decoded, self.speex_state = audiospeex.speex2lin(msg.speech, 16000, self.speex_state)
+                    #(decoded, self.speex_state) = audioop.adpcm2lin(msg.speech, 2, self.speex_state)
+                    decoded = msg.speech
+                    #decoded, self.speex_state = audiospeex.speex2lin(msg.speech, 16000, self.speex_state)
                     #decoded = self.speex.decode(msg.speech.body)
                     #with open('x.speex', 'w') as f_out:
                     #    f_out.write(msg.speech.body)
