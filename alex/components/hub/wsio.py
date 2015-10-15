@@ -231,7 +231,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
     def on_client_message_received(self, payload):
         msg = ClientToAlex()
         msg.ParseFromString(payload)
-        if msg.key == self.wsio.key:
+        if msg.key == self.key:
             decoded = msg.speech
 
             self.audio_record.send(Frame(decoded))
@@ -259,7 +259,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
         return msg
 
 
-class AlexServerFactory(WebSocketClientFactory):
+class AlexServerFactory(WebSocketServerFactory):
     """Twisted Factory that takes care of instantiating AlexWebsocketProtocols."""
     def __init__(self, addr, port, wsio):
         super(AlexServerFactory, self).__init__("ws://%s:%d" % (addr, port), debug=True)
@@ -278,7 +278,7 @@ class AlexServerProtocol(WebSocketServerProtocol):
             self.factory.wsio.on_client_message_received(payload)
 
     def onClose(self, wasClean, code, reason):
-        self.wsio.on_client_closed()
+        self.factory.wsio.on_client_closed()
 
 
 class AlexPingFactory(WebSocketClientFactory):
