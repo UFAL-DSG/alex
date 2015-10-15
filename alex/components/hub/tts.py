@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 
 import multiprocessing
-from threading import Thread
 import time
 import sys
 import traceback
@@ -92,12 +91,6 @@ class TTS(multiprocessing.Process):
         return struct.pack('h',0)*length
 
     def synthesize(self, user_id, text, log="true"):
-        self._synthesize(user_id, text, log)
-        #t = Thread(target=self._synthesize, args=(user_id, text, log))
-        #t.daemon = False
-        #t.start()
-
-    def _synthesize(self, user_id, text, log="true"):
         if text == "_silence_" or text == "silence()":
             # just let the TTS generate an empty wav
             text == ""

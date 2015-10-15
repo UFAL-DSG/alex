@@ -58,8 +58,6 @@ class FFNNVAD():
         self.audio_recorded_in.extend(data)
 
         while len(self.audio_recorded_in) > self.cfg['VAD']['ffnn']['framesize']:
-            #frame = self.audio_recorded_in[-self.cfg['VAD']['ffnn']['framesize']:]
-            #self.audio_recorded_in = []
             frame = self.audio_recorded_in[:self.cfg['VAD']['ffnn']['framesize']]
             self.audio_recorded_in = self.audio_recorded_in[self.cfg['VAD']['ffnn']['frameshift']:]
 

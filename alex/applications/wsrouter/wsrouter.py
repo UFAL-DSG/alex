@@ -1,58 +1,12 @@
-#import sys
-#import urlparse
-#from BaseHTTPServer import HTTPServer
-#from SimpleHTTPServer import SimpleHTTPRequestHandler
-#
-#
-#class WSRouterHTTPHandler(SimpleHTTPRequestHandler):
-#    def do_GET(self):
-#       parsedParams = urlparse.urlparse(self.path)
-#       queryParsed = urlparse.parse_qs(parsedParams.query)
-#
-#       # request is either for a file to be served up or our test
-#       if parsedParams.path == "/test":
-#          self.processMyRequest(queryParsed)
-#       else:
-#          # Default to serve up a local file
-
-from autobahn.twisted.websocket import WebSocketServerProtocol, \
-    WebSocketServerFactory
-
 import sys
 import time
 
+from autobahn.twisted.websocket import WebSocketServerProtocol, \
+    WebSocketServerFactory
 from twisted.python import log
 from twisted.internet import reactor
 
 from alex.components.hub.wsio_messages_pb2 import WSRouterRequestProto, WSRouterRoutingResponseProto, PingProto
-
-
-class WSRouterServerProtocol(WebSocketServerProtocol):
-
-    def onConnect(self, request):
-        print("Client connecting: {0}".format(request.peer))
-
-    def onOpen(self):
-        print("WebSocket connection open.")
-
-    def onMessage(self, payload, isBinary):
-        if isBinary:
-            msg = WSRouterRequestProto()
-            msg.ParseFromString(payload)
-
-            if msg.type == WSRouterRequestProto.PING:
-                self.factory.ping(msg.ping.addr, msg.ping.key, msg.ping.status)
-            elif msg.type == WSRouterRequestProto.ROUTE_REQUEST:
-                addr, key = self.factory.route_request()
-
-                resp = WSRouterRoutingResponseProto()
-                resp.addr = addr
-                resp.key = key
-
-                self.sendMessage(resp.SerializeToString(), True)
-
-    def onClose(self, wasClean, code, reason):
-        print("WebSocket connection closed: {0}".format(reason))
 
 
 class WSRouterServerFactory(WebSocketServerFactory):
@@ -64,7 +18,7 @@ class WSRouterServerFactory(WebSocketServerFactory):
         self.entry_timeout = entry_timeout
 
     def route_request(self):
-        print self.instances
+        print 'ROUTING', 'current instances:', self.instances
         for addr in self.instances.keys():
             key, status = self.instances[addr]
             entry_is_time_outed = time.time() - self.timestamps[addr] > self.entry_timeout
@@ -76,18 +30,48 @@ class WSRouterServerFactory(WebSocketServerFactory):
                 del self.instances[addr]
                 del self.timestamps[addr]
 
-        return "", ""
+        return "", ""  # In case no Alex is available.
 
     def ping(self, addr, key, status):
         self.instances[addr] = (key, status)
         self.timestamps[addr] = time.time()
 
-        print 'got ping', addr, key, status
+        print '  > Got ping from', addr, key, 'with status', status
 
-#
-#
+
+class WSRouterServerProtocol(WebSocketServerProtocol):
+    """Handles messages sent by Alex instances and the clients."""
+    def onConnect(self, request):
+        print("Client connecting: {0}".format(request.peer))
+
+    def onOpen(self):
+        print("WebSocket connection open.")
+
+    def onMessage(self, payload, isBinary):
+        if isBinary:
+            self._process_message(payload)
+
+    def _process_message(self, payload):
+        msg = WSRouterRequestProto()
+        msg.ParseFromString(payload)
+        if msg.type == WSRouterRequestProto.PING:
+            # Ping was received, update the list of available Alex instances.
+            self.factory.ping(msg.ping.addr, msg.ping.key, msg.ping.status)
+        elif msg.type == WSRouterRequestProto.ROUTE_REQUEST:
+            # The message was a routing request. Find an available Alex and send back its address.
+            addr, key = self.factory.route_request()
+
+            resp = WSRouterRoutingResponseProto()
+            resp.addr = addr
+            resp.key = key
+            self.sendMessage(resp.SerializeToString(), True)
+
+    def onClose(self, wasClean, code, reason):
+        print("WebSocket connection closed: {0}".format(reason))
+
 
 class WSRouter(object):
+    """Takes care of providing clients with the address of an available Alex instance."""
     def __init__(self, addr, port, entry_timeout):
         self.addr = addr
         self.port = port
