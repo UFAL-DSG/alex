@@ -268,7 +268,7 @@ class DM(multiprocessing.Process):
 
                 s = (time.time(), time.clock())
 
-                select.select([self.commands, self.slu_hypotheses_in], [], [], timeout=1)
+                select.select([self.commands, self.slu_hypotheses_in], [], [], 1)
 
                 # process all pending commands
                 if self.process_pending_commands():
