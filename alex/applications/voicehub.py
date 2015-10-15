@@ -270,12 +270,10 @@ class VoiceHub(Hub):
                             dm_commands.send(Command('prepare_new_dialogue()', 'HUB', 'DM'))
 
                         if command.parsed['__name__'] == "play_utterance_start":
-                            print 'play utte rance start '.upper() * 100
                             s_voice_activity = True
                             s_last_voice_activity_time = time.time()
 
                         if command.parsed['__name__'] == "play_utterance_end":
-                            print 'play utterance end '.upper() * 100
                             s_voice_activity = False
                             s_last_voice_activity_time = time.time()
 
