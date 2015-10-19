@@ -266,9 +266,9 @@ class DM(multiprocessing.Process):
                     print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
-                s = (time.time(), time.clock())
-
                 select.select([self.commands, self.slu_hypotheses_in], [], [], 1)
+
+                s = (time.time(), time.clock())
 
                 # process all pending commands
                 if self.process_pending_commands():
@@ -277,6 +277,7 @@ class DM(multiprocessing.Process):
                 # process the incoming SLU hypothesis
                 self.read_slu_hypotheses_write_dialogue_act()
 
+                # Print out the execution time if it took longer than the threshold.
                 d = (time.time() - s[0], time.clock() - s[1])
                 if d[0] > 0.200:
                     print "EXEC Time inner loop: DM t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
