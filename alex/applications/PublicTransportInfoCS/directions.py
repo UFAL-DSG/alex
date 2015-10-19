@@ -810,7 +810,7 @@ class CRWSDirectionsFinder(DirectionsFinder, APIRequest):
         params._iMaxArcLengthTo = 4
         params._iNodeFrom = 1
         params._iNodeTo = 1
-        # TODO number of transfers (_iMaxChange)
+
         if parameters is not None:
             # vehicle type limitations (IDs taken from CRWS)
             if parameters.vehicle == 'train':

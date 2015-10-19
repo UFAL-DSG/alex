@@ -782,7 +782,7 @@ class PTICSHDCPolicy(DialoguePolicy):
         from_city_val = self.get_accepted_mpv(ds, 'from_city', accepted_slots)
         to_city_val = self.get_accepted_mpv(ds, 'to_city', accepted_slots)
         vehicle_val = self.get_accepted_mpv(ds, 'vehicle', accepted_slots)
-        max_transfers_val = self.get_accepted_mpv(ds, 'max_transfers', accepted_slots)
+        num_transfers_val = self.get_accepted_mpv(ds, 'num_transfers', accepted_slots)
 
         # infer cities based on stops
         from_cities, to_cities = None, None
@@ -855,7 +855,7 @@ class PTICSHDCPolicy(DialoguePolicy):
 
         return req_da, iconfirm_da, Travel(from_city=from_city_val, from_stop=from_stop_val,
                                            to_city=to_city_val, to_stop=to_stop_val,
-                                           vehicle=vehicle_val, max_transfers=max_transfers_val)
+                                           vehicle=vehicle_val, max_transfers=num_transfers_val)
 
     def gather_platform_info(self, ds, accepted_slots):
         """Return a DA requesting further information for the platform search.
