@@ -49,7 +49,7 @@ install:
     - (pip install -r alex-requirements.txt 2>&1 > /tmp/pip_log.log & PIP_PID=$! ; while [ "$(ps -p ${PIP_PID} | wc -l)" -eq "2" ]; do sleep 60; echo "pip is still running"; done;)
     - echo "#####################"; echo "vvv PIP LOG vvv"; tail -n 100 /tmp/pip_log.log ; echo "#####################";
     # Install pjsip.
-    - (git clone https://github.com/UFAL-DSG/pjsip.git && pushd pjsip && git checkout travis && ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC && make dep && make && make install && cd pjsip-apps/src/python/ && pip install . && popd && python -c 'import pjsuaxt') &> /dev/null
+    - (git clone https://github.com/UFAL-DSG/pjsip.git && pushd pjsip && git checkout travis && ./configure CXXFLAGS=-fPIC CFLAGS=-fPIC LDFLAGS=-fPIC CPPFLAGS=-fPIC && make dep && make && make install && cd pjsip-apps/src/python/ && pip install . && popd && python -c 'import pjsuaxt')
     # Unpack and install precomplied openfst, pykaldi and pyfst
     - wget https://s3-eu-west-1.amazonaws.com/ufal-dsg/pykaldi/pykaldi-travis_2.7.tar.gz/pykaldi_Ubuntu_12.04_LTS.zip && unzip pykaldi_Ubuntu_12.04_LTS.zip && pushd pykaldi_Ubuntu_12.04_LTS && cp -r openfst/lib/* /usr/local/lib && easy_install pyfst*.egg && easy_install pykaldi*.egg && ldconfig && popd
     - easy_install pysox &> /dev/null
