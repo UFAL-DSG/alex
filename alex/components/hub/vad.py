@@ -153,6 +153,7 @@ class VAD(multiprocessing.Process):
         if self.local_audio_in:
             if len(self.local_audio_in) > 10:
                 print "VAD unprocessed frames:", len(self.local_audio_in)
+                self.local_audio_in = deque(list(self.local_audio_in)[-10:])
 
             # read recorded audio
             data_rec = self.local_audio_in.popleft()
@@ -222,7 +223,8 @@ class VAD(multiprocessing.Process):
                     print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                if not self.local_audio_in:
+                    time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
 
                 s = (time.time(), time.clock())
 

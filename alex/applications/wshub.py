@@ -1,29 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import multiprocessing
-import time
 import argparse
-import os
+
 
 if __name__ == '__main__':
     import autopath
 
 from alex.applications.voicehub import VoiceHub
-from alex.components.hub import Hub
-from alex.components.hub.vio import VoipIO
-from alex.components.hub.vad import VAD
-from alex.components.hub.asr import ASR
-from alex.components.hub.slu import SLU
-from alex.components.hub.dm import DM
-from alex.components.hub.nlg import NLG
-from alex.components.hub.tts import TTS
-from alex.components.hub.messages import Command, DMDA
-from alex.components.hub.calldb import CallDB
+from alex.components.hub.wsio import WSIO
 from alex.utils.config import Config
 
 
-class VoipHub(VoiceHub):
+class WSHub(VoiceHub):
     """
     VoipHub builds a full-featured VOIP telephone system.
     It builds a pipeline of ASR, SLU, DM, NLG, TTS components.
@@ -31,7 +20,7 @@ class VoipHub(VoiceHub):
     output.
     """
 
-    voice_io_cls = VoipIO
+    voice_io_cls = WSIO
 
 
 if __name__ == '__main__':
@@ -61,6 +50,6 @@ if __name__ == '__main__':
 
     cfg['Logging']['system_logger'].info("Voip Hub\n" + "=" * 120)
 
-    vhub = VoipHub(cfg, args.ncalls)
+    vhub = WSHub(cfg, args.ncalls)
 
     vhub.run()

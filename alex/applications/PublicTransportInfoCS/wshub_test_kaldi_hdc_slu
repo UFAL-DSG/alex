@@ -1,0 +1,7 @@
+#!/bin/bash
+
+hub_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+pushd $hub_dir
+
+./wshub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/kaldi.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg
+

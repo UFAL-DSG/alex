@@ -24,4 +24,8 @@ sphinxcontrib-napoleon
 flask
 theano
 
+twisted
+autobahn
+protobuf
+
 ufal.morphodita
