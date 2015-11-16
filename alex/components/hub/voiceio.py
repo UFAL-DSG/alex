@@ -22,19 +22,26 @@ class VoiceIO(object):
         print 'curr utterance id', self.curr_utt, 'new:', utt_id
         if utt_id != self.curr_utt:
             if self.curr_utt != -1:
-                self._send_play_cmd("end", self.curr_utt)
+                if not self._send_play_cmd("end", self.curr_utt):
+                    return
 
             if utt_id != -1:
-                self._send_play_cmd("start", utt_id)
+                if not self._send_play_cmd("start", utt_id):
+                    return
 
         self.curr_utt = utt_id
 
     def _send_play_cmd(self, which, utt_id):
-        data = self.utt_info[utt_id]
-        cmd = Command('play_utterance_{which}(user_id="{uid}",fname="{fname})'
-                             .format(which=which, uid=data['user_id'], fname=data['fname']),
-                             'VoipIO', 'HUB')
-        self.commands.send(cmd)
+        if not utt_id in self.utt_info:
+            return False
+        else:
+            data = self.utt_info[utt_id]
+            cmd = Command('play_utterance_{which}(user_id="{uid}",fname="{fname})'
+                                 .format(which=which, uid=data['user_id'], fname=data['fname']),
+                                 'VoipIO', 'HUB')
+            self.commands.send(cmd)
+
+            return True
 
     def process_command(self, data_play):
         if isinstance(data_play, Command):
