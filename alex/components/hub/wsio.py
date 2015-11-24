@@ -300,6 +300,7 @@ class AlexPingProtocol(WebSocketClientProtocol):
             msg = self.factory.wsio.build_ping_message()
             self.sendMessage(msg.SerializeToString(), True)
             self.factory.reactor.callLater(self.ping_interval, ping)
+            print '.'
 
         ping()
 
