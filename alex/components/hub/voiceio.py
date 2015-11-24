@@ -1,4 +1,4 @@
-from alex.components.hub.messages import Command
+from alex.components.hub.messages import Command, Frame
 from alex.utils.exceptions import SessionLoggerException
 
 
@@ -44,6 +44,10 @@ class VoiceIO(object):
             return True
 
     def process_command(self, data_play):
+        if isinstance(data_play, Frame):
+            if self.curr_utt != -1:
+                self.cfg['Logging']['session_logger'].rec_write(self.utt_info[self.curr_utt]['fname'], data_play.payload)
+
         if isinstance(data_play, Command):
             if data_play.parsed['__name__'] == 'utterance_start':
                 self.utt_info[self.utt_ndx] = data_play.parsed

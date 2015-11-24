@@ -216,6 +216,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
 
     def on_client_connected(self, protocol, request):
         """Run when a new client connect."""
+        self.commands.send(Command('incoming_call(remote_uri="%s")' % "PubAlex", 'WSIO', 'HUB'))
         self.commands.send(Command('call_confirmed(remote_uri="%s")' % "PubAlex", 'WSIO', 'HUB'))
         self.ws_protocol = protocol
         self.client_connected = True
@@ -234,8 +235,8 @@ class WSIO(VoiceIO, multiprocessing.Process):
         if msg.key == self.key:
             decoded = msg.speech
 
-            self.audio_record.send(Frame(decoded))
             self.update_current_utterance_id(msg.currently_playing_utterance)
+            self.audio_record.send(Frame(decoded))
 
     def send_to_client(self, data):
         """Send given data to the client."""
