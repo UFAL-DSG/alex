@@ -102,7 +102,6 @@ class TTS(multiprocessing.Process):
         self.commands.send(Command('tts_start(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_start(user_id="%s",text="%s",fname="%s",log="%s")' %
                             (user_id, text, fname, log), 'TTS', 'AudioOut'))
-        self.cfg['Logging']['session_logger'].rec_start("system", fname)
 
         segments = self.parse_into_segments(text)
 
@@ -118,13 +117,11 @@ class TTS(multiprocessing.Process):
             segment_wav = various.split_to_bins(segment_wav, 2 * self.cfg['Audio']['samples_per_frame'])
 
             for frame in segment_wav:
-                self.cfg['Logging']['session_logger'].rec_write(fname, frame)
                 self.audio_out.send(Frame(frame))
 
         self.commands.send(Command('tts_end(user_id="%s",text="%s",fname="%s")' % (user_id,text,fname), 'TTS', 'HUB'))
         self.audio_out.send(Command('utterance_end(user_id="%s",text="%s",fname="%s",log="%s")' %
                             (user_id, text, fname, log), 'TTS', 'AudioOut'))
-        self.cfg['Logging']['session_logger'].rec_end(fname)
 
     def process_pending_commands(self):
         """Process all pending commands.
