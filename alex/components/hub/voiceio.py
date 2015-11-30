@@ -36,21 +36,12 @@ class VoiceIO(object):
         self.utt_info = {}
 
     def update_current_utterance_id(self, utt_id):
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
-
-
         if self.curr_utt != -1:
             self._log_audio()
 
         if utt_id != self.curr_utt:
+            self.cfg['Logging']['system_logger'].info('Curr utterance id: %d, new: %d' %(self.curr_utt, utt_id))
+
             if self.curr_utt != -1:
                 info = self.utt_info[self.curr_utt]
                 try:
