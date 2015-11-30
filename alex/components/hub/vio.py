@@ -476,7 +476,6 @@ class VoipIO(multiprocessing.Process):
             if self.audio_playing and isinstance(data_play, Frame):
                 if len(data_play) == self.cfg['Audio']['samples_per_frame'] * 2:
                     self.last_frame_id = self.mem_player.put_frame(data_play.payload)
-                    self.cfg['Logging']['session_logger'].rec_write(self.audio_playing, data_play.payload)
 
             elif isinstance(data_play, Command):
                 if data_play.parsed['__name__'] == 'utterance_start':
@@ -486,11 +485,6 @@ class VoipIO(multiprocessing.Process):
                                     .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    try:
-                        if data_play.parsed['log'] == "true":
-                            self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
-                    except SessionLoggerException as e:
-                        self.cfg['Logging']['system_logger'].exception(e)
 
                 if self.audio_playing and data_play.parsed['__name__'] == 'utterance_end':
                     self.audio_playing = None
@@ -499,11 +493,6 @@ class VoipIO(multiprocessing.Process):
                                  .format(uid=data_play.parsed['user_id'], fname=data_play.parsed['fname']),
                                  'VoipIO', 'HUB'),
                          self.last_frame_id))
-                    try:
-                        if data_play.parsed['log'] == "true":
-                            self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
-                    except SessionLoggerException as e:
-                        self.cfg['Logging']['system_logger'].exception(e)
 
         if (self.mem_capture.get_read_available() > self.cfg['Audio']['samples_per_frame'] * 2):
             # Get and send recorded data, it must be read at the other end.
