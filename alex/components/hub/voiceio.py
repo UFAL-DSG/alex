@@ -19,7 +19,6 @@ class VoiceIO(object):
         self.utt_info = {}
 
     def update_current_utterance_id(self, utt_id):
-        print 'curr utterance id', self.curr_utt, 'new:', utt_id
         if utt_id != self.curr_utt:
             if self.curr_utt != -1:
                 if not self._send_play_cmd("end", self.curr_utt):

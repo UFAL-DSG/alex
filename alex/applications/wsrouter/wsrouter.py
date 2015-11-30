@@ -18,13 +18,14 @@ class WSRouterServerFactory(WebSocketServerFactory):
         self.entry_timeout = entry_timeout
 
     def route_request(self):
-        print 'ROUTING', 'current instances:', self.instances
+        print 'ROUTING', 'current instances:', self.instances,
         for addr in self.instances.keys():
             key, status = self.instances[addr]
             entry_is_time_outed = time.time() - self.timestamps[addr] > self.entry_timeout
 
             if status == PingProto.AVAILABLE and not entry_is_time_outed:
                 del self.instances[addr]
+                print 'to:', addr, key
                 return addr, key
             elif entry_is_time_outed:
                 del self.instances[addr]
@@ -36,7 +37,7 @@ class WSRouterServerFactory(WebSocketServerFactory):
         self.instances[addr] = (key, status)
         self.timestamps[addr] = time.time()
 
-        print '  > Got ping from', addr, key, 'with status', status
+        #print '  > Got ping from', addr, key, 'with status', status
 
 
 class WSRouterServerProtocol(WebSocketServerProtocol):
