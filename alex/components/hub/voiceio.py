@@ -44,26 +44,14 @@ class VoiceIO(object):
             return True
 
     def process_command(self, data_play):
-        if isinstance(data_play, Frame):
-            if self.curr_utt != -1:
-                self.cfg['Logging']['session_logger'].rec_write(self.utt_info[self.curr_utt]['fname'], data_play.payload)
-
         if isinstance(data_play, Command):
             if data_play.parsed['__name__'] == 'utterance_start':
                 self.utt_info[self.utt_ndx] = data_play.parsed
                 self.utt_ndx += 1
 
-                try:
-                    if data_play.parsed['log'] == "true":
-                        self.cfg['Logging']['session_logger'].rec_start("system", data_play.parsed['fname'])
-                except SessionLoggerException as e:
-                    self.cfg['Logging']['system_logger'].exception(e)
-
-            if data_play.parsed['__name__'] == 'utterance_end':
-                try:
-                    if data_play.parsed['log'] == "true":
-                        self.cfg['Logging']['session_logger'].rec_end(data_play.parsed['fname'])
-                except SessionLoggerException as e:
-                    self.cfg['Logging']['system_logger'].exception(e)
+            if data_play.parsed['__name__'] == 'reset':
+                self.curr_utt = -1
+                self.utt_ndx = 0
+                self.utt_info = {}
 
 

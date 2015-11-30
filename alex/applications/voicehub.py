@@ -96,6 +96,7 @@ class VoiceHub(Hub):
             nlg.start()
             tts.start()
 
+
             self.write_pid_file([['vio', vio.pid], ['vad', vad.pid], ['asr', asr.pid],
                                  ['slu', slu.pid], ['dm', dm.pid], ['nlg', nlg.pid], ['tts', tts.pid]])
 
@@ -268,6 +269,7 @@ class VoiceHub(Hub):
                             self.cfg['Analytics'].track_event('vhub', 'call_disconnected', command.parsed['remote_uri'])
 
                             dm_commands.send(Command('prepare_new_dialogue()', 'HUB', 'DM'))
+                            vio_commands.send(Command('reset()', 'HUB', 'VIO'))
 
                         if command.parsed['__name__'] == "play_utterance_start":
                             s_voice_activity = True
