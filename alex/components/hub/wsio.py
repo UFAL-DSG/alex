@@ -181,6 +181,9 @@ class WSIO(VoiceIO, multiprocessing.Process):
             while 1:
                 select.select([self.commands, self.audio_play], [], [], 1.0)
 
+                if not self.client_connected:
+                    continue
+
                 if self.close_event.is_set():
                     return
 
@@ -225,7 +228,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
     def on_client_closed(self):
         """Run when the current client disconnects."""
         self.ws_protocol = None
-        self.commands.send(Command('call_disconnected(remote_uri="%s", code="%s")' % ("PubAlex", "---"), 'VoipIO', 'HUB'))
+        self.commands.send(Command('call_disconnected(remote_uri="%s", code="%s")' % ("PubAlex", "---"), 'WSIO', 'HUB'))
         self.client_connected = False
         self.key = self._gen_client_key()
 
@@ -235,7 +238,12 @@ class WSIO(VoiceIO, multiprocessing.Process):
         if msg.key == self.key:
             decoded = msg.speech
 
-            self.update_current_utterance_id(msg.currently_playing_utterance)
+            try:
+                self.update_current_utterance_id(msg.currently_playing_utterance)
+            except Exception, e:
+                self.cfg['Logging']['system_logger'].warning("Exception while setting current utterance ID:")
+                self.cfg['Logging']['system_logger'].exception(e)
+
             self.audio_record.send(Frame(decoded))
 
     def send_to_client(self, data):
