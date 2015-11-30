@@ -369,10 +369,7 @@ class SessionLogger(multiprocessing.Process):
         """Write into open file recording.
         """
         try:
-            if self._rec_started[fname]:
-                self._rec_started[fname].writeframes(bytearray(data_rec))
-            else:
-                print 'Trying to write data to closed recording file: %s' % fname
+            self._rec_started[fname].writeframes(bytearray(data_rec))
         except KeyError:
             raise SessionLoggerException("rec_write: missing rec element %s" % fname)
 

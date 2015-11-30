@@ -96,7 +96,6 @@ class VoiceHub(Hub):
             nlg.start()
             tts.start()
 
-
             self.write_pid_file([['vio', vio.pid], ['vad', vad.pid], ['asr', asr.pid],
                                  ['slu', slu.pid], ['dm', dm.pid], ['nlg', nlg.pid], ['tts', tts.pid]])
 
