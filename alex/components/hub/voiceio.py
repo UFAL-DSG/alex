@@ -65,7 +65,6 @@ class VoiceIO(object):
         self.curr_utt = utt_id
 
     def _log_audio(self):
-        print 'logging', self.curr_utt
         info = self.utt_info[self.curr_utt]
         frames = info.pop_queue()
 
