@@ -114,14 +114,9 @@ class PTIENHDCPolicy(DialoguePolicy):
                 # filter mistakenly added iconfirms that have an unset/meaningless value
                 elif dai.value is None or dai.value in ['none', '*']:
                     continue
-                # filter stop names that are the same as city names
-                elif dai.name.endswith('_stop'):
-                    city_dai = dai.name[:-4] + 'city'
-                    if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
-                        continue
-                # filter state names that are the same as city names
-                elif dai.name.endswith('_state'):
-                    city_dai = dai.name[:-5] + 'city'
+                # filter stop names that are the same as city/state/borough names
+                elif dai.name.endswith('_stop') or dai.name.endswith('_borough') or dai.name.endswith('_state'):
+                    city_dai = dai.name.split('_')[0] + '_city'
                     if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
 
@@ -526,7 +521,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         if not 'route_alternative' in ds:
             if slots_being_requested:  # just waste the requested slots for not to carry them to the next round
                 self.get_requested_info(slots_being_requested, ds, accepted_slots)
-            return DialogueAct('inform(stop_conflict="no_stops")')
+            return DialogueAct('inform(stops_conflict="no_stops")')
         else:
             ds_alternative = ds["alternative"].mpv()
             type = ds_alternative
