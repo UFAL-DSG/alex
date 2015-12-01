@@ -311,15 +311,22 @@ class PTIENHDCSLU(SLUInterface):
         # here we support more than one initial and destination point!
         self.parse_waypoint(abutterance, cn, 'STREET=', 'street', phr_wp_types)
 
+        # get bare street slot and try to infer from/to/via from previous occurrence of street
         dais = [dai_hyp[1] for dai_hyp in cn.items()]
-        for _ in dais:
-            # get first bare street and try to infer direction from previous
-            bare_dais = [i for i, dai in enumerate(dais) if dai.name == 'street']
-            if len(bare_dais) == 0:
-                break
-            index = bare_dais.pop()
-            if index > 0:
-                cn.cn[index][1] = DialogueActItem(dais[index].dat, dais[index-1].name, dais[index].value)
+        last_nonbare_street_idx = -1
+        for index, dai in enumerate(dais):
+            # remember occurrences of street (with direction)
+            if dai.name.endswith('_street'):
+                last_nonbare_street_idx = index
+            # skip if the slot is not bare 'street' or if we do not know any previous direction
+            if dai.name != 'street' or last_nonbare_street_idx == -1:
+                continue
+            # replace the direction with the previous one
+            prob = cn.get_prob(dai)
+            cn.remove(dai)
+            dai.name = dais[last_nonbare_street_idx].name
+            cn.add(prob, dai)
+            last_nonbare_street_idx = index
 
         # here we tag each street with its sequential number
         dais = [dai_hyp[1] for dai_hyp in cn.items()]
@@ -327,7 +334,9 @@ class PTIENHDCSLU(SLUInterface):
             street_indices = [i for i, dai in enumerate(dais) if dai.name == type][1:]
             number = 2
             for i in street_indices:  # all slots are from_street2
-                cn.cn[i][1] = DialogueActItem(dais[i].dat, dais[i].name + str(number), dais[i].value)
+                prob = cn.get_prob(dais[i])
+                cn.remove(dais[i])
+                cn.add(prob, DialogueActItem(dais[i].dat, dais[i].name + str(number), dais[i].value))
 
         fix_second_street('from_street')
         fix_second_street('to_street')

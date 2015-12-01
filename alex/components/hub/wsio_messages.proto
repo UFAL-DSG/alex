@@ -1,0 +1,54 @@
+package cz.cuni.mff.ufal.alex;
+
+message ClientToAlex {
+    optional string key = 1;
+    optional bytes speech = 2;
+    optional string location = 3;
+    optional int32 currently_playing_utterance = 4;
+}
+
+message AlexToClient {
+    enum Type {
+        SPEECH = 0;
+        SPEECH_BEGIN = 1;
+        SPEECH_END = 2;
+        SYSTEM_PROMPT = 3;
+        ASR_RESULT = 4;
+        FLUSH_OUT_AUDIO = 5;
+    }
+
+    optional Type type = 1;
+    optional bytes speech = 2;
+    optional string system_prompt = 3;
+    optional string asr_result = 4;
+    optional int32 priority = 5;
+    optional int32 seq = 6;
+    optional int32 utterance_id = 7;
+}
+
+message PingProto {
+	optional string addr = 1;
+
+	enum StatusType {
+        AVAILABLE = 0;
+        BUSY = 1;
+        SHUTTING_DOWN = 2;
+    }
+
+	optional StatusType status = 2;
+	optional string key = 3;
+}
+
+message WSRouterRequestProto {
+    enum Type {
+        PING = 0;
+        ROUTE_REQUEST = 1;
+    }
+    optional Type type = 1;
+    optional PingProto ping = 2;
+}
+
+message WSRouterRoutingResponseProto {
+    optional string addr = 1;
+    optional string key = 2;
+}

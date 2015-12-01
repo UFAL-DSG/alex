@@ -10,7 +10,6 @@ import os
 import threading
 import re
 import pjsuaxt as pj
-
 from datetime import datetime
 from collections import deque, defaultdict
 

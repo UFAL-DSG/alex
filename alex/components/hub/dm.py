@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import multiprocessing
+import select
 import time
 import random
 import urllib
@@ -59,6 +60,7 @@ class DM(multiprocessing.Process):
 
         while self.commands.poll():
             command = self.commands.recv()
+
             if self.cfg['DM']['debug']:
                 self.cfg['Logging']['system_logger'].debug(command)
 
@@ -77,9 +79,11 @@ class DM(multiprocessing.Process):
                     
                     return False
 
+                if command.parsed['__name__'] == 'prepare_new_dialogue':
+                    self.dm.new_dialogue()
+
                 if command.parsed['__name__'] == 'new_dialogue':
                     self.epilogue_state = None
-                    self.dm.new_dialogue()
 
                     self.cfg['Logging']['session_logger'].turn("system")
                     self.dm.log_state()
@@ -262,7 +266,7 @@ class DM(multiprocessing.Process):
                     print 'Received close event in: %s' % multiprocessing.current_process().name
                     return
 
-                time.sleep(self.cfg['Hub']['main_loop_sleep_time'])
+                select.select([self.commands, self.slu_hypotheses_in], [], [], 1)
 
                 s = (time.time(), time.clock())
 
@@ -273,6 +277,7 @@ class DM(multiprocessing.Process):
                 # process the incoming SLU hypothesis
                 self.read_slu_hypotheses_write_dialogue_act()
 
+                # Print out the execution time if it took longer than the threshold.
                 d = (time.time() - s[0], time.clock() - s[1])
                 if d[0] > 0.200:
                     print "EXEC Time inner loop: DM t = {t:0.4f} c = {c:0.4f}\n".format(t=d[0], c=d[1])
