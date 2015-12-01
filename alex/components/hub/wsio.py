@@ -144,14 +144,13 @@ class WSIO(VoiceIO, multiprocessing.Process):
             if not self.client_connected:
                 return
 
-            if isinstance(audio_play_msg, Frame):
+            if isinstance(audio_play_msg, Frame) and self.open_utterance_id != -1:
                 buffer = audio_play_msg.payload
 
                 self.audio_to_send += buffer
                 self.n_sent_frames += len(buffer) / 2
 
-                if self.open_utterance_id != -1:
-                    self.process_frame(audio_play_msg, self.open_utterance_id)
+                self.process_frame(audio_play_msg, self.open_utterance_id)
 
             elif isinstance(audio_play_msg, Command):
                 if audio_play_msg.parsed['__name__'] == 'utterance_start':
@@ -165,7 +164,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
                     self._send_speech_info(end=False)
                     self.process_utt_start(audio_play_msg, self.open_utterance_id)
 
-                if audio_play_msg.parsed['__name__'] == 'utterance_end':
+                if audio_play_msg.parsed['__name__'] == 'utterance_end' and self.open_utterance_id != -1:
                     self._send_speech_info(end=True)
                     self.process_utt_end(audio_play_msg, self.open_utterance_id)
                     self.open_utterance_id = -1
