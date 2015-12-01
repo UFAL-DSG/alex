@@ -150,7 +150,8 @@ class WSIO(VoiceIO, multiprocessing.Process):
                 self.audio_to_send += buffer
                 self.n_sent_frames += len(buffer) / 2
 
-                self.process_frame(audio_play_msg, self.open_utterance_id)
+                if self.open_utterance_id != -1:
+                    self.process_frame(audio_play_msg, self.open_utterance_id)
 
             elif isinstance(audio_play_msg, Command):
                 if audio_play_msg.parsed['__name__'] == 'utterance_start':
