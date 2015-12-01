@@ -39,8 +39,6 @@ class WSIO(VoiceIO, multiprocessing.Process):
         self.audio_record = audio_record
         self.audio_play = audio_play
         self.close_event = close_event
-        self.audio_to_send = ""
-        self.client_connected = False
 
         self.router_address = self.cfg['WSIO']['router_addr']
         self.router_port = self.cfg['WSIO']['router_port']
@@ -50,10 +48,19 @@ class WSIO(VoiceIO, multiprocessing.Process):
 
         self.alex_addr = self.cfg['WSIO']['alex_addr']
 
+        self.reset()
+
+    def reset(self):
+        super(WSIO, self).reset()
+
+        self.audio_to_send = ""
+        self.client_connected = False
+
         self.audio_playing = None
         self.n_sent_frames = None
         self.curr_seq = 0
-        self.utterance_id = 0
+        self.utterance_id = -1
+        self.open_utterance_id = -1
 
     def process_pending_commands(self):
         """Process all pending commands.
@@ -98,6 +105,9 @@ class WSIO(VoiceIO, multiprocessing.Process):
                     msg.seq = self.curr_seq
                     self.send_to_client(msg.SerializeToString())
 
+                if command.parsed['__name__'] == 'reset':
+                    self.reset()
+
             elif isinstance(command, ASRHyp):
                 hyp = command.hyp
                 asr_hyp = hyp.get_best()
@@ -118,8 +128,6 @@ class WSIO(VoiceIO, multiprocessing.Process):
                 msg.system_prompt = unicode(txt)
                 self.send_to_client(msg.SerializeToString())
 
-            self.process_msg(command)
-
         return False
 
     def read_write_audio(self):
@@ -135,27 +143,29 @@ class WSIO(VoiceIO, multiprocessing.Process):
             audio_play_msg = self.audio_play.recv()
             if isinstance(audio_play_msg, Frame):
                 buffer = audio_play_msg.payload
-                self.audio_to_send += buffer
-                self.n_sent_frames += len(buffer) / 2
+                if buffer:
+                    self.audio_to_send += buffer
+                    self.n_sent_frames += len(buffer) / 2
+
+                    self.process_frame(audio_play_msg, self.open_utterance_id)
 
             elif isinstance(audio_play_msg, Command):
                 if audio_play_msg.parsed['__name__'] == 'utterance_start':
-                    msg = AlexToClient()
-                    msg.seq = self.curr_seq
-                    msg.type = AlexToClient.SPEECH_BEGIN
-                    msg.utterance_id = self.utterance_id
-                    self.send_to_client(msg.SerializeToString())
-
-                if audio_play_msg.parsed['__name__'] == 'utterance_end':
-                    msg = AlexToClient()
-                    msg.seq = self.curr_seq
-                    msg.type = AlexToClient.SPEECH_END
-                    msg.utterance_id = self.utterance_id
-                    self.send_to_client(msg.SerializeToString())
+                    if self.open_utterance_id != -1:
+                        self._send_speech_info(end=True)
+                        self.process_utt_end(audio_play_msg, self.open_utterance_id)
 
                     self.utterance_id += 1
+                    self.open_utterance_id = self.utterance_id
 
-            self.process_msg(audio_play_msg)
+                    self._send_speech_info(end=False)
+                    self.process_utt_start(audio_play_msg, self.open_utterance_id)
+
+                if audio_play_msg.parsed['__name__'] == 'utterance_end':
+                    self._send_speech_info(end=True)
+                    self.process_utt_end(audio_play_msg, self.open_utterance_id)
+                    self.open_utterance_id = -1
+
 
         while len(self.audio_to_send) > WSIO.AUDIO_FRAMES_PER_MSG:
             buffer = self.audio_to_send[:WSIO.AUDIO_FRAMES_PER_MSG]
@@ -166,6 +176,21 @@ class WSIO(VoiceIO, multiprocessing.Process):
             msg.speech = buffer
             msg.seq = self.curr_seq
             self.send_to_client(msg.SerializeToString())
+
+            # self.cfg['Logging']['system_logger'].info('Sent SPEECH to Android: seq=%d buff_len=%d' % (msg.seq, len(buffer)))
+
+    def _send_speech_info(self, end=False):
+        msg = AlexToClient()
+        msg.seq = self.curr_seq
+        if end:
+            msg.type = AlexToClient.SPEECH_END
+        else:
+            msg.type = AlexToClient.SPEECH_BEGIN
+        msg.utterance_id = self.open_utterance_id
+        self.send_to_client(msg.SerializeToString())
+
+        self.cfg['Logging']['system_logger'].info('Sent SPEECH_INFO to Android: end=%s utt=%d' % (end, self.open_utterance_id))
+
 
     def run(self):
         try:
@@ -180,9 +205,6 @@ class WSIO(VoiceIO, multiprocessing.Process):
 
             while 1:
                 select.select([self.commands, self.audio_play], [], [], 1.0)
-
-                if not self.client_connected:
-                    continue
 
                 if self.close_event.is_set():
                     return
@@ -233,6 +255,9 @@ class WSIO(VoiceIO, multiprocessing.Process):
         self.key = self._gen_client_key()
 
     def on_client_message_received(self, payload):
+        if not self.client_connected:
+            return
+
         msg = ClientToAlex()
         msg.ParseFromString(payload)
         if msg.key == self.key:

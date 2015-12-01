@@ -23,6 +23,7 @@ class VoiceIO(object):
     """Abstract class that provides high-level functionality for any voice input/output sub-class."""
     def __init__(self, cfg, commands, audio_record, audio_play, close_event):
         super(VoiceIO, self).__init__()
+
         self.cfg = cfg
         self.message_queue = []
         self.commands = commands
@@ -30,10 +31,8 @@ class VoiceIO(object):
         self.last_played_frame = -1
         self.last_utterance_data = None
         self.buffered_utterances = []
-        self.curr_utt = -1
-        self.utt_ndx = 0
-        self.utt_filling = -1
-        self.utt_info = {}
+
+        self.reset()
 
     def update_current_utterance_id(self, utt_id):
         if self.curr_utt != -1:
@@ -45,7 +44,7 @@ class VoiceIO(object):
             if self.curr_utt != -1:
                 info = self.utt_info[self.curr_utt]
                 try:
-                    if info.end_msg.parsed['log'] == "true":
+                    if info.end_msg and info.end_msg.parsed['log'] == "true":
                         self.cfg['Logging']['session_logger'].rec_end(info.end_msg.parsed['fname'])
                 except SessionLoggerException as e:
                     self.cfg['Logging']['system_logger'].exception(e)
@@ -66,6 +65,7 @@ class VoiceIO(object):
         self.curr_utt = utt_id
 
     def _log_audio(self):
+        print 'logging', self.curr_utt
         info = self.utt_info[self.curr_utt]
         frames = info.pop_queue()
 
@@ -79,29 +79,17 @@ class VoiceIO(object):
                              'VoipIO', 'HUB')
         self.commands.send(cmd)
 
-    def process_msg(self, msg):
-        if isinstance(msg, Frame):
-            if self.utt_filling == -1:
-                self.cfg['Logging']['system_logger'].warning('Trying to log a frame but no utterance belongs to it. Perhaps caused by prematurely ended call.')
-                return
-            else:
-                self.utt_info[self.utt_filling].queue_frame(msg)
+    def process_frame(self, msg, open_utterance):
+        self.utt_info[open_utterance].queue_frame(msg)
 
-        if isinstance(msg, Command):
-            if msg.parsed['__name__'] == 'utterance_start':
-                self.utt_filling = self.utt_ndx
-                self.utt_info[self.utt_filling] = PlayedUtteranceInfo(msg.parsed)
-                self.utt_info[self.utt_filling].beg_msg = msg
-                self.utt_ndx += 1
+    def process_utt_start(self, msg, open_utterance):
+        assert not (open_utterance in self.utt_info)
+        self.utt_info[open_utterance] = PlayedUtteranceInfo(msg.parsed)
+        self.utt_info[open_utterance].beg_msg = msg
 
-            if msg.parsed['__name__'] == 'utterance_end':
-                self.utt_info[self.utt_filling].end_msg = msg
-                self.utt_filling = -1
+    def process_utt_end(self, msg, open_utterance):
+        self.utt_info[open_utterance].end_msg = msg
 
-            if msg.parsed['__name__'] == 'reset':
-                self.utt_filling = -1
-                self.curr_utt = -1
-                self.utt_ndx = 0
-                self.utt_info = {}
-
-
+    def reset(self):
+        self.utt_info = {}
+        self.curr_utt = -1
