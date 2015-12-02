@@ -26,6 +26,7 @@ import argparse
 code_path = "./codes"
 log_path = "./log"
 
+
 class Handler(BaseHTTPRequestHandler):
 
     def read_codes(self, path):
@@ -69,8 +70,8 @@ class Handler(BaseHTTPRequestHandler):
             query_components = dict(qc.split("=") for qc in query.split("&"))
             query_code = query_components["q"]
 
-            add = query_components["a"] if query_components.has_key("a") else "0"
-            remove = query_components["r"] if query_components.has_key("r") else "0"
+            add = query_components["a"] if "a" in query_components else "0"
+            remove = query_components["r"] if "r" in query_components else "0"
             # callback = query_components["callback"] if query_components.has_key("callback") else ""
 
             if query_code == "test":
@@ -85,20 +86,19 @@ class Handler(BaseHTTPRequestHandler):
                 response = 'yes' if query_code in codes else 'no'
         except Exception:
             response = "no"
-            callback = ""
+            # callback = ""
 
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
         # for jsonp calls
-        # if len(callback):
+        # if callback:
         #     self.wfile.write( callback + '(' + json.dumps({'response':response}) + ')' )
-            # self.request.sendall( callback + '(' + json.dumps({'response':response}) + ')')
+        #     self.request.sendall( callback + '(' + json.dumps({'response':response}) + ')')
         # else:
-        self.wfile.write(json.dumps({'response':response}))
-            # self.request.sendall(json.dumps({'response':response}))
-
+        self.wfile.write(json.dumps({'response': response}))
+        # self.request.sendall(json.dumps({'response':response}))
 
 
 class SSLTCPServer(SocketServer.TCPServer):
@@ -106,9 +106,9 @@ class SSLTCPServer(SocketServer.TCPServer):
         """Constructor. May be extended, do not override."""
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
-        dir = os.path.dirname(__file__)
-        key_file = os.path.join(dir, 'server.key')
-        cert_file = os.path.join(dir, 'server.crt')
+        mydir = os.path.dirname(__file__)
+        key_file = os.path.join(mydir, 'server.key')
+        cert_file = os.path.join(mydir, 'server.crt')
 
         import ssl
         self.socket = ssl.wrap_socket(self.socket,
@@ -116,12 +116,12 @@ class SSLTCPServer(SocketServer.TCPServer):
                                       certfile=cert_file,
                                       cert_reqs=ssl.CERT_NONE,
                                       ssl_version=ssl.PROTOCOL_TLSv1,
-                                      server_side=True
-        )
+                                      server_side=True)
 
         if bind_and_activate:
             self.server_bind()
             self.server_activate()
+
 
 def run(server_class=SSLTCPServer, port=443):
     httpd = server_class(('', port), Handler)
