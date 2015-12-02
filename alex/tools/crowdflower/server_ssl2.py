@@ -21,10 +21,10 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from urlparse import urlparse
 import os
 import SocketServer
-
+import argparse
 
 code_path = "./codes"
-lod_path = "./log"
+log_path = "./log"
 
 class Handler(BaseHTTPRequestHandler):
 
@@ -57,11 +57,11 @@ class Handler(BaseHTTPRequestHandler):
         with codecs.open(path, "a", 'UTF-8') as fh_out:
             print >> fh_out, get
 
-    #handle GET command
+    # handle GET command
     def do_GET(self):
         response = ""
         try:
-            self.log_GET(lod_path, str(self.path))
+            self.log_GET(log_path, str(self.path))
 
             codes = self.read_codes(code_path)
 
@@ -107,23 +107,24 @@ class SSLTCPServer(SocketServer.TCPServer):
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
         dir = os.path.dirname(__file__)
-        key_file = os.path.join(dir, '/etc/apache2/ssl/apache.key')
-        cert_file = os.path.join(dir, '/etc/apache2/ssl/apache.crt')
+        key_file = os.path.join(dir, 'server.key')
+        cert_file = os.path.join(dir, 'server.crt')
 
         import ssl
         self.socket = ssl.wrap_socket(self.socket,
                                       keyfile=key_file,
                                       certfile=cert_file,
                                       cert_reqs=ssl.CERT_NONE,
-                                      ssl_version=ssl.PROTOCOL_TLSv1
+                                      ssl_version=ssl.PROTOCOL_TLSv1,
+                                      server_side=True
         )
 
         if bind_and_activate:
             self.server_bind()
             self.server_activate()
 
-def run(ServerClass = SSLTCPServer):
-    httpd = ServerClass(('', 443), Handler)
+def run(server_class=SSLTCPServer, port=443):
+    httpd = server_class(('', port), Handler)
     sa = httpd.socket.getsockname()
     print "Serving HTTPS on", sa[0], "port", sa[1], "..."
     try:
@@ -134,4 +135,7 @@ def run(ServerClass = SSLTCPServer):
 
 
 if __name__ == '__main__':
-    run()
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-p', '--port', type=int, default=443)
+    args = ap.parse_args()
+    run(port=args.port)
