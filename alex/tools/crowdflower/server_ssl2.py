@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''
 SimpleSecureHTTPServer.py - simple HTTP server supporting SSL.
 
@@ -102,13 +105,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class SSLTCPServer(SocketServer.TCPServer):
-    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True):
+    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True,
+                 cert_file=None, key_file=None):
         """Constructor. May be extended, do not override."""
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
         mydir = os.path.dirname(__file__)
-        key_file = os.path.join(mydir, 'server.key')
-        cert_file = os.path.join(mydir, 'server.crt')
+        if key_file is None:
+            key_file = os.path.join(mydir, 'server.key')
+        if cert_file is None:
+            cert_file = os.path.join(mydir, 'server.crt')
 
         import ssl
         self.socket = ssl.wrap_socket(self.socket,
@@ -123,8 +129,8 @@ class SSLTCPServer(SocketServer.TCPServer):
             self.server_activate()
 
 
-def run(server_class=SSLTCPServer, port=443):
-    httpd = server_class(('', port), Handler)
+def run(server_class=SSLTCPServer, port=443, cert_file=None, key_file=None):
+    httpd = server_class(('', port), Handler, True, cert_file, key_file)
     sa = httpd.socket.getsockname()
     print "Serving HTTPS on", sa[0], "port", sa[1], "..."
     try:
@@ -137,5 +143,7 @@ def run(server_class=SSLTCPServer, port=443):
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument('-p', '--port', type=int, default=443)
+    ap.add_argument('-c', '--cert')
+    ap.add_argument('-k', '--key')
     args = ap.parse_args()
-    run(port=args.port)
+    run(port=args.port, cert_file=args.cert, key_file=args.key)
