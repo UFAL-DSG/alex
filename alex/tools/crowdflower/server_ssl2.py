@@ -2,21 +2,30 @@
 # -*- coding: utf-8 -*-
 
 '''
-SimpleSecureHTTPServer.py - simple HTTP server supporting SSL.
+server_ssl2.py
+==============
 
-- replace fpem with the location of your .pem server file.
-- the default port is 443.
+A HTTPS server to help with PTIEN jobs at CrowdFlower. Serves
+different tasks for the users and handles code verification.
 
-- it accepts two query parameters: a,q and r
+The default is to use files `server.crt` and `server.key` located in the same directory as
+the SSL key and certificate. The default is to listen on port 443. These defaults may be
+overridden (see usage).
+
+The API
+-------
+- it accepts three query parameters: a,q and r
 - it returns simple JSON with one node "response" [yes,no,success,online]
 - if a is "1" (?q=CODE&a=1), then CODE is added and the response is "success"
 - if r is "1" (?q=CODE&r=1), then CODE is removed and the response is "success"
 - if CODE is present in "code_path" file it returns "yes" otherwise "no"
 - if CODE is equal to "test" it sends "online" in response - connection check
+- if CODE is equal to "task", a random HTML representation of a task is returned
 
-- there is temporarily js.js javascript for supporting click to call button
+Usage
+-----
 
-usage: python SimpleSecureHTTPServer.py
+./server_ssl2.py [--port XXXX] [--key path/to/file.key] [--cert path/to/file.crt]
 '''
 import codecs
 import json
@@ -25,9 +34,11 @@ from urlparse import urlparse
 import os
 import SocketServer
 import argparse
+import random
 
 code_path = "./codes"
 log_path = "./log"
+task_path = "./tasks"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -61,8 +72,8 @@ class Handler(BaseHTTPRequestHandler):
         with codecs.open(path, "a", 'UTF-8') as fh_out:
             print >> fh_out, get
 
-    # handle GET command
     def do_GET(self):
+        """Main method that handles a GET request from the client."""
         response = ""
         try:
             self.log_GET(log_path, str(self.path))
@@ -70,6 +81,7 @@ class Handler(BaseHTTPRequestHandler):
             codes = self.read_codes(code_path)
 
             query = urlparse(self.path).query
+
             query_components = dict(qc.split("=") for qc in query.split("&"))
             query_code = query_components["q"]
 
@@ -79,6 +91,8 @@ class Handler(BaseHTTPRequestHandler):
 
             if query_code == "test":
                 response = "online"
+            elif query_code == "task":
+                response = self.get_random_task()
             elif add == "1":
                 self.add_code(code_path, query_code)
                 response = "success"
@@ -108,8 +122,12 @@ class SSLTCPServer(SocketServer.TCPServer):
     def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True,
                  cert_file=None, key_file=None):
         """Constructor. May be extended, do not override."""
+
+        # read the tasks and store them for reuse
+        self.tasks = self.read_tasks(task_path)
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
+        # initialize SSL connection
         mydir = os.path.dirname(__file__)
         if key_file is None:
             key_file = os.path.join(mydir, 'server.key')
@@ -124,9 +142,42 @@ class SSLTCPServer(SocketServer.TCPServer):
                                       ssl_version=ssl.PROTOCOL_TLSv1,
                                       server_side=True)
 
+        # start serving
         if bind_and_activate:
             self.server_bind()
             self.server_activate()
+
+    def read_tasks(self, path):
+        """Read the tasks from format produced by generate_tasks.py (1-line DAs, 1-line sentences,
+        followed by empty line). The individual DAs and sentences are separated with tab characters.
+
+        @param path: The file to read.
+        """
+        buf = []
+        das = None
+        sents = None
+
+        with codecs.open(path, "r", 'UTF-8') as fh_in:
+            for line in fh_in:
+                line = line.strip()
+                if not line:
+                    buf.append((das, sents))
+                    das = None
+                    sents = None
+                if not das:
+                    das = line
+                elif not sents:
+                    sents = line
+        return buf
+
+    def get_random_task(self):
+        """Return a HMTL representation for a random task (out of tasks stored in `self.task`)."""
+        das, sents = random.choice(self.server.tasks)
+        text = '<ol>\n'
+        for sent in sents.split('\t'):
+            text += '<li>' + sent + '</li>\n'
+        text += '</ol>\n'
+        return text
 
 
 def run(server_class=SSLTCPServer, port=443, cert_file=None, key_file=None):
@@ -141,6 +192,7 @@ def run(server_class=SSLTCPServer, port=443, cert_file=None, key_file=None):
 
 
 if __name__ == '__main__':
+    random.seed()
     ap = argparse.ArgumentParser()
     ap.add_argument('-p', '--port', type=int, default=443)
     ap.add_argument('-c', '--cert')
