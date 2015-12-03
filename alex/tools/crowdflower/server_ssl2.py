@@ -92,7 +92,7 @@ class Handler(BaseHTTPRequestHandler):
             if query_code == "test":
                 response = "online"
             elif query_code == "task":
-                response = self.get_random_task()
+                response = self.server.get_random_task()
             elif add == "1":
                 self.add_code(code_path, query_code)
                 response = "success"
@@ -172,7 +172,7 @@ class SSLTCPServer(SocketServer.TCPServer):
 
     def get_random_task(self):
         """Return a HMTL representation for a random task (out of tasks stored in `self.task`)."""
-        das, sents = random.choice(self.server.tasks)
+        das, sents = random.choice(self.tasks)
         text = '<ol>\n'
         for sent in sents.split('\t'):
             text += '<li>' + sent + '</li>\n'
