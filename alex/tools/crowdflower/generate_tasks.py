@@ -1,10 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""
+Generating tasks for CrowdFlower jobs evaluating the PTIEN service.
+
+Usage: ./generate_tasks.py <number of tasks to generate>
+
+All tasks involve finding a transit schedule between two Manhattan subway stations.
+They include further questions such as arrival time, journey duration, and finding
+other connections – a later one, one at 6PM, and changing the destination station.
+
+The tasks are generated using Alex template NLG with a custom set of templates.
+"""
+
+from __future__ import unicode_literals
+
 from alex.components.slu.da import DialogueAct, DialogueActItem
 import random
 from argparse import ArgumentParser
 from alex.utils.config import as_project_path
-from alex.applications.PublicTransportInfoEN.preprocessing import PTIENNLGPreprocessing
 from alex.components.nlg.template import TemplateNLG
 
 STOPS = ['Astor Place',
