@@ -242,7 +242,6 @@ class PTIENHDCSLU(SLUInterface):
         :param utterance: an Utterance instance
         :return: a list of abstracted utterance, form, value, category label tuples
         """
-
         abs_utts = copy.deepcopy(utterance)
         category_labels = set()
         abs_utt_lengths = [1] * len(abs_utts)
@@ -532,14 +531,18 @@ class PTIENHDCSLU(SLUInterface):
 
         Number words that form time expression are collapsed into a single TIME category word.
         Recognized time expressions (where FRAC, HOUR and MIN stands for fraction, hour and minute numbers respectively):
-            - FRAC [na] HOUR
-            - FRAC hodin*
-            - HOUR a FRAC hodin*
-            - HOUR hodin* a MIN minut*
-            - HOUR hodin* MIN
-            - HOUR hodin*
+            - quarter to/past HOUR
+            - half past HOUR
+            - FRAC (an/of an) hour*
+            - HOUR hour* and a FRAC
+            - HOUR and a FRAC hour*
+            - HOUR hour* and MIN minute*
+            - HOUR hour* MIN
+            - HOUR hour*/o'clock/sharp
             - HOUR [0]MIN
-            - MIN minut*
+            - at/around/after/about HOUR
+            - MIN minute*
+            - in an hour/in a minute
 
         Words of NUMBER category are assumed to be in format parsable to int or float
 
@@ -570,6 +573,7 @@ class PTIENHDCSLU(SLUInterface):
         u = abutterance
         i = 0
         while i < len(u):
+
             if fraction_number(u[i]):
                 fraction_num = int(parse_number(u[i]) * 60)  # 15 or 30
                 # half past/quarter to/quarter past HOUR
@@ -586,6 +590,7 @@ class PTIENHDCSLU(SLUInterface):
                 # quarter of an hour
                 elif i < len(u) - 3 and u[i + 1] == 'of' and u[i + 2] == 'an' and u[i + 3] == 'hour':
                     u[i:i + 4] = ["TIME_{len}=0:{min}".format(len=4, min=fraction_num)]
+
             elif hour_number(u[i]):
                 hour_num = parse_number(u[i])
                 # HOUR hour* and a FRAC
@@ -596,25 +601,29 @@ class PTIENHDCSLU(SLUInterface):
                 elif i < len(u) - 4 and u[i + 1] == 'and' and u[i + 2] == 'a' and fraction_number(u[i + 3]) and u[i + 4].startswith('hour'):
                     fraction_num = int(parse_number(u[i + 3]) * 60)
                     u[i:i + 5] = ["TIME_{len}={hour}:{min}".format(len=5, hour=hour_num, min=fraction_num)]
-                # HOUR hour* a MIN minute*
+                # HOUR hour* and MIN minute*
                 elif i < len(u) - 4 and u[i + 2] == 'and' and minute_number(u[i + 3]) and u[i + 4].startswith('minute'):
                     u[i:i + 5] = ["TIME_{len}={hour}:{min:0>2d}".format(len=5, hour=hour_num, min=parse_number(u[i + 3]))]
                 # HOUR hour* MIN
                 elif i < len(u) - 3 and u[i + 1].startswith("hour") and minute_number(u[i + 2]):
                     u[i:i + 4] = ["TIME_{len}={hour}:{min:0>2d}".format(len=4, hour=hour_num, min=parse_number(u[i + 2]))]
-                # HOUR hours*/o'clock/in ...
-                elif i < len(u) - 1:
-                    if u[i + 1] in ['hour', 'hours', 'in', 'at', "o'clock", 'sharp']:
-                        u[i:i + 2] = ["TIME_{len}={hour}:00".format(len=2, hour=hour_num)]
-                    elif u[i + 1].startswith("AMPM="):
-                        u[i] = "TIME_1={hour}:00".format(hour=hour_num)
-                    # HOUR MINUTE
-                    elif minute_number(u[i + 1]):
-                        minute_num = parse_number(u[i + 1])
-                        # HOUR MIN
-                        u[i:i + 2] = ["TIME_{len}={hour}:{min:0>2d}".format(len=2, hour=hour_num, min=minute_num)]
-                elif i > 0 and u[i - 1] == 'at':
-                    u[i] = "TIME_{len}={hour}:00".format(len=1, hour=parse_number(u[i]))
+                else:
+                    # HOUR hours*/o'clock/in ...
+                    if i < len(u) - 1:
+                        if u[i + 1] in ['hour', 'hours', "o'clock", 'sharp']:
+                            u[i:i + 2] = ["TIME_{len}={hour}:00".format(len=2, hour=hour_num)]
+                        elif u[i + 1].startswith("AMPM="):
+                            u[i] = "TIME_1={hour}:00".format(hour=hour_num)
+                        # HOUR MINUTE
+                        elif minute_number(u[i + 1]):
+                            minute_num = parse_number(u[i + 1])
+                            # HOUR MIN
+                            u[i:i + 2] = ["TIME_{len}={hour}:{min:0>2d}".format(len=2, hour=hour_num, min=minute_num)]
+                    # at/in... HOUR (if not matched already)
+                    if (i > 0 and not u[i].startswith("TIME") and
+                            u[i - 1] in ['at', 'around', 'after', 'about']):
+                        u[i] = "TIME_{len}={hour}:00".format(len=1, hour=parse_number(u[i]))
+
             if minute_number(u[i]):
                 # MIN minute*
                 if i < len(u) - 1 and u[i + 1].startswith("minute"):
@@ -1019,7 +1028,10 @@ class PTIENHDCSLU(SLUInterface):
         if dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it']):
             cn.add_merge(1.0, DialogueActItem('request', 'current_time'))
 
-        if (dai.any_word_in('time found connection alternatives alternative option options possibility choice trip travel journey ride tour link bus train sub subway') or
+        if (dai.any_word_in('time found connection alternatives alternative option options possibility' +
+                            'choice trip travel journey ride tour link bus train sub subway go going' +
+                            'trips rides connections possibilites choices buses trains subways tram trams' +
+                            'travelling') or
                 dai.any_phrase_in(['next one', 'previous one', 'last one', 'first one', 'second one', 'third one', 'fourth one'])) and \
                 not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum'):
 
@@ -1045,16 +1057,16 @@ class PTIENHDCSLU(SLUInterface):
                     not dai.all_words_in("previous preceding")):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if dai.any_word_in("next different following subsequent later another"):
+            if dai.any_word_in("next different following subsequent later another after"):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
-            if dai.any_word_in("previous preciding"):
+            if dai.any_word_in("previous preceding earlier sooner"):
                 if dai.phrase_in("not want to know previous"):
                     cn.add_merge(1.0, DialogueActItem("deny", "alternative", "prev"))
                 else:
                     cn.add_merge(1.0, DialogueActItem("inform", "alternative", "prev"))
 
-        if len(u) == 1 and dai.any_word_in('next following'):
+        if len(u) == 1 and dai.any_word_in('next following later subsequent another after'):
             cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
         if len(u) == 2 and \
