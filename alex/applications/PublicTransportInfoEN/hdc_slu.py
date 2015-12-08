@@ -16,6 +16,7 @@ from alex.components.slu.da import DialogueActItem, DialogueActConfusionNetwork,
 # if there is a change in search parameters from_stop, to_stop, time, then
 # reset alternatives
 
+
 def any_word_in(utterance, words):
     words = words if not isinstance(words, basestring) else words.strip().split()
     for alt_expr in words:
@@ -35,6 +36,7 @@ def all_words_in(utterance, words):
 def phrase_in(utterance, words):
     return phrase_pos(utterance, words) != -1
 
+
 def last_phrase_pos(utterance, words):
     """Returns the last position of a given phrase in the given utterance, or -1 if not found.
 
@@ -51,6 +53,7 @@ def last_phrase_pos(utterance, words):
         return -1
     else:
         return len(utterance.utterance) - index - 1
+
 
 def phrase_pos(utterance, words):
     """Returns the position of the given phrase in the given utterance, or -1 if not found.
@@ -75,6 +78,7 @@ def last_phrase_span(utterance, phrases):
         if pos != -1:
             return pos, pos + len(phrase.split())
     return -1, -1
+
 
 def first_phrase_span(utterance, phrases):
     """Returns the span (start, end+1) of the first phrase from the given list
@@ -130,7 +134,8 @@ class DAIBuilder(object):
         """
         self._utterance = utterance if not isinstance(self, list) else Utterance(' '.join(utterance))
         self.utt2abutt_idxs = range(len(utterance)) if not abutterance_lenghts else \
-            list(chain.from_iterable([idx]*abutterance_lenghts[idx] for idx in range(len(abutterance_lenghts))))
+            list(chain.from_iterable([idx] * abutterance_lenghts[idx]
+                                     for idx in range(len(abutterance_lenghts))))
         self._alignment = set()
 
     def build(self, act_type=None, slot=None, value=None):
@@ -178,8 +183,8 @@ class DAIBuilder(object):
         for phrase in phrases:
             pos = self.phrase_pos(phrase, sub_utt)
             if pos != -1:
-                self._alignment.update(range(pos, pos+len(phrase.split())))
-                return pos, pos+len(phrase)
+                self._alignment.update(range(pos, pos + len(phrase.split())))
+                return pos, pos + len(phrase)
         return -1, -1
 
     def any_phrase_in(self, phrases, sub_utt=None):
@@ -198,7 +203,7 @@ class DAIBuilder(object):
         for phrase in phrases:
             pos = self.phrase_pos(phrase)
             if pos is not -1 and pos + len(phrase.split()) is len(utterance):
-                self._alignment.update(range(pos, pos+len(phrase.split())))
+                self._alignment.update(range(pos, pos + len(phrase.split())))
                 return True
         return False
 
@@ -250,10 +255,10 @@ class PTIENHDCSLU(SLUInterface):
                 if f in self.cldb.form2value2cl:
                     entities = self.cldb.form2value2cl[f]
                     slot_names = [(slot, name) for name in entities for slot in entities[name]]
-                    slots = [slot for slot,_ in slot_names]
+                    slots = [slot for slot, _ in slot_names]
 
                     def replace_slot(abs_utts, slot, slot_names):
-                        name = [n for s,n in slot_names if s == slot].pop()
+                        name = [n for s, n in slot_names if s == slot].pop()
                         return abs_utts.replace(f, (slot.upper() + '=' + name,))
 
                     if 'borough' in slots:
@@ -288,7 +293,6 @@ class PTIENHDCSLU(SLUInterface):
             norm_abs_utt_lengths.append(l)
             i += l
         return abs_utts, category_labels, norm_abs_utt_lengths
-
 
     def __repr__(self):
         return "PTIENHDCSLU({preprocessing}, {cfg})".format(preprocessing=self.preprocessing, cfg=self.cfg)
@@ -330,8 +334,9 @@ class PTIENHDCSLU(SLUInterface):
 
         # here we tag each street with its sequential number
         dais = [dai_hyp[1] for dai_hyp in cn.items()]
-        def fix_second_street(type):
-            street_indices = [i for i, dai in enumerate(dais) if dai.name == type][1:]
+
+        def fix_second_street(slot_name):
+            street_indices = [i for i, dai in enumerate(dais) if dai.name == slot_name][1:]
             number = 2
             for i in street_indices:  # all slots are from_street2
                 prob = cn.get_prob(dais[i])
@@ -340,7 +345,6 @@ class PTIENHDCSLU(SLUInterface):
 
         fix_second_street('from_street')
         fix_second_street('to_street')
-
 
     def parse_stop(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -359,7 +363,6 @@ class PTIENHDCSLU(SLUInterface):
 
         self.parse_waypoint(abutterance, cn, 'STOP=', 'stop', phr_wp_types)
 
-
     def parse_state(self, abutterance, cn):
         """ Detects state in the input abstract utterance.
 
@@ -373,14 +376,13 @@ class PTIENHDCSLU(SLUInterface):
         #         cn.add(1.0, DialogueActItem("inform", 'in_state', value))
 
         # regular parsing
-        phr_wp_types = [('from', set()), # I'm at, I'm in ?
+        phr_wp_types = [('from', set()),  # I'm at, I'm in ?
                         ('to', set()),
                         ('via', set()),
                         ('in', set()),  # ? ['pro', 'po']
-                       ]
+                        ]
 
         self.parse_waypoint(abutterance, cn, 'STATE=', 'state', phr_wp_types, phr_in=['in', 'at'])
-
 
     def parse_borough(self, abutterance, cn):
         """ Detects stops in the input abstract utterance.
@@ -390,13 +392,13 @@ class PTIENHDCSLU(SLUInterface):
         """
 
         # regular parsing
-        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
-                                      'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
+        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin',  # of, off
+                                      'originated', 'originating', 'origination', 'initial', ])),  # I'm at, I'm in ?
                         ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
-                                    'target', 'output', 'exit', 'destination',])),
-                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange' ])),
+                                    'target', 'output', 'exit', 'destination', ])),
+                        ('via', set(['via', 'through', 'transfer', 'transferring', 'interchange'])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
-                       ]
+                        ]
 
         self.parse_waypoint(abutterance, cn, 'BOROUGH=', 'borough', phr_wp_types, phr_in=['in', 'at'])
 
@@ -408,13 +410,13 @@ class PTIENHDCSLU(SLUInterface):
         """
 
         # regular parsing
-        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin', # of, off
-                                      'originated', 'originating', 'origination', 'initial', ])), # I'm at, I'm in ?
+        phr_wp_types = [('from', set(['from', 'beginning', 'start', 'starting', 'origin',  # of, off
+                                      'originated', 'originating', 'origination', 'initial', ])),  # I'm at, I'm in ?
                         ('to', set(['to', 'into', 'end', 'ending', 'terminal', 'final',
-                                    'target', 'output', 'exit', 'destination',])),
-                        ('via', set(['via', 'through a', 'transfer', 'transferring', 'interchange' ])),
+                                    'target', 'output', 'exit', 'destination', ])),
+                        ('via', set(['via', 'through a', 'transfer', 'transferring', 'interchange'])),
                         ('in', set(['for', 'after', 'in', 'at'])),  # ? ['pro', 'po']
-                       ]
+                        ]
 
         self.parse_waypoint(abutterance, cn, 'CITY=', 'city', phr_wp_types, phr_in=['in', 'at'])
 
@@ -434,7 +436,7 @@ class PTIENHDCSLU(SLUInterface):
 
         # simple "not" cannot be included as it collides with negation. "I do not want this [,] go from Brooklyn"
         phr_dai_types = [('confirm', set(['it departs', 'departs from', 'depart from',  # 'leave', 'leaves',
-                                          'is the starting',]), set()),
+                                          'is the starting', ]), set()),
                          ('deny',
                           set(['not from', 'not at', 'not in', 'not on', 'not to', 'not into', 'and not',
                                'not the', 'rather than']),  # don't, doesn't?
@@ -486,11 +488,11 @@ class PTIENHDCSLU(SLUInterface):
                 if len(wp_types) == 1:
                     # TODO: remove this hack - way: zapisovat do uterance - replace STREET with FROM_STREET, a pak tady bych mohl hledat v kontextu 2 slov, jeslti se nevyskytuje FROM_*
                     if 'in' in wp_types:  # catching following instances: from/to street/stop in city/borough -> from_stop & from_city
-                        wp_precontext['in'] = (-1,-1)
+                        wp_precontext['in'] = (-1, -1)
                         next_wp_type = self._get_closest_wp_type(wp_precontext)
                         if next_wp_type:
-                            for j in [1,2,]:
-                                if i >= j and '=' in u[i-j] and u[i-j].split('=')[0].lower() in ['stop', 'street'] and wp_slot_suffix in ['city', 'borough']:
+                            for j in [1, 2, ]:
+                                if i >= j and '=' in u[i - j] and u[i - j].split('=')[0].lower() in ['stop', 'street'] and wp_slot_suffix in ['city', 'borough']:
                                     wp_types.pop()
                                     wp_types = next_wp_type
                                     break
@@ -569,64 +571,64 @@ class PTIENHDCSLU(SLUInterface):
         i = 0
         while i < len(u):
             if fraction_number(u[i]):
-                fraction_num = int(parse_number(u[i]) * 60) # 15 or 30
+                fraction_num = int(parse_number(u[i]) * 60)  # 15 or 30
                 # half past/quarter to/quarter past HOUR
-                if i < len(u) - 2 and hour_number(u[i+2]):
-                    hour_num = parse_number(u[i+2])
+                if i < len(u) - 2 and hour_number(u[i + 2]):
+                    hour_num = parse_number(u[i + 2])
                     minute_num = fraction_num
-                    if fraction_num == 15 and u[i+1] == 'to':  # quarter to HOUR
+                    if fraction_num == 15 and u[i + 1] == 'to':  # quarter to HOUR
                         minute_num *= 3
                         hour_num -= 1
-                    u[i:i+3] = ["TIME_{len}={hour}:{min}".format(len=3, hour=hour_num, min=minute_num)]
+                    u[i:i + 3] = ["TIME_{len}={hour}:{min}".format(len=3, hour=hour_num, min=minute_num)]
                 # half an hour
-                elif i < len(u) - 2 and fraction_num == 30 and u[i+1] == 'an' and u[i+2] == 'hour':
-                    u[i:i+3] = ["TIME_{len}=0:30".format(len=3)]
+                elif i < len(u) - 2 and fraction_num == 30 and u[i + 1] == 'an' and u[i + 2] == 'hour':
+                    u[i:i + 3] = ["TIME_{len}=0:30".format(len=3)]
                 # quarter of an hour
-                elif i < len(u) -3 and u[i+1] == 'of' and u[i+2] == 'an' and u[i+3] == 'hour':
-                    u[i:i+4] = ["TIME_{len}=0:{min}".format(len=4, min=fraction_num)]
+                elif i < len(u) - 3 and u[i + 1] == 'of' and u[i + 2] == 'an' and u[i + 3] == 'hour':
+                    u[i:i + 4] = ["TIME_{len}=0:{min}".format(len=4, min=fraction_num)]
             elif hour_number(u[i]):
                 hour_num = parse_number(u[i])
                 # HOUR hour* and a FRAC
-                if i < len(u) - 4 and u[i+1].startswith('hour') and u[i+2] == 'and' and u[i+3] == 'a' and fraction_number(u[i+4]):
-                    fraction_num = int(parse_number(u[i+4]) * 60)
-                    u[i:i+5] = ["TIME_{len}={hour}:{min}".format(len=5, hour=hour_num, min=fraction_num)]
+                if i < len(u) - 4 and u[i + 1].startswith('hour') and u[i + 2] == 'and' and u[i + 3] == 'a' and fraction_number(u[i + 4]):
+                    fraction_num = int(parse_number(u[i + 4]) * 60)
+                    u[i:i + 5] = ["TIME_{len}={hour}:{min}".format(len=5, hour=hour_num, min=fraction_num)]
                 # HOUR and a FRAC hour*
-                elif i < len(u) - 4 and u[i+1] == 'and' and u[i+2] == 'a' and fraction_number(u[i+3]) and u[i+4].startswith('hour'):
-                    fraction_num = int(parse_number(u[i+3]) * 60)
-                    u[i:i+5] = ["TIME_{len}={hour}:{min}".format(len=5, hour=hour_num,min=fraction_num)]
+                elif i < len(u) - 4 and u[i + 1] == 'and' and u[i + 2] == 'a' and fraction_number(u[i + 3]) and u[i + 4].startswith('hour'):
+                    fraction_num = int(parse_number(u[i + 3]) * 60)
+                    u[i:i + 5] = ["TIME_{len}={hour}:{min}".format(len=5, hour=hour_num, min=fraction_num)]
                 # HOUR hour* a MIN minute*
-                elif i < len(u)-4 and u[i+2] == 'and' and minute_number(u[i+3]) and u[i+4].startswith('minute'):
-                    u[i:i+5] = ["TIME_{len}={hour}:{min:0>2d}".format(len=5, hour=hour_num, min=parse_number(u[i+3]))]
+                elif i < len(u) - 4 and u[i + 2] == 'and' and minute_number(u[i + 3]) and u[i + 4].startswith('minute'):
+                    u[i:i + 5] = ["TIME_{len}={hour}:{min:0>2d}".format(len=5, hour=hour_num, min=parse_number(u[i + 3]))]
                 # HOUR hour* MIN
-                elif i < len(u)-3 and u[i+1].startswith("hour") and minute_number(u[i+2]):
-                    u[i:i+4] = ["TIME_{len}={hour}:{min:0>2d}".format(len=4, hour=hour_num, min=parse_number(u[i+2]))]
+                elif i < len(u) - 3 and u[i + 1].startswith("hour") and minute_number(u[i + 2]):
+                    u[i:i + 4] = ["TIME_{len}={hour}:{min:0>2d}".format(len=4, hour=hour_num, min=parse_number(u[i + 2]))]
                 # HOUR hours*/o'clock/in ...
                 elif i < len(u) - 1:
-                    if u[i+1] in ['hour', 'hours', 'in', 'at', "o'clock", 'sharp']:
-                        u[i:i+2] = ["TIME_{len}={hour}:00".format(len=2, hour=hour_num)]
-                    elif u[i+1].startswith("AMPM="):
+                    if u[i + 1] in ['hour', 'hours', 'in', 'at', "o'clock", 'sharp']:
+                        u[i:i + 2] = ["TIME_{len}={hour}:00".format(len=2, hour=hour_num)]
+                    elif u[i + 1].startswith("AMPM="):
                         u[i] = "TIME_1={hour}:00".format(hour=hour_num)
                     # HOUR MINUTE
-                    elif minute_number(u[i+1]):
-                        minute_num = parse_number(u[i+1])
+                    elif minute_number(u[i + 1]):
+                        minute_num = parse_number(u[i + 1])
                         # HOUR MIN
-                        u[i:i+2] = ["TIME_{len}={hour}:{min:0>2d}".format(len=2, hour=hour_num, min=minute_num)]
-                elif i > 0 and u[i-1] == 'at':
+                        u[i:i + 2] = ["TIME_{len}={hour}:{min:0>2d}".format(len=2, hour=hour_num, min=minute_num)]
+                elif i > 0 and u[i - 1] == 'at':
                     u[i] = "TIME_{len}={hour}:00".format(len=1, hour=parse_number(u[i]))
             if minute_number(u[i]):
                 # MIN minute*
-                if i < len(u)-1 and u[i+1].startswith("minute"):
-                    u[i:i+2] = ["TIME_{len}=0:{min:0>2d}".format(len=2, min=parse_number(u[i]))]
+                if i < len(u) - 1 and u[i + 1].startswith("minute"):
+                    u[i:i + 2] = ["TIME_{len}=0:{min:0>2d}".format(len=2, min=parse_number(u[i]))]
 
             # in _ minute/hour
-            elif i > 1 and 'in' in u[i-2:i-1]: # in an hour/in a minute
+            elif i > 1 and 'in' in u[i - 2:i - 1]:  # in an hour/in a minute
                 if u[i] == 'hour':
                     u[i] = "TIME_1=1:00"
                 elif u[i] == 'minute':
                     u[i] = "TIME_1=0:01"
             # hour and a half:
-            if i<len(u)-3 and u[i] == "hour" and u[i+1] == 'and' and u[i+2] == 'a' and fraction_number(u[i+3]):
-                u[i:i+4] = ["TIME_{len}=1:30".format(len=4)]
+            if i < len(u) - 3 and u[i] == "hour" and u[i + 1] == 'and' and u[i + 2] == 'a' and fraction_number(u[i + 3]):
+                u[i:i + 4] = ["TIME_{len}=1:30".format(len=4)]
             i += 1
 
     def parse_time(self, abutterance, cn):
@@ -676,7 +678,7 @@ class PTIENHDCSLU(SLUInterface):
                         ('inform', '',
                          [],
                          []),
-        ]
+                        ]
 
         count_times = 0
         for i, w in enumerate(u):
@@ -721,7 +723,7 @@ class PTIENHDCSLU(SLUInterface):
                 last_time_type = time_type
 
                 slot = (time_type + ('_time_rel' if time_rel else '_time')).lstrip('_')
-                cn.add_merge(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i+num_len))))
+                cn.add_merge(1.0, DialogueActItem(act_type, slot, value, alignment=set(range(i, i + num_len))))
                 last_time = i + 1
 
     def parse_date_rel(self, abutterance, cn):
@@ -867,9 +869,9 @@ class PTIENHDCSLU(SLUInterface):
             if dai.any_phrase_in(['repeat', 'that again', 'come again', 'once more', 'say again', 'it again']):
                 cn.add_merge(1.0, DialogueActItem("repeat"))
 
-        if dai.phrase_in("repeat the last sentence") or \
-            dai.phrase_in("repeat what you've") or \
-            dai.phrase_in("repeat what you have"):
+        if (dai.phrase_in("repeat the last sentence") or
+                dai.phrase_in("repeat what you've") or
+                dai.phrase_in("repeat what you have")):
             cn.add_merge(1.0, DialogueActItem("repeat"))
 
         if len(u) == 1 and dai.any_word_in("excuse pardon sorry apology, apologise, apologies"):
@@ -884,36 +886,38 @@ class PTIENHDCSLU(SLUInterface):
 
             cn.add_merge(1.0, DialogueActItem('canthearyou'))
 
-        if dai.all_words_in("did not understand") or \
-            dai.all_words_in("didn\'t understand") or \
-            dai.all_words_in("speek up") or \
-            dai.all_words_in("can not hear you") or \
-            (len(u) == 1 and dai.any_word_in("can\'t hear you")):
+        if (dai.all_words_in("did not understand") or
+                dai.all_words_in("didn\'t understand") or
+                dai.all_words_in("speek up") or
+                dai.all_words_in("can not hear you") or
+                (len(u) == 1 and dai.any_word_in("can\'t hear you"))):
             cn.add_merge(1.0, DialogueActItem('notunderstood'))
 
-        if dai.any_word_in("yes yeah sure correct") and \
-            not dai.any_word_in("end over option offer surrender") :
+        if (dai.any_word_in("yes yeah sure correct") and
+                not dai.any_word_in("end over option offer surrender")):
             cn.add_merge(1.0, DialogueActItem("affirm"))
 
         if not dai.any_phrase_in(['not from', 'not care']):
-            if dai.any_word_in("no not nope nono") or \
-                 dai.phrase_in('do not want') or \
-                         len(u) == 2 and dai.all_words_in("not want") or \
-                         len(u) == 3 and dai.all_words_in("yes do not") or \
-                 dai.all_words_in("is wrong"):
+            if (dai.any_word_in("no not nope nono") or
+                    dai.phrase_in('do not want') or
+                    len(u) == 2 and dai.all_words_in("not want") or
+                    len(u) == 3 and dai.all_words_in("yes do not") or
+                    dai.all_words_in("is wrong")):
                 cn.add_merge(1.0, DialogueActItem("negate"))
 
         if dai.any_word_in('thanks thankyou thank cheers'):
             cn.add_merge(1.0, DialogueActItem("thankyou"))
 
-        if dai.any_word_in('ok okay well correct fine understand understood') or (dai.any_word_in('right') and not dai.any_word_in('now')) and \
-            not dai.any_word_in("yes"):
+        if (dai.any_word_in('ok okay well correct fine understand understood') or
+                (dai.any_word_in('right') and not dai.any_word_in('now')) and
+                not dai.any_word_in("yes")):
             cn.add_merge(1.0, DialogueActItem("ack"))
 
-        if dai.any_word_in("from begin begins start starting") and dai.any_word_in("beginning scratch over") or \
-            dai.any_phrase_in(['stop talking', 'new entry']) or \
-            dai.any_word_in("reset restart reboot") or \
-            not dai.phrase_in('from') and dai.any_phrase_in(['new connection', 'new link']):
+        if (dai.any_word_in("from begin begins start starting") and
+                dai.any_word_in("beginning scratch over") or
+                dai.any_phrase_in(['stop talking', 'new entry']) or
+                dai.any_word_in("reset restart reboot") or
+                not dai.phrase_in('from') and dai.any_phrase_in(['new connection', 'new link'])):
             cn.add_merge(1.0, DialogueActItem("restart"))
 
         if dai.any_phrase_in(['want to go', 'like to go', 'want to get', 'would like to get', 'want to take',
@@ -923,40 +927,40 @@ class PTIENHDCSLU(SLUInterface):
         if dai.any_phrase_in(['what is weather', 'what is the weather', 'will be the weather', 'the forecast']):
             cn.add_merge(1.0, DialogueActItem('inform', 'task', 'weather'))
 
-        if dai.all_words_in('where does it start') or \
-            dai.all_words_in('what is the initial') or \
-            dai.all_words_in('where departure ') or \
-            dai.all_words_in('where departuring') or \
-            dai.all_words_in('where departures') or \
-            dai.all_words_in("what's origin") or \
-            dai.all_words_in("what is origin") or \
-            dai.all_words_in('where starts') or \
-            dai.all_words_in('where goes from') or \
-            dai.all_words_in('where does go from') or \
-            dai.all_words_in('from what station') or \
-            dai.all_words_in('what is the starting') or \
-            dai.all_words_in('where will from'):
+        if (dai.all_words_in('where does it start') or
+                dai.all_words_in('what is the initial') or
+                dai.all_words_in('where departure ') or
+                dai.all_words_in('where departuring') or
+                dai.all_words_in('where departures') or
+                dai.all_words_in("what's origin") or
+                dai.all_words_in("what is origin") or
+                dai.all_words_in('where starts') or
+                dai.all_words_in('where goes from') or
+                dai.all_words_in('where does go from') or
+                dai.all_words_in('from what station') or
+                dai.all_words_in('what is the starting') or
+                dai.all_words_in('where will from')):
             cn.add_merge(1.0, DialogueActItem('request', 'from_stop'))
 
-        if dai.all_words_in('where does it arrive') or \
-            dai.all_words_in('where does it stop') or \
-            dai.all_words_in('where stopping') or \
-            dai.all_words_in('where going') or \
-            dai.all_words_in('where arriving') or \
-            dai.all_words_in('to what station') or \
-            dai.all_words_in('at which station arrive') or \
-            dai.all_words_in('what is target') or \
-            dai.all_words_in('where is target') or \
-            dai.all_words_in('where destination') or \
-            dai.all_words_in('what is destination') or \
-            dai.all_words_in("what's destination") or \
-            dai.all_words_in('where terminates') or \
-            dai.all_words_in("where terminal") or \
-            dai.all_words_in("where terminate"):
+        if (dai.all_words_in('where does it arrive') or
+                dai.all_words_in('where does it stop') or
+                dai.all_words_in('where stopping') or
+                dai.all_words_in('where going') or
+                dai.all_words_in('where arriving') or
+                dai.all_words_in('to what station') or
+                dai.all_words_in('at which station arrive') or
+                dai.all_words_in('what is target') or
+                dai.all_words_in('where is target') or
+                dai.all_words_in('where destination') or
+                dai.all_words_in('what is destination') or
+                dai.all_words_in("what's destination") or
+                dai.all_words_in('where terminates') or
+                dai.all_words_in("where terminal") or
+                dai.all_words_in("where terminate")):
             cn.add_merge(1.0, DialogueActItem('request', 'to_stop'))
 
         if not dai.any_word_in('arrival arrive arrives arriving stop stops stopping get gets destination target terminal'):
-            if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'give me', 'tell me', 'provide',]) and \
+            if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'give me', 'tell me', 'provide', ]) and \
                     dai.any_word_in('leave leaves leaving go goes going departure departures destination') or\
                     dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', ]) and dai.any_word_in('next'):
                 if not dai.any_word_in("till until before"):
@@ -999,11 +1003,13 @@ class PTIENHDCSLU(SLUInterface):
                     cn.add_merge(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not dai.any_word_in('till until before'):
-            if (dai.all_words_in('how long') and ((dai.any_word_in('would will does') and dai.any_word_in('it that the') and dai.all_words_in('take')) or
-                     dai.any_word_in('travel connection trip train bus sub subway link'))) or \
-                    dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or \
-                    dai.all_words_in("give me time trip") or \
-                    (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time')):
+            if ((dai.all_words_in('how long') and
+                    ((dai.any_word_in('would will does') and dai.any_word_in('it that the') and
+                      dai.all_words_in('take')) or
+                     dai.any_word_in('travel connection trip train bus sub subway link'))) or
+                    dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or
+                    dai.all_words_in("give me time trip") or
+                    (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time'))):
                 cn.add_merge(1.0, DialogueActItem('request', 'duration'))
 
             if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take travel duration')):
@@ -1015,16 +1021,17 @@ class PTIENHDCSLU(SLUInterface):
         if (dai.any_word_in('time found connection alternatives alternative option options possibility choice trip travel journey ride tour link bus train sub subway') or
                 dai.any_phrase_in(['next one', 'previous one', 'last one', 'first one', 'second one', 'third one', 'fourth one'])) and \
                 not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum'):
-            if dai.any_word_in('arbitrary') and \
-                not dai.any_word_in('first second third fourth one two three four'):
+
+            if (dai.any_word_in('arbitrary any') and
+                    not dai.any_word_in('first second third fourth one two three four')):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "dontcare"))
 
-            if dai.any_word_in('first one') and \
-                not dai.any_word_in('second third fourth two three four'):
+            if (dai.any_word_in('first one') and
+                    not dai.any_word_in('second third fourth two three four')):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "1"))
 
-            if dai.any_word_in('second two')and \
-                not dai.any_word_in('third fourth next'):
+            if (dai.any_word_in('second two') and
+                    not dai.any_word_in('third fourth next')):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "2"))
 
             if dai.any_word_in('third three'):
@@ -1033,14 +1040,14 @@ class PTIENHDCSLU(SLUInterface):
             if dai.any_word_in('fourth four'):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "4"))
 
-            if dai.any_word_in("last before latest latter most bottom repeat again") and \
-                not dai.all_words_in("previous precedent"):
+            if (dai.any_word_in("last before latest latter most bottom repeat again") and
+                    not dai.all_words_in("previous preceding")):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "last"))
 
             if dai.any_word_in("next different following subsequent later another"):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
-            if dai.any_word_in("previous precedent"):
+            if dai.any_word_in("previous preciding"):
                 if dai.phrase_in("not want to know previous"):
                     cn.add_merge(1.0, DialogueActItem("deny", "alternative", "prev"))
                 else:
@@ -1059,8 +1066,6 @@ class PTIENHDCSLU(SLUInterface):
 
         if dai.any_phrase_in(["by day", "of the day"]):
             cn.add_merge(1.0, DialogueActItem('inform', 'ampm', 'pm'))
-
-
 
     def handle_false_abstractions(self, abutterance):
         """
