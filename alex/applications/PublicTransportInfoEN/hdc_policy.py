@@ -857,8 +857,9 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         to_info_complete = has_to_place and has_to_area
 
-        if not from_info_complete and not to_info_complete and \
-                'departure_time' not in accepted_slots and 'time' not in accepted_slots and randbool(10):
+        if (not from_info_complete and not to_info_complete and
+                any(s in accepted_slots for s in ['departure_time', 'time', 'departure_time_rel']) and
+                randbool(10)):
             req_da.extend(DialogueAct('request(departure_time)'))
         elif not has_to_place:
             req_da.extend(DialogueAct('request(to_stop)'))
@@ -881,7 +882,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 req_da.extend(DialogueAct('request(from_stop)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
-        default_city = self.ontology.get_default_value('city')  # don't iconfirm borrough if new york is the other city, because all boroughs are in new york
+        default_city = self.ontology.get_default_value('city')  # don't iconfirm borough if new york is the other city, because all boroughs are in new york
         iconfirm_da = DialogueAct()
         if len(req_da) == 0:
             if stop_city_inferred and from_city_val != to_city_val:
