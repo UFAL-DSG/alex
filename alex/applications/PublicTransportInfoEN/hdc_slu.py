@@ -994,8 +994,9 @@ class PTIENHDCSLU(SLUInterface):
                 (dai.all_words_in('directly') and dai.any_word_in('go travel take get goes travels')):
             cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
 
-        if not dai.any_word_in('departure, leave leaves leaving go goes going departure departures destination target terminal'):
-            if dai.any_phrase_in(['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there', 'be there', ]):
+        if not dai.any_word_in('departure leave leaves leaving go goes going departure departures origin source start'):
+            if dai.any_phrase_in(['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there',
+                                  'be there', 'destination', 'target', 'terminal', 'final stop']):
                 if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide']):
                     cn.add_merge(1.0, DialogueActItem('request', 'arrival_time'))
 
