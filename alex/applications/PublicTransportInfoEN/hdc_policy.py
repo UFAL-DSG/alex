@@ -774,7 +774,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 to_city_val = to_cities.pop()
                 stop_city_inferred = True
 
-        # infer cities based on stops
+        # infer boroughs based on stops
         from_boroughs, to_boroughs = None, None
         stop_borough_inferred = False
         if from_stop_val != 'none' and from_borough_val == 'none':
