@@ -13,7 +13,7 @@ do
     ./PublicTransportInfoEN/google.cfg \
     ./PublicTransportInfoEN/voicerss.cfg \
     ./PublicTransportInfoEN/kaldi.cfg \
-
+    ../resources/private/vystadial-code-server.cfg \
 
 done
 
