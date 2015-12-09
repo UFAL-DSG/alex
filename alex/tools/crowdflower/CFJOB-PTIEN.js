@@ -13,6 +13,7 @@ function getLocation() {
         document.getElementById("locationWarning").innerHTML = "This Job can be completed only by "
             + "native speakers of English from USA. If it is found that this Job was completed from "
             + "other location than USA, then it will be automatically rejected.";
+        document.getElementById("locationWarning").style.display = 'block';
     }
 }
 google.load("search", "1",{callback: getLocation});
