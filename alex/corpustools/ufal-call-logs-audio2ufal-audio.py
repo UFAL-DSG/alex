@@ -69,7 +69,7 @@ def save_transcription(trs_fname, trs):
     return existed
 
 
-def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_words=None, lang='cs', verbose=False):
+def extract_wavs_trns(args, dirname, sess_fname, outdir, known_words=None, lang='cs', verbose=False):
     """Extracts wavs and their transcriptions from the named in `sess_fname',
     a CUED call log file. Extracting means copying them to `outdir'. Recordings
     themselves are expected to reside in `dirname'.
@@ -146,17 +146,11 @@ def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_word
         
         # Check this is the wav from this directory.
         wav_basename = rec.attrib['fname'].strip()
-        if wav_basename in wav_mapping:
-            wav_fname = os.path.join(wav_mapping[wav_basename], wav_basename)
-            if os.path.dirname(wav_fname) != dirname:
-                missing_wav = True
-            else:
-                missing_wav = False
-        else:
+        src_wav_fname = os.path.join(dirname, wav_basename)
+        if not os.path.exists(src_wav_fname):
             missing_wav = True
-
-        # ignore the previous check, we have collisions in the data
-        missing_wav = False
+        else:
+            missing_wav = False
 
         if not missing_wav:
             if verbose:
@@ -185,14 +179,14 @@ def extract_wavs_trns(args, dirname, sess_fname, outdir, wav_mapping, known_word
                 os.makedirs(os.path.dirname(trs_fname))
 
             try:
-                size += os.path.getsize(wav_fname)
+                size += os.path.getsize(src_wav_fname)
             except OSError:
-                print "Lost audio file:", wav_fname
+                print "Lost audio file:", src_wav_fname
             else:
                 try:
                     #shutil.copy2(wav_fname, outdir)
-                    tgt = os.path.join(outdir, sub_dir[0], sub_dir[1], os.path.basename(wav_fname))
-                    cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=wav_fname, tgt=tgt)
+                    tgt_wav_fname = os.path.join(outdir, sub_dir[0], sub_dir[1], os.path.basename(src_wav_fname))
+                    cmd = "sox --ignore-length {src} -c 1 -r 16000 -b 16 {tgt}".format(src=src_wav_fname, tgt=tgt_wav_fname)
                     print cmd
                     os.system(cmd)
                 except shutil.Error as e:
@@ -249,23 +243,17 @@ def convert(args):
     else:
         known_words = None
 
-    # Find wavs.
+    # Find wavs
     wav_paths = find_wavs(infname, ignore_list_file=ignore_list_file)
-    # Map file basenames to their relative paths -- NOTE this can be
-    # destructive if multiple files have the same basename.
-    # Wav_mapping: wav basename -> path to call log dir
-    swapped = [os.path.split(fpath) for fpath in wav_paths]
-    wav_mapping = {name: prefix for (prefix, name) in swapped}
-    n_collisions = len(wav_paths) - len(wav_mapping)
+    prefix_wav = [os.path.split(fpath) for fpath in wav_paths]
+    prefixes = set([prefix for (prefix, name) in prefix_wav])
+    n_collisions = 0
 
     # Get all transcription logs.
     n_notnorm_trss = 0
     n_missing_trss = 0
-    # XXX ???
-    # path session file name created from call log dir
     sess_fnames = dict()
-    # Call dir == prefix
-    for prefix in wav_mapping.itervalues():
+    for prefix in prefixes:
         norm_fname = os.path.join(prefix, 'asr_transcribed.xml')
         if os.path.isfile(norm_fname):
             sess_fnames[prefix] = norm_fname
@@ -275,7 +263,6 @@ def convert(args):
                 n_notnorm_trss += 1
             else:
               n_missing_trss += 1
-    # trn_paths = find(infname, 'user-transcription.norm.xml')
 
     print ""
     print "Number of sessions:                   ", len(sess_fnames)
@@ -294,7 +281,7 @@ def convert(args):
             print "Processing call log dir:", prefix
 
         cursize, cur_n_overwrites, cur_n_missing_wav, cur_n_missing_trs = \
-            extract_wavs_trns(args, prefix, call_log, outdir, wav_mapping, known_words, lang, verbose)
+            extract_wavs_trns(args, prefix, call_log, outdir, known_words, lang, verbose)
         size += cursize
         n_overwrites += cur_n_overwrites
         n_missing_wav += cur_n_missing_wav
@@ -365,7 +352,7 @@ if __name__ == '__main__':
                        help='Path towards an output file to contain a list '
                             'of words that appeared in the transcriptions, '
                             'one word per line.')
-   # For an example of the ignore list file, see the top of the script.
+    # For an example of the ignore list file, see the top of the script.
     arger.add_argument('-c', '--count-ignored',
                        action="store_true",
                        default=False,
