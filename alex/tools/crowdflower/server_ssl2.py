@@ -12,11 +12,17 @@ The default is to use files `server.crt` and `server.key` located in the same di
 the SSL key and certificate. The default is to listen on port 443. These defaults may be
 overridden (see usage).
 
+The default paths to code storage, log file, and tasks storage are `./codes`, `./log`,
+and `./tasks`, respectively.
+
+By default, codes never expire. This can be changed using the `--timeout` parameter.
+
 The API
 -------
 - it accepts three query parameters: a,q and r
 - it returns simple JSON with one node "response" [yes,no,success,online]
 - if a is "1" (?q=CODE&a=1), then CODE is added and the response is "success"
+    - NB: if the code is already in the database, the response is "failure"
 - if r is "1" (?q=CODE&r=1), then CODE is removed and the response is "success"
 - if CODE is present in "code_path" file it returns "yes" otherwise "no"
 - if CODE is equal to "test" it sends "online" in response - connection check
@@ -25,8 +31,11 @@ The API
 Usage
 -----
 
-./server_ssl2.py [--port XXXX] [--key path/to/file.key] [--cert path/to/file.crt]
+./server_ssl2.py [--port XXXX] [--key path/to/file.key] [--cert path/to/file.crt] \
+        [--codes path/to/code/storage.tsv] [--log path/to/logfile] [--timeout <minutes>] \
+        [--tasks path/to/tasks/file]
 '''
+
 import codecs
 import json
 from BaseHTTPServer import BaseHTTPRequestHandler
@@ -35,73 +44,69 @@ import os
 import SocketServer
 import argparse
 import random
+import time
+import ssl
+import sys
 
-code_path = "./codes"
-log_path = "./log"
-task_path = "./tasks"
+
+DEFAULT_PORT = 443
+DEFAULT_CODES_PATH = "./codes"
+DEFAULT_LOG_PATH = "./log"
+DEFAULT_TASKS_PATH = "./tasks"
+MYDIR = os.path.dirname(__file__)
+DEFAULT_KEY_PATH = os.path.join(MYDIR, 'server.key')
+DEFAULT_CERT_PATH = os.path.join(MYDIR, 'server.crt')
+DEFAULT_TIMEOUT = -1
 
 
 class Handler(BaseHTTPRequestHandler):
-
-    def read_codes(self, path):
-        data = set()
-        if not os.path.isfile(path):
-            return data
-        with codecs.open(path, 'r', 'UTF-8') as fh_in:
-            for line in fh_in:
-                line = line.strip()
-                if len(line) > 0:
-                    data.add(line)
-        return data
-
-    def remove_code(self, path, code):
-        data = self.read_codes(path)
-        with codecs.open(path, "w", 'UTF-8') as fh_out:
-            for line in data:
-                if line != code:
-                    print >> fh_out, line
-
-    def add_code(self, path, code):
-        data = self.read_codes(path)
-        data.add(code)
-        with codecs.open(path, "w", 'UTF-8') as fh_out:
-            for line in data:
-                print >> fh_out, line
-
-    def log_GET(self, path, get):
-        with codecs.open(path, "a", 'UTF-8') as fh_out:
-            print >> fh_out, get
 
     def do_GET(self):
         """Main method that handles a GET request from the client."""
         response = ""
         try:
-            self.log_GET(log_path, str(self.path))
-
-            codes = self.read_codes(code_path)
+            self.server.log(str(self.path))
 
             query = urlparse(self.path).query
 
             query_components = dict(qc.split("=") for qc in query.split("&"))
             query_code = query_components["q"]
 
-            add = query_components["a"] if "a" in query_components else "0"
-            remove = query_components["r"] if "r" in query_components else "0"
+            add = query_components.get('a')
+            remove = query_components.get('r')
             # callback = query_components["callback"] if query_components.has_key("callback") else ""
 
+            # connection test
             if query_code == "test":
                 response = "online"
+
+            # get a random task
             elif query_code == "task":
                 response = self.server.get_random_task()
+
+            # try to add code to database
             elif add == "1":
-                self.add_code(code_path, query_code)
-                response = "success"
+                if self.server.add_code(query_code):
+                    response = "success"
+                else:
+                    response = "failure"
+
+            # remove code from database
             elif remove == "1":
-                self.remove_code(code_path, query_code)
+                self.server.remove_code(query_code)
                 response = "success"
+
+            # check validity of code, remove it if successful
             else:
-                response = 'yes' if query_code in codes else 'no'
-        except Exception:
+                codes = self.server.read_codes()
+                if query_code in codes:
+                    self.server.remove_code(query_code)
+                    response = 'yes'
+                else:
+                    response = 'no'
+
+        except Exception as e:
+            print >> sys.stderr, unicode(e).encode('utf-8')
             response = "no"
             # callback = ""
 
@@ -119,25 +124,24 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class SSLTCPServer(SocketServer.TCPServer):
-    def __init__(self, server_address, RequestHandlerClass, bind_and_activate=True,
-                 cert_file=None, key_file=None):
+    def __init__(self, server_address, RequestHandlerClass, settings, bind_and_activate=True):
         """Constructor. May be extended, do not override."""
 
+        self.task_path = settings['tasks']
+        self.log_path = settings['log']
+        self.code_path = settings['codes']
+        self.key_file = settings['key']
+        self.cert_file = settings['cert']
+        self.timeout = settings['timeout']
+
         # read the tasks and store them for reuse
-        self.tasks = self.read_tasks(task_path)
+        self.tasks = self.read_tasks(self.task_path)
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
         # initialize SSL connection
-        mydir = os.path.dirname(__file__)
-        if key_file is None:
-            key_file = os.path.join(mydir, 'server.key')
-        if cert_file is None:
-            cert_file = os.path.join(mydir, 'server.crt')
-
-        import ssl
         self.socket = ssl.wrap_socket(self.socket,
-                                      keyfile=key_file,
-                                      certfile=cert_file,
+                                      keyfile=self.key_file,
+                                      certfile=self.cert_file,
                                       cert_reqs=ssl.CERT_NONE,
                                       ssl_version=ssl.PROTOCOL_TLSv1,
                                       server_side=True)
@@ -172,17 +176,58 @@ class SSLTCPServer(SocketServer.TCPServer):
 
     def get_random_task(self):
         """Return a HMTL representation for a random task (out of tasks stored in `self.task`)."""
-        das, sents = random.choice(self.tasks)
+        _, sents = random.choice(self.tasks)
         text = '<ol>\n'
         for sent in sents.split('\t'):
             text += '<li>' + sent + '</li>\n'
         text += '</ol>\n'
         return text
 
+    def read_codes(self):
+        data = {}
+        if not os.path.isfile(self.code_path):
+            return data
+        dt_now = int(time.time())
+        with codecs.open(self.code_path, 'r', 'UTF-8') as fh_in:
+            for line in fh_in:
+                line = line.strip()
+                if not line:  # skip empty lines
+                    continue
+                cur_code, cur_dt = line.strip().split('\t')
+                dt_code = int(cur_dt)
+                if self.timeout > 0 and dt_code + self.timeout * 60 < dt_now:  # skip old codes
+                    continue
+                # remember the valid code
+                data[cur_code] = cur_dt
+        return data
 
-def run(server_class=SSLTCPServer, port=443, cert_file=None, key_file=None):
-    httpd = server_class(('', port), Handler, True, cert_file, key_file)
+    def remove_code(self, code_to_remove):
+        data = self.read_codes()
+        with codecs.open(self.code_path, "w", 'UTF-8') as fh_out:
+            for code, timestamp in data.iteritems():
+                if code != code_to_remove:
+                    print >> fh_out, code + "\t" + str(timestamp)
+
+    def add_code(self, code_to_add):
+        data = self.read_codes()
+        if code_to_add in data:
+            return False
+        data[code_to_add] = int(time.time())
+        with codecs.open(self.code_path, "w", 'UTF-8') as fh_out:
+            for code, timestamp in data.iteritems():
+                print >> fh_out, code + "\t" + str(timestamp)
+        return True
+
+    def log(self, request):
+        with codecs.open(self.log_path, "a", 'UTF-8') as fh_out:
+            print >> fh_out, request
+
+
+def run(server_class=SSLTCPServer, settings={}):
+
+    httpd = server_class(('', settings['port']), Handler, settings, True)
     sa = httpd.socket.getsockname()
+
     print "Serving HTTPS on", sa[0], "port", sa[1], "..."
     try:
         httpd.serve_forever()
@@ -194,8 +239,12 @@ def run(server_class=SSLTCPServer, port=443, cert_file=None, key_file=None):
 if __name__ == '__main__':
     random.seed()
     ap = argparse.ArgumentParser()
-    ap.add_argument('-p', '--port', type=int, default=443)
-    ap.add_argument('-c', '--cert')
-    ap.add_argument('-k', '--key')
+    ap.add_argument('-p', '--port', type=int, default=DEFAULT_PORT)
+    ap.add_argument('-c', '--cert', default=DEFAULT_CERT_PATH)
+    ap.add_argument('-k', '--key', default=DEFAULT_KEY_PATH)
+    ap.add_argument('--tasks', default=DEFAULT_TASKS_PATH)
+    ap.add_argument('-l', '--log', default=DEFAULT_LOG_PATH)
+    ap.add_argument('-t', '--timeout', type=int, default=DEFAULT_TIMEOUT)
+    ap.add_argument('--codes', default=DEFAULT_CODES_PATH)
     args = ap.parse_args()
-    run(port=args.port, cert_file=args.cert, key_file=args.key)
+    run(settings=vars(args))
