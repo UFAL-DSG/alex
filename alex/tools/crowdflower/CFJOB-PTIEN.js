@@ -32,6 +32,8 @@ function createCrossDomainRequest(url, handler) {
 }
 var invocation = createCrossDomainRequest();
 var server_url = 'vystadial.ms.mff.cuni.cz:4443';
+var valid_err_msg = 'The validation codes probably will not work. Check your internet connection' +
+        'and/or try using a different browser (e.g., the latest version of Chrome).';
 
 function callOtherDomain(value) {
     if (success)  // end early
@@ -49,7 +51,7 @@ function callOtherDomain(value) {
             invocation.send();
         }
     } else {
-        var text = "No Invocation Took Place At All";
+        var text = "Could not contact code validation server. " + valid_err_msg;
         alert(text);
     }
 }
@@ -59,7 +61,7 @@ function handler(evtXHR) {
         if (invocation.status == 200) {
             outputResult();
         } else {
-            alert("Invocation Errors Occurred");
+            alert("Error while contacting the validation server. " + valid_err_msg);
         }
     }
 }
