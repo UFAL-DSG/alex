@@ -25,6 +25,10 @@
   border-radius: 3px;
 }
 
+.collapse-header .toggle-indicator {
+  color: #00A6E0;
+}
+
 li {
 font-family: "Lato",sans-serif;
 font-weight: 400;

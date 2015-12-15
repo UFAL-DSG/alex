@@ -66,13 +66,31 @@ function handler(evtXHR) {
     }
 }
 
+// This sets all inputs except the code field to enabled/disabled
+// (only after the code is successfully verified, other inputs are enabled)
+function set_input_disabled(value){
+    var inputs = document.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; ++i){
+        // code field should be always enabled
+        if (inputs[i].className.indexOf('code_field') > - 1){
+            inputs[i].disabled = '';
+        }
+        else {
+            inputs[i].disabled = value;
+        }
+    }
+    document.getElementsByTagName('textarea')[0].disabled = value;
+}
+
 // check 'success' (if response is 'yes' for a valid code)
 // store last response in the lastResponse variable
 function outputResult() {
     var response = invocation.responseText;
     json = JSON.parse(response);
-    if (json.response == "yes")
+    if (json.response == "yes"){
         success = true;
+        set_input_disabled(''); // enable all inputs
+    }
     lastResponse = json.response;
 }
 
@@ -136,4 +154,40 @@ function load_task(){
     }
 }
 
-addOnloadEvent(load_task);
+function init_page(){
+    load_task();
+    set_input_disabled('disabled');
+}
+
+addOnloadEvent(init_page);
+
+//
+// This adds collapse-uncollapse changing arrows
+//
+require(['jquery-noconflict'], function($) {
+    //Ensure MooTools is where it must be
+    Window.implement('$', function(el, nc){
+    return document.id(el, nc, this.document);
+});
+
+var $ = window.jQuery;
+//jQuery goes here
+
+function toggle_collapse(e){
+    var indicator = $(e.target).prev('.collapse-header').find('.toggle-indicator');
+    if (e.type == 'show'){
+        indicator.html('▴');
+    }
+    else {
+        indicator.html('▾');
+    }
+}
+
+// add toggle events for collapse headers
+$(".collapse").on('show.bs.collapse', toggle_collapse);
+$(".collapse").on('hide.bs.collapse', toggle_collapse);
+
+// ensure the top-level instruction div is shown (un-collapsed)
+$(".well").slideDown('fast');
+
+});
