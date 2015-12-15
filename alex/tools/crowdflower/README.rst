@@ -9,24 +9,36 @@ Getting started
 
 There are multiple ways to get started, the best way is to match appropriate template for your project. Since there is no template for a Job that involves solvers to call a phone number and talk for a while, we have to create a Job from scratch.
 
-Click the **Get started** button on a **Survey Job** panel at a `New Job <https://crowdflower.com/jobs/new>`_ page. This option will not require you to insert any data. You can go ahead and fill the Title and Instructions if you want. Both of these fields can not be left blank. The Instructions field however does not have any capability to change styles or insert items and stuff like that. That is why in most cases you will want to briefly refer to the real instructions implemented down below. 
+Click the **Get started** button on a **Survey Job** panel at a `New Job <https://crowdflower.com/jobs/new>`_ page. This option will not require you to insert any data.
 
-The last field is **Show Your Data** field in which you can insert images, links, lists and add questions, typically to describe a survey. We should want to use the questions at the utmost to construct a feedback form. There needs to be at least one question created. This can be also done programmatically.
+Fill in the Title.
+
+Use the **Show Your Data** field to insert images, links, lists and add questions, typically to describe a survey. Use this field construct a feedback form. There needs to be at least one question created. This can be also done programmatically.
 
 To switch to advanced code editor press the **Switch to CML Editor** button. This will allow you to write your own questions via CML tags. CML `Documentation <https://success.crowdflower.com/hc/en-us>`_ can be conveniently accessed through a presented link. Furthermore You can write HTML tags in there. It will be all processed and injected into a div, once the Job is created or previewed.
 
 At the bottom of the page there is a **Show Custom CSS/JS** button. It will reveal two extra text areas in which you can put your custom styles and javascript code. The JS code is injected into a try/catch block of a function executed when the DOM is loaded.
 
+Use the **Instructions** field to add your instructions. You can use the code icon (rightmost) to insert custom HTML. Any custom Javascript and CSS entered into the fields above will also apply here.
+
 PTI Job description
 -------------------
 
-We have created a Job that includes a description of the Job, instructions for the caller, example call and a statement of consent. All of those text parts are situated in a collapsible divs. Then there is a theme for the contributor to speak about in a box and already mentioned feedback form that is accessible once a valid four digit code is inserted.
+We have created a Job that includes a description of the Job, instructions for the caller, example call and a statement of consent. All of those text parts are situated in a collapsible divs. The job itself contains the phone number, a description of the task to talk about (retrieved from our server) and a few survey questions about the quality of the call.
 
-HTML part of the job is really straight forward. The collapsible divs are modified versions of those in CML Documentation. There is a HTML script tag for loading Google location service. And the feedback form is hidden by **only-if** logic also explained in the documentation.
+To recreate the job, please copy:
+
+- `CFJOB-PTIEN.html` into the CML field
+- `CFJOB-PTIEN.css` into the custom CSS field
+- `CFJOB-PTIEN.js` into the custom Javascript field
+- `CFJOB-PTIEN.instructions.html` into the Instructions field
+
+The HTML part of the job is really straightforward. The collapsible divs are modified versions of those in CML Documentation. There is a HTML script tag for loading Google location service. And the feedback form is hidden by **only-if** logic also explained in the documentation.
 
 Apart from its usual utilization, CSS part is coupled with the collapsibility of divs.
 
 The most interesting part of this Job is the JS section. There is a Google location call introduced. It shows a red warning text that emphasizes the US only contributors requirement. There is implemented a **Custom validator** used to validate a four digit number text field that opens up the feedback form. Incidentally a cross domain request function is implemented here.
+
 
 Custom validator
 ----------------
