@@ -168,8 +168,11 @@ class DM(multiprocessing.Process):
         self.commands.send(DMDA(da, 'DM', 'HUB'))
 
     def epilogue_final_code(self):
+
         data = None
         attempts = 0
+        url_template = self.cfg['DM']['epilogue']['final_code_url']
+        system_logger = self.cfg['Logging']['system_logger']
 
         # store a code on the server (try several times if not successful)
         while attempts < 10 and not data or not data['response'] or data['response'] != 'success':
@@ -177,7 +180,7 @@ class DM(multiprocessing.Process):
             self.codes.append(code)  # put the code back to the end of the queue for reuse
             attempts += 1
             # pull the URL
-            url = self.cfg['DM']['epilogue']['final_code_url'].format(code=code)
+            url = url_template.format(code=code, logdir=system_logger.get_session_dir_name())
             data = urllib2.urlopen(url).read()
             data = json.loads(data, encoding='UTF-8')
 
@@ -315,5 +318,5 @@ class DM(multiprocessing.Process):
             otherwise CF contributor would do the job without getting paid.
         """
         if self.cfg['DM']['epilogue']['final_question'] is None and self.cfg['DM']['epilogue']['final_code_url'] is not None:
-            url = self.cfg['DM']['epilogue']['final_code_url'].format(code='test')
+            url = self.cfg['DM']['epilogue']['final_code_url'].format(code='test', logdir='')
             urllib2.urlopen(url)
