@@ -15,9 +15,12 @@ The tasks are generated using Alex template NLG with a custom set of templates.
 
 from __future__ import unicode_literals
 
-from alex.components.slu.da import DialogueAct, DialogueActItem
 import random
+import codecs
+import sys
 from argparse import ArgumentParser
+
+from alex.components.slu.da import DialogueAct, DialogueActItem
 from alex.utils.config import as_project_path
 from alex.components.nlg.template import TemplateNLG
 
@@ -96,9 +99,6 @@ def generate_task():
 
     # indicate that we're looking for connection
     da.append(DialogueActItem('inform', 'task', 'find_connection'))
-    if random.random() > 0.7:
-        task.append(da)
-        da = DialogueAct()
 
     # get two distinct stops
     from_stop = random.choice(STOPS)
@@ -106,17 +106,21 @@ def generate_task():
     while to_stop == from_stop:
         to_stop = random.choice(STOPS)
     da.append(DialogueActItem('inform', 'from_stop', from_stop))
-    if random.random() > 0.8:
-        task.append(da)
-        da = DialogueAct()
     da.append(DialogueActItem('inform', 'to_stop', to_stop))
     task.append(da)
 
     # generate random subsequent questions
     questions = random.sample(range(6), random.randint(5, 6) - len(task))
 
+    query_change = False
+    da = DialogueAct()
     for question in sorted(questions):
         dais = QUESTIONS[question]
+
+        if dais[0].name in ['alternative', 'vehicle', 'time', 'to_stop'] and not query_change:
+            query_change = True
+            task.append(da)
+            da = DialogueAct()
 
         if dais[0].name == 'to_stop':
             new_to_stop = random.choice(STOPS)
@@ -124,22 +128,25 @@ def generate_task():
                 new_to_stop = random.choice(STOPS)
             dais[0].value = new_to_stop
 
-        da = DialogueAct()
         da.extend(dais)
-        task.append(da)
 
+    task.append(da)
     return task
 
 
 def main(num_tasks):
+    out = codecs.getwriter('utf-8')(sys.stdout)
     random.seed()
     nlg = TemplateNLG(cfg=CFG)
     for _ in xrange(num_tasks):
         task = generate_task()
         sents = [nlg.generate(da) for da in task]
-        print '\t'.join([unicode(da) for da in task])
-        print '\t'.join(sents)
-        print ''
+        print >> out, '\t'.join([unicode(da) for da in task])
+        sent_text = '\t'.join(sents)
+        sent_text = sent_text.replace(' .', '.')
+        sent_text = sent_text.replace(' ,', ',')
+        print >> out, sent_text
+        print >> out, ''
 
 if __name__ == '__main__':
     ap = ArgumentParser()

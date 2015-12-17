@@ -6,7 +6,7 @@ server_ssl2.py
 ==============
 
 A HTTPS server to help with PTIEN jobs at CrowdFlower. Serves
-different tasks for the users and handles code verification.
+tasks assignments for the users and handles code verification.
 
 The default is to use files `server.crt` and `server.key` located in the same directory as
 the SSL key and certificate. The default is to listen on port 443. These defaults may be
@@ -19,14 +19,51 @@ By default, codes never expire. This can be changed using the `--timeout` parame
 
 The API
 -------
-- it accepts three query parameters: a,q and r
-- it returns simple JSON with one node "response" [yes,no,success,online]
+
+### Requests
+
+The server accepts the query parameters: *a*, *q*, *d*, *r*.
+
+Parameter *q* (query/code):
+
+- if CODE is a four-digit number present in the code storage, it returns "yes", otherwise "no"
+    - additionally, if a call log directory has been sent using the *d* parameter,
+      it is also returned.
+- if CODE is equal to "test", it sends "online" in response - connection check
+- if CODE is equal to "task", a random HTML representation of a task is returned
+
+Parameter *a* (add, only used with *q*):
+
 - if a is "1" (?q=CODE&a=1), then CODE is added and the response is "success"
     - NB: if the code is already in the database, the response is "failure"
+
+Parameter *d* (directory, only used with *q* and *a*):
+
+- this optionally specifies a call log directory for the given code which will be returned
+  on successfully checking the code using *q*.
+
+Parameter *r* (remove, only used with *q*):
+
 - if r is "1" (?q=CODE&r=1), then CODE is removed and the response is "success"
-- if CODE is present in "code_path" file it returns "yes" otherwise "no"
-- if CODE is equal to "test" it sends "online" in response - connection check
-- if CODE is equal to "task", a random HTML representation of a task is returned
+
+
+### Response shape
+
+The response is always a JSON dictionary. It always contains at least one key, `'response'`.
+For some queries, an additional key, `'data'`, may be present.
+
+For a `q=test` request, the `response` is `online`.
+
+If a task is requested using `q=task`, the `response` key contains a textual description
+of the task, while the `data` key contains the corresponding dialogue acts.
+
+If a code is added or removed from the database, the `response` is `success` or `failure`
+(`failure` only when trying to add a code that is already in the database).
+
+If a code is checked, the `response` is `no` for an unsuccessful and `yes` for a successful
+check. If the server has been provided with a call log directory upon adding the code in
+the database, the `data` contains the directory.
+
 
 Usage
 -----
@@ -64,6 +101,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Main method that handles a GET request from the client."""
         response = ""
+        data = ""
         try:
             self.server.log(str(self.path))
 
@@ -82,11 +120,11 @@ class Handler(BaseHTTPRequestHandler):
 
             # get a random task
             elif query_code == "task":
-                response = self.server.get_random_task()
+                response, data = self.server.get_random_task()
 
-            # try to add code to database
+            # try to add code to database (optionally with a call log directory)
             elif add == "1":
-                if self.server.add_code(query_code):
+                if self.server.add_code(query_code, query_components.get('d', '')):
                     response = "success"
                 else:
                     response = "failure"
@@ -100,6 +138,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 codes = self.server.read_codes()
                 if query_code in codes:
+                    _, data = codes[query_code]
                     self.server.remove_code(query_code)
                     response = 'yes'
                 else:
@@ -119,7 +158,10 @@ class Handler(BaseHTTPRequestHandler):
         #     self.wfile.write( callback + '(' + json.dumps({'response':response}) + ')' )
         #     self.request.sendall( callback + '(' + json.dumps({'response':response}) + ')')
         # else:
-        self.wfile.write(json.dumps({'response': response}))
+        ret = {'response': response}
+        if data:
+            ret['data'] = data
+        self.wfile.write(json.dumps(ret))
         # self.request.sendall(json.dumps({'response':response}))
 
 
@@ -176,12 +218,11 @@ class SSLTCPServer(SocketServer.TCPServer):
 
     def get_random_task(self):
         """Return a HMTL representation for a random task (out of tasks stored in `self.task`)."""
-        _, sents = random.choice(self.tasks)
-        text = '<ol>\n'
+        das, sents = random.choice(self.tasks)
+        text = ''
         for sent in sents.split('\t'):
-            text += '<li>' + sent + '</li>\n'
-        text += '</ol>\n'
-        return text
+            text += '<p>' + sent + '</p>\n'
+        return text, das
 
     def read_codes(self):
         data = {}
@@ -193,29 +234,30 @@ class SSLTCPServer(SocketServer.TCPServer):
                 line = line.strip()
                 if not line:  # skip empty lines
                     continue
-                cur_code, cur_dt = line.strip().split('\t')
+                cur_code, cur_dt, cur_dir = line.strip().split('\t')
                 dt_code = int(cur_dt)
                 if self.timeout > 0 and dt_code + self.timeout * 60 < dt_now:  # skip old codes
                     continue
                 # remember the valid code
-                data[cur_code] = cur_dt
+                data[cur_code] = (cur_dt, cur_dir)
         return data
 
     def remove_code(self, code_to_remove):
         data = self.read_codes()
         with codecs.open(self.code_path, "w", 'UTF-8') as fh_out:
-            for code, timestamp in data.iteritems():
+            for code, (timestamp, logdir) in data.iteritems():
                 if code != code_to_remove:
-                    print >> fh_out, code + "\t" + str(timestamp)
+                    print >> fh_out, code + "\t" + str(timestamp) + "\t" + logdir
 
-    def add_code(self, code_to_add):
+    def add_code(self, code_to_add, dir_to_add=''):
+        """Add a code to the database, optionally with a call log directory path."""
         data = self.read_codes()
         if code_to_add in data:
             return False
-        data[code_to_add] = int(time.time())
+        data[code_to_add] = (int(time.time()), dir_to_add)
         with codecs.open(self.code_path, "w", 'UTF-8') as fh_out:
-            for code, timestamp in data.iteritems():
-                print >> fh_out, code + "\t" + str(timestamp)
+            for code, (timestamp, logdir) in data.iteritems():
+                print >> fh_out, code + "\t" + str(timestamp) + "\t" + logdir
         return True
 
     def log(self, request):

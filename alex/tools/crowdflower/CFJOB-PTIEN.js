@@ -18,9 +18,14 @@ function getLocation() {
 }
 google.load("search", "1",{callback: getLocation});
 
-// this part is for calling synchronously my own web server
+//
+// Helper functions for handling synchronous calls to our own server
+// (getting tasks, validating codes)
+//
+
 var success = false;
 var lastResponse = null;
+var lastData = null;
 
 // browser-independent cross-domain AJAX request
 function createCrossDomainRequest(url, handler) {
@@ -34,6 +39,7 @@ var invocation = createCrossDomainRequest();
 var server_url = 'vystadial.ms.mff.cuni.cz:4443';
 var valid_err_msg = 'The validation codes probably will not work. Check your internet connection' +
         'and/or try using a different browser (e.g., the latest version of Chrome).';
+
 
 function callOtherDomain(value) {
     if (success)  // end early
@@ -82,6 +88,17 @@ function set_input_disabled(value){
     document.getElementsByTagName('textarea')[0].disabled = value;
 }
 
+// Helper function: find input field with a particular class name
+function get_input_field(name){
+    var inputs = document.getElementsByTagName('input');
+    for (var i = 0; i < inputs.length; ++i){
+         if (inputs[i].className.indexOf(name) > - 1){
+             return inputs[i];
+         }
+    }
+    return null;
+}
+
 // check 'success' (if response is 'yes' for a valid code)
 // store last response in the lastResponse variable
 function outputResult() {
@@ -89,9 +106,16 @@ function outputResult() {
     json = JSON.parse(response);
     if (json.response == "yes"){
         success = true;
+        if (json.data){
+            logdir_input = get_input_field('call_log_dir');
+            logdir_input.value = json.data;
+        }
         set_input_disabled(''); // enable all inputs
     }
     lastResponse = json.response;
+    if (json.data){
+        lastData = json.data;
+    }
 }
 
 // This if/else block is used to hijack the functionality of an existing validator (specifically: yext_no_international_url)
@@ -126,6 +150,10 @@ function METHOD_TO_VALIDATE(element) {
     return success;
 }
 
+//
+// Page initialization
+//
+
 // This is for loading a random task from the server on page load
 function addOnloadEvent(fnc){
     if ( typeof window.addEventListener != "undefined" )
@@ -149,9 +177,13 @@ function addOnloadEvent(fnc){
 function load_task(){
     callOtherDomain('task');
     if (lastResponse !== null){
-        var task = document.getElementById('task');
-        task.innerHTML = '<strong>' + lastResponse + '</strong>';
+        var task_elem = document.getElementById('task');
+        task_elem.innerHTML = '<strong>' + lastResponse + '</strong>';
     }
+    task_text = get_input_field('task_text');
+    task_text.value = lastResponse;
+    task_text = get_input_field('task_data');
+    task_text.value = lastData;
 }
 
 function init_page(){
@@ -191,3 +223,4 @@ $(".collapse").on('hide.bs.collapse', toggle_collapse);
 $(".well").slideDown('fast');
 
 });
+
