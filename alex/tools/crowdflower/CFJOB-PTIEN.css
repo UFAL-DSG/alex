@@ -29,10 +29,13 @@
   color: #00A6E0;
 }
 
-li {
-font-family: "Lato",sans-serif;
-font-weight: 400;
-line-height: 150%;
+#task p {
+  font-size: 13pt;
+  margin: 0 0;
+}
+
+#task {
+  margin-top: 10px;
 }
 
 th{
