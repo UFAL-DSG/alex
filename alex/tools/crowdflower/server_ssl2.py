@@ -36,6 +36,9 @@ Parameter *a* (add, only used with *q*):
 
 - if a is "1" (?q=CODE&a=1), then CODE is added and the response is "success"
     - NB: if the code is already in the database, the response is "failure"
+    - if the --allow-ip command-line setting is used, using this parameter is only allowed
+      to the given range of IP addresses (otherwise, the code is not added and the response
+      is "unauthorized").
 
 Parameter *d* (directory, only used with *q* and *a*):
 
@@ -70,7 +73,7 @@ Usage
 
 ./server_ssl2.py [--port XXXX] [--key path/to/file.key] [--cert path/to/file.crt] \
         [--codes path/to/code/storage.tsv] [--log path/to/logfile] [--timeout <minutes>] \
-        [--tasks path/to/tasks/file]
+        [--tasks path/to/tasks/file] [--allow-ip 0.0.0.0-255.255.255.255]
 '''
 
 import codecs
@@ -85,7 +88,6 @@ import time
 import ssl
 import sys
 
-
 DEFAULT_PORT = 443
 DEFAULT_CODES_PATH = "./codes"
 DEFAULT_LOG_PATH = "./log"
@@ -94,6 +96,30 @@ MYDIR = os.path.dirname(__file__)
 DEFAULT_KEY_PATH = os.path.join(MYDIR, 'server.key')
 DEFAULT_CERT_PATH = os.path.join(MYDIR, 'server.crt')
 DEFAULT_TIMEOUT = -1
+DEFAULT_ALLOW_IP = '0.0.0.0-255.255.255.255'
+
+
+class IPRange(object):
+
+    def __init__(self, range_str):
+        """Initialize using a range string, such as 0.0.0.0-255.255.255.255."""
+        self.lo, self.hi = (self._parse_addr(addr_str) for addr_str in range_str.split('-'))
+
+    def _parse_addr(self, addr_str):
+        """Parse an IP address to an integer representation for easy comparisons."""
+        addr = [int(i) for i in addr_str.split('.')]
+        if len(addr) != 4 or any([i < 0 for i in addr]) or any([i > 255 for i in addr]):
+            raise ValueError('Invalid IP address: %s' % addr_str)
+        val = 0
+        for i in addr:
+            val *= 255
+            val += i
+        return val
+
+    def is_in_range(self, addr_str):
+        """Return True if the given address (string) is in this range."""
+        addr = self._parse_addr(addr_str)
+        return self.lo <= addr and addr <= self.hi
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -102,8 +128,9 @@ class Handler(BaseHTTPRequestHandler):
         """Main method that handles a GET request from the client."""
         response = ""
         data = ""
+        response_code = 200
         try:
-            self.server.log(str(self.path))
+            self.server.log(self.client_address, str(self.path))
 
             query = urlparse(self.path).query
 
@@ -124,7 +151,10 @@ class Handler(BaseHTTPRequestHandler):
 
             # try to add code to database (optionally with a call log directory)
             elif add == "1":
-                if self.server.add_code(query_code, query_components.get('d', '')):
+                if not self.server.is_addr_allowed(self.client_address):
+                    response_code = 401
+                    response = "unauthorized"
+                elif self.server.add_code(query_code, query_components.get('d', '')):
                     response = "success"
                 else:
                     response = "failure"
@@ -146,10 +176,12 @@ class Handler(BaseHTTPRequestHandler):
 
         except Exception as e:
             print >> sys.stderr, unicode(e).encode('utf-8')
+            # import traceback
+            # traceback.print_exc()
             response = "no"
             # callback = ""
 
-        self.send_response(200)
+        self.send_response(response_code)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
@@ -175,6 +207,7 @@ class SSLTCPServer(SocketServer.TCPServer):
         self.key_file = settings['key']
         self.cert_file = settings['cert']
         self.timeout = settings['timeout']
+        self.allow_ip = IPRange(settings['allow_ip'])
 
         # read the tasks and store them for reuse
         self.tasks = self.read_tasks(self.task_path)
@@ -231,10 +264,10 @@ class SSLTCPServer(SocketServer.TCPServer):
         dt_now = int(time.time())
         with codecs.open(self.code_path, 'r', 'UTF-8') as fh_in:
             for line in fh_in:
-                line = line.strip()
+                line = line.strip("\r\n")
                 if not line:  # skip empty lines
                     continue
-                cur_code, cur_dt, cur_dir = line.strip().split('\t')
+                cur_code, cur_dt, cur_dir = line.split('\t')
                 dt_code = int(cur_dt)
                 if self.timeout > 0 and dt_code + self.timeout * 60 < dt_now:  # skip old codes
                     continue
@@ -260,9 +293,14 @@ class SSLTCPServer(SocketServer.TCPServer):
                 print >> fh_out, code + "\t" + str(timestamp) + "\t" + logdir
         return True
 
-    def log(self, request):
+    def log(self, client_addr, request):
+        """Log the request path and client address (IP + port), along with current time."""
         with codecs.open(self.log_path, "a", 'UTF-8') as fh_out:
-            print >> fh_out, request
+            print >> fh_out, time.strftime('%Y-%m-%d %H:%M:%S') + "\t" + ':'.join([str(i) for i in client_addr]) + "\t" + request
+
+    def is_addr_allowed(self, client_addr):
+        """Return true if the given client address (IP + port) is allowed to add keys."""
+        return self.allow_ip.is_in_range(client_addr[0])
 
 
 def run(server_class=SSLTCPServer, settings={}):
@@ -287,6 +325,7 @@ if __name__ == '__main__':
     ap.add_argument('--tasks', default=DEFAULT_TASKS_PATH)
     ap.add_argument('-l', '--log', default=DEFAULT_LOG_PATH)
     ap.add_argument('-t', '--timeout', type=int, default=DEFAULT_TIMEOUT)
+    ap.add_argument('-i', '--allow-ip', default=DEFAULT_ALLOW_IP)
     ap.add_argument('--codes', default=DEFAULT_CODES_PATH)
     args = ap.parse_args()
     run(settings=vars(args))

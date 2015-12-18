@@ -9,10 +9,12 @@ function getLocation() {
         glocation += google.loader.ClientLocation.address.city;
     }
 
+    var re = /^(US|GB|CA|IE|AU)/;
     if (glocation.lastIndexOf('US', 0) !== 0) {
         document.getElementById("locationWarning").innerHTML = "This Job can be completed only by "
-            + "native speakers of English from USA. If it is found that this Job was completed from "
-            + "other location than USA, then it will be automatically rejected.";
+            + "native speakers of English from the USA, United Kingdom, Canada, Ireland, and Australia. "
+            + "If it is found that this Job was completed from "
+            + "any other location, then it will be automatically rejected.";
         document.getElementById("locationWarning").style.display = 'block';
     }
 }
@@ -76,13 +78,15 @@ function handler(evtXHR) {
 // (only after the code is successfully verified, other inputs are enabled)
 function set_input_disabled(value){
     var inputs = document.getElementsByTagName('input');
+    // value for others + code field (true == all disabled except code field, and vice versa)
+    var vals = value ? ['disabled', ''] : ['', 'disabled'];
+
     for (var i = 0; i < inputs.length; ++i){
-        // code field should be always enabled
         if (inputs[i].className.indexOf('code_field') > - 1){
-            inputs[i].disabled = '';
+            inputs[i].disabled = vals[1];
         }
         else {
-            inputs[i].disabled = value;
+            inputs[i].disabled = vals[0];
         }
     }
     document.getElementsByTagName('textarea')[0].disabled = value;
@@ -110,7 +114,7 @@ function outputResult() {
             logdir_input = get_input_field('call_log_dir');
             logdir_input.value = json.data;
         }
-        set_input_disabled(''); // enable all inputs
+        set_input_disabled(false); // enable all inputs
     }
     lastResponse = json.response;
     if (json.data){
@@ -118,6 +122,8 @@ function outputResult() {
     }
 }
 
+// CrowdFlower-recommended custom validation
+// see https://success.crowdflower.com/hc/en-us/articles/201855879-Javascript-Guide-to-Customizing-a-CrowdFlower-Validator
 // This if/else block is used to hijack the functionality of an existing validator (specifically: yext_no_international_url)
 if (!_cf_cml.digging_gold) {
     CMLFormValidator.addAllThese([
@@ -146,6 +152,10 @@ else {
 // value is the user submitted content of the form element you are validating
 function METHOD_TO_VALIDATE(element) {
     var value = element.value;
+    var re = /^[0-9]{4}$/;
+    if (!re.test(value)){
+        return false;
+    }
     callOtherDomain(value);
     return success;
 }
@@ -188,7 +198,7 @@ function load_task(){
 
 function init_page(){
     load_task();
-    set_input_disabled('disabled');
+    set_input_disabled(true);
 }
 
 addOnloadEvent(init_page);
