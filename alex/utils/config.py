@@ -265,7 +265,7 @@ class Config(object):
                 `file_name' overwrites the one specified via `config'
 
         """
-        if not config:
+        if config is None:
           config = {}
 
         self.config = config
