@@ -124,6 +124,10 @@ class IPRange(object):
 
 class Handler(BaseHTTPRequestHandler):
 
+    # set a timeout so that the server never hangs (this should be vastly more than enough
+    # for handling a single request, with no file access blocking etc.)
+    timeout = 30
+
     def do_GET(self):
         """Main method that handles a GET request from the client."""
         response = ""
