@@ -197,8 +197,8 @@ function load_task(){
 }
 
 function init_page(){
-    load_task();
     set_input_disabled(true);
+    load_task();
 }
 
 addOnloadEvent(init_page);

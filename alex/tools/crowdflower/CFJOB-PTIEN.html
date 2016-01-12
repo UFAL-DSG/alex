@@ -82,11 +82,11 @@
 <h2 class="header text-center definition">Validation</h2>
 <div align="center">
   <div class="feedback">
-    <cml:text label="Dialogue Code validation field:" name="code_field" validates="required yext_no_international_url" instructions="In order to obtain this Code you have to successfully complete the call. Please wait until the code is verified." />
+    <cml:text label="Dialogue Code validation field:" name="code_field" validates="required ss-required yext_no_international_url" instructions="In order to obtain this Code you have to successfully complete the call. Please wait until the code is verified." />
 
-    <cml:hidden name="call_log_dir" value="" validates="required" />
-    <cml:hidden name="task_text" value="" validates="required" />
-    <cml:hidden name="task_data" value="" validates="required" />
+    <cml:hidden name="call_log_dir" value="" validates="required ss-required" />
+    <cml:hidden name="task_text" value="" validates="required ss-required" />
+    <cml:hidden name="task_data" value="" validates="required ss-required" />
 
     <cml:radios validates="required" label="Have you found what you were looking for?">
       <cml:radio label="Yes" />
