@@ -79,14 +79,13 @@ function handler(evtXHR) {
 function set_input_disabled(value){
     var inputs = document.getElementsByTagName('input');
     // value for others + code field (true == all disabled except code field, and vice versa)
-    var vals = value ? ['disabled', ''] : ['', 'disabled'];
-
     for (var i = 0; i < inputs.length; ++i){
         if (inputs[i].className.indexOf('code_field') > - 1){
-            inputs[i].disabled = vals[1];
+            // we use readonly for the code field so that it actually passes the data
+            inputs[i].readonly = value ? '' : 'readonly';
         }
         else {
-            inputs[i].disabled = vals[0];
+            inputs[i].disabled = value ? 'disabled' : '';
         }
     }
     document.getElementsByTagName('textarea')[0].disabled = value;
