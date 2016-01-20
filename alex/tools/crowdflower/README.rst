@@ -9,7 +9,7 @@ Getting started
 
 There are multiple ways to get started, the best way is to match appropriate template for your project. Since there is no template for a Job that involves solvers to call a phone number and talk for a while, we have to create a Job from scratch.
 
-Click the **Get started** button on a **Survey Job** panel at a `New Job <https://crowdflower.com/jobs/new>`_ page. This option will not require you to insert any data.
+Click the **Get started** button on a **Survey Job** panel at the `New Job <https://crowdflower.com/jobs/new>`_ page. This option will not require you to insert any data.
 
 Fill in the Title.
 
@@ -46,3 +46,37 @@ Custom validator
 The idea is that a CF contributor will call provided number to our PTI service and talk with it for a while in the terms of given task. After the dialogue is finished by saying “Thank You. Good Bye”, the dialogue system will generate a four digit code and it will say it three times before hanging up. At the same time it sends this code to our Python Web Server which will store it in a set of valid codes. The contributor puts this code in a text field with custom validator that triggers each time focus is off the text field. Custom validator functionality is hijacked via JS in a way described in CF Documentation. The validate function needs to return boolean. We use it to call other domain via HTTPS protocol. This is important because no HTTP requests nor JS scripts located on unsecured sites are permitted. In our case, we query our Python Server with the four digit code as a parameter. The server returns a JSON revealing the genuinity of provided code. If the code is genuine the custom validator passes and consequently the feedback form required to finish the Job is shown. A successful validation of a key is remembered because the cross domain request is synchronous and it is unnecessary to keep validating the code over and over. 
 
 Asynchronous validation is an option worth considering. It would eliminate a web browser freeze effect. However, for simplicity and clarity we opted for the synchronous request.
+
+Building Transcription CrowdFlower Jobs
+=======================================
+
+The system is very similar to PTIEN call jobs, even simpler. You just need to gather the call files and launch a Transcription job. You can use the instructions, task HTML, custom CSS, and Javascript provided here.
+
+Gathering the audio files
+-------------------------
+
+To copy the required files from recorded calls to a server, such as `ufallab`, you can use the following Bash command::
+
+  find /net/projects/vystadial/data/call-logs/2015-04-22-ptien/new/ -iname 'vad-*.wav' | \
+      perl -pe 'use File::Copy "cp"; chomp; my $file = $_; $file =~ s/.*new\///; my $dir = $file; $dir =~ s/\/.*//; if (! -d $dir){ mkdir $dir; } cp($_, $file); $_ = $file . "\n";'
+
+Then create a filelist::
+
+  echo 'url' > filelist.csv
+  find ./ -iname '*.wav' | sed 's/^\./http:\/\/ufallab.ms.mff.cuni.cz\/\~user\/path/' >> filelist.csv
+
+Note that this is a "CSV" file even though it does not contain any commas (single-column only).
+
+Creating the CF job
+-------------------
+
+Just select a **Transcription job** at the `New Job <https://crowdflower.com/jobs/new>`_ page. Load the `filelist.csv` file at the **Data** step.
+
+In the **Design**, copy the files provided:
+
+- `CFJOB-transcription.html` into the CML field
+- `CFJOB-transcription.css` into the custom CSS field
+- `CFJOB-transcription.js` into the custom Javascript field
+- `CFJOB-transcription.instructions.html` into the Instructions field
+
+
