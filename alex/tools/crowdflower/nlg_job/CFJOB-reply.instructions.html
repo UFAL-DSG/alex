@@ -1,0 +1,93 @@
+<h3 id="the-task">The Task</h3>
+
+<p>You are given a question that a user may ask an operator of a New York City public transport information service. You will play the role of the operator and there are two possible tasks for you:</p>
+
+<ol style="list-style-type: lower-alpha">
+  <li>Confirm to the user that you understood their question</li>
+
+  <li>Answer the question</li>
+</ol>
+
+<p>You will be given information to back up your statements. Please note that <strong>the confirmations and replies must contain all the information given to you</strong> and will be checked for that (you can insert it into the reply by clicking on the underlined values). All the information given to you is hypothetical, do not worry whether the answer is correct in real life.</p>
+
+<p>Most importantly, please phrase the confirmation or answer in a <strong>fluent English sentence</strong> and try to <strong>make it sound natural in the context of the question</strong>. Sentences that are not fluent will not be accepted.</p>
+
+<h3 id="example-1">Example 1</h3>
+
+<div class="example">
+  <div class="html-element-wrapper">
+    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
+  </div>
+
+  <div class="html-element-wrapper">
+    <p>Please          <strong class="confirm">confirm that you understand the question</strong>, using the following information:    </p>
+
+    <p><em class="data-example">from_stop=<span>Marble Hill</span>, to_stop=<span>East Broadway</span></em></p>
+  </div>
+</div>
+
+<ul class="replies">
+  <li>Possible replies:
+    <ul>
+      <li><em>OK, going from Marble Hill to East Broadway.</em></li>
+
+      <li><em>You want to go from Marble Hill to East Broadway.</em></li>
+
+      <li><em>From Marble Hill to East Broadway, let me see.</em></li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="example-2">Example 2</h3>
+
+<div class="example">
+  <div class="html-element-wrapper">
+    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
+  </div>
+
+  <div class="html-element-wrapper">
+    <p>Please          <strong class="reply">answer the question</strong>, using the following information:    </p>
+
+    <p><em class="data-example">vehicle=<span>subway</span>, line=<span>C</span>, departure_time=<span>10:04am</span>, from_stop=<span>Marble Hill</span>, direction=<span>East Broadway</span></em></p>
+  </div>
+</div>
+
+<ul>
+  <li>Possible replies:
+    <ul>
+      <li><em>Go by the C subway for East Broadway departing at 10:04am from Marble Hill.</em></li>
+
+      <li><em>Take the C subway from Marble Hill heading for East Broadway at 10:04am.</em></li>
+
+      <li><em>Use the subway line C going at 10:04am from Marble Hill in the direction of East Broadway.</em></li>
+
+      <li><em>OK, take the C subway from Marble Hill heading to East Broadway, departing 10:04am.</em></li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="example-3">Example 3</h3>
+
+<div class="example">
+  <div class="html-element-wrapper">
+    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">how long will the journey take</em></p>
+  </div>
+
+  <div class="html-element-wrapper">
+    <p>Please          <strong class="reply">answer the question</strong>, using the following information:    </p>
+
+    <p><em class="data-example">duration=<span>34 min</span></em></p>
+  </div>
+</div>
+
+<ul>
+  <li>Possible replies:
+    <ul>
+      <li><em>The journey will take 34 minutes.</em></li>
+
+      <li><em>It will take 34 minutes.</em></li>
+
+      <li><em>It takes 34 minutes.</em></li>
+    </ul>
+  </li>
+</ul>
