@@ -120,7 +120,7 @@ require(['jquery-noconflict'], function($) {
     if (fluencyField.value){  // language ID validation already performed
       var fluencyData = JSON.parse(fluencyField.value);
 
-      if (fluencyData.reply == 'yes'){
+      if (fluencyData.result == 'yes'){
         return true;  // once the validation passes, always return true
       }
       if (fluencyData.text == value){
@@ -128,9 +128,10 @@ require(['jquery-noconflict'], function($) {
       }
     }
 
-    // run the external validation
+    // run the external validation, return its result
     var fluencyData = requestExternalValidation(value, data);
     fluencyField.value = JSON.stringify(fluencyData);
+    return fluencyData.result == 'yes';
   }
 
   // return error message based on local validation
