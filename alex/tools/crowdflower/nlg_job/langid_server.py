@@ -124,7 +124,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
               l1 = langdetect.detect(user_text)
               l2, _ = langid.classify(user_text)
-              response = 'yes' if l1 == l2 == 'en' else 'no'
+              response = 'yes' if l1 == 'en' or l2 == 'en' else 'no:' + l1 + ' ' + l2
 
         except Exception as e:
             print >> sys.stderr, unicode(e).encode('utf-8')
