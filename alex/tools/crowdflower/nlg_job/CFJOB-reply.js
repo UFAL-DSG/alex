@@ -29,11 +29,11 @@ require(['jquery-noconflict'], function($) {
       'latest version of Chrome).';
 
   // call the validation server and return the result
-  function requestExternalValidation(requiredData, userText) {
+  function requestExternalValidation(userText, requiredData) {
 
     // build request URL
-    var url = 'https://' + serverURL + '/?rd=' + encodeURIComponent(requiredData) +
-        + '&ut=' + encodeURIComponent(userText);
+    var url = 'https://' + serverURL + '/?rd=' + encodeURIComponent(requiredData.join()) +
+        '&ut=' + encodeURIComponent(userText);
 
     // send the request
     if (request) {
@@ -116,7 +116,7 @@ require(['jquery-noconflict'], function($) {
     }
 
     // find the corresponding hidden field
-    var fluencyField = $(element).closest('.html-element-wrapper').find('.fluency_assessment');
+    var fluencyField = $(element).closest('.html-element-wrapper').find('.fluency_assessment')[0];
     if (fluencyField.value){  // language ID validation already performed
       var fluencyData = JSON.parse(fluencyField.value);
 
@@ -235,7 +235,7 @@ require(['jquery-noconflict'], function($) {
       makeClickable(dataInsts[i], inputFields[i]);
     }
     // this will make it crash if the validation server is inaccessible
-    requestExternalValidation('', '');
+    requestExternalValidation('', []);
   });
 });
 
