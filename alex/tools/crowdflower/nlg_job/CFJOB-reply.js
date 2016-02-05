@@ -24,16 +24,16 @@ require(['jquery-noconflict'], function($) {
 
   var request = createCrossDomainRequest();
   var serverURL = 'vystadial.ms.mff.cuni.cz:4447';
-  var validationErrMsg = 'The validation codes probably will not work. Check your internet connection' +
-      'and/or try using a different browser (e.g., the latest version of Chrome).';
+  var validationErrMsg = 'Fluency validation is not working. You will not be able to submit ' +
+      'the task. Check your internet connection and/or try using a different browser (e.g., the ' +
+      'latest version of Chrome).';
 
   // call the validation server and return the result
   function requestExternalValidation(requiredData, userText) {
 
     // build request URL
-    var url = 'https://' + serverURL + '/?' +
-        'rd=' + encodeURIComponent(requiredData) +
-        '&ut=' + encodeURIComponent(userText);
+    var url = 'https://' + serverURL + '/?rd=' + encodeURIComponent(requiredData) +
+        + '&ut=' + encodeURIComponent(userText);
 
     // send the request
     if (request) {
@@ -42,7 +42,7 @@ require(['jquery-noconflict'], function($) {
       request.send();
     }
     else {
-      alert("Could not contact code validation server. " + validationErrMsg);
+      alert("Could not contact the server. " + validationErrMsg);
       return null;
     }
 
@@ -53,7 +53,7 @@ require(['jquery-noconflict'], function($) {
       return json;
     }
     else {
-      alert("Error while contacting the validation server. " + validationErrMsg);
+      alert("Error while contacting the server. " + validationErrMsg);
       return null;
     }
   }
@@ -61,16 +61,40 @@ require(['jquery-noconflict'], function($) {
   // local validation -- just check that all data are included in the answers
   function performLocalValidation(value, data){
 
-    missing_str = '';
+    // check if disallowed characters are present
+    if (value.match(/[^0-9A-Za-z '?.!;,:-]/)){
+      return 'Your reply contains weird characters. ' +
+          'Use only the English alphabet and basic punctuation.';
+    }
 
+    // check for missing information (case-insensitive)
+    missingStr = '';
+    lcValue = value.toLowerCase();
     for (var i = 0; i < data.length; ++i){
-      if (value.indexOf(data[i]) == -1){
-        missing_str += ', ' + data[i];
+      lcData = data[i].toLowerCase();
+      if (lcValue.indexOf(lcData) == -1){
+        missingStr += ', ' + data[i];
       }
     }
-    if (missing_str != ''){
-      return missing_str.substring(2);
+    if (missingStr !== ''){
+      return 'Your reply is missing the following information: ' +
+          missingStr.substring(2);
     }
+
+    // check for sufficient number of tokens
+    toks = ' ' + value + ' ';  // pad with spaces for easy regexes
+    for (var i = 0; i < data.length; ++i){
+      toks = toks.replace(data[i], 'DATA' + i);
+    }
+    toks = toks.replace(/([?.!;,:-]+)/g, " $1 ");
+    toks = toks.replace(/\s+/g, " ");
+    toks = toks.substring(1, toks.length - 1);  // remove the padding spaces
+    toks = toks.split(" ");
+
+    if (toks.length < 2 * data.length || toks.length < data.length + 3){
+      return 'Your reply is too short. Use full, fluent sentences.';
+    }
+
     return null;
   }
 
@@ -90,15 +114,23 @@ require(['jquery-noconflict'], function($) {
     if (performLocalValidation(value, data) !== null){
       return false;
     }
-    return true;
 
-    // get LM score or something
-    var extResult = requestExternalValidation(value, data);
-    if (extResult && extResult.result == 'OK'){
-      // TODO insert things into hidden fields here so that hijackers are bypassed
-      return true;
+    // find the corresponding hidden field
+    var fluencyField = $(element).closest('.html-element-wrapper').find('.fluency_assessment');
+    if (fluencyField.value){  // language ID validation already performed
+      var fluencyData = JSON.parse(fluencyField.value);
+
+      if (fluencyData.reply == 'yes'){
+        return true;  // once the validation passes, always return true
+      }
+      if (fluencyData.text == value){
+        return false; // never run twice for the same text
+      }
     }
-    return false;
+
+    // run the external validation
+    var fluencyData = requestExternalValidation(value, data);
+    fluencyField.value = JSON.stringify(fluencyData);
   }
 
   // return error message based on local validation
@@ -108,9 +140,9 @@ require(['jquery-noconflict'], function($) {
     var result = performLocalValidation(value, data);
 
     if (result !== null){
-      return 'Your reply is missing the following information: ' + result;
+      return result;
     }
-    return 'Your reply is not fluent';
+    return 'Your reply is not fluent.';
   }
 
   // CrowdFlower-recommended custom validation
@@ -201,7 +233,8 @@ require(['jquery-noconflict'], function($) {
     for (var i = 0; i < dataInsts.length; ++i){
       makeClickable(dataInsts[i], inputFields[i]);
     }
+    // this will make it crash if the validation server is inaccessible
+    requestExternalValidation('', '');
   });
 });
-
 

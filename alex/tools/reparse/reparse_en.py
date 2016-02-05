@@ -75,7 +75,7 @@ def process_file(file_path):
 
     cldb = CategoryLabelDatabase(as_project_path('applications/PublicTransportInfoEN/data/database.py'))
     preprocessing = PTIENSLUPreprocessing(cldb)
-    hdc_slu = PTIENHDCSLU(preprocessing, cfg = {'SLU': {PTIENHDCSLU: {'utt2da': as_project_path('applications/PublicTransportInfoEN/data/utt2da_dict.txt')}}})
+    hdc_slu = PTIENHDCSLU(preprocessing, cfg={'SLU': {PTIENHDCSLU: {'utt2da': as_project_path('applications/PublicTransportInfoEN/data/utt2da_dict.txt')}}})
     stdout = codecs.getwriter('UTF-8')(sys.stdout)
 
     with open(file_path, 'r') as fh:
