@@ -40,6 +40,14 @@ Usage
 ./server_ssl2.py [--port XXXX] [--key path/to/file.key] [--cert path/to/file.crt] \
         [--codes path/to/code/storage.tsv] [--log path/to/logfile] [--timeout <minutes>] \
         [--tasks path/to/tasks/file] [--allow-ip 0.0.0.0-255.255.255.255]
+
+
+Dependencies
+------------
+
+- langid (https://github.com/saffsd/langid.py)
+- langdetect (https://pypi.python.org/pypi/langdetect)
+
 '''
 
 import codecs
