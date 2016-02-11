@@ -84,6 +84,22 @@ BUS_LINES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 20, 21, 22, 23, 31,
 NO_CONNECTION_PROB = 0.1
 
 
+class DataLine(object):
+
+    def __init__(self, dat=None, abstr_utt=None, abstr_da=None, utt=None, da=None):
+        self.dat = dat
+        self.abstr_utt = abstr_utt
+        self.abstr_da = abstr_da
+        self.utt = utt
+        self.da = da
+
+    def as_tuple(self):
+        return (self.dat, self.abstr_utt, self.abstr_da, self.utt, self.da)
+
+    def __unicode__(self):
+        return "\t".join(self.as_tuple())
+
+
 def word_for_ampm(hour, ampm):
     """Return 'morning', 'afternoon', or 'evening' for the given hour and
     AM/PM setting.
@@ -168,67 +184,75 @@ def normalize_da(da):
     return dais
 
 
-def generate_confirm(utt, dais):
-    """Generate a confirmation task for the given utterance and DAIs list."""
+def generate_ack(ack_type, utt, dais):
+    """Generate a confirmation/apology task for the given utterance and DAIs list."""
 
-    ret = ['confirm', utt, '&'.join([unicode(dai) for dai in dais])]
+    ret = DataLine(dat=ack_type, abstr_utt=utt, abstr_da='&'.join([unicode(dai) for dai in dais]))
 
-    utt, dais = deabstract(utt, [dai for dai in dais
-                                 if re.match('^(from|to|departure_time|arrival_time|ampm|vehicle)',
-                                             dai.name)])
+    utt, dais = deabstract(utt, [
+            dai for dai in dais
+            if re.match('^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)',
+                        dai.name)
+            ])
     dais_str = ', '.join([dai.name + '=' + dai.value for dai in dais])
+    if ack_type == 'apologize':
+        dais_str = '*=notfound, ' + dais_str;
 
-    return ret + [utt, dais_str]
+    ret.utt = utt
+    ret.da = dais_str
+    return ret
 
 
 def generate_reply(utt, dais):
     """Generate a reply task for the given utterance and DAIs list."""
 
-    ret = ['reply', utt, '&'.join([unicode(dai) for dai in dais])]
+    ret = DataLine(dat='reply', abstr_utt=utt, abstr_da='&'.join([unicode(dai) for dai in dais]))
 
     utt, dais = deabstract(utt, dais)
 
     # offer a ride (meeting the specifications in dais)
-    if all([dai.dat == 'inform' for dai in dais]):
+    if all([dai.dat in ['inform', 'confirm'] for dai in dais]):
 
-        if random.random() < NO_CONNECTION_PROB:
-            info = {'line': 'not found'}
-            # TODO maybe want to display the criteria used for searching without results
+        info = {dai.name: dai.value for dai in dais}
+        if 'vehicle' not in info:
+            info['vehicle'] = random.choice(['subway', 'bus'])
+        if info['vehicle'] == 'subway':
+            info['line'] = random.choice('1234567ABCDEFGJLMNQRZ')
         else:
-            info = {dai.name: dai.value for dai in dais}
-            if 'vehicle' not in info:
-                info['vehicle'] = random.choice(['subway', 'bus'])
-            if info['vehicle'] == 'subway':
-                info['line'] = random.choice('1234567ABCDEFGJLMNQRZ')
-            else:
-                info['line'] = 'M' + str(random.choice(BUS_LINES))
+            info['line'] = 'M' + str(random.choice(BUS_LINES))
+        if 'ampm' not in info:
+            if 'time' in info:
+                time_val, _ = info['time'].split(':')
+                time_val = int(time_val)
+                if time_val < 7 or time_val == 12:
+                    info['ampm'] = 'pm'
             if 'ampm' not in info:
-                if 'time' in info:
-                    time_val, _ = info['time'].split(':')
-                    time_val = int(time_val)
-                    if time_val < 7 or time_val == 12:
-                        info['ampm'] = 'pm'
-                if 'ampm' not in info:
-                    info['ampm'] = random.choice(['am', 'pm'])
-            if 'departure_time' not in info:
-                if info['ampm'] == 'am':
-                    info['departure_time'] = str(random.choice(range(7, 12))) + ':00'
-                else:
-                    info['departure_time'] = str(random.choice(range(1, 13))) + ':00'
-            if 'from_stop' not in info:
-                info['from_stop'] = random.choice(STOPS)
-            if 'to_stop' not in info:
-                remaining_stops = list(STOPS)
-                remaining_stops.remove(info['from_stop'])
-                info['to_stop'] = random.choice(remaining_stops)
+                info['ampm'] = random.choice(['am', 'pm'])
+        if 'departure_time' not in info:
+            if 'time' in info:
+                info['departure_time'] = info['time']
+                del info['time']
+            elif info['ampm'] == 'am':
+                info['departure_time'] = str(random.choice(range(7, 12))) + ':00'
+            else:
+                info['departure_time'] = str(random.choice(range(1, 13))) + ':00'
+        if 'from_stop' not in info:
+            info['from_stop'] = random.choice(STOPS)
+        if 'to_stop' not in info:
+            remaining_stops = list(STOPS)
+            remaining_stops.remove(info['from_stop'])
+            info['to_stop'] = random.choice(remaining_stops)
 
-            info['direction'] = info['to_stop']
-            del info['to_stop']
+        info['direction'] = info['to_stop']
+        del info['to_stop']
 
-            info['departure_time'] = re.sub(r'00$', '%02d' % random.choice(range(20)),
-                                            info['departure_time'])
-            info['departure_time'] += info['ampm']
-            del info['ampm']
+        info['departure_time'] = re.sub(r'00$', '%02d' % random.choice(range(20)),
+                                        info['departure_time'])
+        info['departure_time'] += info['ampm']
+        del info['ampm']
+
+        if 'alternative' in info:  # let's try and infer this just from the context
+            del info['alternative']
 
         dais_str = [slot + '=' + value for slot, value in info.iteritems()]
         random.shuffle(dais_str)
@@ -240,7 +264,7 @@ def generate_reply(utt, dais):
         if any([dai.name == 'distance' for dai in dais]):
             dais_str += ', distance=%3.1f' % (random.random() * 12)
         if any([dai.name == 'num_transfers' for dai in dais]):
-            dais_str += ', num_transfers=%d' % random.choice(range(0, 2))
+            dais_str += ', num_transfers=%d' % random.choice(range(0, 3))
         if any([dai.name == 'duration' for dai in dais]):
             dais_str += ', duration=%d min' % random.choice(range(10, 80))
         if any([dai.name == 'arrival_time' for dai in dais]):
@@ -255,7 +279,47 @@ def generate_reply(utt, dais):
 
         dais_str = dais_str[2:]
 
-    return ret + [utt, dais_str]
+    ret.utt = utt
+    ret.da = dais_str
+    return ret
+
+
+def generate_request(utt, dais):
+    """Generate a request -- ask about slots not present."""
+
+    ret = DataLine(dat='request', abstr_utt=utt, abstr_da='&'.join([unicode(dai) for dai in dais]))
+    slots = [dai.name for dai in dais if dai.dat in ['inform', 'confirm']]
+    dais_str = ''
+
+    if 'from_stop' not in slots:
+        dais_str += ', from_stop=?'
+    if 'to_stop' not in slots:
+        dais_str += ', to_stop=?'
+
+    dais_str = dais_str[2:]
+
+    utt, _ = deabstract(utt, [
+            dai for dai in dais
+            if re.match('^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)',
+                        dai.name)
+            ])
+
+    ret.utt = utt
+    ret.da = dais_str
+    return ret
+
+
+def combine_actions(act1, act2):
+
+    ret = DataLine(dat='+'.join((act1.dat, act2.dat)),
+                   abstr_utt=act1.abstr_utt,
+                   abstr_da=act1.abstr_da,
+                   utt=act1.utt,)
+
+    ret.da = (re.sub(r'([a-z_]+)=', act1.dat + r'_\1=', act1.da) + ', ' +
+              re.sub(r'([a-z_]+)=', act2.dat + r'_\1=', act2.da))
+
+    return ret
 
 
 def process_utt(utt, da):
@@ -264,30 +328,51 @@ def process_utt(utt, da):
     utt = normalize_utterance(utt)
     dais = normalize_da(da)
 
-    ret = []
+    ret = {}
 
     if not dais:  # skip things that did not contain anything to reply/confirm
         return ret
 
     # check if we should generate a confirmation task, and do it
     if any([dai.dat in ['inform', 'confirm'] and
-            re.match('^(from|to|departure_time|arrival_time|vehicle)', dai.name)
+            re.match('^(from|to|departure_time|arrival_time|vehicle|alternative)', dai.name)
             for dai in dais]):
-        ret.append(generate_confirm(utt, dais))
+        ret['confirm'] = generate_ack('confirm', utt, dais)
+
+        if not any([dai.dat == 'request' for dai in dais]):
+            ret['apologize'] = generate_ack('apologize', utt, dais)
+
+            # check if we can generate a request for additional information
+            slots = [dai.name for dai in dais if dai.dat in ['inform', 'confirm']]
+            if not ('from_stop' in slots and 'to_stop' in slots) and 'alternative' not in slots:
+                ret['request'] = generate_request(utt, dais)
 
     # generate a reply task
-    ret.append(generate_reply(utt, dais))
+    ret['reply'] = generate_reply(utt, dais)
 
-    return ret
+    # try combining confirm + reply/request in case the reply/request is short
+    if 'confirm' in ret:
+        if 'request' in ret and ret['request'].da.count(',') < 3:
+            ret['confirm+request'] = combine_actions(ret['confirm'], ret['request'])
+        if 'reply' in ret and ret['reply'].da.count(',') < 3:
+            ret['confirm+reply'] = combine_actions(ret['confirm'], ret['reply'])
+
+    return ret.values()
 
 
 def main(input_file, filter_threshold):
 
-    data = [['type', 'abstr_utt', 'abstr_da', 'utt', 'da']]  # create output headers
+    headers = ['type', 'abstr_utt', 'abstr_da', 'utt', 'da']
+    data = []
 
     with codecs.open(input_file, "r", 'UTF-8') as fh:
         for line in fh:
             print >> sys.stderr, 'Processing: ', line.strip()
+
+            if line.count("\t") != 2:
+                print >> sys.stderr, 'Invalid input format, skipping'
+                continue
+
             occ_num, utt, da = line.strip().split('\t')
             da = DialogueAct(da_str=da)
             occ_num = int(occ_num)
@@ -302,7 +387,7 @@ def main(input_file, filter_threshold):
 
             try:
                 ret = process_utt(utt, da)
-                print >> sys.stderr, 'Result:', "\n".join(["\t".join(i) for i in ret])
+                print >> sys.stderr, 'Result:', "\n".join(unicode(line) for line in ret)
                 print >> sys.stderr, ''
                 data.extend(ret)
             except NotImplementedError as e:
@@ -310,8 +395,9 @@ def main(input_file, filter_threshold):
 
     with codecs.getwriter('utf-8')(sys.stdout) as fh:
         csvwrite = csv.writer(fh, delimiter=b"\t")
+        csvwrite.writerow(headers)
         for line in data:
-            csvwrite.writerow(line)
+            csvwrite.writerow(line.as_tuple())
 
 
 if __name__ == '__main__':
