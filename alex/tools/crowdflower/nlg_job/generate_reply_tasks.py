@@ -8,8 +8,6 @@ Generate reply/confirm CrowdFlower tasks for the PTIEN domain.
 Usage: ./generate_reply_tasks.py [--filter-threshold N] input.tsv > output.tsv
 """
 
-# TODO: Filter inputs that are just composed of slot values
-
 
 from __future__ import unicode_literals
 from alex.components.slu.da import DialogueAct, DialogueActItem
@@ -96,13 +94,14 @@ def word_for_ampm(hour, ampm):
         return 'afternoon'
     return 'evening'
 
+
 def deabstract(utt, dais):
     """De-abstract an utterance and a list of corresponding DAIs, so that
     a specific answer is provided.
     """
     # prepare some data to be used
     from_stop, to_stop = random.sample(STOPS, 2)
-    time = random.choice(range(7,23))
+    time = random.choice(range(7, 23))
     ampm = 'am' if time < 12 else 'pm'
     time %= 12
     vehicle = random.choice(['subway', 'bus'])
@@ -144,6 +143,7 @@ def deabstract(utt, dais):
 
     return utt, dais_out
 
+
 def normalize_utterance(utt):
     """Normalize utterance (remove double streets, convert streets to stops)."""
 
@@ -156,9 +156,9 @@ def normalize_utterance(utt):
 def normalize_da(da):
     """Normalize DA to contain only things that we would like to confirm or reply to."""
 
-    # keep just request/inform, remove 2nd streets, remove boroughs
+    # keep just request/inform/confirm, remove 2nd streets, remove boroughs
     dais = [dai for dai in da.dais
-            if (dai.dat in ['request', 'inform'] and
+            if (dai.dat in ['request', 'inform', 'confirm'] and
                 dai.name not in ['borough', 'to_street2', 'from_street2', 'task'])]
 
     # convert streets to stops
@@ -179,6 +179,7 @@ def generate_confirm(utt, dais):
     dais_str = ', '.join([dai.name + '=' + dai.value for dai in dais])
 
     return ret + [utt, dais_str]
+
 
 def generate_reply(utt, dais):
     """Generate a reply task for the given utterance and DAIs list."""
@@ -241,9 +242,9 @@ def generate_reply(utt, dais):
         if any([dai.name == 'num_transfers' for dai in dais]):
             dais_str += ', num_transfers=%d' % random.choice(range(0, 2))
         if any([dai.name == 'duration' for dai in dais]):
-            dais_str += ', duration=%d min' % random.choice(range(10,80))
+            dais_str += ', duration=%d min' % random.choice(range(10, 80))
         if any([dai.name == 'arrival_time' for dai in dais]):
-            hr = random.choice(range(7,23))
+            hr = random.choice(range(7, 23))
             ampm = 'am' if hr < 12 else 'pm'
             hr %= 12
             min = random.choice(range(60))
@@ -269,7 +270,7 @@ def process_utt(utt, da):
         return ret
 
     # check if we should generate a confirmation task, and do it
-    if any([dai.dat == 'inform' and
+    if any([dai.dat in ['inform', 'confirm'] and
             re.match('^(from|to|departure_time|arrival_time|vehicle)', dai.name)
             for dai in dais]):
         ret.append(generate_confirm(utt, dais))
@@ -278,6 +279,7 @@ def process_utt(utt, da):
     ret.append(generate_reply(utt, dais))
 
     return ret
+
 
 def main(input_file, filter_threshold):
 
@@ -319,4 +321,3 @@ if __name__ == '__main__':
     random.seed(0)
     args = ap.parse_args()
     main(input_file=args.input_file, filter_threshold=args.filter_threshold)
-
