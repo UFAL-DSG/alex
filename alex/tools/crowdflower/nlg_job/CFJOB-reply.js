@@ -58,6 +58,30 @@ require(['jquery-noconflict'], function($) {
     }
   }
 
+  function missingData(value, dataItem) {
+    if (dataItem == 'notfound'){ // *=notfound (apologize tasks)
+      return !value.match(/\b(no|not|none|don't)\b/);
+    }
+    else if (dataItem == 'next'){ // alternative
+      return !value.match(/\b(next|later|after|subsequent|following|another)\b/);
+    }
+    else if (dataItem == '0'){ // num_transfers
+      return !value.match(/\b(no|none|aren't|isn't|not|zero)\b/);
+    }
+    else if (dataItem == '1'){
+      return !value.match(/\b(one|once|1|1x)\b/);
+    }
+    else if (dataItem == '2'){
+      return !value.match(/\b(two|twice|2|2x)\b/);
+    }
+    else if (dataItem == '?'){ // request tasks
+      return !value.match(/\b(what|where|how|what's|which)\b/);
+    }
+    else {
+      return value.indexOf(dataItem) == -1;
+    }
+  }
+
   // local validation -- just check that all data are included in the answers
   function performLocalValidation(value, data){
 
@@ -68,17 +92,16 @@ require(['jquery-noconflict'], function($) {
     }
 
     // check for missing information (case-insensitive)
-    missingStr = '';
+    missing = [];
     lcValue = value.toLowerCase();
     for (var i = 0; i < data.length; ++i){
       lcData = data[i].toLowerCase();
-      if (lcValue.indexOf(lcData) == -1){
-        missingStr += ', ' + data[i];
+      if (missingData(lcValue, lcData)){
+        missing.push(data[i]);
       }
     }
-    if (missingStr !== ''){
-      return 'Your reply is missing the following information: ' +
-          missingStr.substring(2);
+    if (missing.length > 0){
+      return 'Your reply is missing the following information: ' + missing.join(', ');
     }
 
     // check for sufficient number of tokens
@@ -204,11 +227,17 @@ require(['jquery-noconflict'], function($) {
   function makeClickable(data, inputField){
 
     // convert the values to <span>s
-    data.innerHTML = data.innerHTML.replace(/=([^,]+)(,|$)/g,
-        '=<span>$1</span>$2');
+    data.innerHTML = data.innerHTML.replace(
+        /=([^,]+)(?=,|$)/g,
+        function(match, p1){
+          if (p1.match(/^(notfound|\?|next|none|[012])$/)){
+            return '=<span class="fuzzy">' + p1 + '</span>';
+          }
+          return '=<span class="exact">' + p1 + '</span>';
+        });
 
     // make the spans insert their content to text field on click
-    $(data).find('span').click(
+    $(data).find('span.exact').click(
       function(){
         insertAtCursor(inputField, $(this).html());
         inputField.focus();

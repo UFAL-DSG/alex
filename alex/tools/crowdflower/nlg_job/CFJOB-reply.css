@@ -38,11 +38,11 @@ em.data, em.data-example {
   color: #a33;
 }
 
-em.data span, em.data-example span {
+em.data span.exact, em.data-example span {
   text-decoration: underline;
 }
 
-em.data span {
+em.data span.exact {
   cursor: pointer;
 }
 
