@@ -951,7 +951,7 @@ class PTIENHDCSLU(SLUInterface):
                 dai.all_words_in('where will from')):
             cn.add_merge(1.0, DialogueActItem('request', 'from_stop'))
 
-        if (dai.all_words_in('where does it arrive') or
+        if ((dai.all_words_in('where does it arrive') or
                 dai.all_words_in('where does it stop') or
                 dai.all_words_in('where stopping') or
                 dai.all_words_in('where going') or
@@ -965,7 +965,9 @@ class PTIENHDCSLU(SLUInterface):
                 dai.all_words_in("what's destination") or
                 dai.all_words_in('where terminates') or
                 dai.all_words_in("where terminal") or
-                dai.all_words_in("where terminate")):
+                dai.all_words_in("where terminate")) and
+                not dai.any_phrase_in(['at the destination', 'to the destination',
+                                       'reach my destination', 'reach the destination'])):
             cn.add_merge(1.0, DialogueActItem('request', 'to_stop'))
 
         if not dai.any_word_in('arrival arrive arrives arriving stop stops stopping get gets destination target terminal'):
@@ -1006,26 +1008,27 @@ class PTIENHDCSLU(SLUInterface):
         if not dai.any_word_in('departure leave leaves leaving go goes going departure departures origin source start'):
             if dai.any_phrase_in(['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there',
                                   'be there', 'destination', 'target', 'terminal', 'final stop']):
-                if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide']):
+                if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide', 'arrival time']):
                     cn.add_merge(1.0, DialogueActItem('request', 'arrival_time'))
 
                 elif dai.any_phrase_in(['how long', 'how much', 'give me', 'tell me', 'provide']) and dai.any_word_in("till until before"):
                     cn.add_merge(1.0, DialogueActItem('request', 'arrival_time_rel'))
 
         if not dai.any_word_in('till until before'):
-            if ((dai.all_words_in('how long') and
-                    ((dai.any_word_in('would will does') and dai.any_word_in('it that the') and
-                      dai.all_words_in('take')) or
-                     dai.any_word_in('travel connection trip train bus sub subway link'))) or
-                    dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', ]) or
+            if (((dai.all_words_in('how long') or dai.all_words_in('how much time')) and
+                    ((dai.any_word_in('would will does') and dai.any_word_in('it that the') and dai.all_words_in('take')) or
+                     dai.any_word_in('travel connection trip train bus sub subway link') or
+                     dai.any_phrase_in(['is needed', 'i need', 'is required', 'it takes', 'going to take']))) or
+                    dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', 'time needed']) or
                     dai.all_words_in("give me time trip") or
-                    (dai.all_words_in('duration') and dai.any_word_in('trip travel journey ride tour bus train sub subway time'))):
+                    (dai.all_words_in('duration') and dai.any_phrase_in(['what is', 'how long', 'what\'s', 'get']))):
                 cn.add_merge(1.0, DialogueActItem('request', 'duration'))
 
             if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take travel duration')):
                 cn.add_merge(1.0, DialogueActItem('request', 'distance'))
 
-        if dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it']):
+        if (dai.any_phrase_in(['what time is it', 'what is the time', "what's the time", 'whats the time', 'what time do we have', 'the time in', 'time is it'])
+                and not dai.any_phrase_in(['time needed', 'time required'])):
             cn.add_merge(1.0, DialogueActItem('request', 'current_time'))
 
         if (dai.any_word_in('time found connection alternatives alternative option options possibility' +
