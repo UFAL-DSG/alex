@@ -37,10 +37,16 @@ def get_abutt_str(utt, abutt):
         m = re.match('^([A-Z_]+)=', tok)
         if m:
             slot = m.group(1)
-            if slot == 'TASK':  # do not abstract TASK=..., use the original expression
-                start = sum(abutt[2][0:i])
-                length = abutt[2][i]
-                abutt_str += ' '.join(utt[start:start+length])
+            start = sum(abutt[2][0:i])
+            length = abutt[2][i]
+            value = ' '.join(utt[start:start+length])
+
+            # do not abstract TASK=..., use the original expression
+            if slot == 'TASK':
+                abutt_str += value
+            # avoid weird mismatches
+            elif slot == 'CITY' and value.lower() in ['tell', 'many', 'best']:
+                abutt_str += value
             else:
                 abutt_str += '*' + slot
         else:
