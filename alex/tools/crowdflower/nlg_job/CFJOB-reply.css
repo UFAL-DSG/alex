@@ -24,6 +24,14 @@ strong.reply, strong.reply-example {
   color: #0a0;
 }
 
+strong.apologize, strong.apologize-example {
+  color: #c90095; /* magenta */
+}
+
+strong.request, strong.request-example {
+  color:  #0985ff; /* cobalt blue */
+}
+
 p.user_utt {
   padding-bottom: 2em;
 }

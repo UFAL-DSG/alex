@@ -228,13 +228,17 @@ require(['jquery-noconflict'], function($) {
 
     // convert the values to <span>s
     data.innerHTML = data.innerHTML.replace(
-        /=([^,]+)(?=,|$)/g,
+        /=([^,;]+)(?=[,;]|$)/g,
         function(match, p1){
           if (p1.match(/^(notfound|\?|next|none|[012])$/)){
             return '=<span class="fuzzy">' + p1 + '</span>';
           }
           return '=<span class="exact">' + p1 + '</span>';
         });
+
+    // split confirm & reply into two lines
+    data.innerHTML = data.innerHTML.replace(/(confirm|reply|request): /g, "<em>$1:</em> ");
+    data.innerHTML = data.innerHTML.replace(/; <em>/, '<br/><em>');
 
     // make the spans insert their content to text field on click
     $(data).find('span.exact').click(
@@ -249,9 +253,19 @@ require(['jquery-noconflict'], function($) {
 
   $(document).ready(function(){
 
+    // split double instructions
+    confirmReply = $('strong.confirm-reply');
+    confirmReply.attr('class', 'confirm');
+    confirmReply.after(' and <strong class="reply"></strong>');
+    confirmRequest = $('strong.confirm-request');
+    confirmRequest.attr('class', 'confirm');
+    confirmRequest.after(' and <strong class="request"></strong>');
+
     // make the instructions more explicit
-    $('strong.confirm').html('confirm that you understand the question');
+    $('strong.confirm').html('confirm that you understand');
     $('strong.reply').html('answer the question');
+    $('strong.request').html('request additional information');
+    $('strong.apologize').html('apologize that you cannot find what the user requested');
 
     // prevent copy-paste from the instructions
     $('.html-element-wrapper').bind("copy paste",function(e) {
