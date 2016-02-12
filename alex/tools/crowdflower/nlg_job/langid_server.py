@@ -7,7 +7,7 @@ langid_server.py
 ==============
 
 A HTTPS server to help with PTIEN NLG jobs at CrowdFlower. Handles fluency assessment
-(currently only implemented as language detection).
+(currently only implemented as language detection + spell checking).
 
 The default is to use files `server.crt` and `server.key` located in the same directory as
 the SSL key and certificate. The default is to listen on port 443. These defaults may be
@@ -47,6 +47,7 @@ Dependencies
 
 - langid (https://github.com/saffsd/langid.py)
 - langdetect (https://pypi.python.org/pypi/langdetect)
+- hunspell (https://pypi.python.org/pypi/hunspell)
 
 '''
 
