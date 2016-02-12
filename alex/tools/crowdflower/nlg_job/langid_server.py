@@ -64,6 +64,8 @@ import sys
 import langdetect
 import langid
 import urllib
+import hunspell
+import re
 
 DEFAULT_PORT = 443
 MYDIR = os.path.dirname(__file__)
@@ -105,7 +107,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Main method that handles a GET request from the client."""
         response = ""
-        data = ""
         response_code = 200
         try:
             self.server.log(self.client_address, str(self.path))
@@ -122,9 +123,12 @@ class Handler(BaseHTTPRequestHandler):
 
             # fluency assessment
             else:
-              l1 = langdetect.detect(user_text)
-              l2, _ = langid.classify(user_text)
-              response = 'yes' if l1 == 'en' or l2 == 'en' else 'no:' + l1 + ' ' + l2
+                l1 = langdetect.detect(user_text)
+                l2, _ = langid.classify(user_text)
+                spellcheck = self.server.spellcheck(request_data.split(','), user_text)
+                response = ('yes'
+                            if ((l1 == 'en' or l2 == 'en') and spellcheck > 0.5)
+                            else 'no:' + l1 + ' ' + l2 + (' spellcheck score: %.4f' % spellcheck))
 
         except Exception as e:
             print >> sys.stderr, unicode(e).encode('utf-8')
@@ -149,6 +153,9 @@ class SSLTCPServer(SocketServer.TCPServer):
         self.cert_file = settings['cert']
         self.allow_ip = IPRange(settings['allow_ip'])
 
+        self.spellchecker = hunspell.HunSpell('/usr/share/hunspell/en_US.dic',
+                                              '/usr/share/hunspell/en_US.aff')
+
         SocketServer.TCPServer.__init__(self, server_address, RequestHandlerClass, False)
 
         # initialize SSL connection
@@ -167,11 +174,33 @@ class SSLTCPServer(SocketServer.TCPServer):
     def log(self, client_addr, request):
         """Log the request path and client address (IP + port), along with current time."""
         with codecs.open(self.log_path, "a", 'UTF-8') as fh_out:
-            print >> fh_out, time.strftime('%Y-%m-%d %H:%M:%S') + "\t" + ':'.join([str(i) for i in client_addr]) + "\t" + request
+            print >> fh_out, (time.strftime('%Y-%m-%d %H:%M:%S') + "\t" +
+                              ':'.join([str(i) for i in client_addr]) + "\t" +
+                              request)
 
     def is_addr_allowed(self, client_addr):
         """Return true if the given client address (IP + port) is allowed to add keys."""
         return self.allow_ip.is_in_range(client_addr[0])
+
+    def spellcheck(self, data_items, text):
+        """Run spellchecker."""
+
+        data_toks = set()
+        for data_item in data_items:
+            data_toks.update(data_item.lower().split(' '))
+
+        # tokenize
+        toks = ' ' + text + ' '  # pad with spaces for easy regexes
+        toks = re.sub(r'([?.!;,:-]+)', r' ', toks)
+        toks = re.sub(r'\s+', ' ', toks)
+        toks = toks[1:-1].split(' ')  # remove the padding spaces and split
+
+        good_toks = 0
+        for tok in toks:
+            if tok.lower() in data_toks or self.spellchecker.spell(tok):
+                good_toks += 1
+
+        return good_toks / float(len(toks))
 
 
 def run(server_class=SSLTCPServer, settings={}):
