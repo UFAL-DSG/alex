@@ -262,11 +262,11 @@ def generate_reply(utt, dais):
     else:
         dais_str = ''
         if any([dai.name == 'distance' for dai in dais]):
-            dais_str += ', distance=%3.1f' % (random.random() * 12)
+            dais_str += ', distance=%3.1f miles' % (random.random() * 12)
         if any([dai.name == 'num_transfers' for dai in dais]):
             dais_str += ', num_transfers=%d' % random.choice(range(0, 3))
         if any([dai.name == 'duration' for dai in dais]):
-            dais_str += ', duration=%d min' % random.choice(range(10, 80))
+            dais_str += ', duration=%d minutes' % random.choice(range(10, 80))
         if any([dai.name == 'arrival_time' for dai in dais]):
             hr = random.choice(range(7, 23))
             ampm = 'am' if hr < 12 else 'pm'
@@ -311,13 +311,12 @@ def generate_request(utt, dais):
 
 def combine_actions(act1, act2):
 
-    ret = DataLine(dat='+'.join((act1.dat, act2.dat)),
+    ret = DataLine(dat='-'.join((act1.dat, act2.dat)),
                    abstr_utt=act1.abstr_utt,
                    abstr_da=act1.abstr_da,
                    utt=act1.utt,)
 
-    ret.da = (re.sub(r'([a-z_]+)=', act1.dat + r'_\1=', act1.da) + ', ' +
-              re.sub(r'([a-z_]+)=', act2.dat + r'_\1=', act2.da))
+    ret.da = (act1.dat + ': ' + act1.da + '; ' + act2.dat + ': ' + act2.da)
 
     return ret
 
