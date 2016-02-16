@@ -983,9 +983,7 @@ class PTIENHDCSLU(SLUInterface):
                     cn.add_merge(1.0, DialogueActItem('request', 'departure_time_rel'))
 
         if dai.any_word_in('transfer transfers transferring transformer changing change changes interchange interchanging interchanges'):
-            if dai.any_word_in('time take takes') or dai.any_phrase_in(['how long']):
-                cn.add_merge(1.0, dai.build('request', 'time_transfers'))
-            elif dai.any_word_in('number count') or dai.any_phrase_in(['how many', 'there any']) and not dai.any_word_in('regardless not care'):
+            if dai.any_word_in('number count') or dai.any_phrase_in(['how many', 'there any']) and not dai.any_word_in('regardless not care'):
                 cn.add_merge(1.0, dai.build('request', 'num_transfers'))
             elif dai.any_word_in('zero no not') or dai.any_phrase_in(['any transfers']):
                 cn.add_merge(1.0, dai.build('inform', 'num_transfers', '0'))
@@ -998,8 +996,12 @@ class PTIENHDCSLU(SLUInterface):
             elif dai.any_word_in('four quadro'):
                 cn.add_merge(1.0, dai.build('inform', 'num_transfers', '4'))
             elif dai.any_word_in('arbitrary arbitrarily with') or \
-                    dai.any_phrase_in(['any means', 'regardless', 'not care', 'any number', 'any count']):
+                    dai.any_phrase_in(['any means', 'regardless', 'not care', 'any number', 'any count', 'don\'t care']):
                 cn.add_merge(1.0, dai.build('inform', 'num_transfers', 'dontcare'))
+            elif ((dai.any_word_in('time take takes') or dai.any_phrase_in(['how long']))
+                  and not dai.any_phrase_in(['departure time', 'arrival time', 'change the time', 'change my time',
+                                             'change time', 'time of departure', 'time of arrival'])):
+                cn.add_merge(1.0, dai.build('request', 'time_transfers'))
 
         if (dai.all_words_in('direct') and dai.any_word_in('line connection link')) or \
                 (dai.all_words_in('directly') and dai.any_word_in('go travel take get goes travels')):
