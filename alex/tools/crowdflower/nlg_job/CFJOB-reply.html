@@ -1,15 +1,13 @@
 <div class="html-element-wrapper">
-  <p class="user_utt">
-    <strong>User said</strong>:
-    <em class="user_utt">{{utt}}</em>
-  </p>
-</div>
-<div class="html-element-wrapper">
-  <p class="instr">Please
-    <strong class="{{type}}">{{type}}</strong>, using the following information:
-  </p>
+  <p class="info">Using the following information:</p>
   <p>
     <em class="data">{{da}}</em>
+  </p>
+  <p class="instr">Please
+    <strong class="{{type}}">{{type}}</strong> this user request:
+  </p>
+  <p>
+    <em class="user_utt">{{utt}}</em>
   </p>
   <br/>
   <cml:hidden name="fluency_assessment" validates="required" />

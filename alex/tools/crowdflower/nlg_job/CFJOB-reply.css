@@ -32,6 +32,10 @@ strong.request, strong.request-example {
   color:  #0985ff; /* cobalt blue */
 }
 
+p.instr {
+  margin-top: 1em;
+}
+
 p.user_utt {
   padding-bottom: 2em;
 }
@@ -39,6 +43,7 @@ p.user_utt {
 em.user_utt {
   font-weight: bold;
   color: blue;
+  margin-left: 1em;
 }
 
 em.data, em.data-example {
