@@ -223,8 +223,28 @@ require(['jquery-noconflict'], function($) {
     }
   }
 
-  // make elements clickable
-  function makeClickable(data, inputField){
+  // convert to gemoji images
+  function i(name){
+    return '<img src="' +
+      'https://vystadial.ms.mff.cuni.cz/download/alex/tools/crowdflower/nlg_job/images/' +
+      name + '.png" alt="' + name + '" />';
+  }
+
+  var slotNames = ['*', 'num_transfers', 'from_stop', 'to_stop', 'direction',
+      'departure_time', 'arrival_time', 'duration', 'distance',
+      'vehicle', 'line', 'ampm', 'alternative',
+    ];
+  var replacements = [i('info'), i('num') + i('c'), i('from'), i('to'), i('dir'),
+      i('from') + i('t'), i('to') + i('t'), i('t'), i('d'),
+      i('bus') + i('train'), i('line') + i('num'), i('ampm'), i('alt'),
+    ];
+  var shorts = ['*', 'num', 'from', 'to', 'dir',
+      't', 't', 't', 'd',
+      'vehicle', 'line', 'ampm', 'alt',
+    ];
+
+  // make clickable, format content
+  function prepareDataItems(data, inputField){
 
     // convert the values to <span>s
     data.innerHTML = data.innerHTML.replace(
@@ -249,6 +269,11 @@ require(['jquery-noconflict'], function($) {
         inputField.focus();
       }
     );
+
+    for (var i = 0; i < slotNames.length; ++i){
+      data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+          '<span class="slot-name">' + shorts[i] + '</span>=');
+    }
   }
 
   $(document).ready(function(){
@@ -275,7 +300,7 @@ require(['jquery-noconflict'], function($) {
     var dataInsts = $('.data');
     var inputFields = $('textarea.reply');
     for (var i = 0; i < dataInsts.length; ++i){
-      makeClickable(dataInsts[i], inputFields[i]);
+      prepareDataItems(dataInsts[i], inputFields[i]);
     }
     // this will make it crash if the validation server is inaccessible
     requestExternalValidation('', []);

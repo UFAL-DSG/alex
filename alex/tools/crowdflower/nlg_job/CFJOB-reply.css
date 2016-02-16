@@ -54,3 +54,14 @@ em.data span.exact {
   cursor: pointer;
 }
 
+em.data span.slot-name {
+  margin-left: 1em;
+}
+
+em.data span.slot-name img {
+  display: inline;
+  height: 32px;
+  width: 32px;
+  margin-bottom: -0.1em;
+}
+
