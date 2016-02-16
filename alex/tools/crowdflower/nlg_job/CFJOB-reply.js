@@ -62,7 +62,7 @@ require(['jquery-noconflict'], function($) {
     if (dataItem == 'notfound'){ // *=notfound (apologize tasks)
       return !value.match(/\b(no|not|none|don't)\b/);
     }
-    else if (dataItem == 'next'){ // alternative
+    else if (dataItem == 'next/later/after'){ // alternative
       return !value.match(/\b(next|later|after|subsequent|following|another)\b/);
     }
     else if (dataItem == '0'){ // num_transfers
@@ -238,9 +238,9 @@ require(['jquery-noconflict'], function($) {
       i('from') + i('t'), i('to') + i('t'), i('t'), i('d'),
       i('bus') + i('train'), i('line') + i('num'), i('ampm'), i('alt'),
     ];
-  var shorts = ['*', 'num', 'from', 'to', 'dir',
-      't', 't', 't', 'd',
-      'vehicle', 'line', 'ampm', 'alt',
+  var shorts = ['', '', 'from', 'to', 'dir',
+      '', '', '', '',
+      '', 'line', 'ampm', '',
     ];
 
   // make clickable, format content
@@ -250,7 +250,10 @@ require(['jquery-noconflict'], function($) {
     data.innerHTML = data.innerHTML.replace(
         /=([^,;]+)(?=[,;]|$)/g,
         function(match, p1){
-          if (p1.match(/^(notfound|\?|next|none|[012])$/)){
+          if (p1 == 'next'){
+            return '=<span class="fuzzy">next/later/after</span>';
+          }
+          else if (p1.match(/^(notfound|\?|next|none|[012])$/)){
             return '=<span class="fuzzy">' + p1 + '</span>';
           }
           return '=<span class="exact">' + p1 + '</span>';
@@ -271,8 +274,14 @@ require(['jquery-noconflict'], function($) {
     );
 
     for (var i = 0; i < slotNames.length; ++i){
-      data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
-          '<span class="slot-name">' + shorts[i] + '</span>=');
+      if (shorts[i] != ''){
+        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+            '<span class="slot-name">' + shorts[i] + '</span>=');
+      }
+      else {
+        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+            '<span class="slot-name"></span>');
+      }
     }
   }
 
@@ -289,8 +298,11 @@ require(['jquery-noconflict'], function($) {
     // make the instructions more explicit
     $('strong.confirm').html('confirm that you understand');
     $('strong.reply').html('answer the question');
+    $('strong.reply').after(' in ');
     $('strong.request').html('request additional information');
-    $('strong.apologize').html('apologize that you cannot find what the user requested');
+    $('strong.request').after(' about ');
+    $('strong.apologize').html('apologize that you cannot find what you were asked for');
+    $('strong.apologize').after(' in ');
 
     // prevent copy-paste from the instructions
     $('.html-element-wrapper').bind("copy paste",function(e) {
@@ -306,4 +318,5 @@ require(['jquery-noconflict'], function($) {
     requestExternalValidation('', []);
   });
 });
+
 
