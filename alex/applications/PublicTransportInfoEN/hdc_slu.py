@@ -453,7 +453,7 @@ class PTIENHDCSLU(SLUInterface):
                                           'is the starting', ]), set()),
                          ('deny',
                           set(['not from', 'not at', 'not in', 'not on', 'not to', 'not into', 'and not',
-                               'not the', 'rather than']),  # don't, doesn't?
+                               'not the', 'rather than', 'cancel the']),  # don't, doesn't?
                           set(['not'
                                ' at all' 'not wish', 'not this way', 'no not that', 'not need help',
                                'not want', ]))]
@@ -680,14 +680,14 @@ class PTIENHDCSLU(SLUInterface):
                          []),
                         ('deny', 'departure',
                          ['not leaving', 'not leave', 'not departing', 'not departure', 'not starting',
-                          'not start', 'not want to go from'],
+                          'not start', 'not want to go from', 'not from', 'not going from', 'not want to go from'],
                          []),
                         ('deny', 'arrival',
                          ['not arriving', 'not arrive', 'not come', 'not coming', 'not want to arrive',
-                          'not want to come', 'not want to go to', 'not want to arrive'],
+                          'not want to come', 'not want to go to', 'not want to arrive', 'not going to',],
                          []),
                         ('deny', '',
-                         ['no', 'not want', 'negative'],
+                         ['no', 'not want', 'negative', 'cancel the', 'not going'],
                          []),
                         ('inform', 'departure',
                          ['TASK=find_connection', 'departure', 'departing', 'departs', 'departs from', 'leaving',
@@ -760,7 +760,7 @@ class PTIENHDCSLU(SLUInterface):
         u = abutterance
 
         confirm = phrase_in(u, ['it', 'does'])
-        deny = phrase_in(u, ['not', 'want'])
+        deny = any_phrase_in(u, ["do not", 'not want', 'cancel the',])
 
         for i, w in enumerate(u):
             if w.startswith("DATE_REL="):
@@ -783,7 +783,7 @@ class PTIENHDCSLU(SLUInterface):
         u = abutterance
 
         confirm = phrase_in(u, ['it', 'does'])
-        deny = phrase_in(u, ['not', 'want'])
+        deny = any_phrase_in(u, ["do not", 'not want', 'cancel the',])
 
         for i, w in enumerate(u):
             if w.startswith("AMPM="):
@@ -807,7 +807,7 @@ class PTIENHDCSLU(SLUInterface):
         u = abutterance
 
         confirm = phrase_in(u, ['it', 'does'])
-        deny = any_phrase_in(u, ["do not", 'not want'])
+        deny = any_phrase_in(u, ["do not", 'not want', 'cancel the',])
 
         for i, w in enumerate(u):
             if w.startswith("VEHICLE="):
@@ -1024,7 +1024,7 @@ class PTIENHDCSLU(SLUInterface):
 
         if not dai.any_word_in('departure leave leaves leaving go goes going departure departures origin source start'):
             if dai.any_phrase_in(['arrive', 'arrives', 'arriving', 'arrival', 'get there', 'gets there',
-                                  'be there', 'destination', 'target', 'terminal', 'final stop']):
+                                  'be there', 'destination', 'target', 'terminal', 'final stop', 'get to']):
                 if dai.any_phrase_in(['what time', 'when will', 'when does', 'when is', 'time of', 'give me', 'tell me', 'provide', 'arrival time']):
                     cn.add_merge(1.0, DialogueActItem('request', 'arrival_time'))
 
