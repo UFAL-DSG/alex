@@ -126,9 +126,10 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 l1 = langdetect.detect(user_text)
                 l2, _ = langid.classify(user_text)
-                spellcheck = self.server.spellcheck(request_data.split(','), user_text)
+                good, tot = self.server.spellcheck(request_data.split(','), user_text)
+                # one of the detectors must say it's English, allow 1 typo per 10 words
                 response = ('yes'
-                            if ((l1 == 'en' or l2 == 'en') and spellcheck > 0.5)
+                            if ((l1 == 'en' or l2 == 'en') and (tot - good <= tot / 10 + 1))
                             else 'no:' + l1 + ' ' + l2 + (' spellcheck score: %.4f' % spellcheck))
 
         except Exception as e:
@@ -201,7 +202,7 @@ class SSLTCPServer(SocketServer.TCPServer):
             if tok.lower() in data_toks or self.spellchecker.spell(tok):
                 good_toks += 1
 
-        return good_toks / float(len(toks))
+        return good_toks, len(toks)
 
 
 def run(server_class=SSLTCPServer, settings={}):
