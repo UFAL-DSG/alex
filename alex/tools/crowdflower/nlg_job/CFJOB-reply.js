@@ -156,7 +156,7 @@ require(['jquery-noconflict'], function($) {
     }
 
     // irrelevant time-related values
-    hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+)\b/ig);
+    hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+|[0-9]+[ap]m|o'?clock)\b/ig);
     if (hrs != null){
       for (var i = 0; i < hrs.length; ++i){
         if ($.inArray(hrs[i], data.values) == -1){
@@ -194,8 +194,8 @@ require(['jquery-noconflict'], function($) {
 
     // no "yes there is" if I want just confirmation
     if (data.taskTypes.length == 1 && data.taskTypes[0] == 'confirm'){
-      if (value.match(/^(Yes,? )?there (is|are)/i)){
-        return 'reply instead of confirm';
+      if (value.match(/^ *((Yes|No),? *)?(there (is|are)|(you|I|it) (will|are|is))/i)){
+        return 'Do not reply, just confirm what you heard';
       }
     }
     return ''; // everything OK
