@@ -58,11 +58,11 @@ require(['jquery-noconflict'], function($) {
     }
   }
 
-  function missingData(value, dataItem) {
+  function missingData(value, dataItem, slot) {
     if (dataItem == 'notfound'){ // *=notfound (apologize tasks)
       return !value.match(/\b(no|not|none|don't)\b/);
     }
-    else if (dataItem == 'next/later/after'){ // alternative
+    else if (dataItem == 'next'){ // alternative
       return !value.match(/\b(next|later|after|subsequent|following|another)\b/);
     }
     else if (dataItem == '0'){ // num_transfers
@@ -75,11 +75,130 @@ require(['jquery-noconflict'], function($) {
       return !value.match(/\b(two|twice|2|2x)\b/);
     }
     else if (dataItem == '?'){ // request tasks
-      return !value.match(/\b(what|where|how|what's|which)\b/);
+      if (!value.match(/\b(what|where|how|what's|which)\b/)){
+        return true;
+      }
+      if (slot.match(/stop/) && !value.match(/\b(where|origin|destination|from|to|stop)\b/)){
+        return true;
+      }
+      return false;
     }
     else {
       return value.indexOf(dataItem) == -1;
     }
+  }
+
+  stopsList = ['Astor Place',
+         'Bleecker Street',
+         'Bowery',
+         'Bowling Green',
+         'Broad Street',
+         'Bryant Park',
+         'Canal Street',
+         'Cathedral Parkway',
+         'Central Park',
+         'Chambers Street',
+         'City College',
+         'City Hall',
+         'Columbia University',
+         'Columbus Circle',
+         'Cortlandt Street',
+         'Delancey Street',
+         'Dyckman Street',
+         'East Broadway',
+         'Essex Street',
+         'Franklin Street',
+         'Fulton Street',
+         'Grand Central',
+         'Grand Street',
+         'Harlem',
+         'Herald Square',
+         'Houston Street',
+         'Hudson Yards',
+         'Hunter College',
+         'Inwood',
+         'Lafayette Street',
+         'Lincoln Center',
+         'Marble Hill',
+         'Museum of Natural History',
+         'New York University',
+         'Park Place',
+         'Penn Station',
+         'Port Authority Bus Terminal',
+         'Prince Street',
+         'Rector Street',
+         'Rockefeller Center',
+         'Roosevelt Island',
+         'Sheridan Square',
+         'South Ferry',
+         'Spring Street',
+         'Times Square',
+         'Union Square',
+         'Wall Street',
+         'Washington Square',
+         'World Trade Center'];
+
+  function checkSuperfluousInformation(value, data){
+
+    // time-related words in DAs not concerning time
+    if ($.inArray('departure_time', data.slots) == -1 &&
+        $.inArray('arrival_time', data.slots) == -1 &&
+        $.inArray('ampm', data.slots) == -1){
+
+      if (value.match(/\b(o'clock|hours?|today|tomorrow|day|tonight|evening|morning|afternoon)\b/i)){
+        return 'time';
+      }
+      if ($.inArray('duration', data.slots) == -1 &&
+          value.match(/\b(minutes|time)\b/) &&
+          !value.match(/\b(later|next|this|last) time\b/) && !value.match(/\btime later\b/)){
+        return 'time';
+      }
+    }
+
+    // irrelevant time-related values
+    hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+)\b/ig);
+    if (hrs != null){
+      for (var i = 0; i < hrs.length; ++i){
+        if ($.inArray(hrs[i], data.values) == -1){
+          return 'time';
+        }
+      }
+    }
+
+    // irrelevant stops
+    for (var i = 0; i < stopsList.length; ++i){
+      if (value.match(new RegExp(stopsList[i], 'gi')) && $.inArray(stopsList[i], data.values) == -1){
+        return 'location';
+      }
+    }
+
+    // irrelevant stop-related words
+    if ($.inArray('from_stop', data.slots) == -1 &&
+        $.inArray('to_stop', data.slots) == -1 &&
+        $.inArray('direction', data.slots) == -1){
+
+      if (value.match(/(from|to)( what|which)? stop/)){
+        return 'location';
+      }
+    }
+
+    // irrelevant vehicles (but leave Port Authority Bus Terminal)
+    vehicles = value.match(/\b(train|subway|bus|tram|trolley)(?! terminal)\b/ig);
+    if (vehicles != null){
+      for (var i = 0; i < vehicles.length; ++i){
+        if ($.inArray(vehicles[i], data.values) == -1){
+          return 'vehicle';
+        }
+      }
+    }
+
+    // no "yes there is" if I want just confirmation
+    if (data.taskTypes.length == 1 && data.taskTypes[0] == 'confirm'){
+      if (value.match(/^(Yes,? )?there (is|are)/i)){
+        return 'reply instead of confirm';
+      }
+    }
+    return ''; // everything OK
   }
 
   // local validation -- just check that all data are included in the answers
@@ -94,27 +213,33 @@ require(['jquery-noconflict'], function($) {
     // check for missing information (case-insensitive)
     missing = [];
     lcValue = value.toLowerCase();
-    for (var i = 0; i < data.length; ++i){
-      lcData = data[i].toLowerCase();
-      if (missingData(lcValue, lcData)){
-        missing.push(data[i]);
+    for (var i = 0; i < data.values.length; ++i){
+      lcData = data.values[i].toLowerCase();
+      if (missingData(lcValue, lcData, data.slots[i])){
+        missing.push(data.values[i] == '?' ? data.slots[i] + '=?' : data.values[i]);
       }
     }
     if (missing.length > 0){
       return 'Your reply is missing the following information: ' + missing.join(', ');
     }
 
+    // check for superfluous information
+    var errMsg = checkSuperfluousInformation(value, data);
+    if (errMsg != ''){
+      return 'Your reply contains superfluous information: ' + errMsg;
+    }
+
     // check for sufficient number of tokens
     toks = ' ' + value + ' ';  // pad with spaces for easy regexes
-    for (var i = 0; i < data.length; ++i){
-      toks = toks.replace(data[i], 'DATA' + i);
+    for (var i = 0; i < data.values.length; ++i){
+      toks = toks.replace(data.values[i], 'DATA' + i);
     }
     toks = toks.replace(/([?.!;,:-]+)/g, " $1 ");
     toks = toks.replace(/\s+/g, " ");
     toks = toks.substring(1, toks.length - 1);  // remove the padding spaces
     toks = toks.split(" ");
 
-    if (toks.length < 2 * data.length || toks.length < data.length + 3){
+    if (toks.length < 2 * data.values.length || toks.length < data.values.length + 3){
       return 'Your reply is too short. Use full, fluent sentences.';
     }
 
@@ -122,11 +247,20 @@ require(['jquery-noconflict'], function($) {
   }
 
   function getDataItemsFor(element){
-    var res = [];
-    $(element).closest('.html-element-wrapper').find('em.data').find('span').each(
-        function(){ res.push($(this).text()) }
+    var slots = [];
+    var values = [];
+    var taskTypes = [];
+    $(element).closest('.html-element-wrapper').find('.raw_data').find('.slot').each(
+        function(){ slots.push($(this).text()) }
     );
-    return res;
+    $(element).closest('.html-element-wrapper').find('.raw_data').find('.val').each(
+        function(){ values.push($(this).text()) }
+    );
+    $(element).closest('.html-element-wrapper').find('.instr').find('strong').each(
+        function(){ taskTypes.push($(this).attr('class')) }
+    );
+
+    return {slots: slots, values: values, taskTypes: taskTypes};
   }
 
   // main validation method, gather data and perform local and external validation
@@ -152,7 +286,7 @@ require(['jquery-noconflict'], function($) {
     }
 
     // run the external validation, return its result
-    var fluencyData = requestExternalValidation(value, data);
+    var fluencyData = requestExternalValidation(value, data.values);
     fluencyField.value = JSON.stringify(fluencyData);
     return fluencyData.result == 'yes';
   }
@@ -223,35 +357,45 @@ require(['jquery-noconflict'], function($) {
     }
   }
 
-  // convert to gemoji images
-  function i(name){
-    return '<img src="' +
-      'https://vystadial.ms.mff.cuni.cz/download/alex/tools/crowdflower/nlg_job/images/' +
-      name + '.png" alt="' + name + '" />';
-  }
-
   var slotNames = ['*', 'num_transfers', 'from_stop', 'to_stop', 'direction',
       'departure_time', 'arrival_time', 'duration', 'distance',
       'vehicle', 'line', 'ampm', 'alternative',
     ];
-  var replacements = [i('info'), i('num') + i('c'), i('from'), i('to'), i('dir'),
-      i('from') + i('t'), i('to') + i('t'), i('t'), i('d'),
-      i('bus') + i('train'), i('line') + i('num'), i('ampm'), i('alt'),
-    ];
-  var shorts = ['', '', 'from', 'to', 'dir',
+  var shorts = ['route/connection/schedule/transport/transit', '', 'from', 'to', 'dir',
       '', '', '', '',
       '', 'line', 'ampm', '',
     ];
 
+  // helper function "animating" alternating variants
+  function swapAlt(objId, alts){
+    obj = document.getElementById(objId);
+    idx = $.inArray(obj.innerHTML, alts);
+    idx += 1;
+    idx %= alts.length;
+    obj.innerHTML = alts[idx];
+  }
+
+  function createTimer(objId, alts){
+    setInterval(function(){ swapAlt(objId, alts); }, 1000);
+  }
+
   // make clickable, format content
   function prepareDataItems(data, inputField){
+
+    var rawData = data.innerHTML;
+    rawData = rawData.replace(/=([^,;]+)(?=[,;]|$)/g, '=<span class="val">$1</span>');
+    for (var i = 0; i < slotNames.length; ++i){
+      rawData = rawData.replace(slotNames[i] + '=',
+          '<span class="slot">' + slotNames[i] + '</span>=');
+    }
+    $(data).after('<div class="raw_data" style="display:none;">' + rawData + '</div>');
 
     // convert the values to <span>s
     data.innerHTML = data.innerHTML.replace(
         /=([^,;]+)(?=[,;]|$)/g,
         function(match, p1){
           if (p1 == 'next'){
-            return '=<span class="fuzzy">next/later/after</span>';
+            return '=<span class="fuzzy anim">next/later/after</span>';
           }
           else if (p1.match(/^(notfound|\?|next|none|[012])$/)){
             return '=<span class="fuzzy">' + p1 + '</span>';
@@ -263,6 +407,31 @@ require(['jquery-noconflict'], function($) {
     data.innerHTML = data.innerHTML.replace(/(confirm|reply|request): /g, "<em>$1:</em> ");
     data.innerHTML = data.innerHTML.replace(/; <em>/, '<br/><em>');
 
+    for (var i = 0; i < slotNames.length; ++i){
+      if (shorts[i].indexOf('/') != -1){
+        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+            '<span class="slot-name anim">' + shorts[i] + '</span>=');
+      }
+      else if (shorts[i] != ''){
+        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+            '<span class="slot-name">' + shorts[i] + '</span>=');
+      }
+      else {
+        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
+            '<span class="slot-name"></span>');
+      }
+    }
+
+    // set animation for alternating variants
+    animElems = $(data).find('span.anim');
+    for (var i = 0; i < animElems.length; ++i){
+      var alts = animElems[i].innerHTML.split('/');
+      var randId = 'anim-' + Math.random().toString(36).substr(2);
+      animElems[i].id = randId;
+      animElems[i].innerHTML = alts[0];
+      createTimer(randId, alts);
+    }
+
     // make the spans insert their content to text field on click
     $(data).find('span.exact').click(
       function(){
@@ -272,17 +441,6 @@ require(['jquery-noconflict'], function($) {
         inputField.focus();
       }
     );
-
-    for (var i = 0; i < slotNames.length; ++i){
-      if (shorts[i] != ''){
-        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
-            '<span class="slot-name">' + shorts[i] + '</span>=');
-      }
-      else {
-        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
-            '<span class="slot-name"></span>');
-      }
-    }
   }
 
   $(document).ready(function(){
