@@ -65,6 +65,14 @@ def phrase_pos(utterance, words):
     return utterance.find(words)
 
 
+def any_combination_in(utterance, phrases1, phrases2):
+    for p1 in phrases1:
+        for p2 in phrases2:
+            if phrase_pos(utterance, p1 + ' ' + p2) != -1:
+                return True
+    return False
+
+
 def last_phrase_span(utterance, phrases):
     """Returns the span (start, end+1) of the last phrase from the given list
     that is found in the utterance. Returns (-1, -1) if no phrase is found.
@@ -192,6 +200,13 @@ class DAIBuilder(object):
 
     def phrase_in(self, phrase, sub_utt=None):
         return self.any_phrase_in([phrase], sub_utt)
+
+    def any_combination_in(self, phrases1, phrases2):
+        for p1 in phrases1:
+            for p2 in phrases2:
+                if self.first_phrase_span([p1 + ' ' + p2]) != (-1, -1):
+                    return True
+        return False
 
     def ending_phrases_in(self, phrases):
         """Returns True if the utterance ends with one of the phrases
@@ -1023,7 +1038,7 @@ class PTIENHDCSLU(SLUInterface):
                      dai.any_phrase_in(['is needed', 'i need', 'is required', 'it takes', 'going to take']))) or
                     dai.any_phrase_in(['time requirement', 'time requirements', 'travel time', 'length of the trip', 'length of trip', 'time needed']) or
                     dai.all_words_in("give me time trip") or
-                    (dai.all_words_in('duration') and dai.any_phrase_in(['what is', 'how long', 'what\'s', 'get']))):
+                    (dai.all_words_in('duration') and dai.any_phrase_in(['what is', 'how long', 'what\'s', 'get', 'know', 'give me', 'tell me']))):
                 cn.add_merge(1.0, DialogueActItem('request', 'duration'))
 
             if dai.any_phrase_in(['how far', 'distance']) or (dai.any_phrase_in(['how long']) and not dai.any_word_in('take travel duration')):
@@ -1033,15 +1048,26 @@ class PTIENHDCSLU(SLUInterface):
                 and not dai.any_phrase_in(['time needed', 'time required'])):
             cn.add_merge(1.0, DialogueActItem('request', 'current_time'))
 
-        if (dai.any_word_in('time found connection alternatives alternative option options possibility' +
-                            'choice trip travel journey ride tour link bus train sub subway go going' +
-                            'trips rides connections possibilites choices buses trains subways tram trams' +
-                            'travelling') or
-                dai.any_phrase_in(['next one', 'previous one', 'last one', 'first one', 'second one', 'third one', 'fourth one'])) and \
-                not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum'):
+        if (dai.any_combination_in(['any', 'arbitrary', 'first', 'second', 'third', 'fourth', 'don\'t care which', 'do not care which',
+                                    'next', 'later', 'following', 'subsequent', 'sooner', 'previous', 'last', 'latter', 'repeat the', 'repeat',
+                                    'preceding', 'another', 'other', 'different', 'alternative'],
+                                   ['connection', 'alternative', 'alternatives', 'option', 'options', 'possibility', 'variant',
+                                    'travel', 'trip', 'choice', 'journey', 'ride', 'tour', 'link', 'bus', 'train', 'departure', 'departures',
+                                    'sub', 'subway', 'trips', 'rides', 'connections', 'possibilities', 'choices', 'buses',
+                                    'trains', 'subways', 'tram', 'trams', 'travels', 'transit', 'transport', 'transportation', 'one']) or
+                dai.any_combination_in(['connection', 'alternative', 'alternatives', 'option', 'options', 'possibility', 'variant',
+                                        'travel', 'trip', 'choice', 'journey', 'ride', 'tour', 'link', 'bus', 'train', 'departure', 'departures',
+                                        'sub', 'subway', 'trips', 'rides', 'connections', 'possibilities', 'choices', 'buses',
+                                        'trains', 'subways', 'tram', 'trams', 'travels', 'transit', 'transport', 'transportation'],
+                                       ['one', 'number one', 'two', 'number two', 'three', 'number three', 'four', 'number four',
+                                        'at a later', 'at later', 'later', 'at a sooner', 'at sooner', 'sooner', 'before', 'after',
+                                        'at some other', 'at another', 'at other', 'again', 'other', 'different'])  or
+                dai.any_combination_in(['later', 'sooner', 'another','don\'t care which', 'do not care which', 'alternate', 'alternative'], ['time']) and
+                not dai.any_word_in('street stop city borough avenue road parkway court from in transfer transfers change changes maximum')):
 
             if (dai.any_word_in('arbitrary any') and
-                    not dai.any_word_in('first second third fourth one two three four')):
+                    not dai.any_word_in('first second third fourth one two three four') and
+                    not dai.any_phrase_in(['any other'])):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "dontcare"))
 
             if (dai.any_word_in('first one') and
@@ -1049,20 +1075,20 @@ class PTIENHDCSLU(SLUInterface):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "1"))
 
             if (dai.any_word_in('second two') and
-                    not dai.any_word_in('third fourth next')):
+                    not dai.any_word_in('three third four fourth next later')):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "2"))
 
-            if dai.any_word_in('third three'):
+            if dai.any_word_in('third three') and not dai.any_word_in('fourth four next later'):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "3"))
 
-            if dai.any_word_in('fourth four'):
+            if dai.any_word_in('fourth four') and not dai.any_word_in('next later'):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "4"))
 
             if (dai.any_word_in("last before latest latter most bottom repeat again") and
                     not dai.all_words_in("previous preceding")):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "last"))
 
-            if dai.any_word_in("next different following subsequent later another after"):
+            if dai.any_word_in("next different following subsequent later another after other alternative alternate"):
                 cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
             if dai.any_word_in("previous preceding earlier sooner"):
@@ -1079,7 +1105,7 @@ class PTIENHDCSLU(SLUInterface):
              dai.all_words_in("and later")):
             cn.add_merge(1.0, DialogueActItem("inform", "alternative", "next"))
 
-        if len(u) == 1 and dai.any_word_in("previous precedent"):
+        if len(u) == 1 and dai.any_word_in("previous preceding sooner"):
             cn.add_merge(1.0, DialogueActItem("inform", "alternative", "prev"))
 
         if dai.any_phrase_in(["by day", "of the day"]):
