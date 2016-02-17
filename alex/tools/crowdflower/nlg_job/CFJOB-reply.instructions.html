@@ -21,13 +21,10 @@
 
 <div class="example">
   <div class="html-element-wrapper">
-    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
-  </div>
-
-  <div class="html-element-wrapper">
-    <p>Please          <strong class="confirm">confirm that you understand the question</strong>, using the following information:    </p>
-
+    <p class="info">Using the following information:</p>
     <p><em class="data-example">from_stop=<span>Marble Hill</span>, to_stop=<span>East Broadway</span></em></p>
+    <p class="instr">Please <strong class="confirm">confirm that you understand</strong> this user request:</p>
+    <p><em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
   </div>
 </div>
 
@@ -47,13 +44,10 @@
 
 <div class="example">
   <div class="html-element-wrapper">
-    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
-  </div>
-
-  <div class="html-element-wrapper">
-    <p>Please          <strong class="reply">answer the question</strong>, using the following information:    </p>
-
+    <p class="info">Using the following information:</p>
     <p><em class="data-example">vehicle=<span>subway</span>, line=<span>C</span>, departure_time=<span>10:04am</span>, from_stop=<span>Marble Hill</span>, direction=<span>East Broadway</span></em></p>
+    <p class="instr">Please <strong class="reply">answer the question in</strong> this user request:    </p>
+    <p><em class="user_utt">i want to go from Marble Hill to East Broadway</em></p>
   </div>
 </div>
 
@@ -75,24 +69,26 @@
 
 <div class="example">
   <div class="html-element-wrapper">
-    <p class="user_utt"><strong>User said</strong>:         <em class="user_utt">how long will the journey take</em></p>
+    <p class="info">Using the following information:</p>
+    <p><em class="data-example">notfound, next/later/after</em></p>
+    <p class="instr">Please <strong class="apologize">apologize that you cannot find what you were asked for in</strong> this user request:</p>
+    <p><em class="user_utt">is there a later option</em></p>
   </div>
 
   <div class="html-element-wrapper">
-    <p>Please          <strong class="reply">answer the question</strong>, using the following information:    </p>
 
-    <p><em class="data-example">duration=<span>34 min</span></em></p>
   </div>
 </div>
 
 <ul>
   <li>Possible replies:
     <ul>
-      <li><em>The journey will take 34 minutes.</em></li>
+      <li><em>I am sorry, but I do not know of a later option.</em></li>
 
-      <li><em>It will take 34 minutes.</em></li>
+      <li><em>I am sorry, a later option cannot be found.</em></li>
 
-      <li><em>It takes 34 minutes.</em></li>
+      <li><em>I am afraid that there is no later option.</em></li>
     </ul>
   </li>
-</ul> -->
+</ul>
+-->
