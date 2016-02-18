@@ -272,7 +272,7 @@ def generate_reply(utt, dais):
             ampm = 'am' if hr < 12 else 'pm'
             hr %= 12
             min = random.choice(range(60))
-            dais_str += ', arrival_time=%d:%d%s' % (hr, min, ampm)
+            dais_str += ', arrival_time=%d:%02d%s' % (hr, min, ampm)
 
         if dais_str == '':
             raise NotImplementedError('Cannot generate a reply for: ' + unicode(dais))
