@@ -141,8 +141,15 @@ def deabstract(utt, dais):
             dai_out.value = vehicle
             utt_r = re.sub(r'\*VEHICLE', vehicle, utt)
         elif 'time' in dai.name and dai.dat == 'inform':
-            dai_out.value = unicode(time) + ':00'
-            utt_r = re.sub(r'\*NUMBER', WORD_FOR_NUMBER[time], utt)
+            if re.search(r'\*NUMBER an hour', utt):
+                time = 0.5
+                dai_out.value = '0:30'
+                utt_r = re.sub(r'\*NUMBER', 'half', utt)
+            else:
+                if 'time_rel' in dai.name:
+                    time %= 5
+                dai_out.value = unicode(time) + ':00'
+                utt_r = re.sub(r'\*NUMBER', WORD_FOR_NUMBER[time], utt)
         elif 'ampm' in dai.name:
             dai_out.value = ampm
             utt_r = re.sub(r'(in the) \*AMPM', r'\1 %s' % word_for_ampm(time, ampm), utt)
@@ -251,8 +258,10 @@ def generate_reply(utt, dais):
         info['departure_time'] += info['ampm']
         del info['ampm']
 
-        if 'alternative' in info:  # let's try and infer this just from the context
-            del info['alternative']
+        for slot_name in ['departure_time_rel', 'time_rel',
+                          'alternative', 'arrival_time', 'arrival_time_rel']:
+            if slot_name in info:
+                del info[slot_name]
 
         dais_str = [slot + '=' + value for slot, value in info.iteritems()]
         random.shuffle(dais_str)
