@@ -664,8 +664,8 @@ class PTIENHDCSLU(SLUInterface):
 
         u = abutterance
 
-        preps_abs = set(["at", "time", "past", "after", "between", "before", "in", "around", "about", "for"])
-        preps_rel = set(["in", ])
+        #preps_abs = set(["at", "time", "past", "after", "between", "before", "in", "around", "about", "for"])
+        #preps_rel = set(["in", ])
 
         test_context = [('confirm', 'departure',
                          ['it leaves', 'it departures', 'it starts', 'is starting', 'is leaving', 'is departuring',
@@ -722,8 +722,7 @@ class PTIENHDCSLU(SLUInterface):
                     value = w[5:]
                 time_rel = False
 
-                if i >= 1:
-                    if u[i - 1] in preps_rel:
+                if any_phrase_in(u[max(i-3,0):i], ['in', 'in a', 'in the', 'in the next', 'in the following']):
                         time_rel = True
 
                 if count_times > 1:
