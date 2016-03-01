@@ -74,6 +74,9 @@ require(['jquery-noconflict'], function($) {
     else if (dataItem == '2'){
       return !value.match(/\b(two|twice|2|2x)\b/);
     }
+    else if (dataItem == '0:30'){
+      return !value.match(/\b(30 min(ute)?s|0:30|half|1\/2)\b/);
+    }
     else if (dataItem == '?'){ // request tasks
       if (!value.match(/\b(what|where|how|what's|which)\b/)){
         return true;
@@ -297,9 +300,13 @@ require(['jquery-noconflict'], function($) {
     var data = getDataItemsFor(element);
     var result = performLocalValidation(value, data);
 
+    // + log all validation data (in a very crude fashion, but still)
+    var validLogField = $(element).closest('.html-element-wrapper').find('.validation_log')[0];
     if (result !== null){
+      validLogField.innerHTML += " /// \"" + element.value + "\" --- " + result;
       return result;
     }
+    validLogField.innerHTML += " /// \"" + element.value + "\" --- not fluent";
     return 'Your reply is not fluent.';
   }
 
@@ -358,22 +365,13 @@ require(['jquery-noconflict'], function($) {
   }
 
   var slotNames = ['*', 'num_transfers', 'from_stop', 'to_stop', 'direction',
-      'departure_time', 'arrival_time', 'duration', 'distance',
+      'departure_time', 'arrival_time', 'departure_time_rel', 'duration', 'distance',
       'vehicle', 'line', 'ampm', 'alternative',
     ];
-  var shorts = ['route/connection/schedule/transport/transit', '', 'from', 'to', 'dir',
-      '', '', '', '',
+  var shorts = ['', '', 'from', 'to', 'dir',
+      '', '', '', '', '',
       '', 'line', 'ampm', '',
     ];
-
-  // helper function "animating" alternating variants
-  function swapAlt(objId, alts){
-    obj = document.getElementById(objId);
-    idx = $.inArray(obj.innerHTML, alts);
-    idx += 1;
-    idx %= alts.length;
-    obj.innerHTML = alts[idx];
-  }
 
   function createTimer(objId, alts){
     setInterval(function(){ swapAlt(objId, alts); }, 1000);
@@ -395,9 +393,9 @@ require(['jquery-noconflict'], function($) {
         /=([^,;]+)(?=[,;]|$)/g,
         function(match, p1){
           if (p1 == 'next'){
-            return '=<span class="fuzzy anim">next/later/after</span>';
+            return '=<span class="fuzzy">next/later/after</span>';
           }
-          else if (p1.match(/^(notfound|\?|next|none|[012])$/)){
+          else if (p1.match(/^(notfound|\?|next|none|[012]|0:30)$/)){
             return '=<span class="fuzzy">' + p1 + '</span>';
           }
           return '=<span class="exact">' + p1 + '</span>';
@@ -408,11 +406,7 @@ require(['jquery-noconflict'], function($) {
     data.innerHTML = data.innerHTML.replace(/; <em>/, '<br/><em>');
 
     for (var i = 0; i < slotNames.length; ++i){
-      if (shorts[i].indexOf('/') != -1){
-        data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
-            '<span class="slot-name anim">' + shorts[i] + '</span>=');
-      }
-      else if (shorts[i] != ''){
+      if (shorts[i] != ''){
         data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
             '<span class="slot-name">' + shorts[i] + '</span>=');
       }
@@ -420,16 +414,6 @@ require(['jquery-noconflict'], function($) {
         data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
             '<span class="slot-name"></span>');
       }
-    }
-
-    // set animation for alternating variants
-    animElems = $(data).find('span.anim');
-    for (var i = 0; i < animElems.length; ++i){
-      var alts = animElems[i].innerHTML.split('/');
-      var randId = 'anim-' + Math.random().toString(36).substr(2);
-      animElems[i].id = randId;
-      animElems[i].innerHTML = alts[0];
-      createTimer(randId, alts);
     }
 
     // make the spans insert their content to text field on click
