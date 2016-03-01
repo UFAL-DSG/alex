@@ -372,6 +372,10 @@ def main(input_file, filter_threshold):
 
     headers = ['type', 'abstr_utt', 'abstr_da', 'utt', 'da']
     data = []
+    good_toks, good_types = 0, 0  # good contexts, useful for tasks
+    fthr_toks, fthr_types = 0, 0  # filtered because of threshold
+    fslt_toks, fslt_types = 0, 0  # filtered as they only contain slots
+    frep_toks, frep_types = 0, 0  # filtered because no reply can be generated
 
     with codecs.open(input_file, "r", 'UTF-8') as fh:
         for line in fh:
@@ -387,18 +391,30 @@ def main(input_file, filter_threshold):
 
             if occ_num < filter_threshold:
                 print >> sys.stderr, 'Input "%s" has only %d occurrences, skipping' % (utt, occ_num)
+                fthr_toks += occ_num
+                fthr_types += 1
                 continue
 
             if re.match(r'^(\*[A-Z_]+)(\s+\*[A-Z_]+)*$', utt):
                 print >> sys.stderr, 'Input "%s" only contains slots, skipping' % utt
+                fslt_toks += occ_num
+                fslt_types += 1
                 continue
 
             try:
                 ret = process_utt(utt, da)
+                if not ret:
+                    frep_toks += occ_num
+                    frep_types += 1
+                else:
+                    good_toks += occ_num
+                    good_types += 1
                 print >> sys.stderr, 'Result:', "\n".join(unicode(line) for line in ret)
                 print >> sys.stderr, ''
                 data.extend(ret)
             except NotImplementedError as e:
+                frep_toks += occ_num
+                frep_types += 1
                 print >> sys.stderr, 'Error:', e
 
     with codecs.getwriter('utf-8')(sys.stdout) as fh:
@@ -407,6 +423,9 @@ def main(input_file, filter_threshold):
         for line in data:
             csvwrite.writerow(line.as_tuple())
 
+    print >> sys.stderr, ("\n\nGood: %d / %d\nThreshold: %d / %d\nSlots: %d / %d\nReply: %d / %d" %
+                          (good_toks, good_types, fthr_toks, fthr_types, fslt_toks, fslt_types,
+                          frep_toks, frep_types))
 
 if __name__ == '__main__':
     ap = ArgumentParser()
