@@ -82,7 +82,7 @@ BUS_LINES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 20, 21, 22, 23, 31,
              34, 35, 42, 50, 57, 60, 66, 72, 79, 86, 96, 98, 100, 101, 102,
              103, 104, 106, 116]
 
-ACK_SLOTS_REGEX = '^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)'
+ACK_SLOTS_REGEX = '^(from|to|departure_time|arrival_time|time|ampm|vehicle|alternative)'
 
 
 class DataLine(object):
@@ -201,6 +201,9 @@ def deabstract(utt, dais):
                 time, hr_val, num_word = random.choice(MINUTE_VALUES)
                 dai_out.value = hr_val
                 utt_r = re.sub(r'\*NUMBER', num_word, utt)
+            elif re.search(r'\*NUMBER \*NUMBER', utt):
+                dai_out.value = unicode(time) + ':30'
+                utt_r = re.sub(r'\*NUMBER \*NUMBER', WORD_FOR_NUMBER[time] + ' thirty', utt)
             else:
                 if 'time_rel' in dai.name:
                     time = random.randint(0, 4)
@@ -243,6 +246,10 @@ def normalize_da(da):
     # convert streets to stops
     for dai in dais:
         dai.name = re.sub('_street$', '_stop', dai.name)
+
+    # default to departure time
+    for dai in dais:
+        dai.name = re.sub('^time', 'departure_time', dai.name)
 
     return dais
 
@@ -362,11 +369,7 @@ def generate_request(utt, dais):
 
     dais_str = dais_str[2:]
 
-    utt, _ = deabstract(utt, [
-            dai for dai in dais
-            if re.match('^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)',
-                        dai.name)
-            ])
+    utt, _ = deabstract(utt, [dai for dai in dais if re.match(ACK_SLOTS_REGEX, dai.name)])
 
     ret.utt = utt
     ret.da = dais_str
