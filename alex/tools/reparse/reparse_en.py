@@ -77,6 +77,17 @@ def abstract_da(best_da):
                 dai.value = '*' + dai.name.upper()
 
 
+def fix_transcript_errors(utt):
+    # fix commas
+    utt = re.sub(r',', r' ', utt)
+    # fix am, pm -> a m, p m
+    utt = re.sub(r'clock ([ap])m', r'clock \1 m', utt)
+    for hour in ['one', 'two', 'three', 'four', 'five', 'six',
+                 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve']:
+        utt = re.sub(hour + ' ([ap])m', hour + r' \1 m', utt)
+    return utt
+
+
 def process_file(file_path):
 
     cldb = CategoryLabelDatabase(as_project_path('applications/PublicTransportInfoEN/data/database.py'))
@@ -98,7 +109,7 @@ def process_file(file_path):
                 continue
 
             # reparse utterance using transcription
-            utt = re.sub(r',', r' ', utt)
+            utt = fix_transcript_errors(utt)
             utt = Utterance(utt)
             sem = hdc_slu.parse({'utt': utt})
 
