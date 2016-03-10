@@ -75,6 +75,9 @@ STOPS = ['Astor Place',
 WORD_FOR_NUMBER = ['zero', 'one', 'two', 'three', 'four', 'five', 'six',
                    'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve']
 
+MINUTE_VALUES = [(0.16, '0:10', 'ten'), (0.25, '0:15', 'fifteen'),
+                 (0.33, '0:20', 'twenty'), (0.5, '0:30', 'thirty')]
+
 BUS_LINES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 20, 21, 22, 23, 31,
              34, 35, 42, 50, 57, 60, 66, 72, 79, 86, 96, 98, 100, 101, 102,
              103, 104, 106, 116]
@@ -188,13 +191,19 @@ def deabstract(utt, dais):
             dai_out.value = vehicle
             utt_r = re.sub(r'\*VEHICLE', vehicle, utt)
         elif 'time' in dai.name and dai.dat == 'inform':
+            if re.search(r'\*TIME', utt):
+                dai_out.value = 'now'
+                utt_r = re.sub(r'\*TIME', 'now', utt)
             if re.search(r'\*NUMBER an hour', utt):
-                time = 0.5
                 dai_out.value = '0:30'
                 utt_r = re.sub(r'\*NUMBER', 'half', utt)
+            elif re.search(r'\*NUMBER minutes', utt):
+                time, hr_val, num_word = random.choice(MINUTE_VALUES)
+                dai_out.value = hr_val
+                utt_r = re.sub(r'\*NUMBER', num_word, utt)
             else:
                 if 'time_rel' in dai.name:
-                    time %= 5
+                    time = random.randint(0, 4)
                 dai_out.value = unicode(time) + ':00'
                 utt_r = re.sub(r'\*NUMBER', WORD_FOR_NUMBER[time], utt)
         elif 'ampm' in dai.name:
@@ -474,7 +483,7 @@ def main(args):
     written = {}
     with codecs.getwriter('utf-8')(sys.stdout) as fh:
         # starting with the header
-        csvwrite = csv.writer(fh, delimiter=b"\t")
+        csvwrite = csv.writer(fh, delimiter=b"\t", lineterminator="\n")
         csvwrite.writerow(DataLine.get_headers())
         for line in data:
             if line.signature in written:  # some lines may be duplicate, skip them
