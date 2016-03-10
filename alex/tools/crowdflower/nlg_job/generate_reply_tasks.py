@@ -3,9 +3,7 @@
 
 
 """
-Generate reply/confirm CrowdFlower tasks for the PTIEN domain.
-
-Usage: ./generate_reply_tasks.py [--filter-threshold N] input.tsv > output.tsv
+Generate NLG reply/confirm/apologize/request CrowdFlower tasks for the PTIEN domain.
 """
 
 
@@ -81,7 +79,7 @@ BUS_LINES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 20, 21, 22, 23, 31,
              34, 35, 42, 50, 57, 60, 66, 72, 79, 86, 96, 98, 100, 101, 102,
              103, 104, 106, 116]
 
-NO_CONNECTION_PROB = 0.1
+ACK_SLOTS_REGEX = '^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)'
 
 
 class DataLine(object):
@@ -99,6 +97,47 @@ class DataLine(object):
     def __unicode__(self):
         return "\t".join(self.as_tuple())
 
+    @staticmethod
+    def from_csv_line(line, columns):
+        ret = DataLine()
+        ret.dat = line[columns['dat']]
+        ret.abstr_utt = line[columns['abstr_utt']]
+        ret.abstr_da = line[columns['abstr_da']]
+        ret.utt = line[columns['utt']]
+        ret.da = line[columns['da']]
+        return ret
+
+    @property
+    def signature(self):
+        # the type of response and the original abstr. utterance should be enough to distinguish
+        return self.abstr_utt + "|" + self.abstr_da + "|" + self.dat
+
+    @property
+    def slots(self):
+        parts = re.sub('=[^,;]*', '', self.da)
+        parts = parts.split('; ')
+        slots = ''
+        for part in parts:
+            if ':' in part:
+                ptype, part = part.split(': ')
+                slots += ptype + ':'
+            slots += ','.join(sorted(part.split(', ')))
+            slots += ' '
+        return slots
+
+    @staticmethod
+    def get_columns_from_header(header):
+        columns = {'dat': header.index('type'),
+                   'abstr_utt': header.index('abstr_utt'),
+                   'abstr_da': header.index('abstr_da'),
+                   'utt': header.index('utt'),
+                   'da': header.index('da')}
+        return columns
+
+    @staticmethod
+    def get_headers():
+        return ('type', 'abstr_utt', 'abstr_da', 'utt', 'da')
+
 
 def word_for_ampm(hour, ampm):
     """Return 'morning', 'afternoon', or 'evening' for the given hour and
@@ -111,15 +150,21 @@ def word_for_ampm(hour, ampm):
     return 'evening'
 
 
+def random_hour():
+    """Return random hour + AM/PM info (7am - 11pm)."""
+    hr = random.choice(range(7, 23))
+    ampm = 'am' if hr < 12 else 'pm'
+    hr %= 12
+    return hr, ampm
+
+
 def deabstract(utt, dais):
     """De-abstract an utterance and a list of corresponding DAIs, so that
     a specific answer is provided.
     """
     # prepare some data to be used
     from_stop, to_stop = random.sample(STOPS, 2)
-    time = random.choice(range(7, 23))
-    ampm = 'am' if time < 12 else 'pm'
-    time %= 12
+    time, ampm = random_hour()
     vehicle = random.choice(['subway', 'bus'])
 
     dais_out = []  # create a completely new structure, so that we keep the abstract original
@@ -196,14 +241,12 @@ def generate_ack(ack_type, utt, dais):
 
     ret = DataLine(dat=ack_type, abstr_utt=utt, abstr_da='&'.join([unicode(dai) for dai in dais]))
 
-    utt, dais = deabstract(utt, [
-            dai for dai in dais
-            if re.match('^(from|to|departure_time|arrival_time|ampm|vehicle|alternative)',
-                        dai.name)
-            ])
+    utt, dais = deabstract(utt, [dai for dai in dais
+                                 if re.match(ACK_SLOTS_REGEX, dai.name) and
+                                 dai.dat in ['confirm', 'inform']])
     dais_str = ', '.join([dai.name + '=' + dai.value for dai in dais])
     if ack_type == 'apologize':
-        dais_str = '*=notfound, ' + dais_str;
+        dais_str = '*=notfound, ' + dais_str
 
     ret.utt = utt
     ret.da = dais_str
@@ -270,19 +313,20 @@ def generate_reply(utt, dais):
     # offer additional information
     else:
         dais_str = ''
-        if any([dai.name == 'distance' for dai in dais]):
+        if any([dai.name == 'distance' and dai.dat == 'request' for dai in dais]):
             dais_str += ', distance=%3.1f miles' % (random.random() * 12)
-        if any([dai.name == 'num_transfers' for dai in dais]):
+        if any([dai.name == 'num_transfers' and dai.dat == 'request' for dai in dais]):
             dais_str += ', num_transfers=%d' % random.choice(range(0, 3))
-        if any([dai.name == 'duration' for dai in dais]):
+        if any([dai.name == 'duration' and dai.dat == 'request' for dai in dais]):
             dais_str += ', duration=%d minutes' % random.choice(range(10, 80))
-        if any([dai.name == 'arrival_time' for dai in dais]):
-            hr = random.choice(range(7, 23))
-            ampm = 'am' if hr < 12 else 'pm'
-            hr %= 12
+        if any([dai.name == 'departure_time' and dai.dat == 'request' for dai in dais]):
+            hr, ampm = random_hour()
+            min = random.choice(range(60))
+            dais_str += ', departure_time=%d:%02d%s' % (hr, min, ampm)
+        if any([dai.name == 'arrival_time' and dai.dat == 'request' for dai in dais]):  # arrival_time_rel does not occur
+            hr, ampm = random_hour()
             min = random.choice(range(60))
             dais_str += ', arrival_time=%d:%02d%s' % (hr, min, ampm)
-
         if dais_str == '':
             raise NotImplementedError('Cannot generate a reply for: ' + unicode(dais))
 
@@ -342,9 +386,9 @@ def process_utt(utt, da):
         return ret
 
     # check if we should generate a confirmation task, and do it
-    if any([dai.dat in ['inform', 'confirm'] and
-            re.match('^(from|to|departure_time|arrival_time|vehicle|alternative)', dai.name)
+    if any([dai.dat in ['inform', 'confirm'] and re.match(ACK_SLOTS_REGEX, dai.name)
             for dai in dais]):
+
         ret['confirm'] = generate_ack('confirm', utt, dais)
 
         if not any([dai.dat == 'request' for dai in dais]):
@@ -368,16 +412,16 @@ def process_utt(utt, da):
     return ret.values()
 
 
-def main(input_file, filter_threshold):
+def main(args):
 
-    headers = ['type', 'abstr_utt', 'abstr_da', 'utt', 'da']
     data = []
     good_toks, good_types = 0, 0  # good contexts, useful for tasks
     fthr_toks, fthr_types = 0, 0  # filtered because of threshold
     fslt_toks, fslt_types = 0, 0  # filtered as they only contain slots
     frep_toks, frep_types = 0, 0  # filtered because no reply can be generated
+    finished = {}
 
-    with codecs.open(input_file, "r", 'UTF-8') as fh:
+    with codecs.open(args.input_file, "r", 'UTF-8') as fh:
         for line in fh:
             print >> sys.stderr, 'Processing: ', line.strip()
 
@@ -389,7 +433,7 @@ def main(input_file, filter_threshold):
             da = DialogueAct(da_str=da)
             occ_num = int(occ_num)
 
-            if occ_num < filter_threshold:
+            if occ_num < args.filter_threshold:
                 print >> sys.stderr, 'Input "%s" has only %d occurrences, skipping' % (utt, occ_num)
                 fthr_toks += occ_num
                 fthr_types += 1
@@ -417,20 +461,48 @@ def main(input_file, filter_threshold):
                 frep_types += 1
                 print >> sys.stderr, 'Error:', e
 
+    if args.load_finished:
+        with codecs.open(args.load_finished, "r", 'UTF-8') as fh:
+            csvread = csv.reader(fh, delimiter=str(args.finished_csv_delim), quotechar=b'"')
+            columns = DataLine.get_columns_from_header(csvread.next())
+            for row in csvread:
+                finished_line = DataLine.from_csv_line(row, columns)
+                finished[finished_line.signature] = finished_line
+
+    written = {}
     with codecs.getwriter('utf-8')(sys.stdout) as fh:
+        # starting with the header
         csvwrite = csv.writer(fh, delimiter=b"\t")
-        csvwrite.writerow(headers)
+        csvwrite.writerow(DataLine.get_headers())
         for line in data:
-            csvwrite.writerow(line.as_tuple())
+            if line.signature in written:  # some lines may be duplicate, skip them
+                print >> sys.stderr, 'Duplicate line:', line.signature
+                continue
+            # skip finished results (if they are loaded and if they should be skipped)
+            if line.signature in finished:
+                if finished[line.signature].slots != line.slots:
+                    print >> sys.stderr, ('Slots changed for ', line.signature,
+                                          '-- ignoring finished.')
+                    csvwrite.writerow(line.as_tuple())
+                elif not args.skip_finished:
+                    csvwrite.writerow(finished[line.signature].as_tuple())
+            # default case: not found among finished
+            else:
+                csvwrite.writerow(line.as_tuple())
+
+            written[line.signature] = line
 
     print >> sys.stderr, ("\n\nGood: %d / %d\nThreshold: %d / %d\nSlots: %d / %d\nReply: %d / %d" %
                           (good_toks, good_types, fthr_toks, fthr_types, fslt_toks, fslt_types,
-                          frep_toks, frep_types))
+                           frep_toks, frep_types))
 
 if __name__ == '__main__':
     ap = ArgumentParser()
     ap.add_argument('-f', '--filter-threshold', type=int, default=1)
+    ap.add_argument('-l', '--load-finished', type=str, default='')
+    ap.add_argument('-s', '--skip-finished', action='store_true')
+    ap.add_argument('-d', '--finished-csv-delim', type=str, default="\t")
     ap.add_argument('input_file')
     random.seed(0)
     args = ap.parse_args()
-    main(input_file=args.input_file, filter_threshold=args.filter_threshold)
+    main(args)
