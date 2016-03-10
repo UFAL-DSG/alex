@@ -77,6 +77,12 @@ require(['jquery-noconflict'], function($) {
     else if (dataItem == '0:30'){
       return !value.match(/\b(30 min(ute)?s|0:30|half|1\/2)\b/);
     }
+    else if (dataItem == 'am'){
+      return !value.match(/\b(([0-9]?[0-9](:[0-9][0-9])?)?am|([0-9]?[0-9](:[0-9][0-9])?)?a.m.|a m|morning|forenoon|morn|dawn|morrow|daybreak|sunrise|ante meridian)\b/);
+    }
+    else if (dataItem == 'pm'){
+      return !value.match(/\b(([0-9]?[0-9](:[0-9][0-9])?)?pm|([0-9]?[0-9](:[0-9][0-9])?)?p.m.|p m|evening|night|tonight|afternoon|dusk|eve|nightfall|sunset|siesta|post meridian)\b/);
+    }
     else if (dataItem == '?'){ // request tasks
       if (!value.match(/\b(what|where|how|what's|which)\b/)){
         return true;
@@ -148,7 +154,7 @@ require(['jquery-noconflict'], function($) {
         $.inArray('arrival_time', data.slots) == -1 &&
         $.inArray('ampm', data.slots) == -1){
 
-      if (value.match(/\b(o'clock|hours?|today|tomorrow|day|tonight|evening|morning|afternoon)\b/i)){
+      if (value.match(/\b(o[' ]?clock|hours?|today|tomorrow|day|tonight|evening|morning|afternoon)\b/i)){
         return 'time';
       }
       if ($.inArray('duration', data.slots) == -1 &&
@@ -159,10 +165,11 @@ require(['jquery-noconflict'], function($) {
     }
 
     // irrelevant time-related values
-    hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+|[0-9]+[ap]m|o'?clock)\b/ig);
+    hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+|[0-9]+[ap]m|o[' ]?clock)\b/ig);
     if (hrs != null){
       for (var i = 0; i < hrs.length; ++i){
-        if ($.inArray(hrs[i], data.values) == -1){
+        alt_version = hrs[i].replace(/[ap]m$/, '').replace(/\s*o[' ]?clock/, ':00');
+        if ($.inArray(hrs[i], data.values) == -1 && $.inArray(alt_version, data.values) == -1){
           return 'time';
         }
       }
@@ -370,7 +377,7 @@ require(['jquery-noconflict'], function($) {
     ];
   var shorts = ['', '', 'from', 'to', 'dir',
       '', '', '', '', '',
-      '', 'line', 'ampm', '',
+      '', 'line', '', '',
     ];
 
   function createTimer(objId, alts){
@@ -394,6 +401,12 @@ require(['jquery-noconflict'], function($) {
         function(match, p1){
           if (p1 == 'next'){
             return '=<span class="fuzzy">next/later/after</span>';
+          }
+          else if (p1 == 'am'){
+            return '=<span class="fuzzy">am/morning</span>';
+          }
+          else if (p1 == 'pm'){
+            return '=<span class="fuzzy">pm/afternoon/evening</span>';
           }
           else if (p1.match(/^(notfound|\?|next|none|[012]|0:30)$/)){
             return '=<span class="fuzzy">' + p1 + '</span>';
