@@ -242,7 +242,7 @@ require(['jquery-noconflict'], function($) {
     toks = toks.substring(1, toks.length - 1);  // remove the padding spaces
     toks = toks.split(" ");
 
-    if (toks.length < 2 * data.values.length || toks.length < data.values.length + 3){
+    if (toks.length < 2 * data.values.length || toks.length < data.values.length + 2){
       return 'Your reply is too short. Use full, fluent sentences.';
     }
 
