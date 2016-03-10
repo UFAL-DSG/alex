@@ -35,31 +35,31 @@ _NUMBERS_ORD = {0:"zero", 1:"first", 2: "second", 3: "third", 4: "fourth", 5: "f
 }
 
 
-def word_for_number(number, ordinary = False):
+def word_for_number(number, ordinal=False):
     """\
     Returns a word given a number 1-100
     """
     # > 1000: composed of thousands
     if number > 1000 and number % 1000 != 0:
         return ' '.join((word_for_number((number / 1000) * 1000),
-                         word_for_number(number % 1000, ordinary)))
+                         word_for_number(number % 1000, ordinal)))
     # > 100: composed of hundreds
     if number > 100 and number % 100 != 0:
         return ' '.join((word_for_number((number / 100) * 100),
-                         word_for_number(number % 100, ordinary)))
+                         word_for_number(number % 100, ordinal)))
     # > 20: composed of tens and ones
     if number > 20 and number % 10 != 0:
         return ' '.join((word_for_number((number / 10) * 10),
-                         word_for_number(number % 10, ordinary)))
+                         word_for_number(number % 10, ordinal)))
 
-    if ordinary:
+    if ordinal:
         return _NUMBERS_ORD[number]
     else:
         return _NUMBERS[number]
 
-def every_word_for_number(number, ordinary = False, use_coupling = False):
+def every_word_for_number(number, ordinal=False, use_coupling=False):
     """
-    params: ordinary - if set to True, it returns ordinal of the number (fifth rather than five etc).
+    params: ordinal - if set to True, it returns ordinal number (fifth rather than five etc).
             use_coupling if set to True, it returns number greater than 100 with "and" between hundreds and tens
                 (two hundred and seventeen rather than two hundred seventeen).
     Returns a word given a number 1-100
@@ -67,15 +67,15 @@ def every_word_for_number(number, ordinary = False, use_coupling = False):
     # > 1000: composed of thousands
     if number > 1000 and number % 1000 != 0:
         return ' '.join((every_word_for_number((number / 1000) * 1000),
-                         every_word_for_number(number % 1000, ordinary)))
+                         every_word_for_number(number % 1000, ordinal)))
     # > 100: composed of hunderds
     if number > 100 and number % 100 != 0:
         joiner = use_coupling and " and " or " "
         return joiner.join((every_word_for_number((number / 100) * 100),
-                         every_word_for_number(number % 100, ordinary)))
+                         every_word_for_number(number % 100, ordinal)))
     # > 20: composed of tens and ones
     if number > 20 and number % 10 != 0:
         return ' '.join((every_word_for_number((number / 10) * 10),
-                         every_word_for_number(number % 10, ordinary)))
+                         every_word_for_number(number % 10, ordinal)))
 
-    return ordinary and _NUMBERS_ORD[number] or _NUMBERS[number]
+    return ordinal and _NUMBERS_ORD[number] or _NUMBERS[number]
