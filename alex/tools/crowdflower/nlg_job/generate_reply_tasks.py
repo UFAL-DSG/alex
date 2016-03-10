@@ -155,6 +155,8 @@ def random_hour():
     hr = random.choice(range(7, 23))
     ampm = 'am' if hr < 12 else 'pm'
     hr %= 12
+    if hr == 0:
+        hr = 12
     return hr, ampm
 
 
