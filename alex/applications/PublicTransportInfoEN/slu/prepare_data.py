@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import glob
 import os
@@ -10,6 +12,7 @@ import random
 import sys
 
 import alex.utils.various as various
+from alex.utils.config import Config, as_project_path
 from alex.corpustools.text_norm_cs import normalise_text, exclude_slu
 from alex.corpustools.wavaskey import save_wavaskey
 from alex.components.asr.common import asr_factory
@@ -17,7 +20,6 @@ from alex.components.asr.utterance import Utterance, UtteranceNBList
 from alex.components.slu.base import CategoryLabelDatabase
 from alex.applications.PublicTransportInfoEN.preprocessing import PTIENSLUPreprocessing
 from alex.applications.PublicTransportInfoEN.hdc_slu import PTIENHDCSLU
-from alex.utils.config import Config
 
 
 """ The script has two commands:
@@ -42,7 +44,7 @@ def normalise_semi_words(txt):
 def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTIENSLUPreprocessing(cldb)
-    slu = PTIENHDCSLU(preprocessing)
+    slu = PTIENHDCSLU(preprocessing, cfg={'SLU': {PTIENHDCSLU: {'utt2da': as_project_path("applications/PublicTransportInfoEN/data/utt2da_dict.txt")}}})
     cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
     asr_rec = asr_factory(cfg)                    
 
