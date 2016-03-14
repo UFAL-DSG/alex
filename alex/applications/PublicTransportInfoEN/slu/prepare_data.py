@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+if __name__ == '__main__':
+    import autopath
 
 import glob
 import os
@@ -42,7 +44,7 @@ def normalise_semi_words(txt):
 def main():
     cldb = CategoryLabelDatabase('../data/database.py')
     preprocessing = PTIENSLUPreprocessing(cldb)
-    slu = PTIENHDCSLU(preprocessing)
+    slu = PTIENHDCSLU(preprocessing, cfg=Config.load_configs(['../ptien_hdc_slu.cfg']))
     cfg = Config.load_configs(['../kaldi.cfg',], use_default=True)
     asr_rec = asr_factory(cfg)                    
 
