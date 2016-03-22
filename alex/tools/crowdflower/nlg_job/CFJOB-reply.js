@@ -58,24 +58,71 @@ require(['jquery-noconflict'], function($) {
     }
   }
 
+  hours = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine',
+        'ten', 'eleven', 'twelve'];
+
+  // return true if the given hour information is missing
+  function missingHour(value, hour) {
+    if (value.indexOf(hour) != -1){
+      return false;
+    }
+    hour = hour.replace(/:00$/, '');
+    if (value.match(new RegExp('\\b' + hour + '\\b', ''))){
+      return false;
+    }
+    hour = hours[hour];
+    if (value.match(new RegExp('\\b' + hour + '\\b', 'i'))){
+      return false;
+    }
+    return true;
+  }
+
+  // return true if the given data item is missing from the value (reply text)
   function missingData(value, dataItem, slot) {
     if (dataItem == 'notfound'){ // *=notfound (apologize tasks)
-      return !value.match(/\b(no|not|none|don't)\b/);
+      return !value.match(/\b(no|not|unable|impossible|hasn't|nowhere|cannot|none|don't|couldn't|can't|didn't|haven't)\b/);
     }
     else if (dataItem == 'next'){ // alternative
       return !value.match(/\b(next|later|after|subsequent|following|another)\b/);
     }
-    else if (dataItem == '0'){ // num_transfers
+    else if (dataItem == 'dontcare'){
+      return !value.match(/\b(don\'t care|anything|any|arbitrary)\b/);
+    }
+    else if (dataItem == '1' && slot == 'alternative'){
+      return !value.match(/\b(one|1|1st|first)\b/);
+    }
+    else if (dataItem == '2' && slot == 'alternative'){
+      return !value.match(/\b(two|2|2nd|second)\b/);
+    }
+    else if (dataItem == '3' && slot == 'alternative'){
+      return !value.match(/\b(three|3|3rd|third)\b/);
+    }
+    else if (dataItem == '4' && slot == 'alternative'){
+      return !value.match(/\b(four|4|4th|fourth)\b/);
+    }
+    else if (dataItem == '0' && slot == 'num_transfers'){ // num_transfers
       return !value.match(/\b(no|none|aren't|isn't|not|zero)\b/);
     }
-    else if (dataItem == '1'){
+    else if (dataItem == '1' && slot == 'num_transfers'){
       return !value.match(/\b(one|once|1|1x)\b/);
     }
-    else if (dataItem == '2'){
+    else if (dataItem == '2' && slot == 'num_transfers'){
       return !value.match(/\b(two|twice|2|2x)\b/);
     }
     else if (dataItem == '0:30'){
-      return !value.match(/\b(30 min(ute)?s|0:30|half|1\/2)\b/);
+      return !value.match(/\b((30|thirty) +min(ute)?s|0:30|half|1\/2)\b/);
+    }
+    else if (dataItem == '0:10'){
+      return !value.match(/\b((10|ten) +min(ute)?s|0:10)\b/);
+    }
+    else if (dataItem == '0:15'){
+      return !value.match(/\b((15|fifteen) +min(ute)?s|0:15|quarter|1\/4)\b/);
+    }
+    else if (dataItem == '0:20'){
+      return !value.match(/\b((20|twenty) +min(ute)?s|0:20)\b/);
+    }
+    else if (dataItem.match(/^[0-9]+:00$/)){
+      return missingHour(value, dataItem);
     }
     else if (dataItem == 'am'){
       return !value.match(/\b(([0-9]?[0-9](:[0-9][0-9])?)?am|([0-9]?[0-9](:[0-9][0-9])?)?a.m.|a m|morning|forenoon|morn|dawn|morrow|daybreak|sunrise|ante meridian)\b/);
@@ -91,6 +138,9 @@ require(['jquery-noconflict'], function($) {
         return true;
       }
       return false;
+    }
+    else if (dataItem.length == 1){ // Subway line names (must be separated by spaces)
+      return !value.match(new RegExp('\\b' + dataItem + '\\b', 'i'));
     }
     else {
       return value.indexOf(dataItem) == -1;
@@ -154,21 +204,25 @@ require(['jquery-noconflict'], function($) {
         $.inArray('arrival_time', data.slots) == -1 &&
         $.inArray('ampm', data.slots) == -1){
 
-      if (value.match(/\b(o[' ]?clock|hours?|today|tomorrow|day|tonight|evening|morning|afternoon)\b/i)){
+      if (value.match(/\b(o[' ]?clock|today|tomorrow|day|tonight|evening|morning|afternoon)\b/i)){
         return 'time';
       }
       if ($.inArray('duration', data.slots) == -1 &&
-          value.match(/\b(minutes|time)\b/) &&
-          !value.match(/\b(later|next|this|last) time\b/) && !value.match(/\btime later\b/)){
+          $.inArray('departure_time_rel', data.slots) == -1 &&
+          value.match(/\b(hours?|minutes|time)\b/i) &&
+          !value.match(/\b(later|next|this|last) time\b/i) && !value.match(/\btime later\b/i)){
         return 'time';
       }
     }
 
     // irrelevant time-related values
     hrs = value.match(/\b([0-9]+:[0-9]+[ap]m|[ap]m|[0-9]+:[0-9]+|[0-9]+[ap]m|o[' ]?clock)\b/ig);
-    if (hrs != null){
+    if (hrs !== null){
       for (var i = 0; i < hrs.length; ++i){
-        alt_version = hrs[i].replace(/[ap]m$/, '').replace(/\s*o[' ]?clock/, ':00');
+        if (hrs[i] == 'am' && value.match(/\bI am\b/i)){ // skip 'I am'
+          continue;
+        }
+        alt_version = hrs[i].replace(/[ap]m$/i, '').replace(/\s*o[' ]?clock/i, ':00');
         if ($.inArray(hrs[i], data.values) == -1 && $.inArray(alt_version, data.values) == -1){
           return 'time';
         }
@@ -183,18 +237,22 @@ require(['jquery-noconflict'], function($) {
     }
 
     // irrelevant stop-related words
-    if ($.inArray('from_stop', data.slots) == -1 &&
-        $.inArray('to_stop', data.slots) == -1 &&
+    if ($.inArray('from_stop', data.slots) == -1){
+      if (value.match(/(from +((what|which)? +(origin|stop|place|street|location)|where)|where +from)/i)){
+        return 'location';
+      }
+    }
+    if ($.inArray('to_stop', data.slots) == -1 &&
         $.inArray('direction', data.slots) == -1){
 
-      if (value.match(/(from|to)( what|which)? stop/)){
+      if (value.match(/(to +((what|which)? +(destination|stop|place|street|location)|where)|where +to)/i)){
         return 'location';
       }
     }
 
     // irrelevant vehicles (but leave Port Authority Bus Terminal)
     vehicles = value.match(/\b(train|subway|bus|tram|trolley)(?! terminal)\b/ig);
-    if (vehicles != null){
+    if (vehicles !== null){
       for (var i = 0; i < vehicles.length; ++i){
         if ($.inArray(vehicles[i], data.values) == -1){
           return 'vehicle';
@@ -202,13 +260,68 @@ require(['jquery-noconflict'], function($) {
       }
     }
 
+    // do not enter all alternatives suggested
+    if (value.match(/(next|later|after) (or|and) (next|later|after)/i)){
+      return 'Use *just one* of the alternatives (next/later/after).';
+    }
+    if (value.match(/(am|morning) (or|and) (am|morning)/i)){
+      return 'Use *just one* of the alternatives (am/morning).';
+    }
+    if (value.match(/(pm|afternoon|evening) (or|and) (pm|afternoon|evening)/i)){
+      return 'Use *just one* of the alternatives (pm|afternoon|evening).';
+    }
+
     // no "yes there is" if I want just confirmation
-    if (data.taskTypes.length == 1 && data.taskTypes[0] == 'confirm'){
-      if (value.match(/^ *((Yes|No),? *)?(there (is|are)|(you|I|it) (will|are|is))/i)){
+    if (data.taskTypes[0] == 'confirm' && (data.taskTypes.length == 1 || data.taskTypes[0] != 'reply')){
+      if (value.match(/^((Yes|No|OK)( sir| madam)?,? *)?(there (is|are)|(you|I|it|we) (have|will|are|is))/i)){
         return 'Do not reply, just confirm what you heard';
       }
     }
+
+    // we are supposed to confirm, not ask for confirmation
+    if (data.taskTypes[0] == 'confirm' && value.match(/please +confirm/i)){
+      return 'Do not ask for confirmation but confirm yourself what you heard';
+    }
+
+    // we are not supposed to ask unless the task is 'request'
+    if ($.inArray('request', data.taskTypes) == -1 && value.match(/\b(what|where|how|what's|which)\b/i)){
+      task = '';
+      if ($.inArray('confirm', data.taskTypes) >= 0){
+        task += 'and confirm what you heard';
+      }
+      if ($.inArray('reply', data.taskTypes) >= 0){
+        task += 'and answer the question';
+      }
+      if ($.inArray('apologize', data.taskTypes) >= 0){
+        task += 'and apologize that you cannot find what the user is looking for';
+      }
+      return 'Do not ask for additional information, ' + task.substring(4) + '.';
+    }
+
+    // we don't want just repetition of what the user said, but it's better to keep it; it is a part of entrainment
+    /*if ($.inArray('confirm', data.taskTypes) == -1 && data.context.match(/^(when|is|i|i'd|yes|no|my|i'm|are|how|what|if|can|and|yeah|but|do|ok|looking|searching|what's)\b/)){*/
+      //lcValue = value.toLowerCase();
+      //lcContext = data.context.toLowerCase();
+      //if (lcValue.indexOf(lcContext) >= 0){
+        //return 'You are not supposed to repeat what the user said';
+      //}
+    /*}*/
+
     return ''; // everything OK
+  }
+
+  // checking for missing slots in 'apologize' tasks
+  function checkMissingSlots(value, data){
+    retVal = '';
+    for (var i = 0; i < data.slots.length; ++i){
+      if (data.slots[i] == 'to_stop' && !value.match(/\b(to|directions?|for|destination|connection|ride|transit|route|schedule)\b/i)){
+        retVal += ' *to* ' + data.values[i];
+      }
+      else if (data.slots[i] == 'from_stop' && !value.match(/\b(from|directions|origin|connection|ride|transit|route|schedule)\b/i)){
+        retVal += ' *from* ' + data.values[i];
+      }
+    }
+    return retVal;
   }
 
   // local validation -- just check that all data are included in the answers
@@ -217,8 +330,13 @@ require(['jquery-noconflict'], function($) {
     // check if disallowed characters are present
     if (value.match(/[^0-9A-Za-z '?.!;,:-]/)){
       return 'Your reply contains weird characters. ' +
-          'Use only the English alphabet and basic punctuation.';
+        'Use only the English alphabet and basic punctuation.';
     }
+    // normalize spaces to simplify regexes
+    value = value.replace(/([?.!;,-]+)/g, "$1 ");
+    value = value.replace(/\s+/g, " ");
+    value = value.replace(/^ /, "");
+    value = value.replace(/ $/, "");
 
     // check for missing information (case-insensitive)
     missing = [];
@@ -232,10 +350,16 @@ require(['jquery-noconflict'], function($) {
     if (missing.length > 0){
       return 'Your reply is missing the following information: ' + missing.join(', ');
     }
+    if ($.inArray('apologize', data.taskTypes) >= 0){
+      var errMsg = checkMissingSlots(value, data);
+      if (errMsg !== ''){
+        return 'Please indicate clearly that you cannot find a connection/shedule/ride' + errMsg;
+      }
+    }
 
     // check for superfluous information
     var errMsg = checkSuperfluousInformation(value, data);
-    if (errMsg != ''){
+    if (errMsg !== ''){
       return 'Your reply contains superfluous information: ' + errMsg;
     }
 
@@ -261,16 +385,17 @@ require(['jquery-noconflict'], function($) {
     var values = [];
     var taskTypes = [];
     $(element).closest('.html-element-wrapper').find('.raw_data').find('.slot').each(
-        function(){ slots.push($(this).text()) }
-    );
+        function(){ slots.push($(this).text()); }
+        );
     $(element).closest('.html-element-wrapper').find('.raw_data').find('.val').each(
-        function(){ values.push($(this).text()) }
-    );
+        function(){ values.push($(this).text()); }
+        );
     $(element).closest('.html-element-wrapper').find('.instr').find('strong').each(
-        function(){ taskTypes.push($(this).attr('class')) }
-    );
+        function(){ taskTypes.push($(this).attr('class')); }
+        );
+    var context = $(element).closest('.html-element-wrapper').find('.user_utt')[0].innerText;
 
-    return {slots: slots, values: values, taskTypes: taskTypes};
+    return {slots: slots, values: values, taskTypes: taskTypes, context: context};
   }
 
   // main validation method, gather data and perform local and external validation
@@ -360,9 +485,9 @@ require(['jquery-noconflict'], function($) {
     else if (myField.selectionStart || myField.selectionStart == '0') {
       var startPos = myField.selectionStart;
       var endPos = myField.selectionEnd;
-      myField.value = myField.value.substring(0, startPos)
-          + myValue
-          + myField.value.substring(endPos, myField.value.length);
+      myField.value = myField.value.substring(0, startPos) +
+          myValue +
+          myField.value.substring(endPos, myField.value.length);
       myField.selectionStart = startPos + myValue.length;
       myField.selectionEnd = startPos + myValue.length;
     }
@@ -380,10 +505,6 @@ require(['jquery-noconflict'], function($) {
       '', 'line', '', '',
     ];
 
-  function createTimer(objId, alts){
-    setInterval(function(){ swapAlt(objId, alts); }, 1000);
-  }
-
   // make clickable, format content
   function prepareDataItems(data, inputField){
 
@@ -397,29 +518,50 @@ require(['jquery-noconflict'], function($) {
 
     // convert the values to <span>s
     data.innerHTML = data.innerHTML.replace(
-        /=([^,;]+)(?=[,;]|$)/g,
-        function(match, p1){
-          if (p1 == 'next'){
-            return '=<span class="fuzzy">next/later/after</span>';
+        /([^ ]+)=([^,;]+)(?=[,;]|$)/g,
+        function(match, p1, p2){
+          if (p2 == 'next'){
+            return p1 + '=<span class="fuzzy">next/later/after</span>';
           }
-          else if (p1 == 'am'){
-            return '=<span class="fuzzy">am/morning</span>';
+          if (p2 == 'dontcare'){
+            return p1 + '=<span class="fuzzy">any/don\'t care</span>';
           }
-          else if (p1 == 'pm'){
-            return '=<span class="fuzzy">pm/afternoon/evening</span>';
+          else if (p2 == 'am'){
+            return p1 + '=<span class="fuzzy">am/morning</span>';
           }
-          else if (p1.match(/^(notfound|\?|next|none|[012]|0:30)$/)){
-            return '=<span class="fuzzy">' + p1 + '</span>';
+          else if (p2 == 'pm'){
+            return p1 + '=<span class="fuzzy">pm/afternoon/evening</span>';
           }
-          return '=<span class="exact">' + p1 + '</span>';
+          else if (p1 == 'departure_time_rel' && p2.match(/^0:/)){
+            return p1 + '=<span class="fuzzy">' + p2.substring(2) + ' minutes</span>';
+          }
+          else if (p1 == 'alternative' && p2.match(/^[1234]$/)){
+            if (p2 == '1'){
+              return p1 + '=<span class="fuzzy">1st</span>';
+            }
+            else if (p2 == '2'){
+              return p1 + '=<span class="fuzzy">2nd</span>';
+            }
+            else if (p2 == '3'){
+              return p1 + '=<span class="fuzzy">3rd</span>';
+            }
+            else if (p2 == '4'){
+              return p1 + '=<span class="fuzzy">4th</span>';
+            }
+          }
+          else if (p2.match(/^(notfound|\?|next|none|[012]|0:30)$/)){
+            return p1 + '=<span class="fuzzy">' + p2 + '</span>';
+          }
+          return p1 + '=<span class="exact">' + p2 + '</span>';
         });
 
     // split confirm & reply into two lines
     data.innerHTML = data.innerHTML.replace(/(confirm|reply|request): /g, "<em>$1:</em> ");
     data.innerHTML = data.innerHTML.replace(/; <em>/, '<br/><em>');
 
+    // shorten slot names
     for (var i = 0; i < slotNames.length; ++i){
-      if (shorts[i] != ''){
+      if (shorts[i] !== ''){
         data.innerHTML = data.innerHTML.replace(slotNames[i] + '=',
             '<span class="slot-name">' + shorts[i] + '</span>=');
       }
@@ -473,5 +615,4 @@ require(['jquery-noconflict'], function($) {
     requestExternalValidation('', []);
   });
 });
-
 
