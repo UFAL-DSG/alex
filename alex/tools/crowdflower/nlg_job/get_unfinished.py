@@ -40,8 +40,16 @@ def main(args):
         with finished_file as fh:
             csvread = csv.reader(fh, delimiter=str(args.finished_csv_delim),
                                  quotechar=b'"', encoding="UTF-8")
-            columns = DataLine.get_columns_from_header(csvread.next())
+            header = csvread.next();
+            columns = DataLine.get_columns_from_header(header)
+            try:
+                judgment_column = header.index('check_result')
+            except ValueError:
+                judgment_column = None
             for row in csvread:
+                # treat rejected as unfinished
+                if judgment_column is not None and row[judgment_column].startswith('N'):
+                    continue
                 # keep track of how many judgments are finished in the results
                 finished_line = DataLine.from_csv_line(row, columns)
                 finished[finished_line.signature] += 1
@@ -50,7 +58,7 @@ def main(args):
 
     with sys.stdout as fh:
         # starting with the header
-        csvwrite = csv.writer(fh, delimiter=b"\t", encoding="UTF-8")
+        csvwrite = csv.writer(fh, delimiter=b"\t", lineterminator="\n", encoding="UTF-8")
         csvwrite.writerow(DataLine.get_headers())
         # write rows requiring different number of judgments, starting from the most judgments
         for judg_req in xrange(args.num_judgments, 0, -1):
