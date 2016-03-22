@@ -120,22 +120,27 @@ class Handler(BaseHTTPRequestHandler):
 
             # connection test
             if not user_text or not request_data:
-                response = "online"
+                user_text = ''
+                response = 'online'
 
             # fluency assessment
             else:
                 l1 = langdetect.detect(user_text)
                 l2, _ = langid.classify(user_text)
                 good, tot = self.server.spellcheck(request_data.split(','), user_text)
+                ban_phr = self.server.check_banned_phrases(user_text)
                 # one of the detectors must say it's English, allow 1 typo per 10 words
                 response = ('yes'
-                            if ((l1 == 'en' or l2 == 'en') and (tot - good <= tot / 10 + 1))
-                            else 'no:' + l1 + ' ' + l2 + (' spellcheck score: %.4f' % spellcheck))
+                            if ((l1 == 'en' or l2 == 'en') and (tot - good <= tot / 10 + 1) and not ban_phr)
+                            else ('no:' + l1 + ' ' + l2 +
+                                  (' spellcheck score: %d / %d' % (good, tot)) +
+                                  ' ban_phr: ' + ban_phr))
 
         except Exception as e:
             print >> sys.stderr, unicode(e).encode('utf-8')
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+            traceback.print_exc()
+            user_text = ''
             response = 'no'
 
         self.send_response(response_code)
@@ -203,6 +208,14 @@ class SSLTCPServer(SocketServer.TCPServer):
                 good_toks += 1
 
         return good_toks, len(toks)
+
+    def check_banned_phrases(self, text):
+        """Check for various phrases that are not considered fluent."""
+        if re.search(r'\bfrom +to +where\b', text, re.IGNORECASE):
+            return 'from to where'
+        if re.search(r'\bwhere +where\b', text, re.IGNORECASE):
+            return 'where where'
+        return ''
 
 
 def run(server_class=SSLTCPServer, settings={}):
