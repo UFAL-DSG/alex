@@ -273,7 +273,7 @@ require(['jquery-noconflict'], function($) {
 
     // no "yes there is" if I want just confirmation
     if (data.taskTypes[0] == 'confirm' && (data.taskTypes.length == 1 || data.taskTypes[0] != 'reply')){
-      if (value.match(/^((Yes|No|OK)( sir| madam)?,? *)?(there (is|are)|(you|I|it|we) (have|will|are|is))/i)){
+      if (value.match(/^((Yes|No|OK)( sir| madam)?,? *)?(there (is|are)|(I|it|we) (have|will|are|is))/i)){
         return 'Do not reply, just confirm what you heard';
       }
     }
@@ -333,7 +333,7 @@ require(['jquery-noconflict'], function($) {
         'Use only the English alphabet and basic punctuation.';
     }
     // normalize spaces to simplify regexes
-    value = value.replace(/([?.!;,-]+)/g, "$1 ");
+    value = value.replace(/([?.!;:,-]+)(?![0-9])/g, "$1 "); // (avoid 0:00 0.0 numbers)
     value = value.replace(/\s+/g, " ");
     value = value.replace(/^ /, "");
     value = value.replace(/ $/, "");
