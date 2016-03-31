@@ -12,8 +12,9 @@ from __future__ import unicode_literals
 from argparse import ArgumentParser, FileType
 import sys
 import unicodecsv as csv
-from generate_reply_tasks import DataLine
 from collections import defaultdict
+
+from util import *
 
 # Start IPdb on error in interactive mode
 from tgen.debug import exc_info_hook

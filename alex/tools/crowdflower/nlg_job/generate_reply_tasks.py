@@ -17,6 +17,8 @@ import sys
 import random
 import csv
 
+from util import *
+
 # Start IPdb on error in interactive mode
 from tgen.debug import exc_info_hook
 sys.excepthook = exc_info_hook
@@ -83,63 +85,6 @@ BUS_LINES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 20, 21, 22, 23, 31,
              103, 104, 106, 116]
 
 ACK_SLOTS_REGEX = '^(from|to|departure_time|arrival_time|time|ampm|vehicle|alternative)'
-
-
-class DataLine(object):
-
-    def __init__(self, dat=None, abstr_utt=None, abstr_da=None, utt=None, da=None):
-        self.dat = dat
-        self.abstr_utt = abstr_utt
-        self.abstr_da = abstr_da
-        self.utt = utt
-        self.da = da
-
-    def as_tuple(self):
-        return (self.dat, self.abstr_utt, self.abstr_da, self.utt, self.da)
-
-    def __unicode__(self):
-        return "\t".join(self.as_tuple())
-
-    @staticmethod
-    def from_csv_line(line, columns):
-        ret = DataLine()
-        ret.dat = line[columns['dat']]
-        ret.abstr_utt = line[columns['abstr_utt']]
-        ret.abstr_da = line[columns['abstr_da']]
-        ret.utt = line[columns['utt']]
-        ret.da = line[columns['da']]
-        return ret
-
-    @property
-    def signature(self):
-        # the type of response and the original abstr. utterance should be enough to distinguish
-        return self.abstr_utt + "|" + self.abstr_da + "|" + self.dat
-
-    @property
-    def slots(self):
-        parts = re.sub('=[^,;]*', '', self.da)
-        parts = parts.split('; ')
-        slots = ''
-        for part in parts:
-            if ':' in part:
-                ptype, part = part.split(': ')
-                slots += ptype + ':'
-            slots += ','.join(sorted(part.split(', ')))
-            slots += ' '
-        return slots
-
-    @staticmethod
-    def get_columns_from_header(header):
-        columns = {'dat': header.index('type'),
-                   'abstr_utt': header.index('abstr_utt'),
-                   'abstr_da': header.index('abstr_da'),
-                   'utt': header.index('utt'),
-                   'da': header.index('da')}
-        return columns
-
-    @staticmethod
-    def get_headers():
-        return ('type', 'abstr_utt', 'abstr_da', 'utt', 'da')
 
 
 def word_for_ampm(hour, ampm):
@@ -469,6 +414,9 @@ def main(args):
                     good_types += 1
                 print >> sys.stderr, 'Result:', "\n".join(unicode(line) for line in ret)
                 print >> sys.stderr, ''
+                if args.occ_nums:
+                    for ret_line in ret:
+                        ret_line.occ_num = occ_num
                 data.extend(ret)
             except NotImplementedError as e:
                 frep_toks += occ_num
@@ -487,7 +435,7 @@ def main(args):
     with codecs.getwriter('utf-8')(sys.stdout) as fh:
         # starting with the header
         csvwrite = csv.writer(fh, delimiter=b"\t", lineterminator="\n")
-        csvwrite.writerow(DataLine.get_headers())
+        csvwrite.writerow(DataLine.get_headers(args.occ_nums))
         for line in data:
             if line.signature in written:  # some lines may be duplicate, skip them
                 print >> sys.stderr, 'Duplicate line:', line.signature
@@ -497,12 +445,13 @@ def main(args):
                 if finished[line.signature].slots != line.slots:
                     print >> sys.stderr, ('Slots changed for ', line.signature,
                                           '-- ignoring finished.')
-                    csvwrite.writerow(line.as_tuple())
+                    csvwrite.writerow(line.as_tuple(args.occ_nums))
                 elif not args.skip_finished:
-                    csvwrite.writerow(finished[line.signature].as_tuple())
+                    finished[line.signature].occ_num = line.occ_num
+                    csvwrite.writerow(finished[line.signature].as_tuple(args.occ_nums))
             # default case: not found among finished
             else:
-                csvwrite.writerow(line.as_tuple())
+                csvwrite.writerow(line.as_tuple(args.occ_nums))
 
             written[line.signature] = line
 
@@ -516,6 +465,7 @@ if __name__ == '__main__':
     ap.add_argument('-l', '--load-finished', type=str, default='')
     ap.add_argument('-s', '--skip-finished', action='store_true')
     ap.add_argument('-d', '--finished-csv-delim', type=str, default="\t")
+    ap.add_argument('-o', '--occ-nums', action='store_true')
     ap.add_argument('input_file')
     random.seed(0)
     args = ap.parse_args()
