@@ -110,6 +110,12 @@ class Result(object):
             ret.append(getattr(self, attr, ''))
         return ret
 
+    def as_dict(self):
+        ret = {}
+        for attr in self.__headers:
+            ret[attr] = getattr(self, attr, '')
+        return ret
+
 
 # following from Python cookbook, #475186
 def has_colours(stream):

@@ -8,10 +8,12 @@ from argparse import ArgumentParser, FileType
 import sys
 import unicodecsv as csv
 import re
+import codecs
 from collections import defaultdict
+import json
 
-from util import *
 import hunspell
+from util import *
 
 # Start IPdb on error in interactive mode
 from tgen.debug import exc_info_hook
@@ -67,6 +69,9 @@ CUSTOM_DICT = set([',', ';', ':', '?', '!', '.',
 
 ALT_VALUES = {'pm': ['afternoon', 'evening'],
               'am': ['morning'],
+              '0': ['no', 'zero', 'none'],
+              '1': ['one'],
+              '2': ['two', 'second', '2nd'],
               '1:00': ['one o\'clock', 'one', '1'],
               '2:00': ['two o\'clock', 'two', '2'],
               '3:00': ['three o\'clock', 'three', '3'],
@@ -82,7 +87,8 @@ ALT_VALUES = {'pm': ['afternoon', 'evening'],
               '0:30': ['half', 'thirty', '30'],
               '0:20': ['twenty', '20'],
               '0:15': ['quarter', 'fifteen', '15'],
-              '0:10': ['ten', '10'],}
+              '0:10': ['ten', '10'], }
+
 
 def reparse_time(utt):
     # relative times
@@ -94,7 +100,7 @@ def reparse_time(utt):
         if hour + ' thirty' in utt:
             return str(HOURS.index(hour)) + ':30'
         elif hour in utt:
-            return  str(HOURS.index(hour)) + ':00'
+            return str(HOURS.index(hour)) + ':00'
     raise ValueError('Cannot find time value: ' + utt)
 
 
@@ -103,7 +109,8 @@ def reparse_ampm(utt):
         return 'am'
     if re.search(r'\b(afternoon|evening)\b', utt):
         return 'pm'
-    if re.search(r'(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirty|clock|\*NUMBER) (am|a m)\b', utt):
+    if re.search(r'(zero|one|two|three|four|five|six|seven|eight|nine' +
+                 r'|ten|eleven|twelve|thirty|clock|\*NUMBER) (am|a m)\b', utt):
         return 'am'
     if re.search(r'\b(pm|p m)\b', utt):
         return 'pm'
@@ -111,10 +118,12 @@ def reparse_ampm(utt):
 
 
 def convert_parse(data_line):
+    """Convert the DA format in the SLU parse to standard Alex DA format."""
     ret = data_line.abstr_da
     ret = ret.replace('*STREET', '*STOP')
     ret = re.sub(r'(request\([a-z_]+)="\*[A-Z_]+"\)', r'\1)', ret)
     return ret
+
 
 def lexicalize_parse(data_line, delex_parse):
     """Lexicalize abstract SLU parse (with values from the lexicalized reply)."""
@@ -141,26 +150,31 @@ def convert_da(data_line, delex=False):
     ret = []
     for da_part in da:
         dat, slots = da_part.split(': ')
+        # convert DA types into Alex format
         if dat == 'reply':
             dat = 'inform'
         elif dat == 'apologize':
             dat = 'inform_no_match'
         elif dat == 'confirm':
             dat = 'iconfirm'
+        # conevrt slots and values
         slots = [slot.split('=') for slot in slots.split(', ') if 'notfound' not in slot]
         if delex:
-            ret.extend([dat + '(' + slot_name + ('="*' + slot_name.upper()  + '"' if val != '?' else '') + ')'
+            ret.extend([dat + '(' + slot_name + ('="*' + slot_name.upper() + '"' if val != '?' else '') + ')'
                         for slot_name, val in slots])
         else:
             ret.extend([dat + '(' + slot_name + ('="' + val + '"' if val != '?' else '') + ')'
                         for slot_name, val in slots])
     return '&'.join(ret)
 
+
 def ask(data_line, response_text, question):
+    """Ask a question, printing the current DA and response above it."""
     printout(data_line.dat + ' ' + data_line.da + "\n", colour=RED)
     printout(response_text + "\n", colour=BLUE)
     raw_result = raw_input(question)
     return raw_result.strip()
+
 
 def normalize_response(response_text, data_line):
     """Normalize response text:
@@ -199,8 +213,9 @@ def normalize_response(response_text, data_line):
     # spelling checks
     toks_out = []
     for tok in toks:
-        if tok not in data_toks and not tok in CUSTOM_DICT and not spellchecker.spell(tok):
-            resp = ask(data_line, response_text, 'Correct spelling of `%s\' -- [A]ll/[S]kip (text of post-edit): ' % tok)
+        if tok not in data_toks and tok not in CUSTOM_DICT and not spellchecker.spell(tok):
+            resp = ask(data_line, response_text,
+                       'Correct spelling of `%s\' -- [A]ll/[S]kip (text of post-edit): ' % tok)
             if resp.upper() == 'S':
                 toks_out.append(tok)
                 continue
@@ -228,18 +243,17 @@ def normalize_response(response_text, data_line):
     toks = re.sub(r' ([?.!;,:-]+)', r'\1', toks)  # remove space before punctuation
     toks = toks[1:-1]  # remove padding spaces
 
-# TODO uncomment
-#    # check if final punctuation matches the type
-    #if re.match(r'^(confirm|reply|apologize|confirm&reply)$', data_line.dat) and toks.endswith('?'):
-        #resp = ask(data_line, response_text, "Change final punctuation to `.'? [Y/N]: ")
-        #if resp.upper() == 'Y':
-            #toks = toks[:-1] + '.'
-    #if (re.match(r'^(request|confirm&request)$', data_line.dat) and
-            #(toks.endswith('.') or toks.endswith('!')) and
-             #not re.match(r'^(Please (tell|provide|let me know) |I(\'m going to)? need)', toks)):
-        #resp = ask(data_line, response_text, "Change final punctuation to `?'? [Y/N]: ")
-        #if resp.upper() == 'Y':
-            #toks = toks[:-1] + '?'
+    # check if final punctuation matches the type
+    if re.match(r'^(confirm|reply|apologize|confirm&reply)$', data_line.dat) and toks.endswith('?'):
+        resp = ask(data_line, response_text, "Change final punctuation to `.'? [Y/N]: ")
+        if resp.upper() == 'Y':
+            toks = toks[:-1] + '.'
+    if (re.match(r'^(request|confirm&request)$', data_line.dat) and
+            (toks.endswith('.') or toks.endswith('!')) and
+            not re.match(r'^(Please (tell|provide|let me know) |I(\'m going to)? need)', toks)):
+        resp = ask(data_line, response_text, "Change final punctuation to `?'? [Y/N]: ")
+        if resp.upper() == 'Y':
+            toks = toks[:-1] + '?'
 
     # add final punctuation if not present
     if toks[-1] not in ['.', '!', '?']:
@@ -248,12 +262,11 @@ def normalize_response(response_text, data_line):
         elif re.match(r'^(request|confirm-request)$', data_line.dat):
             toks += '?'
 
-# TODO uncomment
-#    # fix at 0:30 -> in 0:30 if needed
-    #if 'departure_time_rel' in data_line.slots and re.search(r'\bat 0:[0-9][0-9]\b', toks):
-        #resp = ask(data_line, response_text, "Change `at' to `in'? [Y/N]: ")
-        #if resp.upper() == 'Y':
-            #toks = re.sub(r'\bat (0:[0-9][0-9])\b', r'in \1', toks)
+    # fix at 0:30 -> in 0:30 if needed
+    if 'departure_time_rel' in data_line.slots and re.search(r'\bat 0:[0-9][0-9]\b', toks):
+        resp = ask(data_line, response_text, "Change `at' to `in'? [Y/N]: ")
+        if resp.upper() == 'Y':
+            toks = re.sub(r'\bat (0:[0-9][0-9])\b', r'in \1', toks)
 
     return toks
 
@@ -262,15 +275,19 @@ def delexicalize(response_text, data_line):
     """Delexicalize (normalized) response text."""
     text = response_text
     for slot, value in data_line.slot_values.iteritems():
-        if slot in ['alternative', 'num_transfers']:
-            continue
+        if slot == 'alternative':
+            if value == '2':
+                for val in ['second', '2nd']:
+                    text = re.sub(r'\b' + val + r'\b', '*ALTERNATIVE-th', text, flags=re.IGNORECASE)
+            else:
+                continue
         # check if the value to be delexicalized is actually present
         if not any(re.search(r'\b' + val + r'\b', response_text, re.IGNORECASE)
                    for val in [value] + ALT_VALUES.get(value, [])):
             raise ValueError("Cannot find value `%s=%s' in response `%s'!" % (slot, value, response_text))
         # delexicalize
         for val in [value] + ALT_VALUES.get(value, []):
-            text = re.sub(r'\b' + val + r'\b', '*' + slot.upper(), text, flags=re.IGNORECASE)
+            text = re.sub(r'(?<!\.)\b' + val + r'\b', '*' + slot.upper(), text, flags=re.IGNORECASE)
     return text
 
 
@@ -307,15 +324,6 @@ def main(args):
 
     print >> sys.stderr, "Loaded input: %d, Loaded finished: %d" % (len(input_lines), len(finished))
 
-    # TODO remove this; checking whether we have more answers than we need
-    #for sig, res in finished.iteritems():
-        #if len(res) > 3:
-            #print
-            #inp = [line.as_tuple() for line in input_lines if line.signature == sig]
-            #print inp
-            #print sig, len(res)
-            #print '\n'.join([r.reply for r in res])
-
     out_lines = []
     out_headers = ['context_utt', 'context_freq', 'context_parse', 'response_da',
                    'response_nl1', 'response_nl2', 'response_nl3',
@@ -329,7 +337,6 @@ def main(args):
 
         if len(res) > 3:
             print >> sys.stderr, 'WARN: Total %d responses for the signature %s' % (len(res), line.signature)
-            import pudb; pudb.set_trace()
 
         # create output line
         out_line = Result([''] * len(out_headers), out_headers)
@@ -358,15 +365,37 @@ def main(args):
 
         out_lines.append(out_line)
 
+    print >> sys.stderr, 'Writing CSV to %s' % (args.output_file_name + '.csv')
     # write the CSV
-    with sys.stdout as fh:
+    with open(args.output_file_name + '.csv', 'wb') as fh:
         # starting with the header
         csvwrite = csv.writer(fh, delimiter=b",", lineterminator="\n", encoding="UTF-8")
         csvwrite.writerow(out_headers)
         for out_line in out_lines:
-            csvwrite.writerow(out_line)
+            csvwrite.writerow(out_line.as_array())
 
-    # TODO write JSON
+    print >> sys.stderr, 'Writing JSON to %s' % (args.output_file_name + '.json')
+    # write JSON
+    with codecs.open(args.output_file_name + '.json', 'wb', 'UTF-8') as fh:
+
+        # convert the data format
+        out_data = [out_line.as_dict() for out_line in out_lines]
+        for out_line in out_data:
+            out_line['context_freq'] = int(out_line['context_freq'])
+            out_line['response_nl'] = [out_line['response_nl1'],
+                                       out_line['response_nl2'],
+                                       out_line['response_nl3']]
+            out_line['response_nl_l'] = [out_line['response_nl1_l'],
+                                         out_line['response_nl2_l'],
+                                         out_line['response_nl3_l']]
+            del out_line['response_nl1']
+            del out_line['response_nl1_l']
+            del out_line['response_nl2']
+            del out_line['response_nl2_l']
+            del out_line['response_nl3']
+            del out_line['response_nl3_l']
+
+        json.dump(out_data, fh, ensure_ascii=False, indent=4, sort_keys=True)
 
 
 if __name__ == '__main__':
