@@ -11,6 +11,7 @@ import re
 import codecs
 from collections import defaultdict
 import json
+import random
 
 import hunspell
 from util import *
@@ -88,6 +89,9 @@ ALT_VALUES = {'pm': ['afternoon', 'evening'],
               '0:20': ['twenty', '20'],
               '0:15': ['quarter', 'fifteen', '15'],
               '0:10': ['ten', '10'], }
+
+# random seed for final shuffling
+RAND_SEED = 1206
 
 
 def reparse_time(utt):
@@ -364,6 +368,10 @@ def main(args):
             printout(out_line.response_nl3_l + "\n", colour=YELLOW)
 
         out_lines.append(out_line)
+
+    # shuffle the order for the output (but keep it consistent)
+    random.seed(RAND_SEED)
+    random.shuffle(out_lines)
 
     print >> sys.stderr, 'Writing CSV to %s' % (args.output_file_name + '.csv')
     # write the CSV
