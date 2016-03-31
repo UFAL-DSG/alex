@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Checking CrowdFlower results in an interactive script.
+
+The script will present the individual CF users' creations and your task is to accept them (Y)
+or reject them (N). You may further include an entrainment assessment (L/S/LS) and/or a post-edit
+of the sentence (separated by two spaces, or one if entrainment assesment is present).
+"""
+
 from __future__ import unicode_literals
 from argparse import ArgumentParser, FileType
 import sys
 import unicodecsv as csv
 import re
 from util import *
-
-
-# Start IPdb on error in interactive mode
-from tgen.debug import exc_info_hook
-sys.excepthook = exc_info_hook
-
 
 
 def main(args):
@@ -64,13 +65,13 @@ def main(args):
 
     print >> sys.stderr, "Loaded %d results, skipped %d." % (len(results), skipped)
 
-    # work on them
+    # work on them -- main loop
     cur_pos = 0
     status = ''
     while cur_pos < len(results):
         row = results[cur_pos]
 
-        if status not in ['b','m'] and getattr(row, 'check_result', ''):  # move over already finished ones
+        if status not in ['b', 'm'] and getattr(row, 'check_result', ''):  # move over already finished ones
             cur_pos += 1
             continue
 
@@ -93,22 +94,25 @@ def main(args):
         if status == 'b':  # go back
             cur_pos -= 1
             continue
-        elif status == 'm': # move to the specified position
+        elif status == 'm':  # move to the specified position
             cur_pos = int(entrainment)
             continue
         elif status == 'q':  # quit
             break
         elif status == 'y':  # OK
             check_result = 'Y'
-            if postedit.strip():  # if marked as OK but postedit found: change status to postedit
+            # if marked as OK but postedit found: change status to postedit
+            if postedit.strip():
                 print 'STATUS CHANGED TO e'
                 status = 'e'
                 check_result = 'E'
+            # frequent error -- normalize (TODO move to build_dataset)
             elif ' dir ' in row.reply:
                 postedit = re.sub(r'\bdir\b', 'direction', row.reply)
                 print 'SUBSTITUTED "dir"'
                 status = 'e'
                 check_result = 'E'
+            # frequent error -- normalize (TODO move to build_dataset)
             elif re.search(r'\b(could|can|did)( ?not|n\'t) found', row.reply):
                 print 'SUBSTITUTED "found"'
                 postedit = re.sub(r'\bfound\b', 'find', row.reply)
@@ -121,7 +125,7 @@ def main(args):
             check_result = 'E'
         else:
             print 'INVALID OPERATION -- ignoring'
-            continue
+            continue  # stay at the same position
 
         check_result += '-' + entrainment.upper()
         if status == 'e':

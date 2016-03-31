@@ -15,10 +15,6 @@ import json
 import hunspell
 from util import *
 
-# Start IPdb on error in interactive mode
-from tgen.debug import exc_info_hook
-sys.excepthook = exc_info_hook
-
 
 spellchecker = hunspell.HunSpell('/usr/share/hunspell/en_US.dic', '/usr/share/hunspell/en_US.aff')
 
@@ -52,6 +48,7 @@ SPELL_FIXES = {'apologise': 'apologize',
                'lne': 'line',
                }
 
+# possible relative times used in the dataset (for reparsing)
 REL_TIMES = {'ten minutes': '0:10',
              'quarter an hour': '0:15',
              'fifteen minutes': '0:15',
@@ -59,14 +56,17 @@ REL_TIMES = {'ten minutes': '0:10',
              'thirty minutes': '0:30',
              'half an hour': '0:30'}
 
+# possible hour numbers used in the dataset (for reparsing)
 HOURS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six',
          'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve']
 
+# a list of acceptable words that Hunspell won't accept
 CUSTOM_DICT = set([',', ';', ':', '?', '!', '.',
                    'ok',
                    'i\'m', 'i', 'i\'ll', 'i\'ve', 'i\'d',
                    'alrighty'])
 
+# alternative realization of slot values for delexicalization
 ALT_VALUES = {'pm': ['afternoon', 'evening'],
               'am': ['morning'],
               '0': ['no', 'zero', 'none'],
