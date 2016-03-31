@@ -272,15 +272,21 @@ require(['jquery-noconflict'], function($) {
     }
 
     // no "yes there is" if I want just confirmation
-    if (data.taskTypes[0] == 'confirm' && (data.taskTypes.length == 1 || data.taskTypes[0] != 'reply')){
-      if (value.match(/^((Yes|No|OK)( sir| madam)?,? *)?(there (is|are)|(I|it|we) (have|will|are|is))/i)){
+    if (data.taskTypes[0] == 'confirm' && (data.taskTypes.length == 1 || data.taskTypes[1] != 'reply')){
+      if (value.match(/^((Yes|No|OK)( sir| madam)?,? *)?(there (is|are)|(I|it|we) (have|will|are|is)|you can)/i)){
         return 'Do not reply, just confirm what you heard';
       }
     }
 
     // we are supposed to confirm, not ask for confirmation
-    if (data.taskTypes[0] == 'confirm' && value.match(/please +confirm/i)){
+    if (data.taskTypes[0] == 'confirm' && value.match(/please confirm/i)){
       return 'Do not ask for confirmation but confirm yourself what you heard';
+    }
+
+    if (data.taskTypes[0] == 'confirm' && (data.taskTypes.length == 1 || data.taskTypes[1] != 'request')){
+      if (value.match(/(do|can|did|would|are) you/i)){
+        return 'Do not ask for confirmation but confirm yourself what you heard';
+      }
     }
 
     // we are not supposed to ask unless the task is 'request'
@@ -297,15 +303,6 @@ require(['jquery-noconflict'], function($) {
       }
       return 'Do not ask for additional information, ' + task.substring(4) + '.';
     }
-
-    // we don't want just repetition of what the user said, but it's better to keep it; it is a part of entrainment
-    /*if ($.inArray('confirm', data.taskTypes) == -1 && data.context.match(/^(when|is|i|i'd|yes|no|my|i'm|are|how|what|if|can|and|yeah|but|do|ok|looking|searching|what's)\b/)){*/
-      //lcValue = value.toLowerCase();
-      //lcContext = data.context.toLowerCase();
-      //if (lcValue.indexOf(lcContext) >= 0){
-        //return 'You are not supposed to repeat what the user said';
-      //}
-    /*}*/
 
     return ''; // everything OK
   }
