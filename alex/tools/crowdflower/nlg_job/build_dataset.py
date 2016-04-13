@@ -293,7 +293,10 @@ def delexicalize(response_text, data_line):
             raise ValueError("Cannot find value `%s=%s' in response `%s'!" % (slot, value, response_text))
         # delexicalize
         for val in [value] + ALT_VALUES.get(value, []):
-            text = re.sub(r'(?<!\.)\b' + val + r'\b', '*' + slot.upper(), text, flags=re.IGNORECASE)
+            pre_context = r'(?<!\.)\b'  # avoid parts of numbers being changed
+            if val == 'am':
+                pre_context = r'(?<!I )\b'  # avoid 'am' in 'I am'
+            text = re.sub(pre_context + val + r'\b', '*' + slot.upper(), text, flags=re.IGNORECASE)
     return text
 
 
