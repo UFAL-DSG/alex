@@ -302,6 +302,7 @@ class CRWSRouteStep(RouteStep):
                             'autobus': 'bus',
                             'local line': 'bus',
                             'night line bus': 'night_bus',
+                            'regional night line bus': 'night_bus',
                             'regional line bus': 'intercity_bus',
                             'long-distance line': 'intercity_bus',
                             'international line': 'intercity_bus',
