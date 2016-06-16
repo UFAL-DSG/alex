@@ -49,6 +49,7 @@ SPELL_FIXES = {'apologise': 'apologize',
                'whre': 'where',
                'lne': 'line',
                'cound': 'could',
+               'oclock': 'o\'clock',
                }
 
 # possible relative times used in the dataset (for reparsing)
@@ -212,6 +213,7 @@ def normalize_response(response_text, data_line):
 
     # spelling fixes
     toks = re.sub(r'\bcan not\b', 'cannot', toks)
+    toks = re.sub(r'\bo clock\b', 'o\'clock', toks)
 
     toks = toks[1:-1].split(' ')  # remove the padding spaces and split
     toks = [SPELL_FIXES.get(tok, tok) for tok in toks]
