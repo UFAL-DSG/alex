@@ -2,6 +2,8 @@
 set -e
 
 apt-get install -y build-essential libatlas-base-dev python-dev python-pip git wget zip
+apt-get install -y automake autoconf libtool subversion  # to install openfst
+
 # Addid pykaldi source files
 cd /app
 git clone --recursive https://github.com/UFAL-DSG/pykaldi.git
