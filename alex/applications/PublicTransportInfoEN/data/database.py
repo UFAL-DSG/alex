@@ -20,7 +20,7 @@ database = {
     "task": {
         "find_connection": ["find connection", "find a connection", "give me directions", "find link", "find a link",
                             "directions", "find out link", "looking for a connection", "search for a connection",
-                            'connection', 'link',
+                            'connection', 'link', 'schedule', 'itinerary'
                            ],
         "find_platform": ["find a platform", "search for a platform", "give me a platform", "looking for a platform", ],
         'weather': ['weather', ],
@@ -32,7 +32,7 @@ database = {
         "now": ["now", "at once", "immediately", "offhand", "at this time", "the closest", "this instant"],
     },
     "date_rel": {
-        "today": ["today", "this day", "todays", "this days"],
+        "today": ["today", "this day", "todays", "this days", "tonight"],
         "tomorrow": ["tomorrow", "tomorrows", "morrow", "morrows"],
         "day_after_tomorrow": ["day after tomorrow", "after tomorrow", "after tomorrows"],
     },
@@ -54,10 +54,10 @@ database = {
     },
     "ampm": {
         "morning": ["morning", "dawn", ],
-        "am": [ "forenoon", "a.m.", ],
-        "pm": [ "afternoon", "p.m.", ],
+        "am": ["forenoon", "a.m.", "a m"],
+        "pm": ["afternoon", "p.m.", "p m"],
         "evening": ["evening", "dusk", ],
-        "night": ["night", "nighttime", "midnight", ],
+        "night": ["night", "nighttime", "midnight", "tonight"],
     },
     "city": {
     },

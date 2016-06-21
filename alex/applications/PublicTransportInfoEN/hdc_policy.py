@@ -57,7 +57,6 @@ class PTIENHDCPolicy(DialoguePolicy):
         self.policy_cfg = self.cfg['DM']['dialogue_policy']['PTIENHDCPolicy']
         self.accept_prob = self.policy_cfg['accept_prob']
 
-
     def reset_on_change(self, ds, changed_slots):
         """Reset slots which depends on changed slots.
 
@@ -114,14 +113,9 @@ class PTIENHDCPolicy(DialoguePolicy):
                 # filter mistakenly added iconfirms that have an unset/meaningless value
                 elif dai.value is None or dai.value in ['none', '*']:
                     continue
-                # filter stop names that are the same as city names
-                elif dai.name.endswith('_stop'):
-                    city_dai = dai.name[:-4] + 'city'
-                    if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
-                        continue
-                # filter state names that are the same as city names
-                elif dai.name.endswith('_state'):
-                    city_dai = dai.name[:-5] + 'city'
+                # filter stop names that are the same as city/state/borough names
+                elif dai.name.endswith('_stop') or dai.name.endswith('_borough') or dai.name.endswith('_state'):
+                    city_dai = dai.name.split('_')[0] + '_city'
                     if (city_dai, dai.value) in informs or iconfirms[(city_dai, dai.value)]:
                         continue
 
@@ -194,8 +188,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             'dialog_begins': len(self.system_das) == 0,
             'user_did_not_say_anything': last_user_dai_type == "silence",
             'user_said_bye': "lta_bye" in accepted_slots,
-            'we_did_not_understand': last_user_dai_type == "null" or
-                                     last_user_dai_type == "other",
+            'we_did_not_understand': last_user_dai_type == "null" or last_user_dai_type == "other",
             'user_wants_help': last_user_dai_type == "help",
             'user_thanked': last_user_dai_type == "thankyou",
             'user_wants_restart': last_user_dai_type == "restart",
@@ -209,7 +202,6 @@ class PTIENHDCPolicy(DialoguePolicy):
             'user_wants_to_find_the_platform': dialogue_state[
                 'lta_task'].test('find_platform', self.accept_prob),
         }
-
 
         # topic-independent behavior
         if fact['max_turns_exceeded']:
@@ -299,7 +291,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             res_da = self.filter_iconfirms(res_da)
         else:
             # implicitly confirm all changed slots
-            #todo: refactoring (place, area) - remove this hack - streets share stop slot so we don't have to generate more nlg templates
+            # todo: refactoring (place, area) - remove this hack - streets share stop slot so we don't have to generate more nlg templates
             changed_slots = self.fix_stop_street_slots(changed_slots)
             res_da = self.get_iconfirm_info(changed_slots)
             # talk about public transport
@@ -407,7 +399,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         #     res_da = self.backoff_action(ds)
         return res_da
 
-    def get_weather(self, ds, ref_point = None):
+    def get_weather(self, ds, ref_point=None):
         """Retrieve weather information according to the current dialogue state.
         Infers state names based on city names and vice versa.
 
@@ -420,8 +412,8 @@ class PTIENHDCPolicy(DialoguePolicy):
         date_rel = ds['date_rel'].mpv()
         ampm = ds['ampm'].mpv()
         lta_time = ds['lta_time'].mpv()
-        in_city = ref_point.in_city#ds['in_city'].mpv()
-        in_state = ref_point.in_state#ds['in_state'].mpv()
+        in_city = ref_point.in_city  # ds['in_city'].mpv()
+        in_state = ref_point.in_state  # ds['in_state'].mpv()
 
         # return the result
         res_da = DialogueAct()
@@ -446,7 +438,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 res_da.append(DialogueActItem('inform', 'time_rel', time_rel))
             else:
                 if time_abs != 'none' or ampm != 'none':
-                    res_da.append(DialogueActItem('inform', 'time', weather_ts.strftime("%I:%M:%p"))) # is time right?
+                    res_da.append(DialogueActItem('inform', 'time', weather_ts.strftime("%I:%M:%p")))  # is time right?
                 if date_rel != 'none':
                     res_da.append(DialogueActItem('inform', 'date_rel', date_rel))
         else:
@@ -477,11 +469,10 @@ class PTIENHDCPolicy(DialoguePolicy):
             else:
                 return DialogueAct('inform(current_time=%s)&iconfirm(in_state="%s")' % (d_time, default_state))
 
-
         res_da = DialogueAct()
         res_da.append(DialogueActItem('iconfirm', 'in_state', in_state))
         res_da.append(DialogueActItem('inform', 'current_time', cur_time.strftime("%I:%M:%p")))
-        res_da.append(DialogueActItem('inform', 'time_zone',  time_zone))
+        res_da.append(DialogueActItem('inform', 'time_zone', time_zone))
 
         return res_da
 
@@ -523,13 +514,13 @@ class PTIENHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        if not 'route_alternative' in ds:
+        if 'route_alternative' not in ds:
             if slots_being_requested:  # just waste the requested slots for not to carry them to the next round
                 self.get_requested_info(slots_being_requested, ds, accepted_slots)
-            return DialogueAct('inform(stop_conflict="no_stops")')
+            return DialogueAct('inform(stops_conflict="no_stops")')
         else:
             ds_alternative = ds["alternative"].mpv()
-            type = ds_alternative
+            route_type = ds_alternative  # for output in found_directions="..."
             if ds_alternative == "next":
                 increment = 1
             elif ds_alternative == "prev":
@@ -538,18 +529,18 @@ class PTIENHDCPolicy(DialoguePolicy):
                 increment = 0
             else:
                 increment = int(ds_alternative) - ds["route_alternative"] - 1
-                type = "true"
+                route_type = "true"
 
             ds["route_alternative"] += increment
             try:
                 if ds['route_alternative'] < 0:
                     raise Exception()
-                ds.directions[ds['route_alternative']] # just for failing
+                ds.directions[ds['route_alternative']]  # just for failing
             except:
                 ds["route_alternative"] -= increment
                 if slots_being_requested:  # just waste the requested slots for not to carry them to the next round
                     self.get_requested_info(slots_being_requested, ds, accepted_slots)
-                return DialogueAct('inform(found_directions="no_%s")' % type)
+                return DialogueAct('inform(found_directions="no_%s")' % route_type)
 
             if slots_being_requested:
                 res_da.append(DialogueActItem('inform', 'alternative', word_for_number(ds['route_alternative'] + 1, True)))
@@ -557,7 +548,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 ds["route_alternative"] -= increment
                 return res_da
 
-            res_da.extend(self.get_directions(ds, type))
+            res_da.extend(self.get_directions(ds, route_type))
             # ds["route_alternative"] -= increment
             return res_da
 
@@ -597,7 +588,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 if slot in ['from_stop', 'to_stop',
                             'departure_time', 'departure_time_rel',
                             'arrival_time', 'arrival_time_rel',
-                            'duration', 'num_transfers', 'time_transfers', 'distance' ]:
+                            'duration', 'num_transfers', 'time_transfers', 'distance']:
                     dai = DialogueActItem("inform", "stops_conflict", "no_stops")
                     res_da.append(dai)
 
@@ -662,10 +653,10 @@ class PTIENHDCPolicy(DialoguePolicy):
         """
         res_da = DialogueAct()
 
-        for _, slot in sorted([(h.mpvp(), s)  for s, h in tobe_confirmed_slots.items()], reverse=True):
+        for _, slot in sorted([(h.mpvp(), s) for s, h in tobe_confirmed_slots.items()], reverse=True):
             dai = DialogueActItem("confirm", slot, tobe_confirmed_slots[slot].mpv())
             res_da.append(dai)
-            #confirm explicitly only one slot at the time
+            # confirm explicitly only one slot at the time
             break
         return res_da
 
@@ -683,7 +674,7 @@ class PTIENHDCPolicy(DialoguePolicy):
             val1, val2 = tobe_selected_slots[slot].tmpvs()
             res_da.append(DialogueActItem("select", slot, val1))
             res_da.append(DialogueActItem("select", slot, val2))
-            #select values only in one slot at the time
+            # select values only in one slot at the time
             break
         return res_da
 
@@ -783,7 +774,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 to_city_val = to_cities.pop()
                 stop_city_inferred = True
 
-        # infer cities based on stops
+        # infer boroughs based on stops
         from_boroughs, to_boroughs = None, None
         stop_borough_inferred = False
         if from_stop_val != 'none' and from_borough_val == 'none':
@@ -810,7 +801,6 @@ class PTIENHDCPolicy(DialoguePolicy):
             if len(from_boroughs_st) == 1:
                 from_borough_val = from_boroughs_st.pop()
                 street_borough_inferred = True
-
 
         # infer cities based on each other
         if from_stop_val != 'none' and from_city_val == 'none' and to_city_val in from_cities:
@@ -854,11 +844,11 @@ class PTIENHDCPolicy(DialoguePolicy):
 
         # place can be specified by street or stop and area by city or borough or another street
         has_from_place = from_stop_val != 'none' or from_street_val != 'none' or from_city_val not in ['none', 'New York']
-        has_from_area = from_borough_val !='none' or from_street2_val != 'none' or from_city_val != 'none'
+        has_from_area = from_borough_val != 'none' or from_street2_val != 'none' or from_city_val != 'none'
         from_info_complete = has_from_place and has_from_area
-                             
+
         has_to_place = to_stop_val != 'none' or to_street_val != 'none' or to_city_val not in ['none', 'New York']
-        has_to_area = to_borough_val !='none' or to_street2_val != 'none' or to_city_val != 'none'
+        has_to_area = to_borough_val != 'none' or to_street2_val != 'none' or to_city_val != 'none'
 
         # hack for from CITY to CITY and allowing New York as one of them
         if (has_to_area and has_from_area) and from_city_val != to_city_val:
@@ -866,9 +856,10 @@ class PTIENHDCPolicy(DialoguePolicy):
             has_from_place = True
 
         to_info_complete = has_to_place and has_to_area
-        
-        if not from_info_complete and not to_info_complete and \
-                        'departure_time' not in accepted_slots and 'time' not in accepted_slots and randbool(10):
+
+        if (not from_info_complete and not to_info_complete and
+                any(s in accepted_slots for s in ['departure_time', 'time', 'departure_time_rel']) and
+                randbool(10)):
             req_da.extend(DialogueAct('request(departure_time)'))
         elif not has_to_place:
             req_da.extend(DialogueAct('request(to_stop)'))
@@ -891,7 +882,7 @@ class PTIENHDCPolicy(DialoguePolicy):
                 req_da.extend(DialogueAct('request(from_stop)'))
 
         # generate implicit confirms if we inferred cities and they are not the same for both stops
-        default_city = self.ontology.get_default_value('city')  # don't iconfirm borrough if new york is the other city, because all boroughs are in new york
+        default_city = self.ontology.get_default_value('city')  # don't iconfirm borough if new york is the other city, because all boroughs are in new york
         iconfirm_da = DialogueAct()
         if len(req_da) == 0:
             if stop_city_inferred and from_city_val != to_city_val:
@@ -1016,7 +1007,6 @@ class PTIENHDCPolicy(DialoguePolicy):
                 lon = cities[in_city_val]['lon']
 
         return req_da, in_city_val, in_state_val, lon, lat
-
 
     def req_from_stop(self, ds):
         """Generates a dialogue act informing about the origin stop of the last
@@ -1206,14 +1196,14 @@ class PTIENHDCPolicy(DialoguePolicy):
         route = dialogue_state.directions[dialogue_state['route_alternative']]
         leg = route.legs[0]
         # get only transit with some means of transport
-        transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT ]
+        transits = [step for step in route.legs[0].steps if step.travel_mode == step.MODE_TRANSIT]
 
         # get_time counts difference between two datetime objects, returns a string h:min
-        get_time = lambda f,t: '%d:%02d' % divmod(((t - f).seconds / 60), 60)
+        get_time = lambda f, t: '%d:%02d' % divmod(((t - f).seconds / 60), 60)
         # calculate time needed as "departure_time from next stop minus arrival time to the stop"
-        n =  [ (arrive_at.arrival_stop, get_time( arrive_at.arrival_time, depart_from.departure_time))
-                 for arrive_at, depart_from in itertools.izip(transits,transits[1:])]
-        names = [ 'inform(time_transfers_stop="%s")&inform(time_transfers_limit="%s")' % tuple_n for tuple_n in n ]
+        n = [(arrive_at.arrival_stop, get_time(arrive_at.arrival_time, depart_from.departure_time))
+             for arrive_at, depart_from in itertools.izip(transits, transits[1:])]
+        names = ['inform(time_transfers_stop="%s")&inform(time_transfers_limit="%s")' % tuple_n for tuple_n in n]
 
         da = DialogueAct("&".join(names)) if len(names) > 0 else DialogueAct('inform(num_transfers="0")')
         return da
@@ -1338,7 +1328,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         except IndexError:
             # this will lead to apology that no route has been found
             steps = []
-            #dialogue_state.directions = None
+            # dialogue_state.directions = None
             del dialogue_state['route_alternative']
 
         res = []
@@ -1367,11 +1357,11 @@ class PTIENHDCPolicy(DialoguePolicy):
                 directions_to_stop = expand_stop(dialogue_state.directions.to_stop)
                 directions_from_stop = expand_stop(dialogue_state.directions.from_stop)
                 if (next_leave_stop == self.DESTIN and prev_arrive_stop != directions_to_stop) or \
-                    (prev_arrive_stop == self.ORIGIN and next_leave_stop != directions_from_stop) or \
-                    (next_leave_stop != self.DESTIN and prev_arrive_stop != self.ORIGIN and next_leave_stop != prev_arrive_stop):
+                        (prev_arrive_stop == self.ORIGIN and next_leave_stop != directions_from_stop) or \
+                        (next_leave_stop != self.DESTIN and prev_arrive_stop != self.ORIGIN and next_leave_stop != prev_arrive_stop):
                     # walking destination: next departure stop
                     res.append("inform(walk_to=%s)" % next_leave_stop)
-                    #res.append("inform(duration=0:%02d)" % (step.duration / 60))
+                    # res.append("inform(duration=0:%02d)" % (step.duration / 60))
             # public transport
             elif step.travel_mode == step.MODE_TRANSIT:
                 res.append("inform(vehicle=%s)" % step.vehicle)
@@ -1476,7 +1466,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         res_da = DialogueAct()
 
         # if we do not understand the input then provide the context sensitive help
-        if not 'route_alternative' in dialogue_state:
+        if 'route_alternative' not in dialogue_state:
             # before something is offered
             if randbool(10):
                 res_da.append(DialogueActItem("help", "task", "weather"))
@@ -1521,7 +1511,7 @@ class PTIENHDCPolicy(DialoguePolicy):
         topics_alternatives = ['inform="alternative_abs"', 'inform="alternative_prev"', 'inform="alternative_next"',
                                'inform="alternative_last"', ]
         topics_stops = ['inform="from_stop"', 'inform="to_stop"', 'request="from_stop"', 'request="to_stop"',
-                        'request="num_transfers"', 'inform="num_transfers"',]
+                        'request="num_transfers"', 'inform="num_transfers"', ]
         topics_time = ['inform="departure_time"', 'request="current_time"', ]
         topics_general = ['', 'repeat', 'inform="hangup"', ]
         topics_weather = ['task="weather"', ]
@@ -1537,7 +1527,6 @@ class PTIENHDCPolicy(DialoguePolicy):
             topics = topics_general
         rand_theme = topics[random.randint(0, len(topics) - 1)]
         return DialogueAct("help(%s)" % rand_theme)
-
 
     def fix_stop_street_slots(self, changed_slots):
         from_list_stop = ['from_street', 'from_street2', 'from_stop', 'from_street']

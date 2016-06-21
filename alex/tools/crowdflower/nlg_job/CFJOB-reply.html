@@ -1,0 +1,16 @@
+<div class="html-element-wrapper">
+  <p class="info">Using the following information:</p>
+  <p>
+    <em class="data">{{da}}</em>
+  </p>
+  <p class="instr">Please
+    <strong class="{{type}}">{{type}}</strong> this user request:
+  </p>
+  <p>
+    <em class="user_utt">{{utt}}</em>
+  </p>
+  <br/>
+  <cml:hidden name="validation_log" />
+  <cml:hidden name="fluency_assessment" validates="required" />
+  <cml:textarea label="Operator (your) reply:" name="reply" instructions="Respond in a natural and fitting English sentence." class="" validates="required ss-required yext_no_international_url"></cml:textarea>
+</div>

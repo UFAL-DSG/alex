@@ -506,7 +506,7 @@ def load_geo_values(fname, slot1, slot2, surpress_warning=True):
             geo = geo.strip()
             # expand geo coordinates
             lon, lat = geo.strip().split('|')
-            if not value2 in ontology['addinfo'][slot2]:
+            if value2 not in ontology['addinfo'][slot2]:
                 ontology['addinfo'][slot2][value2] = {}
             if value1 in ontology['addinfo'][slot2][value2] and not surpress_warning:
                 print 'WARNING: ' + slot2 + " " + slot1 + " " + value1 + " already present!"
@@ -528,7 +528,7 @@ def load_compatible_values(fname, slot1, slot2):
             subset.add(val_slot1)
 
 
-def load_street_type_values(fname, surpress_warning=False):  # slot1=street, slot2=borugh
+def load_street_type_values(fname, surpress_warning=False):  # slot1=street, slot2=borough
     # we expect to see these slots in column 'slot':  'avenue', 'street', 'place'
     with codecs.open(fname, 'r', 'UTF-8') as fh:
         for line in fh:
@@ -538,12 +538,12 @@ def load_street_type_values(fname, surpress_warning=False):  # slot1=street, slo
             if len(data) < 3:
                 print "ERROR: There is not enough fields to parse slot values in " + fname
                 break
-            val_slot1= data[0]
-            type = data[2].lower()
+            val_slot1 = data[0]
+            street_type = data[2].lower()
             prev_value = ontology['addinfo']['street_type'].get(val_slot1, None)
-            if prev_value and prev_value != type and not surpress_warning:
+            if prev_value and prev_value != street_type and not surpress_warning:
                 print 'WARNING: slot ' + val_slot1 + " already contains " + prev_value + " (overwriting with " + type + ")!"
-            ontology['addinfo']['street_type'][val_slot1] = type
+            ontology['addinfo']['street_type'][val_slot1] = street_type
 
 
 dirname = os.path.dirname(os.path.abspath(__file__))

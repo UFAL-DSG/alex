@@ -252,7 +252,7 @@ class Config(object):
     #   - requirements = property(get_reqs, set_reqs)
     #   - def check_requirements_are_met(self)
 
-    def __init__(self, file_name=None, project_root=False, config={}):
+    def __init__(self, file_name=None, project_root=False, config=None):
         """
         Initialises a new Config object.
 
@@ -265,6 +265,9 @@ class Config(object):
                 `file_name' overwrites the one specified via `config'
 
         """
+        if config is None:
+          config = {}
+
         self.config = config
 
         if project_root:

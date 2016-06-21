@@ -27,14 +27,16 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 from shutil import copyfile
+import wave
+import pyaudio
 
 from alex.components.nlg.tools.en import every_word_for_number
 
 
-
 _NOISE_ = 'none'
-_URL_ = 'url' # header name - for filename association
+_URL_ = 'url'  # header name - for filename association
 _TEXT_ = 'transcribed_text'
+_CHUNK_ = 1024  # buffer size for reading wav files
 
 
 def read_file(path):
@@ -179,7 +181,39 @@ def get_transcriptions(transcription_file):
     return clear, unclear, header
 
 
-def resolve_conflicts(conflicted_transcriptions, header):
+def find_file(name, path):
+    """Find a file by name (find the subdirectory where it sits).
+    From http://stackoverflow.com/questions/1724693/find-a-file-in-python."""
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
+def play_wav(wav_name, base_path):
+    """Find and play a WAV file using PyAudio. Adapted from http://people.csail.mit.edu/hubert/pyaudio/."""
+
+    wav_file = find_file(wav_name, base_path)
+    wf = wave.open(wav_file, 'rb')
+
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+    data = wf.readframes(_CHUNK_)
+
+    while data != '':
+        stream.write(data)
+        data = wf.readframes(_CHUNK_)
+
+    stream.stop_stream()
+    stream.close()
+
+    p.terminate()
+
+
+def resolve_conflicts(conflicted_transcriptions, header, logs_path):
     """
     This will offer transcriptions to the user and duplicate the selected transcription line to original transcription
     csv, so that the next time it will take the majority vote on it. It returns unresolved transcriptions.
@@ -188,26 +222,42 @@ def resolve_conflicts(conflicted_transcriptions, header):
     resolved = dict()
     skipped = dict()
     resolved_lines = []
-    for j, (wav, (options, lines)) in enumerate(conflicted_transcriptions.iteritems()):
+
+    wavs = conflicted_transcriptions.keys()
+    j = 0
+    while j < len(wavs):
+        wav = wavs[j]
+        options, lines = conflicted_transcriptions[wav]
         print '\n%s (%i/%i):' % (wav, j + 1, len(conflicted_transcriptions))
-        print 's/a/q/n\tskip/abort/quit/noise'
+        print 's/a/q/p/m/n\tskip/abort/quit/play/merge/noise'
         for i, conflict in enumerate(options, 1):
             print "(%i)\t%s" % (i, conflict)
 
-        choice = raw_input("select number: ").strip()
+        choice = raw_input("choose action/number: ").strip()
         if 's' == choice:
             skipped[wav] = conflicted_transcriptions[wav]
-            continue
         elif 'q' == choice:
             skipped_keys = conflicted_transcriptions.keys()[j:]
             for k in skipped_keys:
                 skipped[k] = conflicted_transcriptions[k]
-            break
+            j = len(wavs)  # break
         elif 'a' == choice:
             skipped = conflicted_transcriptions
             resolved = dict()
             resolved_lines = []
-            break
+            j = len(wavs)  # break
+        elif 'm' == choice:
+            merged = raw_input("enter merged version: ").strip()
+            resolved[wav] = merged
+            # add the line twice to the logs so it overrides all options appearing only once
+            columns = lines[0].split(',')
+            columns[ti] = merged
+            merged_line = ','.join(columns)
+            resolved_lines.append(merged_line)
+            resolved_lines.append(merged_line)
+        elif 'p' == choice:
+            play_wav(wav, logs_path)
+            j -= 1  # stay at the same position
         elif 'n' == choice:
             resolved[wav] = _NOISE_
             columns = lines[0].split(',')
@@ -222,6 +272,8 @@ def resolve_conflicts(conflicted_transcriptions, header):
         else:
             print "Didn't recognize input '%s', skipping %s" % (options, wav)
             skipped[wav] = conflicted_transcriptions[wav]
+
+        j += 1
 
     return skipped, resolved, resolved_lines
 
@@ -258,7 +310,7 @@ if __name__ == "__main__":
     legit, conflicts, header = get_transcriptions(transcription_file)
     # offer the user to resolve conflicts by hand
     if resolve_confl:
-        conflicts, resolved, resolved_lines = resolve_conflicts(conflicts, header)
+        conflicts, resolved, resolved_lines = resolve_conflicts(conflicts, header, logs_path)
         if resolved:
             legit.update(resolved)
         if resolved_lines:

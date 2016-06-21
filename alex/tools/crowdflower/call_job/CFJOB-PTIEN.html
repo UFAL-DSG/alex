@@ -1,0 +1,103 @@
+<!-- Paste this into the CML field -->
+<script type="text/javascript" src="https://www.google.com/jsapi?key=ABQIAAAA-fK3SsIXeXJuKpgW1hT6kRRwPF2u2lm2QTXas2nGIPxzsfKaMRRV4qNXAn_UlCjcNRodB7mb2gBIVw"></script>
+
+<h2 style="color:red; padding:1em; margin: 1em 0; border: 1px solid red; background: #fee; display: none;" id="locationWarning"></h2>
+<div class="collapse-container">
+  <div class="collapse-group">
+    <a target="_blank" data-toggle="collapse" data-target=".collapse-one" class="collapse-header text-center definition">
+      <h2>Introduction <span class="toggle-indicator">▴</span></h2>
+    </a>
+    <div class="in collapse collapse-one collapse-body text-left">
+      <div class="intro border">
+
+        <div>
+          <p>
+          Your task is to <strong>call an automated phone system</strong> for New York public transport information.
+          </p>
+          <ul>
+            <li>You must be a <strong>NATIVE</strong> speaker of English.</li>
+            <li>You must call a US toll-free phone number. If you call from a US land line, the call is completely free.</li>
+            <li>This Job requires you to <strong>talk naturally</strong> to the system.</li>
+            <li>Once the call is finished, you will be given a four-digit code which will enable a short feedback form.</li>
+            <li>After filling in the feedback form, the Job is successfully done!</li>
+            <li>Your code will only be valid for 15 minutes, so be sure to fill in the form right after you finish the call.</li>
+          </ul>
+          <p style="color:red;font-weight: bold;">
+            All data is collected anonymously by the <a target="_blank" href="http://ufal.mff.cuni.cz/">
+            Institute of Formal and Applied Linguistics, Charles University in Prague</a> for research, development, and commercial deployment of spoken dialogue systems and similar applications involving speech.
+          </p>
+          <!--<p>you can bookmark the following <a target="_top" href="https://www.mturk.com/mturk/searchbar?searchWords=UFAL+automated+tourist+information"> link on CROWDFLOWER search</a>.
+        </p>-->
+          <p>
+            Before you participate in this job for the first time, please take a moment to look at the <a target="_blank" data-toggle="collapse" data-target=".collapse-two" style="cursor: pointer;">instructions</a>, <a target="_blank" data-toggle="collapse" data-target=".collapse-three" style="cursor: pointer;">example</a> of a dialogue and the statement of <a target="_blank" data-toggle="collapse" data-target=".collapse-four" style="cursor: pointer;">consent</a>.
+            By participating in this Job, you agree with the terms and conditions stated in the consent form. </p>
+        </div>
+      </div>
+    </div>
+    <a target="_blank" data-toggle="collapse" data-target=".collapse-four" class="collapse-header text-center definition">
+      <h2>Statement of Consent <span class="toggle-indicator">▾</span></h2>
+    </a>
+    <div class="collapse collapse-four collapse-body text-left">
+    <div class="consent border">
+      <p>
+      ÚFAL MFF UK (Linguistics)
+      <br> Malostranské náměstí 25
+      <br> 11800 Praha
+      <br> Czech Republic
+      </p>
+      <h4>STATEMENT OF CONSENT</h4>
+      <p>
+      You have volunteered to participate in a study conducted at the Institute of Formal and Applied Linguistics at the Charles University in Prague.
+      </p>
+      <p>
+      This study is concerned with how people interact with spoken dialogue systems. In the course of this study, you will be interacting with a dialogue system. All interactions with the dialogue system will be recorded for further study and commercial deployment of spoken dialogue systems and similar applications involving speech. After completing the task(s), you will be asked several questions about your experience. There are no known expected physical discomforts or risks involved in your participation.
+      </p>
+      <p>
+      For the purposes of the Czech Republic 101/2000 Data Protection Act, you give your permission for audio and video recordings, transcriptions, and non-identifying information (e.g. gender, age, mother tongue) to be electronically stored, utilised and shared for purposes of research, development, and commercial deployment of spoken dialogue systems and similar applications involving speech. No identifying information gathered in this study will be disclosed to any persons other than the researchers and their collaborators.
+      </p>
+      <p>
+      Results of this study will appear in academic journals in terms of group data. If any individual data will be presented, the data will be totally anonymous, without any means of identifying the individuals involved. The researchers will be glad to answer any questions about this study. However, answers that could influence the outcome of the study will be deferred until you have completed the study.
+      </p>
+      <p>
+      Every effort is made to conduct this study in compliance with the appropriate professional guidelines.
+      </p>
+      <p>
+      Last update: 2015-01-01
+      </p>
+    </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="collapse-group" style="margin-top: 2em;">
+<h2 class="header text-center definition">Task Description</h2>
+<div class="warning"> To complete the Job, call this toll-free US phone number: <strong>1-888-826-5115</strong>.<br/>To end the call, say: <strong>"Thank you. Good bye!"</strong></div>
+<div class="task">
+  <strong> Please try to talk about the following topic: </strong>
+  <div id="task">If this message is not replaced by the topic within a few seconds, there is a problem connecting to the server. Check your internet connection and/or try using a different browser (e.g., the latest version of Chrome).</div>
+</div>
+
+
+<h2 class="header text-center definition">Validation</h2>
+<div align="center">
+  <div class="feedback">
+    <cml:text label="Dialogue Code validation field:" name="code_field" validates="required ss-required yext_no_international_url" instructions="In order to obtain this Code you have to successfully complete the call. Please wait until the code is verified." />
+
+    <cml:hidden name="call_log_dir" value="" validates="required ss-required" />
+    <cml:hidden name="task_text" value="" validates="required ss-required" />
+    <cml:hidden name="task_data" value="" validates="required ss-required" />
+
+    <cml:radios validates="required" label="Have you found what you were looking for?">
+      <cml:radio label="Yes" />
+      <cml:radio label="No" />
+    </cml:radios>
+
+    <cml:ratings validates="required" points="4" from="Very poorly" to="Very well" label="The system understood me:" />
+    <cml:ratings validates="required" points="4" from="Very poor" to="Very good" label="The phrasing of the system's response was:" />
+    <cml:ratings validates="required" points="4" from="Very poor" to="Very good" label="The quality of the system's voice was:" />
+
+    <cml:textarea label="General comments (optional)" />
+  </div>
+</div>
+</div>

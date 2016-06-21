@@ -1,7 +1,7 @@
 ﻿.collapse-header {
   display: block;
   padding: 8px 15px;
-  cursor: pointer;   
+  cursor: pointer;
   color: #00A6E0;
   background-color: rgb(244,244,244);
   border-radius: 3px;
@@ -18,19 +18,33 @@
   border-radius: 4px;
 }
 
-li {
-font-family: "Lato",sans-serif;
-font-weight: 400;
-font-size: 13pt;
-line-height: 26px;
+.header {
+  display: block;
+  padding: 8px 15px;
+  background-color: rgb(244,244,244);
+  border-radius: 3px;
 }
 
-th{ 
+.collapse-header .toggle-indicator {
+  color: #00A6E0;
+}
+
+#task p {
+  font-size: 13pt;
+  margin: 0 0;
+}
+
+#task {
+  margin-top: 10px;
+}
+
+th{
 font-size: 1em;
 }
 
-h2 {
+h2, h4 {
 color: rgb(25,25,25);
+font-weight: bold;
 }
 
 .border {
@@ -213,7 +227,7 @@ iframe {
     border:green solid 3px;
     margin: 0.66em;
     padding: 0.66em;
-    font-size: 1.5em;
+    font-size: 1.3em;
 }
 
 .warning {
@@ -221,7 +235,7 @@ iframe {
     border:red solid 3px;
     margin: 0.66em;
     padding: 0.66em;
-    font-size: 1.5em; 
+    font-size: 1.3em;
 }
 
 .feedback {

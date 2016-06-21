@@ -31,7 +31,7 @@ class PTIENSLUPreprocessing(SLUPreprocessing):
         for ord in xrange(1, 200):
             suffix = suffixes[ord % 10] if ord < 10 or ord > 20 else 'th'
             ord_form = str(ord) + suffix
-            ord_norms.append(([unicode(ord_form)], word_for_number(ord, ordinary=True).split()))
+            ord_norms.append(([unicode(ord_form)], word_for_number(ord, ordinal=True).split()))
         self.text_normalization_mapping += ord_norms
 
         self.text_normalization_mapping += [

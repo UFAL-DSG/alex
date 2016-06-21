@@ -1,0 +1,72 @@
+.html-element-wrapper p {
+  padding: 0;
+  margin: 0;
+  padding-bottom: 0.5em;
+  font-size: 110%;
+}
+
+.example {
+  background-color: #fff;
+  padding: 0.5em;
+}
+
+.example .html-element-wrapper p {
+  font-size: 100%;
+  padding-bottom: 0.2em;
+}
+
+
+strong.confirm, strong.confirm-example {
+  color: orange;
+}
+
+strong.reply, strong.reply-example {
+  color: #0a0;
+}
+
+strong.apologize, strong.apologize-example {
+  color: #c90095; /* magenta */
+}
+
+strong.request, strong.request-example {
+  color:  #0985ff; /* cobalt blue */
+}
+
+p.instr {
+  margin-top: 1em;
+}
+
+p.user_utt {
+  padding-bottom: 2em;
+}
+
+em.user_utt {
+  font-weight: bold;
+  color: blue;
+  margin-left: 1em;
+}
+
+em.data, em.data-example {
+  font-weight: bold;
+  color: #a33;
+}
+
+em.data span.exact, em.data-example span {
+  text-decoration: underline;
+}
+
+em.data span.exact {
+  cursor: pointer;
+}
+
+em.data span.slot-name {
+  margin-left: 1em;
+}
+
+em.data span.slot-name img {
+  display: inline;
+  height: 32px;
+  width: 32px;
+  margin-bottom: -0.1em;
+}
+

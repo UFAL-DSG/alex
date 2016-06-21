@@ -9,11 +9,12 @@ do
   ./vhub.py -n 5 -c \
     ./PublicTransportInfoEN/ptien.cfg \
     ./PublicTransportInfoEN/ptien_hdc_slu.cfg \
+    ../resources/private/default.cfg \
     ../resources/private/ext-277278100.cfg  \
     ./PublicTransportInfoEN/google.cfg \
     ./PublicTransportInfoEN/voicerss.cfg \
     ./PublicTransportInfoEN/kaldi.cfg \
-
+    ../resources/private/vystadial-code-server.cfg \
 
 done
 
