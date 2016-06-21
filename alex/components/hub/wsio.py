@@ -299,7 +299,7 @@ class WSIO(VoiceIO, multiprocessing.Process):
 class AlexServerFactory(WebSocketServerFactory):
     """Twisted Factory that takes care of instantiating AlexWebsocketProtocols."""
     def __init__(self, addr, port, wsio):
-        super(AlexServerFactory, self).__init__("ws://%s:%d" % (addr, port), debug=True)
+        super(AlexServerFactory, self).__init__("ws://%s:%d" % (addr, port))
         self.protocol = AlexServerProtocol
 
         self.wsio = wsio
@@ -321,7 +321,7 @@ class AlexServerProtocol(WebSocketServerProtocol):
 class AlexPingFactory(WebSocketClientFactory):
     """Twisted Factory that takes care of sending a ping request to the WSRouter to let him know we are alive."""
     def __init__(self, addr, port, wsio):
-        super(AlexPingFactory, self).__init__("ws://%s:%d" % (addr, port), debug=True)
+        super(AlexPingFactory, self).__init__("ws://%s:%d" % (addr, port))
         self.protocol = AlexPingProtocol
 
         self.wsio = wsio
