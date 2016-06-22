@@ -11,7 +11,7 @@ from alex.components.hub.wsio_messages_pb2 import WSRouterRequestProto, WSRouter
 
 class WSRouterServerFactory(WebSocketServerFactory):
     def __init__(self, addr, port, entry_timeout):
-        super(WSRouterServerFactory, self).__init__(url="ws://%s:%d" % (addr, port), debug=False)
+        super(WSRouterServerFactory, self).__init__(url="ws://%s:%d" % (addr, port))
         self.protocol = WSRouterServerProtocol
         self.instances = {}
         self.timestamps = {}

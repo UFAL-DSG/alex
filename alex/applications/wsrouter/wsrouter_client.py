@@ -35,7 +35,7 @@ class MyClientProtocol(WebSocketClientProtocol):
 def main():
     log.startLogging(sys.stdout)
 
-    factory = WebSocketClientFactory("ws://localhost:9001", debug=False)
+    factory = WebSocketClientFactory("ws://localhost:9001")
     factory.protocol = MyClientProtocol
 
     reactor.connectTCP("127.0.0.1", 9001, factory)
