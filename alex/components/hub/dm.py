@@ -79,7 +79,7 @@ class DM(multiprocessing.Process):
                     self.dm.end_dialogue()
 
                     self.commands.send(Command("flushed()", 'DM', 'HUB'))
-                    
+
                     return False
 
                 if command.parsed['__name__'] == 'prepare_new_dialogue':
@@ -205,8 +205,6 @@ class DM(multiprocessing.Process):
 
         :return the name of the activity or None
         """
-
-        self.cfg['Logging']['system_logger'].info("FQ IS " + str(self.cfg['DM']['epilogue'].get('final_question')))
         if self.cfg['DM']['epilogue']['final_question']:
             self.epilogue_final_question()
             return 'final_question'
