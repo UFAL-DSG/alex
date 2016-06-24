@@ -11,7 +11,7 @@ jinja2
 suds
 
 # pykaldi
-cython
+cython<0.24
 pystache
 pyyaml
 
