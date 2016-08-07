@@ -15,26 +15,9 @@ def split_to_bins(A, S=4):
     return [A[i * S:(i + 1) * S] for i in range(m + bool(n))]
 
 
-def flatten(list_, ltypes=(list, tuple)):
-    """Flatten nested list into a simple list."""
-    # Iterate `list_' from the beginning.
-    i = 0
-    while i < len(list_):
-        # While the list_'s i-th element is of a list-like type,
-        while isinstance(list_[i], ltypes):
-            # If the list-like element is empty,
-            if not list_[i]:
-                # Remove the empty element.
-                list_.pop(i)
-                i -= 1
-                break
-            else:  # if the list-like element is non-empty,
-                # Catenate its elements to the main list at the current
-                # position.
-                list_[i:i + 1] = list_[i]
-        i += 1
-    # Coerce the main list into the original type and return.
-    return list_
+def flatten(list_):
+    """Flatten list of lists or tuples into a simple list."""
+    return [item for sublist in list_ for item in sublist]
 
 
 def get_text_from_xml_node(node):
@@ -48,6 +31,7 @@ def get_text_from_xml_node(node):
 
 
 class nesteddict(defaultdict):
+
     def __init__(self):
         defaultdict.__init__(self, nesteddict)
 
