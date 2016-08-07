@@ -1,0 +1,9 @@
+vehicle
+dontcare
+monorail
+train
+cable_car
+tram
+bus
+subway
+ferry

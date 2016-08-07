@@ -1,0 +1,7 @@
+borough
+Staten Island
+Long Island
+Brooklyn
+Bronx
+Manhattan
+Queens

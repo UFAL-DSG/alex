@@ -1,0 +1,6 @@
+ampm
+morning
+pm
+evening
+am
+night

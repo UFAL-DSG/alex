@@ -45,6 +45,21 @@ class D3DiscreteValue(DiscreteValue):
     def items(self):
         return sorted(self.values.items(), key=lambda x: x[1], reverse=True)
 
+    def topn(self, n=-1):
+        """THANH: return top n ordered hypotheses, but not none."""
+        if n==-1:
+            n=len(self.values)
+        ret = []
+        i=0
+        for v, p in self.items():
+            if v is None or v=='none':
+                continue
+            ret.append((v, p))
+            i +=1
+            if i>=n:
+                break
+        return ret
+
     def reset(self):
         self.values = defaultdict(float, {'none': 1.0, })
 
