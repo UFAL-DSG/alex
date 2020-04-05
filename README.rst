@@ -1,3 +1,8 @@
+Warning: This project is no longer maintained.
+--------
+
+========
+
 .. image:: alex/doc/alex-logo.png
     :alt: Alex logo
 
