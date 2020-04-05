@@ -53,9 +53,9 @@ class Generator(object):
         return [cap_func(form_tag.form) for form_tag in self.__out_buf[0].forms]
 
     def inflect(self, words, case, personal_names=False, check_fails=False):
-        """Inflect a stop/city/personal name in the given case (return 
+        """Inflect a stop/city/personal name in the given case (return
         lists of inflection variants for all words).
-        
+
         @param words: list of form/lemma/tag triplets from the analyzer to be inflected
         @param case: the target case (Czech, 1-7)
         @param personal_names: should be False for stops/cities, True for personal names
