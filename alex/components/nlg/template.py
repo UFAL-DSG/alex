@@ -382,7 +382,11 @@ class TemplateNLG(AbstractTemplateNLG):
         self.preprocessing = None
         self.postprocessing = None
         if 'preprocessing_cls' in self.cfg['NLG']['Template']:
-            self.preprocessing = self.cfg['NLG']['Template']['preprocessing_cls'](self.ontology)
+            if 'preprocessing_config' in self.cfg['NLG']['Template']:
+                self.preprocessing = self.cfg['NLG']['Template']['preprocessing_cls'](
+                    self.ontology, self.cfg['NLG']['Template']['preprocessing_config'])
+            else:
+                self.preprocessing = self.cfg['NLG']['Template']['preprocessing_cls'](self.ontology)
         if 'postprocessing_cls' in self.cfg['NLG']['Template']:
             self.postprocessing = self.cfg['NLG']['Template']['postprocessing_cls']()
 

@@ -3,4 +3,4 @@
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $MYDIR/..
 
-./wthub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg -t
+./wthub.py -c ./PublicTransportInfoCS/ptics.cfg ./PublicTransportInfoCS/ptics_hdc_slu.cfg ./PublicTransportInfoCS/ptics_wthub.cfg -t

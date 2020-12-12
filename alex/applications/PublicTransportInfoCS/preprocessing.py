@@ -57,7 +57,7 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
     as well as translating certain slot values into Czech.
     """
 
-    def __init__(self, ontology):
+    def __init__(self, ontology, config=None):
         super(PTICSNLGPreprocessing, self).__init__(ontology)
         # keep track of relative and absolute time slots
         self.rel_time_slots = set()
@@ -68,8 +68,10 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
         # keep track of translated slots
         self.translated_slots = set()
         self.translations = {}
+        self.config = config or {}
+        self.html_highlight = self.config.get('html_highlight', False)
         # load their lists from the ontology
-        if 'slot_attributes' in self.ontology:
+        if 'slot_attributes' in self.ontology and not self.config.get('text_only'):
             for slot in self.ontology['slot_attributes']:
                 if 'relative_time' in self.ontology['slot_attributes'][slot]:
                     self.rel_time_slots.add(slot)
@@ -114,6 +116,8 @@ class PTICSNLGPreprocessing(TemplateNLGPreprocessing):
             # translate some slot values (default to untranslated)
             elif slot_name in self.translated_slots:
                 svs_dict[slot_id] = self.translations[slot_name].get(val, val)
+            if self.html_highlight:
+                svs_dict[slot_id] = '<strong>' + svs_dict[slot_id] + '</strong>'
         # reflect changes to slot values stored in the template
         slot_modif = {}
 
